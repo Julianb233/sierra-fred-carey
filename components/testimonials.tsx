@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FadeUpOnScroll, GradientText } from "@/components/premium/AnimatedText";
+import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
 import { QuoteIcon } from "@radix-ui/react-icons";
 
 export default function Testimonials() {
@@ -13,8 +13,8 @@ export default function Testimonials() {
       content:
         "The Decision OS told me honestly that I wasn't ready to raise. It hurt to hear, but 6 months later I closed my seed round in 3 weeks. That honesty saved me from burning bridges.",
       rating: 5,
-      gradient: "from-purple-500 to-pink-500",
-      glowColor: "rgba(168, 85, 247, 0.3)",
+      gradient: "from-[#ff6a1a] to-orange-400",
+      glowColor: "rgba(255, 106, 26, 0.3)",
     },
     {
       name: "Marcus Rodriguez",
@@ -23,8 +23,8 @@ export default function Testimonials() {
       content:
         "The Investor Readiness Score changed everything. I knew exactly what to fix before my first pitch. Went from 0% response rate to 40% meeting rate in one month.",
       rating: 5,
-      gradient: "from-blue-500 to-cyan-500",
-      glowColor: "rgba(56, 189, 248, 0.3)",
+      gradient: "from-amber-500 to-[#ff6a1a]",
+      glowColor: "rgba(245, 158, 11, 0.3)",
     },
     {
       name: "Emma Thompson",
@@ -33,8 +33,8 @@ export default function Testimonials() {
       content:
         "The virtual team agents are like having a chief of staff. My inbox is managed, my fundraise is organized, and I can finally focus on building product.",
       rating: 5,
-      gradient: "from-green-500 to-emerald-500",
-      glowColor: "rgba(34, 197, 94, 0.3)",
+      gradient: "from-orange-500 to-red-500",
+      glowColor: "rgba(249, 115, 22, 0.3)",
     },
     {
       name: "James Wilson",
@@ -43,8 +43,8 @@ export default function Testimonials() {
       content:
         "I started with the free tier just to think through my idea. The Reality Lens caught 3 fatal flaws I would have discovered the hard way. Worth every minute.",
       rating: 5,
-      gradient: "from-orange-500 to-red-500",
-      glowColor: "rgba(249, 115, 22, 0.3)",
+      gradient: "from-[#ff6a1a] to-amber-400",
+      glowColor: "rgba(255, 106, 26, 0.25)",
     },
     {
       name: "Maria Garcia",
@@ -53,8 +53,8 @@ export default function Testimonials() {
       content:
         "Boardy connected me with the perfect Series A leads. The warm intro workflow is what convinced me to upgrade — and it paid for itself in one meeting.",
       rating: 5,
-      gradient: "from-indigo-500 to-violet-500",
-      glowColor: "rgba(99, 102, 241, 0.3)",
+      gradient: "from-orange-600 to-[#ff6a1a]",
+      glowColor: "rgba(234, 88, 12, 0.3)",
     },
     {
       name: "Kevin Lee",
@@ -63,7 +63,7 @@ export default function Testimonials() {
       content:
         "I'm a builder, not a fundraiser. The pitch deck review and strategy documents gave me the language and structure to communicate my vision. Closed $2M pre-seed.",
       rating: 5,
-      gradient: "from-yellow-500 to-orange-500",
+      gradient: "from-amber-400 to-orange-500",
       glowColor: "rgba(251, 191, 36, 0.3)",
     },
     {
@@ -73,8 +73,8 @@ export default function Testimonials() {
       content:
         "Even as an experienced founder, the weekly check-ins keep me accountable. It's like having a co-founder who never misses a beat.",
       rating: 5,
-      gradient: "from-pink-500 to-rose-500",
-      glowColor: "rgba(236, 72, 153, 0.3)",
+      gradient: "from-[#ff6a1a] to-orange-400",
+      glowColor: "rgba(255, 106, 26, 0.3)",
     },
     {
       name: "David Park",
@@ -83,8 +83,8 @@ export default function Testimonials() {
       content:
         "The Red Flag Detection caught a co-founder issue I was ignoring. Hard conversation, but saved the company. This thing is brutally honest — exactly what founders need.",
       rating: 5,
-      gradient: "from-teal-500 to-cyan-500",
-      glowColor: "rgba(20, 184, 166, 0.3)",
+      gradient: "from-orange-500 to-amber-500",
+      glowColor: "rgba(249, 115, 22, 0.3)",
     },
     {
       name: "Elena Petrov",
@@ -93,8 +93,8 @@ export default function Testimonials() {
       content:
         "From idea validation to Series A strategy docs, this platform grew with me. The 30/60/90 planning alone is worth the subscription.",
       rating: 5,
-      gradient: "from-fuchsia-500 to-purple-500",
-      glowColor: "rgba(192, 38, 211, 0.3)",
+      gradient: "from-amber-500 to-[#ff6a1a]",
+      glowColor: "rgba(245, 158, 11, 0.3)",
     },
   ];
 
@@ -109,25 +109,21 @@ export default function Testimonials() {
   );
 
   return (
-    <section id="testimonials" className="relative py-24 sm:py-32 overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 gradient-mesh opacity-50" />
-      <div className="absolute inset-0 cyber-grid opacity-20" />
-
-      {/* Floating orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <section id="testimonials" className="relative py-24 sm:py-32 overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
         <motion.div
-          className="absolute top-20 left-[10%] w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"
+          className="absolute top-20 left-[10%] w-64 h-64 bg-[#ff6a1a]/20 rounded-full blur-[100px]"
           animate={{ y: [0, 40, 0], x: [0, 20, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 right-[15%] w-80 h-80 bg-blue-500/15 rounded-full blur-[120px]"
+          className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]"
           animate={{ y: [0, -50, 0], x: [0, -30, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/2 left-[50%] w-72 h-72 bg-pink-500/15 rounded-full blur-[100px]"
+          className="absolute top-1/2 left-[50%] w-72 h-72 bg-amber-500/15 rounded-full blur-[100px]"
           animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -146,14 +142,14 @@ export default function Testimonials() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-block text-sm font-semibold tracking-wider text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6"
+            className="inline-block text-sm font-semibold tracking-wider text-[#ff6a1a] bg-[#ff6a1a]/10 px-4 py-2 rounded-full border border-[#ff6a1a]/20 mb-6"
           >
             TESTIMONIALS
           </motion.span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-            Trusted by <GradientText>10,000+</GradientText> Founders
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
+            Trusted by <span className="text-[#ff6a1a]">10,000+</span> Founders
           </h2>
-          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 dark:text-gray-400">
             Real founders sharing their honest experience with the Decision OS.
             No filters. No BS.
           </p>
@@ -186,12 +182,7 @@ export default function Testimonials() {
                 />
 
                 {/* Card */}
-                <div className="relative glass rounded-2xl p-6 sm:p-8 border border-white/10 group-hover:border-white/20 transition-all duration-300 overflow-hidden">
-                  {/* Shimmer effect on hover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="shimmer absolute inset-0" />
-                  </div>
-
+                <div className="relative bg-white dark:bg-gray-950 rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 group-hover:border-[#ff6a1a]/30 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-lg">
                   {/* Quote icon */}
                   <div className={`absolute top-4 right-4 w-10 h-10 rounded-lg bg-gradient-to-br ${testimonial.gradient} opacity-20 flex items-center justify-center`}>
                     <QuoteIcon className="w-5 h-5 text-white" />
@@ -207,7 +198,7 @@ export default function Testimonials() {
                     </div>
 
                     {/* Quote */}
-                    <p className="text-muted-foreground leading-relaxed mb-6 text-sm sm:text-base">
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6 text-sm sm:text-base">
                       &ldquo;{testimonial.content}&rdquo;
                     </p>
 
@@ -220,10 +211,10 @@ export default function Testimonials() {
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-foreground group-hover:text-gradient transition-all duration-300">
+                        <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-[#ff6a1a] transition-all duration-300">
                           {testimonial.name}
                         </h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {testimonial.role}
                         </p>
                       </div>
@@ -248,28 +239,28 @@ export default function Testimonials() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-16 sm:mt-24"
         >
-          <div className="relative glass-strong rounded-2xl p-8 sm:p-12 border border-white/20 text-center overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-950 rounded-2xl p-8 sm:p-12 border border-gray-200 dark:border-gray-800 text-center overflow-hidden shadow-lg">
             {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-blue-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#ff6a1a]/5 via-transparent to-orange-400/5" />
 
             <div className="relative z-10">
-              <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-                Join <span className="text-gradient">10,000+</span> founders who think clearer
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+                Join <span className="text-[#ff6a1a]">10,000+</span> founders who think clearer
               </h3>
-              <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-xl mx-auto">
                 Start free. Upgrade when you&apos;re ready to raise or scale.
               </p>
-              <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+              <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <div className="w-2 h-2 bg-[#ff6a1a] rounded-full" />
                   <span>$50M+ raised by users</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                  <div className="w-2 h-2 bg-orange-400 rounded-full" />
                   <span>89% investor meeting rate</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <div className="w-2 h-2 bg-amber-500 rounded-full" />
                   <span>500+ decks reviewed</span>
                 </div>
               </div>

@@ -14,8 +14,8 @@ export default function PricingPage() {
       price: 0,
       description: "Maximum adoption, trust, and habit formation.",
       audience: "First-time founders, early ideation, founders not yet considering fundraising.",
-      gradient: "from-blue-500 to-cyan-500",
-      glowColor: "rgba(56, 189, 248, 0.3)",
+      gradient: "from-gray-400 to-gray-500",
+      glowColor: "rgba(156, 163, 175, 0.3)",
       icon: StarIcon,
       features: [
         { name: "Core Fred Cary Decision OS", included: true },
@@ -41,8 +41,8 @@ export default function PricingPage() {
       price: 99,
       description: "Turn clarity into investor-grade readiness.",
       audience: "Pre-seed and seed founders, founders preparing for fundraising.",
-      gradient: "from-purple-500 to-pink-500",
-      glowColor: "rgba(168, 85, 247, 0.4)",
+      gradient: "from-[#ff6a1a] to-orange-400",
+      glowColor: "rgba(255, 106, 26, 0.4)",
       icon: RocketIcon,
       features: [
         { name: "Everything in Free tier", included: true },
@@ -68,8 +68,8 @@ export default function PricingPage() {
       price: 249,
       description: "Deliver leverage, execution support, and capital connectivity.",
       audience: "Founders actively fundraising, scaling operations, small teams replacing headcount.",
-      gradient: "from-amber-500 to-orange-500",
-      glowColor: "rgba(251, 191, 36, 0.3)",
+      gradient: "from-orange-600 to-[#ff6a1a]",
+      glowColor: "rgba(234, 88, 12, 0.3)",
       icon: LightningBoltIcon,
       features: [
         { name: "Everything in Fundraising tier", included: true },
@@ -102,25 +102,21 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="flex flex-col min-h-dvh relative overflow-hidden">
-      {/* Background effects */}
-      <div className="fixed inset-0 gradient-mesh opacity-50" />
-      <div className="fixed inset-0 cyber-grid opacity-20" />
-
-      {/* Floating orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <main className="flex flex-col min-h-dvh relative overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Background blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40">
         <motion.div
-          className="absolute top-1/4 left-[10%] w-96 h-96 bg-purple-500/20 rounded-full blur-[120px]"
+          className="absolute top-1/4 left-[10%] w-96 h-96 bg-[#ff6a1a]/20 rounded-full blur-[120px]"
           animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-blue-500/15 rounded-full blur-[100px]"
+          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-orange-400/15 rounded-full blur-[100px]"
           animate={{ y: [0, -40, 0], x: [0, -20, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/2 right-[30%] w-64 h-64 bg-pink-500/15 rounded-full blur-[80px]"
+          className="absolute top-1/2 right-[30%] w-64 h-64 bg-amber-500/15 rounded-full blur-[80px]"
           animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -137,18 +133,18 @@ export default function PricingPage() {
           <motion.span
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block text-sm font-semibold tracking-wider text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6"
+            className="inline-block text-sm font-semibold tracking-wider text-[#ff6a1a] bg-[#ff6a1a]/10 px-4 py-2 rounded-full border border-[#ff6a1a]/20 mb-6"
           >
             PRICING
           </motion.span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-            <span className="text-gradient">Simple, Transparent</span> Pricing
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900 dark:text-white">
+            Simple, <span className="text-[#ff6a1a]">Transparent</span> Pricing
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-4">
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-4">
             Each tier unlocks outcomes, not just features. Higher tiers reduce
             time-to-clarity and time-to-conviction.
           </p>
-          <p className="text-sm text-muted-foreground/80 italic">
+          <p className="text-sm text-gray-500 dark:text-gray-500 italic">
             Pricing is about access to judgment, leverage, and continuity.
           </p>
         </motion.div>
@@ -177,10 +173,10 @@ export default function PricingPage() {
                 />
 
                 {/* Card */}
-                <div className={`relative h-full glass rounded-2xl border ${plan.popular ? 'border-purple-500/50' : 'border-white/10'} group-hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col`}>
+                <div className={`relative h-full bg-white dark:bg-gray-950 rounded-2xl border ${plan.popular ? 'border-[#ff6a1a] border-2' : 'border-gray-200 dark:border-gray-800'} group-hover:border-[#ff6a1a]/30 transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-lg`}>
                   {/* Popular badge */}
                   {plan.popular && (
-                    <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
+                    <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-[#ff6a1a] via-orange-400 to-[#ff6a1a]" />
                   )}
 
                   {plan.popular && (
@@ -189,7 +185,7 @@ export default function PricingPage() {
                       animate={{ opacity: 1, y: 0 }}
                       className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20"
                     >
-                      <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg shadow-purple-500/25">
+                      <span className="bg-[#ff6a1a] text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg shadow-[#ff6a1a]/25">
                         Most Popular
                       </span>
                     </motion.div>
@@ -198,14 +194,9 @@ export default function PricingPage() {
                   {/* Animated border gradient for popular */}
                   {plan.popular && (
                     <div className="absolute inset-0 opacity-20">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 opacity-30" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#ff6a1a] via-orange-400 to-[#ff6a1a] opacity-10" />
                     </div>
                   )}
-
-                  {/* Shimmer effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100">
-                    <div className="shimmer absolute inset-0" />
-                  </div>
 
                   {/* Content */}
                   <div className="relative z-10 p-6 sm:p-8 flex flex-col flex-grow">
@@ -221,7 +212,7 @@ export default function PricingPage() {
 
                     {/* Header */}
                     <div className="mb-6">
-                      <h3 className="text-xl sm:text-2xl font-bold mb-1">{plan.name}</h3>
+                      <h3 className="text-xl sm:text-2xl font-bold mb-1 text-gray-900 dark:text-white">{plan.name}</h3>
                       <p className={`text-sm font-medium bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
                         {plan.subtitle}
                       </p>
@@ -230,34 +221,34 @@ export default function PricingPage() {
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-end gap-1">
-                        <span className="text-5xl sm:text-6xl font-bold text-gradient">${plan.price}</span>
-                        <span className="text-muted-foreground mb-2">/month</span>
+                        <span className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
+                        <span className="text-gray-500 dark:text-gray-400 mb-2">/month</span>
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
-                    <p className="text-xs text-muted-foreground/70 italic mb-6">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{plan.description}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 italic mb-6">
                       Best for: {plan.audience}
                     </p>
 
                     {/* Separator */}
-                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+                    <div className="h-px bg-gray-200 dark:bg-gray-800 mb-6" />
 
                     {/* Features */}
                     <ul className="space-y-3 flex-grow">
                       {plan.features.map((feature) => (
                         <li key={feature.name} className="flex items-center text-sm">
                           {feature.included ? (
-                            <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center mr-3 flex-shrink-0">
-                              <CheckIcon className="h-3 w-3 text-green-400" />
+                            <div className="w-5 h-5 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mr-3 flex-shrink-0">
+                              <CheckIcon className="h-3 w-3 text-[#ff6a1a]" />
                             </div>
                           ) : (
-                            <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0">
-                              <Cross2Icon className="h-3 w-3 text-muted-foreground/30" />
+                            <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-3 flex-shrink-0">
+                              <Cross2Icon className="h-3 w-3 text-gray-400 dark:text-gray-600" />
                             </div>
                           )}
-                          <span className={feature.included ? "text-foreground/90" : "text-muted-foreground/40"}>
+                          <span className={feature.included ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-600"}>
                             {feature.name}
                           </span>
                         </li>
@@ -270,8 +261,8 @@ export default function PricingPage() {
                         asChild
                         className={`w-full h-12 text-base font-medium ${
                           plan.popular
-                            ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-                            : "glass border-white/20 hover:border-white/40 hover:bg-white/10"
+                            ? "bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40"
+                            : "border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] bg-transparent"
                         } transition-all duration-300`}
                         variant={plan.popular ? "default" : "outline"}
                         size="lg"
@@ -291,7 +282,7 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="relative z-10 py-24 px-4">
+      <section className="relative z-10 py-24 px-4 bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -300,10 +291,10 @@ export default function PricingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Feature <span className="text-gradient">Comparison</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              Feature <span className="text-[#ff6a1a]">Comparison</span>
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600 dark:text-gray-400">
               See exactly what&apos;s included in each tier.
             </p>
           </motion.div>
@@ -314,14 +305,14 @@ export default function PricingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-4 sm:p-6 font-semibold">Feature</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-blue-400">Free</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-gradient">$99</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-amber-400">$249</th>
+                  <tr className="border-b border-gray-200 dark:border-gray-800">
+                    <th className="text-left p-4 sm:p-6 font-semibold text-gray-900 dark:text-white">Feature</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-gray-600 dark:text-gray-400">Free</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-[#ff6a1a]">$99</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-orange-600">$249</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,34 +323,34 @@ export default function PricingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.05 }}
-                      className={`${index % 2 === 0 ? "bg-white/[0.02]" : ""} hover:bg-white/[0.05] transition-colors`}
+                      className={`${index % 2 === 0 ? "bg-white dark:bg-gray-950" : "bg-gray-50 dark:bg-gray-900"} hover:bg-[#ff6a1a]/5 transition-colors`}
                     >
-                      <td className="p-4 sm:p-6 text-sm">{feature.name}</td>
+                      <td className="p-4 sm:p-6 text-sm text-gray-700 dark:text-gray-300">{feature.name}</td>
                       <td className="text-center p-4 sm:p-6">
                         {feature.free ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
                           </div>
                         ) : (
-                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                          <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
                       </td>
                       <td className="text-center p-4 sm:p-6">
                         {feature.fundraising ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
                           </div>
                         ) : (
-                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                          <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
                       </td>
                       <td className="text-center p-4 sm:p-6">
                         {feature.studio ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
                           </div>
                         ) : (
-                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                          <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
                       </td>
                     </motion.tr>
@@ -372,7 +363,7 @@ export default function PricingPage() {
       </section>
 
       {/* Guardrails */}
-      <section className="relative z-10 py-24 px-4">
+      <section className="relative z-10 py-24 px-4 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -381,10 +372,10 @@ export default function PricingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Our <span className="text-gradient">Guiding Principles</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              Our <span className="text-[#ff6a1a]">Guiding Principles</span>
             </h2>
-            <p className="text-muted-foreground">Non-negotiable values that shape everything we build.</p>
+            <p className="text-gray-600 dark:text-gray-400">Non-negotiable values that shape everything we build.</p>
           </motion.div>
 
           <motion.div
@@ -410,9 +401,9 @@ export default function PricingPage() {
                 whileHover={{ x: 10 }}
                 className="group"
               >
-                <div className="glass rounded-xl p-5 border border-white/10 group-hover:border-purple-500/30 transition-all duration-300 flex items-start gap-4">
-                  <span className="text-gradient font-bold text-xl">{index + 1}.</span>
-                  <p className="text-muted-foreground group-hover:text-foreground transition-colors">{principle}</p>
+                <div className="bg-white dark:bg-gray-950 rounded-xl p-5 border border-gray-200 dark:border-gray-800 group-hover:border-[#ff6a1a]/30 transition-all duration-300 flex items-start gap-4 shadow-sm hover:shadow-md">
+                  <span className="text-[#ff6a1a] font-bold text-xl">{index + 1}.</span>
+                  <p className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{principle}</p>
                 </div>
               </motion.div>
             ))}

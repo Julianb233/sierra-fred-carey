@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PhoneMockup, PhoneScreenDashboard } from "@/components/premium/PhoneMockup";
-import { GradientBg, FloatingOrbs } from "@/components/premium/GradientBg";
-import { Card3D, GlassCard3D } from "@/components/premium/Card3D";
-import { FadeUpOnScroll, GradientText } from "@/components/premium/AnimatedText";
+import { motion } from "framer-motion";
 import Footer from "@/components/footer";
+import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
   FileText,
@@ -16,7 +13,9 @@ import {
   XCircle,
   Clock,
   Rocket,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function InvestorLensDemo() {
   const [readinessScore, setReadinessScore] = useState(0);
@@ -46,95 +45,56 @@ export default function InvestorLensDemo() {
   }, []);
 
   const categories = [
-    {
-      name: "Pitch Deck",
-      score: 85,
-      icon: FileText,
-      color: "from-blue-500 to-cyan-500",
-      status: "ready",
-      tasks: { completed: 8, total: 9 },
-    },
-    {
-      name: "Team Story",
-      score: 72,
-      icon: Users,
-      color: "from-purple-500 to-pink-500",
-      status: "progress",
-      tasks: { completed: 5, total: 7 },
-    },
-    {
-      name: "Financial Model",
-      score: 58,
-      icon: BarChart3,
-      color: "from-green-500 to-emerald-500",
-      status: "needs-work",
-      tasks: { completed: 4, total: 8 },
-    },
-    {
-      name: "Traction Metrics",
-      score: 91,
-      icon: TrendingUp,
-      color: "from-orange-500 to-red-500",
-      status: "ready",
-      tasks: { completed: 6, total: 6 },
-    },
+    { name: "Pitch Deck", score: 85, icon: FileText, color: "bg-[#ff6a1a]", tasks: { completed: 8, total: 9 } },
+    { name: "Team Story", score: 72, icon: Users, color: "bg-orange-500", tasks: { completed: 5, total: 7 } },
+    { name: "Financial Model", score: 58, icon: BarChart3, color: "bg-amber-500", tasks: { completed: 4, total: 8 } },
+    { name: "Traction Metrics", score: 91, icon: TrendingUp, color: "bg-orange-600", tasks: { completed: 6, total: 6 } },
   ];
 
   const readinessLevel = readinessScore >= 80 ? "ready" : readinessScore >= 60 ? "close" : "not-ready";
 
-  const recommendations = [
-    {
-      priority: "high",
-      icon: XCircle,
-      text: "Add 3-year revenue projections to financial model",
-      category: "Financial Model",
-    },
-    {
-      priority: "medium",
-      icon: Clock,
-      text: "Strengthen competitive analysis section",
-      category: "Pitch Deck",
-    },
-    {
-      priority: "high",
-      icon: XCircle,
-      text: "Document customer acquisition costs",
-      category: "Traction Metrics",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white relative overflow-hidden">
-      <GradientBg />
-      <FloatingOrbs />
+    <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-400/10 rounded-full blur-[150px]" />
+      </div>
 
       {/* Hero Section */}
       <section className="relative z-10 pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <FadeUpOnScroll>
-            <div className="text-center mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, type: "spring" }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-full px-6 py-2 mb-6 border border-green-500/30"
-              >
-                <Rocket className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-medium">Investor Readiness Score</span>
-              </motion.div>
+          <div className="text-center mb-12">
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ff6a1a]/10 border border-[#ff6a1a]/20 text-sm font-medium text-[#ff6a1a] mb-6"
+            >
+              <Rocket className="w-4 h-4" />
+              Investor Readiness Score
+            </motion.span>
 
-              <h1 className="text-5xl md:text-7xl font-bold mb-6">
-                Know If You&apos;re
-                <br />
-                <GradientText>Ready to Raise</GradientText>
-              </h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white"
+            >
+              Know If You&apos;re
+              <br />
+              <span className="text-[#ff6a1a]">Ready to Raise</span>
+            </motion.h1>
 
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-                Don&apos;t waste months pitching when you&apos;re not ready. Get a brutal assessment
-                of your investor readiness across 8 critical dimensions.
-              </p>
-            </div>
-          </FadeUpOnScroll>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto"
+            >
+              Don&apos;t waste months pitching when you&apos;re not ready. Get a brutal assessment
+              of your investor readiness across 8 critical dimensions.
+            </motion.p>
+          </div>
         </div>
       </section>
 
@@ -142,252 +102,156 @@ export default function InvestorLensDemo() {
       <section className="relative z-10 py-16 px-4">
         <div className="container mx-auto max-w-7xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Phone Mockup */}
-            <FadeUpOnScroll delay={0.2}>
-              <div className="flex justify-center lg:justify-end">
-                <PhoneMockup>
-                  <PhoneScreenDashboard>
-                    <div className="p-6 space-y-6">
-                      {/* Header */}
-                      <div className="text-center space-y-2">
-                        <h3 className="text-lg font-bold text-white">Investor Readiness</h3>
-                        <p className="text-xs text-gray-400">Updated 2 minutes ago</p>
-                      </div>
+            {/* Demo Card */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl p-8"
+            >
+              {/* Header */}
+              <div className="text-center space-y-2 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Investor Readiness</h3>
+                <p className="text-sm text-gray-500">Updated 2 minutes ago</p>
+              </div>
 
-                      {/* Overall Readiness Score */}
-                      <div className="bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-2xl p-6 border border-green-500/20">
-                        <div className="text-center space-y-3">
-                          <p className="text-sm text-gray-400">Overall Readiness</p>
-                          <div className="relative">
-                            <svg className="w-32 h-32 mx-auto" viewBox="0 0 120 120">
-                              <circle
-                                cx="60"
-                                cy="60"
-                                r="50"
-                                fill="none"
-                                stroke="rgba(255,255,255,0.1)"
-                                strokeWidth="8"
-                              />
-                              <motion.circle
-                                cx="60"
-                                cy="60"
-                                r="50"
-                                fill="none"
-                                stroke="url(#gradient)"
-                                strokeWidth="8"
-                                strokeLinecap="round"
-                                strokeDasharray={`${2 * Math.PI * 50}`}
-                                initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
-                                animate={{
-                                  strokeDashoffset: 2 * Math.PI * 50 * (1 - readinessScore / 100),
-                                }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                transform="rotate(-90 60 60)"
-                              />
-                              <defs>
-                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor="#10b981" />
-                                  <stop offset="100%" stopColor="#3b82f6" />
-                                </linearGradient>
-                              </defs>
-                              <text
-                                x="60"
-                                y="60"
-                                textAnchor="middle"
-                                dy="0.3em"
-                                className="text-3xl font-bold fill-white"
-                              >
-                                {readinessScore}
-                              </text>
-                            </svg>
+              {/* Overall Readiness Score */}
+              <div className="bg-[#ff6a1a]/5 rounded-2xl p-6 border border-[#ff6a1a]/20 mb-8">
+                <div className="text-center space-y-3">
+                  <p className="text-sm text-gray-500">Overall Readiness</p>
+                  <div className="relative inline-block">
+                    <svg className="w-32 h-32 mx-auto" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,106,26,0.1)" strokeWidth="8" />
+                      <motion.circle
+                        cx="60"
+                        cy="60"
+                        r="50"
+                        fill="none"
+                        stroke="#ff6a1a"
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 50}`}
+                        initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
+                        animate={{ strokeDashoffset: 2 * Math.PI * 50 * (1 - readinessScore / 100) }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        transform="rotate(-90 60 60)"
+                      />
+                      <text x="60" y="60" textAnchor="middle" dy="0.3em" className="text-3xl font-bold fill-gray-900 dark:fill-white">
+                        {readinessScore}
+                      </text>
+                    </svg>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    {readinessLevel === "ready" && (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <p className="text-sm text-green-500 font-medium">Ready to pitch</p>
+                      </>
+                    )}
+                    {readinessLevel === "close" && (
+                      <>
+                        <Clock className="w-4 h-4 text-amber-500" />
+                        <p className="text-sm text-amber-500 font-medium">Almost there</p>
+                      </>
+                    )}
+                    {readinessLevel === "not-ready" && (
+                      <>
+                        <XCircle className="w-4 h-4 text-red-500" />
+                        <p className="text-sm text-red-500 font-medium">Needs work</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Scores */}
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Categories</p>
+                {categories.map((category, index) => {
+                  const Icon = category.icon;
+                  const isActive = index === activeCategory;
+                  return (
+                    <motion.div
+                      key={category.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + index * 0.1 }}
+                      className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border transition-all duration-300 ${
+                        isActive ? "border-[#ff6a1a] shadow-lg" : "border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg ${category.color} flex items-center justify-center`}>
+                            <Icon className="w-4 h-4 text-white" />
                           </div>
-                          <div className="flex items-center justify-center gap-2">
-                            {readinessLevel === "ready" && (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                                <p className="text-xs text-green-400 font-medium">
-                                  Ready to pitch
-                                </p>
-                              </>
-                            )}
-                            {readinessLevel === "close" && (
-                              <>
-                                <Clock className="w-4 h-4 text-yellow-400" />
-                                <p className="text-xs text-yellow-400 font-medium">
-                                  Almost there
-                                </p>
-                              </>
-                            )}
-                            {readinessLevel === "not-ready" && (
-                              <>
-                                <XCircle className="w-4 h-4 text-red-400" />
-                                <p className="text-xs text-red-400 font-medium">Needs work</p>
-                              </>
-                            )}
-                          </div>
+                          <span className="font-medium text-gray-900 dark:text-white">{category.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-500">{category.tasks.completed}/{category.tasks.total}</span>
+                          <span className={`text-lg font-bold ${isActive ? "text-[#ff6a1a]" : "text-gray-600 dark:text-gray-300"}`}>
+                            {category.score}
+                          </span>
                         </div>
                       </div>
-
-                      {/* Category Scores */}
-                      <div className="space-y-3">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                          Categories
-                        </p>
-                        {categories.map((category, index) => {
-                          const Icon = category.icon;
-                          const isActive = index === activeCategory;
-                          return (
-                            <motion.div
-                              key={category.name}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.6 + index * 0.1 }}
-                              className={`bg-white/5 rounded-xl p-3 border transition-all duration-300 ${
-                                isActive ? "border-green-500/50 bg-green-500/5" : "border-white/10"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Icon
-                                    className={`w-4 h-4 ${
-                                      isActive ? "text-green-400" : "text-gray-400"
-                                    }`}
-                                  />
-                                  <span className="text-xs font-medium text-white">
-                                    {category.name}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400">
-                                    {category.tasks.completed}/{category.tasks.total}
-                                  </span>
-                                  <span
-                                    className={`text-sm font-bold ${
-                                      isActive ? "text-green-400" : "text-gray-300"
-                                    }`}
-                                  >
-                                    {category.score}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${category.score}%` }}
-                                  transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
-                                  className={`h-full bg-gradient-to-r ${category.color} rounded-full`}
-                                />
-                              </div>
-                            </motion.div>
-                          );
-                        })}
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${category.score}%` }}
+                          transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
+                          className={`h-full ${category.color} rounded-full`}
+                        />
                       </div>
-
-                      {/* Top Recommendations */}
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                          Priority Actions
-                        </p>
-                        {recommendations.slice(0, 2).map((rec, index) => {
-                          const Icon = rec.icon;
-                          return (
-                            <motion.div
-                              key={index}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 1.4 + index * 0.1 }}
-                              className="bg-white/5 rounded-lg p-2 border border-white/10"
-                            >
-                              <div className="flex items-start gap-2">
-                                <Icon
-                                  className={`w-3 h-3 mt-0.5 flex-shrink-0 ${
-                                    rec.priority === "high" ? "text-red-400" : "text-yellow-400"
-                                  }`}
-                                />
-                                <div className="flex-1">
-                                  <p className="text-xs text-gray-300 leading-relaxed">
-                                    {rec.text}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-1">{rec.category}</p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </PhoneScreenDashboard>
-                </PhoneMockup>
+                    </motion.div>
+                  );
+                })}
               </div>
-            </FadeUpOnScroll>
+            </motion.div>
 
             {/* Features Grid */}
-            <FadeUpOnScroll delay={0.4}>
-              <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold mb-8">
-                  Don&apos;t Pitch
-                  <br />
-                  Until You&apos;re <GradientText>Ready</GradientText>
-                </h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-6"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
+                Don&apos;t Pitch
+                <br />
+                Until You&apos;re <span className="text-[#ff6a1a]">Ready</span>
+              </h2>
 
-                <div className="space-y-4">
-                  <GlassCard3D className="p-6">
+              <div className="space-y-4">
+                {[
+                  { icon: BarChart3, title: "8 Critical Dimensions", desc: "Pitch deck, team, financials, traction, market, product, competitive positioning, and ask—all scored independently." },
+                  { icon: CheckCircle2, title: "Checklist-Driven", desc: "Track completion of every element investors look for. Know exactly what's missing before you book meetings." },
+                  { icon: TrendingUp, title: "Progress Tracking", desc: "Watch your readiness score improve in real-time as you complete tasks. Gamified preparation actually works." },
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-colors"
+                  >
                     <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-green-500 to-blue-500 p-3 rounded-xl">
-                        <BarChart3 className="w-6 h-6 text-white" />
+                      <div className="bg-[#ff6a1a] p-3 rounded-xl">
+                        <feature.icon className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold mb-2">8 Critical Dimensions</h3>
-                        <p className="text-gray-400">
-                          Pitch deck, team, financials, traction, market, product, competitive
-                          positioning, and ask—all scored independently.
-                        </p>
+                        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{feature.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">{feature.desc}</p>
                       </div>
                     </div>
-                  </GlassCard3D>
-
-                  <GlassCard3D className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">Checklist-Driven</h3>
-                        <p className="text-gray-400">
-                          Track completion of every element investors look for. Know exactly
-                          what&apos;s missing before you book meetings.
-                        </p>
-                      </div>
-                    </div>
-                  </GlassCard3D>
-
-                  <GlassCard3D className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl">
-                        <TrendingUp className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">Progress Tracking</h3>
-                        <p className="text-gray-400">
-                          Watch your readiness score improve in real-time as you complete tasks.
-                          Gamified preparation actually works.
-                        </p>
-                      </div>
-                    </div>
-                  </GlassCard3D>
-                </div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="mt-8"
-                >
-                  <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-8 rounded-xl hover:shadow-2xl hover:shadow-green-500/50 transition-all duration-300">
-                    Check My Readiness →
-                  </button>
-                </motion.div>
+                  </motion.div>
+                ))}
               </div>
-            </FadeUpOnScroll>
+
+              <Button asChild size="lg" className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 mt-8">
+                <Link href="/pricing">
+                  Check My Readiness <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -395,30 +259,24 @@ export default function InvestorLensDemo() {
       {/* Stats Section */}
       <section className="relative z-10 py-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <FadeUpOnScroll>
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card3D className="bg-gradient-to-br from-green-500/10 to-blue-500/10 border border-green-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                  3.2x
-                </div>
-                <p className="text-gray-400">Higher close rate when ready</p>
-              </Card3D>
-
-              <Card3D className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                  6 weeks
-                </div>
-                <p className="text-gray-400">Avg time saved vs trial & error</p>
-              </Card3D>
-
-              <Card3D className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-2">
-                  87%
-                </div>
-                <p className="text-gray-400">Users close round within 90 days</p>
-              </Card3D>
-            </div>
-          </FadeUpOnScroll>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { value: "3.2x", label: "Higher close rate when ready" },
+              { value: "6 weeks", label: "Avg time saved vs trial & error" },
+              { value: "87%", label: "Users close round within 90 days" },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-800 shadow-lg"
+              >
+                <div className="text-5xl font-bold text-[#ff6a1a] mb-2">{stat.value}</div>
+                <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

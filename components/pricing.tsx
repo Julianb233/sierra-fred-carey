@@ -51,7 +51,7 @@ export default function Pricing() {
       priceId: null,
       isMostPop: false,
       icon: LightningBoltIcon,
-      gradient: "from-gray-500 to-gray-600",
+      gradient: "from-gray-400 to-gray-500",
       features: [
         "Core Fred Cary Decision OS",
         "Strategy & execution reframing",
@@ -68,7 +68,7 @@ export default function Pricing() {
       priceId: PLANS.FUNDRAISING.priceId,
       isMostPop: true,
       icon: StarIcon,
-      gradient: "from-primary to-blue-500",
+      gradient: "from-[#ff6a1a] to-orange-400",
       features: [
         "Everything in Free tier",
         "Full Investor Lens (Pre-Seed / Seed / Series A)",
@@ -86,7 +86,7 @@ export default function Pricing() {
       priceId: PLANS.VENTURE_STUDIO.priceId,
       isMostPop: false,
       icon: RocketIcon,
-      gradient: "from-purple-500 to-pink-500",
+      gradient: "from-orange-600 to-[#ff6a1a]",
       features: [
         "Everything in Fundraising tier",
         "Boardy integration (investor matching)",
@@ -101,22 +101,23 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <GradientBg variant="radial" className="opacity-40" />
+    <section id="pricing" className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 bg-gray-50 dark:bg-gray-900">
+      {/* Background blobs */}
+      <div className="absolute inset-0 -z-10 overflow-hidden opacity-30">
+        <div className="absolute top-0 left-1/4 w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-400/15 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <FadeUpOnScroll className="text-center mb-12 sm:mb-16">
-          <motion.span className="inline-block text-xs sm:text-sm font-medium text-primary bg-primary/10 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full mb-3 sm:mb-4">
+          <motion.span className="inline-block text-xs sm:text-sm font-semibold text-[#ff6a1a] bg-[#ff6a1a]/10 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full mb-3 sm:mb-4 border border-[#ff6a1a]/20">
             PRICING
           </motion.span>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-4">
-            Simple, <GradientText>Transparent</GradientText> Pricing
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-4 text-gray-900 dark:text-white">
+            Simple, <span className="text-[#ff6a1a]">Transparent</span> Pricing
           </h2>
-          <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground px-4">
+          <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 px-4">
             Each tier unlocks outcomes, not just features. Higher tiers reduce
             time-to-clarity and time-to-conviction.
           </p>
@@ -130,13 +131,13 @@ export default function Pricing() {
                 rotationIntensity={plan.isMostPop ? 6 : 8}
                 className={`relative h-full rounded-2xl overflow-hidden ${
                   plan.isMostPop
-                    ? "bg-gradient-to-b from-primary/10 to-card border-2 border-primary shadow-xl shadow-primary/20"
-                    : "bg-card/90 backdrop-blur-sm border border-border/50"
+                    ? "bg-gradient-to-b from-[#ff6a1a]/10 to-white dark:to-gray-950 border-2 border-[#ff6a1a] shadow-xl shadow-[#ff6a1a]/20"
+                    : "bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800"
                 }`}
               >
                 {/* Most popular badge */}
                 {plan.isMostPop && (
-                  <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-primary via-blue-500 to-primary" />
+                  <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-[#ff6a1a] via-orange-400 to-[#ff6a1a]" />
                 )}
 
                 <div className="relative z-10 p-6 sm:p-8">
@@ -146,7 +147,7 @@ export default function Pricing() {
                       animate={{ y: 0, opacity: 1 }}
                       className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2"
                     >
-                      <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium shadow-lg">
+                      <span className="bg-[#ff6a1a] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium shadow-lg">
                         Most Popular
                       </span>
                     </motion.div>
@@ -159,14 +160,14 @@ export default function Pricing() {
 
                   {/* Plan info */}
                   <div className="mb-4 sm:mb-6">
-                    <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">{plan.name}</h3>
-                    <p className="text-muted-foreground text-xs sm:text-sm">{plan.desc}</p>
+                    <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-gray-900 dark:text-white">{plan.name}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">{plan.desc}</p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-baseline mb-4 sm:mb-6">
-                    <span className="text-4xl sm:text-5xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground ml-2 text-sm sm:text-base">/month</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
+                    <span className="text-gray-500 dark:text-gray-400 ml-2 text-sm sm:text-base">/month</span>
                   </div>
 
                   {/* CTA Button */}
@@ -175,8 +176,8 @@ export default function Pricing() {
                     disabled={loadingPlan === plan.name}
                     className={`w-full mb-4 sm:mb-6 touch-target ${
                       plan.isMostPop
-                        ? "shadow-lg shadow-primary/25 hover:shadow-primary/40"
-                        : ""
+                        ? "bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40"
+                        : "border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] bg-transparent"
                     }`}
                     variant={plan.isMostPop ? "default" : "outline"}
                     size="lg"
@@ -188,7 +189,7 @@ export default function Pricing() {
                       : "Start 14-Day Trial"}
                   </Button>
 
-                  <Separator className="my-4 sm:my-6" />
+                  <Separator className="my-4 sm:my-6 bg-gray-200 dark:bg-gray-800" />
 
                   {/* Features */}
                   <ul className="space-y-3 sm:space-y-4">
@@ -201,10 +202,10 @@ export default function Pricing() {
                         transition={{ delay: 0.3 + featureIndex * 0.05 }}
                         className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm"
                       >
-                        <div className="mt-0.5 p-0.5 rounded-full bg-green-500/20 flex-shrink-0">
-                          <CheckIcon className="h-3 w-3 text-green-500" />
+                        <div className="mt-0.5 p-0.5 rounded-full bg-[#ff6a1a]/20 flex-shrink-0">
+                          <CheckIcon className="h-3 w-3 text-[#ff6a1a]" />
                         </div>
-                        <span className="text-muted-foreground leading-relaxed">{feature}</span>
+                        <span className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature}</span>
                       </motion.li>
                     ))}
                   </ul>
@@ -219,7 +220,7 @@ export default function Pricing() {
 
         {/* Bottom note */}
         <FadeUpOnScroll delay={0.5} className="text-center mt-8 sm:mt-12">
-          <p className="text-xs sm:text-sm text-muted-foreground px-4">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 px-4">
             All plans include a 14-day free trial. No credit card required.
           </p>
         </FadeUpOnScroll>

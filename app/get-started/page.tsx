@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { GradientText, FadeUp, WordReveal } from "@/components/premium/AnimatedText";
-import { GlassCard3D } from "@/components/premium/Card3D";
-import { GradientBg, FloatingOrbs } from "@/components/premium/GradientBg";
 import Footer from "@/components/footer";
 import Link from "next/link";
 import {
@@ -161,29 +158,32 @@ const OnboardingPage = () => {
   const progress = (currentStep / 4) * 100;
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
-      {/* Background effects */}
-      <GradientBg variant="mesh" />
-      <FloatingOrbs />
+    <div className="relative min-h-screen bg-white dark:bg-gray-950 overflow-hidden">
+      {/* Background blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-400/10 rounded-full blur-[150px]" />
+      </div>
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header with progress */}
-        <header className="w-full py-6 px-4">
+        <header className="w-full py-6 px-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <Link href="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-                <GradientText>Decision OS</GradientText>
+            <div className="flex items-center justify-between mb-6">
+              <Link href="/" className="text-xl font-bold text-[#ff6a1a] hover:opacity-80 transition-opacity">
+                Decision OS
               </Link>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Step {currentStep} of 4
               </div>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full h-2 bg-card/50 rounded-full overflow-hidden backdrop-blur-sm">
+            <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-primary via-purple-500 to-pink-500"
+                className="h-full bg-gradient-to-r from-[#ff6a1a] to-orange-400"
                 initial={{ width: "25%" }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -207,74 +207,85 @@ const OnboardingPage = () => {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-4">
-                    <FadeUp>
-                      <h1 className="text-4xl md:text-6xl font-bold">
-                        Welcome to your{" "}
-                        <GradientText from="from-primary" via="via-purple-500" to="to-pink-500">
-                          Decision OS
-                        </GradientText>
-                      </h1>
-                    </FadeUp>
-                    <FadeUp delay={0.2}>
-                      <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        The AI-powered operating system that helps startup founders make better
-                        decisions faster
-                      </p>
-                    </FadeUp>
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white"
+                    >
+                      Welcome to your{" "}
+                      <span className="text-[#ff6a1a]">Decision OS</span>
+                    </motion.h1>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+                    >
+                      The AI-powered operating system that helps startup founders make better
+                      decisions faster
+                    </motion.p>
                   </div>
 
-                  <FadeUp delay={0.4}>
-                    <div className="grid md:grid-cols-3 gap-6 mt-12">
-                      <GlassCard3D className="p-6">
-                        <div className="space-y-3">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Zap className="w-6 h-6 text-primary" />
-                          </div>
-                          <h3 className="font-semibold text-lg">Make Faster Decisions</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Cut through noise with AI-powered insights tailored to your startup stage
-                          </p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="grid md:grid-cols-3 gap-6 mt-12"
+                  >
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-colors">
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-[#ff6a1a]/10 flex items-center justify-center">
+                          <Zap className="w-6 h-6 text-[#ff6a1a]" />
                         </div>
-                      </GlassCard3D>
-
-                      <GlassCard3D className="p-6">
-                        <div className="space-y-3">
-                          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                            <Shield className="w-6 h-6 text-purple-500" />
-                          </div>
-                          <h3 className="font-semibold text-lg">Increase Confidence</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Back every decision with data, frameworks, and proven strategies
-                          </p>
-                        </div>
-                      </GlassCard3D>
-
-                      <GlassCard3D className="p-6">
-                        <div className="space-y-3">
-                          <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
-                            <Clock className="w-6 h-6 text-pink-500" />
-                          </div>
-                          <h3 className="font-semibold text-lg">Save Time</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Focus on execution while your OS handles analysis and recommendations
-                          </p>
-                        </div>
-                      </GlassCard3D>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Make Faster Decisions</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Cut through noise with AI-powered insights tailored to your startup stage
+                        </p>
+                      </div>
                     </div>
-                  </FadeUp>
 
-                  <FadeUp delay={0.6} className="flex justify-center mt-12">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-colors">
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                          <Shield className="w-6 h-6 text-orange-500" />
+                        </div>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Increase Confidence</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Back every decision with data, frameworks, and proven strategies
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-colors">
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                          <Clock className="w-6 h-6 text-amber-500" />
+                        </div>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Save Time</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Focus on execution while your OS handles analysis and recommendations
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex justify-center mt-12"
+                  >
                     <Button
                       size="lg"
                       onClick={handleNext}
-                      className="group relative overflow-hidden bg-primary hover:bg-primary/90"
+                      className="group bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
                     >
-                      <span className="relative z-10 flex items-center gap-2">
+                      <span className="flex items-center gap-2">
                         Get Started
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </span>
                     </Button>
-                  </FadeUp>
+                  </motion.div>
                 </motion.div>
               )}
 
@@ -289,72 +300,77 @@ const OnboardingPage = () => {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-4">
-                    <FadeUp>
-                      <h2 className="text-3xl md:text-5xl font-bold">
-                        What <GradientText>stage</GradientText> are you at?
-                      </h2>
-                    </FadeUp>
-                    <FadeUp delay={0.1}>
-                      <p className="text-lg text-muted-foreground">
-                        We'll customize your experience based on your current journey
-                      </p>
-                    </FadeUp>
+                    <motion.h2
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white"
+                    >
+                      What <span className="text-[#ff6a1a]">stage</span> are you at?
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-lg text-gray-600 dark:text-gray-400"
+                    >
+                      We'll customize your experience based on your current journey
+                    </motion.p>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6 mt-12">
                     {stages.map((stage, index) => (
-                      <FadeUp key={stage.id} delay={0.2 + index * 0.1}>
-                        <GlassCard3D
-                          className={`p-6 cursor-pointer transition-all duration-300 ${
+                      <motion.div
+                        key={stage.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + index * 0.1 }}
+                      >
+                        <button
+                          onClick={() => setSelectedStage(stage.id)}
+                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-2xl p-6 border-2 transition-all duration-300 ${
                             selectedStage === stage.id
-                              ? "ring-2 ring-primary shadow-primary/30"
-                              : "hover:shadow-lg"
+                              ? "border-[#ff6a1a] shadow-lg shadow-[#ff6a1a]/20"
+                              : "border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30"
                           }`}
-                          glowColor={selectedStage === stage.id ? "primary" : undefined}
                         >
-                          <button
-                            onClick={() => setSelectedStage(stage.id)}
-                            className="w-full text-left"
-                          >
-                            <div className="flex items-start gap-4">
-                              <div
-                                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                                  selectedStage === stage.id
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-primary/10 text-primary"
-                                }`}
-                              >
-                                <stage.icon className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 space-y-2">
-                                <h3 className="font-semibold text-xl">{stage.title}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {stage.description}
-                                </p>
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  {stage.metrics.map((metric) => (
-                                    <span
-                                      key={metric}
-                                      className="text-xs px-2 py-1 rounded-full bg-muted/50 text-muted-foreground"
-                                    >
-                                      {metric}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                              {selectedStage === stage.id && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                >
-                                  <CheckCircle2 className="w-6 h-6 text-primary" />
-                                </motion.div>
-                              )}
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                                selectedStage === stage.id
+                                  ? "bg-[#ff6a1a] text-white"
+                                  : "bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                              }`}
+                            >
+                              <stage.icon className="w-6 h-6" />
                             </div>
-                          </button>
-                        </GlassCard3D>
-                      </FadeUp>
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-xl text-gray-900 dark:text-white">{stage.title}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {stage.description}
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {stage.metrics.map((metric) => (
+                                  <span
+                                    key={metric}
+                                    className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                                  >
+                                    {metric}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            {selectedStage === stage.id && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              >
+                                <CheckCircle2 className="w-6 h-6 text-[#ff6a1a]" />
+                              </motion.div>
+                            )}
+                          </div>
+                        </button>
+                      </motion.div>
                     ))}
                   </div>
                 </motion.div>
@@ -371,65 +387,68 @@ const OnboardingPage = () => {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-4">
-                    <FadeUp>
-                      <h2 className="text-3xl md:text-5xl font-bold">
-                        What are your biggest{" "}
-                        <GradientText>challenges</GradientText>?
-                      </h2>
-                    </FadeUp>
-                    <FadeUp delay={0.1}>
-                      <p className="text-lg text-muted-foreground">
-                        Select all that apply - we'll prioritize these in your dashboard
-                      </p>
-                    </FadeUp>
+                    <motion.h2
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white"
+                    >
+                      What are your biggest{" "}
+                      <span className="text-[#ff6a1a]">challenges</span>?
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-lg text-gray-600 dark:text-gray-400"
+                    >
+                      Select all that apply - we'll prioritize these in your dashboard
+                    </motion.p>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4 mt-12">
                     {challenges.map((challenge, index) => (
-                      <FadeUp key={challenge.id} delay={0.2 + index * 0.05}>
-                        <GlassCard3D
-                          className={`p-5 cursor-pointer transition-all duration-300 ${
+                      <motion.div
+                        key={challenge.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + index * 0.05 }}
+                      >
+                        <button
+                          onClick={() => toggleChallenge(challenge.id)}
+                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-xl p-5 border-2 transition-all duration-300 ${
                             selectedChallenges.includes(challenge.id)
-                              ? "ring-2 ring-primary shadow-primary/30"
-                              : "hover:shadow-lg"
+                              ? "border-[#ff6a1a] shadow-lg shadow-[#ff6a1a]/20"
+                              : "border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30"
                           }`}
-                          glowColor={
-                            selectedChallenges.includes(challenge.id) ? "primary" : undefined
-                          }
                         >
-                          <button
-                            onClick={() => toggleChallenge(challenge.id)}
-                            className="w-full text-left"
-                          >
-                            <div className="flex items-start gap-4">
-                              <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                                  selectedChallenges.includes(challenge.id)
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-primary/10 text-primary"
-                                }`}
-                              >
-                                <challenge.icon className="w-5 h-5" />
-                              </div>
-                              <div className="flex-1 space-y-1">
-                                <h3 className="font-semibold">{challenge.title}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {challenge.description}
-                                </p>
-                              </div>
-                              {selectedChallenges.includes(challenge.id) && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                >
-                                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                                </motion.div>
-                              )}
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                                selectedChallenges.includes(challenge.id)
+                                  ? "bg-[#ff6a1a] text-white"
+                                  : "bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                              }`}
+                            >
+                              <challenge.icon className="w-5 h-5" />
                             </div>
-                          </button>
-                        </GlassCard3D>
-                      </FadeUp>
+                            <div className="flex-1 space-y-1">
+                              <h3 className="font-semibold text-gray-900 dark:text-white">{challenge.title}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {challenge.description}
+                              </p>
+                            </div>
+                            {selectedChallenges.includes(challenge.id) && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              >
+                                <CheckCircle2 className="w-5 h-5 text-[#ff6a1a]" />
+                              </motion.div>
+                            )}
+                          </div>
+                        </button>
+                      </motion.div>
                     ))}
                   </div>
                 </motion.div>
@@ -446,32 +465,41 @@ const OnboardingPage = () => {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-4">
-                    <FadeUp>
-                      <h2 className="text-3xl md:text-5xl font-bold">
-                        You're all set! Let's{" "}
-                        <GradientText>get started</GradientText>
-                      </h2>
-                    </FadeUp>
-                    <FadeUp delay={0.1}>
-                      <p className="text-lg text-muted-foreground">
-                        Create your account to unlock your personalized Decision OS
-                      </p>
-                    </FadeUp>
+                    <motion.h2
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white"
+                    >
+                      You're all set! Let's{" "}
+                      <span className="text-[#ff6a1a]">get started</span>
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-lg text-gray-600 dark:text-gray-400"
+                    >
+                      Create your account to unlock your personalized Decision OS
+                    </motion.p>
                   </div>
 
-                  <FadeUp delay={0.3}>
-                    <GlassCard3D className="p-8 md:p-12 max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 md:p-12 max-w-2xl mx-auto border border-gray-200 dark:border-gray-800 shadow-lg">
                       <div className="space-y-8">
                         {/* Summary of selections */}
                         <div className="space-y-4">
-                          <h3 className="font-semibold text-lg">Your personalized setup:</h3>
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Your personalized setup:</h3>
 
                           <div className="space-y-3">
                             {selectedStage && (
-                              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                                <div className="w-8 h-8 rounded-lg bg-[#ff6a1a]/10 flex items-center justify-center">
                                   {stages.find((s) => s.id === selectedStage)?.icon && (
-                                    <div className="text-primary">
+                                    <div className="text-[#ff6a1a]">
                                       {(() => {
                                         const Icon = stages.find((s) => s.id === selectedStage)!.icon;
                                         return <Icon className="w-4 h-4" />;
@@ -480,7 +508,7 @@ const OnboardingPage = () => {
                                   )}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                                     {stages.find((s) => s.id === selectedStage)?.title} Stage
                                   </p>
                                 </div>
@@ -489,7 +517,7 @@ const OnboardingPage = () => {
 
                             {selectedChallenges.length > 0 && (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                   Focus areas ({selectedChallenges.length}):
                                 </p>
                                 <div className="flex flex-wrap gap-2">
@@ -498,7 +526,7 @@ const OnboardingPage = () => {
                                     return (
                                       <span
                                         key={challengeId}
-                                        className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium"
+                                        className="text-xs px-3 py-1.5 rounded-full bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
                                       >
                                         {challenge?.title}
                                       </span>
@@ -510,25 +538,29 @@ const OnboardingPage = () => {
                           </div>
                         </div>
 
-                        <div className="h-px bg-border" />
+                        <div className="h-px bg-gray-200 dark:bg-gray-800" />
 
                         {/* CTA Buttons */}
                         <div className="space-y-4">
-                          <Button size="lg" className="w-full" asChild>
+                          <Button
+                            size="lg"
+                            className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
+                            asChild
+                          >
                             <Link href="/pricing">
                               Start Free Trial
                               <ArrowRight className="w-4 h-4 ml-2" />
                             </Link>
                           </Button>
 
-                          <div className="text-center text-sm text-muted-foreground">
+                          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
                             No credit card required • 14-day free trial
                           </div>
                         </div>
 
                         {/* Features list */}
                         <div className="space-y-3 pt-4">
-                          <p className="text-sm font-medium">What you'll get:</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">What you'll get:</p>
                           <ul className="space-y-2">
                             {[
                               "AI-powered decision recommendations",
@@ -537,16 +569,16 @@ const OnboardingPage = () => {
                               "Strategic planning tools",
                               "Priority support"
                             ].map((feature) => (
-                              <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                              <li key={feature} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <CheckCircle2 className="w-4 h-4 text-[#ff6a1a] flex-shrink-0" />
                                 {feature}
                               </li>
                             ))}
                           </ul>
                         </div>
                       </div>
-                    </GlassCard3D>
-                  </FadeUp>
+                    </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -563,7 +595,7 @@ const OnboardingPage = () => {
                   variant="ghost"
                   onClick={handleBack}
                   disabled={currentStep === 1}
-                  className="gap-2"
+                  className="gap-2 text-gray-600 dark:text-gray-400 hover:text-[#ff6a1a]"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
@@ -573,7 +605,7 @@ const OnboardingPage = () => {
                   size="lg"
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="gap-2 bg-primary hover:bg-primary/90"
+                  className="gap-2 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 disabled:opacity-50 disabled:shadow-none"
                 >
                   Continue
                   <ArrowRight className="w-4 h-4" />
@@ -589,7 +621,11 @@ const OnboardingPage = () => {
                 transition={{ delay: 0.4 }}
                 className="flex justify-center mt-8"
               >
-                <Button variant="ghost" onClick={handleBack} className="gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={handleBack}
+                  className="gap-2 text-gray-600 dark:text-gray-400 hover:text-[#ff6a1a]"
+                >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </Button>

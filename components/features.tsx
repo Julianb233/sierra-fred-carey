@@ -17,66 +17,62 @@ export default function Features() {
       title: "Startup Reality Lens",
       description:
         "Evaluate feasibility, economics, demand, distribution, and timing for any startup idea. No sugarcoating.",
-      gradient: "from-yellow-500 to-orange-500",
-      glowColor: "rgba(251, 191, 36, 0.3)",
+      gradient: "from-[#ff6a1a] to-orange-400",
+      glowColor: "rgba(255, 106, 26, 0.3)",
     },
     {
       icon: TargetIcon,
       title: "Investor Readiness Score",
       description:
         "Know exactly where you stand before approaching investors. Get clear guidance on what to fix first.",
-      gradient: "from-blue-500 to-cyan-500",
-      glowColor: "rgba(56, 189, 248, 0.3)",
+      gradient: "from-amber-500 to-[#ff6a1a]",
+      glowColor: "rgba(245, 158, 11, 0.3)",
     },
     {
       icon: RocketIcon,
       title: "Pitch Deck Review",
       description:
         "Detailed scorecard, objection list, and rewrite guidance. Prepare for every investor question.",
-      gradient: "from-purple-500 to-pink-500",
-      glowColor: "rgba(168, 85, 247, 0.3)",
+      gradient: "from-orange-500 to-red-500",
+      glowColor: "rgba(249, 115, 22, 0.3)",
     },
     {
       icon: LayersIcon,
       title: "Strategy Documents",
       description:
         "Executive summaries, diagnosis frameworks, options & tradeoffs, and 30/60/90-day action plans.",
-      gradient: "from-green-500 to-emerald-500",
-      glowColor: "rgba(34, 197, 94, 0.3)",
+      gradient: "from-[#ff6a1a] to-amber-400",
+      glowColor: "rgba(255, 106, 26, 0.25)",
     },
     {
       icon: PersonIcon,
       title: "Virtual Team Agents",
       description:
         "AI agents for Founder Ops, Fundraise Ops, Growth Ops, and Inbox management. Replace scattered tools.",
-      gradient: "from-red-500 to-rose-500",
-      glowColor: "rgba(239, 68, 68, 0.3)",
+      gradient: "from-orange-600 to-[#ff6a1a]",
+      glowColor: "rgba(234, 88, 12, 0.3)",
     },
     {
       icon: ChatBubbleIcon,
       title: "Weekly Check-Ins",
       description:
         "Automated SMS check-ins that keep you accountable. Persistent memory tracks your progress over time.",
-      gradient: "from-indigo-500 to-violet-500",
-      glowColor: "rgba(99, 102, 241, 0.3)",
+      gradient: "from-amber-400 to-orange-500",
+      glowColor: "rgba(251, 191, 36, 0.3)",
     },
   ];
 
   return (
-    <section id="features" className="relative py-24 sm:py-32 overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 gradient-mesh opacity-50" />
-      <div className="absolute inset-0 cyber-grid opacity-30" />
-
-      {/* Floating orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <section id="features" className="relative py-24 sm:py-32 overflow-hidden bg-white dark:bg-gray-950">
+      {/* Subtle background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
         <motion.div
-          className="absolute top-1/4 left-[5%] w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"
+          className="absolute top-1/4 left-[5%] w-64 h-64 bg-[#ff6a1a]/20 rounded-full blur-[100px]"
           animate={{ y: [0, 30, 0], x: [0, 20, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-blue-500/15 rounded-full blur-[120px]"
+          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]"
           animate={{ y: [0, -40, 0], x: [0, -30, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -95,14 +91,14 @@ export default function Features() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-block text-sm font-semibold tracking-wider text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6"
+            className="inline-block text-sm font-semibold tracking-wider text-[#ff6a1a] bg-[#ff6a1a]/10 px-4 py-2 rounded-full border border-[#ff6a1a]/20 mb-6"
           >
             CAPABILITIES
           </motion.span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-            <span className="text-gradient">Everything</span> Founders Need
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
+            <span className="text-[#ff6a1a]">Everything</span> Founders Need
           </h2>
-          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 dark:text-gray-400">
             From ideation to fundraising to scaling — the Decision OS supports you at every stage
             with tools built by someone who&apos;s been there.
           </p>
@@ -130,7 +126,7 @@ export default function Features() {
                 />
 
                 {/* Card */}
-                <div className="relative h-full glass rounded-2xl p-6 sm:p-8 border border-white/10 group-hover:border-white/20 transition-all duration-300 overflow-hidden">
+                <div className="relative h-full bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 group-hover:border-[#ff6a1a]/30 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-lg">
                   {/* Animated border gradient */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                     <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`} />
@@ -154,12 +150,12 @@ export default function Features() {
                     </motion.div>
 
                     {/* Title */}
-                    <h3 className="text-xl sm:text-2xl font-bold mb-3 group-hover:text-gradient transition-all duration-300">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 dark:text-white group-hover:text-[#ff6a1a] transition-all duration-300">
                       {feature.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                       {feature.description}
                     </p>
 
@@ -195,10 +191,10 @@ export default function Features() {
           className="mt-24 sm:mt-32"
         >
           <div className="text-center mb-12">
-            <h3 className="text-3xl sm:text-4xl font-bold mb-4">
-              See It <span className="text-gradient">In Action</span>
+            <h3 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              See It <span className="text-[#ff6a1a]">In Action</span>
             </h3>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
               Real conversations with the Founder Decision OS that help you make better decisions.
             </p>
           </div>
@@ -207,19 +203,19 @@ export default function Features() {
           <div className="max-w-2xl mx-auto">
             <div className="relative">
               {/* Glow behind */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 blur-3xl" />
+              <div className="absolute inset-0 bg-[#ff6a1a]/10 blur-3xl" />
 
               {/* Chat container */}
-              <div className="relative glass-strong rounded-2xl p-6 sm:p-8 border border-white/20">
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 shadow-xl">
                 {/* Chat header */}
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+                  <div className="w-10 h-10 rounded-full bg-[#ff6a1a] flex items-center justify-center">
                     <span className="text-sm font-bold text-white">FC</span>
                   </div>
                   <div>
-                    <div className="font-semibold">Fred Cary AI</div>
-                    <div className="text-xs text-green-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                    <div className="font-semibold text-gray-900 dark:text-white">Fred Cary AI</div>
+                    <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                       Online
                     </div>
                   </div>
@@ -244,8 +240,8 @@ export default function Features() {
                       <div
                         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                           msg.role === "user"
-                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                            : "glass border border-white/10"
+                            ? "bg-[#ff6a1a] text-white"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
                         }`}
                       >
                         <p className="text-sm sm:text-base">{msg.text}</p>
@@ -255,14 +251,14 @@ export default function Features() {
                 </div>
 
                 {/* Input area */}
-                <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
                       placeholder="Ask about your startup..."
-                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+                      className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-[#ff6a1a] transition-colors"
                     />
-                    <button className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center hover:shadow-lg hover:shadow-purple-500/25 transition-shadow">
+                    <button className="w-12 h-12 rounded-xl bg-[#ff6a1a] flex items-center justify-center hover:shadow-lg hover:shadow-[#ff6a1a]/25 transition-shadow">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
