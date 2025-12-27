@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, Target, Rocket, Inbox } from "lucide-react";
+import { Zap, Target, Rocket, Inbox, Sparkles, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import AgentCard from "@/components/agents/AgentCard";
+import { Button } from "@/components/ui/button";
 
 export type AgentType = {
   id: string;
@@ -193,6 +195,51 @@ export default function AgentsPage() {
               98%
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
+          </div>
+        </motion.div>
+
+        {/* Sign Up CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1 }}
+          className="mt-16 max-w-4xl mx-auto"
+        >
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#ff6a1a] to-orange-600 p-8 md:p-12">
+            {/* Background decoration */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -translate-x-1/2 translate-y-1/2" />
+            </div>
+
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 mb-6">
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-sm font-medium text-white">Start Free Today</span>
+              </div>
+
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to automate your startup?
+              </h2>
+              <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
+                Sign up for free and get instant access to all AI agents.
+                No credit card required.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/signup">
+                  <Button className="bg-white text-[#ff6a1a] hover:bg-white/90 font-semibold px-8 py-6 text-lg">
+                    Sign Up for Free
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/demo">
+                  <Button variant="outline" className="border-white/50 text-white hover:bg-white/10 px-8 py-6 text-lg">
+                    Watch Demo
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
