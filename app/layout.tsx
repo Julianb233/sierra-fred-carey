@@ -9,9 +9,14 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sierra-fred-carey.vercel.app"),
   title: "Founder Decision OS | Fred Cary",
   description: "Think Clearer. Raise Smarter. Scale Faster. The AI-powered decision operating system for startup founders.",
   keywords: ["startup", "founder", "fundraising", "investor", "pitch deck", "venture capital", "AI", "decision making"],
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.svg",
+  },
 };
 
 export default function RootLayout({
