@@ -123,6 +123,7 @@ const agentData = {
     status: "idle" as const,
     lastActivity: "1 hour ago",
     tasksCompleted: 89,
+    currentTask: undefined as string | undefined,
     capabilities: [
       "Email triage",
       "Response drafting",

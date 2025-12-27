@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
-import { ReactNode } from "react";
+import { motion, Variants, useInView } from "framer-motion";
+import { ReactNode, useRef, useState, useEffect } from "react";
 
 interface AnimatedTextProps {
   children: ReactNode;
@@ -341,28 +341,38 @@ export function CountUp({
   suffix?: string;
   className?: string;
 }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (isInView) {
+      const durationMs = duration * 1000;
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        setDisplayValue(Math.floor(easeOut * end));
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setDisplayValue(end);
+        }
+      };
+      requestAnimationFrame(animate);
+    }
+  }, [isInView, end, duration]);
+
   return (
     <motion.span
+      ref={ref}
       className={className}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
     >
-      <motion.span
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 1 }}
-      >
-        {prefix}
-        <motion.span
-          initial={{ count: 0 }}
-          whileInView={{ count: end }}
-          viewport={{ once: true }}
-          transition={{ duration, ease: "easeOut" }}
-        >
-          {({ count }: { count: number }) => Math.round(count)}
-        </motion.span>
-        {suffix}
-      </motion.span>
+      {prefix}{displayValue.toLocaleString()}{suffix}
     </motion.span>
   );
 }
