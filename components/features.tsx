@@ -81,50 +81,50 @@ export default function Features() {
         <GradientBg variant="aurora" className="opacity-30" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-24 md:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24">
         {/* Section header */}
-        <FadeUpOnScroll className="text-center mb-20">
+        <FadeUpOnScroll className="text-center mb-12 sm:mb-16 md:mb-20">
           <motion.span
-            className="inline-block text-sm font-medium text-primary bg-primary/10 px-4 py-1.5 rounded-full mb-4"
+            className="inline-block text-xs sm:text-sm font-medium text-primary bg-primary/10 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full mb-3 sm:mb-4"
           >
             CAPABILITIES
           </motion.span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Everything Founders Need
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground px-4">
             From ideation to fundraising to scaling — the Decision OS supports you at every stage
             with tools built by someone who&apos;s been there.
           </p>
         </FadeUpOnScroll>
 
-        {/* Features grid with 3D cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
+        {/* Features grid with 3D cards - Single column on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-16 sm:mb-20 md:mb-24">
           {features.map((feature, index) => (
             <FadeUpOnScroll key={feature.title} delay={index * 0.1}>
               <Card3D
-                className="h-full bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 group hover:border-primary/30 transition-colors"
+                className="h-full bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-5 sm:p-6 group hover:border-primary/30 transition-colors touch-target"
                 rotationIntensity={8}
               >
                 <div className="relative z-10">
                   {/* Icon with gradient background */}
-                  <div className={`mb-4 p-3 rounded-xl ${feature.bgColor} w-fit group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className="h-6 w-6 text-foreground" />
+                  <div className={`mb-3 sm:mb-4 p-2.5 sm:p-3 rounded-xl ${feature.bgColor} w-fit group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
                   </div>
 
                   {/* Title with gradient on hover */}
-                  <h3 className="text-xl font-semibold mb-3 group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300"
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300"
                       style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }}>
                     {feature.title}
                   </h3>
 
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
 
-                  {/* Hover indicator */}
+                  {/* Hover indicator - Hidden on mobile */}
                   <motion.div
-                    className="mt-4 flex items-center gap-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="mt-3 sm:mt-4 hidden sm:flex items-center gap-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity"
                     whileHover={{ x: 5 }}
                   >
                     Learn more →
@@ -140,26 +140,26 @@ export default function Features() {
 
         {/* Interactive demo section */}
         <div className="relative">
-          <FadeUpOnScroll className="text-center mb-12">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4">
+          <FadeUpOnScroll className="text-center mb-8 sm:mb-12 px-4">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">
               See It In Action
             </h3>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
               Real conversations with the Founder Decision OS that help you make better decisions.
             </p>
           </FadeUpOnScroll>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center px-4">
             <Parallax speed={0.2}>
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
-                className="relative"
+                className="relative max-w-sm mx-auto"
               >
-                {/* Glow behind phone */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/15 rounded-full blur-[80px]" />
+                {/* Glow behind phone - Smaller on mobile */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] bg-primary/15 rounded-full blur-[60px] sm:blur-[80px]" />
 
                 <PhoneMockup floating={true} className="relative z-10">
                   <PhoneScreenChat messages={chatMessages} />
