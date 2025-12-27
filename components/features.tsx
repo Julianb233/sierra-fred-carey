@@ -1,11 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Card3D } from "@/components/premium/Card3D";
-import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
-import { Parallax } from "@/components/premium/ParallaxSection";
-import { GradientBg } from "@/components/premium/GradientBg";
-import { PhoneMockup, PhoneScreenChat } from "@/components/premium/PhoneMockup";
 import {
   LightningBoltIcon,
   RocketIcon,
@@ -22,152 +17,262 @@ export default function Features() {
       title: "Startup Reality Lens",
       description:
         "Evaluate feasibility, economics, demand, distribution, and timing for any startup idea. No sugarcoating.",
-      color: "from-yellow-500 to-orange-500",
-      bgColor: "bg-yellow-500/10",
+      gradient: "from-yellow-500 to-orange-500",
+      glowColor: "rgba(251, 191, 36, 0.3)",
     },
     {
       icon: TargetIcon,
       title: "Investor Readiness Score",
       description:
         "Know exactly where you stand before approaching investors. Get clear guidance on what to fix first.",
-      color: "from-blue-500 to-cyan-500",
-      bgColor: "bg-blue-500/10",
+      gradient: "from-blue-500 to-cyan-500",
+      glowColor: "rgba(56, 189, 248, 0.3)",
     },
     {
       icon: RocketIcon,
       title: "Pitch Deck Review",
       description:
         "Detailed scorecard, objection list, and rewrite guidance. Prepare for every investor question.",
-      color: "from-purple-500 to-pink-500",
-      bgColor: "bg-purple-500/10",
+      gradient: "from-purple-500 to-pink-500",
+      glowColor: "rgba(168, 85, 247, 0.3)",
     },
     {
       icon: LayersIcon,
       title: "Strategy Documents",
       description:
         "Executive summaries, diagnosis frameworks, options & tradeoffs, and 30/60/90-day action plans.",
-      color: "from-green-500 to-emerald-500",
-      bgColor: "bg-green-500/10",
+      gradient: "from-green-500 to-emerald-500",
+      glowColor: "rgba(34, 197, 94, 0.3)",
     },
     {
       icon: PersonIcon,
       title: "Virtual Team Agents",
       description:
         "AI agents for Founder Ops, Fundraise Ops, Growth Ops, and Inbox management. Replace scattered tools.",
-      color: "from-red-500 to-rose-500",
-      bgColor: "bg-red-500/10",
+      gradient: "from-red-500 to-rose-500",
+      glowColor: "rgba(239, 68, 68, 0.3)",
     },
     {
       icon: ChatBubbleIcon,
       title: "Weekly Check-Ins",
       description:
         "Automated SMS check-ins that keep you accountable. Persistent memory tracks your progress over time.",
-      color: "from-indigo-500 to-violet-500",
-      bgColor: "bg-indigo-500/10",
+      gradient: "from-indigo-500 to-violet-500",
+      glowColor: "rgba(99, 102, 241, 0.3)",
     },
   ];
 
-  const chatMessages = [
-    { role: "user" as const, text: "Should I raise funding now?" },
-    { role: "ai" as const, text: "Let me analyze your readiness. Based on your metrics, you're at 73% investor readiness..." },
-    { role: "user" as const, text: "What should I focus on?" },
-    { role: "ai" as const, text: "Priority: Validate unit economics. Your CAC/LTV ratio needs work before approaching VCs." },
-  ];
-
   return (
-    <section id="features" className="relative w-full overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <GradientBg variant="aurora" className="opacity-30" />
+    <section id="features" className="relative py-24 sm:py-32 overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 gradient-mesh opacity-50" />
+      <div className="absolute inset-0 cyber-grid opacity-30" />
+
+      {/* Floating orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-[5%] w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"
+          animate={{ y: [0, 30, 0], x: [0, 20, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-blue-500/15 rounded-full blur-[120px]"
+          animate={{ y: [0, -40, 0], x: [0, -30, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <FadeUpOnScroll className="text-center mb-12 sm:mb-16 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16 sm:mb-20"
+        >
           <motion.span
-            className="inline-block text-xs sm:text-sm font-medium text-primary bg-primary/10 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full mb-3 sm:mb-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-block text-sm font-semibold tracking-wider text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6"
           >
             CAPABILITIES
           </motion.span>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Everything Founders Need
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+            <span className="text-gradient">Everything</span> Founders Need
           </h2>
-          <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground px-4">
+          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground">
             From ideation to fundraising to scaling — the Decision OS supports you at every stage
             with tools built by someone who&apos;s been there.
           </p>
-        </FadeUpOnScroll>
+        </motion.div>
 
-        {/* Features grid with 3D cards - Single column on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-16 sm:mb-20 md:mb-24">
+        {/* Features grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature, index) => (
-            <FadeUpOnScroll key={feature.title} delay={index * 0.1}>
-              <Card3D
-                className="h-full bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-5 sm:p-6 group hover:border-primary/30 transition-colors touch-target"
-                rotationIntensity={8}
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              <motion.div
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="group relative h-full"
               >
-                <div className="relative z-10">
-                  {/* Icon with gradient background */}
-                  <div className={`mb-3 sm:mb-4 p-2.5 sm:p-3 rounded-xl ${feature.bgColor} w-fit group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
+                {/* Glow effect on hover */}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
+                  style={{ background: feature.glowColor }}
+                />
+
+                {/* Card */}
+                <div className="relative h-full glass rounded-2xl p-6 sm:p-8 border border-white/10 group-hover:border-white/20 transition-all duration-300 overflow-hidden">
+                  {/* Animated border gradient */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`} />
                   </div>
 
-                  {/* Title with gradient on hover */}
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300"
-                      style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }}>
-                    {feature.title}
-                  </h3>
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100">
+                    <div className="shimmer absolute inset-0" />
+                  </div>
 
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
+                  {/* Content */}
+                  <div className="relative z-10">
+                    {/* Icon */}
+                    <motion.div
+                      whileHover={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 0.5 }}
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 shadow-lg`}
+                      style={{ boxShadow: `0 10px 30px ${feature.glowColor}` }}
+                    >
+                      <feature.icon className="h-7 w-7 text-white" />
+                    </motion.div>
 
-                  {/* Hover indicator - Hidden on mobile */}
-                  <motion.div
-                    className="mt-3 sm:mt-4 hidden sm:flex items-center gap-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                    whileHover={{ x: 5 }}
-                  >
-                    Learn more →
-                  </motion.div>
+                    {/* Title */}
+                    <h3 className="text-xl sm:text-2xl font-bold mb-3 group-hover:text-gradient transition-all duration-300">
+                      {feature.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+
+                    {/* Learn more link */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      whileHover={{ x: 5 }}
+                      className="mt-6 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
+                        Learn more
+                      </span>
+                      <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
+                        →
+                      </span>
+                    </motion.div>
+                  </div>
+
+                  {/* Corner decoration */}
+                  <div className={`absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-r ${feature.gradient} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`} />
                 </div>
-
-                {/* Decorative gradient orb */}
-                <div className={`absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-r ${feature.color} rounded-full opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500`} />
-              </Card3D>
-            </FadeUpOnScroll>
+              </motion.div>
+            </motion.div>
           ))}
         </div>
 
         {/* Interactive demo section */}
-        <div className="relative">
-          <FadeUpOnScroll className="text-center mb-8 sm:mb-12 px-4">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">
-              See It In Action
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="mt-24 sm:mt-32"
+        >
+          <div className="text-center mb-12">
+            <h3 className="text-3xl sm:text-4xl font-bold mb-4">
+              See It <span className="text-gradient">In Action</span>
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               Real conversations with the Founder Decision OS that help you make better decisions.
             </p>
-          </FadeUpOnScroll>
-
-          <div className="flex justify-center px-4">
-            <Parallax speed={0.2}>
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="relative max-w-sm mx-auto"
-              >
-                {/* Glow behind phone - Smaller on mobile */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] bg-primary/15 rounded-full blur-[60px] sm:blur-[80px]" />
-
-                <PhoneMockup floating={true} className="relative z-10">
-                  <PhoneScreenChat messages={chatMessages} />
-                </PhoneMockup>
-              </motion.div>
-            </Parallax>
           </div>
-        </div>
+
+          {/* Chat demo */}
+          <div className="max-w-2xl mx-auto">
+            <div className="relative">
+              {/* Glow behind */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 blur-3xl" />
+
+              {/* Chat container */}
+              <div className="relative glass-strong rounded-2xl p-6 sm:p-8 border border-white/20">
+                {/* Chat header */}
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">FC</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">Fred Cary AI</div>
+                    <div className="text-xs text-green-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                      Online
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chat messages */}
+                <div className="space-y-4">
+                  {[
+                    { role: "user", text: "Should I raise funding now?" },
+                    { role: "ai", text: "Let me analyze your readiness. Based on your metrics, you're at 73% investor readiness. Here's what I found..." },
+                    { role: "user", text: "What should I focus on first?" },
+                    { role: "ai", text: "Priority: Validate unit economics. Your CAC/LTV ratio needs work before approaching VCs. Let me show you how." },
+                  ].map((msg, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.2 }}
+                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                          msg.role === "user"
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                            : "glass border border-white/10"
+                        }`}
+                      >
+                        <p className="text-sm sm:text-base">{msg.text}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Input area */}
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Ask about your startup..."
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+                    />
+                    <button className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center hover:shadow-lg hover:shadow-purple-500/25 transition-shadow">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

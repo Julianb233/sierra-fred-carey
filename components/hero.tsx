@@ -3,181 +3,329 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { PhoneMockup, PhoneScreenDashboard } from "@/components/premium/PhoneMockup";
-import { GradientBg, FloatingOrbs, GridPattern } from "@/components/premium/GradientBg";
-import { GradientText, FadeUp, StaggerContainer, StaggerItem, HighlightText } from "@/components/premium/AnimatedText";
-import { GlassCard3D } from "@/components/premium/Card3D";
-import { CheckIcon, RocketIcon, LightningBoltIcon, TargetIcon } from "@radix-ui/react-icons";
+import { RocketIcon, CheckIcon, LightningBoltIcon, TargetIcon, StarIcon } from "@radix-ui/react-icons";
 
 export default function Hero() {
-  const dashboardItems = [
-    { label: "Business Model", value: "Validated", color: "text-green-400" },
-    { label: "Market Timing", value: "Optimal", color: "text-green-400" },
-    { label: "Team Readiness", value: "Strong", color: "text-blue-400" },
-    { label: "Funding Strategy", value: "Pre-Seed", color: "text-purple-400" },
-  ];
-
   return (
-    <div className="relative min-h-[90vh] sm:min-h-screen overflow-hidden">
-      {/* Background effects */}
-      <GradientBg variant="mesh" className="opacity-50" />
-      <FloatingOrbs />
-      <GridPattern className="opacity-30" />
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 gradient-mesh" />
+
+      {/* Aurora effect */}
+      <div className="absolute inset-0 aurora-bg opacity-60" />
+
+      {/* Cyber grid overlay */}
+      <div className="absolute inset-0 cyber-grid" />
+
+      {/* Floating orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-20 left-[10%] w-72 h-72 bg-purple-500/30 rounded-full blur-[100px]"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-40 right-[15%] w-96 h-96 bg-blue-500/25 rounded-full blur-[120px]"
+          animate={{
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-[20%] w-80 h-80 bg-pink-500/20 rounded-full blur-[100px]"
+          animate={{
+            x: [0, 40, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/2 right-[5%] w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px]"
+          animate={{
+            x: [0, -60, 0],
+            y: [0, 20, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      {/* Meteors */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="meteor"
+            style={{
+              top: `${10 + i * 15}%`,
+              right: `${-10 + i * 20}%`,
+            }}
+            animate={{ x: [-500, 500], y: [500, -500] }}
+            transition={{
+              duration: 3 + i,
+              repeat: Infinity,
+              delay: i * 2,
+              ease: "linear",
+            }}
+          />
+        ))}
+      </div>
 
       {/* Main content */}
-      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-20 sm:pb-32">
-        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center min-h-[70vh] lg:min-h-[80vh]">
-          {/* Left side - Text content */}
-          <div className="flex flex-col space-y-6 sm:space-y-8">
-            <FadeUp delay={0.1}>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-2 w-fit bg-primary/10 border border-primary/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="text-xs sm:text-sm font-medium text-primary">By Fred Cary • 10,000+ Founders Coached</span>
-              </motion.div>
-            </FadeUp>
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-20">
+        <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
 
-            <FadeUp delay={0.2}>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-                Think Clearer.{" "}
-                <GradientText from="from-primary" via="via-blue-500" to="to-purple-500">
-                  Raise Smarter.
-                </GradientText>{" "}
-                Scale Faster.
-              </h1>
-            </FadeUp>
-
-            <FadeUp delay={0.3}>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-                The AI-powered <HighlightText color="primary">decision operating system</HighlightText> that helps founders
-                build real businesses, prepare for fundraising, and scale with leverage.
-              </p>
-            </FadeUp>
-
-            <FadeUp delay={0.4}>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button asChild size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow touch-target">
-                  <Link href="/get-started">
-                    Get Started Free
-                    <RocketIcon className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto group touch-target">
-                  <Link href="#features">
-                    See How It Works
-                    <motion.span
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="ml-2"
-                    >
-                      →
-                    </motion.span>
-                  </Link>
-                </Button>
-              </div>
-            </FadeUp>
-
-            {/* Trust indicators */}
-            <FadeUp delay={0.5}>
-              <div className="flex flex-wrap gap-4 sm:gap-6 pt-2 sm:pt-4">
-                <StaggerContainer staggerDelay={0.1} className="flex flex-wrap gap-3 sm:gap-4 md:gap-8">
-                  {[
-                    { icon: CheckIcon, text: "Free Forever Tier" },
-                    { icon: LightningBoltIcon, text: "Instant Clarity" },
-                    { icon: TargetIcon, text: "Investor-Ready" },
-                  ].map((item, i) => (
-                    <StaggerItem key={i} className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                      <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                      {item.text}
-                    </StaggerItem>
-                  ))}
-                </StaggerContainer>
-              </div>
-            </FadeUp>
-          </div>
-
-          {/* Right side - Phone mockup - Hidden on mobile, shown on lg+ */}
-          <div className="hidden lg:flex relative justify-center lg:justify-end">
+          {/* Floating badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative"
+              whileHover={{ scale: 1.05 }}
+              className="inline-flex items-center gap-3 glass px-5 py-2.5 rounded-full border border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer"
             >
-              {/* Glow effect behind phone */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] xl:w-[400px] xl:h-[400px] bg-primary/20 rounded-full blur-[100px]" />
-
-              {/* Main phone */}
-              <PhoneMockup rotate={5} className="relative z-10">
-                <PhoneScreenDashboard
-                  title="Founder Readiness Score"
-                  score={87}
-                  items={dashboardItems}
-                />
-              </PhoneMockup>
-
-              {/* Floating cards around phone - Hidden on smaller screens */}
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                className="hidden xl:block absolute -left-20 top-20 z-20"
-              >
-                <GlassCard3D className="p-4 min-w-[180px]" glowColor="green">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-500/20">
-                      <CheckIcon className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Reality Lens</p>
-                      <p className="font-semibold text-sm">Validated</p>
-                    </div>
-                  </div>
-                </GlassCard3D>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-                className="hidden xl:block absolute -right-16 bottom-32 z-20"
-              >
-                <GlassCard3D className="p-4 min-w-[160px]" glowColor="purple">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/20">
-                      <TargetIcon className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Investor Ready</p>
-                      <p className="font-semibold text-sm">87/100</p>
-                    </div>
-                  </div>
-                </GlassCard3D>
-              </motion.div>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+              <span className="text-sm font-medium bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                By Fred Cary
+              </span>
+              <span className="text-sm text-muted-foreground">•</span>
+              <span className="text-sm text-muted-foreground">10,000+ Founders Coached</span>
             </motion.div>
-          </div>
+          </motion.div>
+
+          {/* Main headline with animated gradient */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mb-6"
+          >
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1]">
+              <span className="block">Think Clearer.</span>
+              <span className="block text-gradient mt-2">Raise Smarter.</span>
+              <span className="block mt-2">Scale Faster.</span>
+            </h1>
+          </motion.div>
+
+          {/* Subheadline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mb-10 leading-relaxed"
+          >
+            The AI-powered{" "}
+            <span className="text-foreground font-semibold">decision operating system</span>{" "}
+            that helps founders build real businesses, prepare for fundraising, and scale with leverage.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 mb-12"
+          >
+            <Button
+              asChild
+              size="lg"
+              className="text-lg px-8 h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 btn-glow"
+            >
+              <Link href="/get-started">
+                Get Started Free
+                <RocketIcon className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 h-14 glass border-white/20 hover:border-white/40 hover:bg-white/10 transition-all duration-300"
+            >
+              <Link href="#features">
+                See How It Works
+                <motion.span
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="ml-2"
+                >
+                  →
+                </motion.span>
+              </Link>
+            </Button>
+          </motion.div>
+
+          {/* Trust indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-16"
+          >
+            {[
+              { icon: CheckIcon, text: "Free Forever Tier", color: "text-green-400" },
+              { icon: LightningBoltIcon, text: "Instant Clarity", color: "text-yellow-400" },
+              { icon: TargetIcon, text: "Investor-Ready", color: "text-blue-400" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 + i * 0.1 }}
+                className="flex items-center gap-2 text-sm"
+              >
+                <item.icon className={`h-4 w-4 ${item.color}`} />
+                <span className="text-muted-foreground">{item.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Floating dashboard preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+            className="relative w-full max-w-4xl"
+          >
+            {/* Glow effect behind card */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 blur-3xl" />
+
+            {/* Main dashboard card */}
+            <div className="relative glass-strong rounded-2xl p-1 border border-white/20 shadow-2xl hover-lift">
+              <div className="bg-background/80 rounded-xl p-6 sm:p-8">
+                {/* Dashboard header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                  </div>
+                  <div className="text-sm text-muted-foreground">founder-decision-os.app</div>
+                </div>
+
+                {/* Dashboard content */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {/* Score card */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.3 }}
+                    className="glass rounded-xl p-6 border border-white/10"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <StarIcon className="h-5 w-5 text-yellow-400" />
+                      <span className="font-medium">Founder Readiness Score</span>
+                    </div>
+                    <div className="flex items-end gap-2 mb-4">
+                      <span className="text-5xl font-bold text-gradient">87</span>
+                      <span className="text-2xl text-muted-foreground mb-1">/100</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: "87%" }}
+                        transition={{ duration: 1.5, delay: 1.5, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Metrics grid */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.4 }}
+                    className="grid grid-cols-2 gap-3"
+                  >
+                    {[
+                      { label: "Business Model", value: "Validated", color: "text-green-400" },
+                      { label: "Market Timing", value: "Optimal", color: "text-green-400" },
+                      { label: "Team Readiness", value: "Strong", color: "text-blue-400" },
+                      { label: "Funding Stage", value: "Pre-Seed", color: "text-purple-400" },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 1.5 + i * 0.1 }}
+                        className="glass rounded-lg p-3 border border-white/10"
+                      >
+                        <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
+                        <div className={`text-sm font-semibold ${item.color}`}>{item.value}</div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating elements around dashboard */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.8 }}
+              className="absolute -left-4 sm:-left-12 top-1/4 hidden lg:block"
+            >
+              <div className="glass rounded-xl p-4 border border-green-500/30 shadow-lg animate-float">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <CheckIcon className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Reality Lens</div>
+                    <div className="text-sm font-semibold text-green-400">Validated</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 2 }}
+              className="absolute -right-4 sm:-right-12 bottom-1/4 hidden lg:block"
+            >
+              <div className="glass rounded-xl p-4 border border-purple-500/30 shadow-lg animate-float-delayed">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <TargetIcon className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Investor Ready</div>
+                    <div className="text-sm font-semibold text-purple-400">87/100</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Scroll indicator - Hidden on mobile */}
+      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        className="hidden sm:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2"
+        transition={{ delay: 2.5 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
         <span className="text-sm text-muted-foreground">Scroll to explore</span>
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
-          className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2"
+          className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center pt-2"
         >
-          <motion.div className="w-1.5 h-1.5 bg-primary rounded-full" />
+          <motion.div className="w-1.5 h-1.5 bg-purple-400 rounded-full" />
         </motion.div>
       </motion.div>
     </div>
