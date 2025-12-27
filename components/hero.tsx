@@ -18,32 +18,32 @@ export default function Hero() {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-[90vh] sm:min-h-screen overflow-hidden">
       {/* Background effects */}
       <GradientBg variant="mesh" className="opacity-50" />
       <FloatingOrbs />
       <GridPattern className="opacity-30" />
 
       {/* Main content */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 pt-20 pb-32 md:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-20 sm:pb-32">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center min-h-[70vh] lg:min-h-[80vh]">
           {/* Left side - Text content */}
-          <div className="flex flex-col space-y-8">
+          <div className="flex flex-col space-y-6 sm:space-y-8">
             <FadeUp delay={0.1}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-2 w-fit bg-primary/10 border border-primary/20 px-4 py-2 rounded-full"
+                className="inline-flex items-center gap-2 w-fit bg-primary/10 border border-primary/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full"
               >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                <span className="text-sm font-medium text-primary">By Fred Cary • 10,000+ Founders Coached</span>
+                <span className="text-xs sm:text-sm font-medium text-primary">By Fred Cary • 10,000+ Founders Coached</span>
               </motion.div>
             </FadeUp>
 
             <FadeUp delay={0.2}>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
                 Think Clearer.{" "}
                 <GradientText from="from-primary" via="via-blue-500" to="to-purple-500">
                   Raise Smarter.
@@ -53,21 +53,21 @@ export default function Hero() {
             </FadeUp>
 
             <FadeUp delay={0.3}>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
                 The AI-powered <HighlightText color="primary">decision operating system</HighlightText> that helps founders
                 build real businesses, prepare for fundraising, and scale with leverage.
               </p>
             </FadeUp>
 
             <FadeUp delay={0.4}>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="text-lg px-8 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button asChild size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow touch-target">
                   <Link href="/get-started">
                     Get Started Free
-                    <RocketIcon className="ml-2 h-5 w-5" />
+                    <RocketIcon className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg px-8 group">
+                <Button asChild variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-auto group touch-target">
                   <Link href="#features">
                     See How It Works
                     <motion.span
@@ -84,15 +84,15 @@ export default function Hero() {
 
             {/* Trust indicators */}
             <FadeUp delay={0.5}>
-              <div className="flex flex-wrap gap-6 pt-4">
-                <StaggerContainer staggerDelay={0.1} className="flex flex-wrap gap-4 md:gap-8">
+              <div className="flex flex-wrap gap-4 sm:gap-6 pt-2 sm:pt-4">
+                <StaggerContainer staggerDelay={0.1} className="flex flex-wrap gap-3 sm:gap-4 md:gap-8">
                   {[
                     { icon: CheckIcon, text: "Free Forever Tier" },
                     { icon: LightningBoltIcon, text: "Instant Clarity" },
                     { icon: TargetIcon, text: "Investor-Ready" },
                   ].map((item, i) => (
-                    <StaggerItem key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <item.icon className="h-4 w-4 text-primary" />
+                    <StaggerItem key={i} className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                       {item.text}
                     </StaggerItem>
                   ))}
@@ -101,8 +101,8 @@ export default function Hero() {
             </FadeUp>
           </div>
 
-          {/* Right side - Phone mockup */}
-          <div className="relative flex justify-center lg:justify-end">
+          {/* Right side - Phone mockup - Hidden on mobile, shown on lg+ */}
+          <div className="hidden lg:flex relative justify-center lg:justify-end">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -110,7 +110,7 @@ export default function Hero() {
               className="relative"
             >
               {/* Glow effect behind phone */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] xl:w-[400px] xl:h-[400px] bg-primary/20 rounded-full blur-[100px]" />
 
               {/* Main phone */}
               <PhoneMockup rotate={5} className="relative z-10">
@@ -121,12 +121,12 @@ export default function Hero() {
                 />
               </PhoneMockup>
 
-              {/* Floating cards around phone */}
+              {/* Floating cards around phone - Hidden on smaller screens */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8, duration: 0.5 }}
-                className="absolute -left-20 top-20 z-20"
+                className="hidden xl:block absolute -left-20 top-20 z-20"
               >
                 <GlassCard3D className="p-4 min-w-[180px]" glowColor="green">
                   <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export default function Hero() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1, duration: 0.5 }}
-                className="absolute -right-16 bottom-32 z-20"
+                className="hidden xl:block absolute -right-16 bottom-32 z-20"
               >
                 <GlassCard3D className="p-4 min-w-[160px]" glowColor="purple">
                   <div className="flex items-center gap-3">
@@ -164,12 +164,12 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator - Hidden on mobile */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        className="hidden sm:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2"
       >
         <span className="text-sm text-muted-foreground">Scroll to explore</span>
         <motion.div
