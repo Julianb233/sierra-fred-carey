@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format } from "date-fns";
 
 interface DocumentCardProps {
   document: Document;
@@ -37,6 +36,14 @@ export function DocumentCard({ document, index }: DocumentCardProps) {
 
   const status = statusConfig[document.status];
   const StatusIcon = status.icon;
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
 
   return (
     <motion.div
@@ -88,7 +95,7 @@ export function DocumentCard({ document, index }: DocumentCardProps) {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {format(new Date(document.updatedAt), 'MMM d, yyyy')}
+                {formatDate(document.updatedAt)}
               </div>
               <motion.div
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
