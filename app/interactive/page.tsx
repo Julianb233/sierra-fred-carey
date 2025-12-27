@@ -511,46 +511,48 @@ export default function InteractivePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-xl text-gray-600 dark:text-gray-400"
+              className="text-lg sm:text-xl text-gray-600 dark:text-gray-400"
             >
-              Drag left to try a demo, drag right for details, or click to explore
+              <span className="hidden lg:inline">Drag left to try a demo, drag right for details, or click to explore</span>
+              <span className="lg:hidden">Tap any card to explore the demo</span>
             </motion.p>
           </div>
 
           <div
             ref={cardsRef}
-            className="relative min-h-[500px] flex flex-wrap items-center justify-center gap-8 px-40"
+            className="relative min-h-[500px] flex flex-wrap items-center justify-center gap-4 sm:gap-8 mx-auto max-w-5xl"
           >
+            {/* Drop Zones - Hidden on mobile, shown on desktop */}
             {/* Left Drop Zone - Navigate to Demo */}
             <div
-              className={`absolute left-4 top-1/2 -translate-y-1/2 w-32 h-72 rounded-2xl border-2 border-dashed transition-all duration-300 z-10
+              className={`hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-28 xl:w-32 h-64 xl:h-72 rounded-2xl border-2 border-dashed transition-all duration-300 z-10
                 ${dropZoneActive === "left"
                   ? "border-green-500 bg-green-500/20 scale-110 shadow-lg shadow-green-500/20"
                   : "border-gray-300 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-800/50"}`}
             >
-              <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                <div className={`p-3 rounded-full mb-3 transition-colors ${dropZoneActive === "left" ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"}`}>
-                  <Rocket className={`w-6 h-6 ${dropZoneActive === "left" ? "text-white" : "text-gray-500"}`} />
+              <div className="flex flex-col items-center justify-center h-full text-center p-3 xl:p-4">
+                <div className={`p-2 xl:p-3 rounded-full mb-2 xl:mb-3 transition-colors ${dropZoneActive === "left" ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"}`}>
+                  <Rocket className={`w-5 h-5 xl:w-6 xl:h-6 ${dropZoneActive === "left" ? "text-white" : "text-gray-500"}`} />
                 </div>
-                <span className={`text-sm font-medium ${dropZoneActive === "left" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`}>
-                  Drop to Try Demo
+                <span className={`text-xs xl:text-sm font-medium ${dropZoneActive === "left" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`}>
+                  Drop to Try
                 </span>
               </div>
             </div>
 
             {/* Right Drop Zone - Show Details */}
             <div
-              className={`absolute right-4 top-1/2 -translate-y-1/2 w-32 h-72 rounded-2xl border-2 border-dashed transition-all duration-300 z-10
+              className={`hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-28 xl:w-32 h-64 xl:h-72 rounded-2xl border-2 border-dashed transition-all duration-300 z-10
                 ${dropZoneActive === "right"
                   ? "border-blue-500 bg-blue-500/20 scale-110 shadow-lg shadow-blue-500/20"
                   : "border-gray-300 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-800/50"}`}
             >
-              <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                <div className={`p-3 rounded-full mb-3 transition-colors ${dropZoneActive === "right" ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-700"}`}>
-                  <Info className={`w-6 h-6 ${dropZoneActive === "right" ? "text-white" : "text-gray-500"}`} />
+              <div className="flex flex-col items-center justify-center h-full text-center p-3 xl:p-4">
+                <div className={`p-2 xl:p-3 rounded-full mb-2 xl:mb-3 transition-colors ${dropZoneActive === "right" ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-700"}`}>
+                  <Info className={`w-5 h-5 xl:w-6 xl:h-6 ${dropZoneActive === "right" ? "text-white" : "text-gray-500"}`} />
                 </div>
-                <span className={`text-sm font-medium ${dropZoneActive === "right" ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}`}>
-                  Drop for Details
+                <span className={`text-xs xl:text-sm font-medium ${dropZoneActive === "right" ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}`}>
+                  Details
                 </span>
               </div>
             </div>
@@ -572,7 +574,7 @@ export default function InteractivePage() {
                 >
                   <div
                     className={`
-                      relative w-80 p-8 rounded-3xl bg-white dark:bg-gray-800
+                      relative w-full sm:w-72 lg:w-80 p-6 sm:p-8 rounded-3xl bg-white dark:bg-gray-800
                       border-2 border-transparent
                       shadow-xl hover:shadow-2xl
                       transition-all duration-300
@@ -608,11 +610,12 @@ export default function InteractivePage() {
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-orange-500">
+                        <span className="text-xl sm:text-2xl font-bold text-orange-500">
                           {product.price}
                         </span>
-                        <span className="text-sm text-gray-500">
-                          ← Demo | Details →
+                        <span className="text-xs sm:text-sm text-gray-500">
+                          <span className="hidden lg:inline">← Demo | Details →</span>
+                          <span className="lg:hidden">Tap to explore</span>
                         </span>
                       </div>
                     </div>
@@ -777,9 +780,9 @@ export default function InteractivePage() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto"
+              className="fixed inset-y-0 right-0 w-full sm:max-w-md bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto"
             >
-              <div className="p-8">
+              <div className="p-6 sm:p-8">
                 <button
                   onClick={() => setInfoPanelProduct(null)}
                   className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
