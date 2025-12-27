@@ -2,11 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import Footer from "@/components/footer";
-import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import { CheckIcon, Cross2Icon, RocketIcon, StarIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 
 export default function PricingPage() {
   const plans = [
@@ -16,6 +14,9 @@ export default function PricingPage() {
       price: 0,
       description: "Maximum adoption, trust, and habit formation.",
       audience: "First-time founders, early ideation, founders not yet considering fundraising.",
+      gradient: "from-blue-500 to-cyan-500",
+      glowColor: "rgba(56, 189, 248, 0.3)",
+      icon: StarIcon,
       features: [
         { name: "Core Fred Cary Decision OS", included: true },
         { name: "Strategy & execution reframing", included: true },
@@ -40,6 +41,9 @@ export default function PricingPage() {
       price: 99,
       description: "Turn clarity into investor-grade readiness.",
       audience: "Pre-seed and seed founders, founders preparing for fundraising.",
+      gradient: "from-purple-500 to-pink-500",
+      glowColor: "rgba(168, 85, 247, 0.4)",
+      icon: RocketIcon,
       features: [
         { name: "Everything in Free tier", included: true },
         { name: "Full Investor Lens (Pre-Seed/Seed/A)", included: true },
@@ -64,6 +68,9 @@ export default function PricingPage() {
       price: 249,
       description: "Deliver leverage, execution support, and capital connectivity.",
       audience: "Founders actively fundraising, scaling operations, small teams replacing headcount.",
+      gradient: "from-amber-500 to-orange-500",
+      glowColor: "rgba(251, 191, 36, 0.3)",
+      icon: LightningBoltIcon,
       features: [
         { name: "Everything in Fundraising tier", included: true },
         { name: "Boardy Integration", included: true },
@@ -95,106 +102,196 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="flex flex-col min-h-dvh">
+    <main className="flex flex-col min-h-dvh relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 gradient-mesh opacity-50" />
+      <div className="fixed inset-0 cyber-grid opacity-20" />
+
+      {/* Floating orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-[10%] w-96 h-96 bg-purple-500/20 rounded-full blur-[120px]"
+          animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-[10%] w-80 h-80 bg-blue-500/15 rounded-full blur-[100px]"
+          animate={{ y: [0, -40, 0], x: [0, -20, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/2 right-[30%] w-64 h-64 bg-pink-500/15 rounded-full blur-[80px]"
+          animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 py-24 md:px-8">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 py-24 md:px-8">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto"
         >
-          <span className="text-sm font-medium text-primary">PRICING</span>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mt-4 mb-6">
-            Simple, Transparent Pricing
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-block text-sm font-semibold tracking-wider text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20 mb-6"
+          >
+            PRICING
+          </motion.span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+            <span className="text-gradient">Simple, Transparent</span> Pricing
           </h1>
-          <p className="text-lg text-muted-foreground mb-4">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-4">
             Each tier unlocks outcomes, not just features. Higher tiers reduce
             time-to-clarity and time-to-conviction.
           </p>
-          <p className="text-sm text-muted-foreground italic">
+          <p className="text-sm text-muted-foreground/80 italic">
             Pricing is about access to judgment, leverage, and continuity.
           </p>
         </motion.div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="max-w-7xl mx-auto px-4 pb-24 md:px-8">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 pb-24 md:px-8">
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className={`relative ${plan.popular ? "md:-mt-4 md:mb-4" : ""}`}
+              transition={{ duration: 0.6, delay: index * 0.15 }}
+              className={`relative ${plan.popular ? "md:-mt-8 md:mb-8" : ""}`}
             >
-              <Card
-                className={`h-full flex flex-col ${
-                  plan.popular ? "border-2 border-primary shadow-xl" : ""
-                }`}
+              <motion.div
+                whileHover={{ y: -10, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="group relative h-full"
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
+                {/* Glow effect */}
+                <div
+                  className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${plan.popular ? 'opacity-50' : ''}`}
+                  style={{ background: plan.glowColor }}
+                />
 
-                <CardHeader className="pt-8">
-                  <div className="text-center">
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                    <p className="text-sm text-primary font-medium">{plan.subtitle}</p>
-                    <div className="mt-4">
-                      <span className="text-5xl font-bold">${plan.price}</span>
-                      <span className="text-muted-foreground">/month</span>
+                {/* Card */}
+                <div className={`relative h-full glass rounded-2xl border ${plan.popular ? 'border-purple-500/50' : 'border-white/10'} group-hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col`}>
+                  {/* Popular badge */}
+                  {plan.popular && (
+                    <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
+                  )}
+
+                  {plan.popular && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20"
+                    >
+                      <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg shadow-purple-500/25">
+                        Most Popular
+                      </span>
+                    </motion.div>
+                  )}
+
+                  {/* Animated border gradient for popular */}
+                  {plan.popular && (
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 opacity-30" />
+                    </div>
+                  )}
+
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100">
+                    <div className="shimmer absolute inset-0" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10 p-6 sm:p-8 flex flex-col flex-grow">
+                    {/* Icon */}
+                    <motion.div
+                      whileHover={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 0.5 }}
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center mb-6 shadow-lg`}
+                      style={{ boxShadow: `0 10px 30px ${plan.glowColor}` }}
+                    >
+                      <plan.icon className="h-7 w-7 text-white" />
+                    </motion.div>
+
+                    {/* Header */}
+                    <div className="mb-6">
+                      <h3 className="text-xl sm:text-2xl font-bold mb-1">{plan.name}</h3>
+                      <p className={`text-sm font-medium bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
+                        {plan.subtitle}
+                      </p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-end gap-1">
+                        <span className="text-5xl sm:text-6xl font-bold text-gradient">${plan.price}</span>
+                        <span className="text-muted-foreground mb-2">/month</span>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                    <p className="text-xs text-muted-foreground/70 italic mb-6">
+                      Best for: {plan.audience}
+                    </p>
+
+                    {/* Separator */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+
+                    {/* Features */}
+                    <ul className="space-y-3 flex-grow">
+                      {plan.features.map((feature) => (
+                        <li key={feature.name} className="flex items-center text-sm">
+                          {feature.included ? (
+                            <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center mr-3 flex-shrink-0">
+                              <CheckIcon className="h-3 w-3 text-green-400" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0">
+                              <Cross2Icon className="h-3 w-3 text-muted-foreground/30" />
+                            </div>
+                          )}
+                          <span className={feature.included ? "text-foreground/90" : "text-muted-foreground/40"}>
+                            {feature.name}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* CTA */}
+                    <div className="mt-8">
+                      <Button
+                        asChild
+                        className={`w-full h-12 text-base font-medium ${
+                          plan.popular
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
+                            : "glass border-white/20 hover:border-white/40 hover:bg-white/10"
+                        } transition-all duration-300`}
+                        variant={plan.popular ? "default" : "outline"}
+                        size="lg"
+                      >
+                        <Link href="/get-started">{plan.cta}</Link>
+                      </Button>
                     </div>
                   </div>
-                </CardHeader>
 
-                <CardContent className="flex-grow">
-                  <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                  <p className="text-xs text-muted-foreground mb-6 italic">
-                    Best for: {plan.audience}
-                  </p>
-
-                  <Separator className="mb-6" />
-
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature.name} className="flex items-center text-sm">
-                        {feature.included ? (
-                          <CheckIcon className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                        ) : (
-                          <Cross2Icon className="h-4 w-4 text-muted-foreground/50 mr-3 flex-shrink-0" />
-                        )}
-                        <span className={feature.included ? "" : "text-muted-foreground/50"}>
-                          {feature.name}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-
-                <CardFooter>
-                  <Button
-                    asChild
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                    size="lg"
-                  >
-                    <Link href="/get-started">{plan.cta}</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+                  {/* Corner decoration */}
+                  <div className={`absolute -bottom-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-r ${plan.gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
+                </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* Comparison Table */}
-      <section className="bg-muted/30 py-24 px-4">
+      <section className="relative z-10 py-24 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -203,7 +300,9 @@ export default function PricingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4">Feature Comparison</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Feature <span className="text-gradient">Comparison</span>
+            </h2>
             <p className="text-muted-foreground">
               See exactly what&apos;s included in each tier.
             </p>
@@ -215,54 +314,65 @@ export default function PricingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Card>
-              <CardContent className="p-0">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-4 font-semibold">Feature</th>
-                      <th className="text-center p-4 font-semibold">Free</th>
-                      <th className="text-center p-4 font-semibold text-primary">$99</th>
-                      <th className="text-center p-4 font-semibold">$249</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparisonFeatures.map((feature, index) => (
-                      <tr key={feature.name} className={index % 2 === 0 ? "bg-muted/30" : ""}>
-                        <td className="p-4 text-sm">{feature.name}</td>
-                        <td className="text-center p-4">
-                          {feature.free ? (
-                            <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
-                          ) : (
-                            <Cross2Icon className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                          )}
-                        </td>
-                        <td className="text-center p-4">
-                          {feature.fundraising ? (
-                            <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
-                          ) : (
-                            <Cross2Icon className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                          )}
-                        </td>
-                        <td className="text-center p-4">
-                          {feature.studio ? (
-                            <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
-                          ) : (
-                            <Cross2Icon className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+            <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left p-4 sm:p-6 font-semibold">Feature</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-blue-400">Free</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-gradient">$99</th>
+                    <th className="text-center p-4 sm:p-6 font-semibold text-amber-400">$249</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonFeatures.map((feature, index) => (
+                    <motion.tr
+                      key={feature.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`${index % 2 === 0 ? "bg-white/[0.02]" : ""} hover:bg-white/[0.05] transition-colors`}
+                    >
+                      <td className="p-4 sm:p-6 text-sm">{feature.name}</td>
+                      <td className="text-center p-4 sm:p-6">
+                        {feature.free ? (
+                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          </div>
+                        ) : (
+                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                        )}
+                      </td>
+                      <td className="text-center p-4 sm:p-6">
+                        {feature.fundraising ? (
+                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          </div>
+                        ) : (
+                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                        )}
+                      </td>
+                      <td className="text-center p-4 sm:p-6">
+                        {feature.studio ? (
+                          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-green-400" />
+                          </div>
+                        ) : (
+                          <Cross2Icon className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                        )}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Guardrails */}
-      <section className="py-24 px-4">
+      <section className="relative z-10 py-24 px-4">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -271,7 +381,9 @@ export default function PricingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4">Our Guiding Principles</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Our <span className="text-gradient">Guiding Principles</span>
+            </h2>
             <p className="text-muted-foreground">Non-negotiable values that shape everything we build.</p>
           </motion.div>
 
@@ -280,7 +392,7 @@ export default function PricingPage() {
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
+            className="space-y-4"
           >
             {[
               "Founders earn access to capital tooling by building real businesses.",
@@ -289,10 +401,20 @@ export default function PricingPage() {
               "Each tier unlocks outcomes, not just features.",
               "Higher tiers reduce time-to-clarity and time-to-conviction.",
             ].map((principle, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 rounded-lg bg-muted/30">
-                <span className="text-primary font-bold text-lg">{index + 1}.</span>
-                <p className="text-muted-foreground">{principle}</p>
-              </div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ x: 10 }}
+                className="group"
+              >
+                <div className="glass rounded-xl p-5 border border-white/10 group-hover:border-purple-500/30 transition-all duration-300 flex items-start gap-4">
+                  <span className="text-gradient font-bold text-xl">{index + 1}.</span>
+                  <p className="text-muted-foreground group-hover:text-foreground transition-colors">{principle}</p>
+                </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
