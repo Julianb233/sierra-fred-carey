@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -20,13 +21,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.className} antialiased`}>
-        <Providers>
-          <NavBar />
-          {children}
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${geist.className} antialiased`}>
+          <Providers>
+            <NavBar />
+            {children}
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
