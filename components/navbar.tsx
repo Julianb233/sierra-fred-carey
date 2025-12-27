@@ -49,30 +49,35 @@ export default function NavBar() {
       title: "Startup Reality Lens",
       description: "Evaluate feasibility, economics, demand, distribution & timing for any startup idea.",
       gradient: "from-[#ff6a1a] to-orange-400",
+      href: "/demo/reality-lens",
     },
     {
       icon: <PersonIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />,
       title: "Investor Readiness Score",
       description: "Know exactly where you stand and what to fix before approaching investors.",
       gradient: "from-amber-500 to-[#ff6a1a]",
+      href: "/demo/investor-lens",
     },
     {
       icon: <GlobeIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />,
       title: "Pitch Deck Review",
       description: "Get a detailed scorecard, objection list, and rewrite guidance for your deck.",
       gradient: "from-orange-500 to-red-500",
+      href: "/demo/pitch-deck",
     },
     {
       icon: <TimerIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />,
       title: "Virtual Team Agents",
       description: "AI agents for Founder Ops, Fundraise Ops, Growth Ops, and Inbox management.",
       gradient: "from-[#ff6a1a] to-amber-400",
+      href: "/demo/virtual-team",
     },
     {
       icon: <FaceIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />,
       title: "Boardy Integration",
       description: "Investor matching, warm intros, and outreach sequencing to the right funds.",
       gradient: "from-orange-600 to-[#ff6a1a]",
+      href: "/demo/boardy",
     }
   ];
 
@@ -119,8 +124,10 @@ export default function NavBar() {
                   <p className="text-sm font-semibold text-[#ff6a1a] mb-3 px-2">Features</p>
                   <div className="flex flex-col gap-2">
                     {featureItems.map((feature) => (
-                      <div
+                      <Link
                         key={feature.title}
+                        href={feature.href}
+                        onClick={() => setIsMenuOpen(false)}
                         className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-all touch-target"
                       >
                         <div className={`p-2 rounded-lg bg-gradient-to-br ${feature.gradient}`}>
@@ -132,12 +139,18 @@ export default function NavBar() {
                             {feature.description}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
 
                 <Separator className="my-2 bg-gray-200 dark:bg-gray-800" />
+
+                <Button asChild variant="outline" size="lg" className="w-full touch-target border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10 hover:border-[#ff6a1a]">
+                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    Login
+                  </Link>
+                </Button>
 
                 <Button asChild size="lg" className="w-full touch-target bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25">
                   <Link href="/get-started" onClick={() => setIsMenuOpen(false)}>
@@ -176,16 +189,18 @@ export default function NavBar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-80 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 p-2" align="end">
                 {featureItems.map((feature) => (
-                  <DropdownMenuItem key={feature.title} className="cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 p-3 focus:bg-gray-100 dark:focus:bg-gray-800">
-                    <div className={`p-2 rounded-lg bg-gradient-to-br ${feature.gradient} mr-3`}>
-                      {feature.icon}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">{feature.title}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {feature.description}
+                  <DropdownMenuItem key={feature.title} asChild>
+                    <Link href={feature.href} className="cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 p-3 focus:bg-gray-100 dark:focus:bg-gray-800 flex items-start">
+                      <div className={`p-2 rounded-lg bg-gradient-to-br ${feature.gradient} mr-3`}>
+                        {feature.icon}
                       </div>
-                    </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">{feature.title}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {feature.description}
+                        </div>
+                      </div>
+                    </Link>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -200,6 +215,16 @@ export default function NavBar() {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button
+              asChild
+              variant="outline"
+              className="hidden sm:flex border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10 hover:border-[#ff6a1a] transition-all duration-300 touch-target"
+              size="sm"
+            >
+              <Link href="/dashboard">
+                Login
+              </Link>
+            </Button>
             <Button
               asChild
               className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
