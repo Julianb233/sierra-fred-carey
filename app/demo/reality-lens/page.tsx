@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { PhoneMockup, PhoneScreenDashboard } from "@/components/premium/PhoneMockup";
-import { GradientBg, FloatingOrbs } from "@/components/premium/GradientBg";
-import { Card3D, GlassCard3D } from "@/components/premium/Card3D";
-import { FadeUpOnScroll, GradientText } from "@/components/premium/AnimatedText";
 import Footer from "@/components/footer";
-import { Zap, TrendingUp, AlertCircle, CheckCircle2, Target, Users, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Zap, TrendingUp, AlertCircle, CheckCircle2, Target, Users, DollarSign, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function RealityLensDemo() {
   const [activeScore, setActiveScore] = useState(0);
@@ -28,10 +26,10 @@ export default function RealityLensDemo() {
   }, [animateScores]);
 
   const scores = [
-    { label: "Market Fit", score: 78, icon: Target, color: "from-blue-500 to-cyan-500" },
-    { label: "Team Strength", score: 85, icon: Users, color: "from-purple-500 to-pink-500" },
-    { label: "Revenue Model", score: 62, icon: DollarSign, color: "from-green-500 to-emerald-500" },
-    { label: "Traction", score: 71, icon: TrendingUp, color: "from-orange-500 to-red-500" },
+    { label: "Market Fit", score: 78, icon: Target, color: "bg-[#ff6a1a]" },
+    { label: "Team Strength", score: 85, icon: Users, color: "bg-orange-500" },
+    { label: "Revenue Model", score: 62, icon: DollarSign, color: "bg-amber-500" },
+    { label: "Traction", score: 71, icon: TrendingUp, color: "bg-orange-600" },
   ];
 
   const insights = [
@@ -39,54 +37,64 @@ export default function RealityLensDemo() {
       type: "strength",
       icon: CheckCircle2,
       text: "Strong technical team with complementary skills",
-      color: "text-green-400",
+      color: "text-green-500",
     },
     {
       type: "warning",
       icon: AlertCircle,
       text: "Market validation needed - only 12 user interviews",
-      color: "text-yellow-400",
+      color: "text-amber-500",
     },
     {
       type: "strength",
       icon: CheckCircle2,
       text: "Clear monetization path with proven pricing model",
-      color: "text-green-400",
+      color: "text-green-500",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white relative overflow-hidden">
-      <GradientBg />
-      <FloatingOrbs />
+    <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-400/10 rounded-full blur-[150px]" />
+      </div>
 
       {/* Hero Section */}
       <section className="relative z-10 pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <FadeUpOnScroll>
-            <div className="text-center mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, type: "spring" }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full px-6 py-2 mb-6 border border-blue-500/30"
-              >
-                <Zap className="w-4 h-4 text-blue-400" />
-                <span className="text-sm font-medium">Startup Reality Lens</span>
-              </motion.div>
+          <div className="text-center mb-12">
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ff6a1a]/10 border border-[#ff6a1a]/20 text-sm font-medium text-[#ff6a1a] mb-6"
+            >
+              <Zap className="w-4 h-4" />
+              Startup Reality Lens
+            </motion.span>
 
-              <h1 className="text-5xl md:text-7xl font-bold mb-6">
-                Get <GradientText>Brutally Honest</GradientText>
-                <br />
-                Startup Analysis
-              </h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white"
+            >
+              Get <span className="text-[#ff6a1a]">Brutally Honest</span>
+              <br />
+              Startup Analysis
+            </motion.h1>
 
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-                Stop lying to yourself. Get Fred Carey&apos;s no-BS analysis of your startup idea
-                in under 60 seconds. Real scores. Real insights. Real talk.
-              </p>
-            </div>
-          </FadeUpOnScroll>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto"
+            >
+              Stop lying to yourself. Get Fred Carey&apos;s no-BS analysis of your startup idea
+              in under 60 seconds. Real scores. Real insights. Real talk.
+            </motion.p>
+          </div>
         </div>
       </section>
 
@@ -94,182 +102,133 @@ export default function RealityLensDemo() {
       <section className="relative z-10 py-16 px-4">
         <div className="container mx-auto max-w-7xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Phone Mockup */}
-            <FadeUpOnScroll delay={0.2}>
-              <div className="flex justify-center lg:justify-end">
-                <PhoneMockup>
-                  <PhoneScreenDashboard>
-                    <div className="p-6 space-y-6">
-                      {/* Header */}
-                      <div className="text-center space-y-2">
-                        <h3 className="text-lg font-bold text-white">
-                          AI SaaS for Dentists
-                        </h3>
-                        <p className="text-xs text-gray-400">
-                          Automated patient scheduling & reminders
-                        </p>
-                      </div>
-
-                      {/* Overall Score */}
-                      <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl p-6 border border-blue-500/20">
-                        <div className="text-center space-y-2">
-                          <p className="text-sm text-gray-400">Reality Score</p>
-                          <div className="relative">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                              className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
-                            >
-                              74
-                            </motion.div>
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: "74%" }}
-                              transition={{ duration: 1.2, delay: 0.5 }}
-                              className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
-                              style={{ width: "100px" }}
-                            />
-                          </div>
-                          <p className="text-xs text-gray-400">Promising, but needs work</p>
-                        </div>
-                      </div>
-
-                      {/* Individual Scores */}
-                      <div className="space-y-3">
-                        {scores.map((item, index) => {
-                          const Icon = item.icon;
-                          const isActive = index === activeScore;
-                          return (
-                            <motion.div
-                              key={item.label}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.6 + index * 0.1 }}
-                              className={`bg-white/5 rounded-xl p-3 border transition-all duration-300 ${
-                                isActive ? "border-blue-500/50 bg-blue-500/5" : "border-white/10"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Icon className={`w-4 h-4 ${isActive ? "text-blue-400" : "text-gray-400"}`} />
-                                  <span className="text-xs font-medium text-white">
-                                    {item.label}
-                                  </span>
-                                </div>
-                                <span className={`text-sm font-bold ${isActive ? "text-blue-400" : "text-gray-300"}`}>
-                                  {item.score}
-                                </span>
-                              </div>
-                              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${item.score}%` }}
-                                  transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
-                                  className={`h-full bg-gradient-to-r ${item.color} rounded-full`}
-                                />
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Quick Insights */}
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                          Key Insights
-                        </p>
-                        {insights.slice(0, 2).map((insight, index) => {
-                          const Icon = insight.icon;
-                          return (
-                            <motion.div
-                              key={index}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 1.2 + index * 0.1 }}
-                              className="flex items-start gap-2 bg-white/5 rounded-lg p-2"
-                            >
-                              <Icon className={`w-3 h-3 mt-0.5 flex-shrink-0 ${insight.color}`} />
-                              <p className="text-xs text-gray-300 leading-relaxed">
-                                {insight.text}
-                              </p>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </PhoneScreenDashboard>
-                </PhoneMockup>
+            {/* Demo Card */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl p-8"
+            >
+              {/* Header */}
+              <div className="text-center space-y-2 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  AI SaaS for Dentists
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Automated patient scheduling & reminders
+                </p>
               </div>
-            </FadeUpOnScroll>
+
+              {/* Overall Score */}
+              <div className="bg-[#ff6a1a]/5 rounded-2xl p-6 border border-[#ff6a1a]/20 mb-8">
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-gray-500">Reality Score</p>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className="text-6xl font-bold text-[#ff6a1a]"
+                  >
+                    74
+                  </motion.div>
+                  <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mt-4">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: "74%" }}
+                      transition={{ duration: 1.2, delay: 0.5 }}
+                      className="h-full bg-gradient-to-r from-[#ff6a1a] to-orange-400 rounded-full"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Promising, but needs work</p>
+                </div>
+              </div>
+
+              {/* Individual Scores */}
+              <div className="space-y-4">
+                {scores.map((item, index) => {
+                  const Icon = item.icon;
+                  const isActive = index === activeScore;
+                  return (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + index * 0.1 }}
+                      className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border transition-all duration-300 ${
+                        isActive ? "border-[#ff6a1a] shadow-lg" : "border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}>
+                            <Icon className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {item.label}
+                          </span>
+                        </div>
+                        <span className={`text-lg font-bold ${isActive ? "text-[#ff6a1a]" : "text-gray-600 dark:text-gray-300"}`}>
+                          {item.score}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${item.score}%` }}
+                          transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
+                          className={`h-full ${item.color} rounded-full`}
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
 
             {/* Features Grid */}
-            <FadeUpOnScroll delay={0.4}>
-              <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold mb-8">
-                  Stop Guessing.
-                  <br />
-                  Start <GradientText>Knowing.</GradientText>
-                </h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-6"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
+                Stop Guessing.
+                <br />
+                Start <span className="text-[#ff6a1a]">Knowing.</span>
+              </h2>
 
-                <div className="space-y-4">
-                  <GlassCard3D className="p-6">
+              <div className="space-y-4">
+                {[
+                  { icon: Target, title: "4-Factor Analysis", desc: "Market fit, team strength, revenue model, and traction scored independently using Fred's proven framework." },
+                  { icon: CheckCircle2, title: "Actionable Insights", desc: "Not just scores—get specific, prioritized actions to improve your weakest areas first." },
+                  { icon: AlertCircle, title: "Red Flag Detection", desc: "AI trained on 500+ startup post-mortems identifies the fatal flaws before they kill you." },
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-colors"
+                  >
                     <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-blue-500 to-purple-500 p-3 rounded-xl">
-                        <Target className="w-6 h-6 text-white" />
+                      <div className="bg-[#ff6a1a] p-3 rounded-xl">
+                        <feature.icon className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold mb-2">4-Factor Analysis</h3>
-                        <p className="text-gray-400">
-                          Market fit, team strength, revenue model, and traction scored independently
-                          using Fred&apos;s proven framework.
-                        </p>
+                        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{feature.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">{feature.desc}</p>
                       </div>
                     </div>
-                  </GlassCard3D>
-
-                  <GlassCard3D className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-xl">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">Actionable Insights</h3>
-                        <p className="text-gray-400">
-                          Not just scores—get specific, prioritized actions to improve your weakest
-                          areas first.
-                        </p>
-                      </div>
-                    </div>
-                  </GlassCard3D>
-
-                  <GlassCard3D className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl">
-                        <AlertCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">Red Flag Detection</h3>
-                        <p className="text-gray-400">
-                          AI trained on 500+ startup post-mortems identifies the fatal flaws before
-                          they kill you.
-                        </p>
-                      </div>
-                    </div>
-                  </GlassCard3D>
-                </div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="mt-8"
-                >
-                  <button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-4 px-8 rounded-xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300">
-                    Analyze My Startup →
-                  </button>
-                </motion.div>
+                  </motion.div>
+                ))}
               </div>
-            </FadeUpOnScroll>
+
+              <Button asChild size="lg" className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 mt-8">
+                <Link href="/chat">
+                  Analyze My Startup <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -277,30 +236,24 @@ export default function RealityLensDemo() {
       {/* Stats Section */}
       <section className="relative z-10 py-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          <FadeUpOnScroll>
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card3D className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                  60s
-                </div>
-                <p className="text-gray-400">Average analysis time</p>
-              </Card3D>
-
-              <Card3D className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
-                  94%
-                </div>
-                <p className="text-gray-400">Accuracy vs expert review</p>
-              </Card3D>
-
-              <Card3D className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 p-8 text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-2">
-                  2,400+
-                </div>
-                <p className="text-gray-400">Startups analyzed</p>
-              </Card3D>
-            </div>
-          </FadeUpOnScroll>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { value: "60s", label: "Average analysis time" },
+              { value: "94%", label: "Accuracy vs expert review" },
+              { value: "2,400+", label: "Startups analyzed" },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-800 shadow-lg"
+              >
+                <div className="text-5xl font-bold text-[#ff6a1a] mb-2">{stat.value}</div>
+                <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -2,12 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { GlassCard3D } from "@/components/premium/Card3D";
-import { GradientBg, FloatingOrbs } from "@/components/premium/GradientBg";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, ArrowRight, Search } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Search, BookOpen } from "lucide-react";
 import Link from "next/link";
+import Footer from "@/components/footer";
 
 const categories = ["All", "Product", "Engineering", "Decision Science", "Case Studies"];
 
@@ -91,147 +89,181 @@ export default function BlogPage() {
   });
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <GradientBg variant="mesh" />
-      <FloatingOrbs />
+    <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-400/10 rounded-full blur-[150px]" />
+      </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-blue-400 to-purple-500 bg-clip-text text-transparent">
-            Blog
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Insights on decision-making, product development, and building better businesses.
-          </p>
-        </motion.div>
+      {/* Hero Section */}
+      <section className="relative z-10 pt-24 pb-16 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ff6a1a]/10 border border-[#ff6a1a]/20 text-sm font-medium text-[#ff6a1a] mb-6"
+            >
+              <BookOpen className="w-4 h-4" />
+              Fred Carey Blog
+            </motion.span>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-16"
-        >
-          <Link href={`/blog/${featuredPost.slug}`}>
-            <GlassCard3D className="overflow-hidden group cursor-pointer">
-              <div className="grid md:grid-cols-2 gap-8 p-8">
-                <div className="flex flex-col justify-center">
-                  <Badge className="w-fit mb-4">{featuredPost.category}</Badge>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4 group-hover:text-primary transition-colors">
-                    {featuredPost.title}
-                  </h2>
-                  <p className="text-lg text-muted-foreground mb-6">
-                    {featuredPost.excerpt}
-                  </p>
-                  <div className="flex items-center space-x-6 text-sm text-muted-foreground mb-6">
-                    <span className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {featuredPost.date}
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">
+              Insights for <span className="text-[#ff6a1a]">Founders</span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Insights on decision-making, product development, and building better businesses.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Featured Post */}
+      <section className="relative z-10 px-4 mb-16">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Link href={`/blog/${featuredPost.slug}`}>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl overflow-hidden group cursor-pointer hover:border-[#ff6a1a]/30 transition-all">
+                <div className="grid md:grid-cols-2 gap-8 p-8">
+                  <div className="flex flex-col justify-center">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff6a1a]/10 text-sm font-medium text-[#ff6a1a] w-fit mb-4">
+                      {featuredPost.category}
                     </span>
-                    <span className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {featuredPost.readTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500" />
-                    <div>
-                      <p className="font-medium">{featuredPost.author}</p>
-                      <p className="text-sm text-muted-foreground">Founder & CEO</p>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white group-hover:text-[#ff6a1a] transition-colors">
+                      {featuredPost.title}
+                    </h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                      {featuredPost.excerpt}
+                    </p>
+                    <div className="flex items-center space-x-6 text-sm text-gray-500 mb-6">
+                      <span className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {featuredPost.date}
+                      </span>
+                      <span className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2" />
+                        {featuredPost.readTime}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff6a1a] to-orange-500" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{featuredPost.author}</p>
+                        <p className="text-sm text-gray-500">Founder & CEO</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="aspect-video rounded-lg bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                  <div className="text-6xl">📊</div>
+                  <div className="aspect-video rounded-xl bg-gradient-to-br from-[#ff6a1a]/20 to-orange-400/20 flex items-center justify-center border border-[#ff6a1a]/10">
+                    <div className="text-6xl">📊</div>
+                  </div>
                 </div>
               </div>
-            </GlassCard3D>
-          </Link>
-        </motion.div>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
 
-        <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
-                size="sm"
+      {/* Filters */}
+      <section className="relative z-10 px-4 mb-12">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(category)}
+                  size="sm"
+                  className={selectedCategory === category ? "bg-[#ff6a1a] hover:bg-[#ea580c] text-white" : ""}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search posts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-gray-900 dark:text-white placeholder:text-gray-400"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Posts Grid */}
+      <section className="relative z-10 px-4 pb-16">
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPosts.map((post, index) => (
+              <motion.div
+                key={post.slug}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
               >
-                {category}
-              </Button>
+                <Link href={`/blog/${post.slug}`}>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden group cursor-pointer hover:border-[#ff6a1a]/30 hover:shadow-xl transition-all h-full">
+                    <div className="aspect-video bg-gradient-to-br from-[#ff6a1a]/10 to-orange-400/10 flex items-center justify-center">
+                      <div className="text-4xl">
+                        {post.category === "Engineering" ? "⚙️" :
+                         post.category === "Product" ? "🚀" :
+                         post.category === "Case Studies" ? "📈" : "🧠"}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400 mb-3">
+                        {post.category}
+                      </span>
+                      <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white group-hover:text-[#ff6a1a] transition-colors">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                        {post.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span className="flex items-center">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {post.date}
+                        </span>
+                        <span className="flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {post.readTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm text-gray-900 dark:text-white">{post.author}</span>
+                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-[#ff6a1a] transition-all" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-background/50 border border-border/50 backdrop-blur-sm
-                focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50
-                transition-all duration-300"
-            />
-          </div>
-        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map((post, index) => (
-            <motion.div
-              key={post.slug}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 * index }}
-            >
-              <Link href={`/blog/${post.slug}`}>
-                <GlassCard3D className="h-full group cursor-pointer hover:shadow-2xl transition-shadow duration-300">
-                  <div className="aspect-video rounded-t-lg bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                    <div className="text-4xl">
-                      {post.category === "Engineering" ? "⚙️" :
-                       post.category === "Product" ? "🚀" :
-                       post.category === "Case Studies" ? "📈" : "🧠"}
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <Badge variant="secondary" className="mb-3">{post.category}</Badge>
-                    <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
-                      {post.excerpt}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {post.date}
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {post.readTime}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{post.author}</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </GlassCard3D>
-              </Link>
-            </motion.div>
-          ))}
+          {filteredPosts.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No posts found matching your criteria.</p>
+            </div>
+          )}
         </div>
+      </section>
 
-        {filteredPosts.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No posts found matching your criteria.</p>
-          </div>
-        )}
-      </div>
+      <Footer />
     </div>
   );
 }

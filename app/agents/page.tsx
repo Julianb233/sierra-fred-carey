@@ -86,15 +86,14 @@ const itemVariants = {
 
 export default function AgentsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/80 relative overflow-hidden">
-      {/* Floating orbs background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff6a1a]/20 rounded-full blur-[100px]"
           animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, -25, 0],
           }}
           transition={{
             duration: 20,
@@ -103,11 +102,10 @@ export default function AgentsPage() {
           }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/15 rounded-full blur-[120px]"
           animate={{
-            x: [0, -100, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.1, 1],
+            x: [0, -50, 0],
+            y: [0, 25, 0],
           }}
           transition={{
             duration: 25,
@@ -116,11 +114,10 @@ export default function AgentsPage() {
           }}
         />
         <motion.div
-          className="absolute top-1/2 right-1/3 w-80 h-80 bg-green-500/10 rounded-full blur-3xl"
+          className="absolute top-1/2 right-1/3 w-80 h-80 bg-amber-400/10 rounded-full blur-[100px]"
           animate={{
-            x: [0, 50, 0],
-            y: [0, -100, 0],
-            scale: [1, 1.3, 1],
+            x: [0, 25, 0],
+            y: [0, -50, 0],
           }}
           transition={{
             duration: 30,
@@ -139,19 +136,19 @@ export default function AgentsPage() {
           className="text-center mb-16"
         >
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-green-500/10 border border-white/10 backdrop-blur-sm mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ff6a1a]/10 border border-[#ff6a1a]/20 mb-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium">All Systems Operational</span>
+            <span className="text-sm font-medium text-[#ff6a1a]">All Systems Operational</span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 bg-clip-text text-transparent">
-            Virtual Team Agents
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">
+            Virtual Team <span className="text-[#ff6a1a]">Agents</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Your AI-powered team, working 24/7 to accelerate your startup journey
           </p>
         </motion.div>
@@ -177,25 +174,25 @@ export default function AgentsPage() {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
         >
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10 backdrop-blur-sm">
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent mb-2">
+          <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
+            <div className="text-3xl font-bold text-[#ff6a1a] mb-2">
               315
             </div>
-            <div className="text-sm text-muted-foreground">Total Tasks Completed</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total Tasks Completed</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10 backdrop-blur-sm">
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-green-500 bg-clip-text text-transparent mb-2">
+          <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
+            <div className="text-3xl font-bold text-orange-500 mb-2">
               3 / 4
             </div>
-            <div className="text-sm text-muted-foreground">Agents Active</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Agents Active</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10 backdrop-blur-sm">
-            <div className="text-3xl font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent mb-2">
+          <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
+            <div className="text-3xl font-bold text-amber-500 mb-2">
               98%
             </div>
-            <div className="text-sm text-muted-foreground">Success Rate</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
           </div>
         </motion.div>
       </div>
