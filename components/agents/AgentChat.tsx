@@ -97,17 +97,17 @@ export default function AgentChat({
   };
 
   return (
-    <div className="flex flex-col h-[600px] rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10 backdrop-blur-xl overflow-hidden">
+    <div className="flex flex-col h-[500px] md:h-[600px] rounded-2xl bg-gray-50 dark:bg-gradient-to-br dark:from-white/5 dark:to-white/0 border border-gray-200 dark:border-white/10 dark:backdrop-blur-xl overflow-hidden shadow-lg dark:shadow-none">
       {/* Quick Actions Bar */}
-      <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-sm">
+      <div className="p-4 border-b border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 dark:backdrop-blur-sm">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {quickActions.map((action, index) => (
             <motion.button
               key={index}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${colors.bg} border ${colors.border}
-                whitespace-nowrap text-sm font-medium transition-all hover:shadow-lg`}
+              className={`flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg ${colors.bg} border ${colors.border}
+                whitespace-nowrap text-sm font-medium transition-all hover:shadow-lg ${colors.text}`}
             >
               <Zap className="w-4 h-4" />
               {action.label}
@@ -132,7 +132,7 @@ export default function AgentChat({
                 className={`max-w-[80%] ${
                   message.role === "user"
                     ? `bg-gradient-to-r ${colors.gradient} text-white`
-                    : "bg-white/10 border border-white/10"
+                    : "bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                 } rounded-2xl p-4`}
               >
                 <p className="text-sm leading-relaxed">{message.content}</p>
@@ -145,13 +145,13 @@ export default function AgentChat({
                   </span>
                   {message.role === "agent" && (
                     <div className="flex items-center gap-1 ml-auto">
-                      <button className="p-1 hover:bg-white/10 rounded transition-colors">
+                      <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded transition-colors text-gray-500 dark:text-gray-400">
                         <Copy className="w-3 h-3" />
                       </button>
-                      <button className="p-1 hover:bg-white/10 rounded transition-colors">
+                      <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded transition-colors text-gray-500 dark:text-gray-400">
                         <ThumbsUp className="w-3 h-3" />
                       </button>
-                      <button className="p-1 hover:bg-white/10 rounded transition-colors">
+                      <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded transition-colors text-gray-500 dark:text-gray-400">
                         <ThumbsDown className="w-3 h-3" />
                       </button>
                     </div>
@@ -169,7 +169,7 @@ export default function AgentChat({
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start"
           >
-            <div className="bg-white/10 border border-white/10 rounded-2xl p-4">
+            <div className="bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-2xl p-4">
               <div className="flex gap-2">
                 <motion.div
                   className={`w-2 h-2 rounded-full bg-gradient-to-r ${colors.gradient}`}
@@ -197,7 +197,7 @@ export default function AgentChat({
         <div className="px-6 pb-4">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className={`w-4 h-4 ${colors.text}`} />
-            <span className="text-sm font-medium">Suggested prompts</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">Suggested prompts</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {suggestedPrompts.map((prompt, index) => (
@@ -206,7 +206,7 @@ export default function AgentChat({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handlePromptClick(prompt)}
-                className="text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm"
+                className="text-left p-3 min-h-[44px] rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm text-gray-700 dark:text-gray-300"
               >
                 {prompt}
               </motion.button>
@@ -216,7 +216,7 @@ export default function AgentChat({
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+      <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 dark:backdrop-blur-sm">
         <div className="flex gap-2">
           <input
             type="text"
@@ -224,8 +224,8 @@ export default function AgentChat({
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             placeholder={`Message ${agentName}...`}
-            className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/10 focus:border-white/20 
-              focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+            className="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 focus:border-gray-400 dark:focus:border-white/20
+              focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-white/10 transition-all text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
           <Button
             onClick={handleSend}
