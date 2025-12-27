@@ -87,7 +87,23 @@ function PhoneFrame({
 }
 
 // Pre-built phone screens
-export function PhoneScreenChat({ messages }: { messages: { role: "user" | "ai"; text: string }[] }) {
+export function PhoneScreenChat({
+  messages,
+  children
+}: {
+  messages?: { role: "user" | "ai"; text: string }[];
+  children?: ReactNode;
+}) {
+  // If children are provided, render them directly
+  if (children) {
+    return (
+      <div className="h-full flex flex-col">
+        {children}
+      </div>
+    );
+  }
+
+  // Otherwise render the default chat layout
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -104,27 +120,29 @@ export function PhoneScreenChat({ messages }: { messages: { role: "user" | "ai";
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-3 space-y-3 overflow-hidden">
-        {messages.map((msg, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.3 }}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs ${
-                msg.role === "user"
-                  ? "bg-primary text-white rounded-br-none"
-                  : "bg-white/10 text-white rounded-bl-none"
-              }`}
+      {messages && (
+        <div className="flex-1 p-3 space-y-3 overflow-hidden">
+          {messages.map((msg, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.3 }}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {msg.text}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+              <div
+                className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs ${
+                  msg.role === "user"
+                    ? "bg-primary text-white rounded-br-none"
+                    : "bg-white/10 text-white rounded-bl-none"
+                }`}
+              >
+                {msg.text}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="p-3 bg-black/30">
@@ -136,20 +154,41 @@ export function PhoneScreenChat({ messages }: { messages: { role: "user" | "ai";
   );
 }
 
+// Flexible custom screen that accepts children
+export function PhoneScreenCustom({ children }: { children: ReactNode }) {
+  return (
+    <div className="h-full flex flex-col">
+      {children}
+    </div>
+  );
+}
+
 export function PhoneScreenDashboard({
   score,
   title,
   items,
+  children,
 }: {
   score?: number;
-  title: string;
-  items: { label: string; value: string; color?: string }[];
+  title?: string;
+  items?: { label: string; value: string; color?: string }[];
+  children?: ReactNode;
 }) {
+  // If children are provided, render them directly
+  if (children) {
+    return (
+      <div className="h-full flex flex-col">
+        {children}
+      </div>
+    );
+  }
+
+  // Otherwise render the default dashboard layout
   return (
     <div className="h-full flex flex-col p-4 pt-12">
       {/* Header */}
       <div className="text-center mb-4">
-        <p className="text-white/60 text-xs mb-1">{title}</p>
+        {title && <p className="text-white/60 text-xs mb-1">{title}</p>}
         {score !== undefined && (
           <div className="relative w-24 h-24 mx-auto">
             <svg className="w-full h-full transform -rotate-90">
@@ -188,22 +227,24 @@ export function PhoneScreenDashboard({
       </div>
 
       {/* Items */}
-      <div className="space-y-2 flex-1">
-        {items.map((item, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 + i * 0.1 }}
-            className="bg-white/5 rounded-lg p-3 flex justify-between items-center"
-          >
-            <span className="text-white/70 text-xs">{item.label}</span>
-            <span className={`text-xs font-medium ${item.color || "text-white"}`}>
-              {item.value}
-            </span>
-          </motion.div>
-        ))}
-      </div>
+      {items && (
+        <div className="space-y-2 flex-1">
+          {items.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 + i * 0.1 }}
+              className="bg-white/5 rounded-lg p-3 flex justify-between items-center"
+            >
+              <span className="text-white/70 text-xs">{item.label}</span>
+              <span className={`text-xs font-medium ${item.color || "text-white"}`}>
+                {item.value}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
