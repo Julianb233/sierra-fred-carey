@@ -135,9 +135,14 @@ export function GradientText({
 }) {
   return (
     <span
-      className={`bg-gradient-to-r ${from} ${via} ${to} bg-clip-text text-transparent ${
+      className={`inline-block bg-gradient-to-r ${from} ${via} ${to} ${
         animate ? "bg-[length:200%_auto] animate-gradient" : ""
       } ${className}`}
+      style={{
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+      }}
     >
       {children}
     </span>
