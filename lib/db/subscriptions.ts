@@ -1,5 +1,7 @@
 // Database schema types for subscriptions
-// In production, implement with your database (Supabase, Postgres, etc.)
+// Implemented with Supabase
+
+import { createServiceClient } from "@/lib/supabase/server";
 
 export interface UserSubscription {
   userId: string;
@@ -63,32 +65,151 @@ export interface StripeEvent {
 //
 // 3. Create functions to interact with these tables
 
-// Example placeholder functions (implement with your DB)
+// Supabase database functions
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
-  // TODO: Implement
-  throw new Error("Not implemented");
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    userId: data.user_id,
+    stripeCustomerId: data.stripe_customer_id,
+    stripeSubscriptionId: data.stripe_subscription_id,
+    stripePriceId: data.stripe_price_id,
+    status: data.status,
+    currentPeriodStart: new Date(data.current_period_start),
+    currentPeriodEnd: new Date(data.current_period_end),
+    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+    cancelAtPeriodEnd: data.cancel_at_period_end,
+    trialStart: data.trial_start ? new Date(data.trial_start) : null,
+    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
 }
 
 export async function createOrUpdateSubscription(
   subscription: Partial<UserSubscription>
 ): Promise<UserSubscription> {
-  // TODO: Implement
-  throw new Error("Not implemented");
+  const supabase = createServiceClient();
+
+  const dbData = {
+    user_id: subscription.userId,
+    stripe_customer_id: subscription.stripeCustomerId,
+    stripe_subscription_id: subscription.stripeSubscriptionId,
+    stripe_price_id: subscription.stripePriceId,
+    status: subscription.status,
+    current_period_start: subscription.currentPeriodStart?.toISOString(),
+    current_period_end: subscription.currentPeriodEnd?.toISOString(),
+    canceled_at: subscription.canceledAt?.toISOString(),
+    cancel_at_period_end: subscription.cancelAtPeriodEnd,
+    trial_start: subscription.trialStart?.toISOString(),
+    trial_end: subscription.trialEnd?.toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  // Remove undefined values
+  const cleanData = Object.fromEntries(
+    Object.entries(dbData).filter(([, v]) => v !== undefined)
+  );
+
+  const { data, error } = await supabase
+    .from("user_subscriptions")
+    .upsert(cleanData, { onConflict: "user_id" })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to upsert subscription: ${error.message}`);
+
+  return {
+    userId: data.user_id,
+    stripeCustomerId: data.stripe_customer_id,
+    stripeSubscriptionId: data.stripe_subscription_id,
+    stripePriceId: data.stripe_price_id,
+    status: data.status,
+    currentPeriodStart: new Date(data.current_period_start),
+    currentPeriodEnd: new Date(data.current_period_end),
+    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+    cancelAtPeriodEnd: data.cancel_at_period_end,
+    trialStart: data.trial_start ? new Date(data.trial_start) : null,
+    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
 }
 
 export async function recordStripeEvent(
   event: Partial<StripeEvent>
 ): Promise<StripeEvent> {
-  // TODO: Implement
-  throw new Error("Not implemented");
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("stripe_events")
+    .insert({
+      stripe_event_id: event.stripeEventId,
+      stripe_customer_id: event.stripeCustomerId,
+      type: event.type,
+      status: event.status || "pending",
+      payload: event.payload,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to record event: ${error.message}`);
+
+  return {
+    id: data.id,
+    stripeEventId: data.stripe_event_id,
+    stripeCustomerId: data.stripe_customer_id,
+    type: data.type,
+    status: data.status,
+    payload: data.payload,
+    error: data.error,
+    createdAt: new Date(data.created_at),
+    processedAt: data.processed_at ? new Date(data.processed_at) : null,
+  };
 }
 
-export async function getStripeEventById(id: string): Promise<StripeEvent | null> {
-  // TODO: Implement
-  throw new Error("Not implemented");
+export async function getStripeEventById(stripeEventId: string): Promise<StripeEvent | null> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("stripe_events")
+    .select("*")
+    .eq("stripe_event_id", stripeEventId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    stripeEventId: data.stripe_event_id,
+    stripeCustomerId: data.stripe_customer_id,
+    type: data.type,
+    status: data.status,
+    payload: data.payload,
+    error: data.error,
+    createdAt: new Date(data.created_at),
+    processedAt: data.processed_at ? new Date(data.processed_at) : null,
+  };
 }
 
 export async function markEventAsProcessed(id: string): Promise<void> {
-  // TODO: Implement
-  throw new Error("Not implemented");
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("stripe_events")
+    .update({
+      status: "processed",
+      processed_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(`Failed to mark event as processed: ${error.message}`);
 }

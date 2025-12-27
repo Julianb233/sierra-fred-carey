@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
@@ -7,14 +8,47 @@ import { CheckIcon, StarIcon, RocketIcon, LightningBoltIcon } from "@radix-ui/re
 import { Card3D } from "@/components/premium/Card3D";
 import { FadeUpOnScroll, GradientText } from "@/components/premium/AnimatedText";
 import { GradientBg } from "@/components/premium/GradientBg";
+import { redirectToCheckout } from "@/lib/stripe/client";
+import { PLANS } from "@/lib/stripe/config";
 import Link from "next/link";
 
+// Conditionally import useUser only if Clerk is configured
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const useUserHook = hasClerk ? require("@clerk/nextjs").useUser : () => ({ isSignedIn: false });
+
 export default function Pricing() {
+  const { isSignedIn } = useUserHook();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
+    if (!priceId) {
+      // Free plan - redirect to dashboard/sign-up
+      window.location.href = isSignedIn ? "/dashboard" : "/sign-up";
+      return;
+    }
+
+    if (!isSignedIn) {
+      // Redirect to sign-up first
+      window.location.href = "/sign-up";
+      return;
+    }
+
+    try {
+      setLoadingPlan(planName);
+      await redirectToCheckout(priceId);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setLoadingPlan(null);
+    }
+  };
+
   const plans = [
     {
       name: "Founder Decision OS",
       desc: "Free forever — build trust and habit",
       price: 0,
+      priceId: null,
       isMostPop: false,
       icon: LightningBoltIcon,
       gradient: "from-gray-500 to-gray-600",
@@ -31,6 +65,7 @@ export default function Pricing() {
       name: "Fundraising & Strategy",
       desc: "Turn clarity into investor-grade readiness",
       price: 99,
+      priceId: PLANS.FUNDRAISING.priceId,
       isMostPop: true,
       icon: StarIcon,
       gradient: "from-primary to-blue-500",
@@ -48,6 +83,7 @@ export default function Pricing() {
       name: "Venture Studio",
       desc: "Leverage, execution & capital connectivity",
       price: 249,
+      priceId: PLANS.VENTURE_STUDIO.priceId,
       isMostPop: false,
       icon: RocketIcon,
       gradient: "from-purple-500 to-pink-500",
@@ -135,7 +171,8 @@ export default function Pricing() {
 
                   {/* CTA Button */}
                   <Button
-                    asChild
+                    onClick={() => handleSubscribe(plan.priceId, plan.name)}
+                    disabled={loadingPlan === plan.name}
                     className={`w-full mb-4 sm:mb-6 touch-target ${
                       plan.isMostPop
                         ? "shadow-lg shadow-primary/25 hover:shadow-primary/40"
@@ -144,9 +181,11 @@ export default function Pricing() {
                     variant={plan.isMostPop ? "default" : "outline"}
                     size="lg"
                   >
-                    <Link href="/get-started">
-                      {plan.price === 0 ? "Get Started Free" : "Start 14-Day Trial"}
-                    </Link>
+                    {loadingPlan === plan.name
+                      ? "Loading..."
+                      : plan.price === 0
+                      ? "Get Started Free"
+                      : "Start 14-Day Trial"}
                   </Button>
 
                   <Separator className="my-4 sm:my-6" />
