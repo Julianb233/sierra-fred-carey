@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Rocket,
   Target,
@@ -20,7 +21,10 @@ import {
   Zap,
   Brain,
   Shield,
-  Clock
+  Clock,
+  Loader2,
+  Mail,
+  User
 } from "lucide-react";
 
 // Types
@@ -52,9 +56,14 @@ interface ChallengeOption {
 }
 
 const OnboardingPage = () => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
   const [selectedChallenges, setSelectedChallenges] = useState<Challenge[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Stage options
   const stages: StageOption[] = [
@@ -152,6 +161,48 @@ const OnboardingPage = () => {
     if (currentStep === 2) return selectedStage !== null;
     if (currentStep === 3) return selectedChallenges.length > 0;
     return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !email.trim()) {
+      setError("Please enter your name and email");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          stage: selectedStage,
+          challenges: selectedChallenges,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Progress percentage
@@ -540,17 +591,58 @@ const OnboardingPage = () => {
 
                         <div className="h-px bg-gray-200 dark:bg-gray-800" />
 
-                        {/* CTA Buttons */}
+                        {/* Sign Up Form */}
                         <div className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                              <input
+                                type="text"
+                                placeholder="Your name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
+                              />
+                            </div>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                              <input
+                                type="email"
+                                placeholder="Your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          {error && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg"
+                            >
+                              {error}
+                            </motion.div>
+                          )}
+
                           <Button
                             size="lg"
-                            className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
-                            asChild
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
                           >
-                            <Link href="/pricing">
-                              Start Free Trial
-                              <ArrowRight className="w-4 h-4 ml-2" />
-                            </Link>
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Creating your account...
+                              </>
+                            ) : (
+                              <>
+                                Start Free Trial
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </>
+                            )}
                           </Button>
 
                           <div className="text-center text-sm text-gray-500 dark:text-gray-400">

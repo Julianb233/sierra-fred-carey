@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for next-themes */
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* A Startup Biz Brand Color Palette - Orange Theme */
