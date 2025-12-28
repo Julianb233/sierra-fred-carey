@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db/neon";
 import crypto from "crypto";
+import { logVariantAssignment } from "@/lib/monitoring/ab-test-metrics";
 
 export interface ABVariant {
   id: string;
@@ -81,11 +82,13 @@ export async function getActiveExperiments(): Promise<string[]> {
  *
  * @param userId - User ID for assignment
  * @param experimentName - Name of the experiment
+ * @param sessionId - Optional session ID for tracking
  * @returns Assigned variant or null if experiment not active
  */
 export async function getVariantAssignment(
   userId: string,
-  experimentName: string
+  experimentName: string,
+  sessionId?: string
 ): Promise<ABVariant | null> {
   console.log(`[A/B Test] Getting variant for user ${userId} in ${experimentName}`);
 
@@ -125,6 +128,15 @@ export async function getVariantAssignment(
         console.log(
           `[A/B Test] Assigned user ${userId} to variant '${variant.variantName}' (hash: ${hashValue}, threshold: ${cumulativePercentage})`
         );
+        
+        // Log assignment to monitoring system
+        await logVariantAssignment(
+          userId,
+          variant.id,
+          experimentName,
+          sessionId
+        );
+        
         return variant;
       }
     }
@@ -134,6 +146,15 @@ export async function getVariantAssignment(
     console.log(
       `[A/B Test] Fallback assignment to variant '${fallbackVariant.variantName}'`
     );
+    
+    // Log fallback assignment
+    await logVariantAssignment(
+      userId,
+      fallbackVariant.id,
+      experimentName,
+      sessionId
+    );
+    
     return fallbackVariant;
   } catch (error) {
     console.error(
