@@ -68,18 +68,33 @@ export default function MonitoringDashboard() {
       // Calculate aggregate metrics using utility function
       const metrics = calculateMetrics(activeExperiments);
 
-      // Update state
+      // Update state with real API data
       setTotalRequests(totalRequests24h);
       setAvgLatency(metrics.avgLatency);
       setErrorRate(metrics.errorRate);
       setActiveExperimentCount(totalActiveTests);
 
+      // Transform experiments for UI components
       setExperiments(activeExperiments.map(transformExperiment));
       setCriticalAlertCount(criticalAlerts.length);
 
+      console.log("[Dashboard] Data loaded successfully", {
+        experiments: activeExperiments.length,
+        totalRequests: totalRequests24h,
+        criticalAlerts: criticalAlerts.length,
+      });
+
     } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
+      console.error("[Dashboard] Failed to fetch dashboard data:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
+
+      // In development, provide helpful context
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Dashboard] Debug info:", {
+          endpoint: "/api/monitoring/dashboard",
+          error: err,
+        });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -92,7 +107,7 @@ export default function MonitoringDashboard() {
       const response = await fetch("/api/monitoring/alerts");
 
       if (!response.ok) {
-        console.error("Failed to fetch alerts:", response.statusText);
+        console.error("[Dashboard] Failed to fetch alerts:", response.statusText);
         return;
       }
 
@@ -101,22 +116,32 @@ export default function MonitoringDashboard() {
       if (alertsData.success) {
         const transformedAlerts = alertsData.data.alerts.map(transformAlert);
         setAlerts(transformedAlerts);
+
+        console.log("[Dashboard] Alerts loaded successfully", {
+          total: alertsData.data.total,
+          critical: alertsData.data.breakdown.critical,
+          warning: alertsData.data.breakdown.warning,
+          info: alertsData.data.breakdown.info,
+        });
       }
     } catch (err) {
-      console.error("Failed to fetch alerts:", err);
+      console.error("[Dashboard] Failed to fetch alerts:", err);
     }
   };
 
   useEffect(() => {
+    // Initial data fetch
     fetchDashboardData();
     fetchAlerts();
 
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 30 seconds to keep dashboard data current
     const interval = setInterval(() => {
+      console.log("[Dashboard] Auto-refreshing data...");
       fetchDashboardData();
       fetchAlerts();
     }, 30000);
 
+    // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, []);
 
