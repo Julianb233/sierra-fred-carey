@@ -1,105 +1,142 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { sql } from "@/lib/db/neon";
 
-// Mock data
-const mockCheckIns = [
-  {
-    id: "1",
-    userId: "user_123",
-    date: "2024-12-30",
-    time: "09:00",
-    type: "motivation",
-    status: "pending",
-    createdAt: "2024-12-23T00:00:00Z",
-  },
-  {
-    id: "2",
-    userId: "user_123",
-    date: "2024-12-23",
-    time: "09:00",
-    type: "progress",
-    status: "completed",
-    response:
-      "Made great progress on Q1 planning. Team aligned on priorities and ready to execute.",
-    createdAt: "2024-12-16T00:00:00Z",
-    completedAt: "2024-12-23T09:15:00Z",
-  },
-  {
-    id: "3",
-    userId: "user_123",
-    date: "2024-12-16",
-    time: "09:00",
-    type: "blockers",
-    status: "completed",
-    response:
-      "Identified resource constraints. Need to hire 2 more engineers to hit targets.",
-    createdAt: "2024-12-09T00:00:00Z",
-    completedAt: "2024-12-16T09:30:00Z",
-  },
-];
+export async function GET(request: NextRequest) {
+  try {
+    // User ID from session cookie or header (auth integration pending)
+    const userId = request.headers.get("x-user-id") ||
+                   request.cookies.get("userId")?.value ||
+                   "anonymous";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
+    const { searchParams } = new URL(request.url);
+    const userFilter = searchParams.get("userId") || userId;
 
-  const checkIns = userId
-    ? mockCheckIns.filter((ci) => ci.userId === userId)
-    : mockCheckIns;
+    const checkIns = await sql`
+      SELECT
+        id,
+        user_id as "userId",
+        responses,
+        score,
+        analysis,
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM check_ins
+      WHERE user_id = ${userFilter}
+      ORDER BY created_at DESC
+      LIMIT 50
+    `;
 
-  return NextResponse.json({
-    success: true,
-    data: checkIns,
-    total: checkIns.length,
-  });
-}
-
-export async function POST(request: Request) {
-  const body = await request.json();
-
-  const newCheckIn = {
-    id: `${Date.now()}`,
-    userId: body.userId || "user_123",
-    date: body.date,
-    time: body.time,
-    type: body.type,
-    status: "pending",
-    createdAt: new Date().toISOString(),
-  };
-
-  mockCheckIns.push(newCheckIn);
-
-  return NextResponse.json(
-    {
+    return NextResponse.json({
       success: true,
-      data: newCheckIn,
-      message: "Check-in scheduled successfully",
-    },
-    { status: 201 }
-  );
-}
-
-export async function PATCH(request: Request) {
-  const body = await request.json();
-  const { id, response, status } = body;
-
-  const checkInIndex = mockCheckIns.findIndex((ci) => ci.id === id);
-
-  if (checkInIndex === -1) {
+      data: checkIns,
+      total: checkIns.length,
+    });
+  } catch (error) {
+    console.error("Check-ins fetch error:", error);
     return NextResponse.json(
-      { success: false, error: "Check-in not found" },
-      { status: 404 }
+      { success: false, error: "Failed to fetch check-ins" },
+      { status: 500 }
     );
   }
+}
 
-  mockCheckIns[checkInIndex] = {
-    ...mockCheckIns[checkInIndex],
-    response,
-    status,
-    completedAt: status === "completed" ? new Date().toISOString() : undefined,
-  };
+export async function POST(request: NextRequest) {
+  try {
+    // User ID from session cookie or header (auth integration pending)
+    const userId = request.headers.get("x-user-id") ||
+                   request.cookies.get("userId")?.value ||
+                   "anonymous";
 
-  return NextResponse.json({
-    success: true,
-    data: mockCheckIns[checkInIndex],
-    message: "Check-in updated successfully",
-  });
+    const body = await request.json();
+    const { responses, score, analysis } = body;
+
+    const result = await sql`
+      INSERT INTO check_ins (user_id, responses, score, analysis, created_at)
+      VALUES (
+        ${userId},
+        ${JSON.stringify(responses || {})},
+        ${score || 0},
+        ${analysis || null},
+        NOW()
+      )
+      RETURNING
+        id,
+        user_id as "userId",
+        responses,
+        score,
+        analysis,
+        created_at as "createdAt"
+    `;
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: result[0],
+        message: "Check-in created successfully",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Check-in create error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create check-in" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    // User ID from session cookie or header (auth integration pending)
+    const userId = request.headers.get("x-user-id") ||
+                   request.cookies.get("userId")?.value ||
+                   "anonymous";
+
+    const body = await request.json();
+    const { id, responses, score, analysis } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Check-in ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await sql`
+      UPDATE check_ins
+      SET
+        responses = COALESCE(${responses ? JSON.stringify(responses) : null}, responses),
+        score = COALESCE(${score}, score),
+        analysis = COALESCE(${analysis}, analysis),
+        updated_at = NOW()
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING
+        id,
+        user_id as "userId",
+        responses,
+        score,
+        analysis,
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+    `;
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Check-in not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result[0],
+      message: "Check-in updated successfully",
+    });
+  } catch (error) {
+    console.error("Check-in update error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update check-in" },
+      { status: 500 }
+    );
+  }
 }
