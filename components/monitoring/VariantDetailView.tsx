@@ -24,7 +24,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { ExperimentComparison, VariantMetrics } from "@/lib/monitoring/ab-test-metrics";
-import type { UIVariant, transformVariant } from "@/types/monitoring";
+import type { UIVariant } from "@/types/monitoring";
+import { transformVariant } from "@/types/monitoring";
 
 interface VariantDetailViewProps {
   experimentName: string;

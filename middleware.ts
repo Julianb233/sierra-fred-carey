@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "sahara-default-secret-change-in-production"
+);
+const COOKIE_NAME = "sahara_auth";
 
 /**
  * SECURITY: Middleware enforces authentication on protected routes
  *
- * Protected routes require valid Supabase session.
+ * Protected routes require valid JWT session cookie.
  * Unauthenticated requests are redirected to /login.
  */
 export async function middleware(request: NextRequest) {
@@ -21,18 +26,29 @@ export async function middleware(request: NextRequest) {
 
   // Check authentication for protected routes
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const token = request.cookies.get(COOKIE_NAME)?.value;
 
-    if (!session) {
+    if (!token) {
       // Not authenticated - redirect to login
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Authenticated - allow request
-    return NextResponse.next();
+    // Verify JWT token
+    try {
+      await jwtVerify(token, JWT_SECRET);
+      // Token is valid - allow request
+      return NextResponse.next();
+    } catch {
+      // Invalid token - redirect to login
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+      const response = NextResponse.redirect(loginUrl);
+      // Clear invalid cookie
+      response.cookies.delete(COOKIE_NAME);
+      return response;
+    }
   } catch (error) {
     console.error("[middleware] Auth check failed:", error);
     // On error, redirect to login for security

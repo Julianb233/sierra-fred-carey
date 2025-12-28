@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 // Types
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 type Stage = "ideation" | "pre-seed" | "seed" | "series-a";
 
@@ -42,6 +42,10 @@ type Challenge =
   | "growth-scaling"
   | "unit-economics"
   | "strategic-planning";
+
+// Entrepreneur experience types
+type EntrepreneurDuration = "not-entrepreneur" | "less-than-1" | "1-3" | "3-5" | "5-10" | "10-plus";
+type TeamSize = "solo" | "2-5" | "6-10" | "11-25" | "26-50" | "50-plus";
 
 interface StageOption {
   id: Stage;
@@ -69,6 +73,13 @@ const OnboardingPage = () => {
   const [teammateEmails, setTeammateEmails] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Entrepreneur experience state
+  const [hasSoldCompany, setHasSoldCompany] = useState<boolean | null>(null);
+  const [hasExitedCompany, setHasExitedCompany] = useState<boolean | null>(null);
+  const [entrepreneurDuration, setEntrepreneurDuration] = useState<EntrepreneurDuration | null>(null);
+  const [employeeCount, setEmployeeCount] = useState<TeamSize | null>(null);
+  const [teamSize, setTeamSize] = useState<TeamSize | null>(null);
 
   // Add teammate email
   const addTeammate = () => {
@@ -164,7 +175,7 @@ const OnboardingPage = () => {
   };
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => (prev + 1) as Step);
     }
   };
@@ -177,9 +188,13 @@ const OnboardingPage = () => {
 
   const canProceed = () => {
     if (currentStep === 2) return selectedStage !== null;
-    if (currentStep === 3) return selectedChallenges.length > 0;
+    if (currentStep === 3) return entrepreneurDuration !== null;
+    if (currentStep === 4) return selectedChallenges.length > 0;
     return true;
   };
+
+  // Check if user is not an entrepreneur
+  const isNotEntrepreneur = entrepreneurDuration === "not-entrepreneur";
 
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim()) {
@@ -206,6 +221,13 @@ const OnboardingPage = () => {
           stage: selectedStage,
           challenges: selectedChallenges,
           teammateEmails: teammateEmails,
+          entrepreneurExperience: {
+            duration: entrepreneurDuration,
+            hasSoldCompany: hasSoldCompany,
+            hasExitedCompany: hasExitedCompany,
+            employeeCount: employeeCount,
+            teamSize: teamSize,
+          },
         }),
       });
 
@@ -225,7 +247,7 @@ const OnboardingPage = () => {
   };
 
   // Progress percentage
-  const progress = (currentStep / 4) * 100;
+  const progress = (currentStep / 5) * 100;
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-gray-950 overflow-hidden">
@@ -246,7 +268,7 @@ const OnboardingPage = () => {
                 <img src="/sahara-logo.svg" alt="Sahara" className="h-8 w-auto" />
               </Link>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Step {currentStep} of 4
+                Step {currentStep} of 5
               </div>
             </div>
 
@@ -464,10 +486,234 @@ const OnboardingPage = () => {
                 </motion.div>
               )}
 
-              {/* Step 3: Choose Challenges */}
+              {/* Step 3: Entrepreneur Experience */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-8"
+                >
+                  <div className="text-center space-y-4">
+                    <motion.h2
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white"
+                    >
+                      Tell us about your{" "}
+                      <span className="text-[#ff6a1a]">experience</span>
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-lg text-gray-600 dark:text-gray-400"
+                    >
+                      Help us understand your entrepreneurial journey
+                    </motion.p>
+                  </div>
+
+                  <div className="max-w-2xl mx-auto space-y-6 mt-12">
+                    {/* How long have you been an entrepreneur */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800"
+                    >
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+                        How long have you been an entrepreneur?
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[
+                          { id: "not-entrepreneur" as EntrepreneurDuration, label: "I'm not yet" },
+                          { id: "less-than-1" as EntrepreneurDuration, label: "Less than 1 year" },
+                          { id: "1-3" as EntrepreneurDuration, label: "1-3 years" },
+                          { id: "3-5" as EntrepreneurDuration, label: "3-5 years" },
+                          { id: "5-10" as EntrepreneurDuration, label: "5-10 years" },
+                          { id: "10-plus" as EntrepreneurDuration, label: "10+ years" },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => setEntrepreneurDuration(option.id)}
+                            className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                              entrepreneurDuration === option.id
+                                ? "border-[#ff6a1a] bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                                : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a]/30"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Show additional questions only if they ARE an entrepreneur */}
+                    {entrepreneurDuration && entrepreneurDuration !== "not-entrepreneur" && (
+                      <>
+                        {/* Have you ever sold a company */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800"
+                        >
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+                            Have you ever sold a company before?
+                          </h3>
+                          <div className="flex gap-4">
+                            {[
+                              { value: true, label: "Yes" },
+                              { value: false, label: "No" },
+                            ].map((option) => (
+                              <button
+                                key={option.label}
+                                onClick={() => setHasSoldCompany(option.value)}
+                                className={`flex-1 p-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                                  hasSoldCompany === option.value
+                                    ? "border-[#ff6a1a] bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                                    : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a]/30"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+
+                        {/* Have you ever exited a company */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800"
+                        >
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+                            Have you ever exited a company before?
+                          </h3>
+                          <div className="flex gap-4">
+                            {[
+                              { value: true, label: "Yes" },
+                              { value: false, label: "No" },
+                            ].map((option) => (
+                              <button
+                                key={option.label}
+                                onClick={() => setHasExitedCompany(option.value)}
+                                className={`flex-1 p-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                                  hasExitedCompany === option.value
+                                    ? "border-[#ff6a1a] bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                                    : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a]/30"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+
+                        {/* How many employees */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800"
+                        >
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+                            How many employees do you have?
+                          </h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                              { id: "solo" as TeamSize, label: "Just me" },
+                              { id: "2-5" as TeamSize, label: "2-5" },
+                              { id: "6-10" as TeamSize, label: "6-10" },
+                              { id: "11-25" as TeamSize, label: "11-25" },
+                              { id: "26-50" as TeamSize, label: "26-50" },
+                              { id: "50-plus" as TeamSize, label: "50+" },
+                            ].map((option) => (
+                              <button
+                                key={option.id}
+                                onClick={() => setEmployeeCount(option.id)}
+                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                                  employeeCount === option.id
+                                    ? "border-[#ff6a1a] bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                                    : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a]/30"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+
+                        {/* How many people on team */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800"
+                        >
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+                            How many people are on your founding team?
+                          </h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                              { id: "solo" as TeamSize, label: "Solo founder" },
+                              { id: "2-5" as TeamSize, label: "2-5 co-founders" },
+                              { id: "6-10" as TeamSize, label: "6-10" },
+                              { id: "11-25" as TeamSize, label: "11-25" },
+                              { id: "26-50" as TeamSize, label: "26-50" },
+                              { id: "50-plus" as TeamSize, label: "50+" },
+                            ].map((option) => (
+                              <button
+                                key={option.id}
+                                onClick={() => setTeamSize(option.id)}
+                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                                  teamSize === option.id
+                                    ? "border-[#ff6a1a] bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                                    : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a]/30"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+
+                    {/* Message for non-entrepreneurs */}
+                    {entrepreneurDuration === "not-entrepreneur" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-[#ff6a1a]/5 dark:bg-[#ff6a1a]/10 rounded-2xl p-6 border border-[#ff6a1a]/20"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-[#ff6a1a]/10 flex items-center justify-center flex-shrink-0">
+                            <Rocket className="w-5 h-5 text-[#ff6a1a]" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
+                              Perfect timing to start your journey!
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Sahara is designed to help aspiring founders like you validate ideas,
+                              build the right foundations, and avoid common mistakes. We'll guide you
+                              through every step of your entrepreneurial journey.
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4: Choose Challenges */}
+              {currentStep === 4 && (
+                <motion.div
+                  key="step4"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
@@ -549,10 +795,10 @@ const OnboardingPage = () => {
                 </motion.div>
               )}
 
-              {/* Step 4: Create Account */}
-              {currentStep === 4 && (
+              {/* Step 5: Create Account */}
+              {currentStep === 5 && (
                 <motion.div
-                  key="step4"
+                  key="step5"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
@@ -774,7 +1020,7 @@ const OnboardingPage = () => {
             </AnimatePresence>
 
             {/* Navigation buttons */}
-            {currentStep < 4 && (
+            {currentStep < 5 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -803,8 +1049,8 @@ const OnboardingPage = () => {
               </motion.div>
             )}
 
-            {/* Step 4 back button */}
-            {currentStep === 4 && (
+            {/* Step 5 back button */}
+            {currentStep === 5 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
