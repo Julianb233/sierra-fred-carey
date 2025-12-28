@@ -210,6 +210,33 @@ export async function compareExperimentVariants(
 
     const alerts = generateAlerts(validMetrics, experiment);
 
+    // Auto-notify for new alerts if enabled
+    if (AUTO_NOTIFY_ALERTS && alerts.length > 0) {
+      // Import and trigger notifications asynchronously (don't block the response)
+      import("./alert-notifier")
+        .then(({ notifyAlerts }) => {
+          return notifyAlerts(alerts, {
+            immediate: true,
+            minimumLevel: "warning",
+            experimentName: experiment.name,
+            experimentId: experiment.id,
+          });
+        })
+        .then((stats) => {
+          console.log(
+            `[Monitoring] Auto-notified ${stats.notificationsSent} alerts for experiment: ${experiment.name}`
+          );
+          if (stats.errors.length > 0) {
+            console.error(
+              `[Monitoring] Notification errors: ${stats.errors.join(", ")}`
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("[Monitoring] Failed to auto-notify alerts:", error);
+        });
+    }
+
     return {
       experimentName: experiment.name,
       experimentId: experiment.id,
@@ -279,6 +306,12 @@ function calculateConfidenceLevel(zScore: number): number {
   if (zScore >= 1.645) return 90.0;
   return 0;
 }
+
+/**
+ * Auto-notify configuration for alert generation
+ * Set to true to automatically send notifications when alerts are generated
+ */
+export const AUTO_NOTIFY_ALERTS = process.env.AUTO_NOTIFY_ALERTS !== "false";
 
 function generateAlerts(
   variants: VariantMetrics[],
