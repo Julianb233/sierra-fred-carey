@@ -79,18 +79,21 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           npm install -g vercel
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "Error: VERCEL_TOKEN secret is not set"
+            exit 1
+          fi
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            vercel --prod --token $VERCEL_TOKEN
+            vercel --prod --token $VERCEL_TOKEN --yes
           else
-            vercel --token $VERCEL_TOKEN
+            vercel --token $VERCEL_TOKEN --yes
           fi
 
       - name: Notify Slack
-        if: always()
+        if: always() && secrets.SLACK_WEBHOOK != ''
         uses: slackapi/slack-github-action@v1
         continue-on-error: true
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
           payload: |
             {
               "text": "Sierra Fred Carey Deployment ${{ job.status }}",
@@ -104,3 +107,5 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
