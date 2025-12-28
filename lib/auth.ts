@@ -20,6 +20,7 @@ export interface User {
 export interface AuthResult {
   success: boolean;
   user?: User;
+  token?: string;
   error?: string;
 }
 
@@ -159,11 +160,10 @@ export async function signUp(
       created_at: result[0].created_at,
     };
 
-    // Create and set token
+    // Create token
     const token = await createToken(user.id, user.email);
-    await setAuthCookie(token);
 
-    return { success: true, user };
+    return { success: true, user, token };
   } catch (error) {
     console.error("[auth] Sign up error:", error);
     return { success: false, error: "Failed to create account" };
@@ -208,11 +208,10 @@ export async function signIn(email: string, password: string): Promise<AuthResul
       created_at: userRow.created_at,
     };
 
-    // Create and set token
+    // Create token
     const token = await createToken(user.id, user.email);
-    await setAuthCookie(token);
 
-    return { success: true, user };
+    return { success: true, user, token };
   } catch (error) {
     console.error("[auth] Sign in error:", error);
     return { success: false, error: "Failed to sign in" };

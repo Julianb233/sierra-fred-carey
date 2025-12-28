@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signUp } from "@/lib/auth";
 
+const COOKIE_NAME = "sahara_auth";
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password, name, stage, challenges } = await request.json();
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: result.user!.id,
@@ -36,6 +38,19 @@ export async function POST(request: NextRequest) {
         name: result.user!.name,
       },
     });
+
+    // Set auth cookie
+    if (result.token) {
+      response.cookies.set(COOKIE_NAME, result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("[api/auth/signup] Error:", error);
     return NextResponse.json(
