@@ -40,6 +40,7 @@ export default function NavBar() {
   const menuItems = [
     { name: "Pricing", href: "/pricing" },
     { name: "Features", href: "#features" },
+    { name: "See it in Action", href: "/product" },
     { name: "About", href: "/about" },
     { name: "Agents", href: "/agents" },
   ];
