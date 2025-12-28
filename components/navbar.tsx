@@ -21,6 +21,7 @@ import {
   RocketIcon,
 } from "@radix-ui/react-icons";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -104,7 +105,15 @@ export default function NavBar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[350px] bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
               <SheetHeader>
-                <SheetTitle className="text-[#ff6a1a] text-xl font-bold">Decision OS</SheetTitle>
+                <SheetTitle>
+                  <Image
+                    src="/sahara-logo.svg"
+                    alt="Sahara"
+                    width={120}
+                    height={30}
+                    className="h-8 w-auto"
+                  />
+                </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-8">
                 {menuItems.map((item) => (
@@ -167,9 +176,14 @@ export default function NavBar() {
             href="/"
             className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 group"
           >
-            <span className="font-bold tracking-tight text-lg sm:text-xl lg:text-2xl text-[#ff6a1a] group-hover:opacity-80 transition-opacity">
-              Decision OS
-            </span>
+            <Image
+              src="/sahara-logo.svg"
+              alt="Sahara"
+              width={140}
+              height={35}
+              className="h-8 sm:h-9 lg:h-10 w-auto group-hover:opacity-80 transition-opacity"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}

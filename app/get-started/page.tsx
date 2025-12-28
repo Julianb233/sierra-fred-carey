@@ -223,8 +223,8 @@ const OnboardingPage = () => {
         <header className="w-full py-6 px-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <Link href="/" className="text-xl font-bold text-[#ff6a1a] hover:opacity-80 transition-opacity">
-                Decision OS
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <img src="/sahara-logo.svg" alt="Sahara" className="h-8 w-auto" />
               </Link>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Step {currentStep} of 4
@@ -263,8 +263,8 @@ const OnboardingPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white"
                     >
-                      Welcome to your{" "}
-                      <span className="text-[#ff6a1a]">Decision OS</span>
+                      Welcome to{" "}
+                      <span className="text-[#ff6a1a]">Sahara</span>
                     </motion.h1>
                     <motion.p
                       initial={{ opacity: 0, y: 20 }}
@@ -272,8 +272,8 @@ const OnboardingPage = () => {
                       transition={{ delay: 0.1 }}
                       className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
                     >
-                      The AI-powered operating system that helps startup founders make better
-                      decisions faster
+                      The AI-powered founder operating system that helps you make better
+                      decisions, raise smarter, and scale faster
                     </motion.p>
                   </div>
 
@@ -530,7 +530,7 @@ const OnboardingPage = () => {
                       transition={{ delay: 0.1 }}
                       className="text-lg text-gray-600 dark:text-gray-400"
                     >
-                      Create your account to unlock your personalized Decision OS
+                      Create your account to unlock your personalized Sahara experience
                     </motion.p>
                   </div>
 

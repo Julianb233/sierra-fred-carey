@@ -12,25 +12,13 @@ import { redirectToCheckout } from "@/lib/stripe/client";
 import { PLANS } from "@/lib/stripe/config";
 import Link from "next/link";
 
-// Conditionally import useUser only if Clerk is configured
-const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const useUserHook = hasClerk ? require("@clerk/nextjs").useUser : () => ({ isSignedIn: false });
-
 export default function Pricing() {
-  const { isSignedIn } = useUserHook();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
     if (!priceId) {
       // Free plan - redirect to dashboard/sign-up
-      window.location.href = isSignedIn ? "/dashboard" : "/sign-up";
-      return;
-    }
-
-    if (!isSignedIn) {
-      // Redirect to sign-up first
-      window.location.href = "/sign-up";
+      window.location.href = "/dashboard";
       return;
     }
 
@@ -45,7 +33,7 @@ export default function Pricing() {
 
   const plans = [
     {
-      name: "Founder Decision OS",
+      name: "Sahara Starter",
       desc: "Free forever — build trust and habit",
       price: 0,
       priceId: null,
@@ -53,7 +41,7 @@ export default function Pricing() {
       icon: LightningBoltIcon,
       gradient: "from-gray-400 to-gray-500",
       features: [
-        "Core Fred Cary Decision OS",
+        "Core Sahara Decision Engine",
         "Strategy & execution reframing",
         "Startup Reality Lens (feasibility, economics, timing)",
         "Red Flag Detection",
