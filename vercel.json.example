@@ -1,0 +1,10 @@
+{
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "crons": [
+    {
+      "path": "/api/monitoring/alerts/check",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

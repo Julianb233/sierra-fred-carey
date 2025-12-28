@@ -63,3 +63,17 @@ export interface TopInsightsResponse {
   data: TopInsight[];
   error?: string;
 }
+
+export interface TrendDataPoint {
+  date: string;
+  totalRequests: number;
+  successRate: number;
+  avgResponseTime: number;
+  insights: number;
+}
+
+export interface TrendsResponse {
+  success: boolean;
+  data: TrendDataPoint[];
+  error?: string;
+}

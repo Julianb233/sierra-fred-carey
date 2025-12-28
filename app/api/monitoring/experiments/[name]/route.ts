@@ -54,8 +54,9 @@ export async function GET(
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
+    const { name } = await params;
     console.error(
-      `[Monitoring API] Error fetching experiment ${params.name}:`,
+      `[Monitoring API] Error fetching experiment ${name}:`,
       error
     );
 

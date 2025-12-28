@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/monitoring/auto-promotion/check",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
