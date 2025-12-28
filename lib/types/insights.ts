@@ -12,6 +12,7 @@ export interface ABTestVariantStats {
 
 export interface ABTestResult {
   experimentName: string;
+  description?: string;
   variants: ABTestVariantStats[];
   isActive: boolean;
   startDate: string;

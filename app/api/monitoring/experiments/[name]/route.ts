@@ -11,10 +11,11 @@ import { compareExperimentVariants } from "@/lib/monitoring/ab-test-metrics";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { name: string } }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const experimentName = decodeURIComponent(params.name);
+    const { name } = await params;
+    const experimentName = decodeURIComponent(name);
     const searchParams = request.nextUrl.searchParams;
 
     // Parse time range

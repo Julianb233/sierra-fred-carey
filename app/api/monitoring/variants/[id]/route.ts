@@ -11,10 +11,10 @@ import { collectVariantMetrics } from "@/lib/monitoring/ab-test-metrics";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const variantId = params.id;
+    const { id: variantId } = await params;
     const searchParams = request.nextUrl.searchParams;
 
     // Parse time range
@@ -60,7 +60,7 @@ export async function GET(
     });
   } catch (error: any) {
     console.error(
-      `[Monitoring API] Error fetching variant ${params.id}:`,
+      `[Monitoring API] Error fetching variant:`,
       error
     );
 

@@ -21,45 +21,7 @@ import {
   Cross2Icon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
-
-interface ABTestResult {
-  experimentName: string;
-  description?: string;
-  variants: Array<{
-    variantName: string;
-    totalRequests: number;
-    avgLatency: number;
-    errorRate: number;
-  }>;
-  isActive: boolean;
-  startDate: string;
-  endDate?: string;
-}
-
-interface AIAnalytics {
-  totalRequests: number;
-  avgResponseTime: number;
-  successRate: number;
-  totalTokensUsed: number;
-  requestsByAnalyzer: Array<{
-    analyzer: string;
-    count: number;
-    avgLatency: number;
-    errorRate: number;
-  }>;
-}
-
-interface TopInsight {
-  id: string;
-  type: "breakthrough" | "warning" | "opportunity" | "pattern" | "recommendation";
-  title: string;
-  content: string;
-  importance: number;
-  tags: string[];
-  sourceType: string;
-  createdAt: string;
-  isDismissed: boolean;
-}
+import type { ABTestResult, AIAnalytics, TopInsight } from "@/lib/types/insights";
 
 export default function InsightsDashboardPage() {
   const [abTests, setAbTests] = useState<ABTestResult[]>([]);
