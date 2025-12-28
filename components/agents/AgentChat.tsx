@@ -44,6 +44,42 @@ const colorMap = {
     bg: "bg-orange-500/10",
     border: "border-orange-500/30",
   },
+  pink: {
+    gradient: "from-pink-500 to-pink-600",
+    text: "text-pink-500",
+    bg: "bg-pink-500/10",
+    border: "border-pink-500/30",
+  },
+  indigo: {
+    gradient: "from-indigo-500 to-indigo-600",
+    text: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/30",
+  },
+  teal: {
+    gradient: "from-teal-500 to-teal-600",
+    text: "text-teal-500",
+    bg: "bg-teal-500/10",
+    border: "border-teal-500/30",
+  },
+  cyan: {
+    gradient: "from-cyan-500 to-cyan-600",
+    text: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/30",
+  },
+  emerald: {
+    gradient: "from-emerald-500 to-emerald-600",
+    text: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+  },
+  slate: {
+    gradient: "from-slate-500 to-slate-600",
+    text: "text-slate-500",
+    bg: "bg-slate-500/10",
+    border: "border-slate-500/30",
+  },
 };
 
 export default function AgentChat({

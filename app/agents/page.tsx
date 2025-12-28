@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, Target, Rocket, Inbox, Sparkles, ArrowRight } from "lucide-react";
+import { Zap, Target, Rocket, Inbox, Sparkles, ArrowRight, Share2, FileEdit, HeartHandshake, Layers, Calculator, Scale } from "lucide-react";
 import Link from "next/link";
 import AgentCard from "@/components/agents/AgentCard";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,69 @@ const agents: AgentType[] = [
     status: "idle",
     lastActivity: "1 hour ago",
     tasksCompleted: 89,
+  },
+  {
+    id: "social-media-ops",
+    name: "Social Media Manager",
+    description: "Content scheduling, engagement tracking, and brand voice management",
+    color: "pink",
+    icon: Share2,
+    status: "active",
+    lastActivity: "10 minutes ago",
+    tasksCompleted: 78,
+    currentTask: "Scheduling LinkedIn posts",
+  },
+  {
+    id: "copywriting-ops",
+    name: "Copywriting Pro",
+    description: "Sales copy, landing pages, email sequences, and ad creative",
+    color: "indigo",
+    icon: FileEdit,
+    status: "active",
+    lastActivity: "15 minutes ago",
+    tasksCompleted: 112,
+    currentTask: "Drafting email sequence",
+  },
+  {
+    id: "customer-ops",
+    name: "Customer Success",
+    description: "Customer onboarding, support templates, and feedback analysis",
+    color: "teal",
+    icon: HeartHandshake,
+    status: "idle",
+    lastActivity: "30 minutes ago",
+    tasksCompleted: 45,
+  },
+  {
+    id: "product-ops",
+    name: "Product Manager",
+    description: "Feature prioritization, roadmap planning, and user story creation",
+    color: "cyan",
+    icon: Layers,
+    status: "active",
+    lastActivity: "5 minutes ago",
+    tasksCompleted: 67,
+    currentTask: "Updating product roadmap",
+  },
+  {
+    id: "finance-ops",
+    name: "Finance & Ops",
+    description: "Invoicing, expense tracking, and financial projections",
+    color: "emerald",
+    icon: Calculator,
+    status: "idle",
+    lastActivity: "2 hours ago",
+    tasksCompleted: 34,
+  },
+  {
+    id: "legal-ops",
+    name: "Legal Assistant",
+    description: "Contract templates, compliance checks, and terms of service",
+    color: "slate",
+    icon: Scale,
+    status: "idle",
+    lastActivity: "1 day ago",
+    tasksCompleted: 23,
   },
 ];
 
@@ -178,14 +241,14 @@ export default function AgentsPage() {
         >
           <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
             <div className="text-3xl font-bold text-[#ff6a1a] mb-2">
-              315
+              674
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Total Tasks Completed</div>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
             <div className="text-3xl font-bold text-orange-500 mb-2">
-              3 / 4
+              6 / 10
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Agents Active</div>
           </div>

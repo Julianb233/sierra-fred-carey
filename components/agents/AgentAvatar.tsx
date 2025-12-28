@@ -64,6 +64,42 @@ const colorMap = {
     glow: "bg-orange-500/20",
     bg: "bg-gradient-to-br from-orange-500/20 to-orange-600/10",
   },
+  pink: {
+    gradient: "from-pink-500 to-pink-600",
+    ring: "border-pink-500",
+    glow: "bg-pink-500/20",
+    bg: "bg-gradient-to-br from-pink-500/20 to-pink-600/10",
+  },
+  indigo: {
+    gradient: "from-indigo-500 to-indigo-600",
+    ring: "border-indigo-500",
+    glow: "bg-indigo-500/20",
+    bg: "bg-gradient-to-br from-indigo-500/20 to-indigo-600/10",
+  },
+  teal: {
+    gradient: "from-teal-500 to-teal-600",
+    ring: "border-teal-500",
+    glow: "bg-teal-500/20",
+    bg: "bg-gradient-to-br from-teal-500/20 to-teal-600/10",
+  },
+  cyan: {
+    gradient: "from-cyan-500 to-cyan-600",
+    ring: "border-cyan-500",
+    glow: "bg-cyan-500/20",
+    bg: "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10",
+  },
+  emerald: {
+    gradient: "from-emerald-500 to-emerald-600",
+    ring: "border-emerald-500",
+    glow: "bg-emerald-500/20",
+    bg: "bg-gradient-to-br from-emerald-500/20 to-emerald-600/10",
+  },
+  slate: {
+    gradient: "from-slate-500 to-slate-600",
+    ring: "border-slate-500",
+    glow: "bg-slate-500/20",
+    bg: "bg-gradient-to-br from-slate-500/20 to-slate-600/10",
+  },
 };
 
 export default function AgentAvatar({
