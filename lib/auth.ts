@@ -144,10 +144,11 @@ export async function signUp(
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Create user - cast challenges to jsonb
+    const challengesJson = JSON.stringify(challenges || []);
     const result = await sql`
       INSERT INTO users (email, password_hash, name, stage, challenges)
-      VALUES (${email.toLowerCase()}, ${passwordHash}, ${name || null}, ${stage || null}, ${JSON.stringify(challenges || [])})
+      VALUES (${email.toLowerCase()}, ${passwordHash}, ${name || null}, ${stage || null}, ${challengesJson}::jsonb)
       RETURNING id, email, name, stage, challenges, created_at
     `;
 
@@ -164,9 +165,15 @@ export async function signUp(
     const token = await createToken(user.id, user.email);
 
     return { success: true, user, token };
-  } catch (error) {
+  } catch (error: any) {
     console.error("[auth] Sign up error:", error);
-    return { success: false, error: "Failed to create account" };
+    console.error("[auth] Error details:", JSON.stringify({
+      name: error?.name,
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack?.substring(0, 500)
+    }));
+    return { success: false, error: error?.message || "Failed to create account" };
   }
 }
 
