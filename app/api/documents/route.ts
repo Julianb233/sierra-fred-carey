@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
 import { generateChatResponse } from "@/lib/ai/client";
+import { requireAuth } from "@/lib/auth";
 
 type DocumentType = "gtm" | "competitive" | "financial" | "memo";
 
@@ -58,13 +59,13 @@ const DOCUMENT_TITLES: Record<DocumentType, string> = {
 /**
  * GET /api/documents
  * List user's documents
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const documents = await sql`
       SELECT
@@ -98,13 +99,13 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/documents
  * Generate a new strategy document using AI
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function POST(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { type, context } = body;
