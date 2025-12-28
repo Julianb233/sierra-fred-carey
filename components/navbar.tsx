@@ -22,10 +22,10 @@ import {
 } from "@radix-ui/react-icons";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function NavBar() {
+function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -86,6 +86,8 @@ export default function NavBar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
+      role="navigation"
+      aria-label="Main navigation"
       className={`fixed top-0 z-50 w-full transition-all duration-300 ${
         scrolled
           ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-lg shadow-black/5"
@@ -193,12 +195,18 @@ export default function NavBar() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all"
+                  aria-label="Open features menu"
+                  aria-haspopup="true"
+                >
                   Features
-                  <ChevronDownIcon className="ml-1 h-4 w-4" />
+                  <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 p-2" align="end">
+              <DropdownMenuContent className="w-80 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 p-2" align="end" role="menu" aria-label="Features submenu">
                 {featureItems.map((feature) => (
                   <DropdownMenuItem key={feature.title} asChild>
                     <Link href={feature.href} className="cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 p-3 focus:bg-gray-100 dark:focus:bg-gray-800 flex items-start">
@@ -263,9 +271,13 @@ export default function NavBar() {
             animate={{ scaleX: 1 }}
             exit={{ scaleX: 0 }}
             className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#ff6a1a]/50 to-transparent"
+            aria-hidden="true"
           />
         )}
       </AnimatePresence>
     </motion.nav>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export default memo(NavBar);

@@ -35,22 +35,18 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
         animate={{ scale: 1 }}
         transition={{ duration: 0.3, delay: index * 0.05 + 0.1 }}
       >
-        <Avatar className={cn(
-          "h-10 w-10 border-2",
-          isUser
-            ? "border-primary/50 ring-2 ring-primary/20"
-            : "border-purple-500/50 ring-2 ring-purple-500/20"
-        )}>
-          <AvatarImage src={isUser ? "/avatars/user.png" : "/avatars/ai.png"} />
-          <AvatarFallback className={cn(
-            "text-sm font-semibold",
-            isUser
-              ? "bg-gradient-to-br from-primary to-blue-500 text-white"
-              : "bg-gradient-to-br from-purple-500 to-pink-500 text-white"
-          )}>
-            {isUser ? "U" : "AI"}
-          </AvatarFallback>
-        </Avatar>
+        {isUser ? (
+          <Avatar className="h-10 w-10 border-2 border-[#ff6a1a]/50 ring-2 ring-[#ff6a1a]/20">
+            <AvatarImage src="/avatars/user.png" />
+            <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-500 text-white text-sm font-semibold">
+              U
+            </AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-10 w-10 rounded-full border-2 border-[#ff6a1a]/50 ring-2 ring-[#ff6a1a]/20 bg-gradient-to-br from-[#ff6a1a] to-orange-500 flex items-center justify-center overflow-hidden">
+            <span className="text-white font-bold text-sm">S</span>
+          </div>
+        )}
       </motion.div>
 
       {/* Message bubble */}
@@ -65,7 +61,7 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
           className={cn(
             "relative px-4 py-3 rounded-2xl shadow-lg group",
             isUser
-              ? "bg-gradient-to-br from-primary via-blue-500 to-purple-500 text-white rounded-tr-sm"
+              ? "bg-gradient-to-br from-[#ff6a1a] via-orange-500 to-amber-500 text-white rounded-tr-sm"
               : "backdrop-blur-xl bg-white/10 border border-white/20 text-foreground rounded-tl-sm"
           )}
         >
@@ -74,14 +70,14 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
             <motion.div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
-                background: "radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 70%)",
+                background: "radial-gradient(circle at 50% 50%, rgba(255, 106, 26, 0.15) 0%, transparent 70%)",
               }}
             />
           )}
 
           {/* Gradient glow for user messages */}
           {isUser && (
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/50 via-blue-500/50 to-purple-500/50 blur-xl opacity-50 -z-10" />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#ff6a1a]/50 via-orange-500/50 to-amber-500/50 blur-xl opacity-50 -z-10" />
           )}
 
           <p className={cn(
