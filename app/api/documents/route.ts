@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
-import { generateChatResponse } from "@/lib/ai/client";
+import { generateTrackedResponse } from "@/lib/ai/client";
 import { requireAuth } from "@/lib/auth";
 
 type DocumentType = "gtm" | "competitive" | "financial" | "memo";
@@ -129,14 +129,25 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Documents] Generating ${type} document for user ${userId}`);
 
-    // Generate document content using AI
-    const content = await generateChatResponse(
+    // Generate document content using AI with tracking
+    const result = await generateTrackedResponse(
       [{ role: "user", content: prompt + contextStr }],
-      "You are an expert startup strategist. Generate professional, comprehensive business documents. Be specific and actionable."
+      "You are an expert startup strategist. Generate professional, comprehensive business documents. Be specific and actionable.",
+      {
+        userId,
+        analyzer: "document_generator",
+        inputData: {
+          documentType: type,
+          hasContext: !!context,
+        },
+      }
     );
 
+    const content = result.content;
+    console.log(`[Documents] Generated document (tracked: ${result.requestId}, latency: ${result.latencyMs}ms)`);
+
     // Save to database
-    const result = await sql`
+    const dbResult = await sql`
       INSERT INTO documents (user_id, title, type, content, status, created_at)
       VALUES (${userId}, ${title}, ${type}, ${content}, 'completed', NOW())
       RETURNING
@@ -148,11 +159,11 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    console.log(`[Documents] Created document ${result[0].id}`);
+    console.log(`[Documents] Created document ${dbResult[0].id}`);
 
     return NextResponse.json({
       success: true,
-      document: result[0]
+      document: dbResult[0]
     }, { status: 201 });
 
   } catch (error) {

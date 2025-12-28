@@ -1,4 +1,4 @@
-import { generateChatResponse } from "./client";
+import { generateTrackedResponse } from "./client";
 import { sql } from "@/lib/db/neon";
 
 export interface ExtractedInsight {
@@ -74,13 +74,25 @@ export async function extractInsights(
       userPrompt = `Context: ${context}\n\n${userPrompt}`;
     }
 
-    // Call AI to extract insights
-    const response = await generateChatResponse(
+    // Call AI to extract insights with tracking
+    const result = await generateTrackedResponse(
       [{ role: "user", content: userPrompt }],
-      INSIGHT_EXTRACTION_PROMPT
+      INSIGHT_EXTRACTION_PROMPT,
+      {
+        userId,
+        analyzer: "insight_extraction",
+        sourceId,
+        inputData: {
+          sourceType,
+          sourceId,
+          context,
+          responseLength: aiResponse.length,
+        },
+      }
     );
 
-    console.log("[Insights] Raw extraction response:", response);
+    const response = result.content;
+    console.log("[Insights] Raw extraction response:", response, `(tracked: ${result.requestId})`);
 
     // Parse JSON response
     let insights: ExtractedInsight[];
