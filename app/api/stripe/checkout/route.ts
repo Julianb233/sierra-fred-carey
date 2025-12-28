@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
+import { requireAuth } from "@/lib/auth";
 
+/**
+ * POST /api/stripe/checkout
+ * Create Stripe checkout session
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ */
 export async function POST(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     const { priceId } = await request.json();
 

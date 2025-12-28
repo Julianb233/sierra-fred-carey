@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePDFFromUrl, PDFParseError, ParsedDeck } from "@/lib/parsers/pdf-parser";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * Error response structure
@@ -31,6 +32,8 @@ interface ParseRequest {
  * POST /api/pitch-deck/parse
  * Parse an uploaded PDF pitch deck from a URL
  *
+ * SECURITY: Requires authentication - userId from server-side session
+ *
  * @param request - JSON body with fileUrl
  * @returns Parsed deck structure with slides and metadata
  */
@@ -38,11 +41,8 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ParseResponse>> {
   try {
-    // Get user ID from cookie or header (for logging/analytics)
-    const userId =
-      request.headers.get("x-user-id") ||
-      request.cookies.get("userId")?.value ||
-      "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     console.log(`[PDF Parse] Request from user: ${userId}`);
 

@@ -21,177 +21,261 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+interface JourneyStats {
+  ideaScore: number | null;
+  investorReadiness: number | null;
+  executionStreak: number;
+  milestones: {
+    completed: number;
+    inProgress: number;
+    pending: number;
+    total: number;
+  };
+  insights: {
+    total: number;
+    active: number;
+    pinned: number;
+    highImportance: number;
+  };
+}
+
+interface Insight {
+  id: string;
+  insightType: "breakthrough" | "warning" | "opportunity" | "pattern" | "recommendation";
+  title: string;
+  content: string;
+  importance: number;
+  sourceType: string;
+  isPinned: boolean;
+  isDismissed: boolean;
+  createdAt: string;
+}
+
+interface Milestone {
+  id: string;
+  title: string;
+  description?: string;
+  category: "fundraising" | "product" | "team" | "growth" | "legal";
+  status: "pending" | "in_progress" | "completed" | "skipped";
+  targetDate?: string;
+  completedAt?: string;
+}
+
+interface TimelineEvent {
+  id: string;
+  eventType: string;
+  eventData: any;
+  scoreBefore?: number;
+  scoreAfter?: number;
+  createdAt: string;
+}
+
 export default function JourneyDashboard() {
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
-  const [insights, setInsights] = useState<any[]>([]);
-  const [milestones, setMilestones] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [stats, setStats] = useState<JourneyStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual API calls
+  // Load data from real API endpoints
   useEffect(() => {
     const loadData = async () => {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsLoading(true);
+      setError(null);
 
-      // Mock insights
-      setInsights([
-        {
-          id: "1",
-          insightType: "warning",
-          title: "Team score is your biggest gap",
-          content:
-            "Your team composition score is currently at 45/100. Consider adding a technical co-founder or highlighting key team members' experience in your pitch deck. Investors typically look for complementary skills and proven execution capability.",
-          importance: 5,
-          sourceType: "Reality Lens",
-          isPinned: true,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "2",
-          insightType: "opportunity",
-          title: "Market timing is excellent",
-          content:
-            "Based on market analysis, your industry is experiencing 23% YoY growth with increasing investor interest. This is an optimal time to raise capital.",
-          importance: 4,
-          sourceType: "Market Analysis",
-          isPinned: false,
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "3",
-          insightType: "recommendation",
-          title: "Strengthen your financial projections",
-          content:
-            "Your financial model shows conservative growth estimates. Consider creating both conservative and ambitious scenarios to demonstrate scalability potential.",
-          importance: 4,
-          sourceType: "Pitch Deck Review",
-          isPinned: false,
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ]);
+      try {
+        // Fetch all data in parallel
+        const [statsRes, insightsRes, milestonesRes, timelineRes] = await Promise.all([
+          fetch("/api/journey/stats"),
+          fetch("/api/journey/insights?limit=10"),
+          fetch("/api/journey/milestones?limit=50"),
+          fetch("/api/journey/timeline?limit=20"),
+        ]);
 
-      // Mock milestones
-      setMilestones([
-        {
-          id: "1",
-          title: "Complete pitch deck review",
-          description: "Upload and review final pitch deck with AI analysis",
-          category: "fundraising",
-          status: "in_progress",
-          targetDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-        },
-        {
-          id: "2",
-          title: "First investor meeting",
-          description: "Met with Sequoia partner",
-          category: "fundraising",
-          status: "completed",
-          completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "3",
-          title: "Finalize MVP roadmap",
-          category: "product",
-          status: "pending",
-          targetDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-        },
-        {
-          id: "4",
-          title: "Hire technical co-founder",
-          description: "Source and interview candidates with ML/AI background",
-          category: "team",
-          status: "in_progress",
-        },
-      ]);
+        // Check for errors
+        if (!statsRes.ok) {
+          throw new Error(`Stats API error: ${statsRes.status}`);
+        }
+        if (!insightsRes.ok) {
+          throw new Error(`Insights API error: ${insightsRes.status}`);
+        }
+        if (!milestonesRes.ok) {
+          throw new Error(`Milestones API error: ${milestonesRes.status}`);
+        }
+        if (!timelineRes.ok) {
+          throw new Error(`Timeline API error: ${timelineRes.status}`);
+        }
 
-      // Mock events
-      setEvents([
-        {
-          id: "1",
-          eventType: "analysis_completed",
-          eventData: { description: "AI-Powered CRM for Real Estate" },
-          scoreBefore: 65,
-          scoreAfter: 78,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "2",
-          eventType: "milestone_achieved",
-          eventData: { milestoneName: "First investor meeting" },
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "3",
-          eventType: "insight_discovered",
-          eventData: {
-            insightTitle: "Market timing is excellent",
-            description: "Industry showing 23% YoY growth",
-          },
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: "4",
-          eventType: "score_improved",
-          eventData: { description: "Updated team information" },
-          scoreBefore: 78,
-          scoreAfter: 82,
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ]);
+        // Parse responses
+        const statsData = await statsRes.json();
+        const insightsData = await insightsRes.json();
+        const milestonesData = await milestonesRes.json();
+        const timelineData = await timelineRes.json();
 
-      setIsLoading(false);
+        // Update state
+        if (statsData.success) {
+          setStats(statsData.data);
+        }
+
+        if (insightsData.success) {
+          setInsights(insightsData.data.map((insight: any) => ({
+            id: insight.id,
+            insightType: insight.type || "recommendation",
+            title: insight.title,
+            content: insight.content,
+            importance: insight.importance,
+            sourceType: insight.sourceType,
+            isPinned: !insight.isDismissed, // Convert: not dismissed = pinned
+            isDismissed: insight.isDismissed,
+            createdAt: insight.createdAt,
+          })));
+        }
+
+        if (milestonesData.success) {
+          setMilestones(milestonesData.data.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            description: m.description,
+            category: m.category as Milestone["category"],
+            status: m.status as Milestone["status"],
+            targetDate: m.targetDate,
+            completedAt: m.completedAt,
+          })));
+        }
+
+        if (timelineData.success) {
+          setEvents(timelineData.data.map((e: any) => ({
+            id: e.id,
+            eventType: e.eventType,
+            eventData: e.eventData,
+            scoreBefore: e.scoreBefore ?? undefined,
+            scoreAfter: e.scoreAfter ?? undefined,
+            createdAt: e.createdAt,
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading journey data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load journey data");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadData();
   }, []);
 
-  const handlePinInsight = (id: string) => {
-    setInsights((prev) =>
-      prev.map((insight) =>
-        insight.id === id
-          ? { ...insight, isPinned: !insight.isPinned }
-          : insight
-      )
-    );
+  const handlePinInsight = async (id: string) => {
+    const insight = insights.find((i) => i.id === id);
+    if (!insight) return;
+
+    const action = insight.isPinned ? "unpin" : "pin";
+
+    try {
+      const res = await fetch("/api/journey/insights", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ insightId: id, action }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to ${action} insight`);
+      }
+
+      // Optimistically update UI
+      setInsights((prev) =>
+        prev.map((insight) =>
+          insight.id === id
+            ? { ...insight, isPinned: !insight.isPinned }
+            : insight
+        )
+      );
+    } catch (err) {
+      console.error(`Error ${action}ning insight:`, err);
+      // Could show a toast notification here
+    }
   };
 
-  const handleDismissInsight = (id: string) => {
-    setInsights((prev) => prev.filter((insight) => insight.id !== id));
+  const handleDismissInsight = async (id: string) => {
+    try {
+      const res = await fetch("/api/journey/insights", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ insightId: id, action: "dismiss" }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to dismiss insight");
+      }
+
+      // Remove from UI
+      setInsights((prev) => prev.filter((insight) => insight.id !== id));
+    } catch (err) {
+      console.error("Error dismissing insight:", err);
+      // Could show a toast notification here
+    }
   };
 
-  const handleAddMilestone = (newMilestone: any) => {
-    const milestone = {
-      id: Date.now().toString(),
-      ...newMilestone,
-      status: "pending",
-    };
-    setMilestones((prev) => [milestone, ...prev]);
+  const handleAddMilestone = async (newMilestone: any) => {
+    try {
+      const res = await fetch("/api/journey/milestones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMilestone),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create milestone");
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Add to UI
+        setMilestones((prev) => [data.data, ...prev]);
+      }
+    } catch (err) {
+      console.error("Error creating milestone:", err);
+      // Could show a toast notification here
+    }
   };
 
-  const handleMilestoneStatusChange = (id: string, status: string) => {
-    setMilestones((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? {
-              ...m,
-              status,
-              completedAt:
-                status === "completed" ? new Date().toISOString() : undefined,
-            }
-          : m
-      )
-    );
+  const handleMilestoneStatusChange = async (id: string, status: Milestone["status"]) => {
+    try {
+      const res = await fetch(`/api/journey/milestones/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update milestone");
+      }
+
+      // Optimistically update UI
+      setMilestones((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? {
+                ...m,
+                status,
+                completedAt:
+                  status === "completed" ? new Date().toISOString() : undefined,
+              }
+            : m
+        )
+      );
+    } catch (err) {
+      console.error("Error updating milestone:", err);
+      // Could show a toast notification here
+    }
   };
 
-  // Calculate stats
-  const ideaScore = 78;
-  const investorReadiness = 45;
-  const executionStreak = 6;
+  // Calculate display values
+  const ideaScore = stats?.ideaScore ?? 0;
+  const investorReadiness = stats?.investorReadiness ?? 0;
+  const executionStreak = stats?.executionStreak ?? 0;
 
   if (isLoading) {
     return (
@@ -205,6 +289,40 @@ export default function JourneyDashboard() {
             />
           ))}
         </div>
+        <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            Your Founder Journey
+          </h1>
+          <p className="text-muted-foreground">
+            Track your progress, insights, and milestones in one place
+          </p>
+        </div>
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-900">
+          <CardContent className="py-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-3" />
+            <p className="text-red-700 dark:text-red-300 mb-2 font-semibold">
+              Unable to load journey data
+            </p>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+              {error}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="border-red-300 hover:bg-red-100"
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -235,20 +353,35 @@ export default function JourneyDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-[#ff6a1a]">
-                  {ideaScore}
-                </span>
-                <span className="text-xl text-muted-foreground">/100</span>
-              </div>
-              <Progress value={ideaScore} className="h-2" />
-              <Link
-                href="/dashboard/reality-lens"
-                className="inline-flex items-center text-sm text-[#ff6a1a] hover:text-[#ea580c] gap-1 mt-2"
-              >
-                View details
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              {ideaScore > 0 ? (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold text-[#ff6a1a]">
+                      {ideaScore}
+                    </span>
+                    <span className="text-xl text-muted-foreground">/100</span>
+                  </div>
+                  <Progress value={ideaScore} className="h-2" />
+                  <Link
+                    href="/dashboard/reality-lens"
+                    className="inline-flex items-center text-sm text-[#ff6a1a] hover:text-[#ea580c] gap-1 mt-2"
+                  >
+                    View details
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    No score yet
+                  </p>
+                  <Link href="/dashboard/reality-lens">
+                    <Button size="sm" className="w-full">
+                      Analyze Your Idea
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -265,20 +398,35 @@ export default function JourneyDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-blue-600">
-                  {investorReadiness}
-                </span>
-                <span className="text-xl text-muted-foreground">%</span>
-              </div>
-              <Progress value={investorReadiness} className="h-2" />
-              <Link
-                href="/dashboard/investor-score"
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 gap-1 mt-2"
-              >
-                Improve score
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              {investorReadiness > 0 ? (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold text-blue-600">
+                      {investorReadiness}
+                    </span>
+                    <span className="text-xl text-muted-foreground">%</span>
+                  </div>
+                  <Progress value={investorReadiness} className="h-2" />
+                  <Link
+                    href="/dashboard/investor-score"
+                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 gap-1 mt-2"
+                  >
+                    Improve score
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Not assessed yet
+                  </p>
+                  <Link href="/dashboard/investor-score">
+                    <Button size="sm" variant="outline" className="w-full">
+                      Get Assessed
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -302,7 +450,9 @@ export default function JourneyDashboard() {
                 <span className="text-xl text-muted-foreground">days</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Keep the momentum going!
+                {executionStreak > 0
+                  ? "Keep the momentum going!"
+                  : "Start your journey today!"}
               </p>
             </div>
           </CardContent>
@@ -315,10 +465,20 @@ export default function JourneyDashboard() {
           <TabsTrigger value="insights" className="gap-2">
             <Lightbulb className="h-4 w-4" />
             Insights
+            {stats && stats.insights.active > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {stats.insights.active}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="milestones" className="gap-2">
             <Target className="h-4 w-4" />
             Milestones
+            {stats && stats.milestones.inProgress > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {stats.milestones.inProgress}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="timeline" className="gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -389,7 +549,19 @@ export default function JourneyDashboard() {
               A complete history of your progress
             </p>
           </div>
-          <Timeline events={events} />
+          {events.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-muted-foreground mb-2">No events yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Your journey timeline will appear here as you make progress
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Timeline events={events} />
+          )}
         </TabsContent>
       </Tabs>
 

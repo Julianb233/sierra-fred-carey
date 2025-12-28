@@ -213,7 +213,8 @@ export async function POST(request: NextRequest) {
       userId,
       "investor_score",
       savedScore.id,
-      scoreData
+      aiResponse,  // Pass raw AI response string
+      `Investor readiness analysis - Score: ${scoreData.overallScore}, Level: ${scoreData.readinessLevel}`
     ).catch((err) => console.error("[Investor Score] Insight extraction failed:", err));
 
     // Log journey event

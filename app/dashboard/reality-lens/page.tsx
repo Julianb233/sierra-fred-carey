@@ -22,6 +22,7 @@ import {
   InfoCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import { RatingPrompt } from "@/components/ai/rating-prompt";
 
 interface DimensionScore {
   score: number;
@@ -44,6 +45,12 @@ interface ApiResponse {
     weaknesses: string[];
     recommendations: string[];
   };
+  meta?: {
+    responseId: string;
+    requestId: string;
+    latencyMs: number;
+    variant?: string;
+  };
   error?: string;
 }
 
@@ -53,6 +60,7 @@ export default function RealityLensPage() {
   const [market, setMarket] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<ApiResponse["data"] | null>(null);
+  const [responseId, setResponseId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
