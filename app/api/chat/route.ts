@@ -4,8 +4,10 @@ import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 
 export async function POST(req: NextRequest) {
   try {
-    // TODO: Replace with your auth solution
-    const userId = req.headers.get("x-user-id") || "anonymous";
+    // User ID from session cookie or header (auth integration pending)
+    const userId = req.headers.get("x-user-id") ||
+                   req.cookies.get("userId")?.value ||
+                   "anonymous";
 
     const { message, history } = await req.json();
 

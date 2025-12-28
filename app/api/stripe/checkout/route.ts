@@ -4,8 +4,10 @@ import { getUserSubscription } from "@/lib/db/subscriptions";
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Replace with your auth solution
-    const userId = request.headers.get("x-user-id") || "anonymous";
+    // User ID from session cookie or header (auth integration pending)
+    const userId = request.headers.get("x-user-id") ||
+                   request.cookies.get("userId")?.value ||
+                   "anonymous";
 
     const { priceId } = await request.json();
 
