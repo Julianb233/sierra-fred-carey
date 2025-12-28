@@ -5,7 +5,7 @@
 
 export type NotificationChannel = 'slack' | 'pagerduty' | 'email';
 export type AlertLevel = 'info' | 'warning' | 'critical';
-export type AlertType = 'performance' | 'errors' | 'traffic' | 'significance';
+export type AlertType = 'performance' | 'errors' | 'traffic' | 'significance' | 'winner';
 
 /**
  * Notification Configuration

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       200
     );
 
-    const logs = await getNotificationLogs(userId, limit);
+    const logs = await getNotificationLogs(userId, { limit });
 
     return NextResponse.json({
       success: true,

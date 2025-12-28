@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
 /**
  * Login Page
  *
- * Authenticates users via Supabase Auth
- * Supports email/password and magic link authentication
+ * Authenticates users via Neon database auth
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -20,29 +20,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (signInError) {
-        throw signInError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sign in");
       }
 
-      if (data.session) {
-        // Success - redirect to intended page
-        router.push(redirect);
-        router.refresh();
-      }
+      // Success - redirect to intended page
+      router.push(redirect);
+      router.refresh();
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Failed to sign in");
@@ -51,144 +50,104 @@ export default function LoginPage() {
     }
   };
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}${redirect}`,
-        },
-      });
-
-      if (magicLinkError) {
-        throw magicLinkError;
-      }
-
-      setMagicLinkSent(true);
-    } catch (err) {
-      console.error("Magic link error:", err);
-      setError(err instanceof Error ? err.message : "Failed to send magic link");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (magicLinkSent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold">Check your email</h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              We sent a magic link to <strong>{email}</strong>
-            </p>
-            <p className="mt-4 text-sm text-gray-500">
-              Click the link in the email to sign in. You can close this window.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+      {/* Background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">Welcome back</h2>
+          <Link href="/" className="inline-block mb-6">
+            <img src="/sahara-logo.svg" alt="Sahara" className="h-10 w-auto" />
+          </Link>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Sign in to your account
+            Sign in to continue to your dashboard
           </p>
         </div>
 
-        <form onSubmit={handleEmailLogin} className="mt-8 space-y-6">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 shadow-lg">
+            {error && (
+              <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
-                placeholder="you@example.com"
-              />
-            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  Email address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                Remember me
-              </label>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleMagicLink}
-              disabled={!email || loading}
-              className="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50"
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-6 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
+              size="lg"
             >
-              Send magic link
-            </button>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
 
           <div className="text-center text-sm">
             <span className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </span>
             <Link
-              href={`/signup${redirect !== "/dashboard" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              href="/get-started"
+              className="font-medium text-[#ff6a1a] hover:text-[#ea580c]"
             >
-              Sign up
+              Get started free
             </Link>
           </div>
         </form>

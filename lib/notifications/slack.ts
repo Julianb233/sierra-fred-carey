@@ -323,7 +323,8 @@ function getLevelBadge(level: AlertLevel): string {
     case "info":
       return ":information_source: INFO";
     default:
-      return level.toUpperCase();
+      // Exhaustive check - should never reach here
+      return (level as string).toUpperCase();
   }
 }
 

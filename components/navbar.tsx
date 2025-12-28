@@ -156,8 +156,8 @@ function NavBar() {
 
                 <Separator className="my-2 bg-gray-200 dark:bg-gray-800" />
 
-                <Button asChild variant="outline" size="lg" className="w-full touch-target border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10 hover:border-[#ff6a1a]">
-                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                <Button asChild size="lg" className="w-full touch-target bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25">
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
                     Login
                   </Link>
                 </Button>
@@ -238,11 +238,10 @@ function NavBar() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Button
               asChild
-              variant="outline"
-              className="hidden sm:flex border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10 hover:border-[#ff6a1a] transition-all duration-300 touch-target"
+              className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
               size="sm"
             >
-              <Link href="/dashboard">
+              <Link href="/login">
                 Login
               </Link>
             </Button>

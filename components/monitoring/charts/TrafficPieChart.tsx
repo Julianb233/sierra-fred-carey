@@ -43,21 +43,21 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
 };
 
 interface LabelProps {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
 }
 
 const renderCustomLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
+  cx = 0,
+  cy = 0,
+  midAngle = 0,
+  innerRadius = 0,
+  outerRadius = 0,
+  percent = 0,
 }: LabelProps) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -92,7 +92,7 @@ export function TrafficPieChart({ className }: TrafficPieChartProps) {
         <ResponsiveContainer width="100%" height={350}>
           <PieChart>
             <Pie
-              data={data}
+              data={data as unknown as Array<Record<string, unknown>>}
               cx="50%"
               cy="50%"
               labelLine={false}

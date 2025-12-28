@@ -243,7 +243,7 @@ export async function exampleCheckNotificationLogs() {
   const { getNotificationLogs } = await import("@/lib/notifications");
 
   // Get recent logs for a user
-  const logs = await getNotificationLogs("user-123", 50);
+  const logs = await getNotificationLogs("user-123", { limit: 50 });
 
   // Filter failed notifications
   const failures = logs.filter((log) => log.status === "failed");
