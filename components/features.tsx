@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   LightningBoltIcon,
   RocketIcon,
@@ -93,13 +94,13 @@ export default function Features() {
             viewport={{ once: true }}
             className="inline-block text-sm font-semibold tracking-wider text-[#ff6a1a] bg-[#ff6a1a]/10 px-4 py-2 rounded-full border border-[#ff6a1a]/20 mb-6"
           >
-            CAPABILITIES
+            SAHARA CAPABILITIES
           </motion.span>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
-            <span className="text-[#ff6a1a]">Everything</span> Founders Need
+            Your <span className="text-[#ff6a1a]">Decision OS</span> for Startup Success
           </h2>
           <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 dark:text-gray-400">
-            From ideation to fundraising to scaling — the Decision OS supports you at every stage
+            From ideation to fundraising to scaling — Sahara supports you at every stage
             with tools built by someone who&apos;s been there.
           </p>
         </motion.div>
@@ -155,23 +156,188 @@ export default function Features() {
                     </h3>
 
                     {/* Description */}
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
                       {feature.description}
                     </p>
 
-                    {/* Learn more link */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      whileHover={{ x: 5 }}
-                      className="mt-6 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
-                        Learn more
-                      </span>
-                      <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
-                        →
-                      </span>
-                    </motion.div>
+                    {/* Mini Dashboard Mockup */}
+                    <div className="mb-6 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-4 overflow-hidden">
+                      {/* Reality Lens - Progress bars */}
+                      {index === 0 && (
+                        <div className="space-y-3">
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Feasibility Analysis</div>
+                          {[
+                            { label: "Market Demand", value: 85, color: "bg-[#ff6a1a]" },
+                            { label: "Economics", value: 72, color: "bg-orange-400" },
+                            { label: "Distribution", value: 68, color: "bg-amber-500" },
+                          ].map((metric, i) => (
+                            <div key={i} className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-600 dark:text-gray-400">{metric.label}</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">{metric.value}%</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  whileInView={{ width: `${metric.value}%` }}
+                                  transition={{ duration: 1, delay: i * 0.1 }}
+                                  className={`h-full ${metric.color} rounded-full`}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Investor Score - Score circle/badge */}
+                      {index === 1 && (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="relative">
+                            <svg className="w-24 h-24 transform -rotate-90">
+                              <circle
+                                cx="48"
+                                cy="48"
+                                r="40"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                fill="none"
+                                className="text-gray-200 dark:text-gray-700"
+                              />
+                              <motion.circle
+                                cx="48"
+                                cy="48"
+                                r="40"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                fill="none"
+                                strokeDasharray="251.2"
+                                initial={{ strokeDashoffset: 251.2 }}
+                                whileInView={{ strokeDashoffset: 251.2 - (251.2 * 73) / 100 }}
+                                transition={{ duration: 1.5 }}
+                                className="text-[#ff6a1a]"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-2xl font-bold text-gray-900 dark:text-white">73%</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">Ready</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pitch Deck - Slide preview thumbnail */}
+                      {index === 2 && (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-3 gap-2">
+                            {[1, 2, 3].map((slide) => (
+                              <div
+                                key={slide}
+                                className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center"
+                              >
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                  Slide {slide}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                            <span>12 slides analyzed</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Strategy Docs - Document icon list */}
+                      {index === 3 && (
+                        <div className="space-y-2">
+                          {[
+                            "Executive Summary",
+                            "Market Analysis",
+                            "90-Day Action Plan",
+                          ].map((doc, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 p-2 rounded bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+                            >
+                              <LayersIcon className="h-4 w-4 text-[#ff6a1a] flex-shrink-0" />
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                {doc}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Virtual Team - Agent avatars row */}
+                      {index === 4 && (
+                        <div>
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            Your AI Team
+                          </div>
+                          <div className="flex -space-x-3">
+                            {[
+                              { name: "FO", gradient: "from-[#ff6a1a] to-orange-500" },
+                              { name: "GO", gradient: "from-orange-500 to-amber-500" },
+                              { name: "RO", gradient: "from-amber-500 to-[#ff6a1a]" },
+                              { name: "IM", gradient: "from-orange-600 to-red-500" },
+                            ].map((agent, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ scale: 0 }}
+                                whileInView={{ scale: 1 }}
+                                transition={{ delay: i * 0.1 }}
+                                className={`w-12 h-12 rounded-full bg-gradient-to-br ${agent.gradient} flex items-center justify-center border-2 border-white dark:border-gray-900 shadow-lg`}
+                              >
+                                <span className="text-xs font-bold text-white">{agent.name}</span>
+                              </motion.div>
+                            ))}
+                          </div>
+                          <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                            4 agents active
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Check-ins - Chat bubble preview */}
+                      {index === 5 && (
+                        <div className="space-y-2">
+                          {[
+                            { time: "Today", msg: "How's your progress on the pitch deck?" },
+                            { time: "Yesterday", msg: "Great work on the market research!" },
+                          ].map((chat, i) => (
+                            <div key={i} className="flex gap-2 items-start">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="bg-white dark:bg-gray-900 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
+                                  <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-1">
+                                    {chat.msg}
+                                  </p>
+                                </div>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-1">
+                                  {chat.time}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* See Full Demo link */}
+                    <Link href="/product" className="block">
+                      <motion.div
+                        whileHover={{ x: 5 }}
+                        className="flex items-center gap-2 text-sm font-medium group/link"
+                      >
+                        <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
+                          See Full Demo
+                        </span>
+                        <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent group-hover/link:translate-x-1 transition-transform`}>
+                          →
+                        </span>
+                      </motion.div>
+                    </Link>
                   </div>
 
                   {/* Corner decoration */}
