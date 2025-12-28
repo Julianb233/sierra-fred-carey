@@ -18,6 +18,7 @@ import {
   Cross2Icon,
   OpenInNewWindowIcon,
   LockClosedIcon,
+  BarChartIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,12 @@ const navItems: NavItem[] = [
     name: "Your Journey",
     href: "/dashboard/journey",
     icon: <RocketIcon className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
+    name: "AI Insights",
+    href: "/dashboard/insights",
+    icon: <BarChartIcon className="h-4 w-4" />,
     badge: "Free",
   },
   {
