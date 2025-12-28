@@ -42,6 +42,12 @@ const navItems: NavItem[] = [
     badge: "Free",
   },
   {
+    name: "Your Journey",
+    href: "/dashboard/journey",
+    icon: <RocketIcon className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
     name: "Investor Score",
     href: "/dashboard/investor-score",
     icon: <PersonIcon className="h-4 w-4" />,
