@@ -258,13 +258,21 @@ const OnboardingPage = () => {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium mb-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      Takes 2 minutes • Get your personalized plan
+                    </motion.div>
                     <motion.h1
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white"
                     >
-                      Welcome to{" "}
-                      <span className="text-[#ff6a1a]">Sahara</span>
+                      Let&apos;s get you{" "}
+                      <span className="text-[#ff6a1a]">investor-ready</span>
                     </motion.h1>
                     <motion.p
                       initial={{ opacity: 0, y: 20 }}
@@ -272,8 +280,8 @@ const OnboardingPage = () => {
                       transition={{ delay: 0.1 }}
                       className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
                     >
-                      The AI-powered founder operating system that helps you make better
-                      decisions, raise smarter, and scale faster
+                      Answer 3 quick questions and we&apos;ll build your personalized
+                      roadmap to fundraise with confidence
                     </motion.p>
                   </div>
 

@@ -97,16 +97,16 @@ export default function Hero() {
             </h1>
           </motion.div>
 
-          {/* Subheadline */}
+          {/* Subheadline - Transformation focused */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mb-10 leading-relaxed"
           >
-            The AI-powered{" "}
-            <span className="text-gray-900 dark:text-white font-semibold">decision operating system</span>{" "}
-            that helps founders build real businesses, prepare for fundraising, and scale with leverage.
+            Go from &ldquo;figuring it out&rdquo; to{" "}
+            <span className="text-gray-900 dark:text-white font-semibold">investor-ready in 30 days</span>.
+            {" "}The AI co-pilot that gives you the clarity, strategy, and leverage of a $50K advisor — without the $50K.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -114,7 +114,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 mb-12"
+            className="flex flex-col sm:flex-row gap-4 mb-8"
           >
             <motion.div
               whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -15px rgba(255, 106, 26, 0.4)" }}
@@ -152,6 +152,31 @@ export default function Hero() {
                 </Link>
               </Button>
             </motion.div>
+          </motion.div>
+
+          {/* Instant Value CTA - Get Score in 60 seconds */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="mb-12"
+          >
+            <Link href="/tools/investor-readiness" className="group inline-flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 hover:text-[#ff6a1a] transition-colors">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#ff6a1a]/10 group-hover:bg-[#ff6a1a]/20 transition-colors">
+                <TargetIcon className="w-4 h-4 text-[#ff6a1a]" />
+              </span>
+              <span>
+                <span className="font-semibold text-gray-900 dark:text-white group-hover:text-[#ff6a1a]">Get your Investor Readiness Score</span>
+                {" "}— free, no signup, 60 seconds
+              </span>
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ repeat: Infinity, duration: 1.2 }}
+                className="text-[#ff6a1a]"
+              >
+                →
+              </motion.span>
+            </Link>
           </motion.div>
 
           {/* Trust indicators */}
