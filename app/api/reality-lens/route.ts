@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
-import { generateChatResponse } from "@/lib/ai/client";
+import { generateTrackedResponse } from "@/lib/ai/client";
+import { requireAuth, getOptionalUserId } from "@/lib/auth";
+import { extractInsights } from "@/lib/ai/insight-extractor";
 
-// Reality Lens AI Analysis System Prompt
-const REALITY_LENS_SYSTEM_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. Analyze this startup idea objectively using your proven "5 Dimensions of Reality" framework.
+// Fallback system prompt if not loaded from database
+const REALITY_LENS_FALLBACK_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. Analyze this startup idea objectively using your proven "5 Dimensions of Reality" framework.
 
 Score each dimension 0-100 based on these criteria:
 
@@ -99,13 +101,14 @@ interface RealityLensAnalysis {
 /**
  * POST /api/reality-lens
  * Analyze a startup idea using Fred Carey's 5 Dimensions of Reality framework
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ * TRACKING: Uses generateTrackedResponse for full logging and A/B testing
  */
 export async function POST(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body: RealityLensInput = await request.json();
     const { idea, stage, market } = body;
@@ -143,18 +146,25 @@ export async function POST(request: NextRequest) {
       contextualIdea += `\n\nTARGET MARKET: ${market}`;
     }
 
-    // Generate AI analysis using Fred Carey's framework
+    // Generate AI analysis using tracked response (logs to DB, supports A/B testing)
     console.log("[Reality Lens] Analyzing idea for user:", userId);
 
-    const aiResponse = await generateChatResponse(
+    const trackedResult = await generateTrackedResponse(
       [
         {
           role: "user",
           content: contextualIdea,
         },
       ],
-      REALITY_LENS_SYSTEM_PROMPT
+      REALITY_LENS_FALLBACK_PROMPT,
+      {
+        userId,
+        analyzer: "reality_lens",
+        inputData: { idea: idea.trim(), stage, market },
+      }
     );
+
+    const aiResponse = trackedResult.content;
 
     // Parse AI response
     let analysis: RealityLensAnalysis;
@@ -264,6 +274,34 @@ export async function POST(request: NextRequest) {
 
     console.log("[Reality Lens] Analysis saved with ID:", savedAnalysis.id);
 
+    // Extract insights from the analysis (async, non-blocking)
+    extractInsights(
+      userId,
+      "reality_lens",
+      savedAnalysis.id,
+      analysis
+    ).catch((err) => console.error("[Reality Lens] Insight extraction failed:", err));
+
+    // Log journey event
+    try {
+      await sql`
+        INSERT INTO journey_events (user_id, event_type, event_data, score_after)
+        VALUES (
+          ${userId},
+          'reality_lens_analysis',
+          ${JSON.stringify({
+            analysisId: savedAnalysis.id,
+            overallScore: analysis.overallScore,
+            requestId: trackedResult.requestId,
+            variant: trackedResult.variant,
+          })},
+          ${analysis.overallScore}
+        )
+      `;
+    } catch (err) {
+      console.error("[Reality Lens] Journey event logging failed:", err);
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -297,6 +335,12 @@ export async function POST(request: NextRequest) {
           recommendations: savedAnalysis.recommendations,
           createdAt: savedAnalysis.createdAt,
         },
+        meta: {
+          requestId: trackedResult.requestId,
+          responseId: trackedResult.responseId,
+          latencyMs: trackedResult.latencyMs,
+          variant: trackedResult.variant,
+        },
         message: "Idea analyzed successfully",
       },
       { status: 201 }
@@ -317,16 +361,17 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/reality-lens
  * Get user's analysis history
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
-    const userFilter = searchParams.get("userId") || userId;
+    // Users can only view their own analyses
+    const userFilter = userId;
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
     const offset = Math.max(parseInt(searchParams.get("offset") || "0"), 0);
 
