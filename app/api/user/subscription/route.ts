@@ -1,18 +1,11 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId, PLANS } from "@/lib/stripe/config";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // TODO: Replace with your auth solution
+    const userId = request.headers.get("x-user-id") || "anonymous";
 
     const subscription = await getUserSubscription(userId);
 

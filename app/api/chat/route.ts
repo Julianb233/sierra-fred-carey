@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { generateChatResponse, ChatMessage } from "@/lib/ai/client";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // TODO: Replace with your auth solution
+    const userId = req.headers.get("x-user-id") || "anonymous";
 
     const { message, history } = await req.json();
 

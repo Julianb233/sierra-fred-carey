@@ -10,9 +10,9 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sierra-fred-carey.vercel.app"),
-  title: "Founder Decision OS | Fred Cary",
-  description: "Think Clearer. Raise Smarter. Scale Faster. The AI-powered decision operating system for startup founders.",
-  keywords: ["startup", "founder", "fundraising", "investor", "pitch deck", "venture capital", "AI", "decision making"],
+  title: "Sahara | AI-Powered Founder Operating System",
+  description: "Think Clearer. Raise Smarter. Scale Faster. Sahara is the AI-powered operating system for startup founders. Built by Fred Cary — 10,000+ founders coached.",
+  keywords: ["startup", "founder", "fundraising", "investor", "pitch deck", "venture capital", "AI", "Sahara", "Fred Cary"],
   icons: {
     icon: "/icon.svg",
     apple: "/apple-icon.svg",

@@ -1,7 +1,7 @@
 // Database schema types for subscriptions
-// Implemented with Supabase
+// Implemented with Neon PostgreSQL
 
-import { createServiceClient } from "@/lib/supabase/server";
+import { sql } from "./neon";
 
 export interface UserSubscription {
   userId: string;
@@ -31,52 +31,40 @@ export interface StripeEvent {
   processedAt: Date | null;
 }
 
-// IMPLEMENTATION GUIDE:
-// 1. Replace these types with your database client
-// 2. Create tables:
-//
-//    CREATE TABLE user_subscriptions (
-//      user_id TEXT PRIMARY KEY,
-//      stripe_customer_id TEXT NOT NULL UNIQUE,
-//      stripe_subscription_id TEXT,
-//      stripe_price_id TEXT NOT NULL,
-//      status TEXT NOT NULL,
-//      current_period_start TIMESTAMP NOT NULL,
-//      current_period_end TIMESTAMP NOT NULL,
-//      canceled_at TIMESTAMP,
-//      cancel_at_period_end BOOLEAN DEFAULT FALSE,
-//      trial_start TIMESTAMP,
-//      trial_end TIMESTAMP,
-//      created_at TIMESTAMP DEFAULT NOW(),
-//      updated_at TIMESTAMP DEFAULT NOW()
-//    );
-//
-//    CREATE TABLE stripe_events (
-//      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//      stripe_event_id TEXT NOT NULL UNIQUE,
-//      stripe_customer_id TEXT,
-//      type TEXT NOT NULL,
-//      status TEXT NOT NULL,
-//      payload JSONB NOT NULL,
-//      error TEXT,
-//      created_at TIMESTAMP DEFAULT NOW(),
-//      processed_at TIMESTAMP
-//    );
-//
-// 3. Create functions to interact with these tables
-
-// Supabase database functions
+// Neon database functions
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
-  const supabase = createServiceClient();
+  const result = await sql`
+    SELECT * FROM user_subscriptions WHERE user_id = ${userId} LIMIT 1
+  `;
 
-  const { data, error } = await supabase
-    .from("user_subscriptions")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  if (!result || result.length === 0) return null;
 
-  if (error || !data) return null;
+  const data = result[0];
+  return {
+    userId: data.user_id,
+    stripeCustomerId: data.stripe_customer_id,
+    stripeSubscriptionId: data.stripe_subscription_id,
+    stripePriceId: data.stripe_price_id,
+    status: data.status,
+    currentPeriodStart: new Date(data.current_period_start),
+    currentPeriodEnd: new Date(data.current_period_end),
+    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+    cancelAtPeriodEnd: data.cancel_at_period_end,
+    trialStart: data.trial_start ? new Date(data.trial_start) : null,
+    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
+}
 
+export async function getSubscriptionByCustomerId(customerId: string): Promise<UserSubscription | null> {
+  const result = await sql`
+    SELECT * FROM user_subscriptions WHERE stripe_customer_id = ${customerId} LIMIT 1
+  `;
+
+  if (!result || result.length === 0) return null;
+
+  const data = result[0];
   return {
     userId: data.user_id,
     stripeCustomerId: data.stripe_customer_id,
@@ -97,36 +85,52 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
 export async function createOrUpdateSubscription(
   subscription: Partial<UserSubscription>
 ): Promise<UserSubscription> {
-  const supabase = createServiceClient();
+  const now = new Date().toISOString();
 
-  const dbData = {
-    user_id: subscription.userId,
-    stripe_customer_id: subscription.stripeCustomerId,
-    stripe_subscription_id: subscription.stripeSubscriptionId,
-    stripe_price_id: subscription.stripePriceId,
-    status: subscription.status,
-    current_period_start: subscription.currentPeriodStart?.toISOString(),
-    current_period_end: subscription.currentPeriodEnd?.toISOString(),
-    canceled_at: subscription.canceledAt?.toISOString(),
-    cancel_at_period_end: subscription.cancelAtPeriodEnd,
-    trial_start: subscription.trialStart?.toISOString(),
-    trial_end: subscription.trialEnd?.toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  const result = await sql`
+    INSERT INTO user_subscriptions (
+      user_id,
+      stripe_customer_id,
+      stripe_subscription_id,
+      stripe_price_id,
+      status,
+      current_period_start,
+      current_period_end,
+      canceled_at,
+      cancel_at_period_end,
+      trial_start,
+      trial_end,
+      updated_at
+    ) VALUES (
+      ${subscription.userId},
+      ${subscription.stripeCustomerId},
+      ${subscription.stripeSubscriptionId || null},
+      ${subscription.stripePriceId},
+      ${subscription.status},
+      ${subscription.currentPeriodStart?.toISOString()},
+      ${subscription.currentPeriodEnd?.toISOString()},
+      ${subscription.canceledAt?.toISOString() || null},
+      ${subscription.cancelAtPeriodEnd || false},
+      ${subscription.trialStart?.toISOString() || null},
+      ${subscription.trialEnd?.toISOString() || null},
+      ${now}
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+      stripe_customer_id = EXCLUDED.stripe_customer_id,
+      stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+      stripe_price_id = EXCLUDED.stripe_price_id,
+      status = EXCLUDED.status,
+      current_period_start = EXCLUDED.current_period_start,
+      current_period_end = EXCLUDED.current_period_end,
+      canceled_at = EXCLUDED.canceled_at,
+      cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+      trial_start = EXCLUDED.trial_start,
+      trial_end = EXCLUDED.trial_end,
+      updated_at = EXCLUDED.updated_at
+    RETURNING *
+  `;
 
-  // Remove undefined values
-  const cleanData = Object.fromEntries(
-    Object.entries(dbData).filter(([, v]) => v !== undefined)
-  );
-
-  const { data, error } = await supabase
-    .from("user_subscriptions")
-    .upsert(cleanData, { onConflict: "user_id" })
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to upsert subscription: ${error.message}`);
-
+  const data = result[0];
   return {
     userId: data.user_id,
     stripeCustomerId: data.stripe_customer_id,
@@ -147,22 +151,24 @@ export async function createOrUpdateSubscription(
 export async function recordStripeEvent(
   event: Partial<StripeEvent>
 ): Promise<StripeEvent> {
-  const supabase = createServiceClient();
+  const result = await sql`
+    INSERT INTO stripe_events (
+      stripe_event_id,
+      stripe_customer_id,
+      type,
+      status,
+      payload
+    ) VALUES (
+      ${event.stripeEventId},
+      ${event.stripeCustomerId || null},
+      ${event.type},
+      ${event.status || "pending"},
+      ${JSON.stringify(event.payload)}
+    )
+    RETURNING *
+  `;
 
-  const { data, error } = await supabase
-    .from("stripe_events")
-    .insert({
-      stripe_event_id: event.stripeEventId,
-      stripe_customer_id: event.stripeCustomerId,
-      type: event.type,
-      status: event.status || "pending",
-      payload: event.payload,
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to record event: ${error.message}`);
-
+  const data = result[0];
   return {
     id: data.id,
     stripeEventId: data.stripe_event_id,
@@ -177,16 +183,13 @@ export async function recordStripeEvent(
 }
 
 export async function getStripeEventById(stripeEventId: string): Promise<StripeEvent | null> {
-  const supabase = createServiceClient();
+  const result = await sql`
+    SELECT * FROM stripe_events WHERE stripe_event_id = ${stripeEventId} LIMIT 1
+  `;
 
-  const { data, error } = await supabase
-    .from("stripe_events")
-    .select("*")
-    .eq("stripe_event_id", stripeEventId)
-    .single();
+  if (!result || result.length === 0) return null;
 
-  if (error || !data) return null;
-
+  const data = result[0];
   return {
     id: data.id,
     stripeEventId: data.stripe_event_id,
@@ -201,15 +204,9 @@ export async function getStripeEventById(stripeEventId: string): Promise<StripeE
 }
 
 export async function markEventAsProcessed(id: string): Promise<void> {
-  const supabase = createServiceClient();
-
-  const { error } = await supabase
-    .from("stripe_events")
-    .update({
-      status: "processed",
-      processed_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(`Failed to mark event as processed: ${error.message}`);
+  await sql`
+    UPDATE stripe_events
+    SET status = 'processed', processed_at = NOW()
+    WHERE id = ${id}::uuid
+  `;
 }

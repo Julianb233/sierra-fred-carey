@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { TwitterLogoIcon, LinkedInLogoIcon, RocketIcon } from "@radix-ui/react-icons";
 
@@ -42,9 +43,15 @@ const Footer = () => {
           <div className="flex flex-col space-y-4 md:col-span-2">
             <Link
               href="/"
-              className="text-2xl font-bold text-[#ff6a1a] hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity"
             >
-              Decision OS
+              <Image
+                src="/sahara-logo.svg"
+                alt="Sahara"
+                width={140}
+                height={35}
+                className="h-8 w-auto"
+              />
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-sm">
               The AI-powered decision operating system for startup founders.

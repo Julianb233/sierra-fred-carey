@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCustomerPortalSession } from "@/lib/stripe/server";
-import { auth } from "@clerk/nextjs/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // TODO: Replace with your auth solution
+    const userId = request.headers.get("x-user-id") || "anonymous";
 
     const subscription = await getUserSubscription(userId);
 
