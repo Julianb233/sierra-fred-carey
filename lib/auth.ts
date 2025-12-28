@@ -166,14 +166,8 @@ export async function signUp(
 
     return { success: true, user, token };
   } catch (error: any) {
-    console.error("[auth] Sign up error:", error);
-    console.error("[auth] Error details:", JSON.stringify({
-      name: error?.name,
-      message: error?.message,
-      code: error?.code,
-      stack: error?.stack?.substring(0, 500)
-    }));
-    return { success: false, error: error?.message || "Failed to create account" };
+    console.error("[auth] Sign up error:", error?.message || error);
+    return { success: false, error: String(error?.message || "Failed to create account") };
   }
 }
 

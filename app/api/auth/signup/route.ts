@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error("[api/auth/signup] Error:", error);
+    console.error("[api/auth/signup] Error:", error?.message || error);
     return NextResponse.json(
-      { error: error?.message || "Internal server error", details: error?.toString() },
+      { error: String(error?.message || "Internal server error") },
       { status: 500 }
     );
   }
