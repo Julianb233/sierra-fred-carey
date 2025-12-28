@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateChatResponse } from "@/lib/ai/client";
+import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
+import { extractInsights } from "@/lib/ai/insight-extractor";
 
 // System prompt for investor readiness scoring
 const INVESTOR_SCORE_SYSTEM_PROMPT = `You are Fred Cary, a seasoned investor and startup advisor assessing investor readiness for a startup. Your job is to provide honest, actionable feedback across 8 key dimensions.
@@ -114,18 +116,17 @@ interface StartupProfile {
 /**
  * POST /api/investor-score
  * Calculate investor readiness score for a startup
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ * TRACKING: Uses generateTrackedResponse for full logging and A/B testing
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, profile } = body as { userId: string; profile: StartupProfile };
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 }
-      );
-    }
+    const body = await request.json();
+    const { profile } = body as { profile: StartupProfile };
 
     if (!profile || typeof profile !== "object") {
       return NextResponse.json(
@@ -137,16 +138,23 @@ export async function POST(request: NextRequest) {
     // Build prompt from startup profile
     const profileSummary = formatProfileForPrompt(profile);
 
-    // Call AI to generate score
-    const aiResponse = await generateChatResponse(
+    // Call AI to generate score using tracked response
+    const trackedResult = await generateTrackedResponse(
       [
         {
           role: "user",
           content: `Assess this startup's investor readiness:\n\n${profileSummary}`,
         },
       ],
-      INVESTOR_SCORE_SYSTEM_PROMPT
+      INVESTOR_SCORE_SYSTEM_PROMPT,
+      {
+        userId,
+        analyzer: "investor_score",
+        inputData: { profile },
+      }
     );
+
+    const aiResponse = trackedResult.content;
 
     // Parse AI response
     let scoreData: InvestorScoreResponse;
