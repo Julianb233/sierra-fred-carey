@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ReactNode, useRef } from "react";
+import { ReactNode, useRef, useCallback, useEffect, useState } from "react";
 
 interface Card3DProps {
   children: ReactNode;
@@ -9,6 +9,53 @@ interface Card3DProps {
   containerClassName?: string;
   rotationIntensity?: number;
   glareEnabled?: boolean;
+}
+
+// Throttle helper for performance
+function useThrottledCallback(
+  callback: (mouseX: number, mouseY: number, width: number, height: number) => void,
+  delay: number
+) {
+  const lastCall = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastArgsRef = useRef<[number, number, number, number] | null>(null);
+
+  return useCallback(
+    (mouseX: number, mouseY: number, width: number, height: number) => {
+      const now = Date.now();
+      lastArgsRef.current = [mouseX, mouseY, width, height];
+
+      if (now - lastCall.current >= delay) {
+        lastCall.current = now;
+        callback(mouseX, mouseY, width, height);
+      } else if (!timeoutRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          lastCall.current = Date.now();
+          if (lastArgsRef.current) {
+            callback(...lastArgsRef.current);
+          }
+          timeoutRef.current = null;
+        }, delay - (now - lastCall.current));
+      }
+    },
+    [callback, delay]
+  );
+}
+
+// Hook to detect reduced motion preference
+function useReducedMotion(): boolean {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  return prefersReducedMotion;
 }
 
 export function Card3D({
@@ -19,12 +66,13 @@ export function Card3D({
   glareEnabled = true,
 }: Card3DProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const mouseXSpring = useSpring(x);
-  const mouseYSpring = useSpring(y);
+  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
+  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
 
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [`${rotationIntensity}deg`, `-${rotationIntensity}deg`]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [`-${rotationIntensity}deg`, `${rotationIntensity}deg`]);
@@ -32,23 +80,26 @@ export function Card3D({
   const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"]);
   const glareY = useTransform(mouseYSpring, [-0.5, 0.5], ["0%", "100%"]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+  // Throttled mouse move handler - updates max 60fps (16ms)
+  const updatePosition = useCallback((mouseX: number, mouseY: number, width: number, height: number) => {
     const xPct = mouseX / width - 0.5;
     const yPct = mouseY / height - 0.5;
     x.set(xPct);
     y.set(yPct);
-  };
+  }, [x, y]);
 
-  const handleMouseLeave = () => {
+  const throttledUpdate = useThrottledCallback(updatePosition, 16);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current || prefersReducedMotion) return;
+    const rect = ref.current.getBoundingClientRect();
+    throttledUpdate(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+  }, [throttledUpdate, prefersReducedMotion]);
+
+  const handleMouseLeave = useCallback(() => {
     x.set(0);
     y.set(0);
-  };
+  }, [x, y]);
 
   return (
     <div className={`perspective-1000 ${containerClassName}`}>

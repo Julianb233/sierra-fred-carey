@@ -29,7 +29,7 @@ export default function ProductPage() {
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Decorative background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/5 via-transparent to-purple-500/5 dark:from-[#ff6a1a]/10 dark:to-purple-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/5 via-transparent to-amber-500/5 dark:from-[#ff6a1a]/10 dark:to-amber-500/10" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,106,26,0.1),transparent_50%)]" />
 
         <div className="relative max-w-7xl mx-auto">
@@ -186,8 +186,8 @@ export default function ProductPage() {
               <GlassCard3D className="p-6 sm:p-8 h-full">
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
-                      <RocketIcon className="h-6 w-6 text-purple-500" />
+                    <div className="p-2 rounded-lg bg-[#ff6a1a]/10">
+                      <RocketIcon className="h-6 w-6 text-[#ff6a1a]" />
                     </div>
                     <h3 className="text-2xl font-bold">Investor Readiness Score</h3>
                   </div>
@@ -230,7 +230,7 @@ export default function ProductPage() {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-purple-500/10 to-[#ff6a1a]/10 rounded-lg p-4 border border-purple-500/20">
+                  <div className="bg-gradient-to-r from-[#ff6a1a]/10 to-orange-400/10 rounded-lg p-4 border border-[#ff6a1a]/20">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium mb-1">Overall Score</p>
@@ -238,7 +238,7 @@ export default function ProductPage() {
                           Above average readiness
                         </p>
                       </div>
-                      <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-[#ff6a1a] bg-clip-text text-transparent">
+                      <div className="text-3xl font-bold text-[#ff6a1a]">
                         7.2
                       </div>
                     </div>
@@ -359,7 +359,7 @@ export default function ProductPage() {
                         status: "active",
                         tasks: 8,
                         icon: "💰",
-                        color: "text-purple-500",
+                        color: "text-orange-500",
                       },
                       {
                         name: "Growth Ops",
@@ -542,8 +542,8 @@ export default function ProductPage() {
               <GlassCard3D className="p-6 sm:p-8 h-full">
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10">
-                      <FileTextIcon className="h-6 w-6 text-indigo-500" />
+                    <div className="p-2 rounded-lg bg-[#ff6a1a]/10">
+                      <FileTextIcon className="h-6 w-6 text-[#ff6a1a]" />
                     </div>
                     <h3 className="text-2xl font-bold">Strategy Documents</h3>
                   </div>
@@ -560,7 +560,7 @@ export default function ProductPage() {
                       {
                         name: "Fundraising",
                         icon: "💼",
-                        color: "from-purple-500 to-pink-500",
+                        color: "from-orange-500 to-amber-500",
                       },
                       { name: "Product Roadmap", icon: "🗺️", color: "from-blue-500 to-cyan-500" },
                       {
@@ -610,10 +610,10 @@ export default function ProductPage() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500/30 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#ff6a1a]/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
-                          <FileTextIcon className="h-4 w-4 text-indigo-500" />
+                          <FileTextIcon className="h-4 w-4 text-[#ff6a1a]" />
                           <div>
                             <p className="text-sm font-medium">{doc.name}</p>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -621,7 +621,7 @@ export default function ProductPage() {
                             </p>
                           </div>
                         </div>
-                        <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+                        <Badge className="bg-[#ff6a1a]/10 text-[#ff6a1a] border-[#ff6a1a]/20">
                           {doc.status}
                         </Badge>
                       </motion.div>
@@ -636,13 +636,13 @@ export default function ProductPage() {
 
       {/* CTA Section */}
       <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/10 via-purple-500/10 to-pink-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/10 via-orange-400/10 to-amber-500/10" />
 
         <div className="relative max-w-4xl mx-auto text-center">
           <FadeUpOnScroll>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
               Ready to Transform Your{" "}
-              <span className="bg-gradient-to-r from-[#ff6a1a] via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-[#ff6a1a]">
                 Founder Journey?
               </span>
             </h2>

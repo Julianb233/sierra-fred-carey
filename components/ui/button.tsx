@@ -20,6 +20,12 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Brand orange button - use for primary CTAs
+        orange:
+          "bg-[#ff6a1a] text-white shadow-lg shadow-[#ff6a1a]/25 hover:bg-[#ea580c] hover:shadow-[#ff6a1a]/40 focus-visible:ring-[#ff6a1a]/30",
+        // Orange outline variant
+        "orange-outline":
+          "border-2 border-[#ff6a1a] text-[#ff6a1a] bg-transparent hover:bg-[#ff6a1a]/10 focus-visible:ring-[#ff6a1a]/30",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

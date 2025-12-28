@@ -9,11 +9,23 @@ import { Button } from "@/components/ui/button";
 
 export default function ChatPage() {
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-950 overflow-hidden">
-      {/* Background blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
-        <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-20 right-[15%] w-80 h-80 bg-orange-400/15 rounded-full blur-[120px]" />
+    <div className="relative min-h-screen bg-gradient-to-b from-white via-orange-50/30 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 overflow-hidden">
+      {/* Enhanced background with multiple layers */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Primary glow - top left */}
+        <div className="absolute -top-20 -left-20 w-[500px] h-[500px] bg-[#ff6a1a]/15 rounded-full blur-[150px] animate-pulse" style={{ animationDuration: '8s' }} />
+        {/* Secondary glow - bottom right */}
+        <div className="absolute -bottom-32 -right-20 w-[600px] h-[600px] bg-orange-400/12 rounded-full blur-[180px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        {/* Accent glow - center */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/8 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+        {/* Subtle grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 1px)',
+            backgroundSize: '32px 32px'
+          }}
+        />
       </div>
 
       {/* Header - Mobile Optimized */}

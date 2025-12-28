@@ -134,6 +134,58 @@
 }
 
 /* ========================================
+   ACCESSIBILITY - REDUCED MOTION
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-gradient,
+  .text-gradient,
+  .text-gradient-orange,
+  .animate-float,
+  .animate-blob,
+  .animate-pulse,
+  .shimmer,
+  .shimmer-effect {
+    animation: none !important;
+  }
+
+  /* Keep essential visual feedback but remove motion */
+  .motion-safe\:animate-none {
+    animation: none;
+  }
+}
+
+/* Focus visible styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Skip to content link for screen readers */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* ========================================
    STARTUP BIZ DESIGN SYSTEM
    ======================================== */
 

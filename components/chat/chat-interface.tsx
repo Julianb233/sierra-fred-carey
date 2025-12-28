@@ -51,6 +51,11 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
       const data = await response.json();
 
+      // Check if response was successful
+      if (!response.ok || !data.response) {
+        throw new Error(data.error || "Failed to get response");
+      }
+
       // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -61,10 +66,10 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Chat error:", error);
-      // Add error message
+      // Add helpful error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I encountered an error. Please try again.",
+        content: "I apologize, but I'm having trouble responding right now. This is a demo - the full AI capabilities will be available soon. In the meantime, feel free to explore the other features of Sahara!",
         role: "assistant",
         timestamp: new Date(),
       };
@@ -76,8 +81,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
   return (
     <div className={cn("relative flex flex-col h-full", className)}>
-      {/* Floating orbs background */}
-      <FloatingOrbs />
+      {/* Floating orbs background - chat variant with brand orange colors */}
+      <FloatingOrbs variant="chat" />
 
       {/* Messages container */}
       <div

@@ -46,11 +46,26 @@ export default function WaitlistPage() {
     setError(null);
 
     try {
-      // Simulate API call - replace with actual waitlist API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch("/api/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          stage: "waitlist",
+          challenges: company ? [company] : [],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to join waitlist");
+      }
+
       setIsSubmitted(true);
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

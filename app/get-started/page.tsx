@@ -24,7 +24,10 @@ import {
   Clock,
   Loader2,
   Mail,
-  User
+  User,
+  UserPlus,
+  X,
+  Plus
 } from "lucide-react";
 
 // Types
@@ -62,8 +65,23 @@ const OnboardingPage = () => {
   const [selectedChallenges, setSelectedChallenges] = useState<Challenge[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [teammateEmail, setTeammateEmail] = useState("");
+  const [teammateEmails, setTeammateEmails] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Add teammate email
+  const addTeammate = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (teammateEmail && emailRegex.test(teammateEmail) && !teammateEmails.includes(teammateEmail.toLowerCase())) {
+      setTeammateEmails([...teammateEmails, teammateEmail.toLowerCase()]);
+      setTeammateEmail("");
+    }
+  };
+
+  const removeTeammate = (emailToRemove: string) => {
+    setTeammateEmails(teammateEmails.filter(e => e !== emailToRemove));
+  };
 
   // Stage options
   const stages: StageOption[] = [
@@ -386,12 +404,22 @@ const OnboardingPage = () => {
                       >
                         <button
                           onClick={() => setSelectedStage(stage.id)}
-                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-2xl p-6 border-2 transition-all duration-300 ${
+                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-2xl p-6 border-2 transition-all duration-300 relative ${
                             selectedStage === stage.id
                               ? "border-[#ff6a1a] shadow-lg shadow-[#ff6a1a]/20"
                               : "border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30"
                           }`}
                         >
+                          {/* Checkbox indicator */}
+                          <div className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            selectedStage === stage.id
+                              ? "bg-[#ff6a1a] border-[#ff6a1a]"
+                              : "border-gray-300 dark:border-gray-600"
+                          }`}>
+                            {selectedStage === stage.id && (
+                              <CheckCircle2 className="w-5 h-5 text-white" />
+                            )}
+                          </div>
                           <div className="flex items-start gap-4">
                             <div
                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
@@ -402,7 +430,7 @@ const OnboardingPage = () => {
                             >
                               <stage.icon className="w-6 h-6" />
                             </div>
-                            <div className="flex-1 space-y-2">
+                            <div className="flex-1 space-y-2 pr-8">
                               <h3 className="font-semibold text-xl text-gray-900 dark:text-white">{stage.title}</h3>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {stage.description}
@@ -474,13 +502,29 @@ const OnboardingPage = () => {
                       >
                         <button
                           onClick={() => toggleChallenge(challenge.id)}
-                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-xl p-5 border-2 transition-all duration-300 ${
+                          className={`w-full text-left bg-white dark:bg-gray-900 rounded-xl p-5 border-2 transition-all duration-300 relative ${
                             selectedChallenges.includes(challenge.id)
                               ? "border-[#ff6a1a] shadow-lg shadow-[#ff6a1a]/20"
                               : "border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30"
                           }`}
                         >
-                          <div className="flex items-start gap-4">
+                          {/* Checkbox indicator */}
+                          <div className={`absolute top-4 right-4 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                            selectedChallenges.includes(challenge.id)
+                              ? "bg-[#ff6a1a] border-[#ff6a1a]"
+                              : "border-gray-300 dark:border-gray-600"
+                          }`}>
+                            {selectedChallenges.includes(challenge.id) && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              >
+                                <CheckCircle2 className="w-4 h-4 text-white" />
+                              </motion.div>
+                            )}
+                          </div>
+                          <div className="flex items-start gap-4 pr-8">
                             <div
                               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
                                 selectedChallenges.includes(challenge.id)
@@ -496,15 +540,6 @@ const OnboardingPage = () => {
                                 {challenge.description}
                               </p>
                             </div>
-                            {selectedChallenges.includes(challenge.id) && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                              >
-                                <CheckCircle2 className="w-5 h-5 text-[#ff6a1a]" />
-                              </motion.div>
-                            )}
                           </div>
                         </button>
                       </motion.div>
@@ -622,6 +657,60 @@ const OnboardingPage = () => {
                                 className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
                               />
                             </div>
+                          </div>
+
+                          {/* Invite Teammates Section */}
+                          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2 mb-3">
+                              <UserPlus className="w-5 h-5 text-[#ff6a1a]" />
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                Invite co-founders or teammates (optional)
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                  type="email"
+                                  placeholder="teammate@company.com"
+                                  value={teammateEmail}
+                                  onChange={(e) => setTeammateEmail(e.target.value)}
+                                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTeammate())}
+                                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-sm focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={addTeammate}
+                                variant="outline"
+                                size="sm"
+                                className="border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            {teammateEmails.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {teammateEmails.map((email) => (
+                                  <div
+                                    key={email}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ff6a1a]/10 text-[#ff6a1a] rounded-full text-sm"
+                                  >
+                                    <span>{email}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeTeammate(email)}
+                                      className="hover:bg-[#ff6a1a]/20 rounded-full p-0.5"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              They&apos;ll receive an invite email once you sign up
+                            </p>
                           </div>
 
                           {error && (

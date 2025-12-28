@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
+import { Toaster } from "sonner";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -30,6 +31,22 @@ export default function RootLayout({
         <Providers>
           <NavBar />
           {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "hsl(var(--background))",
+                color: "hsl(var(--foreground))",
+                border: "1px solid hsl(var(--border))",
+              },
+              classNames: {
+                success: "!bg-green-50 !border-green-200 dark:!bg-green-950 dark:!border-green-800",
+                error: "!bg-red-50 !border-red-200 dark:!bg-red-950 dark:!border-red-800",
+              },
+            }}
+            richColors
+            closeButton
+          />
         </Providers>
       </body>
     </html>

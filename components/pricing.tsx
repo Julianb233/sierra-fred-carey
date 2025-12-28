@@ -115,31 +115,35 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <FadeUpOnScroll key={plan.name} delay={index * 0.15}>
-              <Card3D
-                rotationIntensity={plan.isMostPop ? 6 : 8}
-                className={`relative h-full rounded-2xl overflow-hidden ${
-                  plan.isMostPop
-                    ? "bg-gradient-to-b from-[#ff6a1a]/10 to-white dark:to-gray-950 border-2 border-[#ff6a1a] shadow-xl shadow-[#ff6a1a]/20"
-                    : "bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800"
-                }`}
-              >
-                {/* Most popular badge */}
+              {/* Wrapper for badge positioning - badge lives outside overflow-hidden card */}
+              <div className={`relative ${plan.isMostPop ? "pt-4 sm:pt-5" : ""}`}>
+                {/* Most Popular badge - positioned outside card to avoid clipping */}
                 {plan.isMostPop && (
-                  <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-[#ff6a1a] via-orange-400 to-[#ff6a1a]" />
+                  <motion.div
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="absolute top-0 left-1/2 -translate-x-1/2 z-20"
+                  >
+                    <span className="bg-[#ff6a1a] text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg shadow-[#ff6a1a]/30 whitespace-nowrap">
+                      ⭐ Most Popular
+                    </span>
+                  </motion.div>
                 )}
 
-                <div className="relative z-10 p-6 sm:p-8">
+                <Card3D
+                  rotationIntensity={plan.isMostPop ? 6 : 8}
+                  className={`relative h-full rounded-2xl overflow-hidden ${
+                    plan.isMostPop
+                      ? "bg-gradient-to-b from-[#ff6a1a]/10 to-white dark:to-gray-950 border-2 border-[#ff6a1a] shadow-xl shadow-[#ff6a1a]/20"
+                      : "bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800"
+                  }`}
+                >
+                  {/* Top gradient bar for popular plan */}
                   {plan.isMostPop && (
-                    <motion.div
-                      initial={{ y: -10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2"
-                    >
-                      <span className="bg-[#ff6a1a] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium shadow-lg">
-                        Most Popular
-                      </span>
-                    </motion.div>
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff6a1a] via-orange-400 to-[#ff6a1a]" />
                   )}
+
+                <div className="relative z-10 p-6 sm:p-8">
 
                   {/* Icon */}
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center mb-4 sm:mb-6 shadow-lg`}>
@@ -202,6 +206,7 @@ export default function Pricing() {
                 {/* Decorative gradient */}
                 <div className={`absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t ${plan.gradient} opacity-5 pointer-events-none`} />
               </Card3D>
+              </div>
             </FadeUpOnScroll>
           ))}
         </div>
