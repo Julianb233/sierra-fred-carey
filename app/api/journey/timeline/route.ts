@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * GET /api/journey/timeline
  * Unified timeline of all journey events
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const eventType = searchParams.get("event_type");
@@ -50,12 +52,13 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/journey/timeline
  * Create a journey event
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { eventType, eventData = {}, scoreBefore, scoreAfter } = body;

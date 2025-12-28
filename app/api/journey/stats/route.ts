@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * GET /api/journey/stats
  * Get journey statistics for the dashboard header cards
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value;
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User authentication required" },
-        { status: 401 }
-      );
-    }
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     // Fetch multiple stats in parallel
     const [

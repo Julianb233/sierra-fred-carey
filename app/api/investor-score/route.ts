@@ -208,11 +208,46 @@ export async function POST(request: NextRequest) {
 
     const savedScore = result[0];
 
+    // Extract insights from the analysis (async, non-blocking)
+    extractInsights(
+      userId,
+      "investor_score",
+      savedScore.id,
+      scoreData
+    ).catch((err) => console.error("[Investor Score] Insight extraction failed:", err));
+
+    // Log journey event
+    try {
+      await sql`
+        INSERT INTO journey_events (user_id, event_type, event_data, score_after)
+        VALUES (
+          ${userId},
+          'investor_score_analysis',
+          ${JSON.stringify({
+            analysisId: savedScore.id,
+            overallScore: scoreData.overallScore,
+            readinessLevel: scoreData.readinessLevel,
+            requestId: trackedResult.requestId,
+            variant: trackedResult.variant,
+          })},
+          ${scoreData.overallScore}
+        )
+      `;
+    } catch (err) {
+      console.error("[Investor Score] Journey event logging failed:", err);
+    }
+
     return NextResponse.json({
       success: true,
       scoreId: savedScore.id,
       createdAt: savedScore.created_at,
       score: scoreData,
+      meta: {
+        requestId: trackedResult.requestId,
+        responseId: trackedResult.responseId,
+        latencyMs: trackedResult.latencyMs,
+        variant: trackedResult.variant,
+      },
     });
   } catch (error) {
     console.error("Error calculating investor score:", error);
@@ -227,20 +262,15 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/investor-score?userId=xxx
- * Get score history for a user
+ * GET /api/investor-score
+ * Get score history for the authenticated user
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId query parameter is required" },
-        { status: 400 }
-      );
-    }
+    // SECURITY: Get userId from server-side session (not from query params!)
+    const userId = await requireAuth();
 
     // Fetch user's score history
     const scores = await sql`
