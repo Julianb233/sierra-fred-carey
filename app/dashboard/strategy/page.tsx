@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   FileText,
   Target,
@@ -14,7 +16,8 @@ import {
   ChevronUp,
   Sparkles,
   Calendar,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 
 interface DocumentType {
@@ -24,12 +27,15 @@ interface DocumentType {
   icon: React.ElementType;
 }
 
-interface RecentDocument {
+interface Document {
   id: string;
   title: string;
   type: string;
   status: 'completed' | 'draft';
   generatedAt: string;
+  content?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const documentTypes: DocumentType[] = [
@@ -59,37 +65,54 @@ const documentTypes: DocumentType[] = [
   },
 ];
 
-const recentDocuments: RecentDocument[] = [
-  {
-    id: '1',
-    title: 'Q1 GTM Strategy',
-    type: 'Go-to-Market Strategy',
-    status: 'completed',
-    generatedAt: '2 days ago',
-  },
-  {
-    id: '2',
-    title: 'Competitor Landscape Analysis',
-    type: 'Competitive Analysis',
-    status: 'completed',
-    generatedAt: '1 week ago',
-  },
-  {
-    id: '3',
-    title: 'Series A Investor Memo',
-    type: 'Investor Memo',
-    status: 'draft',
-    generatedAt: '3 days ago',
-  },
-];
-
 export default function StrategyPage() {
+  const router = useRouter();
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [previewExpanded, setPreviewExpanded] = useState(false);
 
-  const handleGenerate = (typeId: string) => {
-    console.log('Generate document:', typeId);
-    // TODO: Implement document generation
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await fetch('/api/documents');
+      const data = await response.json();
+      if (data.success) {
+        setDocuments(data.documents);
+      }
+    } catch (error) {
+      console.error('Failed to fetch documents:', error);
+      toast.error('Failed to load documents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerate = async (typeId: string) => {
+    setGenerating(typeId);
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: typeId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchDocuments();
+        toast.success('Document generated successfully!');
+      } else {
+        toast.error(data.error || 'Failed to generate document');
+      }
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast.error('Failed to generate document');
+    } finally {
+      setGenerating(null);
+    }
   };
 
   const handleView = (documentId: string) => {
@@ -98,13 +121,44 @@ export default function StrategyPage() {
   };
 
   const handleEdit = (documentId: string) => {
-    console.log('Edit document:', documentId);
-    // TODO: Implement edit functionality
+    router.push(`/documents/${documentId}`);
   };
 
-  const handleDelete = (documentId: string) => {
-    console.log('Delete document:', documentId);
-    // TODO: Implement delete functionality
+  const handleDelete = async (documentId: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      const response = await fetch(`/api/documents/${documentId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        setDocuments(docs => docs.filter(d => d.id !== documentId));
+        toast.success('Document deleted');
+        if (selectedDocument === documentId) {
+          setSelectedDocument(null);
+        }
+      } else {
+        toast.error('Failed to delete document');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
   };
 
   return (
@@ -137,6 +191,7 @@ export default function StrategyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {documentTypes.map((docType) => {
               const Icon = docType.icon;
+              const isGenerating = generating === docType.id;
               return (
                 <div
                   key={docType.id}
@@ -155,9 +210,11 @@ export default function StrategyPage() {
                       </p>
                       <button
                         onClick={() => handleGenerate(docType.id)}
-                        className="px-4 py-2 bg-[#ff6a1a] text-white rounded-lg hover:bg-[#e55f17] transition-colors text-sm font-medium"
+                        disabled={isGenerating || generating !== null}
+                        className="px-4 py-2 bg-[#ff6a1a] text-white rounded-lg hover:bg-[#e55f17] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
-                        Generate
+                        {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
+                        <span>{isGenerating ? 'Generating...' : 'Generate'}</span>
                       </button>
                     </div>
                   </div>
@@ -173,94 +230,110 @@ export default function StrategyPage() {
             <h2 className="text-xl font-semibold text-gray-900">
               Recent Documents
             </h2>
-            <button className="text-sm text-[#ff6a1a] hover:underline">
-              View All
-            </button>
+            {documents.length > 5 && (
+              <button className="text-sm text-[#ff6a1a] hover:underline">
+                View All
+              </button>
+            )}
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Document
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Generated
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {recentDocuments.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-gray-400" />
-                          <span className="font-medium text-gray-900">
-                            {doc.title}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {doc.type}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            doc.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {doc.status === 'completed' ? 'Completed' : 'Draft'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Clock className="w-4 h-4" />
-                          <span>{doc.generatedAt}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleView(doc.id)}
-                            className="p-2 text-gray-600 hover:text-[#ff6a1a] hover:bg-orange-50 rounded-lg transition-colors"
-                            title="View"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(doc.id)}
-                            className="p-2 text-gray-600 hover:text-[#ff6a1a] hover:bg-orange-50 rounded-lg transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(doc.id)}
-                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-[#ff6a1a] animate-spin" />
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 mb-2">No documents yet</p>
+                <p className="text-sm text-gray-400">
+                  Generate your first strategy document to get started
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Document
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Generated
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {documents.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-gray-400" />
+                            <span className="font-medium text-gray-900">
+                              {doc.title}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {doc.type}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              doc.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {doc.status === 'completed' ? 'Completed' : 'Draft'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Clock className="w-4 h-4" />
+                            <span>{formatTimeAgo(doc.createdAt)}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleView(doc.id)}
+                              className="p-2 text-gray-600 hover:text-[#ff6a1a] hover:bg-orange-50 rounded-lg transition-colors"
+                              title="View"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(doc.id)}
+                              className="p-2 text-gray-600 hover:text-[#ff6a1a] hover:bg-orange-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(doc.id)}
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
@@ -275,7 +348,7 @@ export default function StrategyPage() {
               <span className="font-medium text-gray-900">Document Preview</span>
               {selectedDocument && (
                 <span className="text-sm text-gray-500">
-                  ({recentDocuments.find(d => d.id === selectedDocument)?.title})
+                  ({documents.find(d => d.id === selectedDocument)?.title})
                 </span>
               )}
             </div>
@@ -292,21 +365,21 @@ export default function StrategyPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {recentDocuments.find(d => d.id === selectedDocument)?.title}
+                      {documents.find(d => d.id === selectedDocument)?.title}
                     </h3>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-600">
-                        {recentDocuments.find(d => d.id === selectedDocument)?.generatedAt}
+                        {documents.find(d => d.id === selectedDocument)?.createdAt &&
+                          formatTimeAgo(documents.find(d => d.id === selectedDocument)!.createdAt)}
                       </span>
                     </div>
                   </div>
                   <div className="prose max-w-none">
-                    <p className="text-gray-600">
-                      Document preview content would appear here. This section would display
-                      the generated strategy document with formatted sections, charts, and
-                      actionable insights.
-                    </p>
+                    <div className="text-gray-600 whitespace-pre-wrap">
+                      {documents.find(d => d.id === selectedDocument)?.content ||
+                        'Document preview content would appear here. This section would display the generated strategy document with formatted sections, charts, and actionable insights.'}
+                    </div>
                   </div>
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button className="px-4 py-2 bg-[#ff6a1a] text-white rounded-lg hover:bg-[#e55f17] transition-colors">
