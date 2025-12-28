@@ -17,6 +17,12 @@ import {
   Users,
   Quote,
   Star,
+  Share2,
+  FileEdit,
+  HeartHandshake,
+  Layers,
+  Calculator,
+  Scale,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -105,6 +111,126 @@ export default function VirtualTeamDemo() {
       stats: { emailsTriaged: 342, hoursReclaimed: "6h" },
       testimonial: "I used to spend 2 hours a day on email. Now it's 15 minutes. Game changer.",
     },
+    {
+      name: "Social Media Manager",
+      icon: Share2,
+      color: "bg-pink-500",
+      role: "Social Media AI",
+      description: "Manages your social presence across all platforms with consistent brand voice",
+      capabilities: [
+        "Creates and schedules content calendar",
+        "Drafts posts tailored to each platform",
+        "Tracks engagement and suggests improvements",
+        "Monitors trending topics in your niche",
+      ],
+      messages: [
+        { from: "agent", text: "📱 Your LinkedIn post about funding hit 12k impressions! Your audience loves behind-the-scenes content. Should I draft more founder journey posts?" },
+        { from: "user", text: "Yes, plan next week's content" },
+        { from: "agent", text: "Done! I've drafted:\n• Mon: Team milestone story\n• Wed: Industry insight thread\n• Fri: Customer success spotlight\n\nAll scheduled and ready for your review." },
+      ],
+      stats: { postsScheduled: 78, engagementUp: "+156%" },
+      testimonial: "I went from posting once a month to daily content without spending any extra time. The engagement speaks for itself.",
+    },
+    {
+      name: "Copywriting Pro",
+      icon: FileEdit,
+      color: "bg-indigo-500",
+      role: "Copy AI",
+      description: "Writes high-converting copy for emails, landing pages, and ads",
+      capabilities: [
+        "Creates sales pages and landing copy",
+        "Writes email sequences that convert",
+        "Drafts ad creative for all platforms",
+        "A/B tests headlines and CTAs",
+      ],
+      messages: [
+        { from: "agent", text: "✍️ I analyzed your landing page. The headline is underselling you. Here are 3 alternatives based on what's working for similar SaaS products:" },
+        { from: "user", text: "Write me a welcome email sequence" },
+        { from: "agent", text: "Created a 5-email welcome sequence:\n\n1. Welcome + quick win (Day 0)\n2. Feature spotlight (Day 2)\n3. Social proof (Day 4)\n4. Objection handling (Day 7)\n5. Trial ending CTA (Day 12)\n\nWant me to add personalization tokens?" },
+      ],
+      stats: { emailsWritten: 112, conversionLift: "+34%" },
+      testimonial: "The copy AI writes better emails than I ever could. Our open rates doubled in the first month.",
+    },
+    {
+      name: "Customer Success",
+      icon: HeartHandshake,
+      color: "bg-teal-500",
+      role: "Customer AI",
+      description: "Keeps customers happy with proactive support and onboarding",
+      capabilities: [
+        "Creates personalized onboarding flows",
+        "Drafts support response templates",
+        "Identifies at-risk customers early",
+        "Collects and analyzes feedback",
+      ],
+      messages: [
+        { from: "agent", text: "⚠️ Alert: 3 customers haven't logged in this week. Based on their usage patterns, they might churn. Here's a re-engagement plan for each." },
+        { from: "user", text: "Draft a check-in email for the enterprise account" },
+        { from: "agent", text: "Done. I personalized it with their recent usage data, highlighted features they haven't tried, and offered a success call. Also attached their custom ROI report showing $47k saved using our platform." },
+      ],
+      stats: { customersOnboarded: 45, churnPrevented: "8 accounts" },
+      testimonial: "We went from reactive support to proactive success. Our NPS jumped 40 points in one quarter.",
+    },
+    {
+      name: "Product Manager",
+      icon: Layers,
+      color: "bg-cyan-500",
+      role: "Product AI",
+      description: "Keeps your roadmap organized and your team aligned",
+      capabilities: [
+        "Prioritizes features by impact and effort",
+        "Writes clear user stories and specs",
+        "Tracks competitor feature releases",
+        "Synthesizes user feedback into insights",
+      ],
+      messages: [
+        { from: "agent", text: "📊 Based on user feedback analysis, the #1 requested feature is team collaboration. 47 mentions this month. Should I draft the PRD?" },
+        { from: "user", text: "Yes, and add it to the roadmap" },
+        { from: "agent", text: "Done. Created:\n• PRD with user stories\n• Technical requirements\n• Effort estimate: 3 sprints\n• Added to Q1 roadmap\n\nAlso noticed Competitor X just shipped a similar feature—I've added competitive notes." },
+      ],
+      stats: { featuresShipped: 67, roadmapItems: 24 },
+      testimonial: "Finally, a PM that doesn't need context repeated. It knows our product better than some team members.",
+    },
+    {
+      name: "Finance & Ops",
+      icon: Calculator,
+      color: "bg-emerald-500",
+      role: "Finance AI",
+      description: "Keeps your books clean and your cash flow visible",
+      capabilities: [
+        "Creates invoices and tracks payments",
+        "Categorizes expenses automatically",
+        "Builds financial projections",
+        "Alerts you to cash flow issues",
+      ],
+      messages: [
+        { from: "agent", text: "💰 Monthly finance summary ready:\n• MRR: $48.2k (+12%)\n• Burn rate: $31k/mo\n• Runway: 14.2 months\n\nOne concern: AWS costs up 34%. Want me to analyze?" },
+        { from: "user", text: "Create a 12-month projection for investors" },
+        { from: "agent", text: "Built a 3-scenario projection:\n• Conservative: $180k ARR\n• Moderate: $420k ARR\n• Aggressive: $720k ARR\n\nIncludes assumptions, charts, and sensitivity analysis. Formatted for investor presentations." },
+      ],
+      stats: { invoicesSent: 34, projectionsMade: 12 },
+      testimonial: "I dreaded financials. Now I get a weekly report that's clearer than what our old CFO provided.",
+    },
+    {
+      name: "Legal Assistant",
+      icon: Scale,
+      color: "bg-slate-500",
+      role: "Legal AI",
+      description: "Handles contracts, compliance, and legal documents",
+      capabilities: [
+        "Generates contract templates",
+        "Reviews agreements for red flags",
+        "Creates privacy policies and ToS",
+        "Tracks compliance requirements",
+      ],
+      messages: [
+        { from: "agent", text: "📋 The contractor agreement from Acme Corp has 2 red flags:\n1. IP assignment clause is too broad\n2. Non-compete extends 24 months (unusual)\n\nSuggested edits attached." },
+        { from: "user", text: "Update our privacy policy for GDPR" },
+        { from: "agent", text: "Updated your privacy policy with:\n• Data processing transparency\n• Cookie consent requirements\n• Right to erasure process\n• Data breach notification protocol\n\nAlso created a GDPR compliance checklist for your team." },
+      ],
+      stats: { contractsReviewed: 23, templatesCreated: 18 },
+      testimonial: "Saved us $10k in legal fees last quarter. The contract review catches things I would have missed.",
+    },
   ];
 
   useEffect(() => {
@@ -165,8 +291,8 @@ export default function VirtualTeamDemo() {
               transition={{ delay: 0.1 }}
               className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto"
             >
-              Stop drowning in operations. Get 4 AI agents that handle your calendar, fundraising,
-              growth, and inbox—so you can focus on building.
+              Stop drowning in operations. Get 10 AI agents that handle operations, fundraising,
+              growth, marketing, customer success, and more—so you can focus on building.
             </motion.p>
           </div>
         </div>
@@ -530,7 +656,7 @@ export default function VirtualTeamDemo() {
               {
                 stage: "Seed",
                 title: "Raise & Scale",
-                agents: ["All 4 Agents"],
+                agents: ["All 10 Agents"],
                 benefits: ["Full fundraising pipeline management", "Scale outreach without hiring", "Keep investors updated automatically"],
                 featured: true,
               },

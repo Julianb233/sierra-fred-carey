@@ -23,10 +23,10 @@ const Footer = () => {
   ];
 
   const footerLinks = [
-    { name: "Pricing", href: "#pricing" },
-    { name: "Features", href: "#features" },
-    { name: "Testimonials", href: "#testimonials" },
-    { name: "FAQ", href: "#faq" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "Features", href: "/#features" },
+    { name: "Testimonials", href: "/#testimonials" },
+    { name: "FAQ", href: "/#faq" },
   ];
 
   return (

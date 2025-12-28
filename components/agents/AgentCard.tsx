@@ -50,6 +50,48 @@ const colorMap = {
     text: "text-[#ff6a1a]",
     bg: "bg-[#ff6a1a]/10",
   },
+  pink: {
+    gradient: "from-pink-500/20 to-pink-600/20",
+    border: "border-pink-500/30",
+    glow: "shadow-pink-500/10 hover:shadow-pink-500/20",
+    text: "text-pink-500",
+    bg: "bg-pink-500/10",
+  },
+  indigo: {
+    gradient: "from-indigo-500/20 to-indigo-600/20",
+    border: "border-indigo-500/30",
+    glow: "shadow-indigo-500/10 hover:shadow-indigo-500/20",
+    text: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+  },
+  teal: {
+    gradient: "from-teal-500/20 to-teal-600/20",
+    border: "border-teal-500/30",
+    glow: "shadow-teal-500/10 hover:shadow-teal-500/20",
+    text: "text-teal-500",
+    bg: "bg-teal-500/10",
+  },
+  cyan: {
+    gradient: "from-cyan-500/20 to-cyan-600/20",
+    border: "border-cyan-500/30",
+    glow: "shadow-cyan-500/10 hover:shadow-cyan-500/20",
+    text: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+  },
+  emerald: {
+    gradient: "from-emerald-500/20 to-emerald-600/20",
+    border: "border-emerald-500/30",
+    glow: "shadow-emerald-500/10 hover:shadow-emerald-500/20",
+    text: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  slate: {
+    gradient: "from-slate-500/20 to-slate-600/20",
+    border: "border-slate-500/30",
+    glow: "shadow-slate-500/10 hover:shadow-slate-500/20",
+    text: "text-slate-500",
+    bg: "bg-slate-500/10",
+  },
 };
 
 const statusConfig = {

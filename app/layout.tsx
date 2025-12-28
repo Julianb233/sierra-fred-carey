@@ -18,6 +18,19 @@ export const metadata: Metadata = {
     icon: "/icon.svg",
     apple: "/apple-icon.svg",
   },
+  openGraph: {
+    title: "Sahara | AI-Powered Founder Operating System",
+    description: "Think Clearer. Raise Smarter. Scale Faster. AI operating system for startup founders.",
+    images: ["/preview.png"],
+    type: "website",
+    siteName: "Sahara",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sahara | AI-Powered Founder Operating System",
+    description: "Think Clearer. Raise Smarter. Scale Faster. AI operating system for startup founders.",
+    images: ["/preview.png"],
+  },
 };
 
 export default function RootLayout({

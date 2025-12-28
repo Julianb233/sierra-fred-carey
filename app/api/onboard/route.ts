@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, stage, challenges } = await request.json();
+    const { name, email, stage, challenges, teammateEmails } = await request.json();
 
     // Validate required fields
     if (!name || !email) {
@@ -24,12 +24,13 @@ export async function POST(request: NextRequest) {
 
     // Create or update user in database
     const result = await sql`
-      INSERT INTO users (name, email, stage, challenges, created_at)
-      VALUES (${name}, ${email}, ${stage}, ${JSON.stringify(challenges)}, NOW())
+      INSERT INTO users (name, email, stage, challenges, teammate_emails, created_at)
+      VALUES (${name}, ${email}, ${stage}, ${JSON.stringify(challenges)}, ${JSON.stringify(teammateEmails || [])}, NOW())
       ON CONFLICT (email) DO UPDATE SET
         name = ${name},
         stage = ${stage},
         challenges = ${JSON.stringify(challenges)},
+        teammate_emails = ${JSON.stringify(teammateEmails || [])},
         updated_at = NOW()
       RETURNING id, email, name
     `;

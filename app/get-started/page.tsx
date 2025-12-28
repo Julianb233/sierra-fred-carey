@@ -205,6 +205,7 @@ const OnboardingPage = () => {
           email: email.trim().toLowerCase(),
           stage: selectedStage,
           challenges: selectedChallenges,
+          teammateEmails: teammateEmails,
         }),
       });
 
