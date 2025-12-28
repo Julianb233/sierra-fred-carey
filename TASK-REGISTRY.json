@@ -1,16 +1,114 @@
 {
   "projectName": "sierra-fred-carey",
-  "version": "1.0.0",
-  "lastUpdated": "2025-12-28T16:43:07Z",
-  "availableTasks": [],
+  "version": "1.1.0",
+  "lastUpdated": "2025-12-28T21:30:00Z",
+  "availableTasks": [
+    {
+      "id": "mon-001",
+      "title": "Activate enhanced monitoring dashboard",
+      "description": "Replace current monitoring dashboard with enhanced version",
+      "priority": "medium",
+      "estimatedTime": "15min",
+      "tags": ["frontend", "monitoring", "enhancement"]
+    },
+    {
+      "id": "mon-002",
+      "title": "Add PDF export functionality",
+      "description": "Implement PDF report generation for monitoring data",
+      "priority": "low",
+      "estimatedTime": "2h",
+      "tags": ["frontend", "export", "feature"]
+    },
+    {
+      "id": "mon-003",
+      "title": "Implement custom date range picker",
+      "description": "Add calendar-based date range selection",
+      "priority": "medium",
+      "estimatedTime": "3h",
+      "tags": ["frontend", "ui", "feature"]
+    }
+  ],
   "claimedTasks": [],
-  "completedTasks": [],
+  "completedTasks": [
+    {
+      "id": "mon-dash-001",
+      "title": "Build monitoring dashboard UI components",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:30:00Z",
+      "duration": "3h",
+      "tags": ["frontend", "monitoring", "dashboard"]
+    },
+    {
+      "id": "mon-dash-002",
+      "title": "Create DateRangeSelector component",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:15:00Z",
+      "duration": "30min",
+      "tags": ["frontend", "component"]
+    },
+    {
+      "id": "mon-dash-003",
+      "title": "Create ExperimentFilters component",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:18:00Z",
+      "duration": "35min",
+      "tags": ["frontend", "component"]
+    },
+    {
+      "id": "mon-dash-004",
+      "title": "Create ExportMenu component with CSV/JSON support",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:20:00Z",
+      "duration": "30min",
+      "tags": ["frontend", "export"]
+    },
+    {
+      "id": "mon-dash-005",
+      "title": "Implement useMonitoringData custom hook",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:22:00Z",
+      "duration": "40min",
+      "tags": ["frontend", "hooks"]
+    },
+    {
+      "id": "mon-dash-006",
+      "title": "Implement useExperimentFilters custom hook",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:24:00Z",
+      "duration": "25min",
+      "tags": ["frontend", "hooks"]
+    },
+    {
+      "id": "mon-dash-007",
+      "title": "Implement useDateRange custom hook",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:25:00Z",
+      "duration": "20min",
+      "tags": ["frontend", "hooks"]
+    },
+    {
+      "id": "mon-dash-008",
+      "title": "Create enhanced monitoring dashboard page",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:27:00Z",
+      "duration": "45min",
+      "tags": ["frontend", "dashboard"]
+    },
+    {
+      "id": "mon-dash-009",
+      "title": "Write comprehensive test suite for monitoring components",
+      "completedBy": "Tyler-TypeScript",
+      "completedAt": "2025-12-28T21:29:00Z",
+      "duration": "40min",
+      "tags": ["testing", "quality"]
+    }
+  ],
   "taskStatistics": {
-    "total": 0,
-    "available": 0,
+    "total": 12,
+    "available": 3,
     "claimed": 0,
-    "completed": 0,
+    "completed": 9,
     "blocked": 0,
-    "avgCompletionTime": "45min"
+    "avgCompletionTime": "35min"
   }
 }

@@ -21,9 +21,10 @@ interface Experiment {
 interface ExperimentListProps {
   experiments: Experiment[];
   loading?: boolean;
+  onExperimentClick?: (experiment: Experiment) => void;
 }
 
-export function ExperimentList({ experiments, loading = false }: ExperimentListProps) {
+export function ExperimentList({ experiments, loading = false, onExperimentClick }: ExperimentListProps) {
   const getStatusBadge = (status: Experiment["status"]) => {
     const variants = {
       active: {
@@ -93,7 +94,8 @@ export function ExperimentList({ experiments, loading = false }: ExperimentListP
             {experiments.map((experiment) => (
               <div
                 key={experiment.id}
-                className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-[#ff6a1a] transition-colors"
+                onClick={() => onExperimentClick?.(experiment)}
+                className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-[#ff6a1a] transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">

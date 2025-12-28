@@ -6,6 +6,8 @@ import { ExperimentList } from "@/components/monitoring/ExperimentList";
 import { AlertsTable } from "@/components/monitoring/AlertsTable";
 import { LiveMetricsPanel } from "@/components/monitoring/panels/LiveMetricsPanel";
 import { PerformanceCharts } from "@/components/monitoring/charts";
+import { ExperimentDetailModal } from "@/components/monitoring/ExperimentDetailModal";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -46,6 +48,10 @@ export default function MonitoringDashboard() {
   const [experiments, setExperiments] = useState<UIExperiment[]>([]);
   const [alerts, setAlerts] = useState<UIAlert[]>([]);
   const [criticalAlertCount, setCriticalAlertCount] = useState(0);
+
+  // Modal state
+  const [selectedExperiment, setSelectedExperiment] = useState<UIExperiment | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Fetch dashboard data from API
   const fetchDashboardData = async () => {
@@ -149,6 +155,36 @@ export default function MonitoringDashboard() {
     setRefreshing(true);
     fetchDashboardData();
     fetchAlerts();
+  };
+
+  const handleExperimentClick = (experiment: UIExperiment) => {
+    setSelectedExperiment(experiment);
+    setModalOpen(true);
+  };
+
+  const handlePromotion = async (experimentName: string) => {
+    try {
+      const response = await fetch(`/api/monitoring/experiments/${encodeURIComponent(experimentName)}/promote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Promotion failed");
+      }
+
+      toast.success("Variant promoted successfully!", {
+        description: `${experimentName} winner has been promoted to production.`,
+      });
+
+      // Refresh data and close modal
+      fetchDashboardData();
+      setModalOpen(false);
+    } catch (err) {
+      toast.error("Promotion failed", {
+        description: err instanceof Error ? err.message : "Unknown error occurred",
+      });
+    }
   };
 
   // Generate chart data using utility function
@@ -334,7 +370,11 @@ export default function MonitoringDashboard() {
         </TabsList>
 
         <TabsContent value="experiments" className="space-y-6">
-          <ExperimentList experiments={experiments} loading={loading} />
+          <ExperimentList
+            experiments={experiments}
+            loading={loading}
+            onExperimentClick={handleExperimentClick}
+          />
 
           {/* Quick Actions */}
           {!loading && experiments.length > 0 && (
@@ -365,6 +405,14 @@ export default function MonitoringDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Experiment Detail Modal */}
+      <ExperimentDetailModal
+        experiment={selectedExperiment}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onPromote={handlePromotion}
+      />
     </div>
   );
 }

@@ -3,6 +3,10 @@ export { ExperimentList } from "./ExperimentList";
 export { AlertsTable } from "./AlertsTable";
 export { VariantComparison } from "./VariantComparison";
 export { PromotionStatus } from "./PromotionStatus";
+export { ExperimentDetailModal } from "./ExperimentDetailModal";
+export { DateRangeSelector } from "./DateRangeSelector";
+export { ExperimentFilters } from "./ExperimentFilters";
+export { ExportMenu } from "./ExportMenu";
 
 // Charts
 export {
