@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateChatResponse, ChatMessage } from "@/lib/ai/client";
+import { generateTrackedResponse, ChatMessage } from "@/lib/ai/client";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { getOptionalUserId } from "@/lib/auth";
 
@@ -41,15 +41,26 @@ export async function POST(req: NextRequest) {
     // Add the current message
     messages.push({ role: "user", content: message });
 
-    // Generate response using OpenAI
-    const response = await generateChatResponse(
+    // Generate response using tracked AI client (logs to DB, supports A/B testing)
+    const trackedResult = await generateTrackedResponse(
       messages,
-      FRED_CAREY_SYSTEM_PROMPT
+      FRED_CAREY_SYSTEM_PROMPT,
+      {
+        userId: userId || undefined,
+        analyzer: "chat",
+        inputData: { message, historyLength: history?.length || 0 },
+      }
     );
 
     return NextResponse.json({
-      response,
+      response: trackedResult.content,
       timestamp: new Date().toISOString(),
+      meta: {
+        requestId: trackedResult.requestId,
+        responseId: trackedResult.responseId,
+        latencyMs: trackedResult.latencyMs,
+        variant: trackedResult.variant,
+      },
     });
   } catch (error) {
     console.error("Chat API error:", error);

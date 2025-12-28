@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
 const VALID_CATEGORIES = ["advice", "data", "quote", "action_item", "resource"];
 
 /**
  * GET /api/journey/references
  * List user's saved references
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -57,12 +59,13 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/journey/references
  * Save a reference from AI conversation
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { sourceType, sourceId, title, content, context, category } = body;
@@ -118,12 +121,13 @@ export async function POST(request: NextRequest) {
 /**
  * PATCH /api/journey/references
  * Mark reference as actioned
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { id, is_actioned } = body;
@@ -165,12 +169,13 @@ export async function PATCH(request: NextRequest) {
 /**
  * DELETE /api/journey/references
  * Remove a reference
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
