@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{
@@ -10,16 +11,16 @@ interface RouteParams {
 /**
  * GET /api/documents/[id]
  * Get a specific document by ID
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
 ) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     const { id } = await params;
 
@@ -56,16 +57,16 @@ export async function GET(
 /**
  * PATCH /api/documents/[id]
  * Update a document's title or content
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function PATCH(
   request: NextRequest,
   { params }: RouteParams
 ) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     const { id } = await params;
     const body = await request.json();
@@ -123,16 +124,16 @@ export async function PATCH(
 /**
  * DELETE /api/documents/[id]
  * Delete a document
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function DELETE(
   request: NextRequest,
   { params }: RouteParams
 ) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     const { id } = await params;
 

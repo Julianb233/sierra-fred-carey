@@ -279,7 +279,8 @@ export async function POST(request: NextRequest) {
       userId,
       "reality_lens",
       savedAnalysis.id,
-      analysis
+      aiResponse,  // Pass raw AI response string
+      `Reality Lens analysis for: ${idea.substring(0, 100)}`
     ).catch((err) => console.error("[Reality Lens] Insight extraction failed:", err));
 
     // Log journey event

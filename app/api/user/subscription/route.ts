@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId, PLANS } from "@/lib/stripe/config";
+import { requireAuth } from "@/lib/auth";
 
+/**
+ * GET /api/user/subscription
+ * Get user's subscription status and plan
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ */
 export async function GET(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     const subscription = await getUserSubscription(userId);
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToBlob, FileValidationError } from '@/lib/storage/upload';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * Error response structure
@@ -30,16 +31,15 @@ type UploadResponse = SuccessResponse | ErrorResponse;
  * POST /api/pitch-deck/upload
  * Upload pitch deck file (PDF or PPTX) to Vercel Blob storage
  *
+ * SECURITY: Requires authentication - userId from server-side session
+ *
  * @param request - Multipart form data with file
  * @returns Upload result with blob URL and metadata
  */
 export async function POST(request: NextRequest): Promise<NextResponse<UploadResponse>> {
   try {
-    // Get user ID from cookie or header (fallback to anonymous)
-    const userId =
-      request.headers.get('x-user-id') ||
-      request.cookies.get('userId')?.value ||
-      'anonymous';
+    // SECURITY: Get userId from server-side session
+    const userId = await requireAuth();
 
     // Parse multipart form data
     const formData = await request.formData();

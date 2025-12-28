@@ -26,7 +26,7 @@ interface Milestone {
 
 interface MilestoneListProps {
   milestones: Milestone[];
-  onStatusChange?: (id: string, status: string) => void;
+  onStatusChange?: (id: string, status: Milestone["status"]) => void;
   onAdd?: () => void;
 }
 
@@ -95,9 +95,9 @@ export function MilestoneList({
     return statusOrder[a.status] - statusOrder[b.status];
   });
 
-  const handleCheckboxChange = (id: string, currentStatus: string) => {
+  const handleCheckboxChange = (id: string, currentStatus: Milestone["status"]) => {
     if (!onStatusChange) return;
-    const newStatus = currentStatus === "completed" ? "pending" : "completed";
+    const newStatus: Milestone["status"] = currentStatus === "completed" ? "pending" : "completed";
     onStatusChange(id, newStatus);
   };
 
