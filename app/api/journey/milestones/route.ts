@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
 const VALID_CATEGORIES = ["fundraising", "product", "team", "growth", "legal"];
 const VALID_STATUSES = ["pending", "in_progress", "completed", "skipped"];
@@ -7,12 +8,13 @@ const VALID_STATUSES = ["pending", "in_progress", "completed", "skipped"];
 /**
  * GET /api/journey/milestones
  * List user's milestones with optional filters
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -66,12 +68,13 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/journey/milestones
  * Create a new milestone
+ *
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { title, description, category, targetDate, metadata = {} } = body;

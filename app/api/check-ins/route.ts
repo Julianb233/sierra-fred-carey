@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
+import { requireAuth } from "@/lib/auth";
 
+/**
+ * GET /api/check-ins
+ * List user's check-ins
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ */
 export async function GET(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
-    const { searchParams } = new URL(request.url);
-    const userFilter = searchParams.get("userId") || userId;
-
+    // SECURITY: Always use authenticated userId, ignore client-provided userId param
     const checkIns = await sql`
       SELECT
         id,
@@ -21,7 +24,7 @@ export async function GET(request: NextRequest) {
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM check_ins
-      WHERE user_id = ${userFilter}
+      WHERE user_id = ${userId}
       ORDER BY created_at DESC
       LIMIT 50
     `;
@@ -40,12 +43,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/check-ins
+ * Create a new check-in
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ */
 export async function POST(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { responses, score, analysis } = body;
@@ -85,12 +92,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * PATCH /api/check-ins
+ * Update a check-in
+ *
+ * SECURITY: Requires authentication - userId from server-side session
+ */
 export async function PATCH(request: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = request.headers.get("x-user-id") ||
-                   request.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (not from client headers!)
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { id, responses, score, analysis } = body;

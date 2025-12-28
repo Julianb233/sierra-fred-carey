@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateChatResponse, ChatMessage } from "@/lib/ai/client";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { getOptionalUserId } from "@/lib/auth";
 
+/**
+ * POST /api/chat
+ * Chat with Fred Carey AI assistant
+ *
+ * SECURITY: Optional authentication - works for both authenticated and anonymous users
+ * Note: For authenticated users, we can provide personalized responses
+ */
 export async function POST(req: NextRequest) {
   try {
-    // User ID from session cookie or header (auth integration pending)
-    const userId = req.headers.get("x-user-id") ||
-                   req.cookies.get("userId")?.value ||
-                   "anonymous";
+    // SECURITY: Get userId from server-side session (optional for chat)
+    // Chat can work without auth, but personalized if authenticated
+    const userId = await getOptionalUserId();
 
     const { message, history } = await req.json();
 
