@@ -39,10 +39,8 @@ export default function NavBar() {
 
   const menuItems = [
     { name: "Pricing", href: "/pricing" },
-    { name: "Features", href: "#features" },
     { name: "See it in Action", href: "/product" },
     { name: "About", href: "/about" },
-    { name: "Agents", href: "/agents" },
   ];
 
   const featureItems = [
@@ -189,11 +187,9 @@ export default function NavBar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-            {menuItems.slice(0, 2).map((item) => (
-              <Button key={item.name} asChild variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all">
-                <Link href={item.href}>{item.name}</Link>
-              </Button>
-            ))}
+            <Button asChild variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all">
+              <Link href="/pricing">Pricing</Link>
+            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -221,11 +217,13 @@ export default function NavBar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {menuItems.slice(2).map((item) => (
-              <Button key={item.name} asChild variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all">
-                <Link href={item.href}>{item.name}</Link>
-              </Button>
-            ))}
+            <Button asChild variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-[#ff6a1a] font-medium transition-all">
+              <Link href="/product">See it in Action</Link>
+            </Button>
+
+            <Button asChild variant="ghost" size="sm" className="touch-target hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all">
+              <Link href="/about">About</Link>
+            </Button>
           </div>
 
           {/* Right Actions */}
