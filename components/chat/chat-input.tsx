@@ -12,7 +12,7 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, isLoading = false, placeholder = "Ask me anything about your startup decisions..." }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred anything..." }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -78,8 +78,8 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask me any
               size="icon"
               className={cn(
                 "h-10 w-10 rounded-xl",
-                "bg-gradient-to-br from-primary via-blue-500 to-purple-500",
-                "hover:shadow-lg hover:shadow-primary/50",
+                "bg-[#ff6a1a] hover:bg-[#ea580c]",
+                "hover:shadow-lg hover:shadow-[#ff6a1a]/50",
                 "transition-all duration-300",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}

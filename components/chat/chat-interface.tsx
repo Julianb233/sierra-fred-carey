@@ -16,7 +16,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm your AI decision support assistant. I can help you with strategic decisions, market analysis, fundraising strategies, and more. What would you like to discuss today?",
+      content: "Hey there! I'm Fred Carey — I've coached over 10,000 founders and helped them raise hundreds of millions. Think of me as your digital co-founder, available 24/7.\n\nWhether you're validating an idea, preparing for fundraising, or figuring out your next big move — I'm here to help. What's on your mind?",
       role: "assistant",
       timestamp: new Date(),
     },
