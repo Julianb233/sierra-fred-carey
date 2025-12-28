@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
     }
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error("[api/auth/signup] Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error?.message || "Internal server error", details: error?.toString() },
       { status: 500 }
     );
   }
