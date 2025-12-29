@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
+  Area,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,8 +13,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { generateConversionData } from "@/lib/utils/mockChartData";
+import { TrendingUpIcon } from "@radix-ui/react-icons";
 import type { TimeRange, ChartTooltipProps } from "@/lib/types/charts";
 
 interface ConversionRateChartProps {
@@ -23,11 +27,16 @@ interface ConversionRateChartProps {
 const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload || payload.length === 0) return null;
 
+  // Filter out confidence interval areas from tooltip
+  const dataLines = payload.filter(
+    (p) => !p.dataKey?.toString().includes("Upper") && !p.dataKey?.toString().includes("Lower")
+  );
+
   return (
     <div className="rounded-lg border bg-background p-3 shadow-lg">
       <p className="mb-2 text-sm font-medium text-foreground">{label}</p>
       <div className="space-y-1">
-        {payload.map((entry, index) => (
+        {dataLines.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
               className="h-2 w-2 rounded-full"
@@ -35,11 +44,14 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
             />
             <span className="text-muted-foreground">{entry.name}:</span>
             <span className="font-medium text-foreground">
-              {entry.value.toFixed(2)}%
+              {typeof entry.value === "number" ? entry.value.toFixed(2) : entry.value}%
             </span>
           </div>
         ))}
       </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Confidence interval: 95%
+      </p>
     </div>
   );
 };

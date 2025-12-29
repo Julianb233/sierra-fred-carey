@@ -2,6 +2,7 @@
  * Tests for Auto-Promotion Configuration
  */
 
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   validateAutoPromotionConfig,
   loadAutoPromotionConfig,
@@ -135,7 +136,7 @@ describe("Auto-Promotion Configuration", () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
