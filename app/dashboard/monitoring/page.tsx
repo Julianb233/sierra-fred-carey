@@ -7,6 +7,9 @@ import { AlertsTable } from "@/components/monitoring/AlertsTable";
 import { LiveMetricsPanel } from "@/components/monitoring/panels/LiveMetricsPanel";
 import { PerformanceCharts } from "@/components/monitoring/charts";
 import { AutoPromotionPanel } from "@/components/monitoring/AutoPromotionPanel";
+import { AlertConfig } from "@/components/monitoring/AlertConfig";
+import { DashboardFilters } from "@/components/monitoring/DashboardFilters";
+import { SystemHealth } from "@/components/monitoring/SystemHealth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,6 +20,7 @@ import {
   ReloadIcon,
   BarChartIcon,
   ExclamationTriangleIcon,
+  GearIcon,
 } from "@radix-ui/react-icons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import type {
@@ -31,6 +35,7 @@ import {
   calculateMetrics,
   generateChartData,
 } from "@/types/monitoring";
+import type { FilterState } from "@/components/monitoring/DashboardFilters";
 
 export default function MonitoringDashboard() {
   const [loading, setLoading] = useState(true);
@@ -47,6 +52,13 @@ export default function MonitoringDashboard() {
   const [experiments, setExperiments] = useState<UIExperiment[]>([]);
   const [alerts, setAlerts] = useState<UIAlert[]>([]);
   const [criticalAlertCount, setCriticalAlertCount] = useState(0);
+
+  // Filters
+  const [filters, setFilters] = useState<FilterState>({
+    dateRange: "24h",
+    selectedExperiments: [],
+    metricType: "all",
+  });
 
   // Fetch dashboard data from API
   const fetchDashboardData = async () => {
@@ -152,8 +164,35 @@ export default function MonitoringDashboard() {
     fetchAlerts();
   };
 
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    console.log("[Dashboard] Filters updated:", newFilters);
+    // In a real implementation, you would re-fetch data with the new filters
+    // For now, we just log the change
+  };
+
+  const handleExportCSV = () => {
+    console.log("[Dashboard] Exporting CSV with filters:", filters);
+    // In a real implementation, this would generate and download a CSV file
+    // with the filtered data
+    alert("CSV export would be triggered here");
+  };
+
+  const handleExportJSON = () => {
+    console.log("[Dashboard] Exporting JSON with filters:", filters);
+    // In a real implementation, this would generate and download a JSON file
+    // with the filtered data
+    alert("JSON export would be triggered here");
+  };
+
   // Generate chart data using utility function
   const chartData = generateChartData(totalRequests, avgLatency, errorRate, 24);
+
+  // Transform experiments for filter component
+  const experimentsForFilter = experiments.map((exp) => ({
+    id: exp.id,
+    name: exp.name,
+  }));
 
   return (
     <div className="space-y-8">
@@ -196,6 +235,25 @@ export default function MonitoringDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dashboard Filters and System Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <DashboardFilters
+            experiments={experimentsForFilter}
+            onFilterChange={handleFilterChange}
+            onExportCSV={handleExportCSV}
+            onExportJSON={handleExportJSON}
+            loading={loading}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <SystemHealth
+            refreshInterval={30000}
+            onError={(err) => console.error("System health error:", err)}
+          />
+        </div>
+      </div>
 
       {/* Live Metrics Panel - Real-time updating metrics with sparklines */}
       <LiveMetricsPanel
@@ -322,7 +380,7 @@ export default function MonitoringDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="experiments" className="space-y-6">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="experiments">Experiments</TabsTrigger>
           <TabsTrigger value="promotion">Auto-Promotion</TabsTrigger>
           <TabsTrigger value="alerts">
@@ -332,6 +390,10 @@ export default function MonitoringDashboard() {
                 {alerts.length}
               </span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <GearIcon className="mr-2 h-4 w-4" />
+            Settings
           </TabsTrigger>
         </TabsList>
 
@@ -361,6 +423,10 @@ export default function MonitoringDashboard() {
 
         <TabsContent value="alerts" className="space-y-6">
           <AlertsTable alerts={alerts} loading={loading} maxItems={20} />
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <AlertConfig />
         </TabsContent>
       </Tabs>
 

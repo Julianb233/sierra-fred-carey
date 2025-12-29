@@ -625,3 +625,18 @@ export async function sendBatchNotifications(
 // Re-export types for convenience
 export * from "./types";
 export * from "./validators";
+
+// Re-export service utilities
+export {
+  NotificationService,
+  getNotificationService,
+  resetNotificationService,
+  sendAlert,
+  sendCriticalAlert,
+  sendWarningAlert,
+  sendInfoNotification,
+  sendPerformanceAlert,
+  sendErrorAlert,
+  sendSignificanceNotification,
+  sendWinnerNotification,
+} from "./service";

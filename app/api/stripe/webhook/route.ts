@@ -6,6 +6,8 @@ import {
   getStripeEventById,
   markEventAsProcessed,
 } from "@/lib/db/subscriptions";
+import { getPlanByPriceId } from "@/lib/stripe/config";
+import { getTierFromString, UserTier } from "@/lib/constants";
 import Stripe from "stripe";
 
 // Helper to get period timestamps from subscription
@@ -27,7 +29,31 @@ function getSubscriptionPeriod(subscription: Stripe.Subscription) {
   };
 }
 
+// Helper to get user tier from subscription
+function getUserTierFromSubscription(subscription: Stripe.Subscription): UserTier {
+  const priceId = subscription.items.data[0]?.price.id;
+  if (!priceId) return UserTier.FREE;
+
+  const plan = getPlanByPriceId(priceId);
+  if (!plan) return UserTier.FREE;
+
+  return getTierFromString(plan.id);
+}
+
 export async function POST(request: NextRequest) {
+  // Check if Stripe is configured
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("Stripe webhook: Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET");
+    return NextResponse.json(
+      {
+        error: "Stripe not configured",
+        message: "Webhook processing is not available.",
+        code: "STRIPE_NOT_CONFIGURED"
+      },
+      { status: 503 }
+    );
+  }
+
   const payload = await request.text();
   const signature = request.headers.get("stripe-signature");
 
@@ -44,6 +70,19 @@ export async function POST(request: NextRequest) {
     event = await constructWebhookEvent(payload, signature);
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
+
+    // Check if this is a configuration error
+    if (err instanceof Error && err.message.includes("STRIPE_WEBHOOK_SECRET")) {
+      return NextResponse.json(
+        {
+          error: "Stripe not configured",
+          message: "Webhook secret is not set.",
+          code: "STRIPE_NOT_CONFIGURED"
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Invalid signature" },
       { status: 400 }

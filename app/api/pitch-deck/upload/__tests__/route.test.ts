@@ -4,17 +4,17 @@
  * Run with: npm test -- upload
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Vercel Blob
-jest.mock('@vercel/blob', () => ({
-  put: jest.fn(),
-  del: jest.fn(),
+vi.mock('@vercel/blob', () => ({
+  put: vi.fn(),
+  del: vi.fn(),
 }));
 
 describe('Pitch Deck Upload API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('File Validation', () => {

@@ -7,6 +7,12 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { DashboardResponse, AlertsResponse } from '@/types/monitoring';
+import {
+  transformExperiment,
+  transformAlert,
+  calculateMetrics,
+  generateChartData,
+} from '@/types/monitoring';
 
 describe('Monitoring Dashboard API Integration', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -165,8 +171,6 @@ describe('Monitoring Dashboard API Integration', () => {
 
   describe('Type Transformations', () => {
     it('should transform experiment data for UI correctly', () => {
-      const { transformExperiment } = require('@/types/monitoring');
-
       const experiment = {
         experimentName: 'Test',
         experimentId: 'exp-1',
@@ -201,8 +205,6 @@ describe('Monitoring Dashboard API Integration', () => {
     });
 
     it('should transform alert data for UI correctly', () => {
-      const { transformAlert } = require('@/types/monitoring');
-
       const alert = {
         level: 'critical',
         type: 'performance',
@@ -225,8 +227,6 @@ describe('Monitoring Dashboard API Integration', () => {
 
   describe('Dashboard Metrics Calculation', () => {
     it('should calculate aggregate metrics correctly', () => {
-      const { calculateMetrics } = require('@/types/monitoring');
-
       const experiments = [
         {
           variants: [
@@ -272,8 +272,6 @@ describe('Monitoring Dashboard API Integration', () => {
 
   describe('Chart Data Generation', () => {
     it('should generate chart data with correct structure', () => {
-      const { generateChartData } = require('@/types/monitoring');
-
       const chartData = generateChartData(10000, 150, 0.02, 24);
 
       expect(chartData).toHaveLength(24);

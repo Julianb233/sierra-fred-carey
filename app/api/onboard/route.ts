@@ -1,14 +1,24 @@
 import { sql } from "@/lib/db/neon";
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { signJWT } from "@/lib/auth/token";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, stage, challenges, teammateEmails } = await request.json();
+    const { name, email, stage, challenges, teammateEmails, isQuickOnboard } = await request.json();
 
-    // Validate required fields
-    if (!name || !email) {
+    // Validate required fields - for quick onboard, only email is required
+    if (!email) {
       return NextResponse.json(
-        { error: "Name and email are required" },
+        { error: "Email is required" },
+        { status: 400 }
+      );
+    }
+
+    // For full onboard, name is required
+    if (!isQuickOnboard && !name) {
+      return NextResponse.json(
+        { error: "Name is required" },
         { status: 400 }
       );
     }
@@ -22,20 +32,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // For quick onboard, derive name from email
+    const userName = name || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
+
     // Create or update user in database
     const result = await sql`
-      INSERT INTO users (name, email, stage, challenges, teammate_emails, created_at)
-      VALUES (${name}, ${email}, ${stage}, ${JSON.stringify(challenges)}, ${JSON.stringify(teammateEmails || [])}, NOW())
+      INSERT INTO users (name, email, stage, challenges, teammate_emails, onboarding_completed, created_at)
+      VALUES (${userName}, ${email}, ${stage}, ${JSON.stringify(challenges || [])}, ${JSON.stringify(teammateEmails || [])}, true, NOW())
       ON CONFLICT (email) DO UPDATE SET
-        name = ${name},
-        stage = ${stage},
-        challenges = ${JSON.stringify(challenges)},
-        teammate_emails = ${JSON.stringify(teammateEmails || [])},
+        name = COALESCE(NULLIF(${userName}, ''), users.name),
+        stage = COALESCE(${stage}, users.stage),
+        challenges = COALESCE(${JSON.stringify(challenges || [])}, users.challenges),
+        teammate_emails = COALESCE(${JSON.stringify(teammateEmails || [])}, users.teammate_emails),
+        onboarding_completed = true,
         updated_at = NOW()
-      RETURNING id, email, name
+      RETURNING id, email, name, stage, challenges
     `;
 
     const user = result[0];
+
+    // Create session token for the user
+    const token = await signJWT({
+      userId: user.id,
+      email: user.email,
+    });
+
+    // Set the auth cookie
+    const cookieStore = await cookies();
+    cookieStore.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
 
     return NextResponse.json({
       success: true,
@@ -43,6 +73,8 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
+        stage: user.stage,
+        challenges: user.challenges,
       },
     });
   } catch (error) {
