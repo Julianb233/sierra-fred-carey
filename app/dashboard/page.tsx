@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +16,27 @@ import {
   LockClosedIcon,
 } from "@radix-ui/react-icons";
 import Link from "next/link";
+import { WelcomeModal } from "@/components/dashboard/WelcomeModal";
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Check for welcome parameter on mount
+  useEffect(() => {
+    if (searchParams.get("welcome") === "true") {
+      setShowWelcome(true);
+      // Clean up URL
+      router.replace("/dashboard", { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    // Mark as completed in localStorage
+    localStorage.setItem("sahara_welcome_completed", "true");
+  };
   // Mock user data
   const user = {
     tier: 0, // 0 = Free, 1 = Pro ($99/mo), 2 = Studio ($249/mo)
@@ -263,6 +284,13 @@ export default function DashboardPage() {
           </div>
         </Card>
       )}
+
+      {/* Welcome Modal for new users */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={handleCloseWelcome}
+        userName={user.name}
+      />
     </div>
   );
 }
