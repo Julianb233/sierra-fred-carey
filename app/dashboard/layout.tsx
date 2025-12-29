@@ -22,6 +22,8 @@ import {
   ActivityLogIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
+import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
+import { UserTier } from "@/lib/constants";
 
 type NavItem = {
   name: string;
@@ -211,21 +213,7 @@ export default function DashboardLayout({
       {/* Upgrade CTA */}
       {user.tier < 2 && (
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="p-4 bg-gradient-to-br from-[#ff6a1a]/10 to-orange-400/10 rounded-xl border border-[#ff6a1a]/20">
-            <p className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-              Upgrade to {user.tier === 0 ? "Pro" : "Studio"}
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-              Unlock all features and AI agents
-            </p>
-            <Button
-              size="sm"
-              className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
-            >
-              <RocketIcon className="mr-2 h-3 w-3" />
-              Upgrade Now
-            </Button>
-          </div>
+          <UpgradeBanner currentTier={user.tier as UserTier} />
         </div>
       )}
     </div>
@@ -240,7 +228,7 @@ export default function DashboardLayout({
             <Button
               variant="outline"
               size="icon"
-              className="fixed bottom-4 right-4 z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0"
+              className="fixed bottom-6 right-4 z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 safe-area-inset-bottom"
             >
               {sidebarOpen ? (
                 <Cross2Icon className="h-5 w-5" />
@@ -249,7 +237,7 @@ export default function DashboardLayout({
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72">
+          <SheetContent side="left" className="p-0 w-[280px] sm:w-72">
             <SidebarContent />
           </SheetContent>
         </Sheet>
@@ -261,7 +249,7 @@ export default function DashboardLayout({
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
             {children}
           </div>
         </main>

@@ -27,6 +27,7 @@ const VALID_ALERT_TYPES: readonly AlertType[] = [
   'errors',
   'traffic',
   'significance',
+  'winner',
 ] as const;
 
 /**

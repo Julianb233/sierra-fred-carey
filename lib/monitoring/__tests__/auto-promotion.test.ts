@@ -4,22 +4,42 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { PromotionConfig, PromotionEligibility } from "../auto-promotion";
+
+// Mock the neon database package BEFORE importing anything that uses it
+vi.mock("@neondatabase/serverless", () => ({
+  neon: vi.fn(() => vi.fn()),
+}));
+
+// Mock dependencies
+vi.mock("@/lib/db/neon", () => ({
+  sql: vi.fn(),
+}));
+
+vi.mock("../ab-test-metrics", () => ({
+  compareExperimentVariants: vi.fn(),
+}));
+
+vi.mock("@/lib/notifications");
+
+// Import the module under test after setting up mocks
 import {
   checkPromotionEligibility,
   promoteWinner,
   rollbackPromotion,
   getPromotionHistory,
   DEFAULT_PROMOTION_CONFIG,
-  type PromotionConfig,
-  type PromotionEligibility,
 } from "../auto-promotion";
 
-// Mock dependencies
-vi.mock("@/lib/db/neon");
-vi.mock("../ab-test-metrics");
-vi.mock("@/lib/notifications");
+// Import the mocked module to get access to the mock function
+import { compareExperimentVariants } from "../ab-test-metrics";
+const mockCompareExperimentVariants = vi.mocked(compareExperimentVariants);
 
 describe("Auto-Promotion System", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("checkPromotionEligibility", () => {
     it("should pass all safety checks for a winning variant", async () => {
       // Mock comparison result with clear winner
@@ -72,8 +92,7 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
@@ -136,16 +155,13 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
       expect(eligibility.isEligible).toBe(false);
       expect(eligibility.safetyChecks.minSampleSize).toBe(false);
-      expect(eligibility.reasons).toContain(
-        expect.stringContaining("Insufficient sample size")
-      );
+      expect(eligibility.reasons.some(r => r.includes("Insufficient sample size"))).toBe(true);
     });
 
     it("should reject when improvement is below threshold", async () => {
@@ -198,16 +214,13 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
       expect(eligibility.isEligible).toBe(false);
       expect(eligibility.safetyChecks.minImprovement).toBe(false);
-      expect(eligibility.reasons).toContain(
-        expect.stringContaining("Improvement below threshold")
-      );
+      expect(eligibility.reasons.some(r => r.includes("Improvement below threshold"))).toBe(true);
     });
 
     it("should reject when runtime is too short", async () => {
@@ -260,16 +273,13 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
       expect(eligibility.isEligible).toBe(false);
       expect(eligibility.safetyChecks.minRuntime).toBe(false);
-      expect(eligibility.reasons).toContain(
-        expect.stringContaining("runtime too short")
-      );
+      expect(eligibility.reasons.some(r => r.includes("runtime too short"))).toBe(true);
     });
 
     it("should warn when winner has higher error rate than control", async () => {
@@ -322,15 +332,12 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
       expect(eligibility.isEligible).toBe(true);
-      expect(eligibility.warnings).toContain(
-        expect.stringContaining("higher error rate than control")
-      );
+      expect(eligibility.warnings.some(w => w.includes("higher error rate than control"))).toBe(true);
     });
 
     it("should handle control being the winner gracefully", async () => {
@@ -381,15 +388,12 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility("test-experiment");
 
       expect(eligibility.isEligible).toBe(false);
-      expect(eligibility.reasons).toContain(
-        expect.stringContaining("Control is the best performing variant")
-      );
+      expect(eligibility.reasons.some(r => r.includes("Control is the best performing variant"))).toBe(true);
     });
   });
 
@@ -453,8 +457,7 @@ describe("Auto-Promotion System", () => {
         alerts: [],
       };
 
-      const { compareExperimentVariants } = await import("../ab-test-metrics");
-      (compareExperimentVariants as any).mockResolvedValue(mockComparison);
+      mockCompareExperimentVariants.mockResolvedValue(mockComparison);
 
       const eligibility = await checkPromotionEligibility(
         "test-experiment",

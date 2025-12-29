@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   AreaChart,
   Area,
@@ -13,9 +13,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { generateErrorRateData } from "@/lib/utils/mockChartData";
-import type { TimeRange, ChartTooltipProps } from "@/lib/types/charts";
-import { ExclamationTriangleIcon, CheckCircledIcon } from "@radix-ui/react-icons";
+import type { TimeRange, ChartTooltipProps, ErrorRateDataPoint } from "@/lib/types/charts";
+import { ExclamationTriangleIcon, CheckCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
 
 interface ErrorRateChartProps {
   timeRange: TimeRange;
@@ -57,7 +58,40 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 };
 
 export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
-  const data = useMemo(() => generateErrorRateData(timeRange), [timeRange]);
+  const [data, setData] = useState<ErrorRateDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/monitoring/charts?type=error&range=${timeRange}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch error rate data: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch error rate data");
+      }
+
+      setData(result.data);
+    } catch (err) {
+      console.error("[ErrorRateChart] Error:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+      // Fallback to mock data when API fails
+      setData(generateErrorRateData(timeRange));
+    } finally {
+      setLoading(false);
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Multiple severity thresholds
   const warningThreshold = 1.0; // 1% warning
@@ -78,6 +112,32 @@ export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
 
   const currentSeverity = getSeverity(currentErrorRate);
 
+  // Loading state
+  if (loading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">Error Rate Trends</CardTitle>
+              <CardDescription className="mt-1">
+                Alert thresholds: Warning {warningThreshold}% | Critical {criticalThreshold}%
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
+            <div className="flex flex-col items-center gap-3">
+              <ReloadIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading error rate data...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -86,24 +146,42 @@ export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
             <CardTitle className="text-lg font-semibold">Error Rate Trends</CardTitle>
             <CardDescription className="mt-1">
               Alert thresholds: Warning {warningThreshold}% | Critical {criticalThreshold}%
+              {error && (
+                <span className="ml-2 text-amber-600 dark:text-amber-400">
+                  (using cached data)
+                </span>
+              )}
             </CardDescription>
           </div>
-          {hasCritical ? (
-            <Badge variant="destructive" className="gap-1 animate-pulse">
-              <ExclamationTriangleIcon className="h-3 w-3" />
-              Critical Alert
-            </Badge>
-          ) : hasWarnings ? (
-            <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-              <ExclamationTriangleIcon className="h-3 w-3" />
-              Warning
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
-              <CheckCircledIcon className="h-3 w-3" />
-              Normal
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {error && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchData}
+                className="h-8 gap-1"
+              >
+                <ReloadIcon className="h-3 w-3" />
+                Retry
+              </Button>
+            )}
+            {hasCritical ? (
+              <Badge variant="destructive" className="gap-1 animate-pulse">
+                <ExclamationTriangleIcon className="h-3 w-3" />
+                Critical Alert
+              </Badge>
+            ) : hasWarnings ? (
+              <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                <ExclamationTriangleIcon className="h-3 w-3" />
+                Warning
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
+                <CheckCircledIcon className="h-3 w-3" />
+                Normal
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>

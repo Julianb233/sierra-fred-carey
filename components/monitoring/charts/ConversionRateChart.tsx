@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -15,9 +15,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowUpIcon, ReloadIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { generateConversionData } from "@/lib/utils/mockChartData";
-import { ArrowUpIcon } from "@radix-ui/react-icons";
-import type { TimeRange, ChartTooltipProps } from "@/lib/types/charts";
+import type { TimeRange, ChartTooltipProps, ConversionDataPoint } from "@/lib/types/charts";
 
 interface ConversionRateChartProps {
   timeRange: TimeRange;
@@ -61,10 +62,44 @@ export function ConversionRateChart({
   className,
 }: ConversionRateChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
-  const data = useMemo(() => {
-    const rawData = generateConversionData(timeRange);
+  const [rawData, setRawData] = useState<ConversionDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Add confidence intervals (±1.5% for 95% confidence)
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/monitoring/charts?type=conversion&range=${timeRange}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch conversion data: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch conversion data");
+      }
+
+      setRawData(result.data);
+    } catch (err) {
+      console.error("[ConversionRateChart] Error:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+      // Fallback to mock data when API fails
+      setRawData(generateConversionData(timeRange));
+    } finally {
+      setLoading(false);
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Add confidence intervals (±1.5% for 95% confidence)
+  const data = useMemo(() => {
+    if (rawData.length === 0) return [];
     return rawData.map(point => ({
       ...point,
       variantAUpper: point.variantA + 1.5,
@@ -74,7 +109,7 @@ export function ConversionRateChart({
       variantCUpper: (point.variantC || 0) + 1.5,
       variantCLower: Math.max(0, (point.variantC || 0) - 1.5),
     }));
-  }, [timeRange]);
+  }, [rawData]);
 
   const handleLegendClick = (dataKey: string) => {
     setHiddenSeries((prev) => {
@@ -94,11 +129,41 @@ export function ConversionRateChart({
     { dataKey: "variantC", name: "Variant C", color: "#f59e0b" },
   ];
 
-  // Calculate winner
-  const latestData = data[data.length - 1];
-  const winner = latestData.variantB > latestData.variantA && latestData.variantB > (latestData.variantC || 0)
-    ? "B"
-    : latestData.variantA > (latestData.variantC || 0) ? "A" : "C";
+  // Calculate winner (only when data is available)
+  const latestData = data.length > 0 ? data[data.length - 1] : null;
+  const winner = latestData
+    ? latestData.variantB > latestData.variantA && latestData.variantB > (latestData.variantC || 0)
+      ? "B"
+      : latestData.variantA > (latestData.variantC || 0) ? "A" : "C"
+    : null;
+
+  // Loading state
+  if (loading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">
+                Conversion Rate Over Time
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Compare variant performance with 95% confidence intervals
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
+            <div className="flex flex-col items-center gap-3">
+              <ReloadIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading conversion data...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={className}>
@@ -110,12 +175,32 @@ export function ConversionRateChart({
             </CardTitle>
             <CardDescription className="mt-1">
               Compare variant performance with 95% confidence intervals
+              {error && (
+                <span className="ml-2 text-amber-600 dark:text-amber-400">
+                  (using cached data)
+                </span>
+              )}
             </CardDescription>
           </div>
-          <Badge variant="secondary" className="gap-1">
-            <ArrowUpIcon className="h-3 w-3" />
-            Leading: Variant {winner}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {error && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchData}
+                className="h-8 gap-1"
+              >
+                <ReloadIcon className="h-3 w-3" />
+                Retry
+              </Button>
+            )}
+            {winner && (
+              <Badge variant="secondary" className="gap-1">
+                <ArrowUpIcon className="h-3 w-3" />
+                Leading: Variant {winner}
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -256,9 +341,8 @@ export function ConversionRateChart({
 
         {/* Summary Stats */}
         <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {series.map((s, idx) => {
-            const latest = data[data.length - 1];
-            const value = latest[s.dataKey as keyof typeof latest] as number;
+          {series.map((s) => {
+            const value = latestData ? (latestData[s.dataKey as keyof typeof latestData] as number) : 0;
             return (
               <div key={s.dataKey} className="text-center p-3 rounded-lg border bg-card">
                 <div className="flex items-center justify-center gap-2 mb-1">

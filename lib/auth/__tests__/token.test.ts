@@ -3,6 +3,8 @@
  *
  * Unit tests for JWT signing, verification, and expiration checking.
  * Uses Jest/Vitest compatible syntax.
+ *
+ * @vitest-environment node
  */
 
 import {

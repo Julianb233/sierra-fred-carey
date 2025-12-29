@@ -163,7 +163,9 @@ export function extractTokenFromHeader(authHeader?: string): string | null {
     return null;
   }
 
-  return parts[1];
+  // Return null for empty token (e.g., "Bearer ")
+  const token = parts[1];
+  return token ? token : null;
 }
 
 /**

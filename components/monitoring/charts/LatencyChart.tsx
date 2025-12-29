@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -16,9 +16,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { generateLatencyData } from "@/lib/utils/mockChartData";
-import { TimerIcon } from "@radix-ui/react-icons";
-import type { TimeRange, ChartTooltipProps } from "@/lib/types/charts";
+import { TimerIcon, ReloadIcon } from "@radix-ui/react-icons";
+import type { TimeRange, ChartTooltipProps, LatencyDataPoint } from "@/lib/types/charts";
 
 interface LatencyChartProps {
   timeRange: TimeRange;
@@ -52,7 +53,40 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 export function LatencyChart({ timeRange, className }: LatencyChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"distribution" | "trend">("distribution");
-  const data = useMemo(() => generateLatencyData(timeRange), [timeRange]);
+  const [data, setData] = useState<LatencyDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/monitoring/charts?type=latency&range=${timeRange}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch latency data: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch latency data");
+      }
+
+      setData(result.data);
+    } catch (err) {
+      console.error("[LatencyChart] Error:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+      // Fallback to mock data when API fails
+      setData(generateLatencyData(timeRange));
+    } finally {
+      setLoading(false);
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleLegendClick = (dataKey: string) => {
     setHiddenSeries((prev) => {
@@ -81,6 +115,34 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
   const latestP99 = data[data.length - 1]?.p99 || 0;
   const exceedsSLA = latestP95 > p95Threshold || latestP99 > p99Threshold;
 
+  // Loading state
+  if (loading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">
+                Latency Distribution
+              </CardTitle>
+              <CardDescription className="mt-1">
+                P50, P95, P99 percentiles across variants
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
+            <div className="flex flex-col items-center gap-3">
+              <ReloadIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading latency data...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -91,14 +153,32 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
             </CardTitle>
             <CardDescription className="mt-1">
               P50, P95, P99 percentiles across variants
+              {error && (
+                <span className="ml-2 text-amber-600 dark:text-amber-400">
+                  (using cached data)
+                </span>
+              )}
             </CardDescription>
           </div>
-          {exceedsSLA && (
-            <Badge variant="destructive" className="gap-1">
-              <TimerIcon className="h-3 w-3" />
-              SLA Exceeded
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {error && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchData}
+                className="h-8 gap-1"
+              >
+                <ReloadIcon className="h-3 w-3" />
+                Retry
+              </Button>
+            )}
+            {exceedsSLA && (
+              <Badge variant="destructive" className="gap-1">
+                <TimerIcon className="h-3 w-3" />
+                SLA Exceeded
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
