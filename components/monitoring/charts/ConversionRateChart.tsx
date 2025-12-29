@@ -119,10 +119,10 @@ export function ConversionRateChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height="100%" className="min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
           <ComposedChart
             data={data}
-            margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
           >
             <defs>
               <linearGradient id="ciA" x1="0" y1="0" x2="0" y2="1">
@@ -255,7 +255,7 @@ export function ConversionRateChart({
         </ResponsiveContainer>
 
         {/* Summary Stats */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {series.map((s, idx) => {
             const latest = data[data.length - 1];
             const value = latest[s.dataKey as keyof typeof latest] as number;

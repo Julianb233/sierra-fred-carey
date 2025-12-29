@@ -107,10 +107,10 @@ export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height="100%" className="min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
           <AreaChart
             data={data}
-            margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
           >
             <defs>
               {/* Gradient based on severity */}
@@ -192,7 +192,7 @@ export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
         </ResponsiveContainer>
 
         {/* Severity-coded Summary Stats */}
-        <div className="mt-6 grid grid-cols-4 gap-4">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="text-center p-3 rounded-lg border bg-card">
             <p className="text-sm text-muted-foreground mb-1">Current</p>
             <p

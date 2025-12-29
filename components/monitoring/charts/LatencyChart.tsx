@@ -102,10 +102,10 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height="100%" className="min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
           <ComposedChart
             data={data}
-            margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
           >
             <defs>
               <linearGradient id="p50Gradient" x1="0" y1="0" x2="0" y2="1">
@@ -215,7 +215,7 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
         </ResponsiveContainer>
 
         {/* Latency Percentile Summary */}
-        <div className="mt-6 grid grid-cols-4 gap-4">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="text-center p-3 rounded-lg border bg-card">
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className="h-3 w-3 rounded-full bg-[#10b981]" />

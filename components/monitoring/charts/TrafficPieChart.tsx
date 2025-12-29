@@ -135,7 +135,7 @@ export function TrafficPieChart({ className }: TrafficPieChartProps) {
             <p className="text-sm font-medium text-center mb-4 text-muted-foreground">
               Actual Distribution
             </p>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height="100%" className="min-h-[250px] sm:min-h-[300px]">
               <PieChart>
                 <Pie
                   data={data as unknown as Array<Record<string, unknown>>}
@@ -222,7 +222,7 @@ export function TrafficPieChart({ className }: TrafficPieChartProps) {
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {data.map((item, index) => (
             <div key={index} className="text-center p-3 rounded-lg border bg-card">
               <div className="flex items-center justify-center gap-2 mb-1">
