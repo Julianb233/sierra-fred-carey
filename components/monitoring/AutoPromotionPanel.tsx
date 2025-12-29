@@ -125,7 +125,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
       const promotionResults: PromotionResult[] = [];
 
       if (data.data.promoted && data.data.promoted.length > 0) {
-        data.data.promoted.forEach((p: any) => {
+        data.data.promoted.forEach((p: { experimentName: string; winningVariant?: string; confidence?: number; improvement?: number }) => {
           promotionResults.push({
             experimentName: p.experimentName,
             status: dryRun ? "skipped" : "promoted",
@@ -139,7 +139,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
       }
 
       if (data.data.skipped && data.data.skipped.length > 0) {
-        data.data.skipped.forEach((s: any) => {
+        data.data.skipped.forEach((s: { experimentName: string; reason: string }) => {
           promotionResults.push({
             experimentName: s.experimentName,
             status: "skipped",
@@ -150,7 +150,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
       }
 
       if (data.data.failed && data.data.failed.length > 0) {
-        data.data.failed.forEach((f: any) => {
+        data.data.failed.forEach((f: { experimentName: string; error?: string }) => {
           promotionResults.push({
             experimentName: f.experimentName,
             status: "failed",
@@ -289,7 +289,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
                 <div className="space-y-6 py-4">
                   <div className="space-y-2">
                     <Label>Promotion Strategy</Label>
-                    <Select value={localPreset} onValueChange={(v: any) => setLocalPreset(v)}>
+                    <Select value={localPreset} onValueChange={(v: "aggressive" | "conservative" | "balanced") => setLocalPreset(v)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -297,7 +297,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
                         <SelectItem value="conservative">
                           <div>
                             <div className="font-medium">Conservative</div>
-                            <div className="text-xs text-gray-500">99% confidence, 10% improvement</div>
+                            <div className="text-xs text-gray-500">99% confidence, 10% min improvement</div>
                           </div>
                         </SelectItem>
                         <SelectItem value="balanced">
@@ -469,7 +469,7 @@ export function AutoPromotionPanel({ onPromotionComplete }: AutoPromotionPanelPr
         {results.length === 0 && !scanning && (
           <div className="text-center py-6 text-gray-500">
             <RocketIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Click "Preview Promotions" to scan for experiments ready to promote</p>
+            <p>Click &quot;Preview Promotions&quot; to scan for experiments ready to promote</p>
           </div>
         )}
       </CardContent>

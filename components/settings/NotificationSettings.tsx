@@ -25,7 +25,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  CheckCircledIcon,
   CrossCircledIcon,
   ReloadIcon,
   PlusIcon,
@@ -118,8 +117,8 @@ export function NotificationSettings() {
         setConfigs(data.data.configs || []);
         setStats(data.data.stats || { total: 0, sent: 0, failed: 0 });
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load settings");
+    } catch (fetchErr) {
+      setError(fetchErr instanceof Error ? fetchErr.message : "Failed to load settings");
     } finally {
       setLoading(false);
     }
@@ -135,7 +134,15 @@ export function NotificationSettings() {
       setSaving(true);
       setError(null);
 
-      const body: any = {
+      const body: {
+        channel: string;
+        alertLevels: string[];
+        enabled: boolean;
+        testOnCreate: boolean;
+        webhookUrl?: string;
+        routingKey?: string;
+        emailAddress?: string;
+      } = {
         channel: newChannel,
         alertLevels: newAlertLevels,
         enabled: true,
@@ -189,7 +196,7 @@ export function NotificationSettings() {
       setConfigs((prev) =>
         prev.map((c) => (c.id === configId ? { ...c, enabled } : c))
       );
-    } catch (err) {
+    } catch {
       setError("Failed to update configuration");
     }
   };
@@ -208,7 +215,7 @@ export function NotificationSettings() {
       if (!response.ok) throw new Error("Failed to delete");
 
       setConfigs((prev) => prev.filter((c) => c.id !== configId));
-    } catch (err) {
+    } catch {
       setError("Failed to delete configuration");
     }
   };
