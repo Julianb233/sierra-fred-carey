@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import { NotificationSettings } from "@/components/settings/NotificationSettings"
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -196,10 +197,13 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Notifications Section */}
+      {/* Alert Notification Settings - Slack/PagerDuty */}
+      <NotificationSettings />
+
+      {/* General Notifications Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+          <CardTitle>General Notifications</CardTitle>
           <CardDescription>
             Configure how you receive updates and alerts.
           </CardDescription>

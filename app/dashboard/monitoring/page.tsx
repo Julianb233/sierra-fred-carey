@@ -6,6 +6,7 @@ import { ExperimentList } from "@/components/monitoring/ExperimentList";
 import { AlertsTable } from "@/components/monitoring/AlertsTable";
 import { LiveMetricsPanel } from "@/components/monitoring/panels/LiveMetricsPanel";
 import { PerformanceCharts } from "@/components/monitoring/charts";
+import { AutoPromotionPanel } from "@/components/monitoring/AutoPromotionPanel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -321,8 +322,9 @@ export default function MonitoringDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="experiments" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="experiments">Experiments</TabsTrigger>
+          <TabsTrigger value="promotion">Auto-Promotion</TabsTrigger>
           <TabsTrigger value="alerts">
             Alerts
             {alerts.length > 0 && (
@@ -346,6 +348,15 @@ export default function MonitoringDashboard() {
               <Button variant="outline">View All Experiments</Button>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="promotion" className="space-y-6">
+          <AutoPromotionPanel
+            onPromotionComplete={() => {
+              fetchDashboardData();
+              fetchAlerts();
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-6">
