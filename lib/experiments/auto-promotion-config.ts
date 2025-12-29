@@ -217,6 +217,13 @@ export function loadAutoPromotionConfig(
     );
   }
 
+  // Read excluded experiments at call time (not module load time)
+  if (process.env.AUTO_PROMOTION_EXCLUDED !== undefined) {
+    baseConfig.excludedExperiments = (process.env.AUTO_PROMOTION_EXCLUDED || "")
+      .split(",")
+      .filter(Boolean);
+  }
+
   return baseConfig;
 }
 

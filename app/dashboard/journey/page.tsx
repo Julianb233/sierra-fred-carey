@@ -328,19 +328,19 @@ export default function JourneyDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
           Your Founder Journey
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Track your progress, insights, and milestones in one place
         </p>
       </div>
 
       {/* Score Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Idea Score */}
         <Card className="relative overflow-hidden border-l-4 border-[#ff6a1a]">
           <CardHeader className="pb-3">
@@ -460,42 +460,44 @@ export default function JourneyDashboard() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="insights" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="insights" className="gap-2">
-            <Lightbulb className="h-4 w-4" />
-            Insights
-            {stats && stats.insights.active > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {stats.insights.active}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="milestones" className="gap-2">
-            <Target className="h-4 w-4" />
-            Milestones
-            {stats && stats.milestones.inProgress > 0 && (
-              <Badge variant="secondary" className="ml-1">
+      <Tabs defaultValue="insights" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-3 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="insights" className="gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Lightbulb className="h-3 w-3 sm:h-4 sm:w-4" />
+              Insights
+              {stats && stats.insights.active > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {stats.insights.active}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="milestones" className="gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+              Milestones
+              {stats && stats.milestones.inProgress > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">
                 {stats.milestones.inProgress}
               </Badge>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="timeline" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Timeline
-          </TabsTrigger>
-        </TabsList>
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+              Timeline
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Insights Tab */}
         <TabsContent value="insights" className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold">Recent Insights</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold">Recent Insights</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 AI-generated recommendations for your startup
               </p>
             </div>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" asChild className="w-fit">
               <Link href="/dashboard/reality-lens">
                 <Lightbulb className="h-4 w-4 mr-2" />
                 Generate New

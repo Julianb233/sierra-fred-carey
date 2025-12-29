@@ -255,12 +255,121 @@ Utility functions available:
 - `calculateMetrics()` - Aggregate metrics calculation
 - `generateChartData()` - Generate time-series data
 
+### DashboardFilters
+
+Advanced filtering and data export component for the monitoring dashboard.
+
+```tsx
+import { DashboardFilters } from "@/components/monitoring/DashboardFilters";
+import type { FilterState } from "@/components/monitoring/DashboardFilters";
+
+const [filters, setFilters] = useState<FilterState>({
+  dateRange: "24h",
+  selectedExperiments: [],
+  metricType: "all",
+});
+
+<DashboardFilters
+  experiments={[
+    { id: "exp-1", name: "Checkout Flow A/B" },
+    { id: "exp-2", name: "Pricing Page Test" }
+  ]}
+  onFilterChange={(newFilters) => {
+    setFilters(newFilters);
+    // Fetch data with new filters
+  }}
+  onExportCSV={() => {
+    // Generate CSV export
+  }}
+  onExportJSON={() => {
+    // Generate JSON export
+  }}
+  loading={false}
+/>
+```
+
+**Props:**
+- `experiments?`: Array of `{ id: string, name: string }`
+- `onFilterChange?`: Callback when filters change
+- `onExportCSV?`: CSV export handler
+- `onExportJSON?`: JSON export handler
+- `loading?`: Show loading state
+
+**Features:**
+- Date range picker (24h, 7d, 30d, custom)
+- Multi-select experiment dropdown with checkboxes
+- Metric type filter (all, latency, errors, requests, conversion)
+- CSV and JSON export buttons
+- Active filter badges with remove functionality
+- Responsive horizontal layout
+
+### SystemHealth
+
+Real-time system health monitoring with auto-refresh.
+
+```tsx
+import { SystemHealth } from "@/components/monitoring/SystemHealth";
+
+<SystemHealth
+  refreshInterval={30000}  // 30 seconds (default)
+  onError={(error) => {
+    console.error("Health check failed:", error);
+  }}
+/>
+```
+
+**Props:**
+- `refreshInterval?`: Auto-refresh interval in ms (default: 30000)
+- `onError?`: Error callback
+- `className?`: Additional CSS classes
+
+**Features:**
+- Overall system status (healthy/degraded/critical)
+- Individual service health checks (API, Database, Queue)
+- Response time metrics
+- System uptime percentage
+- Last incident display
+- Auto-refresh every 30s
+- Manual refresh button
+- Loading skeleton
+- Error handling
+
+**API Endpoint:**
+
+GET `/api/monitoring/health`
+
+```json
+{
+  "success": true,
+  "data": {
+    "overallStatus": "healthy",
+    "services": [
+      {
+        "name": "API",
+        "status": "operational",
+        "responseTime": 45,
+        "lastCheck": "2024-12-28T...",
+        "message": "Optional status message"
+      }
+    ],
+    "avgResponseTime": 21,
+    "uptime": 99.87,
+    "lastIncident": {
+      "timestamp": "2024-12-28T...",
+      "severity": "warning",
+      "message": "Description of incident"
+    }
+  }
+}
+```
+
 ## Future Enhancements
 
+- [x] Export data to CSV/JSON (DashboardFilters implemented)
+- [x] Advanced filtering and search (DashboardFilters implemented)
+- [x] System health monitoring (SystemHealth implemented)
 - [ ] Real-time WebSocket updates
-- [ ] Export data to CSV/PDF
-- [ ] Custom date range filters
-- [ ] Advanced filtering and search
+- [ ] Custom date range filters (custom option available)
 - [ ] Email notifications for alerts
 - [ ] Experiment creation UI
 - [ ] Custom metrics builder

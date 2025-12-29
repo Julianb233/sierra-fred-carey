@@ -188,16 +188,16 @@ export default function InsightsDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
             AI Insights Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Comprehensive analytics, A/B test results, and AI-extracted insights
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-[120px] sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -214,20 +214,27 @@ export default function InsightsDashboardPage() {
           >
             <ReloadIcon className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
-          <Button variant="outline" onClick={exportToCSV}>
+          <Button variant="outline" size="sm" className="hidden sm:flex" onClick={exportToCSV}>
             <DownloadIcon className="h-4 w-4 mr-2" />
-            Export CSV
+            CSV
           </Button>
-          <Button variant="outline" onClick={exportToPDF}>
+          <Button variant="outline" size="sm" className="hidden sm:flex" onClick={exportToPDF}>
             <FileTextIcon className="h-4 w-4 mr-2" />
-            Export PDF
+            PDF
+          </Button>
+          {/* Mobile export buttons */}
+          <Button variant="outline" size="icon" className="sm:hidden" onClick={exportToCSV}>
+            <DownloadIcon className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="sm:hidden" onClick={exportToPDF}>
+            <FileTextIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
       {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -300,24 +307,26 @@ export default function InsightsDashboardPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="trends" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="trends">
-            Trends
-          </TabsTrigger>
-          <TabsTrigger value="insights">
-            Top Insights
-            <Badge variant="secondary" className="ml-2">
-              {topInsights.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="ab-tests">
-            A/B Tests
-            <Badge variant="secondary" className="ml-2">
-              {abTests.filter((t) => t.isActive).length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="analytics">AI Analytics</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="trends" className="text-xs sm:text-sm whitespace-nowrap">
+              Trends
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm whitespace-nowrap">
+              Insights
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
+                {topInsights.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="ab-tests" className="text-xs sm:text-sm whitespace-nowrap">
+              A/B Tests
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
+                {abTests.filter((t) => t.isActive).length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm whitespace-nowrap">Analytics</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Trends Tab */}
         <TabsContent value="trends" className="space-y-4">
@@ -334,16 +343,16 @@ export default function InsightsDashboardPage() {
         <TabsContent value="insights" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold mb-1">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">
                 Top AI-Extracted Insights
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 The most important insights from all your analyses
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Select value={minImportance} onValueChange={setMinImportance}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-[130px] sm:w-40">
                   <SelectValue placeholder="Min importance" />
                 </SelectTrigger>
                 <SelectContent>
@@ -354,7 +363,7 @@ export default function InsightsDashboardPage() {
                 </SelectContent>
               </Select>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-[130px] sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
