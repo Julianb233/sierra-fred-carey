@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,20 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { VariantComparison } from "@/components/monitoring/VariantComparison";
 import { PromotionStatus } from "@/components/monitoring/PromotionStatus";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RocketIcon, ActivityIcon, BarChart3Icon } from "lucide-react";
+import { RocketIcon, ActivityIcon, BarChart3Icon, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface UIVariant {
-  name: string;
-  conversions: number;
-  visitors: number;
-  conversionRate: number;
-  improvement?: number;
-  isControl?: boolean;
-  isWinner?: boolean;
-  latency?: number;
-  errorRate?: number;
-}
+import { useExperimentDetail } from "@/lib/hooks/useExperimentDetail";
+import { usePromotionWorkflow } from "@/lib/hooks/usePromotionWorkflow";
+import { transformVariant } from "@/types/monitoring";
+import { toast } from "sonner";
+import type { UIVariant } from "@/types/monitoring";
 
 interface UIExperiment {
   id: string;
@@ -49,23 +42,6 @@ interface ExperimentDetailModalProps {
   userId?: string;
 }
 
-interface PromotionEligibility {
-  eligible: boolean;
-  experimentId: string;
-  experimentName: string;
-  winningVariant: string | null;
-  confidenceLevel: number | null;
-  improvement: number | null;
-  safetyChecks: Array<{
-    passed: boolean;
-    checkName: string;
-    message: string;
-    severity: "info" | "warning" | "critical";
-  }>;
-  recommendation: "promote" | "wait" | "manual_review" | "not_ready";
-  reason: string;
-}
-
 export function ExperimentDetailModal({
   experiment,
   open,
@@ -74,75 +50,112 @@ export function ExperimentDetailModal({
   userId,
 }: ExperimentDetailModalProps) {
   const [activeTab, setActiveTab] = useState("variants");
-  const [eligibility, setEligibility] = useState<PromotionEligibility | undefined>();
-  const [checkingEligibility, setCheckingEligibility] = useState(false);
-  const [promotionLoading, setPromotionLoading] = useState(false);
 
-  // Mock variants data - in real implementation, this would come from the experiment object
-  const mockVariants: UIVariant[] = experiment
-    ? [
-        {
-          name: "control",
-          conversions: 125,
-          visitors: 1250,
-          conversionRate: 10.0,
-          isControl: true,
-          latency: 245,
-          errorRate: 0.02,
-        },
-        {
-          name: "variant-a",
-          conversions: 158,
-          visitors: 1200,
-          conversionRate: 13.17,
-          improvement: 31.7,
-          isWinner: experiment.winner === "variant-a",
-          latency: 238,
-          errorRate: 0.018,
-        },
-      ]
-    : [];
+  // Use hooks for data fetching
+  const {
+    experiment: experimentDetail,
+    loading: detailLoading,
+    error: detailError,
+    refetch: refetchDetail,
+  } = useExperimentDetail(experiment?.name || "", open && !!experiment);
 
+  const {
+    eligibility,
+    loading: eligibilityLoading,
+    promoting,
+    error: promotionError,
+    checkEligibility,
+    promoteWinner,
+  } = usePromotionWorkflow();
+
+  // Transform variant data from API response
+  const variants: UIVariant[] = experimentDetail?.variants.map((variant) => {
+    const controlVariant = experimentDetail.variants.find(
+      (v) => v.variantName.toLowerCase() === "control"
+    );
+    const controlRate = controlVariant?.conversionRate;
+    const transformed = transformVariant(variant, controlRate);
+
+    // Mark winner if exists
+    if (experimentDetail.winningVariant === variant.variantName) {
+      transformed.isWinner = true;
+    }
+
+    return transformed;
+  }) || [];
+
+  // Handle eligibility check
   const handleCheckEligibility = async () => {
     if (!experiment) return;
 
-    setCheckingEligibility(true);
     try {
-      const response = await fetch(
-        `/api/ab-testing/promotion/check?experimentName=${experiment.name}${userId ? `&userId=${userId}` : ""}`
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        setEligibility(data.data);
+      const result = await checkEligibility(experiment.name);
+      if (!result) {
+        toast.error("Failed to check promotion eligibility");
       }
     } catch (error) {
+      toast.error("Error checking eligibility");
       console.error("Failed to check eligibility:", error);
-    } finally {
-      setCheckingEligibility(false);
     }
   };
 
+  // Handle promotion
   const handlePromote = async () => {
-    if (!experiment || !onPromote) return;
+    if (!experiment) return;
 
-    setPromotionLoading(true);
     try {
-      await onPromote(experiment.name);
-      // Close modal after successful promotion
-      onOpenChange(false);
+      const result = await promoteWinner(experiment.name, {
+        backupBeforePromotion: true,
+        rolloutPercentage: 100,
+      });
+
+      if (result?.success) {
+        toast.success(`Successfully promoted ${result.promotedVariant}`, {
+          description: result.message,
+        });
+
+        // Call parent callback if provided
+        if (onPromote) {
+          await onPromote(experiment.name);
+        }
+
+        // Refetch data and close modal
+        await refetchDetail();
+        onOpenChange(false);
+      } else {
+        toast.error("Promotion failed", {
+          description: result?.message || "Unknown error occurred",
+        });
+      }
     } catch (error) {
+      toast.error("Error during promotion");
       console.error("Failed to promote:", error);
-    } finally {
-      setPromotionLoading(false);
     }
   };
+
+  // Show error toast on promotion or detail errors
+  useEffect(() => {
+    if (detailError) {
+      toast.error("Failed to load experiment details", {
+        description: detailError.message,
+      });
+    }
+  }, [detailError]);
+
+  useEffect(() => {
+    if (promotionError) {
+      toast.error("Promotion error", {
+        description: promotionError.message,
+      });
+    }
+  }, [promotionError]);
 
   if (!experiment) return null;
 
-  const isActive = experiment.status === "active";
-  const hasWinner = !!experiment.winner;
-  const canPromote = isActive && hasWinner && (experiment.significance || 0) >= 95;
+  const isActive = experimentDetail?.isActive ?? experiment.status === "active";
+  const hasWinner = !!experimentDetail?.winningVariant;
+  const significance = experimentDetail?.confidenceLevel ?? experiment.significance ?? 0;
+  const canPromote = isActive && hasWinner && significance >= 95;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,20 +173,62 @@ export function ExperimentDetailModal({
                 >
                   {experiment.status.charAt(0).toUpperCase() + experiment.status.slice(1)}
                 </Badge>
-                {hasWinner && (
+                {hasWinner && experimentDetail?.winningVariant && (
                   <Badge className="bg-[#ff6a1a] text-white">
-                    Winner: {experiment.winner}
+                    Winner: {experimentDetail.winningVariant}
                   </Badge>
                 )}
-                {experiment.significance && (
+                {significance > 0 && (
                   <Badge variant="outline">
-                    {experiment.significance.toFixed(1)}% Confidence
+                    {significance.toFixed(1)}% Confidence
                   </Badge>
                 )}
               </div>
             </div>
           </div>
         </DialogHeader>
+
+        {/* Loading State */}
+        {detailLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Loading experiment details...
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {detailError && !detailLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-3 text-center max-w-md">
+              <div className="p-3 bg-red-100 dark:bg-red-950 rounded-full">
+                <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Failed to load experiment details
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {detailError.message}
+                </p>
+              </div>
+              <Button
+                onClick={() => refetchDetail()}
+                variant="outline"
+                size="sm"
+                className="mt-2"
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Content - Only show when data is loaded */}
+        {!detailLoading && !detailError && experimentDetail && (
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
