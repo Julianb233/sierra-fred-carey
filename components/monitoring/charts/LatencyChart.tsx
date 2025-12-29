@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,9 +11,13 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
+  ComposedChart,
+  Line,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { generateLatencyData } from "@/lib/utils/mockChartData";
+import { TimerIcon } from "@radix-ui/react-icons";
 import type { TimeRange, ChartTooltipProps } from "@/lib/types/charts";
 
 interface LatencyChartProps {
@@ -47,6 +51,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 export function LatencyChart({ timeRange, className }: LatencyChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<"distribution" | "trend">("distribution");
   const data = useMemo(() => generateLatencyData(timeRange), [timeRange]);
 
   const handleLegendClick = (dataKey: string) => {
@@ -62,42 +67,59 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
   };
 
   const series = [
-    { dataKey: "p50", name: "P50", color: "#3b82f6", opacity: 0.8 },
-    { dataKey: "p95", name: "P95", color: "#f59e0b", opacity: 0.6 },
-    { dataKey: "p99", name: "P99", color: "#ef4444", opacity: 0.4 },
-    { dataKey: "avg", name: "Average", color: "#10b981", opacity: 0.5 },
+    { dataKey: "p50", name: "P50 (Median)", color: "#3b82f6" },
+    { dataKey: "p95", name: "P95", color: "#f59e0b" },
+    { dataKey: "p99", name: "P99", color: "#ef4444" },
   ];
 
-  // Calculate SLA threshold (e.g., P95 should be under 200ms)
-  const slaThreshold = 200;
+  // Calculate SLA thresholds
+  const p95Threshold = 200;
+  const p99Threshold = 500;
+
+  // Check if exceeding SLA
+  const latestP95 = data[data.length - 1]?.p95 || 0;
+  const latestP99 = data[data.length - 1]?.p99 || 0;
+  const exceedsSLA = latestP95 > p95Threshold || latestP99 > p99Threshold;
 
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">
-          Latency Distribution
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold">
+              Latency Distribution
+            </CardTitle>
+            <CardDescription className="mt-1">
+              P50, P95, P99 percentiles across variants
+            </CardDescription>
+          </div>
+          {exceedsSLA && (
+            <Badge variant="destructive" className="gap-1">
+              <TimerIcon className="h-3 w-3" />
+              SLA Exceeded
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <AreaChart
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart
             data={data}
             margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
           >
             <defs>
-              {series.map((s) => (
-                <linearGradient
-                  key={s.dataKey}
-                  id={`color${s.dataKey}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="5%" stopColor={s.color} stopOpacity={0.8} />
-                  <stop offset="95%" stopColor={s.color} stopOpacity={0.1} />
-                </linearGradient>
-              ))}
+              <linearGradient id="p50Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.2} />
+              </linearGradient>
+              <linearGradient id="p95Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.2} />
+              </linearGradient>
+              <linearGradient id="p99Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0.2} />
+              </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -125,41 +147,116 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
                   className={
                     hiddenSeries.has(entry.dataKey as string)
                       ? "text-muted-foreground line-through cursor-pointer"
-                      : "text-foreground cursor-pointer"
+                      : "text-foreground cursor-pointer hover:underline"
                   }
                 >
                   {value}
                 </span>
               )}
             />
+
+            {/* P95 SLA Threshold */}
             <ReferenceLine
-              y={slaThreshold}
+              y={p95Threshold}
+              stroke="#f59e0b"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              label={{
+                value: "P95 SLA (200ms)",
+                position: "right",
+                fontSize: 11,
+                fill: "#f59e0b",
+              }}
+            />
+
+            {/* P99 SLA Threshold */}
+            <ReferenceLine
+              y={p99Threshold}
               stroke="#ef4444"
               strokeDasharray="5 5"
+              strokeWidth={2}
               label={{
-                value: "SLA Threshold",
+                value: "P99 SLA (500ms)",
                 position: "right",
                 fontSize: 11,
                 fill: "#ef4444",
               }}
             />
-            {series.map(
-              (s) =>
-                !hiddenSeries.has(s.dataKey) && (
-                  <Area
-                    key={s.dataKey}
-                    type="monotone"
-                    dataKey={s.dataKey}
-                    name={s.name}
-                    stroke={s.color}
-                    strokeWidth={2}
-                    fillOpacity={s.opacity}
-                    fill={`url(#color${s.dataKey})`}
-                  />
-                )
+
+            {/* Histogram-style bars for distribution */}
+            {!hiddenSeries.has("p50") && (
+              <Bar
+                dataKey="p50"
+                name="P50 (Median)"
+                fill="url(#p50Gradient)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              />
             )}
-          </AreaChart>
+            {!hiddenSeries.has("p95") && (
+              <Bar
+                dataKey="p95"
+                name="P95"
+                fill="url(#p95Gradient)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              />
+            )}
+            {!hiddenSeries.has("p99") && (
+              <Bar
+                dataKey="p99"
+                name="P99"
+                fill="url(#p99Gradient)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              />
+            )}
+          </ComposedChart>
         </ResponsiveContainer>
+
+        {/* Latency Percentile Summary */}
+        <div className="mt-6 grid grid-cols-4 gap-4">
+          <div className="text-center p-3 rounded-lg border bg-card">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="h-3 w-3 rounded-full bg-[#10b981]" />
+              <p className="text-sm font-medium text-muted-foreground">Average</p>
+            </div>
+            <p className="text-2xl font-bold text-[#10b981]">
+              {data[data.length - 1]?.avg || 0}ms
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Mean Response</p>
+          </div>
+          <div className="text-center p-3 rounded-lg border bg-card">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="h-3 w-3 rounded-full bg-[#3b82f6]" />
+              <p className="text-sm font-medium text-muted-foreground">P50</p>
+            </div>
+            <p className="text-2xl font-bold text-[#3b82f6]">
+              {data[data.length - 1]?.p50 || 0}ms
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">50% under</p>
+          </div>
+          <div className="text-center p-3 rounded-lg border bg-card">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="h-3 w-3 rounded-full bg-[#f59e0b]" />
+              <p className="text-sm font-medium text-muted-foreground">P95</p>
+            </div>
+            <p className={`text-2xl font-bold ${latestP95 > p95Threshold ? "text-red-500" : "text-[#f59e0b]"}`}>
+              {latestP95}ms
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">95% under</p>
+          </div>
+          <div className="text-center p-3 rounded-lg border bg-card">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="h-3 w-3 rounded-full bg-[#ef4444]" />
+              <p className="text-sm font-medium text-muted-foreground">P99</p>
+            </div>
+            <p className={`text-2xl font-bold ${latestP99 > p99Threshold ? "text-red-500" : "text-[#ef4444]"}`}>
+              {latestP99}ms
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">99% under</p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
