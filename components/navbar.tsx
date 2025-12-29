@@ -106,15 +106,7 @@ function NavBar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[350px] bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
               <SheetHeader>
-                <SheetTitle>
-                  <Image
-                    src="/sahara-logo.svg"
-                    alt="Sahara"
-                    width={120}
-                    height={30}
-                    className="h-8 w-auto"
-                  />
-                </SheetTitle>
+                <SheetTitle className="text-lg font-semibold text-gray-900 dark:text-white">Menu</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-8">
                 {menuItems.map((item) => (
