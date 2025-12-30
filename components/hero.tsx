@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Sparkles, Brain, Clock, Users, ArrowRight, CheckIcon } from "lucide-react";
 import NightModeParticles from "@/components/effects/NightModeParticles";
+import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
 
 export default function Hero() {
   return (
@@ -132,23 +133,15 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 mb-12"
+            className="flex flex-col sm:flex-row gap-4 mb-12 items-center justify-center"
           >
-            <motion.div
-              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -15px rgba(255, 106, 26, 0.4)" }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                asChild
-                size="lg"
-                className="text-lg px-8 h-14 bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300"
-              >
-                <Link href="/waitlist" className="flex items-center gap-2">
-                  Join the Waitlist
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-              </Button>
-            </motion.div>
+            {/* Expandable Hero Button */}
+            <HeroButtonExpandable
+              mainText="Start your journey"
+              expandedText="Join the Waitlist"
+              href="/waitlist"
+            />
+            
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
@@ -157,7 +150,7 @@ export default function Hero() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="text-lg px-8 h-14 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] bg-transparent transition-all duration-300"
+                className="text-lg px-8 h-14 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#702425] hover:text-[#702425] bg-transparent transition-all duration-300"
               >
                 <Link href="/chat" className="flex items-center gap-2">
                   Talk to Fred
