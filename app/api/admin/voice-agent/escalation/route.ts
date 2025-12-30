@@ -1,32 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
+import { createServiceClient } from '@/lib/supabase/server';
 
 // GET - Fetch all escalation rules for a config
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const configId = searchParams.get('config_id');
+    const supabase = createServiceClient();
 
-    let rules;
+    let query = supabase
+      .from('escalation_rules')
+      .select('*')
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false });
+
     if (configId) {
-      rules = await sql`
-        SELECT * FROM escalation_rules
-        WHERE config_id = ${configId}
-        ORDER BY priority DESC, created_at DESC
-      `;
-    } else {
-      // Get rules for the default active config
-      rules = await sql`
-        SELECT er.* FROM escalation_rules er
-        JOIN voice_agent_config vac ON er.config_id = vac.id
-        WHERE vac.is_active = true
-        ORDER BY er.priority DESC, er.created_at DESC
-      `;
+      query = query.eq('config_id', configId);
     }
 
-    return NextResponse.json(rules);
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return NextResponse.json(data || []);
   } catch (error) {
     console.error('Error fetching escalation rules:', error);
     return NextResponse.json(
@@ -40,6 +35,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const supabase = createServiceClient();
+
     const {
       config_id,
       name,
@@ -63,22 +60,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const created = await sql`
-      INSERT INTO escalation_rules (
-        config_id, name, description, trigger_type, trigger_keywords,
-        sentiment_threshold, time_limit_seconds, trigger_intents,
-        custom_condition, action, transfer_to, action_message, priority
-      ) VALUES (
-        ${config_id}, ${name}, ${description}, ${trigger_type},
-        ${trigger_keywords || null}, ${sentiment_threshold || null},
-        ${time_limit_seconds || null}, ${trigger_intents || null},
-        ${custom_condition ? JSON.stringify(custom_condition) : null}::jsonb,
-        ${action}, ${transfer_to}, ${action_message}, ${priority}
-      )
-      RETURNING *
-    `;
+    const { data, error } = await supabase
+      .from('escalation_rules')
+      .insert({
+        config_id,
+        name,
+        description,
+        trigger_type,
+        trigger_keywords,
+        sentiment_threshold,
+        time_limit_seconds,
+        trigger_intents,
+        custom_condition,
+        action,
+        transfer_to,
+        action_message,
+        priority
+      })
+      .select()
+      .single();
 
-    return NextResponse.json(created[0], { status: 201 });
+    if (error) throw error;
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error('Error creating escalation rule:', error);
     return NextResponse.json(
@@ -92,53 +95,30 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      id,
-      name,
-      description,
-      is_active,
-      trigger_type,
-      trigger_keywords,
-      sentiment_threshold,
-      time_limit_seconds,
-      trigger_intents,
-      custom_condition,
-      action,
-      transfer_to,
-      action_message,
-      priority
-    } = body;
+    const supabase = createServiceClient();
+
+    const { id, ...updateData } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Rule ID required' }, { status: 400 });
     }
 
-    const updated = await sql`
-      UPDATE escalation_rules
-      SET
-        name = COALESCE(${name}, name),
-        description = COALESCE(${description}, description),
-        is_active = COALESCE(${is_active}, is_active),
-        trigger_type = COALESCE(${trigger_type}, trigger_type),
-        trigger_keywords = COALESCE(${trigger_keywords}, trigger_keywords),
-        sentiment_threshold = COALESCE(${sentiment_threshold}, sentiment_threshold),
-        time_limit_seconds = COALESCE(${time_limit_seconds}, time_limit_seconds),
-        trigger_intents = COALESCE(${trigger_intents}, trigger_intents),
-        custom_condition = COALESCE(${custom_condition ? JSON.stringify(custom_condition) : null}::jsonb, custom_condition),
-        action = COALESCE(${action}, action),
-        transfer_to = COALESCE(${transfer_to}, transfer_to),
-        action_message = COALESCE(${action_message}, action_message),
-        priority = COALESCE(${priority}, priority),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `;
+    const { data, error } = await supabase
+      .from('escalation_rules')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (updated.length === 0) {
+    if (error) throw error;
+    if (!data) {
       return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
     }
 
-    return NextResponse.json(updated[0]);
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error updating escalation rule:', error);
     return NextResponse.json(
@@ -153,13 +133,18 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const supabase = createServiceClient();
 
     if (!id) {
       return NextResponse.json({ error: 'Rule ID required' }, { status: 400 });
     }
 
-    await sql`DELETE FROM escalation_rules WHERE id = ${id}`;
+    const { error } = await supabase
+      .from('escalation_rules')
+      .delete()
+      .eq('id', id);
 
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting escalation rule:', error);
