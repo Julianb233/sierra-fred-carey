@@ -1,131 +1,34 @@
-import bcrypt from "bcryptjs";
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
-import { sql } from "@/lib/db/neon";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "sahara-default-secret-change-in-production"
-);
-const COOKIE_NAME = "sahara_auth";
-
-export interface User {
-  id: number;
-  email: string;
-  name: string | null;
-  stage: string | null;
-  challenges: string[];
-  created_at: Date;
-}
-
-export interface AuthResult {
-  success: boolean;
-  user?: User;
-  token?: string;
-  error?: string;
-}
-
 /**
- * Hash a password using bcrypt
+ * Authentication Module - Supabase Auth Implementation
+ *
+ * This module provides authentication functions using Supabase Auth.
+ * Migrated from custom JWT + Neon PostgreSQL implementation.
  */
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
 
-/**
- * Compare a password with a hash
- */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
+// Re-export all auth functions from Supabase helpers for backward compatibility
+export {
+  type User,
+  type AuthResult,
+  getCurrentUser,
+  getUserId,
+  isAuthenticated,
+  requireAuth,
+  updateProfile,
+  getSession,
+  refreshSession,
+} from "./supabase/auth-helpers";
 
-/**
- * Create a JWT token for a user
- */
-export async function createToken(userId: number, email: string): Promise<string> {
-  return new SignJWT({ userId, email })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .setIssuedAt()
-    .sign(JWT_SECRET);
-}
-
-/**
- * Verify a JWT token
- */
-export async function verifyToken(token: string): Promise<{ userId: number; email: string } | null> {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as { userId: number; email: string };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Set auth cookie
- */
-export async function setAuthCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: "/",
-  });
-}
-
-/**
- * Get auth cookie
- */
-export async function getAuthCookie(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(COOKIE_NAME)?.value || null;
-}
-
-/**
- * Clear auth cookie
- */
-export async function clearAuthCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
-}
-
-/**
- * Get current user from session
- */
-export async function getCurrentUser(): Promise<User | null> {
-  try {
-    const token = await getAuthCookie();
-    if (!token) return null;
-
-    const payload = await verifyToken(token);
-    if (!payload) return null;
-
-    const result = await sql`
-      SELECT id, email, name, stage, challenges, created_at
-      FROM users
-      WHERE id = ${payload.userId}
-    `;
-
-    if (result.length === 0) return null;
-
-    return {
-      id: result[0].id,
-      email: result[0].email,
-      name: result[0].name,
-      stage: result[0].stage,
-      challenges: result[0].challenges || [],
-      created_at: result[0].created_at,
-    };
-  } catch (error) {
-    console.error("[auth] Error getting current user:", error);
-    return null;
-  }
-}
+// Import the actual implementations
+import {
+  supabaseSignUp,
+  supabaseSignIn,
+  supabaseSignOut,
+  getCurrentUser as getUser,
+} from "./supabase/auth-helpers";
 
 /**
  * Sign up a new user
+ * Wrapper for Supabase signUp for backward compatibility
  */
 export async function signUp(
   email: string,
@@ -133,148 +36,82 @@ export async function signUp(
   name?: string,
   stage?: string,
   challenges?: string[]
-): Promise<AuthResult> {
-  try {
-    // Check if user already exists
-    const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase()}`;
-    if (existing.length > 0) {
-      return { success: false, error: "An account with this email already exists" };
-    }
-
-    // Hash password
-    const passwordHash = await hashPassword(password);
-
-    // Create user - cast challenges to jsonb
-    const challengesJson = JSON.stringify(challenges || []);
-    const result = await sql`
-      INSERT INTO users (email, password_hash, name, stage, challenges)
-      VALUES (${email.toLowerCase()}, ${passwordHash}, ${name || null}, ${stage || null}, ${challengesJson}::jsonb)
-      RETURNING id, email, name, stage, challenges, created_at
-    `;
-
-    const user = {
-      id: result[0].id,
-      email: result[0].email,
-      name: result[0].name,
-      stage: result[0].stage,
-      challenges: result[0].challenges || [],
-      created_at: result[0].created_at,
-    };
-
-    // Create token
-    const token = await createToken(user.id, user.email);
-
-    return { success: true, user, token };
-  } catch (error: any) {
-    console.error("[auth] Sign up error:", error);
-    console.error("[auth] Error details:", JSON.stringify({
-      name: error?.name,
-      message: error?.message,
-      code: error?.code,
-      stack: error?.stack?.substring(0, 500)
-    }));
-    return { success: false, error: error?.message || "Failed to create account" };
-  }
+) {
+  return supabaseSignUp(email, password, { name, stage, challenges });
 }
 
 /**
  * Sign in an existing user
+ * Wrapper for Supabase signIn for backward compatibility
  */
-export async function signIn(email: string, password: string): Promise<AuthResult> {
-  try {
-    // Find user
-    const result = await sql`
-      SELECT id, email, password_hash, name, stage, challenges, created_at
-      FROM users
-      WHERE email = ${email.toLowerCase()}
-    `;
-
-    if (result.length === 0) {
-      return { success: false, error: "Invalid email or password" };
-    }
-
-    const userRow = result[0];
-
-    // Check if user has a password (might be from onboarding without password)
-    if (!userRow.password_hash) {
-      return { success: false, error: "Please complete your account setup first" };
-    }
-
-    // Verify password
-    const valid = await verifyPassword(password, userRow.password_hash);
-    if (!valid) {
-      return { success: false, error: "Invalid email or password" };
-    }
-
-    const user = {
-      id: userRow.id,
-      email: userRow.email,
-      name: userRow.name,
-      stage: userRow.stage,
-      challenges: userRow.challenges || [],
-      created_at: userRow.created_at,
-    };
-
-    // Create token
-    const token = await createToken(user.id, user.email);
-
-    return { success: true, user, token };
-  } catch (error) {
-    console.error("[auth] Sign in error:", error);
-    return { success: false, error: "Failed to sign in" };
-  }
+export async function signIn(email: string, password: string) {
+  return supabaseSignIn(email, password);
 }
 
 /**
  * Sign out the current user
  */
 export async function signOut(): Promise<void> {
-  await clearAuthCookie();
-}
-
-/**
- * Check if user is authenticated (for middleware)
- */
-export async function isAuthenticated(): Promise<boolean> {
-  const user = await getCurrentUser();
-  return user !== null;
-}
-
-/**
- * Get user ID from session (convenience function)
- * Returns as string for compatibility with existing code
- */
-export async function getUserId(): Promise<string | null> {
-  const user = await getCurrentUser();
-  return user?.id ? String(user.id) : null;
+  return supabaseSignOut();
 }
 
 /**
  * Optional auth - returns user ID or null without throwing
  */
 export async function getOptionalUserId(): Promise<string | null> {
-  return getUserId();
+  const user = await getUser();
+  return user?.id || null;
+}
+
+// Legacy exports for compatibility with old code
+// These are no longer needed with Supabase but kept for any code that might import them
+
+/**
+ * @deprecated Supabase handles cookie management automatically
+ */
+export async function setAuthCookie(_token: string) {
+  console.warn("[auth] setAuthCookie is deprecated - Supabase manages cookies automatically");
 }
 
 /**
- * Require authentication - throws if not authenticated
+ * @deprecated Supabase handles cookie management automatically
  */
-export async function requireAuth(): Promise<string> {
-  const userId = await getUserId();
+export async function getAuthCookie(): Promise<string | null> {
+  console.warn("[auth] getAuthCookie is deprecated - use getSession() instead");
+  return null;
+}
 
-  if (!userId) {
-    throw new Response(
-      JSON.stringify({
-        success: false,
-        error: "Authentication required",
-        code: "AUTH_REQUIRED",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+/**
+ * @deprecated Supabase handles cookie management automatically
+ */
+export async function clearAuthCookie() {
+  console.warn("[auth] clearAuthCookie is deprecated - use signOut() instead");
+}
 
-  return userId;
+/**
+ * @deprecated Supabase handles password hashing
+ */
+export async function hashPassword(_password: string): Promise<string> {
+  throw new Error("hashPassword is deprecated - Supabase handles password hashing");
+}
+
+/**
+ * @deprecated Supabase handles password verification
+ */
+export async function verifyPassword(_password: string, _hash: string): Promise<boolean> {
+  throw new Error("verifyPassword is deprecated - Supabase handles password verification");
+}
+
+/**
+ * @deprecated Supabase handles token creation
+ */
+export async function createToken(_userId: number, _email: string): Promise<string> {
+  throw new Error("createToken is deprecated - Supabase handles token management");
+}
+
+/**
+ * @deprecated Supabase handles token verification
+ */
+export async function verifyToken(_token: string): Promise<{ userId: number; email: string } | null> {
+  throw new Error("verifyToken is deprecated - use getSession() instead");
 }
