@@ -4,14 +4,18 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Sparkles, Brain, Clock, Users, ArrowRight, CheckIcon } from "lucide-react";
+import NightModeParticles from "@/components/effects/NightModeParticles";
 
 export default function Hero() {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      {/* Animated orange blob background */}
+      {/* Night mode particle effects - stars, sparks, and glowing orbs */}
+      <NightModeParticles />
+
+      {/* Animated orange blob background - enhanced for dark mode */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/25 rounded-full blur-[100px]"
+          className="absolute top-20 left-[10%] w-72 h-72 bg-[#ff6a1a]/25 dark:bg-[#ff6a1a]/40 rounded-full blur-[100px]"
           animate={{
             x: [0, 50, 0],
             y: [0, 30, 0],
@@ -20,7 +24,7 @@ export default function Hero() {
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-40 right-[15%] w-96 h-96 bg-orange-400/20 rounded-full blur-[120px]"
+          className="absolute top-40 right-[15%] w-96 h-96 bg-orange-400/20 dark:bg-orange-500/35 rounded-full blur-[120px]"
           animate={{
             x: [0, -30, 0],
             y: [0, 50, 0],
@@ -29,7 +33,7 @@ export default function Hero() {
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 left-[20%] w-80 h-80 bg-amber-500/20 rounded-full blur-[100px]"
+          className="absolute bottom-20 left-[20%] w-80 h-80 bg-amber-500/20 dark:bg-amber-500/35 rounded-full blur-[100px]"
           animate={{
             x: [0, 40, 0],
             y: [0, -40, 0],
@@ -38,12 +42,30 @@ export default function Hero() {
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/2 right-[5%] w-64 h-64 bg-[#ff6a1a]/15 rounded-full blur-[80px]"
+          className="absolute top-1/2 right-[5%] w-64 h-64 bg-[#ff6a1a]/15 dark:bg-[#ff6a1a]/30 rounded-full blur-[80px]"
           animate={{
             x: [0, -60, 0],
             y: [0, 20, 0],
           }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Additional dark mode glow effects */}
+        <motion.div
+          className="absolute top-[60%] left-[50%] w-48 h-48 bg-purple-500/0 dark:bg-purple-500/20 rounded-full blur-[80px] hidden dark:block"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-[10%] left-[60%] w-56 h-56 bg-blue-500/0 dark:bg-blue-500/15 rounded-full blur-[90px] hidden dark:block"
+          animate={{
+            x: [0, 20, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 

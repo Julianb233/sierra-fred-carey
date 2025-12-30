@@ -298,7 +298,7 @@ export async function GET(request: NextRequest) {
     `;
 
     // Transform database rows to API response format
-    const formattedScores = scores.map((row) => ({
+    const formattedScores = scores.map((row: any) => ({
       id: row.id,
       createdAt: row.created_at,
       overallScore: row.overall_score,

@@ -60,9 +60,6 @@ export default function LoginPage() {
 
       <div className="relative z-10 max-w-md w-full space-y-8">
         <div className="text-center">
-          <Link href="/" className="inline-block mb-6">
-            <img src="/sahara-logo.svg" alt="Sahara" className="h-10 w-auto" />
-          </Link>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Sign in to continue to your dashboard

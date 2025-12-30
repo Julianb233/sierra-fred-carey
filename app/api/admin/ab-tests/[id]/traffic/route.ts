@@ -111,7 +111,7 @@ export async function PATCH(
     }
 
     // Verify all variants belong to this experiment
-    const variantIds = variantAllocations.map((a) => a.variantId);
+    const variantIds = variantAllocations.map((a: any) => a.variantId);
     const variantCheck = await sql`
       SELECT id, variant_name as "variantName"
       FROM ab_variants

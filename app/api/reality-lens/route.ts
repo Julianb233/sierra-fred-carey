@@ -415,7 +415,7 @@ export async function GET(request: NextRequest) {
     `;
 
     // Transform data for response
-    const formattedAnalyses = analyses.map((analysis) => ({
+    const formattedAnalyses = analyses.map((analysis: any) => ({
       id: analysis.id,
       idea: analysis.idea,
       stage: analysis.stage,
