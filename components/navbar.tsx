@@ -176,6 +176,9 @@ function NavBar() {
               height={35}
               className="h-8 sm:h-9 lg:h-10 w-auto group-hover:opacity-80 transition-opacity"
               priority
+              quality={90}
+              loading="eager"
+              sizes="(max-width: 640px) 112px, (max-width: 1024px) 126px, 140px"
             />
           </Link>
 
