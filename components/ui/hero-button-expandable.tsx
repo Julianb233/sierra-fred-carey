@@ -51,8 +51,8 @@ export default function HeroButtonExpandable({
           ? `linear-gradient(135deg, ${SAHARA_COLORS.deepRed} 0%, ${SAHARA_COLORS.darkBlue} 100%)`
           : SAHARA_COLORS.deepRed,
         color: SAHARA_COLORS.offWhite,
-        padding: isExpanded ? "1rem 3rem" : "1rem 2rem",
-        minWidth: isExpanded ? "280px" : "200px",
+        padding: isExpanded ? "1rem 3.5rem" : "1rem 2.5rem",
+        minWidth: isExpanded ? "320px" : "220px",
         boxShadow: isExpanded
           ? `0 20px 40px -15px ${SAHARA_COLORS.deepRed}40, 0 0 60px -20px ${SAHARA_COLORS.mutedBeige}30`
           : `0 10px 30px -10px ${SAHARA_COLORS.deepRed}30`,
@@ -66,16 +66,17 @@ export default function HeroButtonExpandable({
     >
       {/* Animated background gradient */}
       <motion.div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100"
+        className="absolute inset-0"
         style={{
           background: `linear-gradient(135deg, ${SAHARA_COLORS.mutedBeige}20 0%, ${SAHARA_COLORS.deepRed}40 50%, ${SAHARA_COLORS.darkBlue}60 100%)`,
+          opacity: isExpanded ? 1 : 0,
         }}
         animate={{
           backgroundPosition: isExpanded ? ["0% 50%", "100% 50%", "0% 50%"] : "0% 50%",
         }}
         transition={{
           duration: 3,
-          repeat: Infinity,
+          repeat: isExpanded ? Infinity : 0,
           ease: "linear",
         }}
       />
@@ -84,56 +85,56 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(90deg, transparent 0%, ${SAHARA_COLORS.offWhite}20 50%, transparent 100%)`,
-          transform: "translateX(-100%)",
+          background: `linear-gradient(90deg, transparent 0%, ${SAHARA_COLORS.offWhite}15 50%, transparent 100%)`,
         }}
         animate={{
-          transform: isExpanded ? ["translateX(-100%)", "translateX(200%)"] : "translateX(-100%)",
+          x: isExpanded ? ["-100%", "200%"] : "-100%",
         }}
         transition={{
           duration: 1.5,
-          repeat: Infinity,
+          repeat: isExpanded ? Infinity : 0,
           ease: "easeInOut",
         }}
       />
 
       {/* Content container */}
-      <div className="relative z-10 flex items-center gap-3">
-        {/* Main text */}
-        <motion.span
-          className="whitespace-nowrap"
-          animate={{
-            opacity: isExpanded ? 0 : 1,
-            x: isExpanded ? -20 : 0,
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          {mainText}
-        </motion.span>
+      <div className="relative z-10 flex items-center gap-3 min-w-0">
+        {/* Text content with smooth transition */}
+        <div className="relative flex items-center justify-center min-w-0 flex-1">
+          <AnimatePresence mode="wait">
+            {!isExpanded ? (
+              <motion.span
+                key="main"
+                initial={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.3 }}
+                className="whitespace-nowrap"
+              >
+                {mainText}
+              </motion.span>
+            ) : (
+              <motion.span
+                key="expanded"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+                className="whitespace-nowrap flex items-center gap-2"
+              >
+                <Sparkles className="h-4 w-4 flex-shrink-0" />
+                {expandedText}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
 
-        {/* Expanded content */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, x: 20, width: 0 }}
-              animate={{ opacity: 1, x: 0, width: "auto" }}
-              exit={{ opacity: 0, x: 20, width: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex items-center gap-2 overflow-hidden"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className="whitespace-nowrap">{expandedText}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Arrow icon */}
+        {/* Arrow icon - always visible */}
         <motion.div
           animate={{
-            x: isExpanded ? 5 : 0,
-            rotate: isExpanded ? 0 : 0,
+            x: isExpanded ? 3 : 0,
           }}
           transition={{ duration: 0.3 }}
+          className="flex-shrink-0"
         >
           <ArrowRight className="h-5 w-5" />
         </motion.div>
@@ -141,16 +142,17 @@ export default function HeroButtonExpandable({
 
       {/* Glow effect */}
       <motion.div
-        className="absolute -inset-1 rounded-full opacity-0 group-hover:opacity-100 blur-xl"
+        className="absolute -inset-1 rounded-full blur-xl"
         style={{
           background: `radial-gradient(circle, ${SAHARA_COLORS.mutedBeige}40 0%, transparent 70%)`,
+          opacity: isExpanded ? 0.6 : 0,
         }}
         animate={{
           scale: isExpanded ? [1, 1.2, 1] : 1,
         }}
         transition={{
           duration: 2,
-          repeat: Infinity,
+          repeat: isExpanded ? Infinity : 0,
           ease: "easeInOut",
         }}
       />
@@ -167,4 +169,3 @@ export default function HeroButtonExpandable({
 
   return buttonContent;
 }
-
