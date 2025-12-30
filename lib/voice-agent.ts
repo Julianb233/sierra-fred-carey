@@ -1,5 +1,5 @@
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
-import { neon } from '@neondatabase/serverless';
+import { createServiceClient } from '@/lib/supabase/server';
 
 /**
  * Voice AI Agent Service
@@ -7,9 +7,6 @@ import { neon } from '@neondatabase/serverless';
  * Manages AI voice agents that join LiveKit rooms to provide
  * automated support conversations.
  */
-
-// Database connection
-const getDb = () => neon(process.env.DATABASE_URL!);
 
 interface AgentConfig {
   roomName: string;
@@ -226,16 +223,21 @@ export async function fetchAgentConfig(): Promise<VoiceAgentDbConfig | null> {
   }
 
   try {
-    const sql = getDb();
-    const results = await sql`
-      SELECT * FROM voice_agent_config
-      WHERE is_active = true
-      ORDER BY created_at DESC
-      LIMIT 1
-    `;
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from('voice_agent_config')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    if (results.length > 0) {
-      cachedConfig = results[0] as unknown as VoiceAgentDbConfig;
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    if (data) {
+      cachedConfig = data as VoiceAgentDbConfig;
       cacheTimestamp = now;
       return cachedConfig;
     }
@@ -256,29 +258,23 @@ export async function fetchKnowledgeBase(configId?: string): Promise<KnowledgeBa
   }
 
   try {
-    const sql = getDb();
-    let results;
+    const supabase = createServiceClient();
+
+    let query = supabase
+      .from('knowledge_base')
+      .select('question, answer, product_name, product_description, product_price, document_title, document_content')
+      .eq('is_active', true)
+      .order('priority', { ascending: false });
 
     if (configId) {
-      results = await sql`
-        SELECT question, answer, product_name, product_description, product_price,
-               document_title, document_content
-        FROM knowledge_base
-        WHERE config_id = ${configId} AND is_active = true
-        ORDER BY priority DESC
-      `;
-    } else {
-      results = await sql`
-        SELECT kb.question, kb.answer, kb.product_name, kb.product_description, kb.product_price,
-               kb.document_title, kb.document_content
-        FROM knowledge_base kb
-        JOIN voice_agent_config vac ON kb.config_id = vac.id
-        WHERE vac.is_active = true AND kb.is_active = true
-        ORDER BY kb.priority DESC
-      `;
+      query = query.eq('config_id', configId);
     }
 
-    cachedKnowledge = results as unknown as KnowledgeBaseEntry[];
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    cachedKnowledge = (data || []) as KnowledgeBaseEntry[];
     return cachedKnowledge;
   } catch (error) {
     console.error('[VoiceAgent] Failed to fetch knowledge base:', error);
@@ -296,29 +292,23 @@ export async function fetchEscalationRules(configId?: string): Promise<Escalatio
   }
 
   try {
-    const sql = getDb();
-    let results;
+    const supabase = createServiceClient();
+
+    let query = supabase
+      .from('escalation_rules')
+      .select('name, trigger_type, trigger_keywords, sentiment_threshold, time_limit_seconds, action, action_message')
+      .eq('is_active', true)
+      .order('priority', { ascending: false });
 
     if (configId) {
-      results = await sql`
-        SELECT name, trigger_type, trigger_keywords, sentiment_threshold,
-               time_limit_seconds, action, action_message
-        FROM escalation_rules
-        WHERE config_id = ${configId} AND is_active = true
-        ORDER BY priority DESC
-      `;
-    } else {
-      results = await sql`
-        SELECT er.name, er.trigger_type, er.trigger_keywords, er.sentiment_threshold,
-               er.time_limit_seconds, er.action, er.action_message
-        FROM escalation_rules er
-        JOIN voice_agent_config vac ON er.config_id = vac.id
-        WHERE vac.is_active = true AND er.is_active = true
-        ORDER BY er.priority DESC
-      `;
+      query = query.eq('config_id', configId);
     }
 
-    cachedEscalationRules = results as unknown as EscalationRule[];
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    cachedEscalationRules = (data || []) as EscalationRule[];
     return cachedEscalationRules;
   } catch (error) {
     console.error('[VoiceAgent] Failed to fetch escalation rules:', error);

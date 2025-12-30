@@ -1,25 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
+import { createServiceClient } from '@/lib/supabase/server';
 
 // GET - Fetch voice agent configuration
 export async function GET() {
   try {
-    const configs = await sql`
-      SELECT * FROM voice_agent_config
-      WHERE is_active = true
-      ORDER BY created_at DESC
-      LIMIT 1
-    `;
+    const supabase = createServiceClient();
 
-    if (configs.length === 0) {
-      return NextResponse.json({ error: 'No active configuration found' }, { status: 404 });
+    const { data, error } = await supabase
+      .from('voice_agent_config')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
     }
 
-    return NextResponse.json(configs[0]);
+    if (!data) {
+      // Return default config if none exists
+      return NextResponse.json({
+        id: null,
+        name: 'Default Agent',
+        is_active: true,
+        system_prompt: `You are a helpful AI support assistant. Your role is to:
+- Help users with questions about our services
+- Assist with scheduling consultations
+- Answer general inquiries
+- Provide helpful information
+
+Guidelines:
+- Be friendly, professional, and concise
+- If you don't know something, offer to connect them with a human agent
+- Keep responses focused and avoid unnecessary filler`,
+        greeting_message: 'Hello! Thank you for calling. How can I help you today?',
+        voice: 'alloy',
+        max_response_length: 150,
+        response_style: 'professional',
+        language: 'en',
+        business_hours: {
+          monday: { enabled: true, start: '09:00', end: '17:00' },
+          tuesday: { enabled: true, start: '09:00', end: '17:00' },
+          wednesday: { enabled: true, start: '09:00', end: '17:00' },
+          thursday: { enabled: true, start: '09:00', end: '17:00' },
+          friday: { enabled: true, start: '09:00', end: '17:00' },
+          saturday: { enabled: false, start: '09:00', end: '17:00' },
+          sunday: { enabled: false, start: '09:00', end: '17:00' },
+        },
+        timezone: 'America/New_York',
+        after_hours_behavior: 'voicemail',
+        after_hours_message: 'Our office is currently closed. Please leave a message and we\'ll get back to you.',
+        fallback_message: 'I apologize, but I\'m unable to help with that. Would you like me to connect you with a team member?',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching voice agent config:', error);
+    console.error('Error fetching config:', error);
     return NextResponse.json(
       { error: 'Failed to fetch configuration' },
       { status: 500 }
@@ -31,53 +71,61 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      id,
-      name,
-      system_prompt,
-      greeting_message,
-      voice,
-      max_response_length,
-      response_style,
-      language,
-      business_hours,
-      timezone,
-      after_hours_behavior,
-      after_hours_message,
-      fallback_message
-    } = body;
+    const supabase = createServiceClient();
 
-    if (!id) {
-      return NextResponse.json({ error: 'Configuration ID required' }, { status: 400 });
+    if (body.id) {
+      // Update existing config
+      const { data, error } = await supabase
+        .from('voice_agent_config')
+        .update({
+          name: body.name,
+          is_active: body.is_active,
+          system_prompt: body.system_prompt,
+          greeting_message: body.greeting_message,
+          voice: body.voice,
+          max_response_length: body.max_response_length,
+          response_style: body.response_style,
+          language: body.language,
+          business_hours: body.business_hours,
+          timezone: body.timezone,
+          after_hours_behavior: body.after_hours_behavior,
+          after_hours_message: body.after_hours_message,
+          fallback_message: body.fallback_message,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', body.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json(data);
+    } else {
+      // Create new config
+      const { data, error } = await supabase
+        .from('voice_agent_config')
+        .insert({
+          name: body.name || 'Default Agent',
+          is_active: true,
+          system_prompt: body.system_prompt,
+          greeting_message: body.greeting_message,
+          voice: body.voice || 'alloy',
+          max_response_length: body.max_response_length || 150,
+          response_style: body.response_style || 'professional',
+          language: body.language || 'en',
+          business_hours: body.business_hours,
+          timezone: body.timezone || 'America/New_York',
+          after_hours_behavior: body.after_hours_behavior || 'voicemail',
+          after_hours_message: body.after_hours_message,
+          fallback_message: body.fallback_message,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json(data, { status: 201 });
     }
-
-    const updated = await sql`
-      UPDATE voice_agent_config
-      SET
-        name = COALESCE(${name}, name),
-        system_prompt = COALESCE(${system_prompt}, system_prompt),
-        greeting_message = COALESCE(${greeting_message}, greeting_message),
-        voice = COALESCE(${voice}, voice),
-        max_response_length = COALESCE(${max_response_length}, max_response_length),
-        response_style = COALESCE(${response_style}, response_style),
-        language = COALESCE(${language}, language),
-        business_hours = COALESCE(${business_hours ? JSON.stringify(business_hours) : null}::jsonb, business_hours),
-        timezone = COALESCE(${timezone}, timezone),
-        after_hours_behavior = COALESCE(${after_hours_behavior}, after_hours_behavior),
-        after_hours_message = COALESCE(${after_hours_message}, after_hours_message),
-        fallback_message = COALESCE(${fallback_message}, fallback_message),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `;
-
-    if (updated.length === 0) {
-      return NextResponse.json({ error: 'Configuration not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(updated[0]);
   } catch (error) {
-    console.error('Error updating voice agent config:', error);
+    console.error('Error updating config:', error);
     return NextResponse.json(
       { error: 'Failed to update configuration' },
       { status: 500 }
@@ -89,27 +137,32 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      name = 'New Agent',
-      system_prompt = 'You are a helpful AI assistant.',
-      greeting_message = 'Hello! How can I help you today?',
-      voice = 'alloy',
-      response_style = 'professional',
-      created_by
-    } = body;
+    const supabase = createServiceClient();
 
-    const created = await sql`
-      INSERT INTO voice_agent_config (
-        name, system_prompt, greeting_message, voice, response_style, created_by
-      ) VALUES (
-        ${name}, ${system_prompt}, ${greeting_message}, ${voice}, ${response_style}, ${created_by}
-      )
-      RETURNING *
-    `;
+    const { data, error } = await supabase
+      .from('voice_agent_config')
+      .insert({
+        name: body.name || 'Default Agent',
+        is_active: true,
+        system_prompt: body.system_prompt,
+        greeting_message: body.greeting_message,
+        voice: body.voice || 'alloy',
+        max_response_length: body.max_response_length || 150,
+        response_style: body.response_style || 'professional',
+        language: body.language || 'en',
+        business_hours: body.business_hours,
+        timezone: body.timezone || 'America/New_York',
+        after_hours_behavior: body.after_hours_behavior || 'voicemail',
+        after_hours_message: body.after_hours_message,
+        fallback_message: body.fallback_message,
+      })
+      .select()
+      .single();
 
-    return NextResponse.json(created[0], { status: 201 });
+    if (error) throw error;
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error('Error creating voice agent config:', error);
+    console.error('Error creating config:', error);
     return NextResponse.json(
       { error: 'Failed to create configuration' },
       { status: 500 }
