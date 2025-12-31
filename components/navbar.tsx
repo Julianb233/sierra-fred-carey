@@ -97,7 +97,7 @@ function NavBar() {
     >
       {/* Animated gradient background */}
       <HeaderGradient
-        colors={['#ff6a1a', '#F7931E', '#ea580c']}
+        colors={['#ff6a1a', '#F7931E', '#FF8C42']}
         animationSpeed={0.02}
         blur="heavy"
         className={`transition-opacity duration-500 ${scrolled ? 'opacity-40' : 'opacity-60'}`}
