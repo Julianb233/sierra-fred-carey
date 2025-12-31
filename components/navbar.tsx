@@ -10,6 +10,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import ThemeSwitcher from "@/components/theme-switcher";
+import { HeaderGradient } from "@/components/effects/ScrollGradientBackground";
 import {
   ChevronDownIcon,
   FaceIcon,
@@ -88,13 +89,21 @@ function NavBar() {
       transition={{ duration: 0.5 }}
       role="navigation"
       aria-label="Main navigation"
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+      className={`fixed top-0 z-50 w-full transition-all duration-300 overflow-hidden ${
         scrolled
-          ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-lg shadow-black/5"
+          ? "bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-lg shadow-black/5"
           : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Animated gradient background */}
+      <HeaderGradient
+        colors={['#ff6a1a', '#F7931E', '#ea580c']}
+        animationSpeed={0.02}
+        blur="heavy"
+        className={`transition-opacity duration-500 ${scrolled ? 'opacity-40' : 'opacity-60'}`}
+      />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Mobile Menu Button - Left */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
