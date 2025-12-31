@@ -28,8 +28,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supabase handles session cookies automatically
-    // Just return success response
     return NextResponse.json({
       success: true,
       user: {
@@ -38,10 +36,11 @@ export async function POST(request: NextRequest) {
         name: result.user!.name,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     console.error("[api/auth/signup] Error:", error);
     return NextResponse.json(
-      { error: error?.message || "Internal server error", details: error?.toString() },
+      { error: errorMessage },
       { status: 500 }
     );
   }
