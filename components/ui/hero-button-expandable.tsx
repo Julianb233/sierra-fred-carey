@@ -51,7 +51,7 @@ export default function HeroButtonExpandable({
         padding: isExpanded ? "1rem 3.5rem" : "1rem 2.5rem",
         minWidth: isExpanded ? "320px" : "220px",
         boxShadow: isExpanded
-          ? `0 20px 40px -15px ${BRAND_COLORS.orange}40, 0 0 60px -20px ${BRAND_COLORS.orangeHover}20`
+          ? `0 20px 40px -15px ${BRAND_COLORS.orange}40, 0 0 60px -20px ${BRAND_COLORS.orange}20`
           : `0 10px 30px -10px ${BRAND_COLORS.orange}30`,
       }}
       whileHover={{
@@ -66,7 +66,8 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${BRAND_COLORS.orange}00 0%, ${BRAND_COLORS.orange}40 45%, ${BRAND_COLORS.orangeHover}60 100%)`,
+          // Keep the expanded state strictly within the same orange hue
+          background: `linear-gradient(135deg, ${BRAND_COLORS.orange}00 0%, ${BRAND_COLORS.orange}33 50%, ${BRAND_COLORS.orange}55 100%)`,
           opacity: isExpanded ? 1 : 0,
         }}
         animate={{
