@@ -1,0 +1,89 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getOptionalUserId } from "@/lib/auth";
+import {
+  runDiagnosticAnalysis,
+  type ConversationContext,
+} from "@/lib/ai/diagnostic-engine";
+import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+
+/**
+ * POST /api/diagnostic
+ * Analyze conversation and determine which framework to apply
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const userId = await getOptionalUserId();
+    const { messages, hasUploadedDeck, userProfile } = await req.json();
+
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: "Messages array is required" },
+        { status: 400 }
+      );
+    }
+
+    const context: ConversationContext = {
+      messages: messages.map((m: { role: string; content: string }) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content,
+      })),
+      hasUploadedDeck: hasUploadedDeck || false,
+      userProfile: userProfile || undefined,
+    };
+
+    const analysis = runDiagnosticAnalysis(FRED_CAREY_SYSTEM_PROMPT, context);
+
+    return NextResponse.json({
+      state: {
+        currentMode: analysis.state.currentMode,
+        positioningSignalStrength: analysis.state.positioningSignalStrength,
+        investorSignalStrength: analysis.state.investorSignalStrength,
+        shouldIntroducePositioning: analysis.state.shouldIntroducePositioning,
+        shouldIntroduceInvestor: analysis.state.shouldIntroduceInvestor,
+      },
+      introduction: analysis.introduction,
+      userId: userId || null,
+    });
+  } catch (error) {
+    console.error("Diagnostic API error:", error);
+    return NextResponse.json(
+      { error: "Failed to analyze conversation" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/diagnostic
+ * Get available frameworks and their descriptions
+ */
+export async function GET() {
+  return NextResponse.json({
+    frameworks: [
+      {
+        id: "startup-process",
+        name: "9-Step Startup Process",
+        description: "Gating process from idea to traction",
+        steps: 9,
+      },
+      {
+        id: "positioning",
+        name: "Positioning Readiness Framework",
+        description: "Market clarity diagnostic with A-F grades",
+        categories: 4,
+      },
+      {
+        id: "investor-lens",
+        name: "Investor Lens",
+        description: "VC evaluation for Pre-Seed, Seed, Series A",
+        stages: 3,
+      },
+      {
+        id: "reality-lens",
+        name: "Reality Lens",
+        description: "5 Dimensions: Feasibility, Economics, Demand, Distribution, Timing",
+        dimensions: 5,
+      },
+    ],
+  });
+}

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse, ChatMessage } from "@/lib/ai/client";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { getOptionalUserId } from "@/lib/auth";
+import {
+  runDiagnosticAnalysis,
+  type ConversationContext,
+} from "@/lib/ai/diagnostic-engine";
 
 /**
  * POST /api/chat
@@ -9,6 +13,8 @@ import { getOptionalUserId } from "@/lib/auth";
  *
  * SECURITY: Optional authentication - works for both authenticated and anonymous users
  * Note: For authenticated users, we can provide personalized responses
+ *
+ * Now includes diagnostic engine for intelligent framework selection
  */
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Chat can work without auth, but personalized if authenticated
     const userId = await getOptionalUserId();
 
-    const { message, history } = await req.json();
+    const { message, history, hasUploadedDeck } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -41,20 +47,44 @@ export async function POST(req: NextRequest) {
     // Add the current message
     messages.push({ role: "user", content: message });
 
-    // Generate response using tracked AI client (logs to DB, supports A/B testing)
+    // Run diagnostic analysis to determine which framework to apply
+    const conversationContext: ConversationContext = {
+      messages: messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+      hasUploadedDeck: hasUploadedDeck || false,
+    };
+
+    const diagnosticAnalysis = runDiagnosticAnalysis(
+      FRED_CAREY_SYSTEM_PROMPT,
+      conversationContext
+    );
+
+    // Generate response using the diagnostic-enhanced system prompt
     const trackedResult = await generateTrackedResponse(
       messages,
-      FRED_CAREY_SYSTEM_PROMPT,
+      diagnosticAnalysis.systemPrompt,
       {
         userId: userId || undefined,
         analyzer: "chat",
-        inputData: { message, historyLength: history?.length || 0 },
+        inputData: {
+          message,
+          historyLength: history?.length || 0,
+          diagnosticMode: diagnosticAnalysis.state.currentMode,
+        },
       }
     );
 
     return NextResponse.json({
       response: trackedResult.content,
       timestamp: new Date().toISOString(),
+      diagnostic: {
+        mode: diagnosticAnalysis.state.currentMode,
+        positioningSignalStrength: diagnosticAnalysis.state.positioningSignalStrength,
+        investorSignalStrength: diagnosticAnalysis.state.investorSignalStrength,
+        introduction: diagnosticAnalysis.introduction,
+      },
       meta: {
         requestId: trackedResult.requestId,
         responseId: trackedResult.responseId,
