@@ -6,13 +6,12 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Sahara Fred Carey Brand Colors
-const SAHARA_COLORS = {
-  darkBlue: "#242C34",      // Pantone 426 C
-  deepRed: "#702425",       // Pantone 188 C
-  mutedBeige: "#BEAA75",    // Pantone 466 C
-  offWhite: "#F7F7EB",      // Pantone 663 C
-};
+// Primary hero CTA colors (match site-wide orange buttons)
+const BRAND_COLORS = {
+  orange: "#ff6a1a",
+  orangeHover: "#ea580c",
+  offWhite: "#F7F7EB",
+} as const;
 
 interface HeroButtonExpandableProps {
   mainText?: string;
@@ -47,18 +46,17 @@ export default function HeroButtonExpandable({
         className
       )}
       style={{
-        background: isExpanded
-          ? `linear-gradient(135deg, ${SAHARA_COLORS.deepRed} 0%, ${SAHARA_COLORS.darkBlue} 100%)`
-          : SAHARA_COLORS.deepRed,
-        color: SAHARA_COLORS.offWhite,
+        background: BRAND_COLORS.orange,
+        color: "white",
         padding: isExpanded ? "1rem 3.5rem" : "1rem 2.5rem",
         minWidth: isExpanded ? "320px" : "220px",
         boxShadow: isExpanded
-          ? `0 20px 40px -15px ${SAHARA_COLORS.deepRed}40, 0 0 60px -20px ${SAHARA_COLORS.mutedBeige}30`
-          : `0 10px 30px -10px ${SAHARA_COLORS.deepRed}30`,
+          ? `0 20px 40px -15px ${BRAND_COLORS.orange}40, 0 0 60px -20px ${BRAND_COLORS.orangeHover}20`
+          : `0 10px 30px -10px ${BRAND_COLORS.orange}30`,
       }}
       whileHover={{
         scale: 1.05,
+        backgroundColor: BRAND_COLORS.orangeHover,
       }}
       whileTap={{
         scale: 0.98,
@@ -68,7 +66,7 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${SAHARA_COLORS.mutedBeige}20 0%, ${SAHARA_COLORS.deepRed}40 50%, ${SAHARA_COLORS.darkBlue}60 100%)`,
+          background: `linear-gradient(135deg, ${BRAND_COLORS.orange}00 0%, ${BRAND_COLORS.orange}40 45%, ${BRAND_COLORS.orangeHover}60 100%)`,
           opacity: isExpanded ? 1 : 0,
         }}
         animate={{
@@ -85,7 +83,7 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(90deg, transparent 0%, ${SAHARA_COLORS.offWhite}15 50%, transparent 100%)`,
+          background: `linear-gradient(90deg, transparent 0%, ${BRAND_COLORS.offWhite}15 50%, transparent 100%)`,
         }}
         animate={{
           x: isExpanded ? ["-100%", "200%"] : "-100%",
@@ -144,7 +142,7 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute -inset-1 rounded-full blur-xl"
         style={{
-          background: `radial-gradient(circle, ${SAHARA_COLORS.mutedBeige}40 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${BRAND_COLORS.mutedBeige}40 0%, transparent 70%)`,
           opacity: isExpanded ? 0.6 : 0,
         }}
         animate={{
