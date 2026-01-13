@@ -142,7 +142,7 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute -inset-1 rounded-full blur-xl"
         style={{
-          background: `radial-gradient(circle, ${BRAND_COLORS.mutedBeige}40 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${BRAND_COLORS.orangeHover}40 0%, transparent 70%)`,
           opacity: isExpanded ? 0.6 : 0,
         }}
         animate={{
