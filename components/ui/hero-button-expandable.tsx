@@ -6,12 +6,10 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Primary hero CTA colors (match hero orange)
+// Primary hero CTA colors (match site-wide orange buttons)
 const BRAND_COLORS = {
   orange: "#ff6a1a",
   orangeHover: "#ea580c",
-  darkBlue: "#242C34",
-  mutedBeige: "#BEAA75",
   offWhite: "#F7F7EB",
 } as const;
 
@@ -48,18 +46,17 @@ export default function HeroButtonExpandable({
         className
       )}
       style={{
-        background: isExpanded
-          ? `linear-gradient(135deg, ${BRAND_COLORS.orange} 0%, ${BRAND_COLORS.orangeHover} 60%, ${BRAND_COLORS.darkBlue} 100%)`
-          : BRAND_COLORS.orange,
+        background: BRAND_COLORS.orange,
         color: "white",
         padding: isExpanded ? "1rem 3.5rem" : "1rem 2.5rem",
         minWidth: isExpanded ? "320px" : "220px",
         boxShadow: isExpanded
-          ? `0 20px 40px -15px ${BRAND_COLORS.orange}40, 0 0 60px -20px ${BRAND_COLORS.mutedBeige}30`
+          ? `0 20px 40px -15px ${BRAND_COLORS.orange}40, 0 0 60px -20px ${BRAND_COLORS.orangeHover}20`
           : `0 10px 30px -10px ${BRAND_COLORS.orange}30`,
       }}
       whileHover={{
         scale: 1.05,
+        backgroundColor: BRAND_COLORS.orangeHover,
       }}
       whileTap={{
         scale: 0.98,
@@ -69,7 +66,7 @@ export default function HeroButtonExpandable({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${BRAND_COLORS.mutedBeige}20 0%, ${BRAND_COLORS.orange}45 50%, ${BRAND_COLORS.orangeHover}60 100%)`,
+          background: `linear-gradient(135deg, ${BRAND_COLORS.orange}00 0%, ${BRAND_COLORS.orange}40 45%, ${BRAND_COLORS.orangeHover}60 100%)`,
           opacity: isExpanded ? 1 : 0,
         }}
         animate={{
