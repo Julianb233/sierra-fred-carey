@@ -20,6 +20,8 @@ import {
   LockClosedIcon,
   BarChartIcon,
   ActivityLogIcon,
+  TargetIcon,
+  EyeOpenIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -62,6 +64,20 @@ const navItems: NavItem[] = [
     href: "/dashboard/monitoring",
     icon: <ActivityLogIcon className="h-4 w-4" />,
     badge: "Free",
+  },
+  {
+    name: "Positioning",
+    href: "/dashboard/positioning",
+    icon: <TargetIcon className="h-4 w-4" />,
+    tier: 1,
+    badge: "Pro",
+  },
+  {
+    name: "Investor Lens",
+    href: "/dashboard/investor-lens",
+    icon: <EyeOpenIcon className="h-4 w-4" />,
+    tier: 1,
+    badge: "Pro",
   },
   {
     name: "Investor Score",

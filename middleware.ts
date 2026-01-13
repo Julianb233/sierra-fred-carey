@@ -1,31 +1,34 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-/**
- * Routes that require Supabase authentication (checked in API routes themselves)
- */
-const protectedPatterns = [
-  /^\/dashboard/,
-  /^\/agents/,
-  /^\/documents/,
-  /^\/settings/,
-  /^\/profile/,
-  /^\/api\/protected/,
-];
+export async function middleware(request: NextRequest) {
+  const { response, user } = await updateSession(request);
 
-/**
- * Middleware - Supabase auth is handled in API routes directly
- * This middleware just handles any global request processing
- */
-export function middleware(request: NextRequest) {
-  // Let all requests through - Supabase auth is handled in individual routes
-  // Protected route checks are done in the API handlers via requireAuth()
-  return NextResponse.next();
+  // Protected routes pattern
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/agents') ||
+    request.nextUrl.pathname.startsWith('/documents') ||
+    request.nextUrl.pathname.startsWith('/settings') ||
+    request.nextUrl.pathname.startsWith('/profile') ||
+    request.nextUrl.pathname.startsWith('/api/protected');
+
+  if (isProtectedRoute && !user) {
+    return Response.redirect(new URL('/login', request.url));
+  }
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
