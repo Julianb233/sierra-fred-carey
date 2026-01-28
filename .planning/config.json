@@ -1,0 +1,11 @@
+{
+  "mode": "yolo",
+  "depth": "comprehensive",
+  "parallelization": true,
+  "created": "2026-01-28",
+  "gates": {
+    "confirm_phases": false,
+    "confirm_roadmap": false,
+    "confirm_plans": false
+  }
+}
