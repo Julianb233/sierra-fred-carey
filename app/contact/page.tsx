@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, MapPin, Phone, Send, CheckCircle2, MessageSquare } from "lucide-react";
+import { Mail, MapPin, Phone, Send, CheckCircle2, MessageSquare, Loader2 } from "lucide-react";
 import Footer from "@/components/footer";
 
 export default function ContactPage() {
@@ -14,18 +14,44 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          company: formData.company.trim() || null,
+          message: formData.message.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send message");
+      }
+
+      setSubmitted(true);
       setFormData({ name: "", email: "", company: "", message: "" });
-      setSubmitted(false);
-    }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(null);
   };
 
   return (
@@ -158,9 +184,33 @@ export default function ContactPage() {
                       />
                     </div>
 
-                    <Button type="submit" className="w-full group bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25" size="lg">
-                      Send Message
-                      <Send className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg"
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="w-full group bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          Send Message
+                          <Send className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
                     </Button>
                   </form>
                 )}
