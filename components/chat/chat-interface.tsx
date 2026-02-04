@@ -16,7 +16,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hey there! I'm Fred Carey — I've coached over 10,000 founders and helped them raise hundreds of millions. Think of me as your digital co-founder, available 24/7.\n\nWhether you're validating an idea, preparing for fundraising, or figuring out your next big move — I'm here to help. What's on your mind?",
+      content: "Hey there! I'm Fred Cary — I started slinging tacos at 17, became a rock musician, then an attorney, and went on to build 40+ companies over 50 years. I've taken 3 companies public, created technology used in 75% of the world's TV households, and coached 10,000+ founders.\n\nThink of me as your digital co-founder, available 24/7. Whether you're validating an idea, preparing for fundraising, or figuring out your next big move — I'm here to give you the straight truth.\n\nF**k average, be legendary. What's on your mind?",
       role: "assistant",
       timestamp: new Date(),
     },
