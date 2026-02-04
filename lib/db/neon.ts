@@ -112,42 +112,108 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
   // Normalize whitespace (collapse newlines and multiple spaces)
   const normalizedQuery = query.replace(/\s+/g, ' ').trim();
 
-  // Parse: SELECT columns FROM table WHERE conditions
-  const selectMatch = normalizedQuery.match(
-    /SELECT\s+(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+ORDER\s+BY\s+(.+?))?(?:\s+LIMIT\s+(\d+))?$/i
-  );
-
-  if (!selectMatch) {
-    console.warn('[db] Could not parse SELECT query:', normalizedQuery.substring(0, 100));
+  // Multi-step parsing for robustness
+  // Step 1: Extract columns (everything between SELECT and FROM)
+  const fromIndex = normalizedQuery.toUpperCase().indexOf(' FROM ');
+  if (fromIndex === -1) {
+    console.warn('[db] Could not find FROM in SELECT query:', normalizedQuery.substring(0, 100));
     return [];
   }
 
-  const [, columns, tableName, whereClause, orderBy, limit] = selectMatch;
+  const columns = normalizedQuery.substring(7, fromIndex).trim(); // 7 = length of "SELECT "
+  let remainder = normalizedQuery.substring(fromIndex + 6).trim(); // 6 = length of " FROM "
 
-  let queryBuilder = supabase.from(tableName).select(columns === '*' ? '*' : columns);
+  // Step 2: Extract table name (first word after FROM)
+  const tableMatch = remainder.match(/^(\w+)/);
+  if (!tableMatch) {
+    console.warn('[db] Could not find table name in SELECT query:', normalizedQuery.substring(0, 100));
+    return [];
+  }
+  const tableName = tableMatch[1];
+  remainder = remainder.substring(tableName.length).trim();
+
+  // Step 3: Extract WHERE, ORDER BY, LIMIT clauses
+  let whereClause: string | undefined;
+  let orderBy: string | undefined;
+  let limit: string | undefined;
+
+  // Find LIMIT first (at the end)
+  const limitMatch = remainder.match(/\s+LIMIT\s+(\d+)\s*$/i);
+  if (limitMatch) {
+    limit = limitMatch[1];
+    remainder = remainder.substring(0, remainder.length - limitMatch[0].length).trim();
+  }
+
+  // Find ORDER BY
+  const orderByIndex = remainder.toUpperCase().indexOf(' ORDER BY ');
+  if (orderByIndex !== -1) {
+    orderBy = remainder.substring(orderByIndex + 10).trim();
+    remainder = remainder.substring(0, orderByIndex).trim();
+  }
+
+  // Find WHERE
+  const whereIndex = remainder.toUpperCase().indexOf(' WHERE ');
+  if (whereIndex !== -1) {
+    whereClause = remainder.substring(whereIndex + 7).trim();
+  } else if (remainder.toUpperCase().startsWith('WHERE ')) {
+    whereClause = remainder.substring(6).trim();
+  }
+
+  // Parse columns and build alias map for transforming results
+  // e.g., "max_tokens as \"maxTokens\"" -> { max_tokens: maxTokens }
+  const aliasMap: Record<string, string> = {};
+  const cleanColumns = columns
+    .split(',')
+    .map(col => {
+      const trimmed = col.trim();
+      // Match: column_name as "aliasName" or column_name as aliasName
+      const aliasMatch = trimmed.match(/^(\w+)\s+as\s+"?(\w+)"?$/i);
+      if (aliasMatch) {
+        const [, colName, alias] = aliasMatch;
+        aliasMap[colName] = alias;
+        return colName;
+      }
+      return trimmed;
+    })
+    .join(',');
+
+  let queryBuilder = supabase.from(tableName).select(cleanColumns === '*' ? '*' : cleanColumns);
 
   // Handle WHERE clause
   if (whereClause) {
-    // Parse simple conditions: column = $1 AND column2 = $2
+    // Parse simple conditions: column = $1 AND column2 = $2 AND column3 = true
     const conditions = whereClause.split(/\s+AND\s+/i);
-    let paramIndex = 0;
 
     for (const condition of conditions) {
+      // Match parameterized conditions: column = $1
       const eqMatch = condition.match(/(\w+)\s*=\s*\$(\d+)/);
       if (eqMatch) {
         const [, column, pIdx] = eqMatch;
         const value = params[parseInt(pIdx) - 1];
         queryBuilder = queryBuilder.eq(column, value);
+        continue;
       }
 
+      // Match boolean literal conditions: column = true or column = false
+      const boolMatch = condition.match(/(\w+)\s*=\s*(true|false)/i);
+      if (boolMatch) {
+        const [, column, boolValue] = boolMatch;
+        queryBuilder = queryBuilder.eq(column, boolValue.toLowerCase() === 'true');
+        continue;
+      }
+
+      // Match IS NULL conditions
       const isNullMatch = condition.match(/(\w+)\s+IS\s+NULL/i);
       if (isNullMatch) {
         queryBuilder = queryBuilder.is(isNullMatch[1], null);
+        continue;
       }
 
+      // Match IS NOT NULL conditions
       const isNotNullMatch = condition.match(/(\w+)\s+IS\s+NOT\s+NULL/i);
       if (isNotNullMatch) {
         queryBuilder = queryBuilder.not(isNotNullMatch[1], 'is', null);
+        continue;
       }
     }
   }
@@ -171,6 +237,18 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
   if (error) {
     console.error(`[db] Select error on ${tableName}:`, error);
     throw error;
+  }
+
+  // Transform data to use aliased column names
+  if (data && Object.keys(aliasMap).length > 0) {
+    return data.map((row: Record<string, any>) => {
+      const transformed: Record<string, any> = {};
+      for (const [key, value] of Object.entries(row)) {
+        const alias = aliasMap[key];
+        transformed[alias || key] = value;
+      }
+      return transformed;
+    });
   }
 
   return data || [];
