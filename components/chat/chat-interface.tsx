@@ -66,10 +66,18 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Chat error:", error);
-      // Add helpful error message
+      // Add helpful error message based on error type
+      let errorContent = "I'm having trouble connecting right now. Please try again in a moment.";
+
+      if (error instanceof Error && error.message) {
+        if (error.message.includes("Failed to get response")) {
+          errorContent = "I couldn't process your message. Please try rephrasing or try again.";
+        }
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm having trouble responding right now. This is a demo - the full AI capabilities will be available soon. In the meantime, feel free to explore the other features of Sahara!",
+        content: errorContent,
         role: "assistant",
         timestamp: new Date(),
       };

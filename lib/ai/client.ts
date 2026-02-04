@@ -54,7 +54,7 @@ async function generateWithOpenAI(
     : messages;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4-turbo-preview",
+    model: "gpt-4o",
     messages: allMessages,
     temperature: 0.7,
     max_tokens: 1000,
@@ -286,7 +286,7 @@ export async function generateStreamingResponse(
     : messages;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4-turbo-preview",
+    model: "gpt-4o",
     messages: allMessages,
     temperature: 0.7,
     max_tokens: 1000,
@@ -339,7 +339,7 @@ export async function generateTrackedResponse(
   let variant: string | undefined;
 
   // Default values
-  let model = "gpt-4-turbo-preview";
+  let model = "gpt-4o";
   let temperature = 0.7;
   let maxTokens = 1000;
   let finalSystemPrompt = systemPrompt || "";
