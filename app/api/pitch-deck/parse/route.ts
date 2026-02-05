@@ -119,7 +119,7 @@ export async function POST(
     }
 
     // Return auth errors directly
-    if (error instanceof Response) return error;
+    if (error instanceof Response) return error as NextResponse<ParseResponse>;
 
     // Handle all other errors (500 Internal Server Error)
     const errorMessage =
