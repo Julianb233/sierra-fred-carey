@@ -73,14 +73,14 @@ export default function PricingPage() {
       icon: LightningBoltIcon,
       features: [
         { name: "Everything in Fundraising tier", included: true },
-        { name: "Boardy Integration", included: true },
-        { name: "Investor Matching & Warm Intros", included: true },
-        { name: "Investor Targeting Guidance", included: true },
-        { name: "Outreach Sequencing", included: true },
-        { name: "Founder Ops Agent", included: true },
-        { name: "Fundraise Ops Agent", included: true },
-        { name: "Growth Ops Agent", included: true },
-        { name: "Inbox Ops Agent", included: true },
+        { name: "Boardy Integration", included: true, comingSoon: true },
+        { name: "Investor Matching & Warm Intros", included: true, comingSoon: true },
+        { name: "Investor Targeting Guidance", included: true, comingSoon: true },
+        { name: "Outreach Sequencing", included: true, comingSoon: true },
+        { name: "Founder Ops Agent", included: true, comingSoon: true },
+        { name: "Fundraise Ops Agent", included: true, comingSoon: true },
+        { name: "Growth Ops Agent", included: true, comingSoon: true },
+        { name: "Inbox Ops Agent", included: true, comingSoon: true },
         { name: "Higher Usage Limits", included: true },
         { name: "Priority Compute", included: true },
         { name: "Deeper Memory Persistence", included: true },
@@ -237,7 +237,7 @@ export default function PricingPage() {
 
                     {/* Features */}
                     <ul className="space-y-3 flex-grow">
-                      {plan.features.map((feature) => (
+                      {plan.features.map((feature: { name: string; included: boolean; comingSoon?: boolean }) => (
                         <li key={feature.name} className="flex items-center text-sm">
                           {feature.included ? (
                             <div className="w-5 h-5 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mr-3 flex-shrink-0">
@@ -251,6 +251,11 @@ export default function PricingPage() {
                           <span className={feature.included ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-600"}>
                             {feature.name}
                           </span>
+                          {feature.comingSoon && (
+                            <span className="ml-2 px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded">
+                              Coming Soon
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>

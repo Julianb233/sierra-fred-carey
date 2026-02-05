@@ -59,6 +59,21 @@ export default function BoardyIntegrationPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Coming Soon Banner */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <Lock className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-800">Coming Soon</h3>
+              <p className="text-sm text-amber-700">
+                Boardy integration is currently in development. The preview below shows planned functionality.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
@@ -66,6 +81,9 @@ export default function BoardyIntegrationPage() {
             <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-semibold rounded-full">
               <Lock className="h-3.5 w-3.5" />
               Studio
+            </div>
+            <div className="px-2 py-1 border border-amber-500 text-amber-600 text-xs font-medium rounded">
+              Preview
             </div>
           </div>
           <p className="text-lg text-gray-600">

@@ -84,30 +84,37 @@ export default function FeaturesPage() {
         {
           name: "Boardy Integration",
           description: "Investor matching and warm-intro workflows to the right funds.",
+          comingSoon: true,
         },
         {
           name: "Investor Targeting Guidance",
           description: "Find the funds that actually invest in your stage and sector.",
+          comingSoon: true,
         },
         {
           name: "Outreach Sequencing",
           description: "Follow-up logic and fund-fit reality checks.",
+          comingSoon: true,
         },
         {
           name: "Founder Ops Agent",
           description: "Weekly sprint planning, decision tracking, priority management.",
+          comingSoon: true,
         },
         {
           name: "Fundraise Ops Agent",
           description: "Investor list building, email drafts, meeting prep & summaries.",
+          comingSoon: true,
         },
         {
           name: "Growth Ops Agent",
           description: "Content calendars, social post drafting, landing page iterations.",
+          comingSoon: true,
         },
         {
           name: "Inbox Ops Agent",
           description: "Email triage, draft responses, priority surfacing.",
+          comingSoon: true,
         },
       ],
     },
@@ -180,7 +187,7 @@ export default function FeaturesPage() {
             </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {category.features.map((feature, index) => (
+              {category.features.map((feature: { name: string; description: string; comingSoon?: boolean }, index) => (
                 <motion.div
                   key={feature.name}
                   initial={{ y: 20, opacity: 0 }}
@@ -192,7 +199,14 @@ export default function FeaturesPage() {
                     <CardHeader>
                       <CardTitle className="flex items-start gap-3 text-gray-900 dark:text-white">
                         <CheckIcon className="h-5 w-5 text-[#ff6a1a] mt-1 flex-shrink-0" />
-                        {feature.name}
+                        <span className="flex items-center gap-2">
+                          {feature.name}
+                          {feature.comingSoon && (
+                            <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded">
+                              Coming Soon
+                            </span>
+                          )}
+                        </span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

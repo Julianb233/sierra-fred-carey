@@ -119,12 +119,28 @@ const stats = [
 export default function AgentsPage() {
   return (
     <div className="p-8 space-y-8">
+      {/* Coming Soon Banner */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center">
+            <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-amber-800 dark:text-amber-200">Coming Soon</h3>
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Virtual Team Agents are currently in development. The preview below shows planned functionality.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold">Virtual Team Agents</h1>
             <Badge className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90">Studio</Badge>
+            <Badge variant="outline" className="border-amber-500 text-amber-600">Preview</Badge>
           </div>
           <p className="text-muted-foreground">
             4 AI agents working 24/7 to handle your startup operations.
