@@ -3,6 +3,8 @@ import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
+import { checkTierForRequest } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // System prompt for investor readiness scoring
 const INVESTOR_SCORE_SYSTEM_PROMPT = `You are Fred Cary, a seasoned investor and startup advisor assessing investor readiness for a startup. Your job is to provide honest, actionable feedback across 8 key dimensions.
@@ -122,6 +124,15 @@ interface StartupProfile {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Pro tier required for Investor Readiness Score
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
+      return NextResponse.json(
+        { error: "Investor Readiness Score requires Pro tier" },
+        { status: 403 }
+      );
+    }
+
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
 
@@ -270,6 +281,15 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Pro tier required for Investor Readiness Score
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
+      return NextResponse.json(
+        { error: "Investor Readiness Score requires Pro tier" },
+        { status: 403 }
+      );
+    }
+
     // SECURITY: Get userId from server-side session (not from query params!)
     const userId = await requireAuth();
 

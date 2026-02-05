@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { generateChatResponse } from "@/lib/ai/client";
 import { requireAuth } from "@/lib/auth";
+import { checkTierForRequest } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 type DocumentType = "gtm" | "competitive" | "financial" | "memo";
 
@@ -64,6 +66,15 @@ const DOCUMENT_TITLES: Record<DocumentType, string> = {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Pro tier required for Strategy Documents
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Strategy Documents require Pro tier" },
+        { status: 403 }
+      );
+    }
+
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
 
@@ -104,6 +115,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Pro tier required for Strategy Documents
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Strategy Documents require Pro tier" },
+        { status: 403 }
+      );
+    }
+
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
 

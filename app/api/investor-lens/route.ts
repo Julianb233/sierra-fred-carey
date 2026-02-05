@@ -3,6 +3,8 @@ import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
+import { checkTierForRequest } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // Type definitions
 
@@ -493,6 +495,15 @@ function validateResponse(data: any): data is InvestorLensResponse {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Pro tier required for Investor Lens
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Investor Lens requires Pro tier" },
+        { status: 403 }
+      );
+    }
+
     const userId = await requireAuth();
 
     const body: InvestorLensRequest = await request.json();
