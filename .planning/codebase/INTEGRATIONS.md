@@ -51,7 +51,7 @@
   - Server client: `lib/supabase/server.ts`
   - Middleware: `lib/supabase/middleware.ts`
   - Auth helpers: `lib/supabase/auth-helpers.ts`
-  - SQL wrapper: `lib/db/neon.ts` (Supabase compatibility layer)
+  - SQL wrapper: `lib/db/supabase-sql.ts` (Supabase compatibility layer)
   - Migrations: `supabase-migrations/`
 
 **File Storage:**

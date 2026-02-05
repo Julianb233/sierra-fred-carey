@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 export interface AIConfig {
   analyzer: string;

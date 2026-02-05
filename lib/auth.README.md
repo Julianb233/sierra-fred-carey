@@ -18,7 +18,7 @@ User MUST be authenticated to access this endpoint.
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 export async function GET(request: NextRequest) {
   // Get authenticated user ID - throws 401 if not authenticated
@@ -62,7 +62,7 @@ Verify user owns a resource before allowing access/modification.
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireOwnership } from "@/lib/auth";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 export async function DELETE(
   request: NextRequest,

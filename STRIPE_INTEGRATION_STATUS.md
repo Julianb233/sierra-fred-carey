@@ -1,11 +1,11 @@
-# Stripe Integration with Neon PostgreSQL - Status Report
+# Stripe Integration with Supabase PostgreSQL - Status Report
 
 **Date**: December 27, 2025
 **Status**: ✅ COMPLETE
 
 ## Summary
 
-All Stripe integration tasks have been successfully completed and verified. The application is now fully integrated with Neon PostgreSQL for subscription management.
+All Stripe integration tasks have been successfully completed and verified. The application is now fully integrated with Supabase PostgreSQL for subscription management.
 
 ---
 
@@ -55,7 +55,7 @@ All Stripe integration tasks have been successfully completed and verified. The 
 
 **Status**: ✅ Fully Implemented
 
-All database functions are properly implemented with Neon PostgreSQL:
+All database functions are properly implemented with Supabase PostgreSQL:
 
 - [x] `getUserSubscription(userId)` - Fetch user subscription
 - [x] `getSubscriptionByCustomerId(customerId)` - Fetch by Stripe customer
@@ -71,7 +71,7 @@ All database functions are properly implemented with Neon PostgreSQL:
 
 ---
 
-### 4. Database Connectivity (`lib/db/neon.ts`)
+### 4. Database Connectivity (`lib/db/supabase-sql.ts`)
 
 **Status**: ✅ Properly Configured
 
@@ -203,7 +203,7 @@ CLERK_SECRET_KEY=sk_test_...
 ### Database Testing
 
 ```bash
-# Connect to Neon database
+# Connect to Supabase database
 psql $DATABASE_URL
 
 # Verify tables exist
@@ -263,9 +263,9 @@ SELECT stripe_event_id, type, status FROM stripe_events;
 
 3. `/root/github-repos/sierra-fred-carey/lib/db/subscriptions.ts`
    - All database functions implemented
-   - Neon PostgreSQL integration
+   - Supabase PostgreSQL integration
 
-4. `/root/github-repos/sierra-fred-carey/lib/db/neon.ts`
+4. `/root/github-repos/sierra-fred-carey/lib/db/supabase-sql.ts`
    - Database client properly exported
    - Environment validation
 
@@ -279,7 +279,7 @@ SELECT stripe_event_id, type, status FROM stripe_events;
 
 ## Conclusion
 
-✅ **The Stripe integration with Neon PostgreSQL is complete and functional.**
+✅ **The Stripe integration with Supabase PostgreSQL is complete and functional.**
 
 All requested tasks have been verified:
 1. Webhook handler uses database functions

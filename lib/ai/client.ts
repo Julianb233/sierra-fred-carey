@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import { getAIConfig, getActivePrompt } from "./config-loader";
 import { getVariantAssignment } from "./ab-testing";
 

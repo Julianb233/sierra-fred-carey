@@ -26,7 +26,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 // Mock the SQL client
 const mockSql = vi.fn();
-vi.mock('@/lib/db/neon', () => ({
+vi.mock('@/lib/db/supabase-sql', () => ({
   sql: mockSql,
 }));
 

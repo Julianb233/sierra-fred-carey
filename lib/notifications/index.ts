@@ -3,7 +3,7 @@
  * Handles multi-channel notification delivery with intelligent routing and spam prevention
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import { sendSlackNotification, testSlackWebhook } from "./slack";
 import {
   sendPagerDutyNotification,

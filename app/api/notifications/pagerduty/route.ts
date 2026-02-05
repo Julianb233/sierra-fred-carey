@@ -10,7 +10,7 @@ import {
   resolvePagerDutyIncident,
 } from "@/lib/notifications/pagerduty";
 import { NotificationPayload } from "@/lib/notifications/types";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * POST /api/notifications/pagerduty

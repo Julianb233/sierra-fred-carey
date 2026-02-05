@@ -37,7 +37,7 @@ The project already had a comprehensive notification system in place:
 - `/lib/notifications/index.ts` - Unified notification dispatcher
 - `/lib/notifications/types.ts` - TypeScript type definitions
 - `/lib/notifications/pagerduty.ts` - PagerDuty integration
-- `/lib/db/neon.ts` - Database client
+- `/lib/db/supabase-sql.ts` - Database client
 
 ### 2. New Additions
 
@@ -171,7 +171,7 @@ sierra-fred-carey/
 │   ├── monitoring/
 │   │   └── alerts.ts               # Monitoring helpers (NEW)
 │   └── db/
-│       ├── neon.ts                 # Database client
+│       ├── supabase-sql.ts                 # Database client
 │       └── migrations/
 │           └── 012_notification_configs.sql
 ├── scripts/

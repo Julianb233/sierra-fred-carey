@@ -4,7 +4,7 @@
  * determining clear winners, and applying promotions with audit logging
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import type { VariantMetrics } from "@/lib/monitoring/ab-test-metrics";
 import type {
   PromotionConfig,

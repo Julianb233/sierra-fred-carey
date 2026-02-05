@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import crypto from "crypto";
 import { logVariantAssignment } from "@/lib/monitoring/ab-test-metrics";
 

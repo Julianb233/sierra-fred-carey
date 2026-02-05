@@ -117,7 +117,7 @@ sierra-fred-carey/
 - `lib/ai/client.ts`: Multi-provider AI client with tracking
 - `lib/ai/diagnostic-engine.ts`: Conversation analysis for framework selection
 - `lib/auth.ts`: Authentication facade
-- `lib/db/neon.ts`: Database query helper (uses Supabase despite name)
+- `lib/db/supabase-sql.ts`: Database query helper (uses Supabase despite name)
 - `lib/constants.ts`: App-wide constants (tiers, colors, features)
 
 **Testing:**

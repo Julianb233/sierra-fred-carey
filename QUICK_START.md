@@ -21,7 +21,7 @@ All Stripe integration tasks have been completed. The code is production-ready a
 - Fetches user subscription from database
 - Returns plan details and access level
 
-✅ **Database** (Neon PostgreSQL)
+✅ **Database** (Supabase PostgreSQL)
 - Connection verified and working
 - Tables created and ready
 - All database functions operational
@@ -86,7 +86,7 @@ Expected output:
 
 ### Task 4: Verify Database Connectivity ✅
 
-**File**: `lib/db/neon.ts`
+**File**: `lib/db/supabase-sql.ts`
 
 **Status**: Tested and working
 
@@ -167,7 +167,7 @@ SELECT stripe_event_id, type, status FROM stripe_events;
 | `app/api/stripe/webhook/route.ts` | Webhook handler | ✅ Complete |
 | `app/api/user/subscription/route.ts` | User API | ✅ Complete |
 | `lib/db/subscriptions.ts` | Database functions | ✅ Complete |
-| `lib/db/neon.ts` | DB connection | ✅ Complete |
+| `lib/db/supabase-sql.ts` | DB connection | ✅ Complete |
 | `lib/stripe/server.ts` | Stripe utilities | ✅ Complete |
 | `lib/stripe/config.ts` | Plan config | ✅ Complete |
 
@@ -232,7 +232,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID=price_...
 NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID=price_...
 
-# Neon (already configured)
+# Supabase Database (already configured)
 DATABASE_URL=postgresql://...
 
 # Clerk

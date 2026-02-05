@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * A/B Test Metrics Collection System

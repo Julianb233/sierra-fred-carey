@@ -6,13 +6,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PromotionConfig, PromotionEligibility } from "../auto-promotion";
 
-// Mock the neon database package BEFORE importing anything that uses it
-vi.mock("@neondatabase/serverless", () => ({
-  neon: vi.fn(() => vi.fn()),
-}));
-
 // Mock dependencies
-vi.mock("@/lib/db/neon", () => ({
+vi.mock("@/lib/db/supabase-sql", () => ({
   sql: vi.fn(),
 }));
 

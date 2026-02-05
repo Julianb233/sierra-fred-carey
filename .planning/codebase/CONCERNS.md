@@ -27,7 +27,7 @@
 - Files: Multiple, including:
   - `/opt/agency-workspace/sierra-fred-carey/lib/monitoring/alert-notifier.ts` (lines 146, 193, 238)
   - `/opt/agency-workspace/sierra-fred-carey/lib/ai/client.ts` (lines 138, 191, 327)
-  - `/opt/agency-workspace/sierra-fred-carey/lib/db/neon.ts` (lines 22, 28, 89)
+  - `/opt/agency-workspace/sierra-fred-carey/lib/db/supabase-sql.ts` (lines 22, 28, 89)
 - Impact: Loss of type safety, potential runtime errors, harder refactoring
 - Fix approach: Add proper TypeScript interfaces, enable strict mode incrementally
 
@@ -96,7 +96,7 @@
 
 **SQL Injection via sql.unsafe:**
 - Risk: `sql.unsafe()` allows raw SQL string interpolation
-- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/neon.ts` (lines 14-16, 35-36)
+- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/supabase-sql.ts` (lines 14-16, 35-36)
 - Current mitigation: Only used for dynamic column/table names, not user input
 - Recommendations: Audit all `sql.unsafe` usage, add input validation
 
@@ -121,8 +121,8 @@
 
 **Database Query in SQL Compatibility Layer:**
 - Problem: The Supabase compatibility layer attempts parsing and fallback for every query
-- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/neon.ts` (lines 46-84)
-- Cause: Migration from Neon to Supabase not complete; RPC not set up
+- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/supabase-sql.ts` (lines 46-84)
+- Cause: SQL compatibility layer parses raw SQL and translates to Supabase client methods
 - Improvement path: Set up proper `exec_sql` RPC function in Supabase or migrate queries to Supabase client methods
 
 ## Fragile Areas
@@ -134,8 +134,8 @@
 - Test coverage: No tests found for AI response parsing
 
 **Database Compatibility Layer:**
-- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/neon.ts`
-- Why fragile: Complex regex parsing of SQL queries, multiple fallback paths, handles Neon-to-Supabase migration
+- Files: `/opt/agency-workspace/sierra-fred-carey/lib/db/supabase-sql.ts`
+- Why fragile: Complex regex parsing of SQL queries, multiple fallback paths for query translation
 - Safe modification: Extensive testing required; consider completing migration to native Supabase methods
 - Test coverage: No dedicated tests
 

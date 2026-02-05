@@ -60,7 +60,7 @@
 3. Route handler in `app/api/chat/route.ts` validates and processes
 4. `lib/ai/diagnostic-engine.ts` analyzes conversation for framework selection
 5. `lib/ai/client.ts` calls AI provider (OpenAI/Anthropic/Google) with fallback
-6. Response logged to database via `lib/db/neon.ts` (Supabase wrapper)
+6. Response logged to database via `lib/db/supabase-sql.ts` (Supabase wrapper)
 7. JSON response returned to frontend with diagnostic metadata
 
 **Authentication Flow:**
@@ -106,7 +106,7 @@
 
 **Database Access:**
 - Purpose: SQL query execution via Supabase
-- Examples: `lib/db/neon.ts` (despite name, uses Supabase)
+- Examples: `lib/db/supabase-sql.ts` (despite name, uses Supabase)
 - Pattern: Tagged template literal `sql` function with parameter binding
 
 **Auth Module:**

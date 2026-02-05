@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendSlackNotification } from "@/lib/notifications/slack";
 import { NotificationPayload } from "@/lib/notifications/types";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * POST /api/notifications/slack

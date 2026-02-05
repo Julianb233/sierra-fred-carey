@@ -1,13 +1,13 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-function splitSqlStatements(sql: string): string[] {
+function splitSqlStatements(sqlContent: string): string[] {
   const statements: string[] = [];
   let current = "";
   let inFunction = false;
 
-  const lines = sql.split("\n");
+  const lines = sqlContent.split("\n");
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -53,7 +53,7 @@ async function runMigration() {
     process.exit(1);
   }
 
-  const sql = neon(databaseUrl);
+  const sql = postgres(databaseUrl);
 
   // Get migration file from command line argument or default
   const migrationFile =
@@ -73,7 +73,7 @@ async function runMigration() {
       const preview = statement.substring(0, 60).replace(/\n/g, " ");
 
       try {
-        await sql.query(statement);
+        await sql.unsafe(statement);
         console.log(`✓ [${i + 1}/${statements.length}] ${preview}...`);
       } catch (error: unknown) {
         const err = error as Error & { code?: string };
@@ -97,6 +97,8 @@ async function runMigration() {
   } catch (error) {
     console.error("\n❌ Migration failed:", error);
     process.exit(1);
+  } finally {
+    await sql.end();
   }
 }
 

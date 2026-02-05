@@ -4,7 +4,7 @@
  * Implements rules-based promotion with configurable thresholds and notifications
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import { compareExperimentVariants } from "@/lib/monitoring/ab-test-metrics";
 import {
   hasClearWinner,

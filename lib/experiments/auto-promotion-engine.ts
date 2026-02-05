@@ -3,7 +3,7 @@
  * Monitors experiments and automatically promotes winners based on configured thresholds
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import {
   ExperimentComparison,
   VariantMetrics,

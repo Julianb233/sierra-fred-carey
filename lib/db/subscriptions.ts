@@ -1,7 +1,7 @@
 // Database schema types for subscriptions
-// Implemented with Neon PostgreSQL
+// Implemented with Supabase PostgreSQL
 
-import { sql } from "./neon";
+import { sql } from "./supabase-sql";
 
 export interface UserSubscription {
   userId: string;

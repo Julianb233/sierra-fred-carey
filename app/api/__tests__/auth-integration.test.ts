@@ -26,7 +26,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock the SQL client to avoid actual database calls
-vi.mock('@/lib/db/neon', () => ({
+vi.mock('@/lib/db/supabase-sql', () => ({
   sql: vi.fn(() => Promise.resolve([])),
 }));
 
@@ -139,7 +139,7 @@ describe('API Route Authentication', () => {
     it('should return data for authenticated request', async () => {
       mockAuthenticated('user-stats-123');
 
-      const mockSql = (await import('@/lib/db/neon')).sql as any;
+      const mockSql = (await import('@/lib/db/supabase-sql')).sql as any;
       mockSql.mockResolvedValue([]);
 
       const { GET } = await import('@/app/api/journey/stats/route');
@@ -354,7 +354,7 @@ describe('API Route Authentication', () => {
       // Authenticate as user-real-123
       mockAuthenticated('user-real-123');
 
-      const mockSql = (await import('@/lib/db/neon')).sql as any;
+      const mockSql = (await import('@/lib/db/supabase-sql')).sql as any;
       let capturedUserId: string | null = null;
 
       mockSql.mockImplementation((strings: TemplateStringsArray, ...values: any[]) => {

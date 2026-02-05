@@ -16,13 +16,13 @@
 - **clsx** - Conditional classes
 
 ## Database
-- **Neon PostgreSQL** - Serverless Postgres (NOT Supabase)
-- **Drizzle ORM** - Type-safe SQL ORM
-- **drizzle-kit** - Migrations
+- **Supabase PostgreSQL** - Serverless Postgres with realtime
+- **Supabase Client** - @supabase/supabase-js
+- **SQL Template Literals** - lib/db/supabase-sql.ts
 
 ## Authentication
-- **Custom JWT** - Token-based auth (lib/auth)
-- **bcrypt** - Password hashing
+- **Supabase Auth** - Built-in auth with sessions
+- **lib/supabase/auth-helpers.ts** - Auth wrapper functions
 - DO NOT use: Clerk, Auth0, NextAuth
 
 ## Payments
@@ -92,10 +92,10 @@ npm run db:generate  # Generate migrations
 ```
 
 ## DO NOT USE
-- Prisma (use Drizzle)
-- Clerk/Auth0/NextAuth (use custom JWT)
-- MongoDB (use PostgreSQL)
+- Prisma (use Supabase client or Drizzle)
+- Clerk/Auth0/NextAuth (use Supabase Auth)
+- MongoDB (use Supabase PostgreSQL)
 - Express (use Next.js API routes)
 - Redux/Zustand (use Context)
 - Chart.js (use Recharts)
-- Supabase (use Neon + custom auth)
+- Direct Postgres connections (use Supabase client)

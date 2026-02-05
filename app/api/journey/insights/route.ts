@@ -109,7 +109,7 @@ export async function PATCH(request: NextRequest) {
 
     // For pin/unpin, we need to update is_pinned field
     // Note: The insight-extractor doesn't have a pin function, so we do it directly
-    const { sql } = await import("@/lib/db/neon");
+    const { sql } = await import("@/lib/db/supabase-sql");
 
     if (action === "pin") {
       await sql`

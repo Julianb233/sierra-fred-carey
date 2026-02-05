@@ -135,7 +135,7 @@ Go to Vercel Dashboard → Project → Settings → Environment Variables
 Ensure these are set for **Production**:
 ```
 JWT_SECRET=<strong-random-secret-key>
-DATABASE_URL=<your-neon-database-url>
+DATABASE_URL=<your-supabase-database-url>
 ```
 
 If `JWT_SECRET` is missing, generate one:

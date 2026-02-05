@@ -4,7 +4,7 @@
  * Tests the complete auto-promotion workflow
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import {
   checkPromotionEligibility,
   promoteWinningVariant,

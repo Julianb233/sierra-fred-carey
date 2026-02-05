@@ -1,7 +1,7 @@
 # Tools & Dependencies
 
 > Project: sierra-fred-carey
-> Stack: Next.js 16, React 19, TypeScript, Tailwind, Neon PostgreSQL
+> Stack: Next.js 16, React 19, TypeScript, Tailwind, Supabase PostgreSQL
 
 ---
 
@@ -61,7 +61,7 @@ pnpm run dev
 
 | Variable | Purpose | Required | Default |
 |----------|---------|----------|---------|
-| DATABASE_URL | Neon PostgreSQL | Yes | - |
+| DATABASE_URL | Supabase PostgreSQL | Yes | - |
 | OPENAI_API_KEY | AI features | Yes | - |
 | CLERK_SECRET_KEY | Auth | Yes | - |
 | NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | Auth | Yes | - |
@@ -130,7 +130,7 @@ pnpm run lint
 | gsap | 3.14.2 | Animations |
 | framer-motion | 12.23.13 | Animations |
 | @clerk/nextjs | latest | Auth |
-| @neondatabase/serverless | latest | Database |
+| @supabase/supabase-js | latest | Database |
 
 ---
 

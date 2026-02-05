@@ -354,7 +354,7 @@ curl http://localhost:3000/api/journey/timeline?event_type=milestone_achieved
 
 ### 500 Internal Server Error
 - Database connection issue
-- Check Neon database is running
+- Check Supabase database is running
 - Verify environment variables (DATABASE_URL)
 
 ### Empty Data

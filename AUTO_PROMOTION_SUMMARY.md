@@ -389,7 +389,7 @@ CREATE TABLE experiment_promotions (
    - `sendNotification()` - Multi-channel delivery
    - Alert types and levels
 
-3. **Database (`neon`)**
+3. **Database (Supabase)**
    - SQL queries
    - Transaction support
 

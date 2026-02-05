@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";

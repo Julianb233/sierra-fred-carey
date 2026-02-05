@@ -97,7 +97,7 @@ vi.mock('@vercel/blob', () => ({
 }));
 
 // Mock internal modules with path alias
-vi.mock('@/lib/db/neon', () => ({
+vi.mock('@/lib/db/supabase-sql', () => ({
   sql: vi.fn(),
 }));
 

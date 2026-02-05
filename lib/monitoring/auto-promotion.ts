@@ -3,7 +3,7 @@
  * Automatically promotes winning variants to production when statistical significance is reached
  */
 
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 import { compareExperimentVariants, VariantMetrics } from "./ab-test-metrics";
 import { sendNotification } from "@/lib/notifications";
 

@@ -6,7 +6,7 @@
 
 import { sendNotification, NotificationPayload } from "@/lib/notifications";
 import { Alert } from "./ab-test-metrics";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * Configuration for alert notification behavior

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Database Migration Script using Neon Serverless
- * Runs SQL migrations directly against the database
+ * Database Migration Script using Postgres
+ * Runs SQL migrations directly against the Supabase database
  */
 
-import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -36,7 +36,7 @@ if (!databaseUrl) {
 }
 
 // Create database connection
-const sql = neon(databaseUrl);
+const sql = postgres(databaseUrl);
 
 // Core SQL migrations
 const migrations = [
@@ -255,9 +255,11 @@ async function runMigrations() {
   }
 
   console.log('\n✅ Migration complete!');
+  await sql.end();
 }
 
-runMigrations().catch(err => {
+runMigrations().catch(async err => {
   console.error('Migration failed:', err);
+  await sql.end();
   process.exit(1);
 });

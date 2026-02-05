@@ -1,5 +1,5 @@
 import { generateChatResponse } from "./client";
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/supabase-sql";
 
 export interface ExtractedInsight {
   type: "breakthrough" | "warning" | "opportunity" | "pattern" | "recommendation";

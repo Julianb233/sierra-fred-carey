@@ -1,7 +1,7 @@
 # Current Blockers
 
-> Last Updated: 2025-12-28T22:30:00Z
-> Active Blockers: 0
+> Last Updated: 2026-02-05T10:00:00Z
+> Active Blockers: 1
 
 ---
 
@@ -13,7 +13,37 @@
 
 ## Warning Blockers
 
-(None currently)
+### [ACTIVE] Missing A/B Testing Database Tables
+
+**ID:** blocker_db_tables_001
+**Discovered:** 2026-02-05 by bussit-worker
+**Status:** ACTIVE
+
+**Issue:**
+The following database tables required for the monitoring dashboard are missing from Supabase:
+- `ab_experiments` - A/B testing experiments
+- `ab_variants` - Experiment variants
+- `ai_insights` - AI-extracted insights
+
+**Impact:**
+- Monitoring dashboard shows error when loading
+- `/api/monitoring/dashboard` returns 500 error
+- A/B testing features are non-functional
+
+**Solution:**
+Run the migration SQL in Supabase SQL Editor:
+1. Go to https://supabase.com/dashboard/project/ggiywhpgzjdjeeldjdnp/sql/new
+2. Copy contents from `lib/db/migrations/007_unified_intelligence_supabase.sql`
+3. Execute the SQL
+4. Verify by calling `/api/setup-db`
+
+**Tables that DO exist:**
+- `ai_requests` (has data)
+- `ai_responses` (has data)
+- `ai_config` (has data)
+- `ai_prompts` (empty)
+- `profiles` (empty)
+- `contact_submissions` (has data)
 
 ---
 
