@@ -1,0 +1,362 @@
+/**
+ * Validate Input Actor
+ *
+ * Parses and validates user input, extracting intent, entities, and determining
+ * if clarification is needed before proceeding.
+ */
+
+import type {
+  UserInput,
+  ValidatedInput,
+  MemoryContext,
+  InputIntent,
+  ExtractedEntity,
+  ClarificationRequest,
+} from "../types";
+
+/**
+ * Validate and parse user input
+ */
+export async function validateInputActor(
+  input: UserInput,
+  memoryContext: MemoryContext | null
+): Promise<ValidatedInput> {
+  console.log("[FRED] Validating input:", input.message.substring(0, 100));
+
+  // Extract intent from the message
+  const intentResult = await detectIntent(input.message);
+
+  // Extract entities from the message
+  const entities = await extractEntities(input.message);
+
+  // Determine if clarification is needed
+  const clarificationNeeded = determineClarificationNeeds(
+    input,
+    intentResult,
+    entities,
+    memoryContext
+  );
+
+  // Analyze sentiment
+  const sentiment = analyzeSentiment(input.message);
+
+  // Detect urgency
+  const urgency = detectUrgency(input.message, intentResult.intent);
+
+  // Extract keywords
+  const keywords = extractKeywords(input.message);
+
+  return {
+    originalMessage: input.message,
+    intent: intentResult.intent,
+    entities,
+    confidence: intentResult.confidence,
+    clarificationNeeded,
+    keywords,
+    sentiment,
+    urgency,
+  };
+}
+
+/**
+ * Detect the user's intent from their message
+ */
+async function detectIntent(
+  message: string
+): Promise<{ intent: InputIntent; confidence: number }> {
+  const lowerMessage = message.toLowerCase();
+
+  // Simple rule-based intent detection (will be enhanced with AI later)
+  const intentPatterns: Array<{
+    intent: InputIntent;
+    patterns: RegExp[];
+    weight: number;
+  }> = [
+    {
+      intent: "decision_request",
+      patterns: [
+        /should\s+(i|we)/i,
+        /what\s+should/i,
+        /decide\s+(between|on|about)/i,
+        /which\s+(option|way|approach)/i,
+        /help\s+(me\s+)?decide/i,
+        /is\s+it\s+(worth|better|good\s+idea)/i,
+        /recommend/i,
+        /advice\s+on/i,
+      ],
+      weight: 0.95,
+    },
+    {
+      intent: "question",
+      patterns: [
+        /^(what|how|why|when|where|who|which)\s/i,
+        /\?$/,
+        /can\s+you\s+(explain|tell)/i,
+        /i('m|\s+am)\s+(wondering|curious)/i,
+      ],
+      weight: 0.85,
+    },
+    {
+      intent: "information",
+      patterns: [
+        /^(here('s|is)|i('ve|\s+have)|we('ve|\s+have)|our)/i,
+        /let\s+me\s+(tell|share|explain)/i,
+        /for\s+your\s+(information|reference)/i,
+        /fyi/i,
+      ],
+      weight: 0.80,
+    },
+    {
+      intent: "feedback",
+      patterns: [
+        /^(thanks|thank\s+you|great|good|that('s|\s+is)\s+(helpful|useful))/i,
+        /worked|didn('t|\s+not)\s+work/i,
+        /actually/i,
+        /i\s+(meant|mean)/i,
+        /correct(ion)?/i,
+      ],
+      weight: 0.75,
+    },
+    {
+      intent: "greeting",
+      patterns: [
+        /^(hi|hello|hey|good\s+(morning|afternoon|evening))/i,
+        /^(what('s|\s+is)\s+up|howdy)/i,
+      ],
+      weight: 0.90,
+    },
+  ];
+
+  let bestMatch: { intent: InputIntent; confidence: number } = {
+    intent: "unknown",
+    confidence: 0.3,
+  };
+
+  for (const { intent, patterns, weight } of intentPatterns) {
+    for (const pattern of patterns) {
+      if (pattern.test(message)) {
+        if (weight > bestMatch.confidence) {
+          bestMatch = { intent, confidence: weight };
+        }
+        break; // Found match for this intent, move to next
+      }
+    }
+  }
+
+  // Boost confidence if message length suggests thoughtful input
+  if (message.length > 100 && bestMatch.intent === "decision_request") {
+    bestMatch.confidence = Math.min(bestMatch.confidence + 0.05, 1);
+  }
+
+  return bestMatch;
+}
+
+/**
+ * Extract named entities from the message
+ */
+async function extractEntities(message: string): Promise<ExtractedEntity[]> {
+  const entities: ExtractedEntity[] = [];
+
+  // Money patterns
+  const moneyPattern = /\$[\d,]+(?:\.\d{2})?|\d+(?:,\d{3})*(?:\.\d{2})?\s*(?:dollars?|usd|k|m|million|billion)/gi;
+  let match;
+  while ((match = moneyPattern.exec(message)) !== null) {
+    entities.push({
+      type: "money",
+      value: match[0],
+      confidence: 0.9,
+      position: { start: match.index, end: match.index + match[0].length },
+    });
+  }
+
+  // Date patterns
+  const datePattern = /(?:next|this|last)\s+(?:week|month|quarter|year)|(?:in\s+)?\d+\s+(?:days?|weeks?|months?|years?)|(?:by|before|after)\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/gi;
+  while ((match = datePattern.exec(message)) !== null) {
+    entities.push({
+      type: "date",
+      value: match[0],
+      confidence: 0.85,
+      position: { start: match.index, end: match.index + match[0].length },
+    });
+  }
+
+  // Metric patterns (percentages, numbers with context)
+  const metricPattern = /\d+(?:\.\d+)?%|\d+(?:x|X)\s*(?:revenue|growth|return)/gi;
+  while ((match = metricPattern.exec(message)) !== null) {
+    entities.push({
+      type: "metric",
+      value: match[0],
+      confidence: 0.85,
+      position: { start: match.index, end: match.index + match[0].length },
+    });
+  }
+
+  return entities;
+}
+
+/**
+ * Determine if clarification is needed before proceeding
+ */
+function determineClarificationNeeds(
+  input: UserInput,
+  intentResult: { intent: InputIntent; confidence: number },
+  entities: ExtractedEntity[],
+  memoryContext: MemoryContext | null
+): ClarificationRequest[] {
+  const clarifications: ClarificationRequest[] = [];
+
+  // Low confidence intent
+  if (intentResult.confidence < 0.6) {
+    clarifications.push({
+      question: "Could you help me understand what you're looking for?",
+      reason: "I want to make sure I address your needs correctly.",
+      options: [
+        "I need help making a decision",
+        "I have a question",
+        "I'm sharing information",
+        "I'm giving feedback on your previous response",
+      ],
+      required: true,
+    });
+  }
+
+  // Decision request without clear options
+  if (
+    intentResult.intent === "decision_request" &&
+    !input.message.toLowerCase().includes("or") &&
+    !input.message.match(/between|option|choice/i)
+  ) {
+    clarifications.push({
+      question: "What options or alternatives are you considering?",
+      reason: "Understanding your options helps me provide better analysis.",
+      required: false,
+    });
+  }
+
+  // No startup context in memory and decision-related query
+  if (
+    intentResult.intent === "decision_request" &&
+    memoryContext &&
+    memoryContext.relevantFacts.length === 0
+  ) {
+    clarifications.push({
+      question: "Could you tell me a bit about your startup or situation?",
+      reason: "This context will help me give you more relevant advice.",
+      required: false,
+    });
+  }
+
+  return clarifications;
+}
+
+/**
+ * Analyze the sentiment of the message
+ */
+function analyzeSentiment(
+  message: string
+): "positive" | "negative" | "neutral" | "mixed" {
+  const lowerMessage = message.toLowerCase();
+
+  const positiveWords = [
+    "great",
+    "good",
+    "excellent",
+    "amazing",
+    "love",
+    "excited",
+    "opportunity",
+    "growth",
+    "success",
+    "win",
+  ];
+  const negativeWords = [
+    "bad",
+    "terrible",
+    "worried",
+    "concerned",
+    "problem",
+    "issue",
+    "fail",
+    "lose",
+    "struggle",
+    "difficult",
+  ];
+
+  const positiveCount = positiveWords.filter((w) =>
+    lowerMessage.includes(w)
+  ).length;
+  const negativeCount = negativeWords.filter((w) =>
+    lowerMessage.includes(w)
+  ).length;
+
+  if (positiveCount > 0 && negativeCount > 0) return "mixed";
+  if (positiveCount > negativeCount) return "positive";
+  if (negativeCount > positiveCount) return "negative";
+  return "neutral";
+}
+
+/**
+ * Detect urgency level
+ */
+function detectUrgency(
+  message: string,
+  intent: InputIntent
+): "low" | "medium" | "high" | "critical" {
+  const lowerMessage = message.toLowerCase();
+
+  const criticalIndicators = [
+    "asap",
+    "urgent",
+    "emergency",
+    "immediately",
+    "right now",
+    "today",
+  ];
+  const highIndicators = [
+    "soon",
+    "this week",
+    "deadline",
+    "time sensitive",
+    "quickly",
+  ];
+  const mediumIndicators = ["when you can", "next week", "coming up"];
+
+  if (criticalIndicators.some((i) => lowerMessage.includes(i))) return "critical";
+  if (highIndicators.some((i) => lowerMessage.includes(i))) return "high";
+  if (mediumIndicators.some((i) => lowerMessage.includes(i))) return "medium";
+
+  // Decision requests default to medium urgency
+  if (intent === "decision_request") return "medium";
+
+  return "low";
+}
+
+/**
+ * Extract keywords from the message
+ */
+function extractKeywords(message: string): string[] {
+  // Remove common stop words and extract meaningful terms
+  const stopWords = new Set([
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "must", "shall", "can", "need", "dare",
+    "ought", "used", "to", "of", "in", "for", "on", "with", "at", "by",
+    "from", "as", "into", "through", "during", "before", "after", "above",
+    "below", "between", "under", "again", "further", "then", "once", "here",
+    "there", "when", "where", "why", "how", "all", "each", "few", "more",
+    "most", "other", "some", "such", "no", "nor", "not", "only", "own",
+    "same", "so", "than", "too", "very", "just", "and", "but", "if", "or",
+    "because", "until", "while", "this", "that", "these", "those", "i",
+    "me", "my", "we", "our", "you", "your", "he", "him", "his", "she",
+    "her", "it", "its", "they", "them", "their", "what", "which", "who",
+  ]);
+
+  const words = message
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+
+  // Return unique keywords, limited to top 10
+  return [...new Set(words)].slice(0, 10);
+}

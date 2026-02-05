@@ -1,0 +1,737 @@
+/**
+ * FRED Memory Access Functions
+ *
+ * Provides CRUD operations for FRED's three-layer memory architecture:
+ * - Episodic Memory: Conversation history, decisions, outcomes
+ * - Semantic Memory: Learned facts, user/startup knowledge
+ * - Procedural Memory: Decision frameworks, action templates
+ */
+
+import { createServiceClient } from "@/lib/supabase/server";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type EpisodeEventType = "conversation" | "decision" | "outcome" | "feedback";
+
+export type SemanticCategory =
+  | "startup_facts"
+  | "user_preferences"
+  | "market_knowledge"
+  | "team_info"
+  | "investor_info"
+  | "product_details"
+  | "metrics"
+  | "goals"
+  | "challenges"
+  | "decisions";
+
+export type ProcedureType =
+  | "decision_framework"
+  | "action_template"
+  | "analysis_pattern"
+  | "scoring_model"
+  | "assessment_rubric";
+
+export interface EpisodicMemory {
+  id: string;
+  userId: string;
+  sessionId: string;
+  eventType: EpisodeEventType;
+  content: Record<string, unknown>;
+  embedding?: number[];
+  importanceScore: number;
+  createdAt: Date;
+  metadata: Record<string, unknown>;
+}
+
+export interface SemanticMemory {
+  id: string;
+  userId: string;
+  category: SemanticCategory;
+  key: string;
+  value: Record<string, unknown>;
+  embedding?: number[];
+  confidence: number;
+  source?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProceduralMemory {
+  id: string;
+  name: string;
+  description?: string;
+  procedureType: ProcedureType;
+  steps: Array<{
+    step: number;
+    name: string;
+    description: string;
+    action?: string;
+    expectedOutput?: string;
+  }>;
+  triggers?: Record<string, unknown>;
+  inputSchema?: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+  successRate: number;
+  usageCount: number;
+  version: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DecisionLog {
+  id: string;
+  userId: string;
+  sessionId: string;
+  decisionType: "auto" | "recommended" | "escalated";
+  inputContext: Record<string, unknown>;
+  analysis?: Record<string, unknown>;
+  scores?: Record<string, number>;
+  recommendation?: Record<string, unknown>;
+  finalDecision?: Record<string, unknown>;
+  outcome?: Record<string, unknown>;
+  outcomeScore?: number;
+  procedureUsed?: string;
+  confidence?: number;
+  createdAt: Date;
+  decidedAt?: Date;
+  outcomeRecordedAt?: Date;
+}
+
+// ============================================================================
+// Episodic Memory Operations
+// ============================================================================
+
+/**
+ * Store a new episode in episodic memory
+ */
+export async function storeEpisode(
+  userId: string,
+  sessionId: string,
+  eventType: EpisodeEventType,
+  content: Record<string, unknown>,
+  options: {
+    embedding?: number[];
+    importanceScore?: number;
+    metadata?: Record<string, unknown>;
+  } = {}
+): Promise<EpisodicMemory> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_episodic_memory")
+    .insert({
+      user_id: userId,
+      session_id: sessionId,
+      event_type: eventType,
+      content,
+      embedding: options.embedding,
+      importance_score: options.importanceScore ?? 0.5,
+      metadata: options.metadata ?? {},
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[FRED Memory] Error storing episode:", error);
+    throw error;
+  }
+
+  return transformEpisodicRow(data);
+}
+
+/**
+ * Retrieve recent episodes for a user
+ */
+export async function retrieveRecentEpisodes(
+  userId: string,
+  options: {
+    limit?: number;
+    sessionId?: string;
+    eventType?: EpisodeEventType;
+  } = {}
+): Promise<EpisodicMemory[]> {
+  const supabase = createServiceClient();
+
+  let query = supabase
+    .from("fred_episodic_memory")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? 10);
+
+  if (options.sessionId) {
+    query = query.eq("session_id", options.sessionId);
+  }
+
+  if (options.eventType) {
+    query = query.eq("event_type", options.eventType);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[FRED Memory] Error retrieving episodes:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformEpisodicRow);
+}
+
+/**
+ * Search episodes by embedding similarity
+ */
+export async function searchEpisodesByEmbedding(
+  userId: string,
+  embedding: number[],
+  options: {
+    limit?: number;
+    similarityThreshold?: number;
+  } = {}
+): Promise<Array<EpisodicMemory & { similarity: number }>> {
+  const supabase = createServiceClient();
+
+  // Use Supabase's RPC for vector similarity search
+  const { data, error } = await supabase.rpc("search_episodic_memory", {
+    query_embedding: embedding,
+    match_user_id: userId,
+    match_threshold: options.similarityThreshold ?? 0.7,
+    match_count: options.limit ?? 5,
+  });
+
+  if (error) {
+    // If the function doesn't exist yet, fall back to regular query
+    console.warn("[FRED Memory] Vector search RPC not available, using fallback:", error.message);
+    const episodes = await retrieveRecentEpisodes(userId, { limit: options.limit ?? 5 });
+    return episodes.map((e) => ({ ...e, similarity: 0 }));
+  }
+
+  return (data || []).map((row: any) => ({
+    ...transformEpisodicRow(row),
+    similarity: row.similarity,
+  }));
+}
+
+/**
+ * Update importance score for an episode
+ */
+export async function updateEpisodeImportance(
+  episodeId: string,
+  importanceScore: number
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("fred_episodic_memory")
+    .update({ importance_score: importanceScore })
+    .eq("id", episodeId);
+
+  if (error) {
+    console.error("[FRED Memory] Error updating episode importance:", error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// Semantic Memory Operations
+// ============================================================================
+
+/**
+ * Store or update a fact in semantic memory
+ */
+export async function storeFact(
+  userId: string,
+  category: SemanticCategory,
+  key: string,
+  value: Record<string, unknown>,
+  options: {
+    embedding?: number[];
+    confidence?: number;
+    source?: string;
+  } = {}
+): Promise<SemanticMemory> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_semantic_memory")
+    .upsert(
+      {
+        user_id: userId,
+        category,
+        key,
+        value,
+        embedding: options.embedding,
+        confidence: options.confidence ?? 1.0,
+        source: options.source,
+      },
+      {
+        onConflict: "user_id,category,key",
+      }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[FRED Memory] Error storing fact:", error);
+    throw error;
+  }
+
+  return transformSemanticRow(data);
+}
+
+/**
+ * Get a specific fact from semantic memory
+ */
+export async function getFact(
+  userId: string,
+  category: SemanticCategory,
+  key: string
+): Promise<SemanticMemory | null> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_semantic_memory")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .eq("key", key)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      // No rows found
+      return null;
+    }
+    console.error("[FRED Memory] Error getting fact:", error);
+    throw error;
+  }
+
+  return data ? transformSemanticRow(data) : null;
+}
+
+/**
+ * Get all facts in a category for a user
+ */
+export async function getFactsByCategory(
+  userId: string,
+  category: SemanticCategory
+): Promise<SemanticMemory[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_semantic_memory")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("[FRED Memory] Error getting facts by category:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformSemanticRow);
+}
+
+/**
+ * Search facts by embedding similarity
+ */
+export async function searchFactsByEmbedding(
+  userId: string,
+  embedding: number[],
+  options: {
+    limit?: number;
+    similarityThreshold?: number;
+    category?: SemanticCategory;
+  } = {}
+): Promise<Array<SemanticMemory & { similarity: number }>> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase.rpc("search_semantic_memory", {
+    query_embedding: embedding,
+    match_user_id: userId,
+    match_threshold: options.similarityThreshold ?? 0.7,
+    match_count: options.limit ?? 5,
+    match_category: options.category,
+  });
+
+  if (error) {
+    console.warn("[FRED Memory] Vector search RPC not available, using fallback:", error.message);
+    const facts = options.category
+      ? await getFactsByCategory(userId, options.category)
+      : [];
+    return facts.slice(0, options.limit ?? 5).map((f) => ({ ...f, similarity: 0 }));
+  }
+
+  return (data || []).map((row: any) => ({
+    ...transformSemanticRow(row),
+    similarity: row.similarity,
+  }));
+}
+
+/**
+ * Delete a fact from semantic memory
+ */
+export async function deleteFact(
+  userId: string,
+  category: SemanticCategory,
+  key: string
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("fred_semantic_memory")
+    .delete()
+    .eq("user_id", userId)
+    .eq("category", category)
+    .eq("key", key);
+
+  if (error) {
+    console.error("[FRED Memory] Error deleting fact:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all semantic memory for a user (for context building)
+ */
+export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_semantic_memory")
+    .select("*")
+    .eq("user_id", userId)
+    .order("category")
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("[FRED Memory] Error getting all user facts:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformSemanticRow);
+}
+
+// ============================================================================
+// Procedural Memory Operations
+// ============================================================================
+
+/**
+ * Get a procedure by name
+ */
+export async function getProcedure(name: string): Promise<ProceduralMemory | null> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_procedural_memory")
+    .select("*")
+    .eq("name", name)
+    .eq("is_active", true)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    console.error("[FRED Memory] Error getting procedure:", error);
+    throw error;
+  }
+
+  return data ? transformProceduralRow(data) : null;
+}
+
+/**
+ * Get all procedures of a specific type
+ */
+export async function getProceduresByType(
+  procedureType: ProcedureType
+): Promise<ProceduralMemory[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_procedural_memory")
+    .select("*")
+    .eq("procedure_type", procedureType)
+    .eq("is_active", true)
+    .order("usage_count", { ascending: false });
+
+  if (error) {
+    console.error("[FRED Memory] Error getting procedures by type:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformProceduralRow);
+}
+
+/**
+ * Get all active procedures
+ */
+export async function getAllProcedures(): Promise<ProceduralMemory[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("fred_procedural_memory")
+    .select("*")
+    .eq("is_active", true)
+    .order("procedure_type")
+    .order("name");
+
+  if (error) {
+    console.error("[FRED Memory] Error getting all procedures:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformProceduralRow);
+}
+
+/**
+ * Record usage of a procedure and update success rate
+ */
+export async function recordProcedureUsage(
+  name: string,
+  success: boolean
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  // First get current stats
+  const { data: current, error: fetchError } = await supabase
+    .from("fred_procedural_memory")
+    .select("usage_count, success_rate")
+    .eq("name", name)
+    .single();
+
+  if (fetchError) {
+    console.error("[FRED Memory] Error fetching procedure for usage update:", fetchError);
+    throw fetchError;
+  }
+
+  // Calculate new success rate (exponential moving average)
+  const alpha = 0.1; // Weight for new observations
+  const currentRate = current.success_rate ?? 0.5;
+  const newRate = currentRate * (1 - alpha) + (success ? 1 : 0) * alpha;
+
+  // Update the procedure
+  const { error: updateError } = await supabase
+    .from("fred_procedural_memory")
+    .update({
+      usage_count: (current.usage_count ?? 0) + 1,
+      success_rate: newRate,
+    })
+    .eq("name", name);
+
+  if (updateError) {
+    console.error("[FRED Memory] Error updating procedure usage:", updateError);
+    throw updateError;
+  }
+}
+
+// ============================================================================
+// Decision Log Operations
+// ============================================================================
+
+/**
+ * Log a new decision
+ */
+export async function logDecision(
+  userId: string,
+  sessionId: string,
+  data: {
+    decisionType: "auto" | "recommended" | "escalated";
+    inputContext: Record<string, unknown>;
+    analysis?: Record<string, unknown>;
+    scores?: Record<string, number>;
+    recommendation?: Record<string, unknown>;
+    procedureUsed?: string;
+    confidence?: number;
+  }
+): Promise<DecisionLog> {
+  const supabase = createServiceClient();
+
+  const { data: result, error } = await supabase
+    .from("fred_decision_log")
+    .insert({
+      user_id: userId,
+      session_id: sessionId,
+      decision_type: data.decisionType,
+      input_context: data.inputContext,
+      analysis: data.analysis,
+      scores: data.scores,
+      recommendation: data.recommendation,
+      procedure_used: data.procedureUsed,
+      confidence: data.confidence,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[FRED Memory] Error logging decision:", error);
+    throw error;
+  }
+
+  return transformDecisionRow(result);
+}
+
+/**
+ * Record the final decision (may differ from recommendation if escalated)
+ */
+export async function recordFinalDecision(
+  decisionId: string,
+  finalDecision: Record<string, unknown>
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("fred_decision_log")
+    .update({
+      final_decision: finalDecision,
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", decisionId);
+
+  if (error) {
+    console.error("[FRED Memory] Error recording final decision:", error);
+    throw error;
+  }
+}
+
+/**
+ * Record the outcome of a decision
+ */
+export async function recordDecisionOutcome(
+  decisionId: string,
+  outcome: Record<string, unknown>,
+  outcomeScore?: number
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  const { error } = await supabase
+    .from("fred_decision_log")
+    .update({
+      outcome,
+      outcome_score: outcomeScore,
+      outcome_recorded_at: new Date().toISOString(),
+    })
+    .eq("id", decisionId);
+
+  if (error) {
+    console.error("[FRED Memory] Error recording decision outcome:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get recent decisions for a user
+ */
+export async function getRecentDecisions(
+  userId: string,
+  options: {
+    limit?: number;
+    decisionType?: "auto" | "recommended" | "escalated";
+    withOutcome?: boolean;
+  } = {}
+): Promise<DecisionLog[]> {
+  const supabase = createServiceClient();
+
+  let query = supabase
+    .from("fred_decision_log")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? 10);
+
+  if (options.decisionType) {
+    query = query.eq("decision_type", options.decisionType);
+  }
+
+  if (options.withOutcome === true) {
+    query = query.not("outcome", "is", null);
+  } else if (options.withOutcome === false) {
+    query = query.is("outcome", null);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[FRED Memory] Error getting recent decisions:", error);
+    throw error;
+  }
+
+  return (data || []).map(transformDecisionRow);
+}
+
+// ============================================================================
+// Transform Functions (snake_case -> camelCase)
+// ============================================================================
+
+function transformEpisodicRow(row: any): EpisodicMemory {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    sessionId: row.session_id,
+    eventType: row.event_type,
+    content: row.content,
+    embedding: row.embedding,
+    importanceScore: row.importance_score,
+    createdAt: new Date(row.created_at),
+    metadata: row.metadata || {},
+  };
+}
+
+function transformSemanticRow(row: any): SemanticMemory {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    category: row.category,
+    key: row.key,
+    value: row.value,
+    embedding: row.embedding,
+    confidence: row.confidence,
+    source: row.source,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+function transformProceduralRow(row: any): ProceduralMemory {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    procedureType: row.procedure_type,
+    steps: row.steps || [],
+    triggers: row.triggers,
+    inputSchema: row.input_schema,
+    outputSchema: row.output_schema,
+    successRate: row.success_rate,
+    usageCount: row.usage_count,
+    version: row.version,
+    isActive: row.is_active,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+function transformDecisionRow(row: any): DecisionLog {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    sessionId: row.session_id,
+    decisionType: row.decision_type,
+    inputContext: row.input_context,
+    analysis: row.analysis,
+    scores: row.scores,
+    recommendation: row.recommendation,
+    finalDecision: row.final_decision,
+    outcome: row.outcome,
+    outcomeScore: row.outcome_score,
+    procedureUsed: row.procedure_used,
+    confidence: row.confidence,
+    createdAt: new Date(row.created_at),
+    decidedAt: row.decided_at ? new Date(row.decided_at) : undefined,
+    outcomeRecordedAt: row.outcome_recorded_at ? new Date(row.outcome_recorded_at) : undefined,
+  };
+}
