@@ -131,7 +131,7 @@
 - Cache invalidation on updates
 
 ### Database Integration
-- Uses existing Neon SQL database
+- Uses existing Supabase SQL database
 - Leverages existing tables (ai_prompts, ai_config, ab_experiments)
 - Cache-aware updates with clearConfigCache()
 - Proper error logging

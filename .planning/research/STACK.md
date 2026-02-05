@@ -66,7 +66,7 @@ The 2026 stack for an AI-powered founder operating system should center on the *
 |------------|---------|---------|-----|------------|
 | Supabase | 2.89+ | Auth, Postgres, Realtime | Already deployed, handles auth + database + realtime in one | HIGH |
 | @supabase/ssr | 0.8+ | SSR auth helpers | Already in use | HIGH |
-| Neon | 1.x | Serverless Postgres | Already in use for AI request logging | HIGH |
+| Supabase | 2.x | Serverless Postgres | Already in use for AI request logging | HIGH |
 
 **Realtime best practices (2026):**
 - Use **Broadcast** over Postgres Changes for scalability

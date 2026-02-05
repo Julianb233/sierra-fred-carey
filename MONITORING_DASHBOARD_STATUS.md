@@ -183,7 +183,7 @@ GET /api/monitoring/dashboard
     ↓
 getMonitoringDashboard()
     ↓
-Neon Database (PostgreSQL)
+Supabase Database (PostgreSQL)
     ↓
 Raw experiment/variant data
     ↓

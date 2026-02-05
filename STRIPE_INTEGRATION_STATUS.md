@@ -75,7 +75,7 @@ All database functions are properly implemented with Supabase PostgreSQL:
 
 **Status**: ✅ Properly Configured
 
-- [x] Neon client properly initialized
+- [x] Supabase client properly initialized
 - [x] SQL query function exported
 - [x] Environment variable validation
 - [x] Typed database client helper
@@ -177,7 +177,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID=price_...
 NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID=price_...
 
-# Neon Database
+# Supabase Database
 DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
 
 # Clerk

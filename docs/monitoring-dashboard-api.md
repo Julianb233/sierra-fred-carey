@@ -29,7 +29,7 @@ The monitoring dashboard (`/app/dashboard/monitoring/page.tsx`) is fully integra
            │
            v
 ┌──────────────────────┐
-│  Neon Database       │
+│  Supabase Database       │
 │  - ab_experiments    │
 │  - ab_variants       │
 │  - ai_requests       │
@@ -315,7 +315,7 @@ Check browser console for:
 
 ## Dependencies
 
-- **Database**: Neon Postgres with real A/B test data
+- **Database**: Supabase Postgres with real A/B test data
 - **API Layer**: Next.js API routes (`/app/api/monitoring/`)
 - **Business Logic**: `lib/monitoring/ab-test-metrics.ts`
 - **Type Definitions**: `types/monitoring.ts`

@@ -111,7 +111,7 @@ All database operations are type-safe and production-ready:
 
 **Status**: ✅ Properly configured and tested
 
-The Neon client is properly initialized with:
+The Supabase client is properly initialized with:
 - Environment variable validation
 - SQL query function export
 - Type-safe database client helper
@@ -168,7 +168,7 @@ All TypeScript compilation checks passed:
 ```bash
 $ source .env && DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-db-connection.ts
 
-🔍 Verifying Neon Database Connection...
+🔍 Verifying Supabase Database Connection...
 
 1️⃣  Testing database connection...
 ✅ Database connection successful
@@ -259,8 +259,8 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID=price_...
 NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID=price_...
 
-# Neon Database (real connection string)
-DATABASE_URL=postgresql://neondb_owner:npg_7hJfVpC5TaUi@ep-soft-shape-ahjfhv6p-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+# Supabase Database (real connection string)
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT.supabase.co:5432/postgres?sslmode=require
 
 # Clerk (placeholder values - update with real keys)
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -396,7 +396,7 @@ CREATE UNIQUE INDEX idx_stripe_events_event_id ON stripe_events(stripe_event_id)
 
 ### Connection Pooling
 
-Neon serverless driver uses HTTP-based connection pooling automatically. No additional configuration needed.
+Supabase driver uses HTTP-based connection pooling automatically. No additional configuration needed.
 
 ---
 
