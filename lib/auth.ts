@@ -2,7 +2,7 @@
  * Authentication Module - Supabase Auth Implementation
  *
  * This module provides authentication functions using Supabase Auth.
- * Migrated from custom JWT + Neon PostgreSQL implementation.
+ * Migrated from custom JWT + Supabase implementation.
  */
 
 // Re-export all auth functions from Supabase helpers for backward compatibility

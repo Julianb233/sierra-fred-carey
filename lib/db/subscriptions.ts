@@ -31,7 +31,7 @@ export interface StripeEvent {
   processedAt: Date | null;
 }
 
-// Neon database functions
+// Supabase database functions
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
   const result = await sql`
     SELECT * FROM user_subscriptions WHERE user_id = ${userId} LIMIT 1

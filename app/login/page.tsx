@@ -9,7 +9,7 @@ import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 /**
  * Login Page
  *
- * Authenticates users via Neon database auth
+ * Authenticates users via Supabase auth
  */
 export default function LoginPage() {
   const router = useRouter();
