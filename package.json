@@ -13,6 +13,10 @@
     "test:slack": "tsx scripts/test-slack-webhook.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.37",
+    "@ai-sdk/google": "^3.0.21",
+    "@ai-sdk/openai": "^3.0.25",
+    "@ai-sdk/provider-utils": "^4.0.13",
     "@anthropic-ai/sdk": "^0.71.2",
     "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
@@ -45,6 +49,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "@vercel/blob": "^2.0.0",
     "@xstate/react": "^6.0.0",
+    "ai": "^6.0.72",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
@@ -68,7 +73,8 @@
     "sonner": "^2.0.7",
     "stripe": "^20.1.0",
     "tailwind-merge": "^3.3.1",
-    "xstate": "^5.26.0"
+    "xstate": "^5.26.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
