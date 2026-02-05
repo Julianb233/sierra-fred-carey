@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       meta: { count: references.length, limit }
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[GET /api/journey/references]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch references" },
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[POST /api/journey/references]", error);
     return NextResponse.json(
       { success: false, error: "Failed to save reference" },
@@ -158,6 +160,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result[0] });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[PATCH /api/journey/references]", error);
     return NextResponse.json(
       { success: false, error: "Failed to update reference" },
@@ -202,6 +205,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Reference deleted" });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[DELETE /api/journey/references]", error);
     return NextResponse.json(
       { success: false, error: "Failed to delete reference" },

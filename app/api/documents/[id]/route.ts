@@ -46,6 +46,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, document: result[0] });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Document GET]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch document" },
@@ -113,6 +114,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, document: result[0] });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Document PATCH]", error);
     return NextResponse.json(
       { success: false, error: "Failed to update document" },
@@ -155,6 +157,7 @@ export async function DELETE(
       message: "Document deleted successfully"
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Document DELETE]", error);
     return NextResponse.json(
       { success: false, error: "Failed to delete document" },

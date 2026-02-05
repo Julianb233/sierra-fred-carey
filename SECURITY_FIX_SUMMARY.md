@@ -83,25 +83,27 @@ if (!session) {
 
 ## Remaining API Routes to Fix
 
-These routes still use insecure patterns and need to be fixed:
+✅ **All user-facing API routes have been fixed!** (Updated 2026-02-04)
 
-### High Priority (User Data Access)
-1. `/root/github-repos/sierra-fred-carey/app/api/journey/stats/route.ts`
-2. `/root/github-repos/sierra-fred-carey/app/api/journey/timeline/route.ts`
-3. `/root/github-repos/sierra-fred-carey/app/api/journey/references/route.ts`
-4. `/root/github-repos/sierra-fred-carey/app/api/documents/[id]/route.ts`
-5. `/root/github-repos/sierra-fred-carey/app/api/reality-lens/route.ts`
-6. `/root/github-repos/sierra-fred-carey/app/api/pitch-deck/upload/route.ts`
-7. `/root/github-repos/sierra-fred-carey/app/api/pitch-deck/parse/route.ts`
-8. `/root/github-repos/sierra-fred-carey/app/api/user/subscription/route.ts`
+The following routes now use `requireAuth()` for secure authentication:
 
-### Medium Priority (Payment/Subscription)
-9. `/root/github-repos/sierra-fred-carey/app/api/stripe/portal/route.ts`
-10. `/root/github-repos/sierra-fred-carey/app/api/stripe/checkout/route.ts`
+### ✅ Fixed - High Priority (User Data Access)
+1. `/app/api/journey/stats/route.ts` - ✅ Uses requireAuth()
+2. `/app/api/journey/timeline/route.ts` - ✅ Uses requireAuth()
+3. `/app/api/journey/references/route.ts` - ✅ Uses requireAuth()
+4. `/app/api/documents/[id]/route.ts` - ✅ Uses requireAuth()
+5. `/app/api/reality-lens/route.ts` - ✅ Uses requireAuth()
+6. `/app/api/pitch-deck/upload/route.ts` - ✅ Uses requireAuth()
+7. `/app/api/pitch-deck/parse/route.ts` - ✅ Uses requireAuth()
+8. `/app/api/user/subscription/route.ts` - ✅ Uses requireAuth()
 
-### Lower Priority (Admin - has separate auth)
-11. `/root/github-repos/sierra-fred-carey/app/api/admin/ab-tests/route.ts`
-12. `/root/github-repos/sierra-fred-carey/app/api/admin/prompts/route.ts`
+### ✅ Fixed - Payment/Subscription
+9. `/app/api/stripe/portal/route.ts` - ✅ Uses requireAuth()
+10. `/app/api/stripe/checkout/route.ts` - ✅ Uses requireAuth()
+
+### Admin Routes (Separate Auth)
+11. `/app/api/admin/ab-tests/route.ts` - Uses admin key auth (x-admin-key header)
+12. `/app/api/admin/prompts/route.ts` - Uses admin key auth (x-admin-key header)
 
 ---
 
@@ -332,6 +334,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...  # For server-side admin operations
 
 ---
 
-**Status:** Authentication core implemented ✅
-**Remaining:** Fix additional API routes and add user-facing logout
-**Priority:** High - Deploy after fixing remaining routes
+**Status:** ✅ All API routes secured with proper authentication
+**Completed:** 2026-02-04 - All user-facing API routes now use requireAuth()
+**Test Coverage:** Added comprehensive auth integration tests
+**Priority:** Complete - Ready for production

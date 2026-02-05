@@ -11,6 +11,9 @@ import { requireAuth } from "@/lib/auth";
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Check auth first (don't reveal server config to unauthenticated users)
+    const userId = await requireAuth();
+
     // Check if Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
@@ -22,9 +25,6 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-
-    // SECURITY: Get userId from server-side session
-    const userId = await requireAuth();
 
     const subscription = await getUserSubscription(userId);
 
@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Return auth errors directly
+    if (error instanceof Response) return error;
 
     return NextResponse.json(
       { error: "Failed to create portal session" },

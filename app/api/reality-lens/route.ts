@@ -347,6 +347,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Reality Lens] Analysis error:", error);
     return NextResponse.json(
       {
@@ -460,6 +461,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Reality Lens] Fetch error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch analysis history" },

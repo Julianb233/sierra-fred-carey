@@ -81,6 +81,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
       );
     }
 
+    // Return auth errors directly
+    if (error instanceof Response) return error;
+
     // Handle all other errors (500 Internal Server Error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 

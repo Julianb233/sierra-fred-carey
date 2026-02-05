@@ -115,6 +115,10 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
+    // Re-throw auth errors (Response objects from requireAuth)
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("[GET /api/journey/stats]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch journey stats" },
