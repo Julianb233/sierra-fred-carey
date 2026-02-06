@@ -22,45 +22,63 @@ import {
   InfoCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
-import { RatingPrompt } from "@/components/ai/rating-prompt";
 
-interface DimensionScore {
+// ---------------------------------------------------------------------------
+// Types matching the FRED Reality Lens API response
+// ---------------------------------------------------------------------------
+
+interface FactorAssessment {
   score: number;
-  analysis: string;
+  confidence: "high" | "medium" | "low";
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  questions: string[];
+  recommendations: string[];
+}
+
+interface AssessmentMetadata {
+  assessmentId: string;
+  timestamp: string;
+  version: string;
+  processingTimeMs?: number;
+  model?: string;
+}
+
+interface RealityLensData {
+  overallScore: number;
+  verdict: "strong" | "promising" | "needs-work" | "reconsider";
+  verdictDescription: string;
+  factors: {
+    feasibility: FactorAssessment;
+    economics: FactorAssessment;
+    demand: FactorAssessment;
+    distribution: FactorAssessment;
+    timing: FactorAssessment;
+  };
+  topStrengths: string[];
+  criticalRisks: string[];
+  nextSteps: string[];
+  executiveSummary: string;
+  metadata: AssessmentMetadata;
 }
 
 interface ApiResponse {
   success: boolean;
-  data?: {
-    id: number;
-    overallScore: number;
-    dimensions: {
-      feasibility: DimensionScore;
-      economics: DimensionScore;
-      demand: DimensionScore;
-      distribution: DimensionScore;
-      timing: DimensionScore;
-    };
-    strengths: string[];
-    weaknesses: string[];
-    recommendations: string[];
-  };
-  meta?: {
-    responseId: string;
-    requestId: string;
-    latencyMs: number;
-    variant?: string;
-  };
-  error?: string;
+  data?: RealityLensData;
+  error?: { code: string; message: string } | string;
 }
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function RealityLensPage() {
   const [idea, setIdea] = useState("");
   const [stage, setStage] = useState<string>("");
   const [market, setMarket] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState<ApiResponse["data"] | null>(null);
-  const [responseId, setResponseId] = useState<string | null>(null);
+  const [results, setResults] = useState<RealityLensData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
@@ -69,20 +87,29 @@ export default function RealityLensPage() {
     setResults(null);
 
     try {
-      const response = await fetch("/api/reality-lens", {
+      const response = await fetch("/api/fred/reality-lens", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idea,
-          stage: stage || undefined,
-          market: market || undefined,
+          context: {
+            stage: stage || undefined,
+            targetMarket: market || undefined,
+          },
         }),
       });
 
       const data: ApiResponse = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to analyze idea");
+        // Handle nested error object shape from FRED API
+        const errorMsg =
+          typeof data.error === "object" && data.error !== null
+            ? (data.error as { message?: string }).message
+            : typeof data.error === "string"
+            ? data.error
+            : "Failed to analyze idea";
+        throw new Error(errorMsg || "Failed to analyze idea");
       }
 
       setResults(data.data || null);
@@ -104,6 +131,55 @@ export default function RealityLensPage() {
     if (score >= 75) return "good";
     if (score >= 50) return "warning";
     return "poor";
+  };
+
+  const getConfidenceBadge = (
+    confidence: "high" | "medium" | "low"
+  ): { label: string; className: string } => {
+    switch (confidence) {
+      case "high":
+        return {
+          label: "High confidence",
+          className: "border-green-500 text-green-500",
+        };
+      case "medium":
+        return {
+          label: "Medium confidence",
+          className: "border-amber-500 text-amber-500",
+        };
+      case "low":
+        return {
+          label: "Low confidence",
+          className: "border-red-500 text-red-500",
+        };
+    }
+  };
+
+  const getVerdictBadge = (
+    verdict: RealityLensData["verdict"]
+  ): { label: string; className: string } => {
+    switch (verdict) {
+      case "strong":
+        return {
+          label: "Strong",
+          className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+        };
+      case "promising":
+        return {
+          label: "Promising",
+          className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+        };
+      case "needs-work":
+        return {
+          label: "Needs Work",
+          className: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+        };
+      case "reconsider":
+        return {
+          label: "Reconsider",
+          className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+        };
+    }
   };
 
   const getDimensionName = (key: string): string => {
@@ -154,7 +230,7 @@ export default function RealityLensPage() {
               Describe Your Startup Idea
             </Label>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-3">
-              Include what problem you're solving, who your customers are, and
+              Include what problem you&apos;re solving, who your customers are, and
               your basic business model.
             </p>
             <Textarea
@@ -178,10 +254,10 @@ export default function RealityLensPage() {
                   <SelectValue placeholder="Select stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ideation">Ideation</SelectItem>
-                  <SelectItem value="pre-seed">Pre-seed</SelectItem>
-                  <SelectItem value="seed">Seed</SelectItem>
-                  <SelectItem value="series-a">Series A</SelectItem>
+                  <SelectItem value="idea">Idea Stage</SelectItem>
+                  <SelectItem value="mvp">MVP</SelectItem>
+                  <SelectItem value="launched">Launched</SelectItem>
+                  <SelectItem value="scaling">Scaling</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -222,7 +298,7 @@ export default function RealityLensPage() {
           >
             {analyzing ? (
               <>
-                <span className="inline-block animate-spin mr-2">⚙</span>
+                <span className="inline-block animate-spin mr-2">&#x2699;</span>
                 Analyzing...
               </>
             ) : (
@@ -260,37 +336,54 @@ export default function RealityLensPage() {
       {/* Results */}
       {results && !analyzing && (
         <div className="space-y-6">
-          {/* Overall Score */}
+          {/* Overall Score + Verdict */}
           <Card className="p-6">
             <div className="text-center">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                 Overall Reality Score
               </p>
-              <p
-                className={`text-6xl font-bold ${getScoreColor(
-                  results.overallScore
-                )}`}
-              >
-                {results.overallScore}
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <p
+                  className={`text-6xl font-bold ${getScoreColor(
+                    results.overallScore
+                  )}`}
+                >
+                  {results.overallScore}
+                </p>
+                <Badge className={getVerdictBadge(results.verdict).className}>
+                  {getVerdictBadge(results.verdict).label}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {results.verdictDescription}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {results.overallScore >= 75
-                  ? "Strong idea with clear market fit"
-                  : results.overallScore >= 50
-                  ? "Promising but needs refinement"
-                  : "Significant challenges to address"}
-              </p>
+            </div>
+          </Card>
+
+          {/* Executive Summary */}
+          <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-3">
+              <InfoCircledIcon className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  Executive Summary
+                </h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {results.executiveSummary}
+                </p>
+              </div>
             </div>
           </Card>
 
           {/* Dimension Breakdown */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Dimension Analysis
+              Factor Analysis
             </h2>
             <div className="space-y-4">
-              {Object.entries(results.dimensions).map(([key, dimension]) => {
-                const status = getScoreStatus(dimension.score);
+              {Object.entries(results.factors).map(([key, factor]) => {
+                const status = getScoreStatus(factor.score);
+                const confidence = getConfidenceBadge(factor.confidence);
                 return (
                   <Card key={key} className="p-6">
                     <div className="flex items-start justify-between mb-3">
@@ -309,7 +402,10 @@ export default function RealityLensPage() {
                                 : "border-red-500 text-red-500"
                             }
                           >
-                            {dimension.score}/100
+                            {factor.score}/100
+                          </Badge>
+                          <Badge variant="outline" className={confidence.className}>
+                            {confidence.label}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -317,64 +413,115 @@ export default function RealityLensPage() {
                         </p>
                       </div>
                     </div>
-                    <Progress value={dimension.score} className="h-2 mb-3" />
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <Progress value={factor.score} className="h-2 mb-3" />
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-3">
                       <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {dimension.analysis}
+                        {factor.summary}
                       </p>
                     </div>
+
+                    {/* Per-factor strengths and weaknesses */}
+                    {(factor.strengths.length > 0 ||
+                      factor.weaknesses.length > 0) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {factor.strengths.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                              Strengths
+                            </p>
+                            <ul className="space-y-1">
+                              {factor.strengths.map(
+                                (s: string, i: number) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400"
+                                  >
+                                    <span className="text-green-500 mt-0.5">
+                                      &#x2022;
+                                    </span>
+                                    <span>{s}</span>
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                        {factor.weaknesses.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                              Weaknesses
+                            </p>
+                            <ul className="space-y-1">
+                              {factor.weaknesses.map(
+                                (w: string, i: number) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400"
+                                  >
+                                    <span className="text-red-500 mt-0.5">
+                                      &#x2022;
+                                    </span>
+                                    <span>{w}</span>
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </Card>
                 );
               })}
             </div>
           </div>
 
-          {/* Strengths & Weaknesses */}
+          {/* Top Strengths & Critical Risks */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Strengths (Green Flags) */}
+            {/* Top Strengths */}
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircledIcon className="h-5 w-5 text-green-500" />
                 <h3 className="font-semibold text-gray-900 dark:text-white">
-                  Strengths
+                  Top Strengths
                 </h3>
               </div>
               <ul className="space-y-2">
-                {results.strengths.map((strength: string, index: number) => (
+                {results.topStrengths.map((strength: string, index: number) => (
                   <li
                     key={index}
                     className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                   >
-                    <span className="text-green-500 mt-0.5">•</span>
+                    <span className="text-green-500 mt-0.5">&#x2022;</span>
                     <span>{strength}</span>
                   </li>
                 ))}
               </ul>
             </Card>
 
-            {/* Weaknesses (Red Flags) */}
+            {/* Critical Risks */}
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <CrossCircledIcon className="h-5 w-5 text-red-500" />
                 <h3 className="font-semibold text-gray-900 dark:text-white">
-                  Weaknesses
+                  Critical Risks
                 </h3>
               </div>
               <ul className="space-y-2">
-                {results.weaknesses.map((weakness: string, index: number) => (
+                {results.criticalRisks.map((risk: string, index: number) => (
                   <li
                     key={index}
                     className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                   >
-                    <span className="text-red-500 mt-0.5">•</span>
-                    <span>{weakness}</span>
+                    <span className="text-red-500 mt-0.5">&#x2022;</span>
+                    <span>{risk}</span>
                   </li>
                 ))}
               </ul>
             </Card>
           </div>
 
-          {/* Recommendations */}
+          {/* Next Steps */}
           <Card className="p-6 bg-gradient-to-br from-[#ff6a1a]/10 to-orange-400/10 border-[#ff6a1a]/20">
             <div className="flex items-start gap-3">
               <InfoCircledIcon className="h-5 w-5 text-[#ff6a1a] flex-shrink-0 mt-0.5" />
@@ -383,10 +530,10 @@ export default function RealityLensPage() {
                   Recommended Next Steps
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  {results.recommendations.map(
-                    (recommendation: string, index: number) => (
+                  {results.nextSteps.map(
+                    (step: string, index: number) => (
                       <li key={index}>
-                        {index + 1}. {recommendation}
+                        {index + 1}. {step}
                       </li>
                     )
                   )}
