@@ -17,7 +17,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateLatencyData } from "@/lib/utils/mockChartData";
 import { TimerIcon, ReloadIcon } from "@radix-ui/react-icons";
 import type { TimeRange, ChartTooltipProps, LatencyDataPoint } from "@/lib/types/charts";
 
@@ -77,8 +76,6 @@ export function LatencyChart({ timeRange, className }: LatencyChartProps) {
     } catch (err) {
       console.error("[LatencyChart] Error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
-      // Fallback to mock data when API fails
-      setData(generateLatencyData(timeRange));
     } finally {
       setLoading(false);
     }

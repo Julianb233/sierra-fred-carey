@@ -44,15 +44,36 @@ export async function GET(request: NextRequest) {
     `;
     const avgRating = parseFloat(ratingsResult[0]?.avg_rating || "0");
 
-    // Get recent activity (placeholder - customize based on your needs)
-    const recentActivity = [
-      {
-        id: "1",
-        type: "prompt",
-        message: "System initialized - ready to track activity",
-        timestamp: new Date().toISOString(),
-      },
-    ];
+    // Get recent activity from prompt and config changes
+    const activityResult = await sql`
+      (
+        SELECT id::text, 'prompt' as type,
+          'Prompt updated: ' || name as message,
+          updated_at as timestamp
+        FROM ai_prompts
+        WHERE updated_at IS NOT NULL
+        ORDER BY updated_at DESC
+        LIMIT 5
+      )
+      UNION ALL
+      (
+        SELECT id::text, 'config' as type,
+          'Config updated: ' || key as message,
+          updated_at as timestamp
+        FROM ai_config
+        WHERE updated_at IS NOT NULL
+        ORDER BY updated_at DESC
+        LIMIT 5
+      )
+      ORDER BY timestamp DESC
+      LIMIT 10
+    `;
+    const recentActivity = activityResult.map((row: Record<string, unknown>) => ({
+      id: String(row.id),
+      type: String(row.type),
+      message: String(row.message),
+      timestamp: row.timestamp ? new Date(row.timestamp as string).toISOString() : new Date().toISOString(),
+    }));
 
     return NextResponse.json({
       totalPrompts,

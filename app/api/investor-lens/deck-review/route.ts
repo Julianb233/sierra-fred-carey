@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/supabase-sql";
+import { createServiceClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
@@ -434,35 +435,41 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // List reviews (optionally filtered by evaluation)
-    let whereClause = sql`WHERE user_id = ${userId}`;
+    // List reviews (optionally filtered by evaluation) using Supabase query builder
+    const supabase = createServiceClient();
+
+    let countQuery = supabase
+      .from("deck_reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
     if (evaluationId) {
-      whereClause = sql`${whereClause} AND investor_lens_id = ${evaluationId}`;
+      countQuery = countQuery.eq("investor_lens_id", evaluationId);
     }
 
-    const countResult = await sql`
-      SELECT COUNT(*) as total FROM deck_reviews ${whereClause}
-    `;
-    const total = parseInt(countResult[0].total);
+    const { count, error: countError } = await countQuery;
+    if (countError) {
+      console.error("[Deck Review] Count query error:", countError);
+    }
+    const total = count ?? 0;
 
-    const reviews = await sql`
-      SELECT
-        id,
-        investor_lens_id,
-        deck_url,
-        deck_type,
-        review_status,
-        ic_review,
-        created_at,
-        completed_at
-      FROM deck_reviews
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
-    `;
+    let dataQuery = supabase
+      .from("deck_reviews")
+      .select("id, investor_lens_id, deck_url, deck_type, review_status, ic_review, created_at, completed_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    const formattedReviews = reviews.map((r: any) => ({
+    if (evaluationId) {
+      dataQuery = dataQuery.eq("investor_lens_id", evaluationId);
+    }
+
+    const { data: reviews, error: dataError } = await dataQuery;
+    if (dataError) {
+      throw new Error(`Failed to fetch deck reviews: ${dataError.message}`);
+    }
+
+    const formattedReviews = (reviews || []).map((r: any) => ({
       id: r.id,
       evaluationId: r.investor_lens_id,
       deckUrl: r.deck_url,

@@ -22,6 +22,26 @@ vi.mock('@/lib/supabase/server', () => ({
     },
     from: mockFrom,
   })),
+  createServiceClient: vi.fn(() => ({
+    auth: {
+      getUser: mockGetUser,
+      getSession: mockGetSession,
+    },
+    from: mockFrom,
+  })),
+}));
+
+// Mock subscriptions to return PRO tier for authenticated users
+vi.mock('@/lib/db/subscriptions', () => ({
+  getUserSubscription: vi.fn(() => Promise.resolve({
+    status: 'active',
+    stripePriceId: 'price_pro',
+  })),
+}));
+
+// Mock Stripe config for tier resolution
+vi.mock('@/lib/stripe/config', () => ({
+  getPlanByPriceId: vi.fn(() => ({ id: 'pro', name: 'Pro' })),
 }));
 
 // Mock the SQL client

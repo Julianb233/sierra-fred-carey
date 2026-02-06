@@ -14,7 +14,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateErrorRateData } from "@/lib/utils/mockChartData";
 import type { TimeRange, ChartTooltipProps, ErrorRateDataPoint } from "@/lib/types/charts";
 import { ExclamationTriangleIcon, CheckCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
 
@@ -82,8 +81,6 @@ export function ErrorRateChart({ timeRange, className }: ErrorRateChartProps) {
     } catch (err) {
       console.error("[ErrorRateChart] Error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
-      // Fallback to mock data when API fails
-      setData(generateErrorRateData(timeRange));
     } finally {
       setLoading(false);
     }

@@ -23,6 +23,13 @@ vi.mock('@/lib/supabase/server', () => ({
     },
     from: mockFrom,
   })),
+  createServiceClient: vi.fn(() => ({
+    auth: {
+      getUser: mockGetUser,
+      getSession: mockGetSession,
+    },
+    from: mockFrom,
+  })),
 }));
 
 // Mock the SQL client to avoid actual database calls

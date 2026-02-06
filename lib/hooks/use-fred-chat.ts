@@ -158,6 +158,17 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const abortControllerRef = useRef<AbortController | null>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  // Track mounted state for safe state updates after async operations
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
 
   // Notify on state change
   useEffect(() => {
@@ -294,7 +305,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
               }
 
               const assistantMessage: FredMessage = {
-                id: (Date.now() + 1).toString(),
+                id: crypto.randomUUID(),
                 role: "assistant",
                 content: responseData.content,
                 timestamp: new Date(),
@@ -309,8 +320,11 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
             case "done":
               setState("complete");
-              // Reset to idle after a brief moment
-              setTimeout(() => setState("idle"), 500);
+              // Reset to idle after a brief moment (cleanup-safe)
+              if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+              idleTimerRef.current = setTimeout(() => {
+                if (mountedRef.current) setState("idle");
+              }, 500);
               break;
 
             case "error":

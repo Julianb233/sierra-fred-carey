@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
         setUser({
           name: profile?.name || authUser.email?.split("@")[0] || "Founder",
-          email: authUser.email!,
+          email: authUser.email || "",
           tier: contextTier,
         });
       } catch (e) {
@@ -98,13 +98,12 @@ export default function DashboardPage() {
       }
     }
     getUserData();
-  }, [router, contextTier]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- contextTier synced by separate effect; re-fetching user on tier change is wasteful
+  }, [router]);
 
   // Keep user.tier in sync with contextTier when it changes
   useEffect(() => {
-    if (user) {
-      setUser(prev => prev ? { ...prev, tier: contextTier } : prev);
-    }
+    setUser(prev => prev ? { ...prev, tier: contextTier } : prev);
   }, [contextTier]);
 
   // Handle post-Stripe checkout success redirect

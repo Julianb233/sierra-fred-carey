@@ -99,6 +99,9 @@ export async function GET(request: NextRequest) {
       total: documents.length
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("[Documents GET]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch documents" },

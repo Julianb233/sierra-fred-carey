@@ -22,9 +22,8 @@ export async function POST(request: NextRequest) {
       console.error('[SMS Webhook] TWILIO_AUTH_TOKEN not configured');
       return NextResponse.json(
         {
-          error: 'SMS not configured',
-          message: 'Twilio credentials are not set.',
-          code: 'TWILIO_NOT_CONFIGURED',
+          error: 'Service unavailable',
+          code: 'SERVICE_UNAVAILABLE',
         },
         { status: 503 }
       );

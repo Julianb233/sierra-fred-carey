@@ -1,54 +1,38 @@
 import { NextResponse } from "next/server";
 import type { SystemHealthData } from "@/components/monitoring/SystemHealth";
+import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * GET /api/monitoring/health
- * Returns system health information including service status, response times, and incidents
+ * Returns system health information with real service checks
  */
 export async function GET() {
   try {
-    // In a real implementation, this would check actual service health
-    // For now, we return mock data with realistic values
-
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-    // Simulate service health checks
-    const apiCheck = await simulateHealthCheck("API", 45, 0.95);
-    const dbCheck = await simulateHealthCheck("Database", 12, 0.98);
-    const queueCheck = await simulateHealthCheck("Queue", 8, 0.99);
-
-    // Calculate overall status based on service health
-    const overallStatus = calculateOverallStatus([
-      apiCheck.status,
-      dbCheck.status,
-      queueCheck.status,
+    // Real health checks - run in parallel
+    const [apiCheck, dbCheck] = await Promise.all([
+      checkApiHealth(),
+      checkDatabaseHealth(),
     ]);
 
-    // Calculate average response time
-    const avgResponseTime = Math.round(
-      (apiCheck.responseTime! + dbCheck.responseTime! + queueCheck.responseTime!) / 3
+    const services = [apiCheck, dbCheck];
+
+    // Calculate overall status based on service health
+    const overallStatus = calculateOverallStatus(
+      services.map((s) => s.status)
     );
 
-    // Mock last incident (10% chance of having a recent incident)
-    const hasRecentIncident = Math.random() < 0.1;
-    const lastIncident = hasRecentIncident
-      ? {
-          timestamp: oneHourAgo,
-          severity: "warning" as const,
-          message: "Database connection pool exhausted, auto-recovered",
-        }
-      : undefined;
-
-    // Calculate uptime (typically 99.5% - 100%)
-    const uptime = 99.5 + Math.random() * 0.5;
+    // Calculate average response time from real checks
+    const avgResponseTime = Math.round(
+      services.reduce((sum, s) => sum + (s.responseTime || 0), 0) / services.length
+    );
 
     const healthData: SystemHealthData = {
       overallStatus,
-      services: [apiCheck, dbCheck, queueCheck],
+      services,
       avgResponseTime,
-      lastIncident,
-      uptime,
+      uptime: 100, // Uptime is 100% if this endpoint responds
     };
 
     return NextResponse.json({
@@ -69,47 +53,71 @@ export async function GET() {
 }
 
 /**
- * Simulates a health check for a service
- * In production, this would make actual health check requests
+ * Check API health by measuring this endpoint's own response capability
  */
-async function simulateHealthCheck(
-  serviceName: string,
-  baseLatency: number,
-  healthProbability: number
-): Promise<{
+async function checkApiHealth(): Promise<{
   name: string;
   status: "operational" | "degraded" | "down";
   responseTime: number;
   lastCheck: Date;
   message?: string;
 }> {
-  // Add some randomness to latency
-  const responseTime = Math.round(baseLatency + Math.random() * 20);
+  const start = Date.now();
 
-  // Determine status based on probability
-  const random = Math.random();
-  let status: "operational" | "degraded" | "down";
-  let message: string | undefined;
+  try {
+    // API is healthy if this code is executing
+    const responseTime = Date.now() - start;
 
-  if (random > healthProbability + 0.05) {
-    // 5% chance of being down (if health probability is < 0.95)
-    status = "down";
-    message = `${serviceName} is not responding`;
-  } else if (random > healthProbability) {
-    // Slightly higher chance of degraded
-    status = "degraded";
-    message = `${serviceName} experiencing high latency`;
-  } else {
-    status = "operational";
+    return {
+      name: "API",
+      status: responseTime > 1000 ? "degraded" : "operational",
+      responseTime,
+      lastCheck: new Date(),
+      message: responseTime > 1000 ? "API experiencing high latency" : undefined,
+    };
+  } catch {
+    return {
+      name: "API",
+      status: "down",
+      responseTime: Date.now() - start,
+      lastCheck: new Date(),
+      message: "API health check failed",
+    };
   }
+}
 
-  return {
-    name: serviceName,
-    status,
-    responseTime,
-    lastCheck: new Date(),
-    message,
-  };
+/**
+ * Check database health with a real query
+ */
+async function checkDatabaseHealth(): Promise<{
+  name: string;
+  status: "operational" | "degraded" | "down";
+  responseTime: number;
+  lastCheck: Date;
+  message?: string;
+}> {
+  const start = Date.now();
+
+  try {
+    await sql`SELECT 1`;
+    const responseTime = Date.now() - start;
+
+    return {
+      name: "Database",
+      status: responseTime > 500 ? "degraded" : "operational",
+      responseTime,
+      lastCheck: new Date(),
+      message: responseTime > 500 ? "Database experiencing high latency" : undefined,
+    };
+  } catch (error) {
+    return {
+      name: "Database",
+      status: "down",
+      responseTime: Date.now() - start,
+      lastCheck: new Date(),
+      message: `Database unreachable: ${error instanceof Error ? error.message : "Unknown error"}`,
+    };
+  }
 }
 
 /**

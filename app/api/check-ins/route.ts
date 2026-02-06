@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
       total: checkIns.length,
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("Check-ins fetch error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch check-ins" },
@@ -84,6 +87,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("Check-in create error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create check-in" },
@@ -144,6 +150,9 @@ export async function PATCH(request: NextRequest) {
       message: "Check-in updated successfully",
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("Check-in update error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to update check-in" },

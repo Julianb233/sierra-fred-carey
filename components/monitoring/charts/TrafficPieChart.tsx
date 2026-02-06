@@ -12,7 +12,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateTrafficData } from "@/lib/utils/mockChartData";
 import { CheckCircledIcon, ExclamationTriangleIcon, ReloadIcon } from "@radix-ui/react-icons";
 import type { TrafficDataPoint } from "@/lib/types/charts";
 
@@ -112,8 +111,6 @@ export function TrafficPieChart({ className }: TrafficPieChartProps) {
     } catch (err) {
       console.error("[TrafficPieChart] Error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
-      // Fallback to mock data when API fails
-      setRawData(generateTrafficData());
     } finally {
       setLoading(false);
     }

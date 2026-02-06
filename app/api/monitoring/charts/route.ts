@@ -112,7 +112,7 @@ async function getConversionData(range: TimeRange): Promise<ConversionDataPoint[
     `;
 
     if (result.length === 0) {
-      return generateFallbackConversionData(range);
+      return [];
     }
 
     return result.map((row: Record<string, unknown>) => {
@@ -127,7 +127,7 @@ async function getConversionData(range: TimeRange): Promise<ConversionDataPoint[
     });
   } catch (error) {
     console.error("[Charts API] Conversion data error:", error);
-    return generateFallbackConversionData(range);
+    return [];
   }
 }
 
@@ -173,7 +173,7 @@ async function getLatencyData(range: TimeRange): Promise<LatencyDataPoint[]> {
     `;
 
     if (result.length === 0) {
-      return generateFallbackLatencyData(range);
+      return [];
     }
 
     return result.map((row: Record<string, unknown>) => {
@@ -189,7 +189,7 @@ async function getLatencyData(range: TimeRange): Promise<LatencyDataPoint[]> {
     });
   } catch (error) {
     console.error("[Charts API] Latency data error:", error);
-    return generateFallbackLatencyData(range);
+    return [];
   }
 }
 
@@ -213,7 +213,7 @@ async function getTrafficData(): Promise<TrafficDataPoint[]> {
     `;
 
     if (result.length === 0) {
-      return generateFallbackTrafficData();
+      return [];
     }
 
     const totalRequests = result.reduce((sum: number, row: Record<string, unknown>) =>
@@ -234,7 +234,7 @@ async function getTrafficData(): Promise<TrafficDataPoint[]> {
     });
   } catch (error) {
     console.error("[Charts API] Traffic data error:", error);
-    return generateFallbackTrafficData();
+    return [];
   }
 }
 
@@ -279,7 +279,7 @@ async function getErrorRateData(range: TimeRange): Promise<ErrorRateDataPoint[]>
     `;
 
     if (result.length === 0) {
-      return generateFallbackErrorRateData(range);
+      return [];
     }
 
     return result.map((row: Record<string, unknown>) => {
@@ -293,7 +293,7 @@ async function getErrorRateData(range: TimeRange): Promise<ErrorRateDataPoint[]>
     });
   } catch (error) {
     console.error("[Charts API] Error rate data error:", error);
-    return generateFallbackErrorRateData(range);
+    return [];
   }
 }
 
@@ -322,80 +322,3 @@ function formatDate(date: Date, range: TimeRange): string {
   });
 }
 
-// Fallback data generators for when database has no data
-// These provide meaningful defaults while real data is being collected
-
-function generateFallbackConversionData(range: TimeRange): ConversionDataPoint[] {
-  const { interval, count } = getTimeParams(range);
-  const now = Date.now();
-  const data: ConversionDataPoint[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const timestamp = now - (count - i - 1) * interval;
-    data.push({
-      timestamp,
-      date: formatDate(new Date(timestamp), range),
-      variantA: 3.5 + (Math.random() - 0.5) * 0.5 + (i / count) * 0.3,
-      variantB: 4.2 + (Math.random() - 0.5) * 0.5 + (i / count) * 0.5,
-      variantC: 3.85 + (Math.random() - 0.5) * 0.5,
-    });
-  }
-
-  return data;
-}
-
-function generateFallbackLatencyData(range: TimeRange): LatencyDataPoint[] {
-  const { interval, count } = getTimeParams(range);
-  const now = Date.now();
-  const data: LatencyDataPoint[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const timestamp = now - (count - i - 1) * interval;
-    const baseLatency = 120;
-    const spike = i % 8 === 0 ? 50 : 0;
-    const trend = (i / count) * 20;
-    const avg = baseLatency + trend + spike + (Math.random() - 0.5) * 10;
-
-    data.push({
-      timestamp,
-      date: formatDate(new Date(timestamp), range),
-      avg: Math.round(avg),
-      p50: Math.round(avg * 0.7),
-      p95: Math.round(avg * 1.5),
-      p99: Math.round(avg * 2.2),
-    });
-  }
-
-  return data;
-}
-
-function generateFallbackTrafficData(): TrafficDataPoint[] {
-  return [
-    { variant: "Variant A", traffic: 45000, percentage: 45, fill: "#3b82f6" },
-    { variant: "Variant B", traffic: 35000, percentage: 35, fill: "#10b981" },
-    { variant: "Variant C", traffic: 20000, percentage: 20, fill: "#f59e0b" },
-  ];
-}
-
-function generateFallbackErrorRateData(range: TimeRange): ErrorRateDataPoint[] {
-  const { interval, count } = getTimeParams(range);
-  const now = Date.now();
-  const threshold = 2.0;
-  const data: ErrorRateDataPoint[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const timestamp = now - (count - i - 1) * interval;
-    const baseRate = 0.5;
-    const spike = Math.random() > 0.9 ? 2.5 : 0;
-    const errorRate = baseRate + spike + (Math.random() - 0.5) * 0.3;
-
-    data.push({
-      timestamp,
-      date: formatDate(new Date(timestamp), range),
-      errorRate: Math.round(errorRate * 100) / 100,
-      threshold,
-    });
-  }
-
-  return data;
-}

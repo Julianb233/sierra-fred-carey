@@ -49,6 +49,9 @@ export async function GET(request: NextRequest) {
       data: sanitizedConfigs,
     });
   } catch (error: any) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("[GET /api/notifications/config]", error);
 
     if (error.message === "Unauthorized") {
@@ -189,6 +192,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("[POST /api/notifications/config]", error);
 
     if (error.message === "Unauthorized") {

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import Footer from "@/components/footer";
+import { toast } from "sonner";
 import {
   Rocket,
   CheckCircle2,
@@ -17,7 +19,11 @@ import {
   Sparkles,
   Users,
   TrendingUp,
-  Shield
+  Shield,
+  Copy,
+  Check,
+  UserPlus,
+  Share2
 } from "lucide-react";
 
 const stageOptions = [
@@ -40,7 +46,10 @@ const teamOptions = [
   { value: "team", label: "Have a team" },
 ];
 
-export default function WaitlistPage() {
+function WaitlistContent() {
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -51,6 +60,12 @@ export default function WaitlistPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Post-signup state
+  const [refCode, setRefCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [inviteEmails, setInviteEmails] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
 
   // Scroll to top when submission succeeds so user sees the confirmation, not the footer
   useEffect(() => {
@@ -91,6 +106,7 @@ export default function WaitlistPage() {
             fundingInterest: fundingInterest || null,
             teamStatus: teamStatus || null,
           },
+          ref: ref || undefined,
         }),
       });
 
@@ -100,11 +116,76 @@ export default function WaitlistPage() {
         throw new Error(data.error || "Failed to join waitlist");
       }
 
+      if (data.refCode) {
+        setRefCode(data.refCode);
+      }
       setIsSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const shareUrl = refCode
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/waitlist?ref=${refCode}`
+    : "";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const handleInvite = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const parsed = inviteEmails
+      .split(/[,\n]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e.length > 0);
+
+    const valid = parsed.filter((e) => emailRegex.test(e));
+    if (valid.length === 0) {
+      toast.error("Please enter at least one valid email address");
+      return;
+    }
+
+    setIsInviting(true);
+    try {
+      const response = await fetch("/api/onboard/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emails: valid,
+          referrerEmail: email.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to invite teammates");
+      }
+
+      const msgs: string[] = [];
+      if (data.invited?.length > 0) {
+        msgs.push(`${data.invited.length} teammate${data.invited.length > 1 ? "s" : ""} added to the waitlist`);
+      }
+      if (data.alreadyOnWaitlist?.length > 0) {
+        msgs.push(`${data.alreadyOnWaitlist.length} already on the waitlist`);
+      }
+
+      toast.success(msgs.join(". ") || "Invites sent!");
+      setInviteEmails("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to invite teammates");
+    } finally {
+      setIsInviting(false);
     }
   };
 
@@ -379,7 +460,7 @@ export default function WaitlistPage() {
                       </form>
 
                       <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-                        No spam, ever. We'll only email you about Sahara updates.
+                        No spam, ever. We&apos;ll only email you about Sahara updates.
                       </p>
                     </div>
                   </div>
@@ -391,20 +472,98 @@ export default function WaitlistPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="max-w-lg mx-auto text-center space-y-6"
+                className="max-w-lg mx-auto text-center space-y-8"
               >
                 <div className="w-20 h-20 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    You're on the list!
+                    You&apos;re on the list!
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Thanks for joining the Sahara waitlist, {name.split(" ")[0]}! We'll notify you
-                    at <span className="font-medium text-[#ff6a1a]">{email}</span> when we're ready to launch.
+                    Thanks for joining the Sahara waitlist, {name.split(" ")[0]}! We&apos;ll notify you
+                    at <span className="font-medium text-[#ff6a1a]">{email}</span> when we&apos;re ready to launch.
                   </p>
                 </div>
+
+                {/* Invite Teammates Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 text-left space-y-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-[#ff6a1a]" />
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Invite your teammates</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Add coworkers directly to the waitlist. Enter emails separated by commas.
+                  </p>
+                  <textarea
+                    placeholder="alice@company.com, bob@company.com"
+                    value={inviteEmails}
+                    onChange={(e) => setInviteEmails(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-sm resize-none"
+                  />
+                  <Button
+                    onClick={handleInvite}
+                    disabled={isInviting || !inviteEmails.trim()}
+                    className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+                  >
+                    {isInviting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding to waitlist...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add to Waitlist
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+
+                {/* Share Link Section */}
+                {refCode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 text-left space-y-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Share2 className="w-5 h-5 text-[#ff6a1a]" />
+                      <h3 className="font-semibold text-gray-900 dark:text-white">Share your link</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Send your personal referral link to anyone you think would benefit from Sahara.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={shareUrl}
+                        className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm truncate"
+                      />
+                      <Button
+                        onClick={handleCopy}
+                        variant="outline"
+                        className="border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10 flex-shrink-0"
+                      >
+                        {copied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Button asChild variant="outline" className="border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10">
                     <Link href="/">
@@ -426,5 +585,13 @@ export default function WaitlistPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function WaitlistPage() {
+  return (
+    <Suspense>
+      <WaitlistContent />
+    </Suspense>
   );
 }

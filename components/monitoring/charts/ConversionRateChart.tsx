@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, ReloadIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { generateConversionData } from "@/lib/utils/mockChartData";
 import type { TimeRange, ChartTooltipProps, ConversionDataPoint } from "@/lib/types/charts";
 
 interface ConversionRateChartProps {
@@ -86,8 +85,6 @@ export function ConversionRateChart({
     } catch (err) {
       console.error("[ConversionRateChart] Error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
-      // Fallback to mock data when API fails
-      setRawData(generateConversionData(timeRange));
     } finally {
       setLoading(false);
     }

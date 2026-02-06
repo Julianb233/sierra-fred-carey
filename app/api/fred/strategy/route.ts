@@ -22,6 +22,12 @@ export async function POST(request: NextRequest) {
   try {
     // Check tier requirement (Pro or Studio)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required for Strategy Documents' },
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Parse request body
     const body = await request.json();
@@ -83,6 +89,12 @@ export async function GET(request: NextRequest) {
   try {
     // Check tier requirement
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -90,7 +102,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Parse query params
     const { searchParams } = new URL(request.url);
