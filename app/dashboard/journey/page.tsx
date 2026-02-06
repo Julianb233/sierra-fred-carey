@@ -408,7 +408,7 @@ export default function JourneyDashboard() {
                   </div>
                   <Progress value={investorReadiness} className="h-2" />
                   <Link
-                    href="/dashboard/investor-score"
+                    href="/dashboard/investor-readiness"
                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 gap-1 mt-2"
                   >
                     Improve score
@@ -420,7 +420,7 @@ export default function JourneyDashboard() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Not assessed yet
                   </p>
-                  <Link href="/dashboard/investor-score">
+                  <Link href="/dashboard/investor-readiness">
                     <Button size="sm" variant="outline" className="w-full">
                       Get Assessed
                     </Button>

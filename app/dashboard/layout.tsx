@@ -22,6 +22,7 @@ import {
   ActivityLogIcon,
   TargetIcon,
   EyeOpenIcon,
+  CountdownTimerIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -56,6 +57,12 @@ const navItems: NavItem[] = [
     badge: "Free",
   },
   {
+    name: "Decision History",
+    href: "/dashboard/history",
+    icon: <CountdownTimerIcon className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
     name: "AI Insights",
     href: "/dashboard/insights",
     icon: <BarChartIcon className="h-4 w-4" />,
@@ -82,8 +89,8 @@ const navItems: NavItem[] = [
     badge: "Pro",
   },
   {
-    name: "Investor Score",
-    href: "/dashboard/investor-score",
+    name: "Investor Readiness",
+    href: "/dashboard/investor-readiness",
     icon: <PersonIcon className="h-4 w-4" />,
     tier: 1,
     badge: "Pro",

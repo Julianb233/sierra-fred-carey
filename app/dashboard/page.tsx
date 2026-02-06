@@ -158,7 +158,7 @@ export default function DashboardPage() {
       title: "Check Investor Readiness",
       description: "Get your current fundraising score",
       icon: <PersonIcon className="h-6 w-6" />,
-      href: "/dashboard/investor-score",
+      href: "/dashboard/investor-readiness",
       gradient: "from-amber-500 to-[#ff6a1a]",
       tier: 1,
     },
