@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ============================================================================
 // Types
@@ -36,6 +37,22 @@ const STORAGE_KEY = "sahara-onboarding";
 // ============================================================================
 // Hook
 // ============================================================================
+
+/** Sync onboarding completion + startup info to the profiles table */
+async function syncCompletionToDb(state: OnboardingState) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("profiles")
+    .update({
+      onboarding_completed: true,
+      stage: state.startupInfo.stage || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+}
 
 export function useOnboarding() {
   const [state, setState] = useState<OnboardingState>({
@@ -74,6 +91,13 @@ export function useOnboarding() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
     } catch (error) {
       console.error("[useOnboarding] Error saving state:", error);
+    }
+
+    // Sync completion to database
+    if (newState.isComplete) {
+      syncCompletionToDb(newState).catch((err) =>
+        console.error("[useOnboarding] DB sync error:", err)
+      );
     }
   }, []);
 

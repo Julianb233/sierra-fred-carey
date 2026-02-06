@@ -42,7 +42,10 @@ export interface TierError {
 export async function getUserTier(userId: string): Promise<UserTier> {
   try {
     const subscription = await getUserSubscription(userId);
-    if (!subscription || !["active", "trialing"].includes(subscription.status)) {
+    if (!subscription) return UserTier.FREE;
+
+    // Allow active, trialing, and past_due (grace period — Stripe retries payment for ~30 days)
+    if (!["active", "trialing", "past_due"].includes(subscription.status)) {
       return UserTier.FREE;
     }
 

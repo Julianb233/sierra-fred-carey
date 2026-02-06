@@ -108,19 +108,32 @@ export async function generateSection(
 
   userPrompt += '\n\nWrite only the section content. Do not include the section heading -- it will be added automatically. Write in flowing prose, not bullet points (unless bullet points genuinely serve the content better).';
 
-  const result = await generateText({
-    model: openai('gpt-4o'),
-    system: systemPrompt,
-    prompt: userPrompt,
-    temperature: 0.6,
-    maxOutputTokens: section.maxWords * 2,
-  });
+  // Try primary model, then retry once with fallback
+  let lastError: unknown;
+  const models = [openai('gpt-4o'), openai('gpt-4o-mini')];
 
-  return {
-    title: section.title,
-    content: result.text.trim(),
-    wordCount: countWords(result.text),
-  };
+  for (const model of models) {
+    try {
+      const result = await generateText({
+        model,
+        system: systemPrompt,
+        prompt: userPrompt,
+        temperature: 0.6,
+        maxOutputTokens: section.maxWords * 2,
+      });
+
+      return {
+        title: section.title,
+        content: result.text.trim(),
+        wordCount: countWords(result.text),
+      };
+    } catch (err) {
+      lastError = err;
+      console.warn(`[Strategy Generator] Model failed for section "${section.title}", trying fallback:`, err);
+    }
+  }
+
+  throw lastError;
 }
 
 // ============================================================================

@@ -36,7 +36,7 @@ function createInitialProcess(): StartupProcess {
 
   return {
     id: `process_${Date.now()}`,
-    userId: "current_user",
+    userId: "",
     currentStep: 1,
     steps,
     overallProgress: 0,
@@ -45,15 +45,11 @@ function createInitialProcess(): StartupProcess {
   };
 }
 
-// Mock validation function - in production, this would call an AI API
-async function mockValidateStep(
+// Validate a step using FRED's analysis engine
+async function validateStep(
   stepNumber: StepNumber,
   data: StepData | null
 ): Promise<ValidationResult> {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // Check if data is empty or incomplete
   if (!data) {
     return {
       status: "blocked",
@@ -62,45 +58,43 @@ async function mockValidateStep(
     };
   }
 
-  // Simulate different validation outcomes based on step
-  const rand = Math.random();
+  try {
+    const response = await fetch("/api/fred/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "step_validation",
+        context: {
+          stepNumber,
+          stepTitle: STEP_TITLES[stepNumber],
+          stepDescription: STEP_DESCRIPTIONS[stepNumber],
+          keyQuestions: STEP_KEY_QUESTIONS[stepNumber],
+          userResponses: data,
+        },
+      }),
+    });
 
-  if (rand > 0.3) {
-    // 70% chance of pass
+    if (!response.ok) {
+      throw new Error("Validation request failed");
+    }
+
+    const result = await response.json();
+
     return {
-      status: "pass",
-      feedback: `Step ${stepNumber} has been validated successfully. Your responses demonstrate a clear understanding of this phase. You can now proceed to the next step.`,
-      suggestions: [
-        "Consider revisiting this step periodically as your understanding evolves",
-        "Document any assumptions you've made for future reference",
-      ],
-      validatedAt: new Date().toISOString(),
+      status: result.status || "needs_work",
+      feedback: result.feedback || "Analysis complete. Review the suggestions below.",
+      suggestions: result.suggestions || [],
+      blockerReasons: result.blockerReasons,
+      validatedAt: result.status === "pass" ? new Date().toISOString() : undefined,
     };
-  } else if (rand > 0.1) {
-    // 20% chance of needs_work
+  } catch (err) {
+    console.error("[StartupProcess] Validation error:", err);
     return {
       status: "needs_work",
-      feedback:
-        "Your responses show promise but need more specificity. Review the suggestions below and refine your answers.",
+      feedback: "Unable to validate with AI right now. Please review your answers and try again.",
       suggestions: [
-        "Be more specific about your target audience",
-        "Include quantitative metrics where possible",
-        "Consider potential objections and how you'd address them",
-      ],
-    };
-  } else {
-    // 10% chance of blocked
-    return {
-      status: "blocked",
-      feedback:
-        "There are critical issues that must be addressed before you can proceed.",
-      blockerReasons: [
-        "The problem statement is too vague to validate",
-        "Missing key information about your target customer",
-      ],
-      suggestions: [
-        "Interview at least 5 potential customers before revising",
-        "Research existing solutions and how yours differs",
+        "Ensure all key questions are addressed",
+        "Be specific and include supporting data where possible",
       ],
     };
   }
@@ -199,7 +193,7 @@ export default function StartupProcessPage() {
       }
 
       const step = process.steps.find((s) => s.stepNumber === stepNumber);
-      const result = await mockValidateStep(stepNumber, step?.data ?? null);
+      const result = await validateStep(stepNumber, step?.data ?? null);
 
       setProcess((prev) => {
         if (!prev) return prev;

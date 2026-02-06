@@ -58,6 +58,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate message age to prevent replay attacks (10-minute window)
+    const messageTimestamp = params.DateCreated || params.DateSent;
+    if (messageTimestamp) {
+      const messageAge = Date.now() - new Date(messageTimestamp).getTime();
+      if (messageAge > 600_000) {
+        console.warn(`[SMS Webhook] Stale message rejected (${Math.round(messageAge / 1000)}s old)`);
+        return new NextResponse(
+          '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+          { status: 200, headers: { 'Content-Type': 'text/xml' } }
+        );
+      }
+    }
+
     // Extract message details
     const from = params.From;
     const body = params.Body;

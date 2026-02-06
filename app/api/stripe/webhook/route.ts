@@ -90,10 +90,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Idempotency check
+  // Idempotency check — skip if already processed or currently being processed
   const existingEvent = await getStripeEventById(event.id);
   if (existingEvent?.status === "processed") {
     return NextResponse.json({ received: true, status: "already_processed" });
+  }
+  if (existingEvent?.status === "pending") {
+    // Another handler is processing this event — skip to prevent double-processing
+    return NextResponse.json({ received: true, status: "already_processing" });
   }
 
   // Record the event
@@ -114,7 +118,16 @@ export async function POST(request: NextRequest) {
           const subscription = await getSubscription(
             session.subscription as string
           );
-          await handleSubscriptionUpdate(subscription, session.client_reference_id!);
+          let userId = session.client_reference_id;
+          if (!userId) {
+            // Fallback: try to resolve userId from subscription metadata or customer ID
+            userId = await resolveUserIdFromSubscription(subscription);
+          }
+          if (!userId) {
+            console.error(`[Webhook] checkout.session.completed: No userId found. Session: ${session.id}, Subscription: ${subscription.id}`);
+            break;
+          }
+          await handleSubscriptionUpdate(subscription, userId);
         }
         break;
       }
@@ -156,13 +169,17 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const invoiceData = invoice as unknown as Record<string, unknown>;
         const subscriptionId = invoiceData.subscription;
-        if (subscriptionId) {
-          const subscription = await getSubscription(subscriptionId as string);
-          const userId = await resolveUserIdFromSubscription(subscription);
-          if (userId) {
-            await handleSubscriptionUpdate(subscription, userId);
-          }
+        if (!subscriptionId) {
+          console.error(`[Webhook] invoice.payment_succeeded: No subscriptionId on invoice ${invoice.id}`);
+          break;
         }
+        const subscription = await getSubscription(subscriptionId as string);
+        const userId = await resolveUserIdFromSubscription(subscription);
+        if (!userId) {
+          console.error(`[Webhook] invoice.payment_succeeded: No userId found. Invoice: ${invoice.id}, Subscription: ${subscription.id}`);
+          break;
+        }
+        await handleSubscriptionUpdate(subscription, userId);
         break;
       }
 

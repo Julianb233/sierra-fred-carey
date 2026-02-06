@@ -45,6 +45,9 @@ const dispatchSchema = z.object({
 /** Maximum concurrent active agent tasks per user */
 const MAX_ACTIVE_TASKS = 5;
 
+/** Maximum execution time for agent tasks (ms) */
+const AGENT_TIMEOUT_MS = 60_000;
+
 // ============================================================================
 // POST /api/agents - Dispatch a task to an agent
 // ============================================================================
@@ -322,6 +325,24 @@ async function startAgentExecution(
         updatedAt: new Date(),
       },
     });
+
+    // Timeout: force-fail tasks that run too long
+    setTimeout(async () => {
+      try {
+        const snapshot = actor.getSnapshot();
+        if (!snapshot.matches("complete") && !snapshot.matches("error") && !snapshot.matches("failed")) {
+          console.warn(`[Agent API] Task ${taskId} timed out after ${AGENT_TIMEOUT_MS}ms`);
+          actor.stop();
+          await updateAgentTask(taskId, {
+            status: "failed",
+            error: `Agent execution timed out after ${AGENT_TIMEOUT_MS / 1000}s`,
+            completedAt: new Date(),
+          });
+        }
+      } catch {
+        // Actor may already be stopped
+      }
+    }, AGENT_TIMEOUT_MS);
   } catch (error) {
     console.error(`[Agent API] startAgentExecution failed for task ${taskId}:`, error);
     await updateAgentTask(taskId, {

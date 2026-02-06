@@ -16,6 +16,16 @@ export default function InvestorReadinessPage() {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    stage: "pre-seed",
+    industry: "",
+    description: "",
+    teamSize: "",
+    revenue: "",
+    funding: "",
+  });
 
   useEffect(() => {
     fetchData();
@@ -49,20 +59,32 @@ export default function InvestorReadinessPage() {
   }
 
   async function calculateNewScore() {
+    if (!showForm) {
+      setShowForm(true);
+      return;
+    }
+
+    if (!formData.name.trim() || !formData.industry.trim()) {
+      setError("Please fill in at least your startup name and industry.");
+      return;
+    }
+
     try {
       setCalculating(true);
       setError(null);
 
-      // In a real implementation, this would open a form to collect info
-      // For now, we'll use placeholder data
       const response = await fetch("/api/fred/investor-readiness", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           startupInfo: {
-            name: "My Startup",
-            stage: "seed",
-            industry: "SaaS",
+            name: formData.name,
+            stage: formData.stage,
+            industry: formData.industry,
+            description: formData.description,
+            teamSize: formData.teamSize,
+            monthlyRevenue: formData.revenue,
+            fundingRaised: formData.funding,
           },
         }),
       });
@@ -72,6 +94,7 @@ export default function InvestorReadinessPage() {
       if (response.ok && data.result) {
         setResult(data.result);
         setHistory((prev) => [data.result, ...prev]);
+        setShowForm(false);
       } else {
         throw new Error(data.error || "Failed to calculate score");
       }
@@ -136,7 +159,99 @@ export default function InvestorReadinessPage() {
           </div>
         )}
 
-        {!result ? (
+        {showForm && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Startup Assessment Info</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Startup Name *</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Acme Inc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Industry *</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.industry}
+                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                    placeholder="SaaS, FinTech, HealthTech..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Stage</label>
+                  <select
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.stage}
+                    onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                  >
+                    <option value="pre-seed">Pre-Seed</option>
+                    <option value="seed">Seed</option>
+                    <option value="series-a">Series A</option>
+                    <option value="series-b">Series B+</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Team Size</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.teamSize}
+                    onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })}
+                    placeholder="e.g. 3 full-time, 2 contractors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Monthly Revenue</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.revenue}
+                    onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
+                    placeholder="e.g. $5k MRR, pre-revenue"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Funding Raised</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    value={formData.funding}
+                    onChange={(e) => setFormData({ ...formData, funding: e.target.value })}
+                    placeholder="e.g. $150k from angels"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                <textarea
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm min-h-[80px]"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Brief description of what your startup does and the problem it solves..."
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={calculateNewScore}
+                  disabled={calculating}
+                  className="bg-[#ff6a1a] hover:bg-[#ea580c]"
+                >
+                  {calculating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Calculate Score
+                </Button>
+                <Button variant="outline" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!result && !showForm ? (
           /* No score yet */
           <Card>
             <CardContent className="py-16 text-center">
@@ -153,14 +268,11 @@ export default function InvestorReadinessPage() {
                 className="bg-[#ff6a1a] hover:bg-[#ea580c]"
                 size="lg"
               >
-                {calculating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Calculate My Score
+                Start Assessment
               </Button>
             </CardContent>
           </Card>
-        ) : (
+        ) : result ? (
           /* Score display */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left column - Score and categories */}
@@ -268,7 +380,7 @@ export default function InvestorReadinessPage() {
               )}
             </div>
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   );
