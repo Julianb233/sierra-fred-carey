@@ -1,18 +1,18 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (06-01 execution)
+**Session:** gsd-execute-plan (05-02 execution)
 
 ---
 
 ## Position
 
 **Current Phase:** 06 - Tier Display & Stripe Wiring
-**Current Plan:** 06-01 complete (1/2 Phase 06 plans done)
-**Status:** In progress
-**Last activity:** 2026-02-06 - Completed 06-01-PLAN.md (Tier Infrastructure Foundation)
+**Current Plan:** 06-02 complete (2/2 Phase 06 plans done)
+**Status:** Phase complete
+**Last activity:** 2026-02-06 - Completed 06-02-PLAN.md (Dashboard Consumer Wiring)
 
-Progress: [===============               ] 50% (1/2 Phase 06 plans)
+Progress: [==============================] 100% (2/2 Phase 06 plans)
 
 ---
 
@@ -68,6 +68,7 @@ Phase 06 progress:
   - [x] 04-07: Studio tier Stripe integration and SMS settings UI
 - [x] **Phase 05: Auth & Onboarding Fix**
   - [x] 05-01: Auth infrastructure (proxy route protection, profiles migration, onboarding auth gate)
+  - [x] 05-02: Signup password collection, API validation, dashboard real user data
 - [ ] **Phase 06: Tier Display & Stripe Wiring**
   - [x] 06-01: Tier infrastructure foundation (TierProvider mount, response shape fix, middleware table fix, migrations)
   - [ ] 06-02: Dashboard layout, post-checkout refresh, settings page fix
@@ -100,6 +101,7 @@ Phase 06 progress:
 | 2026-02-06 | 04-07 execution | Studio Stripe config + upgrade card + SMS settings UI + preferences API |
 | 2026-02-06 | 04-06 execution | Boardy integration: strategy pattern client, AI mock, CRUD, API endpoints, dashboard with filter tabs |
 | 2026-02-06 | 06-01 execution | Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, 2 DB migrations |
+| 2026-02-06 | 05-02 execution | Signup password field, API password validation, dashboard avatar loading guard |
 
 ---
 
@@ -144,6 +146,8 @@ Phase 06 progress:
 - Use getTierFromString() everywhere for consistent plan-id-to-UserTier mapping (not duplicated string matching)
 - Reuse getUserSubscription() from lib/db/subscriptions.ts as single source of truth for server-side tier queries
 - Both "active" and "trialing" subscription statuses grant tier access
+- Require real password on signup (no crypto.randomUUID fallback); validate min 6 chars on client and server
+- Avatar initials guard: use (name || "?") to prevent crash during async user data loading
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -179,8 +183,8 @@ Phase 06 progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T02:02:00Z
-Stopped at: Completed 06-01-PLAN.md (Tier Infrastructure Foundation)
+Last session: 2026-02-06T02:06:00Z
+Stopped at: Completed 05-02-PLAN.md (Signup Password & Dashboard Real User Data)
 Resume file: None
 
 ---
