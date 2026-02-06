@@ -7,10 +7,10 @@
 
 ## Position
 
-**Current Phase:** 08-final-polish (PENDING — needs planning + execution)
-**Current Plan:** None yet
-**Status:** Re-audit found tech debt. Phase 08 created for final polish.
-**Last activity:** 2026-02-06 - Re-audit passed (17/17 req), Phase 08 created for P0-P2 fixes
+**Current Phase:** 08-final-polish (PLANNED — ready for execution)
+**Current Plan:** 08-01-PLAN.md (7 tasks, 1 wave, autonomous)
+**Status:** Phase 08 planned. All P0-P2 issues from re-audit have execution plan.
+**Last activity:** 2026-02-06 - Phase 08 planned (08-01-PLAN.md created)
 
 Progress: [===========================---] 90% (7/8 phases complete)
 
@@ -18,8 +18,8 @@ Progress: [===========================---] 90% (7/8 phases complete)
 
 ## Next Action
 
-**Action:** Plan Phase 08 (Final Polish & Chat Wiring)
-**Type:** plan
+**Action:** Execute Phase 08 (Final Polish & Chat Wiring)
+**Type:** execute
 **Blocked By:** None
 
 Gap closure progress:
