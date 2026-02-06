@@ -11,8 +11,10 @@ import { sql } from "@/lib/db/supabase-sql";
  * Uses simple header-based authentication for now
  */
 function isAdmin(request: NextRequest): boolean {
+  const secret = process.env.ADMIN_SECRET_KEY;
+  if (!secret) return false;
   const adminKey = request.headers.get("x-admin-key");
-  return adminKey === process.env.ADMIN_SECRET_KEY;
+  return !!adminKey && adminKey === secret;
 }
 
 /**
