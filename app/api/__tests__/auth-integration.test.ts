@@ -90,6 +90,34 @@ vi.mock('@/lib/stripe/server', () => ({
   createCustomerPortalSession: vi.fn(() => Promise.resolve({ url: 'https://portal.stripe.com' })),
 }));
 
+// Mock rate limiter (used by FRED Reality Lens API)
+vi.mock('@/lib/api/rate-limit', () => ({
+  checkRateLimit: vi.fn(() => ({ success: true, limit: 5, remaining: 4, reset: 86400 })),
+  applyRateLimitHeaders: vi.fn(),
+  createRateLimitResponse: vi.fn(),
+}));
+
+// Mock FRED Reality Lens engine (used by FRED Reality Lens API)
+vi.mock('@/lib/fred/reality-lens', () => ({
+  assessIdea: vi.fn(() => Promise.resolve({
+    overallScore: 72,
+    verdict: 'promising',
+    verdictDescription: 'Good potential',
+    factors: {},
+    topStrengths: [],
+    criticalRisks: [],
+    nextSteps: [],
+    executiveSummary: 'Test summary',
+    metadata: { assessmentId: 'test', timestamp: new Date().toISOString(), version: '1.0' },
+  })),
+  validateInput: vi.fn((body: any) => {
+    if (!body || !body.idea || typeof body.idea !== 'string' || body.idea.trim().length < 10) {
+      return { valid: false, errors: ['Idea description must be at least 10 characters'] };
+    }
+    return { valid: true, data: body };
+  }),
+}));
+
 describe('API Route Authentication', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -292,12 +320,12 @@ describe('API Route Authentication', () => {
     });
   });
 
-  describe('Reality Lens API - /api/reality-lens', () => {
+  describe('Reality Lens API - /api/fred/reality-lens', () => {
     it('should return 401 for unauthenticated POST request', async () => {
       mockUnauthenticated();
 
-      const { POST } = await import('@/app/api/reality-lens/route');
-      const request = createMockRequest('/api/reality-lens', {
+      const { POST } = await import('@/app/api/fred/reality-lens/route');
+      const request = createMockRequest('/api/fred/reality-lens', {
         method: 'POST',
         body: JSON.stringify({ idea: 'A startup idea for testing purposes that is long enough' }),
         headers: { 'Content-Type': 'application/json' },
@@ -310,8 +338,8 @@ describe('API Route Authentication', () => {
     it('should return 401 for unauthenticated GET request', async () => {
       mockUnauthenticated();
 
-      const { GET } = await import('@/app/api/reality-lens/route');
-      const request = createMockRequest('/api/reality-lens');
+      const { GET } = await import('@/app/api/fred/reality-lens/route');
+      const request = createMockRequest('/api/fred/reality-lens');
 
       const response = await GET(request);
       expect(response.status).toBe(401);
@@ -402,7 +430,7 @@ describe('API Route Input Validation', () => {
     });
   }
 
-  describe('Reality Lens Input Validation', () => {
+  describe('Reality Lens Input Validation (FRED API)', () => {
     it('should return 400 for empty idea', async () => {
       // Mock authenticated user
       const mockGetUser = (await import('@/lib/supabase/server') as any).createClient;
@@ -422,8 +450,8 @@ describe('API Route Input Validation', () => {
         }),
       });
 
-      const { POST } = await import('@/app/api/reality-lens/route');
-      const request = new NextRequest('http://localhost:3000/api/reality-lens', {
+      const { POST } = await import('@/app/api/fred/reality-lens/route');
+      const request = new NextRequest('http://localhost:3000/api/fred/reality-lens', {
         method: 'POST',
         body: JSON.stringify({ idea: '' }),
         headers: { 'Content-Type': 'application/json' },
@@ -434,7 +462,8 @@ describe('API Route Input Validation', () => {
 
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain('required');
+      expect(body.error).toBeDefined();
+      expect(body.error.code).toBe('VALIDATION_ERROR');
     });
 
     it('should return 400 for idea that is too short', async () => {
@@ -455,8 +484,8 @@ describe('API Route Input Validation', () => {
         }),
       });
 
-      const { POST } = await import('@/app/api/reality-lens/route');
-      const request = new NextRequest('http://localhost:3000/api/reality-lens', {
+      const { POST } = await import('@/app/api/fred/reality-lens/route');
+      const request = new NextRequest('http://localhost:3000/api/fred/reality-lens', {
         method: 'POST',
         body: JSON.stringify({ idea: 'short' }),
         headers: { 'Content-Type': 'application/json' },
@@ -467,7 +496,8 @@ describe('API Route Input Validation', () => {
 
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain('minimum');
+      expect(body.error).toBeDefined();
+      expect(body.error.code).toBe('VALIDATION_ERROR');
     });
   });
 
