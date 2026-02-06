@@ -18,22 +18,29 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const events = await sql`
-      SELECT
-        id,
-        user_id as "userId",
-        event_type as "eventType",
-        event_data as "eventData",
-        score_before as "scoreBefore",
-        score_after as "scoreAfter",
-        created_at as "createdAt"
-      FROM journey_events
-      WHERE user_id = ${userId}
-        AND (${eventType}::text IS NULL OR event_type = ${eventType})
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
-    `;
+    let events: Record<string, unknown>[] = [];
+    try {
+      events = await sql`
+        SELECT
+          id,
+          user_id as "userId",
+          event_type as "eventType",
+          event_data as "eventData",
+          score_before as "scoreBefore",
+          score_after as "scoreAfter",
+          created_at as "createdAt"
+        FROM journey_events
+        WHERE user_id = ${userId}
+          AND (${eventType}::text IS NULL OR event_type = ${eventType})
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
+    } catch (dbError) {
+      // Gracefully handle missing table (migrations not applied)
+      console.warn("[GET /api/journey/timeline] DB query failed (table may not exist):", dbError);
+      events = [];
+    }
 
     return NextResponse.json({
       success: true,

@@ -32,7 +32,7 @@ export default function HistoryPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.back()}
+                onClick={() => router.push("/dashboard")}
                 className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />

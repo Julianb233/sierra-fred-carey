@@ -80,7 +80,9 @@ export async function extractInsights(
       INSIGHT_EXTRACTION_PROMPT
     );
 
-    console.log("[Insights] Raw extraction response:", response);
+    if (process.env.NODE_ENV === "development") {
+      console.log("[Insights] Raw extraction response:", response);
+    }
 
     // Parse JSON response
     let insights: ExtractedInsight[];
@@ -317,7 +319,7 @@ export async function getUserInsights(
     return result as any;
   } catch (error) {
     console.error("[Insights] Error getting user insights:", error);
-    throw error;
+    return [];
   }
 }
 

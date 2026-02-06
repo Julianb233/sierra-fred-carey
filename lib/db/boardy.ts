@@ -171,18 +171,32 @@ export async function deleteMatchesByStatus(
 export async function getMatchById(
   matchId: string
 ): Promise<BoardyMatch | null> {
-  const { data, error } = await supabase
-    .from("boardy_matches")
-    .select("*")
-    .eq("id", matchId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("boardy_matches")
+      .select("*")
+      .eq("id", matchId)
+      .single();
 
-  if (error) {
-    if (error.code === "PGRST116") return null; // Not found
-    throw new Error(`Failed to get boardy match: ${error.message}`);
+    if (error) {
+      if (error.code === "PGRST116") return null; // Not found
+      // PGRST205 = table doesn't exist (migrations not applied)
+      if (error.code === 'PGRST205' || error.message?.includes('relation') || error.code === '42P01') {
+        console.warn('[getMatchById] Table does not exist, returning null');
+        return null;
+      }
+      throw new Error(`Failed to get boardy match: ${error.message}`);
+    }
+
+    return mapBoardyMatch(data);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('PGRST205')) {
+      console.warn('[getMatchById] Table does not exist, returning null');
+      return null;
+    }
+    throw err;
   }
-
-  return mapBoardyMatch(data);
 }
 
 // ============================================================================

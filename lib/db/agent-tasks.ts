@@ -6,14 +6,30 @@
  * Follows the pattern from lib/db/documents.ts using Supabase client.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { AgentTask, AgentType, AgentStatus } from '@/lib/agents/types';
 
-// Initialize Supabase client with service role for server-side operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-initialized Supabase client to avoid build-time crashes when env vars aren't set
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    }
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
+
+// Proxy for backward compatibility — all usages of `supabase` now go through lazy init
+const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 // ============================================================================
 // Create
@@ -83,32 +99,47 @@ export async function getAgentTasks(
     offset?: number;
   }
 ): Promise<AgentTask[]> {
-  let query = supabase
-    .from('agent_tasks')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    let query = supabase
+      .from('agent_tasks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-  if (opts?.agentType) {
-    query = query.eq('agent_type', opts.agentType);
-  }
-  if (opts?.status) {
-    query = query.eq('status', opts.status);
-  }
-  if (opts?.limit) {
-    query = query.limit(opts.limit);
-  }
-  if (opts?.offset) {
-    query = query.range(opts.offset, opts.offset + (opts.limit || 10) - 1);
-  }
+    if (opts?.agentType) {
+      query = query.eq('agent_type', opts.agentType);
+    }
+    if (opts?.status) {
+      query = query.eq('status', opts.status);
+    }
+    if (opts?.limit) {
+      query = query.limit(opts.limit);
+    }
+    if (opts?.offset) {
+      query = query.range(opts.offset, opts.offset + (opts.limit || 10) - 1);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
-    throw new Error(`Failed to get agent tasks: ${error.message}`);
+    if (error) {
+      // PGRST205 = table doesn't exist (migrations not applied)
+      if (error.code === 'PGRST205' || error.message?.includes('relation') || error.code === '42P01') {
+        console.warn('[getAgentTasks] Table does not exist, returning empty array');
+        return [];
+      }
+      throw new Error(`Failed to get agent tasks: ${error.message}`);
+    }
+
+    return (data || []).map(mapAgentTask);
+  } catch (err) {
+    // Gracefully handle missing table or connection issues
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('PGRST205')) {
+      console.warn('[getAgentTasks] Table does not exist, returning empty array');
+      return [];
+    }
+    throw err;
   }
-
-  return (data || []).map(mapAgentTask);
 }
 
 /**

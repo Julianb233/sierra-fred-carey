@@ -55,12 +55,7 @@ export function FeatureLock({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Blurred/dimmed children */}
-      {blur && (
-        <div className="opacity-30 pointer-events-none select-none blur-sm">
-          {children}
-        </div>
-      )}
+      {/* Placeholder height when locked - don't mount children to avoid side effects */}
 
       {/* Lock overlay */}
       <motion.div

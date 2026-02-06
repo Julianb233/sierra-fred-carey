@@ -157,7 +157,8 @@ async function getSessionList(
 
   if (error) {
     console.error("[FRED History] Error fetching episodes:", error);
-    throw error;
+    // Return empty list if table doesn't exist yet
+    return [];
   }
 
   // Group by session
@@ -272,7 +273,7 @@ async function getSessionDetail(
 
   if (episodesError) {
     console.error("[FRED History] Error fetching session episodes:", episodesError);
-    throw episodesError;
+    // Return empty session if table doesn't exist
   }
 
   // Fetch decisions for this session

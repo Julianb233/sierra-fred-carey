@@ -94,25 +94,11 @@ export default function JourneyDashboard() {
           fetch("/api/journey/timeline?limit=20"),
         ]);
 
-        // Check for errors
-        if (!statsRes.ok) {
-          throw new Error(`Stats API error: ${statsRes.status}`);
-        }
-        if (!insightsRes.ok) {
-          throw new Error(`Insights API error: ${insightsRes.status}`);
-        }
-        if (!milestonesRes.ok) {
-          throw new Error(`Milestones API error: ${milestonesRes.status}`);
-        }
-        if (!timelineRes.ok) {
-          throw new Error(`Timeline API error: ${timelineRes.status}`);
-        }
-
-        // Parse responses
-        const statsData = await statsRes.json();
-        const insightsData = await insightsRes.json();
-        const milestonesData = await milestonesRes.json();
-        const timelineData = await timelineRes.json();
+        // Parse responses gracefully - don't fail if individual endpoints error
+        const statsData = statsRes.ok ? await statsRes.json() : { success: false };
+        const insightsData = insightsRes.ok ? await insightsRes.json() : { success: false };
+        const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { success: false };
+        const timelineData = timelineRes.ok ? await timelineRes.json() : { success: false };
 
         // Update state
         if (statsData.success) {

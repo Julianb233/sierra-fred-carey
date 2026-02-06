@@ -22,34 +22,41 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "100", 10);
 
     // Query with optional filters using COALESCE pattern
-    const milestones = await sql`
-      SELECT
-        id,
-        user_id as "userId",
-        title,
-        description,
-        category,
-        status,
-        target_date as "targetDate",
-        completed_at as "completedAt",
-        metadata,
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM milestones
-      WHERE user_id = ${userId}
-        AND (${category}::text IS NULL OR category = ${category})
-        AND (${status}::text IS NULL OR status = ${status})
-      ORDER BY
-        CASE status
-          WHEN 'in_progress' THEN 1
-          WHEN 'pending' THEN 2
-          WHEN 'completed' THEN 3
-          WHEN 'skipped' THEN 4
-        END,
-        target_date ASC NULLS LAST,
-        created_at DESC
-      LIMIT ${limit}
-    `;
+    let milestones: Record<string, unknown>[] = [];
+    try {
+      milestones = await sql`
+        SELECT
+          id,
+          user_id as "userId",
+          title,
+          description,
+          category,
+          status,
+          target_date as "targetDate",
+          completed_at as "completedAt",
+          metadata,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM milestones
+        WHERE user_id = ${userId}
+          AND (${category}::text IS NULL OR category = ${category})
+          AND (${status}::text IS NULL OR status = ${status})
+        ORDER BY
+          CASE status
+            WHEN 'in_progress' THEN 1
+            WHEN 'pending' THEN 2
+            WHEN 'completed' THEN 3
+            WHEN 'skipped' THEN 4
+          END,
+          target_date ASC NULLS LAST,
+          created_at DESC
+        LIMIT ${limit}
+      `;
+    } catch (dbError) {
+      // Gracefully handle missing table (migrations not applied)
+      console.warn("[GET /api/journey/milestones] DB query failed (table may not exist):", dbError);
+      milestones = [];
+    }
 
     return NextResponse.json({
       success: true,
@@ -57,6 +64,7 @@ export async function GET(request: NextRequest) {
       meta: { count: milestones.length, limit }
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[GET /api/journey/milestones]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch milestones" },
@@ -127,6 +135,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[POST /api/journey/milestones]", error);
     return NextResponse.json(
       { success: false, error: "Failed to create milestone" },

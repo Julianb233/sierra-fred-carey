@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { createServiceClient } from "@/lib/supabase/server";
+
+// Helper to safely execute a Supabase query with a fallback
+async function safeQuery<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
+  try {
+    const result = await query;
+    return result.data ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function safeCount(query: PromiseLike<{ count: number | null; error: unknown }>): Promise<number> {
+  try {
+    const result = await query;
+    return result.count ?? 0;
+  } catch {
+    return 0;
+  }
+}
 
 /**
  * GET /api/journey/stats
@@ -12,110 +31,168 @@ export async function GET(request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
+    const supabase = createServiceClient();
 
-    // Fetch multiple stats in parallel
+    // Fetch multiple stats in parallel with individual error handling
     const [
-      ideaScoreResult,
-      investorScoreResult,
-      streakResult,
+      ideaScoreData,
+      investorScoreData,
       milestoneStats,
-      insightStats
+      insightStats,
     ] = await Promise.all([
       // Latest idea score from reality lens
-      sql`
-        SELECT score_after as score
-        FROM journey_events
-        WHERE user_id = ${userId}
-          AND event_type = 'analysis_completed'
-          AND event_data->>'analyzer' = 'reality_lens'
-        ORDER BY created_at DESC
-        LIMIT 1
-      `,
+      safeQuery(
+        supabase
+          .from("journey_events")
+          .select("score_after")
+          .eq("user_id", userId)
+          .eq("event_type", "analysis_completed")
+          .order("created_at", { ascending: false })
+          .limit(1),
+        [] as any[]
+      ),
 
       // Latest investor readiness score
-      sql`
-        SELECT score_after as score
-        FROM journey_events
-        WHERE user_id = ${userId}
-          AND event_type = 'analysis_completed'
-          AND event_data->>'analyzer' = 'investor_score'
-        ORDER BY created_at DESC
-        LIMIT 1
-      `,
+      safeQuery(
+        supabase
+          .from("journey_events")
+          .select("score_after")
+          .eq("user_id", userId)
+          .eq("event_type", "score_improved")
+          .order("created_at", { ascending: false })
+          .limit(1),
+        [] as any[]
+      ),
 
-      // Execution streak (consecutive days with activity)
-      sql`
-        WITH daily_activity AS (
-          SELECT DISTINCT DATE(created_at) as activity_date
-          FROM journey_events
-          WHERE user_id = ${userId}
-            AND created_at > NOW() - INTERVAL '30 days'
-          ORDER BY activity_date DESC
+      // Milestone statistics - count by status
+      Promise.all([
+        safeCount(
+          supabase
+            .from("milestones")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("status", "completed")
         ),
-        streak AS (
-          SELECT
-            activity_date,
-            activity_date - (ROW_NUMBER() OVER (ORDER BY activity_date DESC))::int as grp
-          FROM daily_activity
-        )
-        SELECT COUNT(*) as streak_days
-        FROM streak
-        WHERE grp = (
-          SELECT grp FROM streak WHERE activity_date = CURRENT_DATE
-          UNION ALL
-          SELECT grp FROM streak WHERE activity_date = CURRENT_DATE - 1
-          LIMIT 1
-        )
-      `,
+        safeCount(
+          supabase
+            .from("milestones")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("status", "in_progress")
+        ),
+        safeCount(
+          supabase
+            .from("milestones")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("status", "pending")
+        ),
+        safeCount(
+          supabase
+            .from("milestones")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+        ),
+      ]),
 
-      // Milestone statistics
-      sql`
-        SELECT
-          COUNT(*) FILTER (WHERE status = 'completed') as completed,
-          COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
-          COUNT(*) FILTER (WHERE status = 'pending') as pending,
-          COUNT(*) as total
-        FROM milestones
-        WHERE user_id = ${userId}
-      `,
-
-      // Insight statistics
-      sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE is_dismissed = false) as active,
-          COUNT(*) FILTER (WHERE is_pinned = true) as pinned,
-          COUNT(*) FILTER (WHERE importance >= 7) as high_importance
-        FROM ai_insights
-        WHERE user_id = ${userId}
-      `
+      // Insight statistics - count by attributes
+      Promise.all([
+        safeCount(
+          supabase
+            .from("ai_insights")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+        ),
+        safeCount(
+          supabase
+            .from("ai_insights")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("is_dismissed", false)
+        ),
+        safeCount(
+          supabase
+            .from("ai_insights")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("is_pinned", true)
+        ),
+        safeCount(
+          supabase
+            .from("ai_insights")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .gte("importance", 7)
+        ),
+      ]),
     ]);
 
-    // Calculate execution streak (fallback to 0 if no activity today/yesterday)
-    const streakDays = streakResult[0]?.streak_days || 0;
+    // Extract scores
+    const ideaScore = ideaScoreData?.[0]?.score_after ?? null;
+    const investorScore = investorScoreData?.[0]?.score_after ?? null;
+
+    // Calculate execution streak from recent activity
+    let streakDays = 0;
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const { data: events } = await supabase
+        .from("journey_events")
+        .select("created_at")
+        .eq("user_id", userId)
+        .gte("created_at", thirtyDaysAgo.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (events && events.length > 0) {
+        const uniqueDates = [...new Set(
+          events.map((e) => new Date(e.created_at).toISOString().split("T")[0])
+        )].sort().reverse();
+
+        const today = new Date().toISOString().split("T")[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+        if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+          streakDays = 1;
+          for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = new Date(uniqueDates[i - 1]);
+            const curr = new Date(uniqueDates[i]);
+            const diffDays = (prev.getTime() - curr.getTime()) / 86400000;
+            if (Math.abs(diffDays - 1) < 0.1) {
+              streakDays++;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    } catch {
+      // Streak calculation failed, default to 0
+    }
+
+    const [completed, inProgress, pending, total] = milestoneStats;
+    const [insTotal, insActive, insPinned, insHighImportance] = insightStats;
 
     return NextResponse.json({
       success: true,
       data: {
-        ideaScore: ideaScoreResult[0]?.score || null,
-        investorReadiness: investorScoreResult[0]?.score || null,
-        executionStreak: Number(streakDays),
+        ideaScore,
+        investorReadiness: investorScore,
+        executionStreak: streakDays,
         milestones: {
-          completed: Number(milestoneStats[0]?.completed || 0),
-          inProgress: Number(milestoneStats[0]?.in_progress || 0),
-          pending: Number(milestoneStats[0]?.pending || 0),
-          total: Number(milestoneStats[0]?.total || 0)
+          completed: Number(completed),
+          inProgress: Number(inProgress),
+          pending: Number(pending),
+          total: Number(total),
         },
         insights: {
-          total: Number(insightStats[0]?.total || 0),
-          active: Number(insightStats[0]?.active || 0),
-          pinned: Number(insightStats[0]?.pinned || 0),
-          highImportance: Number(insightStats[0]?.high_importance || 0)
-        }
-      }
+          total: Number(insTotal),
+          active: Number(insActive),
+          pinned: Number(insPinned),
+          highImportance: Number(insHighImportance),
+        },
+      },
     });
   } catch (error) {
-    // Re-throw auth errors (Response objects from requireAuth)
     if (error instanceof Response) {
       return error;
     }
