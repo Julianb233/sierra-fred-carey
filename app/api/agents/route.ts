@@ -35,7 +35,7 @@ const dispatchSchema = z.object({
   agentType: z.enum(["founder_ops", "fundraising", "growth"]),
   taskType: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
-  input: z.record(z.unknown()).optional(),
+  input: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ============================================================================
