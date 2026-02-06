@@ -35,11 +35,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    ".next-audit/types/**/*.ts",
-    ".next-audit/dev/types/**/*.ts",
-    ".build-deep-audit/types/**/*.ts",
-    ".build-deep-audit/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

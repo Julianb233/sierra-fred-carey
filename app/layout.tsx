@@ -5,6 +5,11 @@ import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 
+// Force dynamic rendering to avoid prerender errors with client components
+// that use React hooks (framer-motion, etc.) during static generation.
+// See: https://github.com/vercel/next.js/issues/85668
+export const dynamic = "force-dynamic";
+
 const geist = Geist({
   subsets: ["latin"],
 });
