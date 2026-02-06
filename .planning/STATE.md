@@ -18,13 +18,14 @@ Progress: [====================----------] 66% (2/3 gap closure phases code-comp
 
 ## Next Action
 
-**Action:** Phase 06 complete. All tier wiring done.
-**Type:** complete
-**Blocked By:** None
+**Action:** Execute Phase 07 (Dashboard Integration & Strategy Completion)
+**Type:** execute
+**Blocked By:** None (Phase 07 is independent of 05/06)
 
-Phase 06 progress:
-- Wave 1: 06-01 Tier infrastructure foundation -- COMPLETE
-- Wave 2: 06-02 Dashboard layout + post-checkout + settings -- COMPLETE
+Gap closure progress:
+- Phase 05: Auth & Onboarding Fix -- CODE COMPLETE (infra gap: Supabase placeholder credentials)
+- Phase 06: Tier Display & Stripe Wiring -- COMPLETE
+- Phase 07: Dashboard Integration & Strategy Completion -- PENDING
 
 ---
 
@@ -73,8 +74,13 @@ Phase 06 progress:
   - [x] 06-01: Tier infrastructure foundation (TierProvider mount, response shape fix, middleware table fix, migrations)
   - [x] 06-02: Dashboard layout, post-checkout refresh, settings page fix
 
+### What's Pending
+- [ ] **Phase 07: Dashboard Integration & Strategy Completion**
+  - [ ] 07-01: Fix Reality Lens wiring, add missing nav links, complete strategy UI components
+
 ### What's Blocked
-- Nothing currently blocked
+- Phase 05 runtime verification blocked by Supabase placeholder credentials in .env
+  - User action needed: create real Supabase project, update .env, run migration SQL
 
 ---
 
