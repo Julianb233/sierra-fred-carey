@@ -20,10 +20,34 @@ import {
   Shield
 } from "lucide-react";
 
+const stageOptions = [
+  { value: "idea", label: "Idea Stage" },
+  { value: "building-mvp", label: "Building MVP" },
+  { value: "pre-seed", label: "Pre-seed" },
+  { value: "seed", label: "Seed" },
+  { value: "series-a-plus", label: "Series A+" },
+];
+
+const fundingOptions = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+  { value: "not-sure", label: "Not sure" },
+];
+
+const teamOptions = [
+  { value: "solo", label: "Solo founder" },
+  { value: "co-founder", label: "Have co-founder" },
+  { value: "team", label: "Have a team" },
+];
+
 export default function WaitlistPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
+  const [startupStage, setStartupStage] = useState("");
+  const [firstBusiness, setFirstBusiness] = useState("");
+  const [fundingInterest, setFundingInterest] = useState("");
+  const [teamStatus, setTeamStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +85,12 @@ export default function WaitlistPage() {
           email: email.trim().toLowerCase(),
           stage: "waitlist",
           challenges: company ? [company] : [],
+          qualifying: {
+            startupStage: startupStage || null,
+            firstBusiness: firstBusiness || null,
+            fundingInterest: fundingInterest || null,
+            teamStatus: teamStatus || null,
+          },
         }),
       });
 
@@ -229,6 +259,93 @@ export default function WaitlistPage() {
                             onChange={(e) => setCompany(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
                           />
+                        </div>
+
+                        {/* Qualifying Questions */}
+                        <div className="space-y-3 pt-2">
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Help us learn about you (optional)
+                          </p>
+
+                          <div className="space-y-1">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">What stage is your startup?</label>
+                            <div className="flex flex-wrap gap-2">
+                              {stageOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setStartupStage(startupStage === opt.value ? "" : opt.value)}
+                                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                                    startupStage === opt.value
+                                      ? "bg-[#ff6a1a] text-white border-[#ff6a1a]"
+                                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#ff6a1a]/50"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">Is this your first business?</label>
+                            <div className="flex flex-wrap gap-2">
+                              {[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }].map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setFirstBusiness(firstBusiness === opt.value ? "" : opt.value)}
+                                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                                    firstBusiness === opt.value
+                                      ? "bg-[#ff6a1a] text-white border-[#ff6a1a]"
+                                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#ff6a1a]/50"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">Are you looking for funding?</label>
+                            <div className="flex flex-wrap gap-2">
+                              {fundingOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setFundingInterest(fundingInterest === opt.value ? "" : opt.value)}
+                                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                                    fundingInterest === opt.value
+                                      ? "bg-[#ff6a1a] text-white border-[#ff6a1a]"
+                                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#ff6a1a]/50"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">Do you have a co-founder or team?</label>
+                            <div className="flex flex-wrap gap-2">
+                              {teamOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setTeamStatus(teamStatus === opt.value ? "" : opt.value)}
+                                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                                    teamStatus === opt.value
+                                      ? "bg-[#ff6a1a] text-white border-[#ff6a1a]"
+                                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#ff6a1a]/50"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
 
                         {error && (

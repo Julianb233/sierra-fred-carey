@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password } = await request.json();
+    const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password, qualifying } = await request.json();
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
@@ -37,11 +37,20 @@ export async function POST(request: NextRequest) {
 
     // Waitlist signups: no account needed, just record the interest
     if (stage === "waitlist") {
+      const qualifyingData = qualifying
+        ? JSON.stringify({
+            startupStage: qualifying.startupStage || null,
+            firstBusiness: qualifying.firstBusiness || null,
+            fundingInterest: qualifying.fundingInterest || null,
+            teamStatus: qualifying.teamStatus || null,
+          })
+        : "Waitlist signup";
+
       await supabase.from("contact_submissions").insert({
         name: userName,
         email: email.toLowerCase(),
         company: challenges?.[0] || null,
-        message: "Waitlist signup",
+        message: qualifyingData,
         source: "waitlist",
       });
 
