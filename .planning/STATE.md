@@ -7,24 +7,24 @@
 
 ## Position
 
-**Current Phase:** 04 - Studio Tier Features (PLANNED)
-**Current Plan:** All 7 plans created and verified
-**Status:** PHASE 04 PLANNED - READY FOR EXECUTION
-**Last activity:** 2026-02-06 - Phase 04 planning complete
+**Current Phase:** 04 - Studio Tier Features (IN PROGRESS)
+**Current Plan:** 04-01 complete, 6 remaining
+**Status:** In progress - Wave 1 complete
+**Last activity:** 2026-02-06 - Completed 04-01-PLAN.md (agent architecture foundation)
 
-Progress: [--------------------] 0%
+Progress: [===-----------------] 14% (1/7 Phase 04 plans)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 04 plans
+**Action:** Execute Phase 04 Wave 2 plans (parallel)
 **Type:** execute
 **Blocked By:** None
 
-Phase 04 is planned. 7 plans in 4 waves:
-- Wave 1: 04-01 Architecture foundation (DB schema, types, orchestrator, base agent)
-- Wave 2: 04-02, 04-03, 04-04 Three specialist agents + dashboard (parallel)
+Phase 04 progress:
+- Wave 1: 04-01 Architecture foundation -- COMPLETE
+- Wave 2: 04-02, 04-03, 04-04 Three specialist agents + dashboard (parallel) -- NEXT
 - Wave 3: 04-05 SMS check-ins (Twilio + cron)
 - Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel)
 
@@ -52,26 +52,24 @@ Phase 04 is planned. 7 plans in 4 waves:
   - [x] 02-03: Decision history UI
   - [x] 02-04: Tier gating system
   - [x] 02-05: Onboarding flow with FRED introduction
-
-### What's In Progress
-- [ ] **Phase 04: Studio Tier Features** (PLANNED - 7 plans, 4 waves)
-  - [ ] 04-01: Virtual agent architecture (DB schema, types, orchestrator, base agent)
-  - [ ] 04-02: Founder Ops Agent implementation
-  - [ ] 04-03: Fundraising Agent implementation
-  - [ ] 04-04: Growth Agent implementation + dashboard UI + dispatch modal
-  - [ ] 04-05: Twilio SMS weekly check-ins with accountability tracking
-  - [ ] 04-06: Boardy integration for investor/advisor matching
-  - [ ] 04-07: Studio tier Stripe integration and SMS settings UI
-
-### What's Complete (Phase 03)
 - [x] **Phase 03: Pro Tier Features**
   - [x] 03-01: PDF document pipeline (extraction, chunking, embeddings)
   - [x] 03-02: Investor Readiness Score (6-category AI evaluation)
   - [x] 03-03: Pitch Deck Review (slide-by-slide analysis) -- original
   - [x] 03-04: Strategy document generation (templates + export)
   - [x] 03-05: Pro tier Stripe integration (subscriptions, webhooks)
-  - [x] 03-06: Pitch Deck Review full implementation (gap closure - replaced static mock)
-  - [x] 03-07: Strategy Document Generation full implementation (gap closure - 5 templates, generator, PDF export, dashboard)
+  - [x] 03-06: Pitch Deck Review full implementation (gap closure)
+  - [x] 03-07: Strategy Document Generation full implementation (gap closure)
+
+### What's In Progress
+- [ ] **Phase 04: Studio Tier Features** (IN PROGRESS - 1/7 complete)
+  - [x] 04-01: Virtual agent architecture (DB schema, types, orchestrator, base agent)
+  - [ ] 04-02: Founder Ops Agent implementation
+  - [ ] 04-03: Fundraising Agent implementation
+  - [ ] 04-04: Growth Agent implementation + dashboard UI + dispatch modal
+  - [ ] 04-05: Twilio SMS weekly check-ins with accountability tracking
+  - [ ] 04-06: Boardy integration for investor/advisor matching
+  - [ ] 04-07: Studio tier Stripe integration and SMS settings UI
 
 ### What's Blocked
 - Nothing currently blocked
@@ -89,8 +87,9 @@ Phase 04 is planned. 7 plans in 4 waves:
 | 2026-02-05 | Phase 03 planning | Created all 5 PLAN files - Pro Tier features ready to build |
 | 2026-02-05 | Phase 03 execution | Completed all 5 plans - Pro Tier features implemented |
 | 2026-02-06 | 03-06 gap closure | Pitch Deck Review full implementation (engine, API, UI, dashboard) |
-| 2026-02-06 | 03-07 gap closure | Strategy Document Generation full implementation (types, 5 templates, generator, DB, export, API, UI, dashboard) |
-| 2026-02-06 | Phase 04 planning | Research + 7 plans created + verified (2 blockers fixed in revision) |
+| 2026-02-06 | 03-07 gap closure | Strategy Document Generation full implementation |
+| 2026-02-06 | Phase 04 planning | Research + 7 plans created + verified |
+| 2026-02-06 | 04-01 execution | Agent architecture foundation (4 migrations, types, base agent, orchestrator, CRUD) |
 
 ---
 
@@ -107,6 +106,9 @@ Phase 04 is planned. 7 plans in 4 waves:
 - 40/60 structure/content weighting for overall pitch score
 - Sequential section generation for strategy docs (not parallel) for coherence
 - Card-based document list UI instead of table for visual consistency
+- AI SDK 6 uses stopWhen(stepCountIs(N)) not maxSteps for agent step limits
+- AI SDK 6 tool calls use `input` property not `args`
+- Dynamic imports for specialist agents in orchestrator to avoid circular deps
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -124,13 +126,15 @@ Phase 04 is planned. 7 plans in 4 waves:
 - Deterministic scoring where AI is unnecessary (structure checks)
 - Template-driven document generation with sequential section coherence
 - React.createElement for non-JSX PDF rendering
+- Orchestrator-worker pattern for multi-agent routing via XState guards
+- Base agent wrapping AI SDK generateText with tools + stopWhen
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T00:48:29Z
-Stopped at: Completed 03-07-PLAN.md
+Last session: 2026-02-06T00:59:39Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
 
 ---
