@@ -84,12 +84,11 @@ export const TIER_FEATURES = {
   ],
   [UserTier.STUDIO]: [
     "Everything in Pro tier",
-    "Boardy integration (investor matching)",
-    "Investor targeting & outreach sequencing",
     "Virtual Team: Founder Ops Agent",
-    "Virtual Team: Fundraise Ops Agent",
-    "Virtual Team: Growth Ops Agent",
-    "Virtual Team: Inbox Ops Agent",
+    "Virtual Team: Fundraising Agent",
+    "Virtual Team: Growth Agent",
+    "Weekly SMS Accountability Check-ins",
+    "Boardy Investor/Advisor Matching",
     "Priority compute & deeper memory",
   ],
 } as const;
@@ -138,8 +137,9 @@ export const DASHBOARD_NAV = [
   { id: "overview", label: "Overview", icon: "LayoutDashboard", href: "/dashboard", tier: UserTier.FREE },
   { id: "chat", label: "Talk to Fred", icon: "MessageCircle", href: "/chat", tier: UserTier.FREE },
   { id: "check-ins", label: "Check-ins", icon: "CalendarCheck", href: "/check-ins", tier: UserTier.FREE },
-  { id: "agents", label: "AI Agents", icon: "Bot", href: "/dashboard/agents", tier: UserTier.PRO },
+  { id: "agents", label: "AI Agents", icon: "Bot", href: "/dashboard/agents", tier: UserTier.STUDIO },
   { id: "documents", label: "Documents", icon: "FileText", href: "/dashboard/documents", tier: UserTier.PRO },
+  { id: "sms-checkins", label: "SMS Check-ins", icon: "MessageSquare", href: "/dashboard/sms", tier: UserTier.STUDIO },
   { id: "boardy", label: "Boardy", icon: "Network", href: "/dashboard/boardy", tier: UserTier.STUDIO },
 ] as const;
 
