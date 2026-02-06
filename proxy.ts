@@ -4,9 +4,10 @@ import { updateSession } from "@/lib/supabase/middleware";
 export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request);
 
-  // Protected routes pattern
+  // Protected routes pattern - redirect unauthenticated users to /login
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/chat') ||
     request.nextUrl.pathname.startsWith('/agents') ||
     request.nextUrl.pathname.startsWith('/documents') ||
     request.nextUrl.pathname.startsWith('/settings') ||
@@ -14,7 +15,9 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/api/protected');
 
   if (isProtectedRoute && !user) {
-    return Response.redirect(new URL('/login', request.url));
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    return Response.redirect(loginUrl);
   }
 
   return response;
