@@ -149,6 +149,22 @@ Growth Agent with 4 domain tools (channelAnalysis, experimentDesign, funnelAnaly
 - **Files modified:** app/api/agents/route.ts
 - **Commit:** 4d15704
 
+**5. [Rule 1 - Bug] health-monitor.ts uses deprecated maxTokens**
+
+- **Found during:** Build verification
+- **Issue:** `lib/ai/health-monitor.ts` used `maxTokens` which does not exist in AI SDK 6.0.72
+- **Fix:** Changed to `maxOutputTokens`
+- **Files modified:** lib/ai/health-monitor.ts
+- **Commit:** 4595e5b
+
+**6. [Rule 1 - Bug] pdf-processor.ts import fails with pdf-parse ESM types**
+
+- **Found during:** Build verification
+- **Issue:** `module.default` does not exist on the ESM type of pdf-parse; dynamic import needs fallback
+- **Fix:** Cast module as `any`, use `module.default ?? module` pattern
+- **Files modified:** lib/documents/pdf-processor.ts
+- **Commit:** 4595e5b
+
 ## Commit History
 
 | Commit | Type | Description |
@@ -157,6 +173,7 @@ Growth Agent with 4 domain tools (channelAnalysis, experimentDesign, funnelAnaly
 | 66694a9 | feat | Agent dashboard UI, tasks API, dispatch modal, task list |
 | 172f303 | feat | generateStructuredReliable in fred-client.ts with fallback |
 | 4d15704 | fix | Zod v4 z.record fix and export generateStructuredReliable |
+| 4595e5b | fix | Pre-existing build errors in health-monitor and pdf-processor |
 
 ## Next Phase Readiness
 
