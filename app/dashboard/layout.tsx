@@ -147,7 +147,7 @@ export default function DashboardLayout({
       if (authUser) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name")
+          .select("name, tier")
           .eq("id", authUser.id)
           .single();
         setUserInfo({
@@ -160,7 +160,7 @@ export default function DashboardLayout({
   }, []);
 
   const user = {
-    name: userInfo?.name || "Loading...",
+    name: userInfo?.name || "",
     email: userInfo?.email || "",
     tier: tier,
   };
@@ -179,7 +179,7 @@ export default function DashboardLayout({
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
             <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
-              {user.name.split(" ").map(n => n[0]).join("")}
+              {(user.name || "?").split(" ").map(n => n[0]).join("")}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
