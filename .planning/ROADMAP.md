@@ -51,10 +51,11 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - Closes flow: "User signs up -> onboarding -> dashboard"
   - [ ] 05-01-PLAN.md — Fix Supabase schema/migrations for user creation + onboarding auth flow
 
-- [ ] **Phase 06: Tier Display & Stripe Wiring** - Fix client-side tier detection, Stripe payment -> UI update
+- [x] **Phase 06: Tier Display & Stripe Wiring** - Fix client-side tier detection, Stripe payment -> UI update
   - Closes: TIER-DISPLAY, Stripe payment -> tier integration
   - Closes flow: "Free user -> Stripe upgrade -> Pro access"
-  - [ ] 06-01-PLAN.md — Mount TierProvider, fix API response shape, fix dashboard layout, wire Stripe -> tier
+  - [x] 06-01-PLAN.md — Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, DB migrations
+  - [x] 06-02-PLAN.md — Dashboard consumer wiring: real user data, post-checkout success, settings page
 
 - [ ] **Phase 07: Dashboard Integration & Strategy Completion** - Fix dashboard wiring, complete strategy UI
   - Closes: REALITY-LENS-WIRING, STRAT-COMPONENTS, dashboard nav gaps
@@ -139,10 +140,10 @@ Within phases:
 - [ ] Onboarding flow results in a persistent, authenticated session
 
 **Phase 06 Complete When:**
-- [ ] TierProvider mounted and reading correct subscription data
-- [ ] Dashboard layout shows real user tier (not hardcoded)
-- [ ] Stripe payment updates UI tier in real-time
-- [ ] Free->Pro upgrade flow works end-to-end
+- [x] TierProvider mounted and reading correct subscription data
+- [x] Dashboard layout shows real user tier (not hardcoded)
+- [x] Stripe payment updates UI tier in real-time
+- [x] Free->Pro upgrade flow works end-to-end
 
 **Phase 07 Complete When:**
 - [ ] Reality Lens dashboard calls /api/fred/reality-lens (not legacy route)
