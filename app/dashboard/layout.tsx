@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import {
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
+import { useTier } from "@/lib/context/tier-context";
+import { createClient } from "@/lib/supabase/client";
 
 type NavItem = {
   name: string;
@@ -135,12 +137,32 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const { tier, isLoading: tierLoading } = useTier();
+  const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
 
-  // Mock user data - replace with actual auth later
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", authUser.id)
+          .single();
+        setUserInfo({
+          name: profile?.name || authUser.email?.split("@")[0] || "Founder",
+          email: authUser.email || "",
+        });
+      }
+    }
+    fetchUser();
+  }, []);
+
   const user = {
-    name: "Fred Cary",
-    email: "founder@startup.com",
-    tier: 0, // 0 = Free, 1 = Pro ($99/mo), 2 = Studio ($249/mo)
+    name: userInfo?.name || "Loading...",
+    email: userInfo?.email || "",
+    tier: tier,
   };
 
   const tierNames = ["Free", "Pro", "Studio"];
