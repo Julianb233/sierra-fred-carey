@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, Brain, Clock, Users, ArrowRight, CheckIcon } from "lucide-react";
+import { Sparkles, Brain, Clock, Users, ArrowRight, Check as CheckIcon } from "lucide-react";
 import NightModeParticles from "@/components/effects/NightModeParticles";
 import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
 

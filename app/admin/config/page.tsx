@@ -15,7 +15,7 @@ interface AIConfig {
   maxTokens: number;
   dimensionWeights: Record<string, number> | null;
   scoreThresholds: Record<string, number> | null;
-  customSettings: Record<string, any>;
+  customSettings: Record<string, unknown>;
 }
 
 export default function ConfigPage() {
@@ -63,7 +63,7 @@ export default function ConfigPage() {
   function handleConfigChange(
     analyzer: string,
     field: keyof AIConfig,
-    value: any
+    value: AIConfig[keyof AIConfig]
   ) {
     setConfigs((prev) =>
       prev.map((config) =>
@@ -197,7 +197,7 @@ export default function ConfigPage() {
                           "dimensionWeights",
                           parsed
                         );
-                      } catch (err) {
+                      } catch {
                         // Invalid JSON, ignore
                       }
                     }}
@@ -223,7 +223,7 @@ export default function ConfigPage() {
                           "scoreThresholds",
                           parsed
                         );
-                      } catch (err) {
+                      } catch {
                         // Invalid JSON, ignore
                       }
                     }}
@@ -249,7 +249,7 @@ export default function ConfigPage() {
                           "customSettings",
                           parsed
                         );
-                      } catch (err) {
+                      } catch {
                         // Invalid JSON, ignore
                       }
                     }}

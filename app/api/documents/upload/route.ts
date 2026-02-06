@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
   try {
     // Check tier requirement (Pro or Studio tier required)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required for document uploads' },
@@ -36,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Parse multipart form data
     const formData = await request.formData();

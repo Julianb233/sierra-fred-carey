@@ -75,10 +75,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[GET /api/notifications/settings]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch settings" },
-      { status: error.message === "Unauthorized" ? 401 : 500 }
+      { success: false, error: "Failed to fetch settings" },
+      { status: 500 }
     );
   }
 }
@@ -249,10 +252,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[POST /api/notifications/settings]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create config" },
-      { status: error.message === "Unauthorized" ? 401 : 500 }
+      { success: false, error: "Failed to create config" },
+      { status: 500 }
     );
   }
 }
@@ -292,20 +298,7 @@ export async function PATCH(request: NextRequest) {
 
     const config = existing[0];
 
-    // Build update query dynamically
-    const updateFields: string[] = [];
-    const updateValues: any[] = [];
-
-    if (updates.enabled !== undefined) {
-      updateFields.push("enabled = $" + (updateValues.length + 1));
-      updateValues.push(updates.enabled);
-    }
-
-    if (updates.alertLevels) {
-      updateFields.push("alert_levels = $" + (updateValues.length + 1));
-      updateValues.push(updates.alertLevels);
-    }
-
+    // Validate channel-specific updates
     if (updates.webhookUrl && config.channel === "slack") {
       const validation = validateSlackWebhookUrl(updates.webhookUrl);
       if (!validation.valid) {
@@ -314,13 +307,6 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         );
       }
-      updateFields.push("webhook_url = $" + (updateValues.length + 1));
-      updateValues.push(updates.webhookUrl);
-    }
-
-    if (updates.emailAddress && config.channel === "email") {
-      updateFields.push("email_address = $" + (updateValues.length + 1));
-      updateValues.push(updates.emailAddress);
     }
 
     if (updates.routingKey && config.channel === "pagerduty") {
@@ -331,29 +317,34 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         );
       }
-      updateFields.push("routing_key = $" + (updateValues.length + 1));
-      updateValues.push(updates.routingKey);
     }
 
-    if (updates.metadata) {
-      updateFields.push("metadata = $" + (updateValues.length + 1));
-      updateValues.push(JSON.stringify(updates.metadata));
-    }
-
-    if (updateFields.length === 0) {
+    // Check if there's anything to update
+    if (
+      updates.enabled === undefined &&
+      !updates.alertLevels &&
+      !updates.webhookUrl &&
+      !updates.emailAddress &&
+      !updates.routingKey &&
+      !updates.metadata
+    ) {
       return NextResponse.json(
         { success: false, error: "No valid fields to update" },
         { status: 400 }
       );
     }
 
-    // Always update the updated_at timestamp
-    updateFields.push("updated_at = NOW()");
-
-    // Execute update
+    // Use COALESCE pattern for safe parameterized updates (no sql.unsafe needed)
     const result = await sql`
       UPDATE notification_configs
-      SET ${sql.unsafe(updateFields.join(", "))}
+      SET
+        enabled = COALESCE(${updates.enabled !== undefined ? updates.enabled : null}, enabled),
+        alert_levels = COALESCE(${updates.alertLevels || null}, alert_levels),
+        webhook_url = COALESCE(${(updates.webhookUrl && config.channel === "slack") ? updates.webhookUrl : null}, webhook_url),
+        email_address = COALESCE(${(updates.emailAddress && config.channel === "email") ? updates.emailAddress : null}, email_address),
+        routing_key = COALESCE(${(updates.routingKey && config.channel === "pagerduty") ? updates.routingKey : null}, routing_key),
+        metadata = COALESCE(${updates.metadata ? JSON.stringify(updates.metadata) : null}, metadata),
+        updated_at = NOW()
       WHERE id = ${configId}
         AND user_id = ${userId}
       RETURNING
@@ -369,10 +360,13 @@ export async function PATCH(request: NextRequest) {
       data: result[0],
     });
   } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[PATCH /api/notifications/settings]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to update config" },
-      { status: error.message === "Unauthorized" ? 401 : 500 }
+      { success: false, error: "Failed to update config" },
+      { status: 500 }
     );
   }
 }
@@ -414,10 +408,13 @@ export async function DELETE(request: NextRequest) {
       data: { deleted: true },
     });
   } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[DELETE /api/notifications/settings]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete config" },
-      { status: error.message === "Unauthorized" ? 401 : 500 }
+      { success: false, error: "Failed to delete config" },
+      { status: 500 }
     );
   }
 }

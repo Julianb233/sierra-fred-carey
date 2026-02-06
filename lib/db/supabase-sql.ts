@@ -71,9 +71,10 @@ async function sqlQuery(strings: TemplateStringsArray, ...values: any[]) {
 
 /**
  * Handle INSERT queries using Supabase's insert method
+ * Supports ON CONFLICT ... DO UPDATE (upsert) and ON CONFLICT ... DO NOTHING (idempotent insert)
  */
 async function handleInsert(supabase: any, query: string, params: any[]) {
-  // Parse: INSERT INTO table_name (columns) VALUES (values) RETURNING ...
+  // Parse: INSERT INTO table_name (columns) VALUES (values) [ON CONFLICT ...] [RETURNING ...]
   const insertMatch = query.match(
     /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i
   );
@@ -92,10 +93,48 @@ async function handleInsert(supabase: any, query: string, params: any[]) {
     data[col] = params[i];
   });
 
-  const { data: result, error } = await supabase
-    .from(tableName)
-    .insert(data)
-    .select();
+  // Check for ON CONFLICT clause
+  const onConflictDoNothingMatch = query.match(
+    /ON\s+CONFLICT\s*\([^)]*\)\s+DO\s+NOTHING/i
+  );
+  const onConflictDoUpdateMatch = query.match(
+    /ON\s+CONFLICT\s*\(([^)]+)\)\s+DO\s+UPDATE\s+SET\s+/i
+  );
+
+  let queryBuilder;
+
+  if (onConflictDoNothingMatch) {
+    // Idempotent insert: use ignoreDuplicates option
+    // Supabase upsert with ignoreDuplicates skips conflicting rows silently
+    const conflictColMatch = query.match(/ON\s+CONFLICT\s*\(([^)]+)\)/i);
+    const conflictColumn = conflictColMatch
+      ? conflictColMatch[1].trim()
+      : undefined;
+
+    queryBuilder = supabase
+      .from(tableName)
+      .upsert(data, {
+        onConflict: conflictColumn,
+        ignoreDuplicates: true,
+      })
+      .select();
+  } else if (onConflictDoUpdateMatch) {
+    // Upsert: ON CONFLICT (column) DO UPDATE SET ...
+    const conflictColumn = onConflictDoUpdateMatch[1].trim();
+
+    queryBuilder = supabase
+      .from(tableName)
+      .upsert(data, { onConflict: conflictColumn })
+      .select();
+  } else {
+    // Plain insert (no ON CONFLICT)
+    queryBuilder = supabase
+      .from(tableName)
+      .insert(data)
+      .select();
+  }
+
+  const { data: result, error } = await queryBuilder;
 
   if (error) {
     console.error(`[db] Insert error on ${tableName}:`, error);
@@ -335,15 +374,49 @@ async function handleDelete(supabase: any, query: string, params: any[]) {
   return data || [];
 }
 
-// Create the sql function with the unsafe method attached
-type SqlFunction = {
-  (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
-  unsafe: (value: string) => { __unsafeRaw: string };
-};
+/**
+ * Execute a raw parameterized SQL query with $1, $2, ... placeholders.
+ * This bridges the gap for dynamic queries that build SQL strings with
+ * positional parameters and a separate values array.
+ */
+async function executeSql(query: string, params: any[] = []): Promise<any[]> {
+  const supabase = createServiceClient();
+  const trimmed = query.trim().replace(/\s+/g, ' ').toUpperCase();
 
-export const sql: SqlFunction = Object.assign(sqlQuery, {
-  unsafe: unsafeSql,
-});
+  try {
+    if (trimmed.startsWith('INSERT')) {
+      return await handleInsert(supabase, query, params);
+    }
+    if (trimmed.startsWith('SELECT')) {
+      return await handleSelect(supabase, query, params);
+    }
+    if (trimmed.startsWith('UPDATE')) {
+      return await handleUpdate(supabase, query, params);
+    }
+    if (trimmed.startsWith('DELETE')) {
+      return await handleDelete(supabase, query, params);
+    }
+
+    console.warn('[db] Unsupported query type in execute:', trimmed.substring(0, 20));
+    return [];
+  } catch (e) {
+    console.error('[db] Execute query error:', e);
+    throw e;
+  }
+}
+
+// Create the sql function with the unsafe and execute methods attached
+interface SqlFunction {
+  (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
+  unsafe(value: string): { __unsafeRaw: string };
+  execute(query: string, params?: any[]): Promise<any[]>;
+}
+
+const sqlWithMethods = sqlQuery as SqlFunction;
+sqlWithMethods.unsafe = unsafeSql;
+sqlWithMethods.execute = executeSql;
+
+export const sql: SqlFunction = sqlWithMethods;
 
 // Helper to get a typed SQL client
 export function getDb() {

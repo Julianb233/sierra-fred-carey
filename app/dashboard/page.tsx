@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
 import { redirectToCheckoutByTier } from "@/lib/stripe/client";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(false);
@@ -386,5 +386,19 @@ export default function DashboardPage() {
         userName={user.name!}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

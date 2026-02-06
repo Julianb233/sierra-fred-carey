@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import {
   checkPromotionEligibility,
   promoteWinner,
@@ -12,6 +13,8 @@ import {
 /**
  * GET /api/monitoring/experiments/[name]/promote
  * Check if experiment is eligible for promotion
+ *
+ * SECURITY: Requires admin authentication
  * Query params:
  *   - minSampleSize: number (optional)
  *   - minConfidenceLevel: number (optional)
@@ -23,6 +26,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { name } = await params;
     const experimentName = decodeURIComponent(name);
@@ -108,6 +115,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { name } = await params;
     const experimentName = decodeURIComponent(name);
@@ -229,6 +240,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { name } = await params;
     const experimentName = decodeURIComponent(name);

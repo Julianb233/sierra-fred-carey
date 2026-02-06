@@ -277,15 +277,33 @@ describe('Waitlist Page (/waitlist)', () => {
     expect(screen.getByText(/No spam, ever/i)).toBeInTheDocument();
   });
 
-  it('should have "Back to Home" link in header', async () => {
+  it('should have "Back to Home" link after successful submission', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+    ) as any;
+
     await act(async () => {
       render(<WaitlistPage />);
     });
 
-    // Get the first Back to Home link (in header)
-    const backLinks = screen.getAllByText('Back to Home');
-    expect(backLinks.length).toBeGreaterThan(0);
-    expect(backLinks[0].closest('a') || backLinks[0].closest('button')).toBeInTheDocument();
+    const nameInput = screen.getByPlaceholderText('Your name') as HTMLInputElement;
+    const emailInput = screen.getByPlaceholderText('Your email') as HTMLInputElement;
+    const submitButton = screen.getByRole('button', { name: /join the waitlist/i });
+
+    await act(async () => {
+      fireEvent.change(nameInput, { target: { value: 'Test User' } });
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.click(submitButton);
+    });
+
+    await waitFor(() => {
+      const backLinks = screen.getAllByText('Back to Home');
+      expect(backLinks.length).toBeGreaterThan(0);
+      expect(backLinks[0].closest('a')).toHaveAttribute('href', '/');
+    }, { timeout: 2000 });
   });
 
   it('should show success state action buttons', async () => {

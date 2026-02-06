@@ -49,7 +49,7 @@ export interface UserPayload {
  */
 export interface JWTPayload extends StandardJWTClaims, UserPayload {
   /** Allow additional custom claims */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -260,7 +260,7 @@ export interface JWTSignOptions {
   /** Token expiration (seconds or time string like "7d") */
   expiresIn?: string | number;
   /** Additional claims to include */
-  claims?: Record<string, any>;
+  claims?: Record<string, unknown>;
   /** Algorithm (usually HS256) */
   algorithm?: string;
 }

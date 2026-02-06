@@ -7,8 +7,18 @@ import { createServiceClient } from "@/lib/supabase/server";
  *
  * This endpoint creates tables using Supabase's native methods
  * It's idempotent - safe to call multiple times
+ *
+ * SECURITY: Blocked in production. Only available in development.
  */
 export async function GET() {
+  // SECURITY: Block in production to prevent database schema exposure
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "This endpoint is disabled in production" },
+      { status: 403 }
+    );
+  }
+
   const supabase = createServiceClient();
   const results: { table: string; status: string; error?: string }[] = [];
 
@@ -48,12 +58,11 @@ export async function GET() {
     success: false,
     message: 'Database tables need to be created',
     instructions: [
-      '1. Go to https://supabase.com/dashboard/project/ggiywhpgzjdjeeldjdnp/sql/new',
+      '1. Go to the Supabase SQL Editor for your project',
       '2. Copy the contents of SETUP_DATABASE.sql',
       '3. Paste and run in the SQL Editor',
       '4. Call this endpoint again to verify'
-    ],
-    sqlFile: '/SETUP_DATABASE.sql'
+    ]
   });
 }
 

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { collectVariantMetrics } from "@/lib/monitoring/ab-test-metrics";
 
 /**
  * GET /api/monitoring/variants/[id]
  * Detailed metrics for a specific variant
+ *
+ * SECURITY: Requires admin authentication
  * Query params:
  *   - startDate: ISO date string (optional)
  *   - endDate: ISO date string (optional)
@@ -13,6 +16,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const { id: variantId } = await params;
     const searchParams = request.nextUrl.searchParams;

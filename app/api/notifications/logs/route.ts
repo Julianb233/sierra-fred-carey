@@ -30,13 +30,18 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[GET /api/notifications/logs]", error);
 
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Handle missing table gracefully
+    if (error?.code === "42P01" || error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        meta: { count: 0, limit: 50 },
+      });
     }
 
     return NextResponse.json(

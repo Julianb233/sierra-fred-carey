@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Parse request body
     const body = await request.json();

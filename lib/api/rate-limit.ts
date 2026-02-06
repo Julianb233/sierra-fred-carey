@@ -48,10 +48,16 @@ function cleanupStore(windowSeconds: number) {
   for (const [key, entry] of store.entries()) {
     // Remove entries with no recent activity
     const recentTimestamps = entry.timestamps.filter((t) => t > cutoff);
-    if (recentTimestamps.length === 0 && !entry.blocked) {
+    // Also expire blocked entries whose block period has passed
+    const blockExpired = entry.blocked && entry.blockedUntil && now >= entry.blockedUntil;
+    if (recentTimestamps.length === 0 && (!entry.blocked || blockExpired)) {
       store.delete(key);
     } else {
       entry.timestamps = recentTimestamps;
+      if (blockExpired) {
+        entry.blocked = false;
+        entry.blockedUntil = undefined;
+      }
     }
   }
 }

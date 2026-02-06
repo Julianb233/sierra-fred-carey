@@ -32,7 +32,7 @@ export default function AdminLogin() {
         const data = await response.json();
         setError(data.error || "Invalid admin key");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);

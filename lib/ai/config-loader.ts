@@ -263,14 +263,13 @@ export async function updateAIConfig(
         custom_settings as "customSettings"
     `;
 
-    // @ts-ignore - sql.unsafe doesn't have proper typing
-    const result: any[] = await sql.unsafe(query, values);
+    const result: Record<string, unknown>[] = await sql.execute(query, values);
 
     if (!result || result.length === 0) {
       throw new Error(`No config found for analyzer: ${analyzer}`);
     }
 
-    const config = result[0] as AIConfig;
+    const config = result[0] as unknown as AIConfig;
 
     // Update cache
     configCache.set(analyzer, {

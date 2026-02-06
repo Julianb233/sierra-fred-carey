@@ -26,7 +26,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Edit, AlertTriangle, Clock, MessageSquare, ArrowUpRight } from 'lucide-react';
 
-interface EscalationRule {
+export interface EscalationRule {
   id: string;
   name: string;
   description?: string;

@@ -21,6 +21,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Check tier requirement
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -28,7 +34,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Verify document exists and belongs to user
     const document = await getDocumentById(userId, id);

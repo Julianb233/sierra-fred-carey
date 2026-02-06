@@ -273,8 +273,7 @@ export async function PATCH(
         created_by as "createdBy"
     `;
 
-    // @ts-expect-error - sql.unsafe() only wraps strings; this 2-arg call pattern needs a proper query executor
-    const result: Record<string, unknown>[] = await sql.unsafe(query, values);
+    const result: Record<string, unknown>[] = await sql.execute(query, values);
 
     console.log(`[Admin A/B Test PATCH] Updated experiment ${experimentId}`);
 

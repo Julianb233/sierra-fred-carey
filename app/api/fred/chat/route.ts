@@ -11,7 +11,16 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { createFredService } from "@/lib/fred/service";
 import { storeEpisode } from "@/lib/db/fred-memory";
-import { checkRateLimitForUser } from "@/lib/api/rate-limit";
+import { checkRateLimitForUser, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
+
+/** Map numeric UserTier enum to rate-limit tier key */
+const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
+  [UserTier.FREE]: "free",
+  [UserTier.PRO]: "pro",
+  [UserTier.STUDIO]: "studio",
+};
 
 // ============================================================================
 // Request Schema
@@ -69,8 +78,10 @@ export async function POST(req: NextRequest) {
     // Require authentication
     const userId = await requireAuth();
 
-    // Check rate limit
-    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, "free");
+    // Check rate limit using actual user tier
+    const userTier = await getUserTier(userId);
+    const rateLimitKey = TIER_TO_RATE_KEY[userTier] ?? "free";
+    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, rateLimitKey);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

@@ -317,7 +317,7 @@ export default function LinksPage() {
             className="text-center"
           >
             <p className="text-sm text-gray-500 dark:text-gray-500">
-              © 2024 Sahara. Built with passion for founders worldwide.
+              © {new Date().getFullYear()} Sahara. Built with passion for founders worldwide.
             </p>
           </motion.div>
         </motion.div>

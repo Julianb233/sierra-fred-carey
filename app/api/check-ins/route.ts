@@ -34,11 +34,21 @@ export async function GET(request: NextRequest) {
       data: checkIns,
       total: checkIns.length,
     });
-  } catch (error) {
-    if (error instanceof Response) {
+  } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
       return error;
     }
     console.error("Check-ins fetch error:", error);
+
+    // Handle missing table gracefully
+    if (error?.code === "42P01" || error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        total: 0,
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: "Failed to fetch check-ins" },
       { status: 500 }
@@ -60,13 +70,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { responses, score, analysis } = body;
 
+    // Input validation
+    const validatedScore = typeof score === 'number' ? Math.max(0, Math.min(100, Math.round(score))) : 0;
+    const validatedAnalysis = typeof analysis === 'string' ? analysis.slice(0, 5000) : null;
+    const validatedResponses = typeof responses === 'object' && responses !== null ? responses : {};
+
     const result = await sql`
       INSERT INTO check_ins (user_id, responses, score, analysis, created_at)
       VALUES (
         ${userId},
-        ${JSON.stringify(responses || {})},
-        ${score || 0},
-        ${analysis || null},
+        ${JSON.stringify(validatedResponses)},
+        ${validatedScore},
+        ${validatedAnalysis},
         NOW()
       )
       RETURNING

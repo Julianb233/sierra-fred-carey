@@ -301,7 +301,7 @@ export default function SupportPage() {
               <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Knowledge Base</h3>
-                  <Link href="/faq">
+                  <Link href="/support">
                     <Button variant="ghost" size="sm" className="text-[#ff6a1a] hover:text-[#ea580c]">
                       View All
                       <ArrowRight className="w-4 h-4 ml-2" />

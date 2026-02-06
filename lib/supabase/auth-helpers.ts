@@ -1,6 +1,5 @@
 import { createClient } from "./server";
-import { createClient as createBrowserClient } from "./client";
-import type { User as SupabaseUser, Session, AuthError } from "@supabase/supabase-js";
+import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 /**
  * User interface matching the existing app's user model
@@ -97,9 +96,9 @@ export async function supabaseSignUp(
       user: toAppUser(data.user, metadata),
       session: data.session || undefined,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[supabase-auth] Sign up error:", error);
-    return { success: false, error: error?.message || "Failed to create account" };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create account" };
   }
 }
 
@@ -137,9 +136,9 @@ export async function supabaseSignIn(
       user: toAppUser(data.user, profile || undefined),
       session: data.session,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[supabase-auth] Sign in error:", error);
-    return { success: false, error: error?.message || "Failed to sign in" };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to sign in" };
   }
 }
 

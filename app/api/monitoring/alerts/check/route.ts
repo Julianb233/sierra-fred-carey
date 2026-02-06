@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { runAlertNotificationCheck } from "@/lib/monitoring/alert-scheduler";
 
 /**
@@ -10,16 +11,18 @@ import { runAlertNotificationCheck } from "@/lib/monitoring/alert-scheduler";
  * 2. Called manually for testing
  * 3. Called by external schedulers
  *
- * Security: Consider adding API key authentication in production
+ * SECURITY: Requires CRON_SECRET authorization
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
-  // Optional: Check for authorization token
+  // SECURITY: Require CRON_SECRET or admin auth for alert check triggers
   const authHeader = request.headers.get("authorization");
   const expectedToken = process.env.CRON_SECRET;
+  const hasCronSecret = expectedToken && authHeader === `Bearer ${expectedToken}`;
+  const hasAdminAuth = isAdminRequest(request);
 
-  if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+  if (!hasCronSecret && !hasAdminAuth) {
     console.warn("[Alert Check API] Unauthorized access attempt");
     return NextResponse.json(
       {
@@ -50,7 +53,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to run alert check",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -60,9 +62,24 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/monitoring/alerts/check
  * Trigger alert check with custom parameters
+ *
+ * Security: Requires CRON_SECRET authorization
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require CRON_SECRET or admin auth for alert check triggers
+    const authHeader = request.headers.get("authorization");
+    const expectedToken = process.env.CRON_SECRET;
+    const hasCronSecret = expectedToken && authHeader === `Bearer ${expectedToken}`;
+    const hasAdminAuth = isAdminRequest(request);
+
+    if (!hasCronSecret && !hasAdminAuth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { minimumLevel = "warning" } = body;
 
@@ -88,7 +105,6 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Failed to run manual alert check",
-        message: error.message,
       },
       { status: 500 }
     );

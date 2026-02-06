@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { generateChatResponse } from "@/lib/ai/client";
-import { requireAuth } from "@/lib/auth";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
 
@@ -68,6 +67,12 @@ export async function GET(request: NextRequest) {
   try {
     // Pro tier required for Strategy Documents
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Strategy Documents require Pro tier" },
@@ -75,8 +80,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // SECURITY: Get userId from server-side session (not from client headers!)
-    const userId = await requireAuth();
+    // SECURITY: Get userId from tier check (already authenticated via checkTierForRequest)
+    const userId = tierCheck.user.id;
 
     const documents = await sql`
       SELECT
@@ -120,6 +125,12 @@ export async function POST(request: NextRequest) {
   try {
     // Pro tier required for Strategy Documents
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Strategy Documents require Pro tier" },
@@ -127,8 +138,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // SECURITY: Get userId from server-side session (not from client headers!)
-    const userId = await requireAuth();
+    // SECURITY: Get userId from tier check (already authenticated via checkTierForRequest)
+    const userId = tierCheck.user.id;
 
     const body = await request.json();
     const { type, context } = body;

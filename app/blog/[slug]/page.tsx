@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowLeft, Share2, Bookmark, BookOpen } from "lucide-react";
@@ -24,7 +25,8 @@ const relatedPosts = [
   },
 ];
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
+export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
       {/* Background blobs */}

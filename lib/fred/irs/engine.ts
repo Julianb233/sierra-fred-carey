@@ -15,12 +15,14 @@ import type {
   CategoryScore,
   Recommendation,
   StartupContext,
+  StartupStage,
 } from './types';
 import {
   IRS_CATEGORIES,
   CATEGORY_WEIGHTS,
   CATEGORY_LABELS,
   CATEGORY_DESCRIPTIONS,
+  STAGE_BENCHMARKS,
 } from './types';
 
 // ============================================================================
@@ -319,7 +321,6 @@ export function compareToStage(
   stage: string
 ): { diff: number; status: 'above' | 'at' | 'below' } {
   const stageKey = normalizeStage(stage);
-  const { STAGE_BENCHMARKS } = require('./types');
   const benchmark = STAGE_BENCHMARKS[stageKey]?.[category] || 50;
   const diff = score - benchmark;
 
@@ -328,7 +329,7 @@ export function compareToStage(
   return { diff, status: 'at' };
 }
 
-function normalizeStage(stage: string): string {
+function normalizeStage(stage: string): StartupStage {
   const lower = stage.toLowerCase();
   if (lower.includes('idea')) return 'idea';
   if (lower.includes('pre-seed') || lower.includes('preseed')) return 'pre-seed';

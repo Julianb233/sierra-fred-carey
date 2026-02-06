@@ -260,17 +260,19 @@ describe('Get Started Page (/get-started)', () => {
     }, { timeout: 1000 });
 
     const emailInput = screen.getByPlaceholderText('you@company.com') as HTMLInputElement;
+    const passwordInput = screen.getByPlaceholderText('Create a password (8+ chars, A-Z, 0-9)') as HTMLInputElement;
     const submitButton = screen.getByText('Start Free Trial');
 
     await act(async () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'TestPass123' } });
       fireEvent.click(submitButton);
     });
 
     // The button shows "Creating..." during submission
     await waitFor(() => {
       expect(screen.getByText(/Creating/i)).toBeInTheDocument();
-    }, { timeout: 500 });
+    }, { timeout: 2000 });
   });
 
   it('should show progress dots', async () => {

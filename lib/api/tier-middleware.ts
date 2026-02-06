@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { UserTier, TIER_NAMES, canAccessFeature, getTierFromString } from "@/lib/constants";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId } from "@/lib/stripe/config";
@@ -62,11 +62,13 @@ export async function getUserTier(userId: string): Promise<UserTier> {
     if (subscription.stripePriceId === fundraisingPriceId) return UserTier.PRO;
 
     // Last resort: user has an active subscription but we can't resolve the tier.
-    // Log a warning and grant PRO as a safe minimum (they are paying).
+    // SECURITY: Default to FREE to prevent tier escalation via unrecognized price IDs.
+    // An admin should investigate and manually map the price ID to the correct tier.
     console.warn(
-      `[TierMiddleware] Active subscription for user ${userId} has unrecognized price ID: ${subscription.stripePriceId}. Defaulting to PRO.`
+      `[TierMiddleware] SECURITY: Active subscription for user ${userId} has unrecognized price ID: "${subscription.stripePriceId}". ` +
+      `Defaulting to FREE to prevent unauthorized tier escalation. Please verify this price ID in Stripe and update the plan configuration.`
     );
-    return UserTier.PRO;
+    return UserTier.FREE;
   } catch (error) {
     console.error("[TierMiddleware] Error fetching user tier:", error);
     return UserTier.FREE;
@@ -134,8 +136,8 @@ export function requireTier(minimumTier: UserTier) {
       context?: { params?: Record<string, string> }
     ): Promise<NextResponse> => {
       try {
-        // Get user from auth header or session
-        const supabase = createServiceClient();
+        // Get user from session cookies (must use cookie-aware client, not service client)
+        const supabase = await createClient();
         const {
           data: { user },
           error: authError,
@@ -199,7 +201,7 @@ export async function checkTierForRequest(
   _req: NextRequest,
   requiredTier: UserTier
 ): Promise<TierCheckResult & { user?: { id: string } }> {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error,
@@ -229,7 +231,7 @@ export async function getTierForRequest(_req: NextRequest): Promise<{
   userId?: string;
   isAuthenticated: boolean;
 }> {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error,

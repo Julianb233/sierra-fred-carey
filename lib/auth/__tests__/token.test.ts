@@ -61,14 +61,12 @@ describe('Token Utilities', () => {
       process.env.NODE_ENV = originalNodeEnv;
     });
 
-    it('should return fallback in development without JWT_SECRET', () => {
+    it('should throw in development without JWT_SECRET', () => {
       const originalNodeEnv = process.env.NODE_ENV;
       delete process.env.JWT_SECRET;
       process.env.NODE_ENV = 'development';
 
-      const secret = getJWTSecret();
-      expect(secret).toBeDefined();
-      expect(typeof secret).toBe('string');
+      expect(() => getJWTSecret()).toThrow('JWT_SECRET environment variable is required');
 
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -194,9 +192,9 @@ describe('Token Utilities', () => {
       expect(isTokenExpired(verified as JWTPayload)).toBe(false);
     });
 
-    it('should return false for token without exp claim', () => {
+    it('should return true for token without exp claim (security: no-exp = expired)', () => {
       const payload: JWTPayload = { sub: 'user-123' };
-      expect(isTokenExpired(payload)).toBe(false);
+      expect(isTokenExpired(payload)).toBe(true);
     });
 
     it('should return true for expired token', () => {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Phone, PhoneOff, PhoneForwarded, Clock, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-interface CallSummary {
+export interface CallSummary {
   total_calls: number;
   completed_calls: number;
   missed_calls: number;
@@ -13,7 +13,7 @@ interface CallSummary {
   total_duration: number;
 }
 
-interface RecentCall {
+export interface RecentCall {
   id: string;
   room_name: string;
   caller_id: string;
@@ -25,7 +25,7 @@ interface RecentCall {
   escalation_reason: string;
 }
 
-interface AnalyticsData {
+export interface AnalyticsData {
   summary: CallSummary;
   recentCalls: RecentCall[];
   callsByHour: Record<string, number>;

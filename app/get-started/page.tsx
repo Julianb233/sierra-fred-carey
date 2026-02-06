@@ -196,8 +196,16 @@ const OnboardingPage = () => {
       return;
     }
 
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must contain at least one number");
       return;
     }
 
@@ -244,37 +252,25 @@ const OnboardingPage = () => {
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="w-full py-6 px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <img src="/sahara-logo.svg" alt="Sahara" className="h-8 w-auto" />
-              </Link>
-
-              {/* Progress dots */}
-              {currentStep !== "wink" && (
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3].map((step) => (
-                    <div
-                      key={step}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                        step === stepNumber
-                          ? "bg-[#ff6a1a] scale-125"
-                          : step < stepNumber
-                          ? "bg-[#ff6a1a]/60"
-                          : "bg-gray-300 dark:bg-gray-700"
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
         {/* Steps content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-8">
+        <main className="flex-1 flex items-center justify-center px-4 py-8 pt-24 lg:pt-28">
+          {/* Progress dots */}
+          {currentStep !== "wink" && (
+            <div className="fixed top-20 lg:top-24 right-4 sm:right-6 lg:right-8 z-40 flex items-center gap-2">
+              {[1, 2, 3].map((step) => (
+                <div
+                  key={step}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    step === stepNumber
+                      ? "bg-[#ff6a1a] scale-125"
+                      : step < stepNumber
+                      ? "bg-[#ff6a1a]/60"
+                      : "bg-gray-300 dark:bg-gray-700"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
           <div className="w-full max-w-2xl">
             <AnimatePresence mode="wait">
               {/* Step 1: Choose Stage - CLICK 1 */}
@@ -450,8 +446,10 @@ const OnboardingPage = () => {
                       {/* Email input */}
                       <div className="space-y-4">
                         <div className="relative">
+                          <label htmlFor="onboard-email" className="sr-only">Email address</label>
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
+                            id="onboard-email"
                             type="email"
                             placeholder="you@company.com"
                             value={email}
@@ -462,10 +460,12 @@ const OnboardingPage = () => {
                         </div>
 
                         <div className="relative">
+                          <label htmlFor="onboard-password" className="sr-only">Password</label>
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
+                            id="onboard-password"
                             type="password"
-                            placeholder="Create a password (6+ chars)"
+                            placeholder="Create a password (8+ chars, A-Z, 0-9)"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}

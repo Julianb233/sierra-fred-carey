@@ -8,14 +8,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendSlackNotification } from "@/lib/notifications/slack";
 import { NotificationPayload } from "@/lib/notifications/types";
 import { sql } from "@/lib/db/supabase-sql";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * POST /api/notifications/slack
  * Send alert to Slack webhook
  *
+ * SECURITY: Requires authentication - userId from server-side session
+ *
  * Body:
  *   - webhookUrl: Slack webhook URL (required if not using userId)
- *   - userId: User ID to fetch webhook from config (optional)
  *   - level: Alert level (info, warning, critical) - required
  *   - type: Alert type (performance, errors, traffic, significance) - required
  *   - title: Alert title - required
@@ -29,10 +31,12 @@ import { sql } from "@/lib/db/supabase-sql";
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const authenticatedUserId = await requireAuth();
+
     const body = await request.json();
     const {
       webhookUrl,
-      userId,
       level,
       type,
       title,
@@ -44,6 +48,9 @@ export async function POST(request: NextRequest) {
       threshold,
       metadata = {},
     } = body;
+
+    // SECURITY: Always use authenticated userId, ignore client-provided userId
+    const userId = authenticatedUserId;
 
     // Validate required fields
     if (!level || !type || !title || !message) {
@@ -129,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Create notification payload
     const payload: NotificationPayload = {
-      userId: userId || "api",
+      userId,
       level,
       type,
       title,
@@ -171,13 +178,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    // Return auth errors directly
+    if (error instanceof Response) return error;
+
     console.error("[Slack API] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to send Slack notification",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -186,25 +195,14 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/notifications/slack
- * Get Slack notification configuration for a user
+ * Get Slack notification configuration for the authenticated user
  *
- * Query params:
- *   - userId: User ID to fetch config for
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "userId query parameter is required",
-        },
-        { status: 400 }
-      );
-    }
+    // SECURITY: Require authentication, use server-side userId
+    const userId = await requireAuth();
 
     const configs = await sql`
       SELECT
@@ -222,18 +220,28 @@ export async function GET(request: NextRequest) {
         AND channel = 'slack'
     `;
 
+    // Redact webhook URL for security
+    const sanitizedConfigs = configs.length > 0 ? {
+      ...configs[0],
+      webhookUrl: configs[0].webhookUrl
+        ? `${configs[0].webhookUrl.substring(0, 30)}...`
+        : null,
+    } : null;
+
     return NextResponse.json({
       success: true,
-      data: configs.length > 0 ? configs[0] : null,
+      data: sanitizedConfigs,
     });
   } catch (error: any) {
+    // Return auth errors directly
+    if (error instanceof Response) return error;
+
     console.error("[Slack API] Error fetching config:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch Slack configuration",
-        message: error.message,
       },
       { status: 500 }
     );

@@ -135,12 +135,20 @@ export const BREAKPOINTS = {
 // ============================================
 export const DASHBOARD_NAV = [
   { id: "overview", label: "Overview", icon: "LayoutDashboard", href: "/dashboard", tier: UserTier.FREE },
-  { id: "chat", label: "Talk to Fred", icon: "MessageCircle", href: "/chat", tier: UserTier.FREE },
-  { id: "check-ins", label: "Check-ins", icon: "CalendarCheck", href: "/check-ins", tier: UserTier.FREE },
-  { id: "agents", label: "AI Agents", icon: "Bot", href: "/dashboard/agents", tier: UserTier.STUDIO },
-  { id: "documents", label: "Documents", icon: "FileText", href: "/dashboard/documents", tier: UserTier.PRO },
-  { id: "sms-checkins", label: "SMS Check-ins", icon: "MessageSquare", href: "/dashboard/sms", tier: UserTier.STUDIO },
-  { id: "boardy", label: "Boardy", icon: "Network", href: "/dashboard/boardy", tier: UserTier.STUDIO },
+  { id: "reality-lens", label: "Reality Lens", icon: "OpenInNewWindow", href: "/dashboard/reality-lens", tier: UserTier.FREE },
+  { id: "journey", label: "Your Journey", icon: "Rocket", href: "/dashboard/journey", tier: UserTier.FREE },
+  { id: "history", label: "Decision History", icon: "CountdownTimer", href: "/dashboard/history", tier: UserTier.FREE },
+  { id: "insights", label: "AI Insights", icon: "BarChart", href: "/dashboard/insights", tier: UserTier.FREE },
+  { id: "monitoring", label: "Monitoring", icon: "ActivityLog", href: "/dashboard/monitoring", tier: UserTier.FREE },
+  { id: "positioning", label: "Positioning", icon: "Target", href: "/dashboard/positioning", tier: UserTier.PRO },
+  { id: "investor-lens", label: "Investor Lens", icon: "EyeOpen", href: "/dashboard/investor-lens", tier: UserTier.PRO },
+  { id: "investor-readiness", label: "Investor Readiness", icon: "Person", href: "/dashboard/investor-readiness", tier: UserTier.PRO },
+  { id: "pitch-deck", label: "Pitch Deck Review", icon: "FileText", href: "/dashboard/pitch-deck", tier: UserTier.PRO },
+  { id: "strategy", label: "Strategy Docs", icon: "FileText", href: "/dashboard/strategy", tier: UserTier.PRO },
+  { id: "sms-checkins", label: "Weekly Check-ins", icon: "CheckCircled", href: "/dashboard/sms", tier: UserTier.STUDIO },
+  { id: "agents", label: "Virtual Team", icon: "Rocket", href: "/dashboard/agents", tier: UserTier.STUDIO },
+  { id: "boardy", label: "Boardy Integration", icon: "LockClosed", href: "/dashboard/boardy", tier: UserTier.STUDIO },
+  { id: "settings", label: "Settings", icon: "Gear", href: "/dashboard/settings" },
 ] as const;
 
 // ============================================

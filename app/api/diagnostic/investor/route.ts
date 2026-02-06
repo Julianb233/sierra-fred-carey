@@ -3,12 +3,18 @@ import { getOptionalUserId } from "@/lib/auth";
 import { generateTrackedResponse, ChatMessage } from "@/lib/ai/client";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/api/rate-limit";
+import {
   generateInvestorLensPrompt,
   STAGE_CRITERIA,
   CORE_VC_AXES,
-  HIDDEN_VC_FILTERS,
   type InvestorStage,
 } from "@/lib/ai/frameworks/investor-lens";
+
+/** Rate limit config for expensive AI diagnostic operations */
+const DIAGNOSTIC_RATE_LIMIT = { limit: 10, windowSeconds: 60 } as const;
 
 const INVESTOR_ASSESSMENT_PROMPT = `
 You are evaluating a startup from an investor's perspective using the Investor Lens framework.
@@ -57,6 +63,17 @@ Evaluate rigorously as a VC partner would. Do not encourage fundraising by defau
 export async function POST(req: NextRequest) {
   try {
     const userId = await getOptionalUserId();
+
+    // SECURITY: Rate limit expensive AI diagnostic calls to prevent abuse
+    const identifier = userId || req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+    const rateLimitResult = checkRateLimit(`diagnostic:investor:${identifier}`, {
+      limit: DIAGNOSTIC_RATE_LIMIT.limit,
+      windowSeconds: DIAGNOSTIC_RATE_LIMIT.windowSeconds,
+    });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const {
       businessDescription,
       stage,
@@ -132,7 +149,6 @@ Provide your IC-style evaluation in the specified JSON format.`,
       evaluation,
       stageCriteria: STAGE_CRITERIA[investorStage],
       vcAxes: CORE_VC_AXES,
-      hiddenFilters: HIDDEN_VC_FILTERS,
       meta: {
         requestId: trackedResult.requestId,
         responseId: trackedResult.responseId,
@@ -151,12 +167,14 @@ Provide your IC-style evaluation in the specified JSON format.`,
 /**
  * GET /api/diagnostic/investor
  * Get investor evaluation framework info
+ *
+ * SECURITY: Does not expose HIDDEN_VC_FILTERS -- those are internal
+ * evaluation criteria not meant for end users.
  */
 export async function GET() {
   return NextResponse.json({
     stages: Object.keys(STAGE_CRITERIA),
     stageCriteria: STAGE_CRITERIA,
     vcAxes: CORE_VC_AXES,
-    hiddenFilters: HIDDEN_VC_FILTERS,
   });
 }

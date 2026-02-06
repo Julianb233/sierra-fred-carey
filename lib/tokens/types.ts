@@ -228,7 +228,7 @@ export interface UsageQueryFilters {
 /**
  * API Response wrapper for token endpoints
  */
-export interface TokenAPIResponse<T = any> {
+export interface TokenAPIResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

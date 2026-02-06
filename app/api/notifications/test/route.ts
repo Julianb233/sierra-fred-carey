@@ -45,14 +45,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("[POST /api/notifications/test]", error);
+    // Return auth errors directly
+    if (error instanceof Response) return error;
 
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("[POST /api/notifications/test]", error);
 
     return NextResponse.json(
       { success: false, error: "Failed to test notification config" },

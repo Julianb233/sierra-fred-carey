@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
     }
 
     const plan = getPlanByPriceId(subscription.stripePriceId) || PLANS.FREE;
-    const isActive = ["active", "trialing"].includes(subscription.status);
+    // Include past_due in active check: Stripe retries payment for ~30 days
+    // This must match lib/api/tier-middleware.ts and lib/context/tier-context.tsx
+    const isActive = ["active", "trialing", "past_due"].includes(subscription.status);
 
     return NextResponse.json({
       plan,

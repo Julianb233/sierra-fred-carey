@@ -7,6 +7,7 @@ import {
   POSITIONING_CATEGORIES,
   CATEGORY_ORDER,
 } from "@/lib/ai/frameworks/positioning";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 
 const POSITIONING_ASSESSMENT_PROMPT = `
 You are evaluating a founder's positioning readiness using the Positioning Readiness Framework.
@@ -43,6 +44,17 @@ Evaluate rigorously. This is a diagnostic, not encouragement.
 export async function POST(req: NextRequest) {
   try {
     const userId = await getOptionalUserId();
+
+    // SECURITY: Rate limit expensive AI diagnostic calls to prevent abuse
+    const identifier = userId || req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+    const rateLimitResult = checkRateLimit(`diagnostic:positioning:${identifier}`, {
+      limit: 10,
+      windowSeconds: 60,
+    });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const { businessDescription, additionalContext } = await req.json();
 
     if (!businessDescription || typeof businessDescription !== "string") {

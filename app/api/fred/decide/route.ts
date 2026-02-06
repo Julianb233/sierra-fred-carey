@@ -15,7 +15,9 @@ import {
   recordPrediction,
   type DecisionContext,
 } from "@/lib/fred/scoring";
-import { checkRateLimitForUser, applyRateLimitHeaders } from "@/lib/api/rate-limit";
+import { checkRateLimitForUser, applyRateLimitHeaders, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // Request Schema
@@ -56,9 +58,16 @@ export async function POST(req: NextRequest) {
     // Require authentication
     const userId = await requireAuth();
 
-    // Check rate limit
+    // Check rate limit using actual user tier
+    const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
+      [UserTier.FREE]: "free",
+      [UserTier.PRO]: "pro",
+      [UserTier.STUDIO]: "studio",
+    };
+    const userTier = await getUserTier(userId);
+    const rateLimitKey = TIER_TO_RATE_KEY[userTier] ?? "free";
     const { response: rateLimitResponse, result: rateLimitResult } =
-      checkRateLimitForUser(req, userId, "free");
+      checkRateLimitForUser(req, userId, rateLimitKey);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

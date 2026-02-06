@@ -97,7 +97,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Weekly check-in dispatch failed',
-        message: errorMsg,
         duration: `${duration}ms`,
       },
       { status: 500 }

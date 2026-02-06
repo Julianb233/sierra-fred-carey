@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { PlusIcon, TrendingUpIcon, TrendingDownIcon } from "lucide-react";
+import { PlusIcon, TrendingUpIcon } from "lucide-react";
 
 interface VariantStats {
   variantName: string;
@@ -174,7 +174,7 @@ export default function ABTestsPage() {
             <CardContent className="space-y-6">
               {/* Variants comparison */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {test.variants.map((variant, index) => {
+                {test.variants.map((variant, _index) => {
                   const isWinning =
                     test.variants.length > 1 &&
                     variant.avgRating ===

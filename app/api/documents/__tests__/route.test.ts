@@ -9,10 +9,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock Supabase client
-const mockGetUser = vi.fn();
-const mockGetSession = vi.fn();
-const mockFrom = vi.fn();
+// Hoist mock functions so they're available in vi.mock factories
+const { mockGetUser, mockGetSession, mockFrom, mockSql } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+  mockGetSession: vi.fn(),
+  mockFrom: vi.fn(),
+  mockSql: vi.fn(),
+}));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => Promise.resolve({
@@ -44,8 +47,19 @@ vi.mock('@/lib/stripe/config', () => ({
   getPlanByPriceId: vi.fn(() => ({ id: 'pro', name: 'Pro' })),
 }));
 
+// Mock tier middleware to return PRO tier for authenticated users
+vi.mock('@/lib/api/tier-middleware', () => ({
+  getUserTier: vi.fn(() => Promise.resolve(1)), // UserTier.PRO
+  createTierErrorResponse: vi.fn(() => {
+    const { NextResponse } = require('next/server');
+    return NextResponse.json(
+      { success: false, error: 'Tier required', code: 'TIER_REQUIRED' },
+      { status: 403 }
+    );
+  }),
+}));
+
 // Mock the SQL client
-const mockSql = vi.fn();
 vi.mock('@/lib/db/supabase-sql', () => ({
   sql: mockSql,
 }));

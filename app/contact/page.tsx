@@ -275,11 +275,12 @@ export default function ContactPage() {
                     <motion.a
                       key={social.name}
                       href="#"
+                      aria-label={`Follow us on ${social.name}`}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                       className="w-12 h-12 rounded-xl bg-[#ff6a1a]/10 hover:bg-[#ff6a1a]/20 flex items-center justify-center transition-colors duration-300"
                     >
-                      <span className="text-xl text-[#ff6a1a]">{social.icon}</span>
+                      <span className="text-xl text-[#ff6a1a]" aria-hidden="true">{social.icon}</span>
                     </motion.a>
                   ))}
                 </div>

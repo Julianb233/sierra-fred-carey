@@ -22,6 +22,12 @@ export async function GET(
 ) {
   try {
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -29,7 +35,7 @@ export async function GET(
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
     const { id } = await params;
 
     const document = await getStrategyDocumentById(userId, id);
@@ -59,6 +65,12 @@ export async function PUT(
 ) {
   try {
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -66,7 +78,7 @@ export async function PUT(
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
     const { id } = await params;
 
     const body = await request.json();
@@ -105,6 +117,12 @@ export async function DELETE(
 ) {
   try {
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -112,7 +130,7 @@ export async function DELETE(
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
     const { id } = await params;
 
     await deleteStrategyDocument(userId, id);

@@ -336,8 +336,7 @@ export async function PATCH(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    // @ts-expect-error - sql.unsafe() only wraps strings; this 2-arg call pattern needs a proper query executor
-    const result: Record<string, unknown>[] = await sql.unsafe(query, values);
+    const result: Record<string, unknown>[] = await sql.execute(query, values);
 
     // Get experiment context
     const experimentContext = await sql`

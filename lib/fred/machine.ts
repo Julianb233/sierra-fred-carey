@@ -17,7 +17,6 @@ import type {
   DecisionResult,
   MemoryContext,
   FredConfig,
-  DEFAULT_FRED_CONFIG,
 } from "./types";
 
 // ============================================================================

@@ -14,13 +14,13 @@ import {
 } from '@/components/ui/select';
 import { Save, RefreshCw, Copy } from 'lucide-react';
 
-interface DaySchedule {
+export interface DaySchedule {
   enabled: boolean;
   start: string;
   end: string;
 }
 
-interface BusinessHours {
+export interface BusinessHours {
   monday: DaySchedule;
   tuesday: DaySchedule;
   wednesday: DaySchedule;

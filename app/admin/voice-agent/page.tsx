@@ -2,41 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Settings, ShieldAlert, BookOpen, Clock, BarChart3, CheckCircle2, XCircle } from 'lucide-react';
-import { AgentConfigForm } from '@/components/admin/voice-agent/AgentConfigForm';
-import { EscalationRuleEditor } from '@/components/admin/voice-agent/EscalationRuleEditor';
-import { KnowledgeBaseEditor } from '@/components/admin/voice-agent/KnowledgeBaseEditor';
-import { BusinessHoursEditor } from '@/components/admin/voice-agent/BusinessHoursEditor';
-import { AnalyticsDashboard } from '@/components/admin/voice-agent/AnalyticsDashboard';
+import { AgentConfigForm, type VoiceAgentConfig } from '@/components/admin/voice-agent/AgentConfigForm';
+import { EscalationRuleEditor, type EscalationRule } from '@/components/admin/voice-agent/EscalationRuleEditor';
+import { KnowledgeBaseEditor, type KnowledgeEntry } from '@/components/admin/voice-agent/KnowledgeBaseEditor';
+import { BusinessHoursEditor, type BusinessHours } from '@/components/admin/voice-agent/BusinessHoursEditor';
+import { AnalyticsDashboard, type AnalyticsData } from '@/components/admin/voice-agent/AnalyticsDashboard';
 import { toast } from 'sonner';
 
-interface VoiceAgentConfig {
-  id: string;
-  name: string;
-  is_active: boolean;
-  system_prompt: string;
-  greeting_message: string;
-  voice: string;
-  max_response_length: number;
-  response_style: string;
-  language: string;
-  business_hours: Record<string, { enabled: boolean; start: string; end: string }>;
-  timezone: string;
-  after_hours_behavior: string;
-  after_hours_message: string;
-  fallback_message: string;
-  created_at: string;
-  updated_at: string;
-}
+// VoiceAgentConfig imported from AgentConfigForm
+// EscalationRule imported from EscalationRuleEditor
+// KnowledgeEntry imported from KnowledgeBaseEditor
+
+// DaySchedule and BusinessHours imported from BusinessHoursEditor
+
+// CallSummary, RecentCall, AnalyticsData imported from AnalyticsDashboard
 
 export default function VoiceAgentAdminPage() {
   const [config, setConfig] = useState<VoiceAgentConfig | null>(null);
-  const [escalationRules, setEscalationRules] = useState<any[]>([]);
-  const [knowledgeBase, setKnowledgeBase] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [escalationRules, setEscalationRules] = useState<EscalationRule[]>([]);
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeEntry[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('config');
 
@@ -97,7 +86,7 @@ export default function VoiceAgentAdminPage() {
     }
   };
 
-  const saveEscalationRule = async (rule: any) => {
+  const saveEscalationRule = async (rule: EscalationRule) => {
     try {
       const method = rule.id ? 'PUT' : 'POST';
       const res = await fetch('/api/admin/voice-agent/escalation', {
@@ -124,12 +113,12 @@ export default function VoiceAgentAdminPage() {
 
       setEscalationRules(prev => prev.filter(r => r.id !== ruleId));
       toast.success('Escalation rule deleted');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete escalation rule');
     }
   };
 
-  const saveKnowledgeEntry = async (entry: any) => {
+  const saveKnowledgeEntry = async (entry: KnowledgeEntry) => {
     try {
       const method = entry.id ? 'PUT' : 'POST';
       const res = await fetch('/api/admin/voice-agent/knowledge', {
@@ -156,12 +145,12 @@ export default function VoiceAgentAdminPage() {
 
       setKnowledgeBase(prev => prev.filter(e => e.id !== entryId));
       toast.success('Knowledge base entry deleted');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete knowledge base entry');
     }
   };
 
-  const saveBusinessHours = async (hours: any, timezone: string) => {
+  const saveBusinessHours = async (hours: BusinessHours, timezone: string) => {
     if (!config) return;
 
     try {
@@ -326,7 +315,7 @@ export default function VoiceAgentAdminPage() {
         <TabsContent value="hours">
           {config ? (
             <BusinessHoursEditor
-              hours={config.business_hours as any}
+              hours={config.business_hours}
               timezone={config.timezone}
               onSave={saveBusinessHours}
             />

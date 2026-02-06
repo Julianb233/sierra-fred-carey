@@ -5,9 +5,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    root: __dirname,
-  },
+  distDir: ".next",
+  generateBuildId: () => "production-build",
+  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas"],
 };
 
 export default nextConfig;

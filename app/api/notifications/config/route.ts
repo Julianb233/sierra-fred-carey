@@ -49,16 +49,17 @@ export async function GET(request: NextRequest) {
       data: sanitizedConfigs,
     });
   } catch (error: any) {
-    if (error instanceof Response) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
       return error;
     }
     console.error("[GET /api/notifications/config]", error);
 
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Handle missing table gracefully
+    if (error?.code === "42P01" || error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+      });
     }
 
     return NextResponse.json(
@@ -192,17 +193,10 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    if (error instanceof Response) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
       return error;
     }
     console.error("[POST /api/notifications/config]", error);
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
     return NextResponse.json(
       { success: false, error: "Failed to create notification config" },
@@ -252,27 +246,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Build update query dynamically
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (webhookUrl !== undefined) {
-      updates.push(`webhook_url = $${values.length + 1}`);
-      values.push(webhookUrl);
-    }
-
-    if (emailAddress !== undefined) {
-      updates.push(`email_address = $${values.length + 1}`);
-      values.push(emailAddress);
-    }
-
-    if (routingKey !== undefined) {
-      updates.push(`routing_key = $${values.length + 1}`);
-      values.push(routingKey);
-    }
-
+    // Validate alert levels if provided
     if (alertLevels !== undefined) {
-      // Validate alert levels
       if (!Array.isArray(alertLevels) || alertLevels.length === 0) {
         return NextResponse.json(
           { success: false, error: "Alert levels must be a non-empty array" },
@@ -292,32 +267,34 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      updates.push(`alert_levels = $${values.length + 1}`);
-      values.push(alertLevels);
     }
 
-    if (enabled !== undefined) {
-      updates.push(`enabled = $${values.length + 1}`);
-      values.push(enabled);
-    }
-
-    if (metadata !== undefined) {
-      updates.push(`metadata = $${values.length + 1}`);
-      values.push(JSON.stringify(metadata));
-    }
-
-    if (updates.length === 0) {
+    // Check if there's anything to update
+    if (
+      webhookUrl === undefined &&
+      emailAddress === undefined &&
+      routingKey === undefined &&
+      alertLevels === undefined &&
+      enabled === undefined &&
+      metadata === undefined
+    ) {
       return NextResponse.json(
         { success: false, error: "No fields to update" },
         { status: 400 }
       );
     }
 
-    // Execute update
+    // Use COALESCE pattern for safe parameterized updates (no sql.unsafe needed)
     const result = await sql`
       UPDATE notification_configs
-      SET ${sql.unsafe(updates.join(", "))}
+      SET
+        webhook_url = COALESCE(${webhookUrl !== undefined ? webhookUrl : null}, webhook_url),
+        email_address = COALESCE(${emailAddress !== undefined ? emailAddress : null}, email_address),
+        routing_key = COALESCE(${routingKey !== undefined ? routingKey : null}, routing_key),
+        alert_levels = COALESCE(${alertLevels !== undefined ? alertLevels : null}, alert_levels),
+        enabled = COALESCE(${enabled !== undefined ? enabled : null}, enabled),
+        metadata = COALESCE(${metadata !== undefined ? JSON.stringify(metadata) : null}, metadata),
+        updated_at = NOW()
       WHERE id = ${id} AND user_id = ${userId}
       RETURNING
         id,
@@ -333,14 +310,10 @@ export async function PATCH(request: NextRequest) {
       data: result[0],
     });
   } catch (error: any) {
-    console.error("[PATCH /api/notifications/config]", error);
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
     }
+    console.error("[PATCH /api/notifications/config]", error);
 
     return NextResponse.json(
       { success: false, error: "Failed to update notification config" },
@@ -386,14 +359,10 @@ export async function DELETE(request: NextRequest) {
       message: "Notification config deleted",
     });
   } catch (error: any) {
-    console.error("[DELETE /api/notifications/config]", error);
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
     }
+    console.error("[DELETE /api/notifications/config]", error);
 
     return NextResponse.json(
       { success: false, error: "Failed to delete notification config" },

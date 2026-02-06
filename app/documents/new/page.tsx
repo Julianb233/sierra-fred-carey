@@ -218,7 +218,7 @@ function DocumentGeneratorContent() {
                           onChange={(e) =>
                             setCurrentTag((prev) => ({ ...prev, [input.id]: e.target.value }))
                           }
-                          onKeyPress={(e) => {
+                          onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
                               handleAddTag(input.id);

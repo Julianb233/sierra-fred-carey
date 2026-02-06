@@ -10,6 +10,11 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
     exclude: ['node_modules', '.next', 'dist'],
+    pool: 'threads',
+    fileParallelism: false,
+    maxWorkers: 2,
+    minWorkers: 1,
+    testTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

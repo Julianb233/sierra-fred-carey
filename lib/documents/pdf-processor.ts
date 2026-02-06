@@ -6,56 +6,46 @@
  */
 
 import type { ExtractedDocument, ExtractedPage, DocumentMetadata } from './types';
-
-// pdf-parse type definition
-type PdfParseResult = {
-  numpages: number;
-  text: string;
-  info: Record<string, unknown> | null;
-};
-
-type PdfParseOptions = {
-  pagerender?: unknown;
-  max?: number;
-};
-
-type PdfParseFn = (buffer: Buffer, options?: PdfParseOptions) => Promise<PdfParseResult>;
-
-// Dynamic import for pdf-parse (CommonJS module)
-let pdfParse: PdfParseFn | null = null;
-
-async function getPdfParser(): Promise<PdfParseFn> {
-  if (!pdfParse) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const module = await import('pdf-parse') as any;
-    pdfParse = (module.default ?? module) as PdfParseFn;
-  }
-  return pdfParse;
-}
+import { PDFParse } from 'pdf-parse';
 
 /**
  * Extract text content and metadata from a PDF buffer
+ *
+ * Uses pdf-parse v2 class-based API.
  */
 export async function extractText(buffer: Buffer): Promise<ExtractedDocument> {
-  const parse = await getPdfParser();
+  let parser: PDFParse | undefined;
 
   try {
-    const data = await parse(buffer, {
-      // Don't render pages as images
-      pagerender: undefined,
-    });
+    parser = new PDFParse({ data: new Uint8Array(buffer) });
 
-    // Extract per-page content
-    const pages = extractPages(data.text, data.numpages);
+    // Get text with per-page results and info in parallel
+    const [textResult, infoResult] = await Promise.all([
+      parser.getText(),
+      parser.getInfo(),
+    ]);
 
-    // Extract metadata
-    const metadata = extractMetadata(data.info);
+    // Build per-page content from v2 page results, with fallback
+    let pages: ExtractedPage[];
+    if (textResult.pages && textResult.pages.length > 0) {
+      pages = textResult.pages.map((page) => ({
+        pageNumber: page.num,
+        content: page.text.trim(),
+        charCount: page.text.length,
+      }));
+    } else {
+      pages = extractPages(textResult.text, textResult.total);
+    }
+
+    // Extract metadata from info
+    const info = infoResult.info as Record<string, unknown> | null;
+    const metadata = extractMetadata(info);
 
     return {
-      text: data.text,
+      text: textResult.text,
       pages,
       metadata,
-      pageCount: data.numpages,
+      pageCount: textResult.total,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -69,6 +59,10 @@ export async function extractText(buffer: Buffer): Promise<ExtractedDocument> {
     }
 
     throw new Error(`Failed to extract PDF text: ${message}`);
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 
@@ -132,21 +126,24 @@ function extractPages(text: string, pageCount: number): ExtractedPage[] {
  * Get just the metadata without full extraction
  */
 export async function getMetadata(buffer: Buffer): Promise<DocumentMetadata & { pageCount: number }> {
-  const parse = await getPdfParser();
+  let parser: PDFParse | undefined;
 
   try {
-    const data = await parse(buffer, {
-      // Only get first page to speed up
-      max: 1,
-    });
+    parser = new PDFParse({ data: new Uint8Array(buffer) });
+    const infoResult = await parser.getInfo();
+    const info = infoResult.info as Record<string, unknown> | null;
 
     return {
-      ...extractMetadata(data.info),
-      pageCount: data.numpages,
+      ...extractMetadata(info),
+      pageCount: infoResult.total,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     throw new Error(`Failed to get PDF metadata: ${message}`);
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 

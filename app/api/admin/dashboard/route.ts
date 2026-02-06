@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     `);
 
     const configActivity = await safeQuery(sql`
-      SELECT id, key, updated_at
+      SELECT id, analyzer, updated_at
       FROM ai_config
       WHERE updated_at IS NOT NULL
       ORDER BY updated_at DESC
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       ...configActivity.map((row: any) => ({
         id: String(row.id),
         type: "config",
-        message: `Config updated: ${String(row.key || "")}`,
+        message: `Config updated: ${String(row.analyzer || "")}`,
         timestamp: row.updated_at ? new Date(row.updated_at as string).toISOString() : new Date().toISOString(),
       })),
     ]

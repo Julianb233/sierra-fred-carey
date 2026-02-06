@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/footer";
 import Link from "next/link";
@@ -223,7 +223,7 @@ export default function AboutPage() {
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     But there was a problem: <span className="text-[#ff6a1a] font-semibold">scaling one-on-one coaching was impossible</span>.
-                    The founders who needed help most couldn't access it. That's when I realized AI could change everything.
+                    The founders who needed help most couldn&apos;t access it. That&apos;s when I realized AI could change everything.
                   </p>
                 </CardContent>
               </Card>
@@ -353,8 +353,8 @@ export default function AboutPage() {
             <Card className="border-2 border-[#ff6a1a]/30 bg-gradient-to-br from-[#ff6a1a]/5 to-orange-400/5">
               <CardContent className="p-12 text-center space-y-6">
                 <p className="text-2xl md:text-3xl font-semibold leading-relaxed text-gray-900 dark:text-white">
-                  "Every founder deserves access to the decision-making frameworks that
-                  billion-dollar companies use - not just the privileged few."
+                  &ldquo;Every founder deserves access to the decision-making frameworks that
+                  billion-dollar companies use - not just the privileged few.&rdquo;
                 </p>
                 <p className="text-lg text-gray-600 dark:text-gray-400">
                   — Fred Cary, Founder
@@ -418,11 +418,11 @@ export default function AboutPage() {
                 your hardest decisions in minutes, not months.
               </p>
               <p>
-                Where AI doesn't replace your judgment but enhances it - helping you see blind spots,
+                Where AI doesn&apos;t replace your judgment but enhances it - helping you see blind spots,
                 identify patterns, and make decisions with confidence backed by data from 10,000+ founder journeys.
               </p>
               <p className="text-xl font-semibold text-[#ff6a1a]">
-                That's the world we're building with the Founder Decision OS.
+                That&apos;s the world we&apos;re building with the Founder Decision OS.
               </p>
             </div>
           </motion.div>

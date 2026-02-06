@@ -21,6 +21,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Check tier requirement (Pro or Studio)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -28,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Get document
     const document = await getDocumentById(userId, id);
@@ -87,6 +93,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Check tier requirement (Pro or Studio)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { error: 'Pro tier required' },
@@ -94,7 +106,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const userId = tierCheck.user!.id;
+    const userId = tierCheck.user.id;
 
     // Delete document
     await deleteDocument(userId, id);

@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Edit, HelpCircle, FileText, Package, Search } from 'lucide-react';
 
-interface KnowledgeEntry {
+export interface KnowledgeEntry {
   id: string;
   entry_type: 'faq' | 'document' | 'product' | 'custom';
   question?: string;

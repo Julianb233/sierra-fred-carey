@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
 import Footer from "@/components/footer";
 import { toast } from "sonner";
 import {
@@ -223,26 +222,8 @@ function WaitlistContent() {
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="w-full py-6 px-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <Link href="/" className="hover:opacity-80 transition-opacity">
-              <Image
-                src="/sahara-logo.svg"
-                alt="Sahara"
-                width={120}
-                height={30}
-                className="h-8 w-auto"
-              />
-            </Link>
-            <Button asChild variant="ghost" className="text-[#ff6a1a] hover:bg-[#ff6a1a]/10">
-              <Link href="/">Back to Home</Link>
-            </Button>
-          </div>
-        </header>
-
         {/* Main */}
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <main className="flex-1 flex items-center justify-center px-4 py-12 pt-24 lg:pt-28">
           <div className="w-full max-w-5xl">
             {!isSubmitted ? (
               <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -310,8 +291,10 @@ function WaitlistContent() {
 
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="relative">
+                          <label htmlFor="waitlist-name" className="sr-only">Your name</label>
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
+                            id="waitlist-name"
                             type="text"
                             placeholder="Your name"
                             value={name}
@@ -321,8 +304,10 @@ function WaitlistContent() {
                         </div>
 
                         <div className="relative">
+                          <label htmlFor="waitlist-email" className="sr-only">Your email</label>
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
+                            id="waitlist-email"
                             type="email"
                             placeholder="Your email"
                             value={email}
@@ -332,8 +317,10 @@ function WaitlistContent() {
                         </div>
 
                         <div className="relative">
+                          <label htmlFor="waitlist-company" className="sr-only">Company name</label>
                           <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
+                            id="waitlist-company"
                             type="text"
                             placeholder="Company name (optional)"
                             value={company}

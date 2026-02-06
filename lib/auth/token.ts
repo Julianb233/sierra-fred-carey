@@ -22,16 +22,10 @@ export function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error(
-        'JWT_SECRET environment variable is required in production'
-      );
-    }
-    console.warn(
-      'JWT_SECRET not set, using development default. ' +
-      'Set JWT_SECRET environment variable for production.'
+    throw new Error(
+      'JWT_SECRET environment variable is required. ' +
+      'Generate one with: openssl rand -base64 32'
     );
-    return 'sahara-dev-secret-change-in-production';
   }
 
   return secret;
@@ -125,7 +119,9 @@ export async function verifyToken(
  */
 export function isTokenExpired(payload: JWTPayload): boolean {
   if (!payload.exp) {
-    return false; // No expiration claim
+    // SECURITY: Tokens without expiration claim are treated as expired.
+    // All tokens should have an expiration for security.
+    return true;
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
@@ -197,7 +193,8 @@ function parseCookies(cookieHeader: string): Record<string, string> {
   const cookies: Record<string, string> = {};
 
   cookieHeader.split(';').forEach(cookie => {
-    const [key, value] = cookie.trim().split('=');
+    const [key, ...valueParts] = cookie.trim().split('=');
+    const value = valueParts.join('=');
     if (key && value) {
       cookies[key] = decodeURIComponent(value);
     }

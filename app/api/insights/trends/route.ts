@@ -32,17 +32,25 @@ export async function GET(req: NextRequest) {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
     const url = new URL(req.url);
-    const days = parseInt(url.searchParams.get("days") || "30", 10);
+    const days = Math.min(Math.max(parseInt(url.searchParams.get("days") || "30", 10) || 30, 1), 365);
     const granularity = url.searchParams.get("granularity") || "day";
+
+    // SECURITY: Strict allowlist for granularity to prevent SQL injection via sql.unsafe
+    const ALLOWED_GRANULARITIES: Record<string, string> = {
+      day: "DATE(req.created_at)",
+      week: "DATE_TRUNC('week', req.created_at)",
+    };
+
+    const dateFormat = ALLOWED_GRANULARITIES[granularity];
+    if (!dateFormat) {
+      return NextResponse.json(
+        { success: false, error: "Invalid granularity. Must be 'day' or 'week'." },
+        { status: 400 }
+      );
+    }
 
     const since = new Date();
     since.setDate(since.getDate() - days);
-
-    // Get daily/weekly trends
-    const dateFormat =
-      granularity === "week"
-        ? "DATE_TRUNC('week', req.created_at)"
-        : "DATE(req.created_at)";
 
     const trends = await sql`
       WITH daily_stats AS (

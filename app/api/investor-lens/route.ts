@@ -3,7 +3,6 @@ import { generateTrackedResponse } from "@/lib/ai/client";
 import { extractJSON } from "@/lib/ai/extract-json";
 import { sql } from "@/lib/db/supabase-sql";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
@@ -499,6 +498,12 @@ export async function POST(request: NextRequest) {
   try {
     // Pro tier required for Investor Lens
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Investor Lens requires Pro tier" },
@@ -506,7 +511,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await requireAuth();
+    const userId = tierCheck.user.id;
 
     const body: InvestorLensRequest = await request.json();
     const { profile, fundingStage } = body;
@@ -783,6 +788,12 @@ export async function GET(request: NextRequest) {
   try {
     // Pro tier required for Investor Lens
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
     if (!tierCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Investor Lens requires Pro tier" },
@@ -790,7 +801,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = await requireAuth();
+    const userId = tierCheck.user.id;
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 50);

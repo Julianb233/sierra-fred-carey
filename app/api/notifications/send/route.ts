@@ -169,14 +169,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("[POST /api/notifications/send]", error);
+    // Return auth errors directly
+    if (error instanceof Response) return error;
 
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("[POST /api/notifications/send]", error);
 
     // Check for rate limiting
     if (error.message?.includes("Rate limit")) {
@@ -299,8 +295,20 @@ async function handleBatchSend(
 /**
  * GET /api/notifications/send
  * Get information about the send API and available options
+ *
+ * SECURITY: Requires authentication to prevent information disclosure
  */
 export async function GET(request: NextRequest) {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json(
+      { success: false, error: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
   return NextResponse.json({
     success: true,
     data: {

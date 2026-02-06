@@ -20,7 +20,7 @@ export interface NotificationConfig {
   routingKey?: string; // For PagerDuty
   enabled: boolean;
   alertLevels: AlertLevel[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,7 +39,7 @@ export interface NotificationPayload {
   metric?: string;
   value?: number;
   threshold?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -73,7 +73,7 @@ export interface SlackBlock {
     type: string;
     text: string;
   }>;
-  accessory?: any;
+  accessory?: Record<string, unknown>;
 }
 
 export interface SlackAttachment {
@@ -101,7 +101,7 @@ export interface PagerDutyEvent {
     component?: string;
     group?: string;
     class?: string;
-    custom_details?: Record<string, any>;
+    custom_details?: Record<string, unknown>;
   };
   client?: string;
   client_url?: string;
@@ -135,11 +135,11 @@ export interface NotificationLog {
   message: string;
   experimentName?: string;
   variantName?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   status: 'pending' | 'sent' | 'failed';
   errorMessage?: string;
   attempts: number;
-  responseData?: Record<string, any>;
+  responseData?: Record<string, unknown>;
   sentAt?: Date;
   createdAt: Date;
 }

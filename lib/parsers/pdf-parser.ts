@@ -1,7 +1,4 @@
-import * as pdfParse from "pdf-parse";
-
-// pdf-parse default export
-const pdf = (pdfParse as any).default || pdfParse;
+import { PDFParse } from "pdf-parse";
 
 /**
  * Content extracted from a single slide/page
@@ -50,71 +47,36 @@ function getWordCount(text: string): number {
  * Parse PDF buffer into structured deck data
  */
 export async function parsePDF(buffer: Buffer): Promise<ParsedDeck> {
+  let parser: PDFParse | undefined;
   try {
-    // Parse the PDF
-    const data = await pdf(buffer);
+    // pdf-parse v2 uses a class-based API
+    parser = new PDFParse({ data: new Uint8Array(buffer) });
 
-    // Extract text from each page
-    const slides: SlideContent[] = [];
-    const pageTexts: string[] = [];
+    // Get text with per-page results
+    const textResult = await parser.getText();
 
-    // pdf-parse doesn't provide per-page text by default
-    // We need to use the render_page option to extract text per page
-    const options = {
-      max: data.numpages,
-      pagerender: async (pageData: any) => {
-        const textContent = await pageData.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(" ");
-        return pageText;
-      },
-    };
+    // Get metadata
+    const infoResult = await parser.getInfo();
 
-    // Re-parse with page-by-page extraction
-    const detailedData = await pdf(buffer, options);
+    // Build slides from per-page text results
+    const slides: SlideContent[] = textResult.pages.map((page) => ({
+      pageNumber: page.num,
+      text: page.text.trim(),
+      wordCount: getWordCount(page.text),
+    }));
 
-    // Since pdf-parse doesn't easily expose per-page text,
-    // we'll estimate by splitting the full text
-    // This is a fallback approach - for production, consider using pdf-lib or pdfjs-dist
-    const fullText = data.text;
-    const estimatedPagesText = fullText.split(/\n\s*\n\s*\n/); // Rough page breaks
-
-    // If we have approximately the right number of sections, use them
-    if (estimatedPagesText.length >= data.numpages * 0.5) {
-      estimatedPagesText.slice(0, data.numpages).forEach((text: string, index: number) => {
-        slides.push({
-          pageNumber: index + 1,
-          text: text.trim(),
-          wordCount: getWordCount(text),
-        });
-      });
-    } else {
-      // Fallback: distribute text evenly across pages
-      const charsPerPage = Math.ceil(fullText.length / data.numpages);
-      for (let i = 0; i < data.numpages; i++) {
-        const startIdx = i * charsPerPage;
-        const endIdx = Math.min((i + 1) * charsPerPage, fullText.length);
-        const pageText = fullText.substring(startIdx, endIdx);
-        slides.push({
-          pageNumber: i + 1,
-          text: pageText.trim(),
-          wordCount: getWordCount(pageText),
-        });
-      }
-    }
-
-    // Extract metadata
+    // Extract metadata from info result
+    const dateNode = infoResult.getDateNode();
     const metadata = {
-      title: data.info?.Title || undefined,
-      author: data.info?.Author || undefined,
-      createdAt: data.info?.CreationDate || undefined,
+      title: infoResult.info?.Title || undefined,
+      author: infoResult.info?.Author || undefined,
+      createdAt: dateNode.CreationDate?.toISOString() || undefined,
     };
 
     return {
-      totalPages: data.numpages,
+      totalPages: textResult.total,
       slides,
-      fullText,
+      fullText: textResult.text,
       metadata,
     };
   } catch (error) {
@@ -132,6 +94,10 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDeck> {
       throw new PDFParseError(`Failed to parse PDF: ${error.message}`, error);
     }
     throw new PDFParseError("Unknown error parsing PDF", error);
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 
@@ -215,14 +181,17 @@ export function isValidPDF(buffer: Buffer): boolean {
 export async function getPDFInfo(
   buffer: Buffer
 ): Promise<{ pages: number; metadata: ParsedDeck["metadata"] }> {
+  let parser: PDFParse | undefined;
   try {
-    const data = await pdf(buffer);
+    parser = new PDFParse({ data: new Uint8Array(buffer) });
+    const infoResult = await parser.getInfo();
+    const dateNode = infoResult.getDateNode();
     return {
-      pages: data.numpages,
+      pages: infoResult.total,
       metadata: {
-        title: data.info?.Title || undefined,
-        author: data.info?.Author || undefined,
-        createdAt: data.info?.CreationDate || undefined,
+        title: infoResult.info?.Title || undefined,
+        author: infoResult.info?.Author || undefined,
+        createdAt: dateNode.CreationDate?.toISOString() || undefined,
       },
     };
   } catch (error) {
@@ -230,5 +199,9 @@ export async function getPDFInfo(
       "Failed to extract PDF info",
       error instanceof Error ? error : undefined
     );
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }

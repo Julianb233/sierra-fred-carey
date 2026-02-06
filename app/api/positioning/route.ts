@@ -684,7 +684,10 @@ export async function GET(request: NextRequest) {
         hasMore: offset + limit < total,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[Positioning] Fetch error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch assessment history" },

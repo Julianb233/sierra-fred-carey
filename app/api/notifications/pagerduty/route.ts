@@ -11,14 +11,16 @@ import {
 } from "@/lib/notifications/pagerduty";
 import { NotificationPayload } from "@/lib/notifications/types";
 import { sql } from "@/lib/db/supabase-sql";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * POST /api/notifications/pagerduty
  * Create incident in PagerDuty
  *
+ * SECURITY: Requires authentication - userId from server-side session
+ *
  * Body:
  *   - routingKey: PagerDuty routing/integration key (required if not using userId)
- *   - userId: User ID to fetch routing key from config (optional)
  *   - level: Alert level (info, warning, critical) - required
  *   - type: Alert type (performance, errors, traffic, significance) - required
  *   - title: Alert title - required
@@ -34,10 +36,12 @@ import { sql } from "@/lib/db/supabase-sql";
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const authenticatedUserId = await requireAuth();
+
     const body = await request.json();
     const {
       routingKey,
-      userId,
       level,
       type,
       title,
@@ -64,9 +68,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get routing key from config if userId provided
+    // SECURITY: Always use authenticated userId
+    const userId = authenticatedUserId;
+
+    // Get routing key from config if not directly provided
     let finalRoutingKey = routingKey;
-    if (userId && !routingKey) {
+    if (!routingKey) {
       const configResult = await sql`
         SELECT routing_key
         FROM notification_configs
@@ -94,7 +101,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Either routingKey or userId must be provided",
+          error: "Routing key is required (either directly or via user config)",
         },
         { status: 400 }
       );
@@ -175,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     // Create notification payload
     const payload: NotificationPayload = {
-      userId: userId || "api",
+      userId,
       level,
       type,
       title,
@@ -219,13 +226,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    // Return auth errors directly
+    if (error instanceof Response) return error;
+
     console.error("[PagerDuty API] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to process PagerDuty request",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -234,25 +243,14 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/notifications/pagerduty
- * Get PagerDuty notification configuration for a user
+ * Get PagerDuty notification configuration for the authenticated user
  *
- * Query params:
- *   - userId: User ID to fetch config for
+ * SECURITY: Requires authentication - userId from server-side session
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "userId query parameter is required",
-        },
-        { status: 400 }
-      );
-    }
+    // SECURITY: Require authentication, use server-side userId
+    const userId = await requireAuth();
 
     const configs = await sql`
       SELECT
@@ -270,18 +268,28 @@ export async function GET(request: NextRequest) {
         AND channel = 'pagerduty'
     `;
 
+    // Redact routing key for security
+    const sanitizedConfig = configs.length > 0 ? {
+      ...configs[0],
+      routingKey: configs[0].routingKey
+        ? `${configs[0].routingKey.substring(0, 8)}...`
+        : null,
+    } : null;
+
     return NextResponse.json({
       success: true,
-      data: configs.length > 0 ? configs[0] : null,
+      data: sanitizedConfig,
     });
   } catch (error: any) {
+    // Return auth errors directly
+    if (error instanceof Response) return error;
+
     console.error("[PagerDuty API] Error fetching config:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch PagerDuty configuration",
-        message: error.message,
       },
       { status: 500 }
     );

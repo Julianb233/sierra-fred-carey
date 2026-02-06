@@ -44,19 +44,25 @@ export async function createCheckoutSession({
   successUrl: string;
   cancelUrl: string;
 }) {
-  const session = await getStripe().checkout.sessions.create({
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    customer: customerId,
     client_reference_id: userId,
     metadata: { userId },
     subscription_data: {
       metadata: { userId },
     },
-  });
+  };
+
+  // Only include customer if we have one (avoids sending undefined to Stripe)
+  if (customerId) {
+    sessionParams.customer = customerId;
+  }
+
+  const session = await getStripe().checkout.sessions.create(sessionParams);
 
   return session;
 }
@@ -80,10 +86,14 @@ export async function constructWebhookEvent(
   payload: string | Buffer,
   signature: string
 ): Promise<Stripe.Event> {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET environment variable is not set");
+  }
   return getStripe().webhooks.constructEvent(
     payload,
     signature,
-    process.env.STRIPE_WEBHOOK_SECRET!
+    webhookSecret
   );
 }
 

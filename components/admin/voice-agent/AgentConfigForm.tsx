@@ -14,8 +14,9 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, RefreshCw, Volume2 } from 'lucide-react';
+import type { BusinessHours } from './BusinessHoursEditor';
 
-interface VoiceAgentConfig {
+export interface VoiceAgentConfig {
   id: string;
   name: string;
   is_active: boolean;
@@ -25,7 +26,7 @@ interface VoiceAgentConfig {
   max_response_length: number;
   response_style: string;
   language: string;
-  business_hours: Record<string, { enabled: boolean; start: string; end: string }>;
+  business_hours: BusinessHours;
   timezone: string;
   after_hours_behavior: string;
   after_hours_message: string;

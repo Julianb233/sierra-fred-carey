@@ -322,12 +322,8 @@ export default function PricingPage() {
                 </thead>
                 <tbody>
                   {comparisonFeatures.map((feature, index) => (
-                    <motion.tr
+                    <tr
                       key={feature.name}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.05 }}
                       className={`${index % 2 === 0 ? "bg-white dark:bg-gray-950" : "bg-gray-50 dark:bg-gray-900"} hover:bg-[#ff6a1a]/5 transition-colors`}
                     >
                       <td className="p-4 sm:p-6 text-sm text-gray-700 dark:text-gray-300">{feature.name}</td>
@@ -358,7 +354,7 @@ export default function PricingPage() {
                           <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>
