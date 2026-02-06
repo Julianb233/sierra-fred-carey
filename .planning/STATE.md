@@ -1,32 +1,30 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (04-06 execution)
+**Session:** gsd-execute-plan (06-01 execution)
 
 ---
 
 ## Position
 
-**Current Phase:** 04 - Studio Tier Features (COMPLETE)
-**Current Plan:** 04-07 complete (7/7 Phase 04 plans done)
-**Status:** Phase 04 complete
-**Last activity:** 2026-02-06 - Completed 04-07-PLAN.md (Studio Stripe & SMS Settings UI)
+**Current Phase:** 06 - Tier Display & Stripe Wiring
+**Current Plan:** 06-01 complete (1/2 Phase 06 plans done)
+**Status:** In progress
+**Last activity:** 2026-02-06 - Completed 06-01-PLAN.md (Tier Infrastructure Foundation)
 
-Progress: [==============================] 100% (7/7 Phase 04 plans)
+Progress: [===============               ] 50% (1/2 Phase 06 plans)
 
 ---
 
 ## Next Action
 
-**Action:** Begin Phase 05 planning or project wrap-up
-**Type:** planning
+**Action:** Execute 06-02-PLAN.md (Dashboard layout, post-checkout refresh, settings fix)
+**Type:** execute
 **Blocked By:** None
 
-Phase 04 progress:
-- Wave 1: 04-01 Architecture foundation -- COMPLETE
-- Wave 2: 04-02, 04-03, 04-04 Three specialist agents + dashboard -- COMPLETE
-- Wave 3: 04-05 SMS check-ins (Twilio + cron) -- COMPLETE
-- Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel) -- COMPLETE
+Phase 06 progress:
+- Wave 1: 06-01 Tier infrastructure foundation -- COMPLETE
+- Wave 1: 06-02 Dashboard layout + post-checkout + settings -- PENDING
 
 ---
 
@@ -68,6 +66,11 @@ Phase 04 progress:
   - [x] 04-05: Twilio SMS weekly check-ins with accountability tracking
   - [x] 04-06: Boardy integration for investor/advisor matching
   - [x] 04-07: Studio tier Stripe integration and SMS settings UI
+- [x] **Phase 05: Auth & Onboarding Fix**
+  - [x] 05-01: Auth infrastructure (proxy route protection, profiles migration, onboarding auth gate)
+- [ ] **Phase 06: Tier Display & Stripe Wiring**
+  - [x] 06-01: Tier infrastructure foundation (TierProvider mount, response shape fix, middleware table fix, migrations)
+  - [ ] 06-02: Dashboard layout, post-checkout refresh, settings page fix
 
 ### What's Blocked
 - Nothing currently blocked
@@ -96,6 +99,7 @@ Phase 04 progress:
 | 2026-02-06 | 04-05 execution | SMS pipeline: Twilio client, templates, scheduler, webhook, cron, DB ops |
 | 2026-02-06 | 04-07 execution | Studio Stripe config + upgrade card + SMS settings UI + preferences API |
 | 2026-02-06 | 04-06 execution | Boardy integration: strategy pattern client, AI mock, CRUD, API endpoints, dashboard with filter tabs |
+| 2026-02-06 | 06-01 execution | Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, 2 DB migrations |
 
 ---
 
@@ -137,6 +141,9 @@ Phase 04 progress:
 - AI-generated match suggestions via generateStructuredReliable with fictional but realistic names
 - Auto-generate initial matches on first GET request for immediate UX value
 - Graceful fallback to empty list on AI match generation failure (no 500s)
+- Use getTierFromString() everywhere for consistent plan-id-to-UserTier mapping (not duplicated string matching)
+- Reuse getUserSubscription() from lib/db/subscriptions.ts as single source of truth for server-side tier queries
+- Both "active" and "trialing" subscription statuses grant tier access
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -144,6 +151,7 @@ Phase 04 progress:
 3. State machine underengineering - explicit states, deterministic backbone
 4. Decision score miscalibration - track outcomes, add uncertainty
 5. A2P 10DLC delays - 2-4 weeks lead time
+6. API response shape mismatch between route handler and consumer -- always verify response shape matches what consumers read
 
 ### Architecture Patterns
 - State machine for all decision flows
@@ -165,13 +173,14 @@ Phase 04 progress:
 - Query param includes pattern: ?include=history for optional data co-fetching
 - Strategy pattern for external integrations: interface + mock + factory allows swapping implementations without changing callers
 - Match lifecycle dashboard: filter tabs + status-aware action buttons for relationship progression tracking
+- Centralized tier derivation: getUserSubscription() -> getPlanByPriceId() -> getTierFromString() chain for server-side; TierProvider -> /api/user/subscription -> getTierFromString() for client-side
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T02:00:00Z
-Stopped at: Phase 04 verified - all 7 plans complete, 7/7 must-haves passed
+Last session: 2026-02-06T02:02:00Z
+Stopped at: Completed 06-01-PLAN.md (Tier Infrastructure Foundation)
 Resume file: None
 
 ---
