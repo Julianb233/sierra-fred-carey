@@ -21,6 +21,7 @@ import {
   Brain,
   Loader2,
   Mail,
+  Lock,
   Sparkles,
   PartyPopper,
 } from "lucide-react";
@@ -56,6 +57,7 @@ const OnboardingPage = () => {
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -194,6 +196,11 @@ const OnboardingPage = () => {
       return;
     }
 
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -203,6 +210,7 @@ const OnboardingPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
+          password: password,
           stage: selectedStage,
           challenges: selectedChallenge ? [selectedChallenge] : [],
           isQuickOnboard: true,
@@ -415,7 +423,7 @@ const OnboardingPage = () => {
                       Let's <span className="text-[#ff6a1a]">get started</span>!
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Enter your email to create your account
+                      Create your account
                     </p>
                   </div>
 
@@ -448,8 +456,19 @@ const OnboardingPage = () => {
                             placeholder="you@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                             autoFocus
+                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
+                          />
+                        </div>
+
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="password"
+                            placeholder="Create a password (6+ chars)"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                             className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
                           />
                         </div>

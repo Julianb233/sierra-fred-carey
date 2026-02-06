@@ -73,8 +73,14 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Create new user with Supabase Auth
-      // Generate a random password if not provided (user can set it later)
-      const userPassword = password || crypto.randomUUID();
+      // Require a real password -- no random UUID fallback
+      if (!password || password.length < 6) {
+        return NextResponse.json(
+          { error: "Password must be at least 6 characters" },
+          { status: 400 }
+        );
+      }
+      const userPassword = password;
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: email.toLowerCase(),
