@@ -20,6 +20,9 @@ key-files:
     - lib/agents/base-agent.ts
     - lib/agents/machine.ts
     - lib/db/agent-tasks.ts
+    - lib/agents/founder-ops/agent.ts
+    - lib/agents/fundraising/agent.ts
+    - lib/agents/growth/agent.ts
   modified: []
 decisions:
   - id: use-stopWhen-not-maxSteps
@@ -70,7 +73,7 @@ Created the agent routing machine following lib/fred/machine.ts pattern:
 | # | Decision | Reasoning |
 |---|----------|-----------|
 | 1 | Use `stopWhen(stepCountIs(N))` instead of `maxSteps` | AI SDK 6 replaced `maxSteps` with `stopWhen` + `stepCountIs()` helper |
-| 2 | Use `createServiceClient` for DB operations | Matches fred-memory.ts pattern, more consistent than direct createClient |
+| 2 | Use direct Supabase `createClient` with service role | Matches lib/db/documents.ts pattern for server-side CRUD operations |
 | 3 | Dynamic `import()` for specialist agents | Avoids circular dependencies; agents don't exist yet (Plans 02-04) |
 | 4 | Use `result.totalUsage` for token tracking | AI SDK 6 provides `totalUsage` for aggregate across all steps |
 | 5 | Tool call property is `input` not `args` | AI SDK 6 TypedToolCall uses `input` property for tool arguments |
@@ -85,15 +88,23 @@ Created the agent routing machine following lib/fred/machine.ts pattern:
 - **Issue:** Plan referenced `maxSteps` parameter and `tc.args` property which don't exist in installed AI SDK 6.x
 - **Fix:** Used `stopWhen: stepCountIs(N)` instead of `maxSteps`, and `tc.input` instead of `tc.args`
 - **Files modified:** lib/agents/base-agent.ts
-- **Commit:** d5d7c1f
+- **Commit:** 4fa16b9
+
+**2. [Rule 3 - Blocking] Missing agent modules for TypeScript compilation**
+
+- **Found during:** Task 3
+- **Issue:** machine.ts dynamic imports referenced ./founder-ops/agent, ./fundraising/agent, ./growth/agent which don't exist yet (Plans 04-02 to 04-04), causing TS2307 errors
+- **Fix:** Created stub agent files that throw "not yet implemented" errors, satisfying TypeScript while clearly indicating they await implementation
+- **Files created:** lib/agents/founder-ops/agent.ts, lib/agents/fundraising/agent.ts, lib/agents/growth/agent.ts
+- **Commit:** 366e84d
 
 ## Commit History
 
 | Commit | Type | Description |
 |--------|------|-------------|
-| 3c4ee6a | feat | Database migrations for Phase 04 Studio tier tables |
-| d5d7c1f | feat | Agent type system, base agent runner, and task CRUD |
-| 0e97ba9 | feat | XState v5 agent orchestrator state machine |
+| 776c102 | feat | Database migrations for Phase 04 Studio tier tables |
+| 4fa16b9 | feat | Agent type system, base agent runner, and task CRUD |
+| 366e84d | feat | XState v5 agent orchestrator state machine + agent stubs |
 
 ## Next Phase Readiness
 
