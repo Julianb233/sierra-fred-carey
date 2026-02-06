@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
+import { redirectToCheckoutByTier } from "@/lib/stripe/client";
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
@@ -351,6 +352,13 @@ export default function DashboardPage() {
               <Button
                 size="lg"
                 className="bg-white text-[#ff6a1a] hover:bg-gray-100 border-none shadow-lg font-bold"
+                onClick={async () => {
+                  try {
+                    await redirectToCheckoutByTier("pro");
+                  } catch (e: any) {
+                    toast.error(e.message || "Failed to start upgrade");
+                  }
+                }}
               >
                 <RocketIcon className="mr-2 h-4 w-4" />
                 Upgrade Now
