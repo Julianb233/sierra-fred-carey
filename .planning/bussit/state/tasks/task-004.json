@@ -1,0 +1,16 @@
+{
+  "id": "task-004",
+  "type": "build",
+  "priority": "P1",
+  "title": "Tier upgrade flow",
+  "description": "Implement user flow for upgrading between Free, Pro, and Studio tiers",
+  "context": {
+    "files": [
+      "app/pricing/*",
+      "app/dashboard/*"
+    ],
+    "dependencies": ["task-003"]
+  },
+  "created": "2026-02-05T00:00:00Z",
+  "status": "pending"
+}

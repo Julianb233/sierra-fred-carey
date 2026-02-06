@@ -1,0 +1,21 @@
+{
+  "gsd": {
+    "projectFile": ".planning/PROJECT.md",
+    "roadmapFile": ".planning/ROADMAP.md",
+    "stateFile": ".planning/STATE.md",
+    "phasesDir": ".planning/phases"
+  },
+  "parallelization": {
+    "maxConcurrentBuilds": 10,
+    "maxConcurrentTests": 5
+  },
+  "taskTypes": {
+    "b": "build",
+    "t": "test",
+    "d": "debug",
+    "r": "review",
+    "p": "plan"
+  },
+  "priorityFormula": "phase * 100 + plan * 10 + typeOffset",
+  "initialized": "2026-02-05T09:59:00Z"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "task-003",
+  "type": "build",
+  "priority": "P1",
+  "title": "Stripe checkout integration",
+  "description": "Implement Stripe checkout flow for tier upgrades",
+  "context": {
+    "files": [
+      "app/api/stripe/*",
+      "app/pricing/*"
+    ],
+    "dependencies": ["STRIPE_SECRET_KEY env var"]
+  },
+  "created": "2026-02-05T00:00:00Z",
+  "status": "pending"
+}

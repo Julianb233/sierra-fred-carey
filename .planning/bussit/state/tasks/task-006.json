@@ -1,0 +1,17 @@
+{
+  "id": "task-006",
+  "type": "build",
+  "priority": "P2",
+  "title": "Real user authentication",
+  "description": "Implement real authentication with Supabase, session management, and protected routes",
+  "context": {
+    "files": [
+      "app/api/auth/*",
+      "lib/auth/*",
+      "middleware.ts"
+    ],
+    "dependencies": ["SUPABASE env vars"]
+  },
+  "created": "2026-02-05T00:00:00Z",
+  "status": "pending"
+}

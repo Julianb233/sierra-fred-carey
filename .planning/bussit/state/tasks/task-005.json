@@ -1,0 +1,15 @@
+{
+  "id": "task-005",
+  "type": "build",
+  "priority": "P1",
+  "title": "Stripe webhook handlers",
+  "description": "Implement webhook handlers for subscription events (created, updated, cancelled)",
+  "context": {
+    "files": [
+      "app/api/webhooks/stripe/*"
+    ],
+    "dependencies": ["task-003"]
+  },
+  "created": "2026-02-05T00:00:00Z",
+  "status": "pending"
+}
