@@ -1,31 +1,31 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan 07-02 (dashboard navigation fix)
+**Session:** gsd-execute-plan 07-01 (Reality Lens FRED API wiring)
 
 ---
 
 ## Position
 
-**Current Phase:** 07-dashboard-integration (Phase 07 plan 02 COMPLETE)
-**Current Plan:** 07-02 COMPLETE (1/1 tasks)
-**Status:** Phase 07 plan 02 complete (dashboard nav fixed)
-**Last activity:** 2026-02-06 - Completed 07-02-PLAN.md (dashboard navigation gap closure)
+**Current Phase:** 07-dashboard-integration (ALL PLANS COMPLETE)
+**Current Plan:** 07-01 COMPLETE (2/2 tasks), 07-02 COMPLETE (1/1 tasks)
+**Status:** Phase 07 COMPLETE -- all gap closure phases done
+**Last activity:** 2026-02-06 - Completed 07-01-PLAN.md (Reality Lens FRED API wiring)
 
-Progress: [=========================-----] 83% (07-02 of gap closure complete)
+Progress: [==============================] 100% (all gap closure phases 05, 06, 07 complete)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 07 (Dashboard Integration & Strategy Completion)
-**Type:** execute
-**Blocked By:** None (Phase 07 is independent of 05/06)
+**Action:** All gap closure phases complete. Project ready for UAT / deployment.
+**Type:** review
+**Blocked By:** None
 
 Gap closure progress:
-- Phase 05: Auth & Onboarding Fix -- COMPLETE (infra gap closed via Supabase Management API)
+- Phase 05: Auth & Onboarding Fix -- COMPLETE
 - Phase 06: Tier Display & Stripe Wiring -- COMPLETE
-- Phase 07: Dashboard Integration & Strategy Completion -- 07-02 COMPLETE (nav fix), 07-01 pending
+- Phase 07: Dashboard Integration & Strategy Completion -- COMPLETE (07-01 + 07-02)
 
 ---
 
@@ -73,11 +73,12 @@ Gap closure progress:
 - [x] **Phase 06: Tier Display & Stripe Wiring**
   - [x] 06-01: Tier infrastructure foundation (TierProvider mount, response shape fix, middleware table fix, migrations)
   - [x] 06-02: Dashboard layout, post-checkout refresh, settings page fix
+- [x] **Phase 07: Dashboard Integration & Strategy Completion**
+  - [x] 07-01: Reality Lens FRED API wiring (rewired page, removed legacy route)
+  - [x] 07-02: Dashboard nav fix (Decision History link, Investor Readiness link)
 
 ### What's Pending
-- [ ] **Phase 07: Dashboard Integration & Strategy Completion**
-  - [ ] 07-01: Fix Reality Lens wiring, add missing nav links, complete strategy UI components
-  - [x] 07-02: Fix dashboard nav - add Decision History link, correct Investor Readiness link
+- Nothing pending -- all phases complete
 
 ### What's Blocked
 - Nothing currently blocked
@@ -111,6 +112,7 @@ Gap closure progress:
 | 2026-02-06 | 06-02 execution | Dashboard consumer wiring: real user data + tier context in layout, page, settings |
 | 2026-02-06 | 05 infra gap closure | Ran SQL migration via Supabase Management API, added tier column, disabled email confirmation, E2E tested user creation |
 | 2026-02-06 | 07-02 execution | Dashboard nav fix: added Decision History link, corrected Investor Readiness link, removed stale investor-score refs |
+| 2026-02-06 | 07-01 execution | Reality Lens FRED wiring: rewired page to /api/fred/reality-lens, removed legacy /api/reality-lens route |
 
 ---
 
@@ -160,6 +162,8 @@ Gap closure progress:
 - Post-checkout polling: refreshTier() 5x at 2s intervals to handle Stripe webhook processing delay
 - Disable Manage Subscription button when no active subscription (Stripe portal requires existing sub)
 - CountdownTimerIcon for Decision History nav item (distinct from ActivityLogIcon used by Monitoring)
+- Stage enum alignment: dashboard stage Select uses FRED schema values (idea/mvp/launched/scaling) not legacy (ideation/pre-seed/seed/series-a)
+- Delete legacy routes entirely rather than adding redirect stubs when all consumers are internal
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -196,8 +200,8 @@ Gap closure progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T16:39:00Z
-Stopped at: Completed 07-02-PLAN.md (dashboard navigation gap closure)
+Last session: 2026-02-06T16:41:00Z
+Stopped at: Completed 07-01-PLAN.md (Reality Lens FRED API wiring) -- all gap closure phases complete
 Resume file: None
 
 ---
