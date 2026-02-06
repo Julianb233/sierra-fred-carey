@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { generateTrackedResponse } from "@/lib/ai/client";
+import { extractJSON } from "@/lib/ai/extract-json";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { UserTier } from "@/lib/constants";
@@ -321,13 +322,7 @@ export async function POST(request: NextRequest) {
     // Parse AI response
     let analysis: PositioningAnalysis;
     try {
-      // Remove markdown code blocks if present
-      const cleanResponse = aiResponse
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-
-      analysis = JSON.parse(cleanResponse);
+      analysis = extractJSON<PositioningAnalysis>(aiResponse);
 
       // Validate structure
       if (
@@ -560,11 +555,11 @@ export async function GET(request: NextRequest) {
     const userId = await requireAuth();
 
     // SECURITY: Require Pro tier for Positioning assessment history
-    const userTierGet = await getUserTier(userId);
-    if (userTierGet < UserTier.PRO) {
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
       return createTierErrorResponse({
         allowed: false,
-        userTier: userTierGet,
+        userTier,
         requiredTier: UserTier.PRO,
         userId,
       });

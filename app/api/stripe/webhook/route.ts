@@ -6,6 +6,7 @@ import {
   recordStripeEvent,
   getStripeEventById,
   markEventAsProcessed,
+  markEventAsFailed,
 } from "@/lib/db/subscriptions";
 import { getPlanByPriceId } from "@/lib/stripe/config";
 import { getTierFromString, UserTier } from "@/lib/constants";
@@ -90,25 +91,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Idempotency check — skip if already processed or currently being processed
-  const existingEvent = await getStripeEventById(event.id);
-  if (existingEvent?.status === "processed") {
-    return NextResponse.json({ received: true, status: "already_processed" });
-  }
-  if (existingEvent?.status === "pending") {
-    // Another handler is processing this event — skip to prevent double-processing
-    return NextResponse.json({ received: true, status: "already_processing" });
-  }
-
-  // Record the event
+  // Atomic idempotency: INSERT ... ON CONFLICT DO NOTHING
+  // If another handler already claimed this event, recordStripeEvent returns null
   const stripeEvent = await recordStripeEvent({
     stripeEventId: event.id,
     type: event.type,
     stripeCustomerId:
       (event.data.object as { customer?: string }).customer || null,
     status: "pending",
-    payload: JSON.parse(JSON.stringify(event.data.object)) as Record<string, unknown>,
+    payload: event.data.object as unknown as Record<string, unknown>,
   });
+
+  if (!stripeEvent) {
+    // Event already claimed by another handler — safe to skip
+    return NextResponse.json({ received: true, status: "already_claimed" });
+  }
 
   try {
     switch (event.type) {
@@ -125,6 +122,7 @@ export async function POST(request: NextRequest) {
           }
           if (!userId) {
             console.error(`[Webhook] checkout.session.completed: No userId found. Session: ${session.id}, Subscription: ${subscription.id}`);
+            await markEventAsFailed(stripeEvent.id, `No userId found for checkout session ${session.id}`);
             break;
           }
           await handleSubscriptionUpdate(subscription, userId);
@@ -140,6 +138,7 @@ export async function POST(request: NextRequest) {
           await handleSubscriptionUpdate(subscription, userId);
         } else {
           console.error(`[Webhook] No userId found for subscription ${subscription.id}`);
+          await markEventAsFailed(stripeEvent.id, `No userId found for subscription ${subscription.id}`);
         }
         break;
       }
@@ -161,6 +160,7 @@ export async function POST(request: NextRequest) {
           });
         } else {
           console.error(`[Webhook] No userId found for deleted subscription ${subscription.id}`);
+          await markEventAsFailed(stripeEvent.id, `No userId found for deleted subscription ${subscription.id}`);
         }
         break;
       }
@@ -177,6 +177,7 @@ export async function POST(request: NextRequest) {
         const userId = await resolveUserIdFromSubscription(subscription);
         if (!userId) {
           console.error(`[Webhook] invoice.payment_succeeded: No userId found. Invoice: ${invoice.id}, Subscription: ${subscription.id}`);
+          await markEventAsFailed(stripeEvent.id, `No userId found for invoice ${invoice.id}`);
           break;
         }
         await handleSubscriptionUpdate(subscription, userId);
@@ -205,6 +206,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook processing error:", error);
+    // Track the failure for debugging and retry analysis
+    try {
+      await markEventAsFailed(
+        stripeEvent.id,
+        error instanceof Error ? error.message : "Unknown processing error"
+      );
+    } catch (trackErr) {
+      console.error("Failed to mark event as failed:", trackErr);
+    }
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }

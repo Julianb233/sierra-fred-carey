@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
+import { extractJSON } from "@/lib/ai/extract-json";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
@@ -133,13 +134,7 @@ export async function POST(request: NextRequest) {
     // Parse AI response
     let analysis: QuickCheckAnalysis;
     try {
-      // Remove markdown code blocks if present
-      const cleanResponse = aiResponse
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-
-      analysis = JSON.parse(cleanResponse);
+      analysis = extractJSON<QuickCheckAnalysis>(aiResponse);
 
       // Validate structure
       if (!analysis.clarity || !analysis.signals || !analysis.quickTake) {

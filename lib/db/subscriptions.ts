@@ -160,7 +160,7 @@ export async function createOrUpdateSubscription(
 
 export async function recordStripeEvent(
   event: Partial<StripeEvent>
-): Promise<StripeEvent> {
+): Promise<StripeEvent | null> {
   const result = await sql`
     INSERT INTO stripe_events (
       stripe_event_id,
@@ -175,8 +175,11 @@ export async function recordStripeEvent(
       ${event.status || "pending"},
       ${JSON.stringify(event.payload)}
     )
+    ON CONFLICT (stripe_event_id) DO NOTHING
     RETURNING *
   `;
+
+  if (!result || result.length === 0) return null;
 
   const data = result[0];
   return {
@@ -217,6 +220,14 @@ export async function markEventAsProcessed(id: string): Promise<void> {
   await sql`
     UPDATE stripe_events
     SET status = 'processed', processed_at = NOW()
+    WHERE id = ${id}::uuid
+  `;
+}
+
+export async function markEventAsFailed(id: string, error: string): Promise<void> {
+  await sql`
+    UPDATE stripe_events
+    SET status = 'failed', error = ${error}, processed_at = NOW()
     WHERE id = ${id}::uuid
   `;
 }

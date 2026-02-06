@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
+import { extractJSON } from "@/lib/ai/extract-json";
 import { sql } from "@/lib/db/supabase-sql";
+import { createServiceClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
@@ -551,12 +553,7 @@ export async function POST(request: NextRequest) {
     // Parse response
     let evaluation: InvestorLensResponse;
     try {
-      const cleanResponse = aiResponse
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-
-      evaluation = JSON.parse(cleanResponse);
+      evaluation = extractJSON<InvestorLensResponse>(aiResponse);
 
       if (!validateResponse(evaluation)) {
         throw new Error("Invalid AI response structure");
@@ -785,8 +782,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Pro tier required for Investor Lens
-    const tierCheckGet = await checkTierForRequest(request, UserTier.PRO);
-    if (!tierCheckGet.allowed) {
+    const tierCheck = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Investor Lens requires Pro tier" },
         { status: 403 }
@@ -796,105 +793,52 @@ export async function GET(request: NextRequest) {
     const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
-    const offset = Math.max(parseInt(searchParams.get("offset") || "0"), 0);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 50);
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10), 0);
     const stage = searchParams.get("stage") as FundingStage | null;
     const verdict = searchParams.get("verdict") as ICVerdict | null;
 
-    // Build query conditions
-    let whereClause = sql`WHERE user_id = ${userId}`;
+    // Use Supabase query builder for composable filtering
+    const supabase = createServiceClient();
+
+    // Build count query
+    let countQuery = supabase
+      .from("investor_lens_evaluations")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
 
     if (stage && ["pre_seed", "seed", "series_a"].includes(stage)) {
-      whereClause = sql`${whereClause} AND funding_stage = ${stage}`;
+      countQuery = countQuery.eq("funding_stage", stage);
     }
-
     if (verdict && ["yes", "no", "not_yet"].includes(verdict)) {
-      whereClause = sql`${whereClause} AND ic_verdict = ${verdict}`;
+      countQuery = countQuery.eq("ic_verdict", verdict);
     }
 
-    // Get total count
-    const countResult = await sql`
-      SELECT COUNT(*) as total
-      FROM investor_lens_evaluations
-      ${whereClause}
-    `;
-    const total = parseInt(countResult[0].total);
+    const { count, error: countError } = await countQuery;
+    if (countError) {
+      console.error("[Investor Lens] Count query error:", countError);
+    }
+    const total = count ?? 0;
 
-    // Get evaluations
-    const evaluations = await sql`
-      SELECT
-        id,
-        funding_stage,
-        ic_verdict,
-        ic_verdict_reasoning,
+    // Build data query with same filters
+    let dataQuery = supabase
+      .from("investor_lens_evaluations")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-        team_founder_market_fit_score,
-        team_learning_velocity_score,
-        team_ability_to_recruit_score,
-        team_feedback,
+    if (stage && ["pre_seed", "seed", "series_a"].includes(stage)) {
+      dataQuery = dataQuery.eq("funding_stage", stage);
+    }
+    if (verdict && ["yes", "no", "not_yet"].includes(verdict)) {
+      dataQuery = dataQuery.eq("ic_verdict", verdict);
+    }
 
-        market_size_score,
-        market_urgency_score,
-        market_timing_score,
-        market_feedback,
-
-        problem_painful_score,
-        problem_frequent_score,
-        problem_expensive_score,
-        problem_feedback,
-
-        solution_approach_score,
-        solution_vs_alternatives_score,
-        solution_why_now_score,
-        solution_feedback,
-
-        gtm_distribution_score,
-        gtm_repeatability_score,
-        gtm_feedback,
-
-        traction_retention_score,
-        traction_usage_score,
-        traction_revenue_score,
-        traction_feedback,
-
-        business_pricing_score,
-        business_margin_score,
-        business_scalability_score,
-        business_feedback,
-
-        fund_fit_score,
-        fund_fit_feedback,
-
-        valuation_realism_score,
-        valuation_feedback,
-
-        hidden_filters,
-        top_pass_reasons,
-        derisking_actions,
-
-        preseed_kill_signals,
-        preseed_30day_plan,
-
-        seed_traction_quality_score,
-        seed_repeatability_score,
-        seed_series_a_clarity_score,
-        seed_milestone_map,
-
-        seriesa_objections,
-        seriesa_90day_plan,
-
-        deck_requested,
-        deck_review_completed,
-        deck_premature_reason,
-
-        input_data,
-        created_at
-      FROM investor_lens_evaluations
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
-    `;
+    const { data: evaluations, error: dataError } = await dataQuery;
+    if (dataError) {
+      throw new Error(`Failed to fetch evaluations: ${dataError.message}`);
+    }
 
     // Transform for response
     const formattedEvaluations = evaluations.map((e: any) => ({

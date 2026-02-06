@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Only update profile after successful authentication
-      await supabase
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({
           name: userName,
@@ -137,6 +137,14 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", userId);
+
+      if (updateError) {
+        console.error("[onboard] Profile update failed:", updateError);
+        return NextResponse.json(
+          { error: "Failed to update profile. Please try again." },
+          { status: 500 }
+        );
+      }
     } else {
       // Create new user with Supabase Auth
       // Server-side password validation
@@ -158,11 +166,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const userPassword = password;
-
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: email.toLowerCase(),
-        password: userPassword,
+        password,
         options: {
           data: {
             name: userName,
@@ -218,8 +224,15 @@ export async function POST(request: NextRequest) {
         });
         if (retryError) {
           console.error("[onboard] Profile creation retry failed:", retryError);
+          // Clean up orphaned auth user to avoid inconsistent state
+          try {
+            await supabase.auth.admin.deleteUser(userId);
+            console.log("[onboard] Cleaned up orphaned auth user:", userId);
+          } catch (cleanupErr) {
+            console.error("[onboard] Failed to clean up auth user:", cleanupErr);
+          }
           return NextResponse.json(
-            { error: "Account created but profile setup failed. Please try logging in." },
+            { error: "Account setup failed. Please try again." },
             { status: 500 }
           );
         }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
+import { extractJSON } from "@/lib/ai/extract-json";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
@@ -189,12 +190,7 @@ Remember: Default to NOT requesting a deck unless specific visual/detailed infor
     // Parse response
     let response: DeckRequestResponse;
     try {
-      const cleanResponse = trackedResult.content
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-
-      response = JSON.parse(cleanResponse);
+      response = extractJSON<DeckRequestResponse>(trackedResult.content);
     } catch (parseError) {
       console.error("[Deck Request] Parse error:", parseError);
       return NextResponse.json(
