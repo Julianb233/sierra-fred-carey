@@ -44,6 +44,22 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - [ ] 04-06-PLAN.md — Boardy integration for investor/advisor matching
   - [ ] 04-07-PLAN.md — Studio tier Stripe integration and upgrade flow
 
+### Gap Closure (from v1.0 audit)
+
+- [ ] **Phase 05: Auth & Onboarding Fix** - Fix Supabase auth, onboarding password flow
+  - Closes: SUPABASE-AUTH, ONBOARD-AUTH
+  - Closes flow: "User signs up -> onboarding -> dashboard"
+  - [ ] 05-01-PLAN.md — Fix Supabase schema/migrations for user creation + onboarding auth flow
+
+- [ ] **Phase 06: Tier Display & Stripe Wiring** - Fix client-side tier detection, Stripe payment -> UI update
+  - Closes: TIER-DISPLAY, Stripe payment -> tier integration
+  - Closes flow: "Free user -> Stripe upgrade -> Pro access"
+  - [ ] 06-01-PLAN.md — Mount TierProvider, fix API response shape, fix dashboard layout, wire Stripe -> tier
+
+- [ ] **Phase 07: Dashboard Integration & Strategy Completion** - Fix dashboard wiring, complete strategy UI
+  - Closes: REALITY-LENS-WIRING, STRAT-COMPONENTS, dashboard nav gaps
+  - [ ] 07-01-PLAN.md — Fix Reality Lens wiring, add missing nav links, complete strategy UI components, cleanup legacy routes
+
 ### Parallel Track
 
 - [ ] **A2P 10DLC Registration** - Start during Phase 01, required for SMS in Phase 04
@@ -63,6 +79,11 @@ Phase 02 (Free Tier) ← depends on FRED being complete
 Phase 03 (Pro Tier) ← depends on Free Tier infrastructure
     ↓
 Phase 04 (Studio Tier) ← depends on Pro Tier document pipeline
+
+Gap Closure (can run before or parallel to Phase 04):
+Phase 05 (Auth Fix) ← independent, fixes infra
+Phase 06 (Tier Wiring) ← depends on Phase 05 (needs working auth to test)
+Phase 07 (Dashboard Integration) ← independent of 05/06
 ```
 
 Within phases:
@@ -70,6 +91,7 @@ Within phases:
 - 02-01 through 02-05 are mostly parallelizable after 02-01
 - 03-01 (PDF pipeline) → 03-02, 03-03, 03-04 (can parallel) → 03-05 (integration)
 - 04-01 (architecture) → 04-02, 04-03, 04-04 (can parallel) → 04-05 (SMS) → 04-06, 04-07 (can parallel)
+- 05-01 single plan → 06-01 depends on 05 → 07-01 independent
 
 ---
 
@@ -111,7 +133,25 @@ Within phases:
 - [ ] SMS check-ins sending weekly with responses tracked
 - [ ] Studio tier purchase flow complete
 
+**Phase 05 Complete When:**
+- [ ] Supabase user creation succeeds (no 500 error)
+- [ ] Users can sign up and log back in with a real password
+- [ ] Onboarding flow results in a persistent, authenticated session
+
+**Phase 06 Complete When:**
+- [ ] TierProvider mounted and reading correct subscription data
+- [ ] Dashboard layout shows real user tier (not hardcoded)
+- [ ] Stripe payment updates UI tier in real-time
+- [ ] Free->Pro upgrade flow works end-to-end
+
+**Phase 07 Complete When:**
+- [ ] Reality Lens dashboard calls /api/fred/reality-lens (not legacy route)
+- [ ] Dashboard nav includes History and Investor Readiness links
+- [ ] Strategy UI components complete (document-preview, document-list, index)
+- [ ] Legacy /api/reality-lens route removed or redirected
+
 ---
 
 *Generated from research: 2026-02-05*
+*Updated: 2026-02-06 — gap closure phases 05-07 added from v1.0 audit*
 *Based on: .planning/research/SUMMARY.md*
