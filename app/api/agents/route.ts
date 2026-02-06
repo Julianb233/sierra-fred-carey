@@ -155,7 +155,18 @@ export async function GET(request: NextRequest) {
     // 1. Authenticate
     const userId = await requireAuth();
 
-    // 2. Parse query params
+    // 2. Check Studio tier gating
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
+
+    // 3. Parse query params
     const { searchParams } = new URL(request.url);
     const agentType = searchParams.get("agentType") as AgentType | null;
     const status = searchParams.get("status") as AgentStatus | null;
@@ -199,7 +210,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 3. Fetch tasks
+    // 4. Fetch tasks
     const tasks = await getAgentTasks(userId, {
       agentType: agentType || undefined,
       status: status || undefined,
@@ -207,7 +218,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // 4. Return tasks
+    // 5. Return tasks
     return NextResponse.json({
       success: true,
       tasks,

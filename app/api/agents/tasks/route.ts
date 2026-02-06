@@ -10,6 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { getAgentTasks } from "@/lib/db/agent-tasks";
 import type { AgentType, AgentStatus } from "@/lib/agents/types";
 
@@ -18,7 +20,18 @@ export async function GET(request: NextRequest) {
     // 1. Authenticate
     const userId = await requireAuth();
 
-    // 2. Parse optional query params
+    // 2. Check Studio tier gating
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
+
+    // 3. Parse optional query params
     const { searchParams } = new URL(request.url);
     const agentType = searchParams.get("agentType") as AgentType | null;
     const status = searchParams.get("status") as AgentStatus | null;

@@ -33,53 +33,63 @@ export interface StripeEvent {
 
 // Supabase database functions
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
-  const result = await sql`
-    SELECT * FROM user_subscriptions WHERE user_id = ${userId} LIMIT 1
-  `;
+  try {
+    const result = await sql`
+      SELECT * FROM user_subscriptions WHERE user_id = ${userId} LIMIT 1
+    `;
 
-  if (!result || result.length === 0) return null;
+    if (!result || result.length === 0) return null;
 
-  const data = result[0];
-  return {
-    userId: data.user_id,
-    stripeCustomerId: data.stripe_customer_id,
-    stripeSubscriptionId: data.stripe_subscription_id,
-    stripePriceId: data.stripe_price_id,
-    status: data.status,
-    currentPeriodStart: new Date(data.current_period_start),
-    currentPeriodEnd: new Date(data.current_period_end),
-    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
-    cancelAtPeriodEnd: data.cancel_at_period_end,
-    trialStart: data.trial_start ? new Date(data.trial_start) : null,
-    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-  };
+    const data = result[0];
+    return {
+      userId: data.user_id,
+      stripeCustomerId: data.stripe_customer_id,
+      stripeSubscriptionId: data.stripe_subscription_id,
+      stripePriceId: data.stripe_price_id,
+      status: data.status,
+      currentPeriodStart: new Date(data.current_period_start),
+      currentPeriodEnd: new Date(data.current_period_end),
+      canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+      cancelAtPeriodEnd: data.cancel_at_period_end,
+      trialStart: data.trial_start ? new Date(data.trial_start) : null,
+      trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
+  } catch (error) {
+    console.error("[getUserSubscription] Error (table may not exist):", error);
+    return null;
+  }
 }
 
 export async function getSubscriptionByCustomerId(customerId: string): Promise<UserSubscription | null> {
-  const result = await sql`
-    SELECT * FROM user_subscriptions WHERE stripe_customer_id = ${customerId} LIMIT 1
-  `;
+  try {
+    const result = await sql`
+      SELECT * FROM user_subscriptions WHERE stripe_customer_id = ${customerId} LIMIT 1
+    `;
 
-  if (!result || result.length === 0) return null;
+    if (!result || result.length === 0) return null;
 
-  const data = result[0];
-  return {
-    userId: data.user_id,
-    stripeCustomerId: data.stripe_customer_id,
-    stripeSubscriptionId: data.stripe_subscription_id,
-    stripePriceId: data.stripe_price_id,
-    status: data.status,
-    currentPeriodStart: new Date(data.current_period_start),
-    currentPeriodEnd: new Date(data.current_period_end),
-    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
-    cancelAtPeriodEnd: data.cancel_at_period_end,
-    trialStart: data.trial_start ? new Date(data.trial_start) : null,
-    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-  };
+    const data = result[0];
+    return {
+      userId: data.user_id,
+      stripeCustomerId: data.stripe_customer_id,
+      stripeSubscriptionId: data.stripe_subscription_id,
+      stripePriceId: data.stripe_price_id,
+      status: data.status,
+      currentPeriodStart: new Date(data.current_period_start),
+      currentPeriodEnd: new Date(data.current_period_end),
+      canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+      cancelAtPeriodEnd: data.cancel_at_period_end,
+      trialStart: data.trial_start ? new Date(data.trial_start) : null,
+      trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
+  } catch (error) {
+    console.error("[getSubscriptionByCustomerId] Error (table may not exist):", error);
+    return null;
+  }
 }
 
 export async function createOrUpdateSubscription(

@@ -45,9 +45,25 @@ export async function getUserTier(userId: string): Promise<UserTier> {
     if (!subscription || !["active", "trialing"].includes(subscription.status)) {
       return UserTier.FREE;
     }
+
+    // Primary lookup: match price ID to plan
     const plan = getPlanByPriceId(subscription.stripePriceId);
-    if (!plan) return UserTier.FREE;
-    return getTierFromString(plan.id);
+    if (plan) return getTierFromString(plan.id);
+
+    // Fallback: if price ID not found in PLANS (e.g. archived price),
+    // infer tier from the price ID env vars directly
+    const fundraisingPriceId = process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID;
+    const studioPriceId = process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID;
+
+    if (subscription.stripePriceId === studioPriceId) return UserTier.STUDIO;
+    if (subscription.stripePriceId === fundraisingPriceId) return UserTier.PRO;
+
+    // Last resort: user has an active subscription but we can't resolve the tier.
+    // Log a warning and grant PRO as a safe minimum (they are paying).
+    console.warn(
+      `[TierMiddleware] Active subscription for user ${userId} has unrecognized price ID: ${subscription.stripePriceId}. Defaulting to PRO.`
+    );
+    return UserTier.PRO;
   } catch (error) {
     console.error("[TierMiddleware] Error fetching user tier:", error);
     return UserTier.FREE;

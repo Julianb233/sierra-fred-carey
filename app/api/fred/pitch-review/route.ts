@@ -50,12 +50,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if document is still being processed
+    if (document.status === 'processing') {
+      return NextResponse.json(
+        {
+          error: 'Document is still being processed. Please wait a moment and try again.',
+          code: 'DOCUMENT_PROCESSING',
+          documentId,
+          status: 'processing',
+        },
+        { status: 202 }
+      );
+    }
+
+    if (document.status === 'failed') {
+      return NextResponse.json(
+        {
+          error: 'Document processing failed. Please re-upload the PDF.',
+          code: 'DOCUMENT_FAILED',
+          documentId,
+        },
+        { status: 400 }
+      );
+    }
+
     // Get page-level chunks from PDF pipeline
     const chunks = await getDocumentChunks(documentId);
 
     if (!chunks || chunks.length === 0) {
       return NextResponse.json(
-        { error: 'No content found in document. Please ensure the PDF has been processed.' },
+        { error: 'No content found in document. Please re-upload or try a different PDF.' },
         { status: 400 }
       );
     }

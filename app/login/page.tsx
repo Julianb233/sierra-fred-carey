@@ -14,7 +14,11 @@ import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+  // Prevent open redirect attacks — only allow relative paths
+  const redirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+    ? rawRedirect
+    : "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

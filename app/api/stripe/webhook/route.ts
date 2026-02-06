@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { constructWebhookEvent, getSubscription } from "@/lib/stripe/server";
 import {
   createOrUpdateSubscription,
+  getSubscriptionByCustomerId,
   recordStripeEvent,
   getStripeEventById,
   markEventAsProcessed,
@@ -121,16 +122,18 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata.userId;
+        const userId = await resolveUserIdFromSubscription(subscription);
         if (userId) {
           await handleSubscriptionUpdate(subscription, userId);
+        } else {
+          console.error(`[Webhook] No userId found for subscription ${subscription.id}`);
         }
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata.userId;
+        const userId = await resolveUserIdFromSubscription(subscription);
         if (userId) {
           const period = getSubscriptionPeriod(subscription);
           await createOrUpdateSubscription({
@@ -143,6 +146,22 @@ export async function POST(request: NextRequest) {
             currentPeriodEnd: period.currentPeriodEnd,
             canceledAt: new Date(),
           });
+        } else {
+          console.error(`[Webhook] No userId found for deleted subscription ${subscription.id}`);
+        }
+        break;
+      }
+
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const invoiceData = invoice as unknown as Record<string, unknown>;
+        const subscriptionId = invoiceData.subscription;
+        if (subscriptionId) {
+          const subscription = await getSubscription(subscriptionId as string);
+          const userId = await resolveUserIdFromSubscription(subscription);
+          if (userId) {
+            await handleSubscriptionUpdate(subscription, userId);
+          }
         }
         break;
       }
@@ -153,7 +172,7 @@ export async function POST(request: NextRequest) {
         const subscriptionId = invoiceData.subscription;
         if (subscriptionId) {
           const subscription = await getSubscription(subscriptionId as string);
-          const userId = subscription.metadata.userId;
+          const userId = await resolveUserIdFromSubscription(subscription);
           if (userId) {
             await createOrUpdateSubscription({
               userId,
@@ -174,6 +193,27 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Resolve userId from subscription metadata, falling back to customer-based DB lookup.
+ * Fixes the critical issue where metadata.userId may be missing on subscription events.
+ */
+async function resolveUserIdFromSubscription(
+  subscription: Stripe.Subscription
+): Promise<string | null> {
+  // Try metadata first
+  const metadataUserId = subscription.metadata?.userId;
+  if (metadataUserId) return metadataUserId;
+
+  // Fallback: look up by Stripe customer ID in our DB
+  const customerId = subscription.customer as string;
+  if (customerId) {
+    const existingSub = await getSubscriptionByCustomerId(customerId);
+    if (existingSub?.userId) return existingSub.userId;
+  }
+
+  return null;
 }
 
 async function handleSubscriptionUpdate(

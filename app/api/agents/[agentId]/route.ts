@@ -10,6 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { getAgentTask } from "@/lib/db/agent-tasks";
 
 // ============================================================================
@@ -24,7 +26,18 @@ export async function GET(
     // 1. Authenticate
     const userId = await requireAuth();
 
-    // 2. Extract task ID from path params
+    // 2. Check Studio tier gating
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
+
+    // 3. Extract task ID from path params
     const { agentId: taskId } = await params;
 
     if (!taskId) {

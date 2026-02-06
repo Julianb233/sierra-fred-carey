@@ -28,9 +28,18 @@ export async function reviewPitchDeck(input: PitchReviewInput): Promise<PitchRev
   const structure = await classifyDeck(input.pages);
 
   // 2. Analyze each slide in parallel
+  // Build a classification map by page number for safe lookup.
+  // Classifier returns one classification per input page in order,
+  // so structure.slides[i] corresponds to input.pages[i].
   const slideAnalyses = await Promise.all(
     input.pages.map((page, index) => {
+      // Use index to match — classifier output is 1:1 with input pages
       const classification = structure.slides[index];
+      if (!classification && index < structure.slides.length) {
+        console.warn(
+          `[PitchReview] No classification for page ${page.pageNumber} at index ${index}`
+        );
+      }
       const type = classification?.type || 'unknown';
       const confidence = classification?.confidence || 0;
 

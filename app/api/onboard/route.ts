@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password, qualifying } = await request.json();
+    const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password, qualifying, ref } = await request.json();
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
@@ -37,25 +37,52 @@ export async function POST(request: NextRequest) {
 
     // Waitlist signups: no account needed, just record the interest
     if (stage === "waitlist") {
-      const qualifyingData = qualifying
-        ? JSON.stringify({
-            startupStage: qualifying.startupStage || null,
-            firstBusiness: qualifying.firstBusiness || null,
-            fundingInterest: qualifying.fundingInterest || null,
-            teamStatus: qualifying.teamStatus || null,
-          })
+      // Look up referrer if a ref code was provided
+      let referredByEmail: string | null = null;
+      if (ref && typeof ref === "string" && ref.length >= 6) {
+        const refClean = ref.replace(/-/g, "").slice(0, 8);
+        const { data: referrer } = await supabase
+          .from("contact_submissions")
+          .select("email")
+          .eq("source", "waitlist")
+          .like("id::text", `${refClean}%`)
+          .limit(1)
+          .single();
+        if (referrer) {
+          referredByEmail = referrer.email;
+        }
+      }
+
+      const qualifyingObj: Record<string, string | null> = {
+        startupStage: qualifying?.startupStage || null,
+        firstBusiness: qualifying?.firstBusiness || null,
+        fundingInterest: qualifying?.fundingInterest || null,
+        teamStatus: qualifying?.teamStatus || null,
+      };
+      if (referredByEmail) {
+        qualifyingObj.referredBy = referredByEmail;
+      }
+
+      const qualifyingData = qualifying || referredByEmail
+        ? JSON.stringify(qualifyingObj)
         : "Waitlist signup";
 
-      await supabase.from("contact_submissions").insert({
+      const { data: inserted } = await supabase.from("contact_submissions").insert({
         name: userName,
         email: email.toLowerCase(),
         company: challenges?.[0] || null,
         message: qualifyingData,
         source: "waitlist",
-      });
+      }).select("id").single();
+
+      // Build refCode from first 8 hex chars of the new row's UUID
+      const refCode = inserted
+        ? inserted.id.replace(/-/g, "").slice(0, 8)
+        : null;
 
       return NextResponse.json({
         success: true,
+        refCode,
         user: {
           email: email.toLowerCase(),
           name: userName,
@@ -74,9 +101,31 @@ export async function POST(request: NextRequest) {
     let userId: string;
 
     if (existingUser) {
-      // Update existing profile
+      // Update existing profile — requires password authentication first
       userId = existingUser.id;
 
+      // SECURITY: Verify password before allowing profile updates on existing accounts
+      if (!password) {
+        return NextResponse.json(
+          { error: "Password is required for existing accounts" },
+          { status: 401 }
+        );
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase(),
+        password,
+      });
+
+      if (signInError) {
+        console.error("[onboard] Sign in failed for existing user:", signInError.message);
+        return NextResponse.json(
+          { error: "Invalid password for existing account" },
+          { status: 401 }
+        );
+      }
+
+      // Only update profile after successful authentication
       await supabase
         .from("profiles")
         .update({
@@ -88,24 +137,24 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", userId);
-
-      // Try to sign in the user (if they have a password set)
-      if (password) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.toLowerCase(),
-          password,
-        });
-
-        if (signInError) {
-          console.error("[onboard] Sign in failed for existing user:", signInError.message);
-        }
-      }
     } else {
       // Create new user with Supabase Auth
-      // Require a real password -- no random UUID fallback
-      if (!password || password.length < 6) {
+      // Server-side password validation
+      if (!password || typeof password !== "string" || password.length < 8) {
         return NextResponse.json(
-          { error: "Password must be at least 6 characters" },
+          { error: "Password must be at least 8 characters" },
+          { status: 400 }
+        );
+      }
+      if (!/[A-Z]/.test(password)) {
+        return NextResponse.json(
+          { error: "Password must contain at least one uppercase letter" },
+          { status: 400 }
+        );
+      }
+      if (!/[0-9]/.test(password)) {
+        return NextResponse.json(
+          { error: "Password must contain at least one number" },
           { status: 400 }
         );
       }
@@ -155,7 +204,25 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         console.error("[onboard] Profile creation error:", profileError);
-        // Don't fail - auth user was created
+        // Retry once — profile is critical for the app to work
+        const { error: retryError } = await supabase.from("profiles").upsert({
+          id: userId,
+          email: email.toLowerCase(),
+          name: userName,
+          stage: stage || null,
+          challenges: challenges || [],
+          teammate_emails: teammateEmails || [],
+          onboarding_completed: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        if (retryError) {
+          console.error("[onboard] Profile creation retry failed:", retryError);
+          return NextResponse.json(
+            { error: "Account created but profile setup failed. Please try logging in." },
+            { status: 500 }
+          );
+        }
       }
     }
 

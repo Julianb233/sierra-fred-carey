@@ -8,6 +8,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import {
   getUserSMSPreferences,
   updateSMSPreferences,
@@ -24,6 +26,17 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    // Check Studio tier gating
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
 
     const url = new URL(request.url);
     const includeHistory = url.searchParams.get("include") === "history";
@@ -90,6 +103,17 @@ const UpdatePreferencesSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    // Check Studio tier gating
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
 
     const body = await request.json();
     const parsed = UpdatePreferencesSchema.safeParse(body);

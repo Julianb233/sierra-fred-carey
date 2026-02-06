@@ -33,6 +33,11 @@ export default function SettingsPage() {
   const { tier, tierName, isSubscriptionActive, isLoading: tierLoading } = useTier()
   const [isProfileLoading, setIsProfileLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     async function fetchProfile() {
@@ -69,6 +74,95 @@ export default function SettingsPage() {
       console.error("Portal error:", err)
     } finally {
       setPortalLoading(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaveLoading(true)
+      setSaveSuccess(false)
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          name: profile.name,
+          company_name: profile.company,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", authUser.id)
+
+      if (error) throw error
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err) {
+      console.error("Save profile error:", err)
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    try {
+      setExportLoading(true)
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
+
+      // Fetch all user data in parallel
+      const [profileRes, decisionsRes, episodesRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", authUser.id).single(),
+        supabase.from("fred_decision_log").select("*").eq("user_id", authUser.id),
+        supabase.from("fred_episodic_memory").select("*").eq("user_id", authUser.id),
+      ])
+
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        profile: profileRes.data,
+        decisions: decisionsRes.data || [],
+        conversations: episodesRes.data || [],
+      }
+
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `sahara-export-${new Date().toISOString().split("T")[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error("Export error:", err)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true)
+      return
+    }
+    try {
+      setDeleteLoading(true)
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
+
+      // Delete profile data
+      await supabase.from("profiles").delete().eq("id", authUser.id)
+
+      // Sign out (actual auth user deletion requires admin API / edge function)
+      await supabase.auth.signOut()
+      window.location.href = "/"
+    } catch (err) {
+      console.error("Delete error:", err)
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -141,8 +235,12 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <Button className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90">
-            Save Changes
+          <Button
+            className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
+            onClick={handleSaveProfile}
+            disabled={saveLoading}
+          >
+            {saveLoading ? "Saving..." : saveSuccess ? "Saved!" : "Save Changes"}
           </Button>
         </CardContent>
       </Card>
@@ -324,8 +422,8 @@ export default function SettingsPage() {
                 Download a copy of all your account data and projects
               </p>
             </div>
-            <Button variant="outline" size="sm">
-              Export Data
+            <Button variant="outline" size="sm" onClick={handleExportData} disabled={exportLoading}>
+              {exportLoading ? "Exporting..." : "Export Data"}
             </Button>
           </div>
 
@@ -338,8 +436,14 @@ export default function SettingsPage() {
                 Permanently delete your account and all associated data
               </p>
             </div>
-            <Button variant="outline" size="sm" className="border-destructive text-destructive hover:bg-destructive hover:text-white">
-              Delete Account
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-destructive text-destructive hover:bg-destructive hover:text-white"
+              onClick={handleDeleteAccount}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : deleteConfirm ? "Click again to confirm" : "Delete Account"}
             </Button>
           </div>
         </CardContent>
