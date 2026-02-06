@@ -28,7 +28,7 @@ import {
 
 // Types
 type Step = 1 | 2 | 3 | "wink";
-type Stage = "ideation" | "pre-seed" | "seed" | "series-a";
+type Stage = "idea" | "pre-seed" | "seed" | "series-a";
 type Challenge =
   | "product-market-fit"
   | "fundraising"
@@ -64,7 +64,7 @@ const OnboardingPage = () => {
   // Stage options - simplified
   const stages: StageOption[] = [
     {
-      id: "ideation",
+      id: "idea",
       title: "Ideation",
       description: "Validating ideas & finding fit",
       icon: Lightbulb,

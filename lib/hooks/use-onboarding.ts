@@ -14,7 +14,7 @@ export type OnboardingStep =
 
 export interface StartupInfo {
   name?: string;
-  stage?: "idea" | "mvp" | "launched" | "scaling";
+  stage?: "idea" | "mvp" | "pre-seed" | "seed" | "series-a";
   industry?: string;
   description?: string;
   mainChallenge?: string;

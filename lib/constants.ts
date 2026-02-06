@@ -97,12 +97,12 @@ export const TIER_FEATURES = {
 // ONBOARDING OPTIONS
 // ============================================
 export const FOUNDER_CHALLENGES = [
-  { id: "clarity", label: "Getting Clarity", icon: "Lightbulb" },
+  { id: "product-market-fit", label: "Product-Market Fit", icon: "Target" },
   { id: "fundraising", label: "Fundraising", icon: "DollarSign" },
-  { id: "growth", label: "Growth Strategy", icon: "TrendingUp" },
-  { id: "team", label: "Building Team", icon: "Users" },
-  { id: "product", label: "Product Development", icon: "Package" },
-  { id: "operations", label: "Operations", icon: "Settings" },
+  { id: "team-building", label: "Team Building", icon: "Users" },
+  { id: "growth-scaling", label: "Growth & Scaling", icon: "TrendingUp" },
+  { id: "unit-economics", label: "Unit Economics", icon: "BarChart3" },
+  { id: "strategic-planning", label: "Strategy", icon: "Brain" },
 ] as const;
 
 export const STARTUP_STAGES = [
