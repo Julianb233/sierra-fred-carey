@@ -17,6 +17,63 @@ import { z } from "zod";
 import { generateStructuredReliable } from "@/lib/ai/fred-client";
 
 // ============================================================================
+// Parameter Schemas (extracted for explicit typing)
+// ============================================================================
+
+const draftEmailParams = z.object({
+  recipient: z
+    .string()
+    .describe("Who the email is addressed to (name, role, or relationship)"),
+  subject: z.string().describe("Brief description of the email topic"),
+  context: z
+    .string()
+    .describe("Background context for the email (why, what outcome you want)"),
+  tone: z
+    .enum(["formal", "casual", "urgent"])
+    .describe("Desired tone for the email"),
+});
+
+const createTaskParams = z.object({
+  title: z.string().describe("Clear, actionable task title"),
+  priority: z
+    .enum(["low", "medium", "high", "critical"])
+    .describe("Task priority level"),
+  dueDate: z
+    .string()
+    .optional()
+    .describe("Target due date (ISO 8601 format)"),
+  category: z
+    .string()
+    .describe("Task category (e.g., fundraising, product, hiring, ops)"),
+  rationale: z
+    .string()
+    .describe("Why this task matters and its expected business impact"),
+});
+
+const scheduleMeetingParams = z.object({
+  attendees: z
+    .array(z.string())
+    .describe("List of attendees (names or roles)"),
+  topic: z.string().describe("Main topic or purpose of the meeting"),
+  duration: z.number().describe("Meeting duration in minutes"),
+  keyQuestions: z
+    .array(z.string())
+    .describe("Key questions to address in the meeting"),
+});
+
+const weeklyPrioritiesParams = z.object({
+  currentGoals: z
+    .array(z.string())
+    .describe("Current goals the founder is working toward"),
+  blockers: z
+    .array(z.string())
+    .describe("Current blockers or challenges"),
+  recentWins: z
+    .array(z.string())
+    .describe("Recent wins or achievements to build on"),
+});
+
+// ============================================================================
 // Tool: Draft Email
 // ============================================================================
 
@@ -24,19 +81,10 @@ const draftEmail = tool({
   description:
     "Draft a professional email tailored to the recipient and context. " +
     "Generates subject line, body, and optional follow-up suggestion.",
-  parameters: z.object({
-    recipient: z
-      .string()
-      .describe("Who the email is addressed to (name, role, or relationship)"),
-    subject: z.string().describe("Brief description of the email topic"),
-    context: z
-      .string()
-      .describe("Background context for the email (why, what outcome you want)"),
-    tone: z
-      .enum(["formal", "casual", "urgent"])
-      .describe("Desired tone for the email"),
-  }),
-  execute: async ({ recipient, subject, context, tone }) => {
+  inputSchema: draftEmailParams,
+  execute: async (input: z.infer<typeof draftEmailParams>) => {
+    const { recipient, subject, context, tone } = input;
+
     const emailSchema = z.object({
       subject: z.string().describe("Email subject line"),
       body: z.string().describe("Full email body text"),
@@ -74,23 +122,10 @@ const createTask = tool({
   description:
     "Create a prioritized task with deadline, category, and rationale. " +
     "Returns a structured task object ready for tracking.",
-  parameters: z.object({
-    title: z.string().describe("Clear, actionable task title"),
-    priority: z
-      .enum(["low", "medium", "high", "critical"])
-      .describe("Task priority level"),
-    dueDate: z
-      .string()
-      .optional()
-      .describe("Target due date (ISO 8601 format)"),
-    category: z
-      .string()
-      .describe("Task category (e.g., fundraising, product, hiring, ops)"),
-    rationale: z
-      .string()
-      .describe("Why this task matters and its expected business impact"),
-  }),
-  execute: async ({ title, priority, dueDate, category, rationale }) => {
+  inputSchema: createTaskParams,
+  execute: async (input: z.infer<typeof createTaskParams>) => {
+    const { title, priority, dueDate, category, rationale } = input;
+
     return {
       taskId: crypto.randomUUID(),
       title,
@@ -111,17 +146,10 @@ const scheduleMeeting = tool({
   description:
     "Prepare a meeting agenda with key questions, preparation items, " +
     "and expected outcomes. Helps founders run efficient meetings.",
-  parameters: z.object({
-    attendees: z
-      .array(z.string())
-      .describe("List of attendees (names or roles)"),
-    topic: z.string().describe("Main topic or purpose of the meeting"),
-    duration: z.number().describe("Meeting duration in minutes"),
-    keyQuestions: z
-      .array(z.string())
-      .describe("Key questions to address in the meeting"),
-  }),
-  execute: async ({ attendees, topic, duration, keyQuestions }) => {
+  inputSchema: scheduleMeetingParams,
+  execute: async (input: z.infer<typeof scheduleMeetingParams>) => {
+    const { attendees, topic, duration, keyQuestions } = input;
+
     const meetingSchema = z.object({
       agenda: z
         .array(z.string())
@@ -139,7 +167,7 @@ const scheduleMeeting = tool({
 Topic: ${topic}
 Attendees: ${attendees.join(", ")}
 Key questions to address:
-${keyQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+${keyQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")}
 
 Requirements:
 - Agenda items should have realistic time allocations for ${duration} minutes
@@ -165,18 +193,10 @@ const weeklyPriorities = tool({
   description:
     "Analyze the founder's current situation and recommend top 3-5 weekly " +
     "priorities, things to drop, and quick wins. Based on goals, blockers, and recent wins.",
-  parameters: z.object({
-    currentGoals: z
-      .array(z.string())
-      .describe("Current goals the founder is working toward"),
-    blockers: z
-      .array(z.string())
-      .describe("Current blockers or challenges"),
-    recentWins: z
-      .array(z.string())
-      .describe("Recent wins or achievements to build on"),
-  }),
-  execute: async ({ currentGoals, blockers, recentWins }) => {
+  inputSchema: weeklyPrioritiesParams,
+  execute: async (input: z.infer<typeof weeklyPrioritiesParams>) => {
+    const { currentGoals, blockers, recentWins } = input;
+
     const prioritiesSchema = z.object({
       priorities: z
         .array(
@@ -198,13 +218,13 @@ const weeklyPriorities = tool({
     const prompt = `Analyze this founder's situation and recommend weekly priorities.
 
 Current Goals:
-${currentGoals.map((g, i) => `${i + 1}. ${g}`).join("\n")}
+${currentGoals.map((g: string, i: number) => `${i + 1}. ${g}`).join("\n")}
 
 Blockers:
-${blockers.map((b, i) => `${i + 1}. ${b}`).join("\n")}
+${blockers.map((b: string, i: number) => `${i + 1}. ${b}`).join("\n")}
 
 Recent Wins:
-${recentWins.map((w, i) => `${i + 1}. ${w}`).join("\n")}
+${recentWins.map((w: string, i: number) => `${i + 1}. ${w}`).join("\n")}
 
 Requirements:
 - Recommend 3-5 priorities max (ruthless prioritization)

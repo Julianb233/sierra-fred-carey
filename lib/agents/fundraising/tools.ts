@@ -16,20 +16,59 @@ import { z } from 'zod';
 import { generateStructuredReliable } from '@/lib/ai/fred-client';
 
 // ============================================================================
+// Parameter Schemas (extracted for explicit typing)
+// ============================================================================
+
+const investorResearchParams = z.object({
+  stage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b']).describe('Funding stage the founder is raising for'),
+  sector: z.string().describe('Industry sector or vertical (e.g., "fintech", "healthtech", "B2B SaaS")'),
+  checkSizeMin: z.number().describe('Minimum check size in USD'),
+  checkSizeMax: z.number().describe('Maximum check size in USD'),
+  geographicFocus: z.string().optional().describe('Geographic focus for investors (e.g., "US", "Bay Area", "NYC")'),
+});
+
+const outreachDraftParams = z.object({
+  investorName: z.string().describe('Name of the target investor'),
+  investorFirm: z.string().describe('Firm or fund name'),
+  investorThesis: z.string().describe('What the investor typically invests in'),
+  founderBackground: z.string().describe('Brief founder background and relevant experience'),
+  companyOneLiner: z.string().describe('One-sentence company description'),
+  traction: z.string().describe('Key traction metrics (ARR, users, growth rate, etc.)'),
+  askAmount: z.string().optional().describe('Amount being raised (e.g., "$2M seed round")'),
+  isWarmIntro: z.boolean().describe('Whether this is a warm introduction (true) or cold outreach (false)'),
+  introContext: z.string().optional().describe('Context for warm intro (who is introducing, how they know the investor)'),
+});
+
+const pipelineAnalysisParams = z.object({
+  pipeline: z.array(
+    z.object({
+      investorName: z.string().describe('Investor name'),
+      stage: z.enum(['identified', 'outreach_sent', 'meeting_scheduled', 'term_sheet', 'passed']).describe('Current stage in fundraising pipeline'),
+      lastContact: z.string().optional().describe('Date of last contact (ISO format)'),
+      notes: z.string().optional().describe('Any notes about the conversation or status'),
+    })
+  ).describe('Current fundraising pipeline'),
+});
+
+const meetingPrepParams = z.object({
+  investorName: z.string().describe('Name of the investor'),
+  investorFirm: z.string().describe('Firm or fund name'),
+  meetingType: z.enum(['first-call', 'partner-meeting', 'follow-up', 'due-diligence']).describe('Type of investor meeting'),
+  companyMetrics: z.record(z.string(), z.unknown()).describe('Key company metrics (ARR, MRR, growth, burn, runway, etc.)'),
+  previousInteractions: z.string().optional().describe('Summary of any previous conversations with this investor'),
+});
+
+// ============================================================================
 // Tool 1: Investor Research
 // ============================================================================
 
 const investorResearch = tool({
   description:
     'Research and identify relevant investors based on stage, sector, check size, and geographic focus. Returns a list of matching investors with thesis fit analysis and intro strategies.',
-  parameters: z.object({
-    stage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b']).describe('Funding stage the founder is raising for'),
-    sector: z.string().describe('Industry sector or vertical (e.g., "fintech", "healthtech", "B2B SaaS")'),
-    checkSizeMin: z.number().describe('Minimum check size in USD'),
-    checkSizeMax: z.number().describe('Maximum check size in USD'),
-    geographicFocus: z.string().optional().describe('Geographic focus for investors (e.g., "US", "Bay Area", "NYC")'),
-  }),
-  execute: async ({ stage, sector, checkSizeMin, checkSizeMax, geographicFocus }) => {
+  inputSchema: investorResearchParams,
+  execute: async (input: z.infer<typeof investorResearchParams>) => {
+    const { stage, sector, checkSizeMin, checkSizeMax, geographicFocus } = input;
+
     const prompt = `You are an expert startup fundraising advisor. Research and identify investors that match the following criteria:
 
 Stage: ${stage}
@@ -75,28 +114,20 @@ Be specific and actionable. Explain the reasoning behind each recommendation.`;
 const outreachDraft = tool({
   description:
     'Draft a personalized investor outreach email (cold or warm intro) with follow-up scheduling. Produces a ready-to-send email with subject line, body, and follow-up plan.',
-  parameters: z.object({
-    investorName: z.string().describe('Name of the target investor'),
-    investorFirm: z.string().describe('Firm or fund name'),
-    investorThesis: z.string().describe('What the investor typically invests in'),
-    founderBackground: z.string().describe('Brief founder background and relevant experience'),
-    companyOneLiner: z.string().describe('One-sentence company description'),
-    traction: z.string().describe('Key traction metrics (ARR, users, growth rate, etc.)'),
-    askAmount: z.string().optional().describe('Amount being raised (e.g., "$2M seed round")'),
-    isWarmIntro: z.boolean().describe('Whether this is a warm introduction (true) or cold outreach (false)'),
-    introContext: z.string().optional().describe('Context for warm intro (who is introducing, how they know the investor)'),
-  }),
-  execute: async ({
-    investorName,
-    investorFirm,
-    investorThesis,
-    founderBackground,
-    companyOneLiner,
-    traction,
-    askAmount,
-    isWarmIntro,
-    introContext,
-  }) => {
+  inputSchema: outreachDraftParams,
+  execute: async (input: z.infer<typeof outreachDraftParams>) => {
+    const {
+      investorName,
+      investorFirm,
+      investorThesis,
+      founderBackground,
+      companyOneLiner,
+      traction,
+      askAmount,
+      isWarmIntro,
+      introContext,
+    } = input;
+
     const introType = isWarmIntro ? 'warm introduction' : 'cold outreach';
     const prompt = `You are an expert startup fundraising advisor drafting a ${introType} email to an investor.
 
@@ -147,20 +178,13 @@ Also provide:
 const pipelineAnalysis = tool({
   description:
     'Analyze a fundraising pipeline and provide prioritized next steps, identify stale leads, assess pipeline health, and recommend improvements.',
-  parameters: z.object({
-    pipeline: z.array(
-      z.object({
-        investorName: z.string().describe('Investor name'),
-        stage: z.enum(['identified', 'outreach_sent', 'meeting_scheduled', 'term_sheet', 'passed']).describe('Current stage in fundraising pipeline'),
-        lastContact: z.string().optional().describe('Date of last contact (ISO format)'),
-        notes: z.string().optional().describe('Any notes about the conversation or status'),
-      })
-    ).describe('Current fundraising pipeline'),
-  }),
-  execute: async ({ pipeline }) => {
+  inputSchema: pipelineAnalysisParams,
+  execute: async (input: z.infer<typeof pipelineAnalysisParams>) => {
+    const { pipeline } = input;
+
     const pipelineDescription = pipeline
       .map(
-        (p) =>
+        (p: z.infer<typeof pipelineAnalysisParams>['pipeline'][number]) =>
           `- ${p.investorName}: ${p.stage}${p.lastContact ? ` (last contact: ${p.lastContact})` : ''}${p.notes ? ` -- ${p.notes}` : ''}`
       )
       .join('\n');
@@ -209,20 +233,16 @@ Be specific about WHAT to do, WHEN to do it, and WHY it matters. Fundraising is 
 const meetingPrep = tool({
   description:
     'Prepare for an investor meeting with talking points, anticipated questions with suggested answers, key metrics to highlight, closing ask, and potential red flags.',
-  parameters: z.object({
-    investorName: z.string().describe('Name of the investor'),
-    investorFirm: z.string().describe('Firm or fund name'),
-    meetingType: z.enum(['first-call', 'partner-meeting', 'follow-up', 'due-diligence']).describe('Type of investor meeting'),
-    companyMetrics: z.record(z.string(), z.unknown()).describe('Key company metrics (ARR, MRR, growth, burn, runway, etc.)'),
-    previousInteractions: z.string().optional().describe('Summary of any previous conversations with this investor'),
-  }),
-  execute: async ({
-    investorName,
-    investorFirm,
-    meetingType,
-    companyMetrics,
-    previousInteractions,
-  }) => {
+  inputSchema: meetingPrepParams,
+  execute: async (input: z.infer<typeof meetingPrepParams>) => {
+    const {
+      investorName,
+      investorFirm,
+      meetingType,
+      companyMetrics,
+      previousInteractions,
+    } = input;
+
     const metricsStr = Object.entries(companyMetrics)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');

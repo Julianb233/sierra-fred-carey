@@ -156,7 +156,7 @@ export const growthTools = {
   channelAnalysis: tool({
     description:
       'Analyze current acquisition channels, rank them by ROI, suggest new channels, and recommend budget allocation. Use this when founders need help deciding where to spend their growth budget.',
-    parameters: channelAnalysisParams,
+    inputSchema: channelAnalysisParams,
     execute: async (input: ChannelAnalysisInput) => {
       const prompt = `Analyze these growth channels for a ${input.stage} startup with $${input.monthlyBudget}/month budget.
 
@@ -185,7 +185,7 @@ Rank existing channels by effectiveness, suggest 2-3 new channels to test, and r
   experimentDesign: tool({
     description:
       'Design a rigorous A/B test or growth experiment with clear hypothesis, control/test groups, sample size, duration, and success criteria. Use this when founders want to test a growth idea.',
-    parameters: experimentDesignParams,
+    inputSchema: experimentDesignParams,
     execute: async (input: ExperimentDesignInput) => {
       const prompt = `Design a growth experiment for this hypothesis:
 
@@ -210,7 +210,7 @@ Create a rigorous experiment design with control/test groups, required sample si
   funnelAnalysis: tool({
     description:
       'Analyze a conversion funnel to identify the biggest dropoff points, likely causes, and optimization suggestions ranked by effort and impact. Use this when founders need to improve their conversion rates.',
-    parameters: funnelAnalysisParams,
+    inputSchema: funnelAnalysisParams,
     execute: async (input: FunnelAnalysisInput) => {
       const prompt = `Analyze this conversion funnel for a ${input.pricingModel} product (${input.product}):
 
@@ -237,7 +237,7 @@ Identify the biggest dropoff, likely causes, and provide actionable optimization
   contentStrategy: tool({
     description:
       'Create a content strategy with content pillars, a 4-week calendar, and quick-win content ideas tied to acquisition goals. Use this when founders need a growth-oriented content plan.',
-    parameters: contentStrategyParams,
+    inputSchema: contentStrategyParams,
     execute: async (input: ContentStrategyInput) => {
       const prompt = `Create a growth-oriented content strategy:
 
