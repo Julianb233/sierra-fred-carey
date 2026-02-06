@@ -58,10 +58,10 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - [x] 06-01-PLAN.md — Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, DB migrations
   - [x] 06-02-PLAN.md — Dashboard consumer wiring: real user data, post-checkout success, settings page
 
-- [ ] **Phase 07: Dashboard Integration & Strategy Completion** - Fix dashboard wiring, complete strategy UI
+- [x] **Phase 07: Dashboard Integration & Strategy Completion** - Fix dashboard wiring, complete strategy UI
   - Closes: REALITY-LENS-WIRING, STRAT-COMPONENTS, dashboard nav gaps
-  - [ ] 07-01-PLAN.md — Fix Reality Lens wiring to FRED API, remove legacy route
-  - [ ] 07-02-PLAN.md — Fix dashboard nav (History link, Investor Readiness link)
+  - [x] 07-01-PLAN.md — Fix Reality Lens wiring to FRED API, remove legacy route
+  - [x] 07-02-PLAN.md — Fix dashboard nav (History link, Investor Readiness link)
 
 ### Parallel Track
 
@@ -148,10 +148,10 @@ Within phases:
 - [x] Free->Pro upgrade flow works end-to-end
 
 **Phase 07 Complete When:**
-- [ ] Reality Lens dashboard calls /api/fred/reality-lens (not legacy route)
-- [ ] Dashboard nav includes History and Investor Readiness links
-- [ ] Strategy UI components complete (document-preview, document-list, index)
-- [ ] Legacy /api/reality-lens route removed or redirected
+- [x] Reality Lens dashboard calls /api/fred/reality-lens (not legacy route)
+- [x] Dashboard nav includes History and Investor Readiness links
+- [x] Strategy UI components complete (document-preview, document-list, index)
+- [x] Legacy /api/reality-lens route removed or redirected
 
 ---
 
