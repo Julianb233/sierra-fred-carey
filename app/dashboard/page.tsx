@@ -29,6 +29,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string | null; email: string; tier: number } | null>(null);
   const { tier: contextTier, refresh: refreshTier, isLoading: tierLoading } = useTier();
+  const [dashboardStats, setDashboardStats] = useState<{
+    ideasAnalyzed: number;
+    pitchDecksReviewed: number;
+    checkInsCompleted: number;
+    activeAgents: number;
+    recentActivity: Array<{ action: string; item: string; time: string; score: number | null }>;
+  } | null>(null);
+
+  // Fetch real dashboard stats from API
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/dashboard/stats");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            setDashboardStats(json.data);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch dashboard stats:", e);
+      }
+    }
+    fetchStats();
+  }, []);
 
   // Check for welcome parameter on mount
   useEffect(() => {
@@ -115,31 +140,31 @@ export default function DashboardPage() {
 
   if (!user) return null; // Should have redirected
 
-  // Mock stats - dynamically update based on tier in future
+  // Dashboard stats from API (fallback to 0 while loading)
   const stats = [
     {
       label: "Ideas Analyzed",
-      value: "3",
+      value: String(dashboardStats?.ideasAnalyzed ?? 0),
       icon: <OpenInNewWindowIcon className="h-5 w-5" />,
       color: "text-[#ff6a1a]",
     },
     {
       label: "Pitch Decks Reviewed",
-      value: user.tier >= 1 ? "1" : "-",
+      value: user.tier >= 1 ? String(dashboardStats?.pitchDecksReviewed ?? 0) : "-",
       icon: <FileTextIcon className="h-5 w-5" />,
       color: "text-amber-500",
       locked: user.tier < 1,
     },
     {
       label: "Check-ins Completed",
-      value: user.tier >= 1 ? "2" : "-",
+      value: user.tier >= 1 ? String(dashboardStats?.checkInsCompleted ?? 0) : "-",
       icon: <CheckCircledIcon className="h-5 w-5" />,
       color: "text-green-500",
       locked: user.tier < 1,
     },
     {
       label: "Active Agents",
-      value: user.tier >= 2 ? "4" : "-",
+      value: user.tier >= 2 ? String(dashboardStats?.activeAgents ?? 0) : "-",
       icon: <RocketIcon className="h-5 w-5" />,
       color: "text-purple-500",
       locked: user.tier < 2,
@@ -181,26 +206,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const recentActivity = [
-    {
-      action: "Analyzed",
-      item: "AI-Powered CRM for Real Estate",
-      time: "2 hours ago",
-      score: 78,
-    },
-    {
-      action: "Completed",
-      item: "Weekly Founder Check-in",
-      time: "1 day ago",
-      score: null,
-    },
-    {
-      action: "Reviewed",
-      item: "Series A Pitch Deck v3",
-      time: "3 days ago",
-      score: 85,
-    },
-  ];
+  const recentActivity = dashboardStats?.recentActivity ?? [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -303,33 +309,39 @@ export default function DashboardPage() {
           Recent Activity
         </h2>
         <Card className="divide-y divide-gray-100 dark:divide-gray-800 border-none shadow-lg bg-white/80 dark:bg-gray-900/50 backdrop-blur-md overflow-hidden">
-          {recentActivity.map((activity, index) => (
-            <div key={index} className="p-5 hover:bg-orange-50/50 dark:hover:bg-white/5 transition-colors duration-200">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0 flex items-center gap-4">
-                  <div className="h-2 w-2 rounded-full bg-[#ff6a1a]" />
-                  <div>
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-semibold">{activity.action}</span>{" "}
-                      <span className="text-gray-600 dark:text-gray-400">
-                        {activity.item}
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-                {activity.score && (
-                  <div className="ml-4 text-right">
-                    <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-[#ff6a1a] font-bold text-sm">
-                      {activity.score}
+          {recentActivity.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <p className="text-sm">No recent activity yet. Start by analyzing an idea!</p>
+            </div>
+          ) : (
+            recentActivity.map((activity, index) => (
+              <div key={index} className="p-5 hover:bg-orange-50/50 dark:hover:bg-white/5 transition-colors duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0 flex items-center gap-4">
+                    <div className="h-2 w-2 rounded-full bg-[#ff6a1a]" />
+                    <div>
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        <span className="font-semibold">{activity.action}</span>{" "}
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {activity.item}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {activity.time}
+                      </p>
                     </div>
                   </div>
-                )}
+                  {activity.score && (
+                    <div className="ml-4 text-right">
+                      <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-[#ff6a1a] font-bold text-sm">
+                        {activity.score}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </Card>
       </div>
 
