@@ -65,9 +65,9 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 ### Gap Closure (from v1.0 re-audit)
 
-- [ ] **Phase 08: Final Polish & Chat Wiring** - Wire chat to FRED engine, fix dead buttons, clean up stubs and orphaned code
+- [x] **Phase 08: Final Polish & Chat Wiring** - Wire chat to FRED engine, fix dead buttons, clean up stubs and orphaned code
   - Closes: FRED chat integration break, dashboard CTA dead button, Reality Lens tier stub, SMS nav mismatch, mock stats, legacy routes
-  - [ ] 08-01-PLAN.md — Chat FRED wiring, dashboard fixes, cleanup
+  - [x] 08-01-PLAN.md — Chat FRED wiring, dashboard fixes, cleanup
 
 ### Parallel Track
 
@@ -160,13 +160,13 @@ Within phases:
 - [x] Legacy /api/reality-lens route removed or redirected
 
 **Phase 08 Complete When:**
-- [ ] Chat interface calls /api/fred/chat (not legacy /api/chat)
-- [ ] Dashboard CTA "Upgrade Now" button has working onClick handler
-- [ ] Reality Lens getUserTier() reads real user tier from subscription
-- [ ] SMS nav links to /dashboard/sms (not /dashboard/check-ins mockup)
-- [ ] Dashboard stats fetched from real APIs (not hardcoded)
-- [ ] Legacy /dashboard/investor-score and /api/investor-score deleted
-- [ ] No dual auth import pattern remaining
+- [x] Chat interface calls /api/fred/chat (not legacy /api/chat)
+- [x] Dashboard CTA "Upgrade Now" button has working onClick handler
+- [x] Reality Lens getUserTier() reads real user tier from subscription
+- [x] SMS nav links to /dashboard/sms (not /dashboard/check-ins mockup)
+- [x] Dashboard stats fetched from real APIs (not hardcoded)
+- [x] Legacy /dashboard/investor-score and /api/investor-score deleted
+- [x] No dual auth import pattern remaining
 
 ---
 
