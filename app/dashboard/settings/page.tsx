@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,11 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { NotificationSettings } from "@/components/settings/NotificationSettings"
+import { useTier } from "@/lib/context/tier-context"
+import { createClient } from "@/lib/supabase/client"
+import { UserTier, TIER_FEATURES } from "@/lib/constants"
+import { redirectToPortal } from "@/lib/stripe/client"
+import { UpgradeTier } from "@/components/dashboard/UpgradeTier"
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -20,41 +25,51 @@ export default function SettingsPage() {
   })
 
   const [profile, setProfile] = useState({
-    name: "Fred Cary",
-    email: "founder@startup.com",
-    company: "My Startup Inc.",
+    name: "",
+    email: "",
+    company: "",
   })
 
-  const [currentPlan] = useState<"Free" | "Pro" | "Studio">("Free")
+  const { tier, tierName, isSubscriptionActive, isLoading: tierLoading } = useTier()
+  const [isProfileLoading, setIsProfileLoading] = useState(true)
+  const [portalLoading, setPortalLoading] = useState(false)
 
-  const planPrices = {
-    Free: "$0/month",
-    Pro: "$49/month",
-    Studio: "$199/month",
-  }
+  useEffect(() => {
+    async function fetchProfile() {
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name, company_name")
+          .eq("id", authUser.id)
+          .single()
+        setProfile({
+          name: profileData?.name || authUser.email?.split("@")[0] || "",
+          email: authUser.email || "",
+          company: profileData?.company_name || "",
+        })
+      }
+      setIsProfileLoading(false)
+    }
+    fetchProfile()
+  }, [])
 
-  const planFeatures = {
-    Free: [
-      "1 active project",
-      "Basic investor scoring",
-      "Weekly reality lens",
-      "Email support",
-    ],
-    Pro: [
-      "5 active projects",
-      "Advanced analytics",
-      "Daily reality lens",
-      "Priority support",
-      "Custom pitch deck templates",
-    ],
-    Studio: [
-      "Unlimited projects",
-      "White-label options",
-      "Real-time collaboration",
-      "Dedicated success manager",
-      "API access",
-      "Custom integrations",
-    ],
+  const planPrice = tier === UserTier.STUDIO ? "$249/month"
+    : tier === UserTier.PRO ? "$99/month"
+    : "$0/month"
+
+  const planFeatures = TIER_FEATURES[tier]
+
+  const handleManageSubscription = async () => {
+    try {
+      setPortalLoading(true)
+      await redirectToPortal()
+    } catch (err) {
+      console.error("Portal error:", err)
+    } finally {
+      setPortalLoading(false)
+    }
   }
 
   return (
@@ -79,7 +94,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarFallback className="bg-[#ff6a1a] text-white text-2xl font-semibold">
-                FC
+                {profile.name ? profile.name.split(" ").map(n => n[0]).join("").toUpperCase() : "?"}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
@@ -149,10 +164,10 @@ export default function SettingsPage() {
                   variant="secondary"
                   className="bg-[#ff6a1a]/10 text-[#ff6a1a] hover:bg-[#ff6a1a]/20"
                 >
-                  {currentPlan}
+                  {tierName}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  {planPrices[currentPlan]}
+                  {planPrice}
                 </span>
               </div>
             </div>
@@ -161,7 +176,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <p className="text-sm font-medium">Plan Features</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              {planFeatures[currentPlan as keyof typeof planFeatures].map(
+              {planFeatures.map(
                 (feature, index) => (
                   <li key={index} className="flex items-center gap-2">
                     <svg
@@ -187,11 +202,15 @@ export default function SettingsPage() {
           <Separator />
 
           <div className="flex gap-3">
-            <Button variant="outline">Manage Subscription</Button>
-            {currentPlan !== "Studio" && (
-              <Button className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90">
-                Upgrade Plan
-              </Button>
+            <Button
+              variant="outline"
+              onClick={handleManageSubscription}
+              disabled={portalLoading || !isSubscriptionActive}
+            >
+              {portalLoading ? "Opening..." : "Manage Subscription"}
+            </Button>
+            {tier !== UserTier.STUDIO && (
+              <UpgradeTier currentTier={tier} isSubscriptionActive={isSubscriptionActive} />
             )}
           </div>
         </CardContent>
