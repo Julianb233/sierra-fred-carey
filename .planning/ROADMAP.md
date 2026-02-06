@@ -71,9 +71,9 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 ### Gap Closure (from v1.0 final audit)
 
-- [ ] **Phase 09: Stripe Checkout Fix** - Fix tier-name-to-plan-key mapping in checkout route
+- [x] **Phase 09: Stripe Checkout Fix** - Fix tier-name-to-plan-key mapping in checkout route
   - Closes: Dashboard CTA → Stripe checkout 400 error, Flow 2 partial break
-  - [ ] 09-01-PLAN.md — Add TIER_TO_PLAN_KEY mapping so "pro"→FUNDRAISING, "studio"→VENTURE_STUDIO
+  - [x] 09-01-PLAN.md — Add TIER_TO_PLAN_KEY mapping so "pro"→FUNDRAISING, "studio"→VENTURE_STUDIO
 
 ### Parallel Track
 
@@ -175,9 +175,9 @@ Within phases:
 - [x] No dual auth import pattern remaining
 
 **Phase 09 Complete When:**
-- [ ] redirectToCheckoutByTier("pro") resolves to FUNDRAISING plan priceId
-- [ ] redirectToCheckoutByTier("studio") resolves to VENTURE_STUDIO plan priceId
-- [ ] Existing direct priceId checkout flow still works
+- [x] redirectToCheckoutByTier("pro") resolves to FUNDRAISING plan priceId
+- [x] redirectToCheckoutByTier("studio") resolves to VENTURE_STUDIO plan priceId
+- [x] Existing direct priceId checkout flow still works
 
 ---
 
