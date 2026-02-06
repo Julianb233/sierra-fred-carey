@@ -7,26 +7,26 @@
 
 ## Position
 
-**Current Phase:** 08-final-polish (PLANNED — ready for execution)
-**Current Plan:** 08-01-PLAN.md (7 tasks, 1 wave, autonomous)
-**Status:** Phase 08 planned. All P0-P2 issues from re-audit have execution plan.
-**Last activity:** 2026-02-06 - Phase 08 planned (08-01-PLAN.md created)
+**Current Phase:** 08-final-polish (COMPLETE)
+**Current Plan:** 08-01-PLAN.md (8/8 tasks complete)
+**Status:** All 8 phases complete. v1.0 ready.
+**Last activity:** 2026-02-06 - Completed 08-01-PLAN.md (Chat FRED Wiring, Dashboard Fixes, Cleanup)
 
-Progress: [===========================---] 90% (7/8 phases complete)
+Progress: [==============================] 100% (8/8 phases complete)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 08 (Final Polish & Chat Wiring)
-**Type:** execute
-**Blocked By:** None
+**Action:** None -- all phases complete. v1.0 milestone achieved.
+**Type:** n/a
+**Blocked By:** Nothing
 
 Gap closure progress:
 - Phase 05: Auth & Onboarding Fix -- COMPLETE
 - Phase 06: Tier Display & Stripe Wiring -- COMPLETE
 - Phase 07: Dashboard Integration & Strategy Completion -- COMPLETE
-- Phase 08: Final Polish & Chat Wiring -- PENDING
+- Phase 08: Final Polish & Chat Wiring -- COMPLETE
 
 ---
 
@@ -78,8 +78,11 @@ Gap closure progress:
   - [x] 07-01: Reality Lens FRED API wiring (rewired page, removed legacy route)
   - [x] 07-02: Dashboard nav fix (Decision History link, Investor Readiness link)
 
+- [x] **Phase 08: Final Polish & Chat Wiring**
+  - [x] 08-01: Chat FRED wiring, dashboard fixes, cleanup (8 tasks)
+
 ### What's Pending
-- Nothing pending -- all phases complete
+- Nothing pending -- all 8 phases complete. v1.0 milestone achieved.
 
 ### What's Blocked
 - Nothing currently blocked
@@ -114,6 +117,7 @@ Gap closure progress:
 | 2026-02-06 | 05 infra gap closure | Ran SQL migration via Supabase Management API, added tier column, disabled email confirmation, E2E tested user creation |
 | 2026-02-06 | 07-02 execution | Dashboard nav fix: added Decision History link, corrected Investor Readiness link, removed stale investor-score refs |
 | 2026-02-06 | 07-01 execution | Reality Lens FRED wiring: rewired page to /api/fred/reality-lens, removed legacy /api/reality-lens route |
+| 2026-02-06 | 08-01 execution | Chat FRED wiring (useFredChat hook), CTA fix, Reality Lens tier fix, SMS nav fix, orphan cleanup, auth standardization, dashboard stats API -- 8/8 tasks complete |
 
 ---
 
@@ -165,6 +169,11 @@ Gap closure progress:
 - CountdownTimerIcon for Decision History nav item (distinct from ActivityLogIcon used by Monitoring)
 - Stage enum alignment: dashboard stage Select uses FRED schema values (idea/mvp/launched/scaling) not legacy (ideation/pre-seed/seed/series-a)
 - Delete legacy routes entirely rather than adding redirect stubs when all consumers are internal
+- useFredChat hook replaces raw fetch for chat wiring (SSE streaming, XState, memory persistence)
+- CognitiveStepIndicator for step-based progress display in chat (Analyze > Think > Synthesize > Respond)
+- Single /api/dashboard/stats endpoint for aggregated counts (fewer client requests)
+- Map UserTier enum to RealityLensTier string via lookup table for clean tier boundary
+- Import getUserTier from tier-middleware to reuse subscription chain (not duplicated in reality-lens)
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -196,13 +205,15 @@ Gap closure progress:
 - Match lifecycle dashboard: filter tabs + status-aware action buttons for relationship progression tracking
 - Centralized tier derivation: getUserSubscription() -> getPlanByPriceId() -> getTierFromString() chain for server-side; TierProvider -> /api/user/subscription -> getTierFromString() for client-side
 - Post-checkout success pattern: detect ?success=true, poll refreshTier(), toast notification, clean URL via router.replace
+- Dashboard stats aggregation: single GET endpoint, parallel Promise.all with .catch(() => 0) fallbacks
+- Hook-first chat integration: extract all fetch/state/error logic into custom hook, component only handles layout
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T16:41:00Z
-Stopped at: Completed 07-01-PLAN.md (Reality Lens FRED API wiring) -- all gap closure phases complete
+Last session: 2026-02-06T17:47:43Z
+Stopped at: Completed 08-01-PLAN.md (Chat FRED Wiring, Dashboard Fixes, Cleanup) -- ALL PHASES COMPLETE
 Resume file: None
 
 ---
