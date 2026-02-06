@@ -1,249 +1,272 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Upload, TrendingUp, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+"use client";
+
+import { useState, useEffect } from "react";
+import { ArrowLeft, Loader2, AlertCircle, FileText } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ReviewSummary, DeckOverview, SlideAnalysisPanel } from "@/components/pitch";
+import type { PitchReview } from "@/lib/fred/pitch/types";
+
+interface UploadedDoc {
+  id: string;
+  name: string;
+  type: string;
+  pageCount: number | null;
+  status: string;
+  createdAt: string;
+}
 
 export default function PitchDeckReviewPage() {
-  const overallScore = 74;
+  const [documents, setDocuments] = useState<UploadedDoc[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [review, setReview] = useState<PitchReview | null>(null);
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reviewing, setReviewing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const slides = [
-    {
-      name: 'Title Slide',
-      score: 85,
-      feedback: [
-        'Strong company name and tagline',
-        'Consider adding founder credentials'
-      ],
-      status: 'good'
-    },
-    {
-      name: 'Problem Slide',
-      score: 78,
-      feedback: [
-        'Clear problem statement',
-        'Add more quantifiable pain points'
-      ],
-      status: 'good'
-    },
-    {
-      name: 'Solution Slide',
-      score: 70,
-      feedback: [
-        'Solution is well-explained',
-        'Missing competitive differentiation'
-      ],
-      status: 'needs-work'
-    },
-    {
-      name: 'Market Size Slide',
-      score: 65,
-      feedback: [
-        'TAM/SAM/SOM breakdown needed',
-        'Market growth rate missing'
-      ],
-      status: 'critical'
-    }
-  ];
+  // Fetch uploaded pitch deck documents on mount
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
 
-  const objections = [
-    {
-      objection: 'How will you acquire customers at scale?',
-      response: 'Our multi-channel strategy includes partnerships with industry leaders, content marketing, and a referral program that has shown 40% conversion in beta testing.'
-    },
-    {
-      objection: 'What prevents competitors from copying your solution?',
-      response: 'We have filed 3 patents on our core technology, built proprietary datasets over 2 years, and established exclusive partnerships with key suppliers.'
-    },
-    {
-      objection: 'Your burn rate seems high - when will you be profitable?',
-      response: 'We project profitability by Q3 2026 based on current growth trajectory. Our unit economics show positive contribution margin at 65% customer LTV/CAC ratio.'
-    }
-  ];
+  async function fetchDocuments() {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'good':
-        return {
-          badge: 'Good',
-          variant: 'default' as const,
-          icon: CheckCircle2,
-          color: 'text-green-600'
-        };
-      case 'needs-work':
-        return {
-          badge: 'Needs Work',
-          variant: 'secondary' as const,
-          icon: AlertTriangle,
-          color: 'text-yellow-600'
-        };
-      case 'critical':
-        return {
-          badge: 'Critical',
-          variant: 'destructive' as const,
-          icon: XCircle,
-          color: 'text-red-600'
-        };
-      default:
-        return {
-          badge: 'Unknown',
-          variant: 'outline' as const,
-          icon: AlertTriangle,
-          color: 'text-gray-600'
-        };
+      const res = await fetch("/api/documents/uploaded?type=pitch_deck");
+      if (res.status === 403) {
+        setError("Pro tier required to access Pitch Deck Review");
+        setLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.documents) {
+        setDocuments(data.documents);
+      }
+    } catch {
+      setError("Failed to load documents");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  // When a document is selected, check for existing review
+  async function handleDocumentSelect(docId: string) {
+    setSelectedDocId(docId);
+    setReview(null);
+    setSelectedSlideIndex(null);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/fred/pitch-review?documentId=${docId}`);
+      const data = await res.json();
+
+      if (data.success && data.review) {
+        setReview(data.review);
+      }
+    } catch {
+      // No existing review -- that is fine
+    }
+  }
+
+  // Trigger AI review
+  async function runReview() {
+    if (!selectedDocId) return;
+
+    try {
+      setReviewing(true);
+      setError(null);
+
+      const res = await fetch("/api/fred/pitch-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: selectedDocId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.review) {
+        setReview(data.review);
+      } else {
+        throw new Error(data.error || "Failed to review pitch deck");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to review pitch deck");
+    } finally {
+      setReviewing(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold">Pitch Deck Review</h1>
-          <Badge
-            style={{ backgroundColor: '#ff6a1a' }}
-            className="text-white"
-          >
-            Pro
-          </Badge>
-        </div>
-        <p className="text-muted-foreground">
-          Get expert AI feedback on your pitch deck slide by slide.
-        </p>
-      </div>
-
-      {/* Upload Area */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-[#ff6a1a] transition-colors cursor-pointer">
-            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-lg font-medium mb-2">
-              Drag and drop your deck or click to browse
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Supports PDF, PPT, PPTX up to 50MB
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Overall Score */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" style={{ color: '#ff6a1a' }} />
-            Overall Deck Score
-          </CardTitle>
-          <CardDescription>
-            Based on investor readiness criteria
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="text-5xl font-bold" style={{ color: '#ff6a1a' }}>
-              {overallScore}
-            </div>
-            <div className="text-2xl text-muted-foreground">/100</div>
-          </div>
-          <Progress
-            value={overallScore}
-            className="mt-4 h-3"
-            style={{
-              // @ts-ignore
-              '--progress-background': '#ff6a1a'
-            }}
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            Your deck is above average but needs refinement in key areas
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Slide-by-Slide Analysis */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Slide-by-Slide Analysis</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {slides.map((slide, index) => {
-            const statusConfig = getStatusConfig(slide.status);
-            const StatusIcon = statusConfig.icon;
-
-            return (
-              <Card key={index}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{slide.name}</CardTitle>
-                    <Badge variant={statusConfig.variant}>
-                      {statusConfig.badge}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <StatusIcon className={`h-5 w-5 ${statusConfig.color}`} />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">Score</span>
-                        <span className="text-sm font-bold">{slide.score}%</span>
-                      </div>
-                      <Progress value={slide.score} className="h-2" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {slide.feedback.map((item, i) => (
-                      <div key={i} className="flex gap-2 text-sm">
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Common Objections */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Common Investor Objections</CardTitle>
-          <CardDescription>
-            Be prepared for these questions with our suggested responses
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {objections.map((item, index) => (
-            <div key={index} className="border-l-4 pl-4 py-2" style={{ borderColor: '#ff6a1a' }}>
-              <p className="font-semibold mb-2">{item.objection}</p>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium" style={{ color: '#ff6a1a' }}>Suggested Response: </span>
-                {item.response}
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Pitch Deck Review
+                </h1>
+                <Badge
+                  style={{ backgroundColor: "#ff6a1a" }}
+                  className="text-white"
+                >
+                  Pro
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-500">
+                AI-powered slide-by-slide analysis of your pitch deck
               </p>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Upgrade CTA */}
-      <Card className="border-2" style={{ borderColor: '#ff6a1a' }}>
-        <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <h3 className="text-2xl font-bold">Unlock Full Deck Analysis</h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Get detailed feedback on all slides, investor-ready recommendations,
-              competitive analysis, and personalized coaching to perfect your pitch.
-            </p>
-            <Button
-              size="lg"
-              style={{ backgroundColor: '#ff6a1a' }}
-              className="text-white hover:opacity-90"
-            >
-              Upgrade to Pro - $49/month
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Error banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+            <p className="text-red-700 dark:text-red-400">{error}</p>
+          </div>
+        )}
+
+        {/* Document selector */}
+        <Card className="mb-8">
+          <CardContent className="py-6">
+            {documents.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Pitch Decks Found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Upload a pitch deck first to get AI-powered analysis.
+                </p>
+                <Link href="/dashboard">
+                  <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1 w-full sm:max-w-md">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                    Select a pitch deck to review
+                  </label>
+                  <Select
+                    value={selectedDocId || undefined}
+                    onValueChange={handleDocumentSelect}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a document..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {documents.map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {doc.name}
+                          {doc.pageCount ? ` (${doc.pageCount} pages)` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedDocId && !review && !reviewing && (
+                  <Button
+                    onClick={runReview}
+                    className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white mt-4 sm:mt-6"
+                  >
+                    Review Deck
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Reviewing state */}
+        {reviewing && (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-[#ff6a1a] mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                FRED is analyzing your deck slide by slide...
+              </h3>
+              <p className="text-gray-500">
+                This may take a minute. Each slide is being classified and evaluated.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Review display */}
+        {review && !reviewing && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left column */}
+            <div className="lg:col-span-2 space-y-6">
+              <ReviewSummary review={review} />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Slide Overview
+                </h3>
+                <DeckOverview
+                  slides={review.slides}
+                  selectedIndex={selectedSlideIndex}
+                  onSelectSlide={setSelectedSlideIndex}
+                />
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div className="lg:col-span-1">
+              {selectedSlideIndex !== null && review.slides[selectedSlideIndex] ? (
+                <div className="sticky top-8">
+                  <SlideAnalysisPanel
+                    slide={review.slides[selectedSlideIndex]}
+                    onClose={() => setSelectedSlideIndex(null)}
+                  />
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-gray-400">
+                      Click a slide above to see detailed analysis
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
