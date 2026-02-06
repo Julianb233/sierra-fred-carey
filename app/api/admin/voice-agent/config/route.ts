@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch voice agent configuration
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const supabase = createServiceClient();
 
@@ -69,6 +73,9 @@ Guidelines:
 
 // PUT - Update voice agent configuration
 export async function PUT(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const supabase = createServiceClient();
@@ -135,6 +142,9 @@ export async function PUT(request: NextRequest) {
 
 // POST - Create new voice agent configuration
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const supabase = createServiceClient();

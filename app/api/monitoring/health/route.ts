@@ -1,12 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import type { SystemHealthData } from "@/components/monitoring/SystemHealth";
 import { sql } from "@/lib/db/supabase-sql";
 
 /**
  * GET /api/monitoring/health
  * Returns system health information with real service checks
+ *
+ * SECURITY: Requires admin authentication
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const now = new Date();
 

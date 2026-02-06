@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { getMonitoringDashboard } from "@/lib/monitoring/ab-test-metrics";
 
 /**
  * GET /api/monitoring/dashboard
  * Real-time A/B test monitoring dashboard
  * Returns active experiments, metrics, and critical alerts
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     console.log("[Monitoring API] Fetching dashboard data");
 
@@ -23,7 +30,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to fetch monitoring dashboard",
-        message: error.message,
       },
       { status: 500 }
     );

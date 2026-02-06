@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { clearConfigCache } from "@/lib/ai/config-loader";
-
-/**
- * Admin authentication check
- * Uses simple header-based authentication for now
- */
-function isAdmin(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  return !!adminKey && adminKey === secret;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/admin/config
  * Get all analyzer configurations
  */
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -72,7 +62,7 @@ export async function GET(request: NextRequest) {
  * }
  */
 export async function PATCH(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -116,56 +106,33 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Build dynamic UPDATE query
-    const setters: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    if (model !== undefined) {
-      setters.push(`model = $${paramIndex++}`);
-      values.push(model);
-    }
-
-    if (temperature !== undefined) {
-      setters.push(`temperature = $${paramIndex++}`);
-      values.push(temperature);
-    }
-
-    if (maxTokens !== undefined) {
-      setters.push(`max_tokens = $${paramIndex++}`);
-      values.push(maxTokens);
-    }
-
-    if (dimensionWeights !== undefined) {
-      setters.push(`dimension_weights = $${paramIndex++}`);
-      values.push(JSON.stringify(dimensionWeights));
-    }
-
-    if (scoreThresholds !== undefined) {
-      setters.push(`score_thresholds = $${paramIndex++}`);
-      values.push(JSON.stringify(scoreThresholds));
-    }
-
-    if (customSettings !== undefined) {
-      setters.push(`custom_settings = $${paramIndex++}`);
-      values.push(JSON.stringify(customSettings));
-    }
-
-    if (setters.length === 0) {
+    // Check there's something to update
+    if (
+      model === undefined &&
+      temperature === undefined &&
+      maxTokens === undefined &&
+      dimensionWeights === undefined &&
+      scoreThresholds === undefined &&
+      customSettings === undefined
+    ) {
       return NextResponse.json(
         { success: false, error: "No update fields provided" },
         { status: 400 }
       );
     }
 
-    // Always update updated_at
-    setters.push(`updated_at = NOW()`);
-    values.push(analyzer);
-
-    const query = `
+    // Use COALESCE pattern for safe parameterized updates (no sql.unsafe needed)
+    const result = await sql`
       UPDATE ai_config
-      SET ${setters.join(", ")}
-      WHERE analyzer = $${paramIndex}
+      SET
+        model = COALESCE(${model !== undefined ? model : null}, model),
+        temperature = COALESCE(${temperature !== undefined ? temperature : null}, temperature),
+        max_tokens = COALESCE(${maxTokens !== undefined ? maxTokens : null}, max_tokens),
+        dimension_weights = COALESCE(${dimensionWeights !== undefined ? JSON.stringify(dimensionWeights) : null}, dimension_weights),
+        score_thresholds = COALESCE(${scoreThresholds !== undefined ? JSON.stringify(scoreThresholds) : null}, score_thresholds),
+        custom_settings = COALESCE(${customSettings !== undefined ? JSON.stringify(customSettings) : null}, custom_settings),
+        updated_at = NOW()
+      WHERE analyzer = ${analyzer}
       RETURNING
         id,
         analyzer,
@@ -178,10 +145,6 @@ export async function PATCH(request: NextRequest) {
         created_at as "createdAt",
         updated_at as "updatedAt"
     `;
-
-    // Execute the dynamic query
-    // @ts-ignore - sql.unsafe doesn't have proper typing
-    const result: any[] = await sql.unsafe(query, values);
 
     if (!result || result.length === 0) {
       return NextResponse.json(
@@ -225,7 +188,7 @@ export async function PATCH(request: NextRequest) {
  * }
  */
 export async function POST(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch voice agent analytics
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const configId = searchParams.get('config_id');
     const supabase = createServiceClient();
 
-    // Get call statistics using RPC or direct query
-    let statsQuery = supabase.from('voice_calls').select('*');
+    // Get call statistics via database aggregation (avoids loading all rows into memory)
+    let statsQuery = supabase.from('voice_calls').select('id, status, duration_seconds, escalation_triggered, escalation_reason, started_at, agent_config_id');
 
     if (configId) {
       statsQuery = statsQuery.eq('agent_config_id', configId);
@@ -104,6 +108,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Record call analytics (called by voice agent after call ends)
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const supabase = createServiceClient();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import {
   autoCheckPromotions,
   DEFAULT_PROMOTION_CONFIG,
@@ -15,22 +16,25 @@ import {
  *   - config: PromotionConfig (optional)
  *   - cronSecret: string (optional, for security)
  *
- * Security: Recommend using Vercel Cron or similar with secret validation
+ * SECURITY: Requires AUTO_PROMOTION_CRON_SECRET or admin auth
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { userId, config = DEFAULT_PROMOTION_CONFIG, cronSecret } = body;
 
-    // Validate cron secret if configured
+    // SECURITY: Require cron secret or admin auth
     const expectedSecret = process.env.AUTO_PROMOTION_CRON_SECRET;
-    if (expectedSecret && cronSecret !== expectedSecret) {
-      console.error("[Auto-Promotion] Invalid cron secret");
+    const hasCronSecret = expectedSecret && cronSecret === expectedSecret;
+    const hasAdminAuth = isAdminRequest(request);
+
+    if (!hasCronSecret && !hasAdminAuth) {
+      console.error("[Auto-Promotion] Unauthorized access attempt");
       return NextResponse.json(
         {
           success: false,
           error: "Unauthorized",
-          message: "Invalid cron secret",
+          message: "Valid cron secret or admin authentication required",
         },
         { status: 401 }
       );
@@ -71,7 +75,6 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Auto-promotion check failed",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -81,8 +84,14 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/monitoring/auto-promotion/check
  * Get information about auto-promotion configuration
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   return NextResponse.json({
     success: true,
     data: {

@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
-
-/**
- * Admin authentication check
- * Uses simple header-based authentication for now
- */
-function isAdmin(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  return !!adminKey && adminKey === secret;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/admin/ab-tests/[id]
@@ -20,7 +10,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -146,7 +136,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -210,7 +200,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -283,8 +273,8 @@ export async function PATCH(
         created_by as "createdBy"
     `;
 
-    // @ts-ignore - sql.unsafe doesn't have proper typing
-    const result: any[] = await sql.unsafe(query, values);
+    // @ts-expect-error - sql.unsafe() only wraps strings; this 2-arg call pattern needs a proper query executor
+    const result: Record<string, unknown>[] = await sql.unsafe(query, values);
 
     console.log(`[Admin A/B Test PATCH] Updated experiment ${experimentId}`);
 
@@ -316,7 +306,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

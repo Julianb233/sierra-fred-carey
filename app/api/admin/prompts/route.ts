@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { clearConfigCache } from "@/lib/ai/config-loader";
-
-/**
- * Admin authentication check
- * Uses simple header-based authentication for now
- */
-function isAdmin(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  return !!adminKey && adminKey === secret;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/admin/prompts
@@ -22,7 +12,7 @@ function isAdmin(request: NextRequest): boolean {
  * - active_only: Show only active prompts (default: false)
  */
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -98,7 +88,7 @@ export async function GET(request: NextRequest) {
  * Automatically increments version based on existing prompts with same name
  */
 export async function POST(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -185,7 +175,7 @@ export async function POST(request: NextRequest) {
  * When activating, automatically deactivates other versions of same name
  */
 export async function PATCH(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

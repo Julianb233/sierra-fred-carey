@@ -1,21 +1,14 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import Link from "next/link";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Simple admin check - can be enhanced later
-async function isAdmin() {
-  const cookieStore = await cookies();
-  const adminKey = cookieStore.get("adminKey")?.value;
-  return adminKey === process.env.ADMIN_SECRET_KEY;
-}
+import { LogoutButton } from "./components/LogoutButton";
+import { isAdminSession } from "@/lib/auth/admin";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await isAdmin();
+  const admin = await isAdminSession();
 
   if (!admin) {
     redirect("/admin/login");
@@ -34,14 +27,7 @@ export default async function AdminLayout({
                 AI Settings Management
               </span>
             </div>
-            <form action="/api/admin/logout" method="POST">
-              <button
-                type="submit"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Logout
-              </button>
-            </form>
+            <LogoutButton />
           </div>
 
           <div className="flex gap-2">

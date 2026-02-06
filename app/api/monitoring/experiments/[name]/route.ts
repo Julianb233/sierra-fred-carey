@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { compareExperimentVariants } from "@/lib/monitoring/ab-test-metrics";
 
 /**
@@ -8,11 +9,17 @@ import { compareExperimentVariants } from "@/lib/monitoring/ab-test-metrics";
  *   - startDate: ISO date string (optional)
  *   - endDate: ISO date string (optional)
  *   - days: number of days to look back (default: 7)
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { name } = await params;
     const experimentName = decodeURIComponent(name);

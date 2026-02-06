@@ -5,17 +5,7 @@ import {
   getPromotionHistory,
 } from "@/lib/ab-testing/auto-promotion";
 import { sql } from "@/lib/db/supabase-sql";
-
-/**
- * Admin authentication check
- * Uses simple header-based authentication for now
- */
-function isAdmin(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  return !!adminKey && adminKey === secret;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/admin/ab-tests/[id]/promote
@@ -30,7 +20,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -135,7 +125,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -258,7 +248,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

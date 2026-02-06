@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import {
   scanAndPromoteWinners,
   promoteWinner,
@@ -24,6 +25,10 @@ import {
  *   - dryRun: boolean (optional)
  */
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { action, experimentName, promotionId, reason, config, preset, dryRun } = body;
@@ -148,7 +153,6 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Internal server error",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -160,6 +164,10 @@ export async function POST(request: NextRequest) {
  * Get auto-promotion configuration and status
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const preset = searchParams.get("preset") as any;
@@ -182,7 +190,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Internal server error",
-        message: error.message,
       },
       { status: 500 }
     );

@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
-
-/**
- * Admin authentication check
- * Uses simple header-based authentication for now
- */
-function isAdmin(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  return !!adminKey && adminKey === secret;
-}
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/admin/ab-tests
  * List all experiments with their variants and latest metrics
  */
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -105,7 +95,7 @@ export async function GET(request: NextRequest) {
  * }
  */
 export async function POST(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -236,7 +226,7 @@ export async function POST(request: NextRequest) {
  * Validates total traffic across variants doesn't exceed 100%
  */
 export async function PATCH(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -346,8 +336,8 @@ export async function PATCH(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    // @ts-ignore - sql.unsafe doesn't have proper typing
-    const result: any[] = await sql.unsafe(query, values);
+    // @ts-expect-error - sql.unsafe() only wraps strings; this 2-arg call pattern needs a proper query executor
+    const result: Record<string, unknown>[] = await sql.unsafe(query, values);
 
     // Get experiment context
     const experimentContext = await sql`

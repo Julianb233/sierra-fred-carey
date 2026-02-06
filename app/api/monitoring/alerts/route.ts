@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { getMonitoringDashboard } from "@/lib/monitoring/ab-test-metrics";
 import { sendNotification, NotificationPayload } from "@/lib/notifications";
 import { notifyAlerts } from "@/lib/monitoring/alert-notifier";
@@ -10,8 +11,14 @@ import { notifyAlerts } from "@/lib/monitoring/alert-notifier";
  *   - level: Filter by alert level (info, warning, critical)
  *   - type: Filter by alert type (performance, errors, traffic, significance)
  *   - notify: If true, send notifications for new alerts (default: false)
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const levelFilter = searchParams.get("level");
@@ -109,6 +116,10 @@ export async function GET(request: NextRequest) {
  *   - metadata: (optional) Additional metadata
  */
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
+import { requireAuth, getOptionalUserId } from "@/lib/auth";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * POST /api/ai/rating
@@ -17,13 +19,15 @@ import { sql } from "@/lib/db/supabase-sql";
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication - userId from server-side session, not client body
+    const userId = await requireAuth();
+
     const body = await request.json();
     const {
       responseId,
       rating,
       variant = "stars",
       feedback = {},
-      userId = null,
     } = body;
 
     // Validation
@@ -150,6 +154,9 @@ export async function POST(request: NextRequest) {
       message: "Rating submitted successfully",
     });
   } catch (error: any) {
+    // Return auth errors directly (thrown by requireAuth)
+    if (error instanceof Response) return error as NextResponse;
+
     console.error("[AI Rating] Error:", error);
 
     // Handle specific database errors
@@ -192,13 +199,38 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Require admin auth for aggregate/unfiltered queries,
+    // allow authenticated users to query their own ratings
+    const isAdmin = isAdminRequest(request);
+
     const { searchParams } = new URL(request.url);
     const responseId = searchParams.get("responseId");
     const userId = searchParams.get("userId");
     const aggregate = searchParams.get("aggregate") === "true";
 
+    // Aggregate and unfiltered queries require admin auth
+    if (aggregate || (!responseId && !userId)) {
+      if (!isAdmin) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    }
+
+    // User-specific queries: verify the caller is the user or is admin
+    if (userId && !isAdmin) {
+      const authenticatedUserId = await getOptionalUserId();
+      if (!authenticatedUserId || authenticatedUserId !== userId) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    }
+
     if (aggregate) {
-      // Return aggregate statistics
+      // Return aggregate statistics (admin only)
       const stats = await sql`
         SELECT
           COUNT(*) as "totalRatings",
@@ -241,7 +273,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (userId) {
-      // Get ratings by specific user
+      // Get ratings by specific user (auth verified above)
       const ratings = await sql`
         SELECT
           id,
@@ -264,7 +296,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // If no filters, return recent ratings
+    // Admin-only: recent ratings (auth verified above)
     const recentRatings = await sql`
       SELECT
         id,

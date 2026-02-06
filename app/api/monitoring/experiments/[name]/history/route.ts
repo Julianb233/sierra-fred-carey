@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { getPromotionHistory } from "@/lib/monitoring/auto-promotion";
 
 /**
  * GET /api/monitoring/experiments/[name]/history
  * Get promotion history for an experiment
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { name } = await params;
     const experimentName = decodeURIComponent(name);

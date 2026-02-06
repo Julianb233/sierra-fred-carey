@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch knowledge base entries
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const configId = searchParams.get('config_id');
@@ -42,6 +46,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new knowledge base entry
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const supabase = createServiceClient();
@@ -105,22 +112,37 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update knowledge base entry
 export async function PUT(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const supabase = createServiceClient();
 
-    const { id, ...updateData } = body;
+    const { id } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Entry ID required' }, { status: 400 });
     }
 
+    // SECURITY: Explicitly pick allowed fields instead of spreading user input
+    const allowedUpdate: Record<string, unknown> = {};
+    const ALLOWED_FIELDS = [
+      'entry_type', 'question', 'answer', 'document_title', 'document_content',
+      'document_url', 'product_name', 'product_description', 'product_price',
+      'product_features', 'category', 'tags', 'search_keywords', 'priority',
+      'is_active'
+    ] as const;
+    for (const field of ALLOWED_FIELDS) {
+      if (body[field] !== undefined) {
+        allowedUpdate[field] = body[field];
+      }
+    }
+    allowedUpdate.updated_at = new Date().toISOString();
+
     const { data, error } = await supabase
       .from('knowledge_base')
-      .update({
-        ...updateData,
-        updated_at: new Date().toISOString()
-      })
+      .update(allowedUpdate)
       .eq('id', id)
       .select()
       .single();
@@ -142,6 +164,9 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete knowledge base entry
 export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

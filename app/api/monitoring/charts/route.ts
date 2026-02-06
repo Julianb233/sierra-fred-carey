@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 import { sql } from "@/lib/db/supabase-sql";
 import type {
   ConversionDataPoint,
@@ -15,8 +16,14 @@ import type {
  * Query params:
  * - type: "conversion" | "latency" | "traffic" | "error"
  * - range: "24h" | "7d" | "30d"
+ *
+ * SECURITY: Requires admin authentication
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const chartType = searchParams.get("type") || "conversion";
