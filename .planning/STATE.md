@@ -1,25 +1,25 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-plan-milestone-gaps (re-audit gap closure)
+**Session:** gsd-plan-09-stripe-fix (Phase 09 execution)
 
 ---
 
 ## Position
 
-**Current Phase:** 09-stripe-checkout-fix (PLANNED)
-**Current Plan:** 09-01-PLAN.md (0/1 tasks complete)
-**Status:** Phase 09 planned. 1 P1 gap to close from final audit.
-**Last activity:** 2026-02-06 - Created Phase 09 plan (Stripe checkout tier mapping fix)
+**Current Phase:** 09-stripe-checkout-fix (COMPLETE)
+**Current Plan:** 09-01-PLAN.md (1/1 tasks complete)
+**Status:** All 9 phases complete. v1.0 milestone fully achieved.
+**Last activity:** 2026-02-06 - Completed 09-01-PLAN.md (Stripe checkout tier mapping fix)
 
-Progress: [=============================-] 97% (8/9 phases complete)
+Progress: [==============================] 100% (9/9 phases complete)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 09 (Stripe Checkout Fix)
-**Type:** execute-phase
+**Action:** None -- all phases complete
+**Type:** n/a
 **Blocked By:** Nothing
 
 Gap closure progress:
@@ -27,7 +27,7 @@ Gap closure progress:
 - Phase 06: Tier Display & Stripe Wiring -- COMPLETE
 - Phase 07: Dashboard Integration & Strategy Completion -- COMPLETE
 - Phase 08: Final Polish & Chat Wiring -- COMPLETE
-- Phase 09: Stripe Checkout Fix -- PLANNED
+- Phase 09: Stripe Checkout Fix -- COMPLETE
 
 ---
 
@@ -81,9 +81,11 @@ Gap closure progress:
 
 - [x] **Phase 08: Final Polish & Chat Wiring**
   - [x] 08-01: Chat FRED wiring, dashboard fixes, cleanup (8 tasks)
+- [x] **Phase 09: Stripe Checkout Fix**
+  - [x] 09-01: Tier-name-to-plan-key mapping in checkout route
 
 ### What's Pending
-- Nothing pending -- all 8 phases complete. v1.0 milestone achieved.
+- Nothing pending -- all 9 phases complete. v1.0 milestone fully achieved.
 
 ### What's Blocked
 - Nothing currently blocked
@@ -119,6 +121,7 @@ Gap closure progress:
 | 2026-02-06 | 07-02 execution | Dashboard nav fix: added Decision History link, corrected Investor Readiness link, removed stale investor-score refs |
 | 2026-02-06 | 07-01 execution | Reality Lens FRED wiring: rewired page to /api/fred/reality-lens, removed legacy /api/reality-lens route |
 | 2026-02-06 | 08-01 execution | Chat FRED wiring (useFredChat hook), CTA fix, Reality Lens tier fix, SMS nav fix, orphan cleanup, auth standardization, dashboard stats API -- 8/8 tasks complete |
+| 2026-02-06 | 09-01 execution | Stripe checkout tier mapping fix: TIER_TO_PLAN_KEY so "pro"->FUNDRAISING, "studio"->VENTURE_STUDIO -- 1/1 tasks complete |
 
 ---
 
@@ -175,6 +178,7 @@ Gap closure progress:
 - Single /api/dashboard/stats endpoint for aggregated counts (fewer client requests)
 - Map UserTier enum to RealityLensTier string via lookup table for clean tier boundary
 - Import getUserTier from tier-middleware to reuse subscription chain (not duplicated in reality-lens)
+- TIER_TO_PLAN_KEY mapping at checkout route boundary: translate user-facing tier names (pro, studio) to PLANS keys (FUNDRAISING, VENTURE_STUDIO)
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -208,13 +212,14 @@ Gap closure progress:
 - Post-checkout success pattern: detect ?success=true, poll refreshTier(), toast notification, clean URL via router.replace
 - Dashboard stats aggregation: single GET endpoint, parallel Promise.all with .catch(() => 0) fallbacks
 - Hook-first chat integration: extract all fetch/state/error logic into custom hook, component only handles layout
+- API-boundary tier translation: accept user-facing tier names, map to internal PLANS keys before lookup
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T17:52:35Z
-Stopped at: Completed 08-01-PLAN.md (Chat FRED Wiring, Dashboard Fixes, Cleanup) -- ALL PHASES COMPLETE
+Last session: 2026-02-06T19:09:00Z
+Stopped at: Completed 09-01-PLAN.md (Stripe Checkout Tier Mapping Fix) -- ALL 9 PHASES COMPLETE
 Resume file: None
 
 ---
