@@ -73,29 +73,43 @@ export async function getMatches(
     limit?: number;
   }
 ): Promise<BoardyMatch[]> {
-  let query = supabase
-    .from("boardy_matches")
-    .select("*")
-    .eq("user_id", userId)
-    .order("match_score", { ascending: false });
+  try {
+    let query = supabase
+      .from("boardy_matches")
+      .select("*")
+      .eq("user_id", userId)
+      .order("match_score", { ascending: false });
 
-  if (opts?.matchType) {
-    query = query.eq("match_type", opts.matchType);
-  }
-  if (opts?.status) {
-    query = query.eq("status", opts.status);
-  }
-  if (opts?.limit) {
-    query = query.limit(opts.limit);
-  }
+    if (opts?.matchType) {
+      query = query.eq("match_type", opts.matchType);
+    }
+    if (opts?.status) {
+      query = query.eq("status", opts.status);
+    }
+    // Always apply a limit to prevent unbounded queries
+    query = query.limit(opts?.limit ?? 50);
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
-    throw new Error(`Failed to get boardy matches: ${error.message}`);
+    if (error) {
+      // PGRST205 = table doesn't exist (migrations not applied)
+      if (error.code === 'PGRST205' || error.message?.includes('relation') || error.code === '42P01') {
+        console.warn('[getMatches] Table does not exist, returning empty array');
+        return [];
+      }
+      throw new Error(`Failed to get boardy matches: ${error.message}`);
+    }
+
+    return (data || []).map(mapBoardyMatch);
+  } catch (err) {
+    // Gracefully handle missing table or connection issues
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('PGRST205')) {
+      console.warn('[getMatches] Table does not exist, returning empty array');
+      return [];
+    }
+    throw err;
   }
-
-  return (data || []).map(mapBoardyMatch);
 }
 
 // ============================================================================
@@ -135,13 +149,16 @@ export async function updateMatchStatus(
  */
 export async function deleteMatchesByStatus(
   userId: string,
-  status: BoardyMatchStatus
+  status: BoardyMatchStatus,
+  olderThanHours: number = 1
 ): Promise<void> {
+  const cutoff = new Date(Date.now() - olderThanHours * 60 * 60 * 1000).toISOString();
   const { error } = await supabase
     .from("boardy_matches")
     .delete()
     .eq("user_id", userId)
-    .eq("status", status);
+    .eq("status", status)
+    .lt("created_at", cutoff);
 
   if (error) {
     throw new Error(`Failed to delete boardy matches: ${error.message}`);

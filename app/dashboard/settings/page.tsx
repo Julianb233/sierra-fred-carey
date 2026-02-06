@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client"
 import { UserTier, TIER_FEATURES } from "@/lib/constants"
 import { redirectToPortal } from "@/lib/stripe/client"
 import { UpgradeTier } from "@/components/dashboard/UpgradeTier"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -168,6 +169,7 @@ export default function SettingsPage() {
       const supabase = createClient()
       // Note: actual account deletion would need a server-side endpoint
       // For now, sign out and redirect
+      localStorage.clear()
       await supabase.auth.signOut()
       window.location.href = "/login"
     } catch (err) {
@@ -203,8 +205,10 @@ export default function SettingsPage() {
         .eq("id", authUser.id)
 
       if (error) throw error
+      toast.success("Notification preferences saved")
     } catch (err) {
       console.error("Save notifications error:", err)
+      toast.error("Failed to save notification preferences")
     } finally {
       setNotifSaveLoading(false)
     }

@@ -200,7 +200,13 @@ export async function storeChunks(
   documentId: string,
   chunks: (Chunk & { embedding: number[] })[]
 ): Promise<void> {
-  const chunkRecords = chunks.map(chunk => ({
+  // Limit chunks to prevent memory issues with very large documents
+  const MAX_CHUNKS = 500;
+  const limitedChunks = chunks.length > MAX_CHUNKS
+    ? (console.warn(`[storeChunks] Document ${documentId}: truncating ${chunks.length} chunks to ${MAX_CHUNKS}`), chunks.slice(0, MAX_CHUNKS))
+    : chunks;
+
+  const chunkRecords = limitedChunks.map(chunk => ({
     document_id: documentId,
     chunk_index: chunk.index,
     content: chunk.content,

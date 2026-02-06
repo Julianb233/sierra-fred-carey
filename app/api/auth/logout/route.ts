@@ -4,7 +4,10 @@ import { signOut } from "@/lib/auth";
 export async function POST() {
   try {
     await signOut();
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      clearStorage: ["sahara-onboarding", "startup_process"],
+    });
   } catch (error) {
     console.error("[api/auth/logout] Error:", error);
     return NextResponse.json(

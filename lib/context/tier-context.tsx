@@ -76,7 +76,7 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
       const data = await response.json();
 
       // API returns: { plan: { id, name, ... }, subscription: { status, ... } | null, isActive: boolean }
-      if (data.isActive && (data.subscription?.status === "active" || data.subscription?.status === "trialing")) {
+      if (data.isActive && ["active", "trialing", "past_due"].includes(data.subscription?.status)) {
         setIsSubscriptionActive(true);
         setTier(getTierFromString(data.plan?.id || "free"));
       } else {
@@ -172,7 +172,7 @@ export function useUserTier() {
         const data = await response.json();
 
         // API returns: { plan: { id, name, ... }, subscription: { status, ... } | null, isActive: boolean }
-        if (data.isActive && (data.subscription?.status === "active" || data.subscription?.status === "trialing")) {
+        if (data.isActive && ["active", "trialing", "past_due"].includes(data.subscription?.status)) {
           setIsSubscriptionActive(true);
           setTier(getTierFromString(data.plan?.id || "free"));
         } else {

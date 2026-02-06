@@ -218,6 +218,7 @@ export default function DashboardLayout({
             <Link
               key={item.name}
               href={isLocked ? "#" : item.href}
+              title={isLocked ? `Upgrade to ${item.badge} to unlock ${item.name}` : undefined}
               onClick={(e) => {
                 if (isLocked) {
                   e.preventDefault();

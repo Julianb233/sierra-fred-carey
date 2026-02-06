@@ -97,13 +97,15 @@ export default function StrategyPage() {
     const template = TEMPLATES[selectedType];
     const sectionCount = template?.sections.length || 5;
 
-    // Simulate section progress (~4s per section)
+    // Increment progress gradually, capping at second-to-last section until real response
+    let elapsed = 0;
+    const estimatedMs = sectionCount * 5000; // ~5s per section estimate
     progressIntervalRef.current = setInterval(() => {
-      setCurrentSection((prev) => {
-        if (prev < sectionCount - 1) return prev + 1;
-        return prev;
-      });
-    }, 4000);
+      elapsed += 1000;
+      const progress = Math.min(elapsed / estimatedMs, 0.9); // Cap at 90%
+      const sectionIndex = Math.floor(progress * sectionCount);
+      setCurrentSection((prev) => Math.max(prev, Math.min(sectionIndex, sectionCount - 2)));
+    }, 1000);
 
     try {
       const response = await fetch("/api/fred/strategy", {
