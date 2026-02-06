@@ -10,11 +10,10 @@
  * The orchestrator handles retries at a higher level.
  */
 
-import { generateText, stepCountIs } from "ai";
-import type { ToolSet } from "ai";
-import { getModel } from "@/lib/ai/providers";
-import type { ProviderKey } from "@/lib/ai/providers";
-import type { AgentTask, AgentResult, BaseAgentConfig } from "./types";
+import { generateText, stepCountIs } from 'ai';
+import { getModel } from '@/lib/ai/providers';
+import type { ProviderKey } from '@/lib/ai/providers';
+import type { AgentTask, AgentResult, BaseAgentConfig } from './types';
 
 /**
  * Run an agent with the given configuration and task.
@@ -33,23 +32,23 @@ export async function runAgent(
   task: AgentTask
 ): Promise<AgentResult> {
   try {
-    const model = getModel((config.model as ProviderKey) || "primary");
+    const model = getModel((config.model as ProviderKey) || 'primary');
 
     const result = await generateText({
       model,
       system: config.systemPrompt,
       prompt: buildPrompt(task),
-      tools: config.tools as ToolSet,
+      tools: config.tools,
       stopWhen: stepCountIs(config.maxSteps),
     });
 
     // Extract tool calls from all steps
     // In AI SDK 6, tool call properties use `input` (not `args`)
     const toolCalls = result.steps.flatMap((step) =>
-      (step.toolCalls || []).map((tc) => ({
-        toolName: tc.toolName,
-        args: ("input" in tc ? tc.input : {}) as Record<string, unknown>,
-        result: null,
+      (step.toolCalls || []).map((tc: any) => ({
+        toolName: tc.toolName as string,
+        args: (tc.input ?? {}) as Record<string, unknown>,
+        result: null as unknown,
       }))
     );
 
@@ -58,18 +57,17 @@ export async function runAgent(
       taskId: task.id,
       output: result.text,
       toolCalls,
-      status: "complete",
+      status: 'complete',
       tokenUsage: {
-        prompt: result.usage.inputTokens ?? 0,
-        completion: result.usage.outputTokens ?? 0,
+        prompt: result.totalUsage.inputTokens ?? 0,
+        completion: result.totalUsage.outputTokens ?? 0,
         total:
-          (result.usage.inputTokens ?? 0) +
-          (result.usage.outputTokens ?? 0),
+          (result.totalUsage.inputTokens ?? 0) +
+          (result.totalUsage.outputTokens ?? 0),
       },
     };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
 
     console.error(
       `[Agent:${config.agentType}] Task ${task.id} failed:`,
@@ -79,9 +77,9 @@ export async function runAgent(
     return {
       agentId: config.agentType,
       taskId: task.id,
-      output: "",
+      output: '',
       toolCalls: [],
-      status: "failed",
+      status: 'failed',
       error: message,
     };
   }
@@ -100,5 +98,5 @@ function buildPrompt(task: AgentTask): string {
     parts.push(`\nContext:\n${JSON.stringify(task.input, null, 2)}`);
   }
 
-  return parts.join("\n");
+  return parts.join('\n');
 }
