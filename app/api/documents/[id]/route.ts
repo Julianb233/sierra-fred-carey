@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 
 interface RouteParams {
   params: Promise<{
@@ -21,6 +23,17 @@ export async function GET(
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Strategy Documents
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const { id } = await params;
 
@@ -68,6 +81,17 @@ export async function PATCH(
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Strategy Documents
+    const userTierPatch = await getUserTier(userId);
+    if (userTierPatch < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier: userTierPatch,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const { id } = await params;
     const body = await request.json();
@@ -136,6 +160,17 @@ export async function DELETE(
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Strategy Documents
+    const userTierDel = await getUserTier(userId);
+    if (userTierDel < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier: userTierDel,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const { id } = await params;
 

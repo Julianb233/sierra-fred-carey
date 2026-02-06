@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePDFFromUrl, PDFParseError, ParsedDeck } from "@/lib/parsers/pdf-parser";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import {
+  storeChunks,
+  updateDocumentStatus,
+  updateDocumentMetadata,
+} from "@/lib/db/documents";
+import type { Chunk } from "@/lib/documents/types";
 
 /**
  * Error response structure
@@ -17,6 +25,7 @@ interface ErrorResponse {
 interface SuccessResponse {
   success: true;
   parsed: ParsedDeck;
+  chunksStored?: boolean;
 }
 
 type ParseResponse = SuccessResponse | ErrorResponse;
@@ -26,6 +35,7 @@ type ParseResponse = SuccessResponse | ErrorResponse;
  */
 interface ParseRequest {
   fileUrl: string;
+  documentId?: string;
 }
 
 /**
@@ -43,6 +53,17 @@ export async function POST(
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for pitch deck parsing
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      }) as NextResponse<ParseResponse>;
+    }
 
     console.log(`[PDF Parse] Request from user: ${userId}`);
 
@@ -84,11 +105,61 @@ export async function POST(
       `[PDF Parse] Successfully parsed ${parsed.totalPages} pages, ${parsed.fullText.length} characters`
     );
 
+    // If documentId is provided, save chunks to the database so the
+    // pitch-review endpoint can find them later.
+    let chunksStored = false;
+    if (body.documentId) {
+      try {
+        console.log(`[PDF Parse] Storing chunks for document ${body.documentId}`);
+
+        // Convert parsed slides into Chunk format for storage
+        const chunks: (Chunk & { embedding: number[] })[] = parsed.slides.map(
+          (slide, index) => ({
+            index,
+            content: slide.text,
+            pageNumber: slide.pageNumber,
+            section: undefined,
+            tokenCount: slide.wordCount,
+            metadata: {},
+            // Empty embedding -- the review endpoint does not require embeddings,
+            // and generating real ones would slow down the parse response.
+            // Vector search is handled separately by the documents/upload pipeline.
+            embedding: [],
+          })
+        );
+
+        if (chunks.length > 0) {
+          await storeChunks(body.documentId, chunks);
+
+          // Update document metadata and status to 'ready'
+          await updateDocumentMetadata(
+            body.documentId,
+            {
+              title: parsed.metadata.title,
+              author: parsed.metadata.author,
+              creationDate: parsed.metadata.createdAt,
+            },
+            parsed.totalPages
+          );
+          await updateDocumentStatus(body.documentId, "ready");
+          chunksStored = true;
+
+          console.log(
+            `[PDF Parse] Stored ${chunks.length} chunks for document ${body.documentId}`
+          );
+        }
+      } catch (storeError) {
+        // Log but don't fail the parse response -- chunks can be retried
+        console.error("[PDF Parse] Failed to store chunks:", storeError);
+      }
+    }
+
     // Return success response
     return NextResponse.json(
       {
         success: true,
         parsed,
+        chunksStored,
       },
       { status: 200 }
     );

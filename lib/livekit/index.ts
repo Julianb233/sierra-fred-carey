@@ -34,7 +34,10 @@ export async function getToken(params: JoinRoomParams): Promise<TokenResponse> {
 }
 
 /**
- * Generate a random room name
+ * Generate a random room name.
+ * Note: The server will automatically prefix the room name with the
+ * authenticated userId (e.g., `${userId}_${roomName}`) to scope rooms
+ * per user. The name returned here is the client-side portion only.
  */
 export function generateRoomName(prefix = 'room'): string {
   const randomId = Math.random().toString(36).substring(2, 8);

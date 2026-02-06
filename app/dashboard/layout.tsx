@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -143,7 +143,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
   const { tier, isLoading: tierLoading } = useTier();
   const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
 
@@ -151,20 +153,23 @@ export default function DashboardLayout({
     async function fetchUser() {
       const supabase = createClient();
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("name, tier")
-          .eq("id", authUser.id)
-          .single();
-        setUserInfo({
-          name: profile?.name || authUser.email?.split("@")[0] || "Founder",
-          email: authUser.email || "",
-        });
+      if (!authUser) {
+        router.replace("/login");
+        return;
       }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, tier")
+        .eq("id", authUser.id)
+        .single();
+      setUserInfo({
+        name: profile?.name || authUser.email?.split("@")[0] || "Founder",
+        email: authUser.email || "",
+      });
+      setIsAuthChecking(false);
     }
     fetchUser();
-  }, []);
+  }, [router]);
 
   const user = {
     name: userInfo?.name || "",
@@ -263,6 +268,14 @@ export default function DashboardLayout({
       )}
     </div>
   );
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6a1a]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16 lg:pt-20">

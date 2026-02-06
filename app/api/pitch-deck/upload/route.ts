@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToBlob, FileValidationError } from '@/lib/storage/upload';
 import { requireAuth } from '@/lib/auth';
+import { UserTier } from '@/lib/constants';
+import { getUserTier, createTierErrorResponse } from '@/lib/api/tier-middleware';
 
 /**
  * Error response structure
@@ -40,6 +42,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for pitch deck uploads
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      }) as NextResponse<UploadResponse>;
+    }
 
     // Parse multipart form data
     const formData = await request.formData();

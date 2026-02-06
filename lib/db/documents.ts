@@ -204,7 +204,11 @@ export async function storeChunks(
     document_id: documentId,
     chunk_index: chunk.index,
     content: chunk.content,
-    embedding: JSON.stringify(chunk.embedding), // pgvector accepts JSON array
+    // pgvector expects a JSON array with the correct dimension, or null.
+    // Pass null for empty embeddings to avoid dimension mismatch errors.
+    embedding: chunk.embedding.length > 0
+      ? JSON.stringify(chunk.embedding)
+      : null,
     page_number: chunk.pageNumber,
     section: chunk.section,
     metadata: chunk.metadata,

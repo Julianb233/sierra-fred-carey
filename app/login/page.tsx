@@ -14,11 +14,31 @@ import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawRedirect = searchParams.get("redirect") || "/dashboard";
-  // Prevent open redirect attacks — only allow relative paths
-  const redirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
-    ? rawRedirect
-    : "/dashboard";
+  // Prevent open redirect attacks — only allow safe relative paths
+  function getSafeRedirect(raw: string | null): string {
+    if (!raw) return "/dashboard";
+    // Must start with single forward slash and be a simple path
+    // Block: protocol-relative (//), backslash variants (\/), external URLs
+    const cleaned = raw.trim();
+    if (
+      !cleaned.startsWith("/") ||
+      cleaned.startsWith("//") ||
+      cleaned.includes("\\") ||
+      cleaned.includes("://") ||
+      cleaned.startsWith("/\\") ||
+      /^\/[^/]*:/.test(cleaned)
+    ) {
+      return "/dashboard";
+    }
+    // Only allow paths under known safe prefixes
+    const safePrefixes = ["/dashboard", "/onboarding", "/pricing", "/settings"];
+    if (!safePrefixes.some(prefix => cleaned.startsWith(prefix))) {
+      return "/dashboard";
+    }
+    return cleaned;
+  }
+
+  const redirect = getSafeRedirect(searchParams.get("redirect"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

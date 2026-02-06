@@ -78,8 +78,27 @@ export async function POST(request: NextRequest) {
     const chunks = await getDocumentChunks(documentId);
 
     if (!chunks || chunks.length === 0) {
+      // Re-check the document status in case it changed during chunk retrieval
+      // (race condition: status updated to 'ready' but chunks not yet committed)
+      const freshDoc = await getDocumentById(userId, documentId);
+      if (freshDoc && freshDoc.status === 'processing') {
+        return NextResponse.json(
+          {
+            error: 'Document is still being processed. Please wait a moment and try again.',
+            code: 'DOCUMENT_PROCESSING',
+            documentId,
+            status: 'processing',
+          },
+          { status: 202 }
+        );
+      }
+
       return NextResponse.json(
-        { error: 'No content found in document. Please re-upload or try a different PDF.' },
+        {
+          error: 'No content found in document. The PDF may still be processing, or it may contain no extractable text. Please wait a moment and retry, or re-upload the PDF.',
+          code: 'NO_CHUNKS',
+          documentId,
+        },
         { status: 400 }
       );
     }

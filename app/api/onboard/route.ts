@@ -203,8 +203,8 @@ export async function POST(request: NextRequest) {
       });
 
       if (profileError) {
-        console.error("[onboard] Profile creation error:", profileError);
-        // Retry once — profile is critical for the app to work
+        console.error("[onboard] Profile creation error, retrying:", profileError);
+        // Retry once
         const { error: retryError } = await supabase.from("profiles").upsert({
           id: userId,
           email: email.toLowerCase(),

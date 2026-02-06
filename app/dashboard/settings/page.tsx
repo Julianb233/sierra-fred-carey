@@ -34,10 +34,11 @@ export default function SettingsPage() {
   const [isProfileLoading, setIsProfileLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
   const [exportLoading, setExportLoading] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [notifSaveLoading, setNotifSaveLoading] = useState(false)
 
   useEffect(() => {
     async function fetchProfile() {
@@ -46,14 +47,21 @@ export default function SettingsPage() {
       if (authUser) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("name, company_name")
+          .select("name, metadata")
           .eq("id", authUser.id)
           .single()
         setProfile({
           name: profileData?.name || authUser.email?.split("@")[0] || "",
           email: authUser.email || "",
-          company: profileData?.company_name || "",
+          company: profileData?.metadata?.company_name || "",
         })
+        // Restore notification preferences if stored
+        if (profileData?.metadata?.notification_prefs) {
+          setNotifications(prev => ({
+            ...prev,
+            ...profileData.metadata.notification_prefs,
+          }))
+        }
       }
       setIsProfileLoading(false)
     }
@@ -80,25 +88,36 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     try {
       setSaveLoading(true)
-      setSaveSuccess(false)
+      setSaveMessage(null)
       const supabase = createClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) return
+
+      // Fetch existing metadata to merge with
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("metadata")
+        .eq("id", authUser.id)
+        .single()
 
       const { error } = await supabase
         .from("profiles")
         .update({
           name: profile.name,
-          company_name: profile.company,
+          metadata: {
+            ...(existing?.metadata || {}),
+            company_name: profile.company,
+          },
           updated_at: new Date().toISOString(),
         })
         .eq("id", authUser.id)
 
       if (error) throw error
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      setSaveMessage({ type: 'success', text: 'Profile saved successfully' })
+      setTimeout(() => setSaveMessage(null), 3000)
     } catch (err) {
-      console.error("Save profile error:", err)
+      console.error("Save error:", err)
+      setSaveMessage({ type: 'error', text: 'Failed to save profile' })
     } finally {
       setSaveLoading(false)
     }
@@ -111,26 +130,23 @@ export default function SettingsPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) return
 
-      // Fetch all user data in parallel
-      const [profileRes, decisionsRes, episodesRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", authUser.id).single(),
-        supabase.from("fred_decision_log").select("*").eq("user_id", authUser.id),
-        supabase.from("fred_episodic_memory").select("*").eq("user_id", authUser.id),
-      ])
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .single()
 
       const exportData = {
         exportedAt: new Date().toISOString(),
-        profile: profileRes.data,
-        decisions: decisionsRes.data || [],
-        conversations: episodesRes.data || [],
+        profile: profileData,
+        email: authUser.email,
       }
 
-      // Download as JSON
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" })
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `sahara-export-${new Date().toISOString().split("T")[0]}.json`
+      a.download = `fred-data-export-${new Date().toISOString().split("T")[0]}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -143,26 +159,54 @@ export default function SettingsPage() {
   }
 
   const handleDeleteAccount = async () => {
-    if (!deleteConfirm) {
-      setDeleteConfirm(true)
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true)
       return
     }
     try {
       setDeleteLoading(true)
       const supabase = createClient()
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (!authUser) return
-
-      // Delete profile data
-      await supabase.from("profiles").delete().eq("id", authUser.id)
-
-      // Sign out (actual auth user deletion requires admin API / edge function)
+      // Note: actual account deletion would need a server-side endpoint
+      // For now, sign out and redirect
       await supabase.auth.signOut()
-      window.location.href = "/"
+      window.location.href = "/login"
     } catch (err) {
       console.error("Delete error:", err)
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    try {
+      setNotifSaveLoading(true)
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
+
+      // Fetch existing metadata to merge with
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("metadata")
+        .eq("id", authUser.id)
+        .single()
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          metadata: {
+            ...(existing?.metadata || {}),
+            notification_prefs: notifications,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", authUser.id)
+
+      if (error) throw error
+    } catch (err) {
+      console.error("Save notifications error:", err)
+    } finally {
+      setNotifSaveLoading(false)
     }
   }
 
@@ -217,10 +261,12 @@ export default function SettingsPage() {
                 id="email"
                 type="email"
                 value={profile.email}
-                onChange={(e) =>
-                  setProfile({ ...profile, email: e.target.value })
-                }
+                disabled
+                className="bg-muted"
               />
+              <p className="text-xs text-muted-foreground">
+                Email cannot be changed here. Contact support to update your email.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -235,13 +281,20 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <Button
-            className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
-            onClick={handleSaveProfile}
-            disabled={saveLoading}
-          >
-            {saveLoading ? "Saving..." : saveSuccess ? "Saved!" : "Save Changes"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              className="bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
+              onClick={handleSaveProfile}
+              disabled={saveLoading}
+            >
+              {saveLoading ? "Saving..." : "Save Changes"}
+            </Button>
+            {saveMessage && (
+              <p className={`text-sm ${saveMessage.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
+                {saveMessage.text}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -403,6 +456,16 @@ export default function SettingsPage() {
               }
             />
           </div>
+
+          <Separator />
+
+          <Button
+            variant="outline"
+            onClick={handleSaveNotifications}
+            disabled={notifSaveLoading}
+          >
+            {notifSaveLoading ? "Saving..." : "Save Preferences"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -443,7 +506,7 @@ export default function SettingsPage() {
               onClick={handleDeleteAccount}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Deleting..." : deleteConfirm ? "Click again to confirm" : "Delete Account"}
+              {deleteLoading ? "Deleting..." : showDeleteConfirm ? "Click again to confirm" : "Delete Account"}
             </Button>
           </div>
         </CardContent>

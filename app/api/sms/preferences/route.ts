@@ -15,6 +15,7 @@ import {
   updateSMSPreferences,
   getCheckinHistory,
 } from "@/lib/db/sms";
+import { createServiceClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -130,8 +131,31 @@ export async function POST(request: NextRequest) {
 
     const updates = parsed.data;
 
+    // If a phone number is being set, verify it has been confirmed
+    if (updates.phoneNumber) {
+      const supabase = createServiceClient();
+      const { data: verification } = await supabase
+        .from("phone_verifications")
+        .select("verified")
+        .eq("user_id", userId)
+        .eq("phone_number", updates.phoneNumber)
+        .eq("verified", true)
+        .single();
+
+      if (!verification) {
+        return NextResponse.json(
+          {
+            error: "Phone number must be verified before saving. Send a verification code via POST /api/sms/verify first.",
+            code: "PHONE_NOT_VERIFIED",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const preferences = await updateSMSPreferences(userId, {
       phoneNumber: updates.phoneNumber,
+      phoneVerified: updates.phoneNumber ? true : undefined,
       checkinEnabled: updates.checkinEnabled,
       checkinDay: updates.checkinDay,
       checkinHour: updates.checkinHour,

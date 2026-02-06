@@ -3,6 +3,8 @@ import { sql } from "@/lib/db/supabase-sql";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 
 // Fallback system prompt if not loaded from database
 const POSITIONING_ASSESSMENT_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. You specialize in positioning clarity diagnostics - helping founders understand whether their positioning is sharp enough to resonate with their target market.
@@ -207,6 +209,17 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Positioning assessment
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const body: PositioningInput = await request.json();
     const {
@@ -545,6 +558,17 @@ export async function GET(request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Positioning assessment history
+    const userTierGet = await getUserTier(userId);
+    if (userTierGet < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier: userTierGet,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);

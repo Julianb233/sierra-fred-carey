@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 
 /**
  * Deck Request Protocol
@@ -83,6 +85,17 @@ Respond ONLY with valid JSON (no markdown):
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Investor Lens deck request
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const body: DeckRequestInput = await request.json();
     const { evaluationId, profile, reason } = body;

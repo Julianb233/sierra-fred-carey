@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { requireAuth } from "@/lib/auth";
+import { UserTier } from "@/lib/constants";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 
 // Quick clarity check prompt - lightweight diagnostic
 const QUICK_CLARITY_CHECK_PROMPT = `You are Fred Carey, a startup advisor. Perform a QUICK positioning clarity check on the provided startup description.
@@ -65,6 +67,17 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
+
+    // SECURITY: Require Pro tier for Positioning quick check
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.PRO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.PRO,
+        userId,
+      });
+    }
 
     const body: QuickCheckInput = await request.json();
     const { description } = body;

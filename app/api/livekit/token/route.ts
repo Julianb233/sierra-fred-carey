@@ -4,6 +4,29 @@ import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import { getUserTier, createTierErrorResponse } from '@/lib/api/tier-middleware';
 
+const ROOM_NAME_MAX_LENGTH = 128;
+const ROOM_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+/**
+ * Sanitize and validate a room name segment.
+ * Only allows alphanumeric characters, hyphens, and underscores.
+ */
+function sanitizeRoomName(raw: string): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0 || trimmed.length > ROOM_NAME_MAX_LENGTH) return null;
+  if (!ROOM_NAME_PATTERN.test(trimmed)) return null;
+  return trimmed;
+}
+
+/**
+ * Build a user-scoped room name by prefixing with userId.
+ * This prevents users from joining rooms belonging to other users.
+ */
+function buildScopedRoomName(userId: string, roomName: string): string {
+  return `${userId}_${roomName}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Authenticate
@@ -29,6 +52,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 3. Sanitize roomName to prevent injection
+    const sanitized = sanitizeRoomName(roomName);
+    if (!sanitized) {
+      return NextResponse.json(
+        { error: 'Invalid roomName: must be 1-128 alphanumeric, hyphen, or underscore characters' },
+        { status: 400 }
+      );
+    }
+
+    // 4. Scope room to the authenticated user
+    const scopedRoom = buildScopedRoomName(userId, sanitized);
+
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
 
@@ -47,9 +82,9 @@ export async function POST(request: NextRequest) {
       ttl: '30m',
     });
 
-    // Grant permissions for the room
+    // Grant permissions for the user-scoped room
     at.addGrant({
-      room: roomName,
+      room: scopedRoom,
       roomJoin: true,
       canPublish: true,
       canPublishData: true,
@@ -61,6 +96,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       token,
       url: process.env.LIVEKIT_URL,
+      room: scopedRoom,
     });
   } catch (error) {
     // Handle auth errors
@@ -101,6 +137,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 3. Sanitize roomName to prevent injection
+    const sanitized = sanitizeRoomName(roomName);
+    if (!sanitized) {
+      return NextResponse.json(
+        { error: 'Invalid room: must be 1-128 alphanumeric, hyphen, or underscore characters' },
+        { status: 400 }
+      );
+    }
+
+    // 4. Scope room to the authenticated user
+    const scopedRoom = buildScopedRoomName(userId, sanitized);
+
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
 
@@ -118,7 +166,7 @@ export async function GET(request: NextRequest) {
     });
 
     at.addGrant({
-      room: roomName,
+      room: scopedRoom,
       roomJoin: true,
       canPublish: true,
       canPublishData: true,
@@ -130,6 +178,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       token,
       url: process.env.LIVEKIT_URL,
+      room: scopedRoom,
     });
   } catch (error) {
     // Handle auth errors

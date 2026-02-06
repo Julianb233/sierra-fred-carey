@@ -784,6 +784,15 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Pro tier required for Investor Lens
+    const tierCheckGet = await checkTierForRequest(request, UserTier.PRO);
+    if (!tierCheckGet.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Investor Lens requires Pro tier" },
+        { status: 403 }
+      );
+    }
+
     const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);

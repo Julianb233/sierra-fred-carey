@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, Loader2, AlertCircle, FileText } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { ArrowLeft, Loader2, AlertCircle, FileText, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,33 +81,87 @@ export default function PitchDeckReviewPage() {
     }
   }
 
-  // Trigger AI review
+  // Max number of polling retries when document is still processing
+  const MAX_POLL_RETRIES = 15;
+  const POLL_INTERVAL_MS = 3000;
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Helper to get the selected document object
+  const getSelectedDoc = useCallback(() => {
+    return documents.find((d) => d.id === selectedDocId) ?? null;
+  }, [documents, selectedDocId]);
+
+  // Trigger AI review with automatic retry when document is still processing
   async function runReview() {
     if (!selectedDocId) return;
+
+    // Cancel any previous polling
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setReviewing(true);
       setError(null);
 
-      const res = await fetch("/api/fred/pitch-review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: selectedDocId }),
-      });
+      let retries = 0;
 
-      const data = await res.json();
+      while (retries < MAX_POLL_RETRIES) {
+        if (controller.signal.aborted) return;
 
-      if (res.ok && data.success && data.review) {
-        setReview(data.review);
-      } else {
+        const res = await fetch("/api/fred/pitch-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentId: selectedDocId }),
+          signal: controller.signal,
+        });
+
+        const data = await res.json();
+
+        // Success -- review is ready
+        if (res.ok && data.success && data.review) {
+          setReview(data.review);
+          // Refresh documents list to get updated statuses
+          fetchDocuments();
+          return;
+        }
+
+        // 202 means the document is still processing -- wait and retry
+        if (res.status === 202 && data.code === "DOCUMENT_PROCESSING") {
+          retries++;
+          if (retries >= MAX_POLL_RETRIES) {
+            throw new Error(
+              "Document is taking longer than expected to process. Please try again in a few moments."
+            );
+          }
+          // Wait before retrying
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(resolve, POLL_INTERVAL_MS);
+            controller.signal.addEventListener("abort", () => {
+              clearTimeout(timeout);
+              reject(new DOMException("Aborted", "AbortError"));
+            });
+          });
+          continue;
+        }
+
+        // Any other error
         throw new Error(data.error || "Failed to review pitch deck");
       }
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Failed to review pitch deck");
     } finally {
       setReviewing(false);
     }
   }
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -193,20 +247,49 @@ export default function PitchDeckReviewPage() {
                         <SelectItem key={doc.id} value={doc.id}>
                           {doc.name}
                           {doc.pageCount ? ` (${doc.pageCount} pages)` : ""}
+                          {doc.status === "processing" ? " - Processing..." : ""}
+                          {doc.status === "failed" ? " - Failed" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {selectedDocId && !review && !reviewing && (
-                  <Button
-                    onClick={runReview}
-                    className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white mt-4 sm:mt-6"
-                  >
-                    Review Deck
-                  </Button>
-                )}
+                {selectedDocId && !review && !reviewing && (() => {
+                  const doc = getSelectedDoc();
+                  if (doc?.status === "failed") {
+                    return (
+                      <div className="flex items-center gap-2 mt-4 sm:mt-6 text-red-600 dark:text-red-400">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm">Processing failed. Please re-upload this document.</span>
+                      </div>
+                    );
+                  }
+                  if (doc?.status === "processing") {
+                    return (
+                      <div className="flex items-center gap-2 mt-4 sm:mt-6">
+                        <Button
+                          onClick={runReview}
+                          className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+                        >
+                          <Clock className="h-4 w-4 mr-2" />
+                          Review Deck (Processing...)
+                        </Button>
+                        <span className="text-xs text-gray-500">
+                          Will wait for processing to finish
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Button
+                      onClick={runReview}
+                      className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white mt-4 sm:mt-6"
+                    >
+                      Review Deck
+                    </Button>
+                  );
+                })()}
               </div>
             )}
           </CardContent>
@@ -218,10 +301,14 @@ export default function PitchDeckReviewPage() {
             <CardContent className="py-16 text-center">
               <Loader2 className="h-10 w-10 animate-spin text-[#ff6a1a] mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                FRED is analyzing your deck slide by slide...
+                {getSelectedDoc()?.status === "processing"
+                  ? "Waiting for document processing to complete..."
+                  : "FRED is analyzing your deck slide by slide..."}
               </h3>
               <p className="text-gray-500">
-                This may take a minute. Each slide is being classified and evaluated.
+                {getSelectedDoc()?.status === "processing"
+                  ? "Your PDF is still being processed. The review will start automatically once ready."
+                  : "This may take a minute. Each slide is being classified and evaluated."}
               </p>
             </CardContent>
           </Card>
