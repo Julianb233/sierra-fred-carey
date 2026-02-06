@@ -27,6 +27,12 @@ import {
   type EmbeddingProviderKey,
   PROVIDER_METADATA,
 } from "./providers";
+import {
+  executeWithFallback,
+  type ProviderName,
+  type FallbackConfig,
+} from "./fallback-chain";
+import { withRetry as withRetryAdvanced, RETRY_PRESETS } from "./retry";
 
 // ============================================================================
 // Types
@@ -484,4 +490,78 @@ export async function withTimeout<T>(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+// ============================================================================
+// Reliable Generation (with Circuit Breaker + Fallback)
+// ============================================================================
+
+export interface ReliableGenerateOptions extends GenerateOptions {
+  /** Fallback configuration */
+  fallback?: FallbackConfig;
+  /** Use enhanced retry logic (default: true) */
+  useRetry?: boolean;
+  /** Retry preset (default: standard) */
+  retryPreset?: keyof typeof RETRY_PRESETS;
+}
+
+/**
+ * Generate structured output with automatic provider fallback
+ *
+ * Uses circuit breaker + retry logic for maximum reliability.
+ * This is the recommended function for agent tools that need structured output.
+ *
+ * @example
+ * const schema = z.object({ name: z.string(), age: z.number() });
+ * const result = await generateStructuredReliable("John is 25", schema);
+ * console.log(result.object); // { name: "John", age: 25 }
+ */
+export async function generateStructuredReliable<T extends z.ZodType>(
+  prompt: string,
+  schema: T,
+  options: ReliableGenerateOptions = {}
+): Promise<StructuredGenerateResult<z.infer<T>> & { provider: ProviderName; fallbacks: number }> {
+  const { fallback, useRetry = true, retryPreset = "standard", ...generateOptions } = options;
+
+  const fallbackResult = await executeWithFallback(
+    async (_provider, model) => {
+      const operation = async () => {
+        const result = await generateObject({
+          model,
+          prompt,
+          schema,
+          system: generateOptions.system,
+          maxOutputTokens: generateOptions.maxOutputTokens ?? 4096,
+          temperature: generateOptions.temperature ?? 0.5,
+          abortSignal: generateOptions.abortSignal,
+        });
+
+        return {
+          object: result.object as z.infer<T>,
+          usage: {
+            promptTokens: result.usage.inputTokens ?? 0,
+            completionTokens: result.usage.outputTokens ?? 0,
+            totalTokens: (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
+          },
+          finishReason: result.finishReason,
+          modelId: result.response?.modelId ?? "unknown",
+        };
+      };
+
+      if (useRetry) {
+        return withRetryAdvanced(operation, RETRY_PRESETS[retryPreset]);
+      }
+      return operation();
+    },
+    {
+      ...fallback,
+      enableRetry: false, // We handle retry above
+    }
+  );
+
+  return {
+    ...fallbackResult.result,
+    provider: fallbackResult.provider,
+    fallbacks: fallbackResult.fallbacks,
+  };
 }
