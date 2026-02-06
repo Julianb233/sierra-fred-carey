@@ -1,18 +1,18 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-phase 05 (infra gap closure)
+**Session:** gsd-execute-plan 07-02 (dashboard navigation fix)
 
 ---
 
 ## Position
 
-**Current Phase:** 05-07 Gap Closure (Phases 05, 06 COMPLETE; Phase 07 pending)
-**Current Plan:** 05 VERIFIED (6/6), 06 complete
-**Status:** Phase 05 COMPLETE (infra gap closed), Phase 06 COMPLETE, Phase 07 pending
-**Last activity:** 2026-02-06 - Phase 05 infra gap closed (SQL migration applied, email confirmation disabled, E2E tested)
+**Current Phase:** 07-dashboard-integration (Phase 07 plan 02 COMPLETE)
+**Current Plan:** 07-02 COMPLETE (1/1 tasks)
+**Status:** Phase 07 plan 02 complete (dashboard nav fixed)
+**Last activity:** 2026-02-06 - Completed 07-02-PLAN.md (dashboard navigation gap closure)
 
-Progress: [====================----------] 66% (2/3 gap closure phases complete)
+Progress: [=========================-----] 83% (07-02 of gap closure complete)
 
 ---
 
@@ -25,7 +25,7 @@ Progress: [====================----------] 66% (2/3 gap closure phases complete)
 Gap closure progress:
 - Phase 05: Auth & Onboarding Fix -- COMPLETE (infra gap closed via Supabase Management API)
 - Phase 06: Tier Display & Stripe Wiring -- COMPLETE
-- Phase 07: Dashboard Integration & Strategy Completion -- PENDING
+- Phase 07: Dashboard Integration & Strategy Completion -- 07-02 COMPLETE (nav fix), 07-01 pending
 
 ---
 
@@ -77,6 +77,7 @@ Gap closure progress:
 ### What's Pending
 - [ ] **Phase 07: Dashboard Integration & Strategy Completion**
   - [ ] 07-01: Fix Reality Lens wiring, add missing nav links, complete strategy UI components
+  - [x] 07-02: Fix dashboard nav - add Decision History link, correct Investor Readiness link
 
 ### What's Blocked
 - Nothing currently blocked
@@ -109,6 +110,7 @@ Gap closure progress:
 | 2026-02-06 | 05-02 execution | Signup password field, API password validation, dashboard avatar loading guard |
 | 2026-02-06 | 06-02 execution | Dashboard consumer wiring: real user data + tier context in layout, page, settings |
 | 2026-02-06 | 05 infra gap closure | Ran SQL migration via Supabase Management API, added tier column, disabled email confirmation, E2E tested user creation |
+| 2026-02-06 | 07-02 execution | Dashboard nav fix: added Decision History link, corrected Investor Readiness link, removed stale investor-score refs |
 
 ---
 
@@ -157,6 +159,7 @@ Gap closure progress:
 - Avatar initials guard: use (name || "?") to prevent crash during async user data loading
 - Post-checkout polling: refreshTier() 5x at 2s intervals to handle Stripe webhook processing delay
 - Disable Manage Subscription button when no active subscription (Stripe portal requires existing sub)
+- CountdownTimerIcon for Decision History nav item (distinct from ActivityLogIcon used by Monitoring)
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -193,8 +196,8 @@ Gap closure progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T03:00:00Z
-Stopped at: Phase 05 infra gap closed -- all gap closure phases 05+06 complete, Phase 07 pending
+Last session: 2026-02-06T16:39:00Z
+Stopped at: Completed 07-02-PLAN.md (dashboard navigation gap closure)
 Resume file: None
 
 ---
