@@ -140,6 +140,15 @@ const contentStrategyOutput = z.object({
 });
 
 // ============================================================================
+// Type Aliases for Execute Callbacks
+// ============================================================================
+
+type ChannelAnalysisInput = z.infer<typeof channelAnalysisParams>;
+type ExperimentDesignInput = z.infer<typeof experimentDesignParams>;
+type FunnelAnalysisInput = z.infer<typeof funnelAnalysisParams>;
+type ContentStrategyInput = z.infer<typeof contentStrategyParams>;
+
+// ============================================================================
 // Tool Definitions
 // ============================================================================
 
@@ -148,7 +157,7 @@ export const growthTools = {
     description:
       'Analyze current acquisition channels, rank them by ROI, suggest new channels, and recommend budget allocation. Use this when founders need help deciding where to spend their growth budget.',
     parameters: channelAnalysisParams,
-    execute: async (input) => {
+    execute: async (input: ChannelAnalysisInput) => {
       const prompt = `Analyze these growth channels for a ${input.stage} startup with $${input.monthlyBudget}/month budget.
 
 Target customer: ${input.targetCustomerProfile}
@@ -156,7 +165,7 @@ Target customer: ${input.targetCustomerProfile}
 Current channels:
 ${input.currentChannels
   .map(
-    (ch) =>
+    (ch: ChannelAnalysisInput['currentChannels'][number]) =>
       `- ${ch.name}${ch.spend ? ` ($${ch.spend}/mo)` : ''}${ch.results ? `: ${ch.results}` : ''}`
   )
   .join('\n')}
@@ -177,7 +186,7 @@ Rank existing channels by effectiveness, suggest 2-3 new channels to test, and r
     description:
       'Design a rigorous A/B test or growth experiment with clear hypothesis, control/test groups, sample size, duration, and success criteria. Use this when founders want to test a growth idea.',
     parameters: experimentDesignParams,
-    execute: async (input) => {
+    execute: async (input: ExperimentDesignInput) => {
       const prompt = `Design a growth experiment for this hypothesis:
 
 Hypothesis: ${input.hypothesis}
@@ -202,13 +211,13 @@ Create a rigorous experiment design with control/test groups, required sample si
     description:
       'Analyze a conversion funnel to identify the biggest dropoff points, likely causes, and optimization suggestions ranked by effort and impact. Use this when founders need to improve their conversion rates.',
     parameters: funnelAnalysisParams,
-    execute: async (input) => {
+    execute: async (input: FunnelAnalysisInput) => {
       const prompt = `Analyze this conversion funnel for a ${input.pricingModel} product (${input.product}):
 
 Funnel stages:
 ${input.stages
   .map(
-    (s) =>
+    (s: FunnelAnalysisInput['stages'][number]) =>
       `- ${s.name}: ${s.visitors} visitors -> ${s.conversions} conversions (${((s.conversions / s.visitors) * 100).toFixed(1)}%)`
   )
   .join('\n')}
@@ -229,7 +238,7 @@ Identify the biggest dropoff, likely causes, and provide actionable optimization
     description:
       'Create a content strategy with content pillars, a 4-week calendar, and quick-win content ideas tied to acquisition goals. Use this when founders need a growth-oriented content plan.',
     parameters: contentStrategyParams,
-    execute: async (input) => {
+    execute: async (input: ContentStrategyInput) => {
       const prompt = `Create a growth-oriented content strategy:
 
 Product: ${input.product}
