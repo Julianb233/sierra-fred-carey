@@ -69,6 +69,12 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - Closes: FRED chat integration break, dashboard CTA dead button, Reality Lens tier stub, SMS nav mismatch, mock stats, legacy routes
   - [x] 08-01-PLAN.md — Chat FRED wiring, dashboard fixes, cleanup
 
+### Gap Closure (from v1.0 final audit)
+
+- [ ] **Phase 09: Stripe Checkout Fix** - Fix tier-name-to-plan-key mapping in checkout route
+  - Closes: Dashboard CTA → Stripe checkout 400 error, Flow 2 partial break
+  - [ ] 09-01-PLAN.md — Add TIER_TO_PLAN_KEY mapping so "pro"→FUNDRAISING, "studio"→VENTURE_STUDIO
+
 ### Parallel Track
 
 - [ ] **A2P 10DLC Registration** - Start during Phase 01, required for SMS in Phase 04
@@ -167,6 +173,11 @@ Within phases:
 - [x] Dashboard stats fetched from real APIs (not hardcoded)
 - [x] Legacy /dashboard/investor-score and /api/investor-score deleted
 - [x] No dual auth import pattern remaining
+
+**Phase 09 Complete When:**
+- [ ] redirectToCheckoutByTier("pro") resolves to FUNDRAISING plan priceId
+- [ ] redirectToCheckoutByTier("studio") resolves to VENTURE_STUDIO plan priceId
+- [ ] Existing direct priceId checkout flow still works
 
 ---
 
