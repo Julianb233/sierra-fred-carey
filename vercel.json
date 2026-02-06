@@ -1,6 +1,12 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
+  "crons": [
+    {
+      "path": "/api/cron/weekly-checkin",
+      "schedule": "0 14 * * 1"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
