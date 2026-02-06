@@ -15,11 +15,13 @@ import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
 import type { DocumentType } from '@/lib/documents/types';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client (avoids module-level init during static generation)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // Limits
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
     const storagePath = `${userId}/${fileName}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await getSupabase().storage
       .from('documents')
       .upload(storagePath, buffer, {
         contentType: 'application/pdf',
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = getSupabase().storage
       .from('documents')
       .getPublicUrl(storagePath);
 

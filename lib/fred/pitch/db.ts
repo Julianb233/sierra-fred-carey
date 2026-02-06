@@ -6,10 +6,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { PitchReview, SlideAnalysis, SlideType } from './types';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * Save pitch review result to database
@@ -18,7 +20,7 @@ export async function savePitchReview(
   userId: string,
   review: PitchReview
 ): Promise<PitchReview> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('pitch_reviews')
     .insert({
       user_id: userId,
@@ -49,7 +51,7 @@ export async function getPitchReview(
   userId: string,
   reviewId: string
 ): Promise<PitchReview | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('pitch_reviews')
     .select('*')
     .eq('id', reviewId)
@@ -71,7 +73,7 @@ export async function getPitchReviews(
   userId: string,
   limit: number = 10
 ): Promise<PitchReview[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('pitch_reviews')
     .select('*')
     .eq('user_id', userId)
@@ -92,7 +94,7 @@ export async function getPitchReviewByDocument(
   userId: string,
   documentId: string
 ): Promise<PitchReview | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('pitch_reviews')
     .select('*')
     .eq('user_id', userId)

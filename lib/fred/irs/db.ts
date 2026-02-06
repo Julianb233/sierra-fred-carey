@@ -6,10 +6,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { IRSResult, IRSCategory, CategoryScore, Recommendation } from './types';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * Save IRS result to database
@@ -18,7 +20,7 @@ export async function saveIRSResult(
   userId: string,
   result: IRSResult
 ): Promise<IRSResult> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('investor_readiness_scores')
     .insert({
       user_id: userId,
@@ -47,7 +49,7 @@ export async function getIRSHistory(
   userId: string,
   limit: number = 10
 ): Promise<IRSResult[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('investor_readiness_scores')
     .select('*')
     .eq('user_id', userId)
@@ -65,7 +67,7 @@ export async function getIRSHistory(
  * Get latest IRS result for user
  */
 export async function getLatestIRS(userId: string): Promise<IRSResult | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('investor_readiness_scores')
     .select('*')
     .eq('user_id', userId)
@@ -88,7 +90,7 @@ export async function getIRSById(
   userId: string,
   irsId: string
 ): Promise<IRSResult | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('investor_readiness_scores')
     .select('*')
     .eq('id', irsId)
@@ -107,7 +109,7 @@ export async function getIRSById(
  * Delete IRS result
  */
 export async function deleteIRS(userId: string, irsId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('investor_readiness_scores')
     .delete()
     .eq('id', irsId)

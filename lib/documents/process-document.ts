@@ -22,11 +22,13 @@ import {
 } from '@/lib/db/documents';
 import type { DocumentType, ChunkOptions } from './types';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client (avoids module-level init during static generation)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 interface ProcessOptions {
   chunkStrategy?: ChunkOptions['strategy'];
@@ -121,7 +123,7 @@ async function downloadFile(fileUrl: string): Promise<Buffer> {
   const [bucket, ...pathSegments] = pathParts[1].split('/');
   const path = pathSegments.join('/');
 
-  const { data, error } = await supabase.storage.from(bucket).download(path);
+  const { data, error } = await getSupabase().storage.from(bucket).download(path);
 
   if (error) {
     throw new Error(`Failed to download from storage: ${error.message}`);
@@ -141,7 +143,7 @@ export async function reprocessDocument(
   options: ProcessOptions = {}
 ): Promise<void> {
   // Delete existing chunks
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('document_chunks')
     .delete()
     .eq('document_id', documentId);

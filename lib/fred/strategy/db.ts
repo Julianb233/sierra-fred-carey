@@ -10,10 +10,12 @@ import type {
   StrategyDocType,
 } from './types';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * Save a generated strategy document to the database.
@@ -22,7 +24,7 @@ export async function saveStrategyDocument(
   userId: string,
   doc: GeneratedDocument
 ): Promise<GeneratedDocument> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('strategy_documents')
     .insert({
       user_id: userId,
@@ -54,7 +56,7 @@ export async function getStrategyDocuments(
   userId: string,
   filters?: { type?: StrategyDocType; limit?: number }
 ): Promise<GeneratedDocument[]> {
-  let query = supabase
+  let query = getSupabase()
     .from('strategy_documents')
     .select('*')
     .eq('user_id', userId)
@@ -85,7 +87,7 @@ export async function getStrategyDocumentById(
   userId: string,
   docId: string
 ): Promise<GeneratedDocument | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('strategy_documents')
     .select('*')
     .eq('id', docId)
@@ -123,7 +125,7 @@ export async function updateStrategyDocument(
   if (updates.title !== undefined) updateData.title = updates.title;
   if (updates.sections !== undefined) updateData.sections = updates.sections;
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('strategy_documents')
     .update(updateData)
     .eq('id', docId)
@@ -145,7 +147,7 @@ export async function deleteStrategyDocument(
   userId: string,
   docId: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('strategy_documents')
     .delete()
     .eq('id', docId)
