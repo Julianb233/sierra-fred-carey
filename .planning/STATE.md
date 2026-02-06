@@ -1,18 +1,18 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (06-02 execution)
+**Session:** gsd-execute-phase 05 (infra gap closure)
 
 ---
 
 ## Position
 
-**Current Phase:** 05-07 Gap Closure (Phases 05, 06 code-complete; Phase 07 pending)
-**Current Plan:** 05 verified (gaps: placeholder Supabase credentials), 06 complete
-**Status:** Phase 05 code-complete (infra gap), Phase 06 complete, Phase 07 pending
-**Last activity:** 2026-02-06 - Phase 05 verified with infrastructure gap
+**Current Phase:** 05-07 Gap Closure (Phases 05, 06 COMPLETE; Phase 07 pending)
+**Current Plan:** 05 VERIFIED (6/6), 06 complete
+**Status:** Phase 05 COMPLETE (infra gap closed), Phase 06 COMPLETE, Phase 07 pending
+**Last activity:** 2026-02-06 - Phase 05 infra gap closed (SQL migration applied, email confirmation disabled, E2E tested)
 
-Progress: [====================----------] 66% (2/3 gap closure phases code-complete)
+Progress: [====================----------] 66% (2/3 gap closure phases complete)
 
 ---
 
@@ -23,7 +23,7 @@ Progress: [====================----------] 66% (2/3 gap closure phases code-comp
 **Blocked By:** None (Phase 07 is independent of 05/06)
 
 Gap closure progress:
-- Phase 05: Auth & Onboarding Fix -- CODE COMPLETE (infra gap: Supabase placeholder credentials)
+- Phase 05: Auth & Onboarding Fix -- COMPLETE (infra gap closed via Supabase Management API)
 - Phase 06: Tier Display & Stripe Wiring -- COMPLETE
 - Phase 07: Dashboard Integration & Strategy Completion -- PENDING
 
@@ -79,8 +79,7 @@ Gap closure progress:
   - [ ] 07-01: Fix Reality Lens wiring, add missing nav links, complete strategy UI components
 
 ### What's Blocked
-- Phase 05 runtime verification blocked by Supabase placeholder credentials in .env
-  - User action needed: create real Supabase project, update .env, run migration SQL
+- Nothing currently blocked
 
 ---
 
@@ -109,6 +108,7 @@ Gap closure progress:
 | 2026-02-06 | 06-01 execution | Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, 2 DB migrations |
 | 2026-02-06 | 05-02 execution | Signup password field, API password validation, dashboard avatar loading guard |
 | 2026-02-06 | 06-02 execution | Dashboard consumer wiring: real user data + tier context in layout, page, settings |
+| 2026-02-06 | 05 infra gap closure | Ran SQL migration via Supabase Management API, added tier column, disabled email confirmation, E2E tested user creation |
 
 ---
 
@@ -193,8 +193,8 @@ Gap closure progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T02:07:00Z
-Stopped at: Completed 06-02-PLAN.md (Dashboard Consumer Wiring) -- Phase 06 complete
+Last session: 2026-02-06T03:00:00Z
+Stopped at: Phase 05 infra gap closed -- all gap closure phases 05+06 complete, Phase 07 pending
 Resume file: None
 
 ---

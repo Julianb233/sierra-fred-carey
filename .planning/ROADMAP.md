@@ -46,10 +46,11 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 ### Gap Closure (from v1.0 audit)
 
-- [ ] **Phase 05: Auth & Onboarding Fix** - Fix Supabase auth, onboarding password flow
+- [x] **Phase 05: Auth & Onboarding Fix** - Fix Supabase auth, onboarding password flow
   - Closes: SUPABASE-AUTH, ONBOARD-AUTH
   - Closes flow: "User signs up -> onboarding -> dashboard"
-  - [ ] 05-01-PLAN.md — Fix Supabase schema/migrations for user creation + onboarding auth flow
+  - [x] 05-01-PLAN.md — Auth infrastructure (proxy route protection, profiles migration, onboarding auth gate)
+  - [x] 05-02-PLAN.md — Signup password collection, API validation, dashboard real user data
 
 - [x] **Phase 06: Tier Display & Stripe Wiring** - Fix client-side tier detection, Stripe payment -> UI update
   - Closes: TIER-DISPLAY, Stripe payment -> tier integration
@@ -135,9 +136,9 @@ Within phases:
 - [x] Studio tier purchase flow complete
 
 **Phase 05 Complete When:**
-- [ ] Supabase user creation succeeds (no 500 error)
-- [ ] Users can sign up and log back in with a real password
-- [ ] Onboarding flow results in a persistent, authenticated session
+- [x] Supabase user creation succeeds (no 500 error)
+- [x] Users can sign up and log back in with a real password
+- [x] Onboarding flow results in a persistent, authenticated session
 
 **Phase 06 Complete When:**
 - [x] TierProvider mounted and reading correct subscription data
