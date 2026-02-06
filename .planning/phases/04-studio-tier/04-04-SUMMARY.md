@@ -21,6 +21,9 @@ key-files:
   modified:
     - lib/agents/growth/agent.ts
     - app/dashboard/agents/page.tsx
+    - lib/ai/fred-client.ts
+    - lib/ai/index.ts
+    - app/api/agents/route.ts
 decisions:
   - id: match-founder-ops-tool-pattern
     summary: "Growth tools follow exact same pattern as founder-ops tools: AI SDK tool() with generateStructuredReliable for structured output"
@@ -130,12 +133,30 @@ Growth Agent with 4 domain tools (channelAnalysis, experimentDesign, funnelAnaly
 - **Files created:** app/api/agents/tasks/route.ts
 - **Commit:** 66694a9
 
+**3. [Rule 3 - Blocking] Missing generateStructuredReliable function in fred-client.ts**
+
+- **Found during:** Task 1 (re-execution)
+- **Issue:** All agent tools import `generateStructuredReliable` from `@/lib/ai/fred-client`, but the function was never committed to the file. Only `generateStructured` (without fallback/retry) existed.
+- **Fix:** Added `generateStructuredReliable` function with circuit breaker + fallback chain support, plus the necessary imports from fallback-chain.ts and retry.ts. Also exported from lib/ai/index.ts.
+- **Files modified:** lib/ai/fred-client.ts, lib/ai/index.ts
+- **Commit:** 172f303
+
+**4. [Rule 1 - Bug] Zod v4 z.record() requires two arguments**
+
+- **Found during:** Task 2 (re-execution)
+- **Issue:** `app/api/agents/route.ts` used `z.record(z.unknown())` which fails in Zod v4 (requires key type as first arg)
+- **Fix:** Changed to `z.record(z.string(), z.unknown())`
+- **Files modified:** app/api/agents/route.ts
+- **Commit:** 4d15704
+
 ## Commit History
 
 | Commit | Type | Description |
 |--------|------|-------------|
 | ca880ca | feat | Growth Agent with 4 domain tools (prompts, tools, agent) |
 | 66694a9 | feat | Agent dashboard UI, tasks API, dispatch modal, task list |
+| 172f303 | feat | generateStructuredReliable in fred-client.ts with fallback |
+| 4d15704 | fix | Zod v4 z.record fix and export generateStructuredReliable |
 
 ## Next Phase Readiness
 

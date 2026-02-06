@@ -1,7 +1,7 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (04-04)
+**Session:** gsd-execute-plan (04-04 re-execution)
 
 ---
 
@@ -93,6 +93,7 @@ Phase 04 progress:
 | 2026-02-06 | 04-02 execution | Founder Ops Agent (4 tools) + Agent API routes (dispatch, list, status) |
 | 2026-02-06 | 04-03 execution | Fundraising Agent: 4 domain tools + system prompt + runner (Wave 2 parallel) |
 | 2026-02-06 | 04-04 execution | Growth Agent (4 tools) + dashboard UI + tasks API + dispatch modal |
+| 2026-02-06 | 04-04 re-execution | Added generateStructuredReliable to fred-client + Zod v4 fix |
 
 ---
 
@@ -119,6 +120,8 @@ Phase 04 progress:
 - Security: return 404 (not 403) when task belongs to another user
 - Separate /api/agents/tasks endpoint for dashboard task listing (vs /api/agents for dispatch+status)
 - useUserTier hook for runtime tier gating in dashboard components
+- generateStructuredReliable with circuit breaker + fallback for all agent tools
+- Zod v4 requires z.record(z.string(), z.unknown()) not z.record(z.unknown())
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -145,8 +148,8 @@ Phase 04 progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T01:11:00Z
-Stopped at: Completed 04-04-PLAN.md (Growth Agent + Dashboard UI)
+Last session: 2026-02-06T01:09:00Z
+Stopped at: Completed 04-04-PLAN.md (Growth Agent + Dashboard UI + fixes)
 Resume file: None
 
 ---
