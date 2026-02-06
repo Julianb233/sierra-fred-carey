@@ -1,32 +1,32 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (04-05 execution)
+**Session:** gsd-execute-plan (04-07 execution)
 
 ---
 
 ## Position
 
-**Current Phase:** 04 - Studio Tier Features (IN PROGRESS)
-**Current Plan:** 04-01 through 04-05 complete, 2 remaining
-**Status:** In progress - Wave 3 complete
-**Last activity:** 2026-02-06 - Completed 04-05-PLAN.md (Twilio SMS Weekly Check-ins)
+**Current Phase:** 04 - Studio Tier Features (COMPLETE)
+**Current Plan:** 04-07 complete (7/7 Phase 04 plans done)
+**Status:** Phase 04 complete
+**Last activity:** 2026-02-06 - Completed 04-07-PLAN.md (Studio Stripe & SMS Settings UI)
 
-Progress: [=========================---] 71% (5/7 Phase 04 plans)
+Progress: [==============================] 100% (7/7 Phase 04 plans)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 04 Wave 4 (04-06, 04-07 parallel)
-**Type:** execute
+**Action:** Begin Phase 05 planning or project wrap-up
+**Type:** planning
 **Blocked By:** None
 
 Phase 04 progress:
 - Wave 1: 04-01 Architecture foundation -- COMPLETE
 - Wave 2: 04-02, 04-03, 04-04 Three specialist agents + dashboard -- COMPLETE
 - Wave 3: 04-05 SMS check-ins (Twilio + cron) -- COMPLETE
-- Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel) -- NEXT
+- Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel) -- COMPLETE
 
 ---
 
@@ -60,16 +60,14 @@ Phase 04 progress:
   - [x] 03-05: Pro tier Stripe integration (subscriptions, webhooks)
   - [x] 03-06: Pitch Deck Review full implementation (gap closure)
   - [x] 03-07: Strategy Document Generation full implementation (gap closure)
-
-### What's In Progress
-- [ ] **Phase 04: Studio Tier Features** (IN PROGRESS - 5/7 complete)
+- [x] **Phase 04: Studio Tier Features**
   - [x] 04-01: Virtual agent architecture (DB schema, types, orchestrator, base agent)
   - [x] 04-02: Founder Ops Agent + Agent API Routes
   - [x] 04-03: Fundraising Agent implementation
   - [x] 04-04: Growth Agent + dashboard UI + dispatch modal
   - [x] 04-05: Twilio SMS weekly check-ins with accountability tracking
-  - [ ] 04-06: Boardy integration for investor/advisor matching
-  - [ ] 04-07: Studio tier Stripe integration and SMS settings UI
+  - [x] 04-06: Boardy integration for investor/advisor matching
+  - [x] 04-07: Studio tier Stripe integration and SMS settings UI
 
 ### What's Blocked
 - Nothing currently blocked
@@ -96,6 +94,7 @@ Phase 04 progress:
 | 2026-02-06 | 04-04 execution | Growth Agent (4 tools) + dashboard UI + tasks API + dispatch modal |
 | 2026-02-06 | 04-04 re-execution | Added generateStructuredReliable to fred-client + Zod v4 fix |
 | 2026-02-06 | 04-05 execution | SMS pipeline: Twilio client, templates, scheduler, webhook, cron, DB ops |
+| 2026-02-06 | 04-07 execution | Studio Stripe config + upgrade card + SMS settings UI + preferences API |
 
 ---
 
@@ -129,6 +128,10 @@ Phase 04 progress:
 - 160 char SMS limit with highlight truncation for single-segment messages
 - Return empty TwiML on webhook errors to prevent Twilio retry storms
 - ISO week idempotency for cron dispatch to prevent duplicate messages
+- Tier progression in upgrade card: Free->Pro->Studio (no skipping)
+- SMS preferences ?include=history query param for combined data fetch
+- E.164 validation at API boundary with Zod regex
+- A2P consent notice inline in settings component before opt-in
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -153,13 +156,15 @@ Phase 04 progress:
 - Lazy client init pattern: null client, initialize on first use, throw on missing env vars (Stripe, Twilio)
 - Webhook pattern: validate signature, process, return provider-expected response format (TwiML for Twilio)
 - Cron pattern: Bearer CRON_SECRET auth, idempotent dispatch, extensive logging for unattended execution
+- Tier-aware upgrade flow: component adapts UI to current tier (manage/upgrade/upgrade-to-pro-first)
+- Query param includes pattern: ?include=history for optional data co-fetching
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T01:20:00Z
-Stopped at: Completed 04-05-PLAN.md (Twilio SMS Weekly Check-ins)
+Last session: 2026-02-06T01:27:31Z
+Stopped at: Completed 04-07-PLAN.md (Studio Stripe & SMS Settings UI)
 Resume file: None
 
 ---
