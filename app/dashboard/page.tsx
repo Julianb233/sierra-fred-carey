@@ -18,6 +18,8 @@ import Link from "next/link";
 import { WelcomeModal } from "@/components/dashboard/WelcomeModal";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useTier } from "@/lib/context/tier-context";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
@@ -25,6 +27,7 @@ export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string | null; email: string; tier: number } | null>(null);
+  const { tier: contextTier, refresh: refreshTier, isLoading: tierLoading } = useTier();
 
   // Check for welcome parameter on mount
   useEffect(() => {
@@ -50,21 +53,17 @@ export default function DashboardPage() {
           return;
         }
 
-        // Fetch profile
+        // Fetch profile for name (tier comes from TierProvider context)
         const { data: profile } = await supabase
           .from("profiles")
-          .select("*")
+          .select("name")
           .eq("id", authUser.id)
           .single();
-
-        // Determine tier (mock logic based on stage/challenges or explicit tier field if it exists)
-        // For now, default to 0 unless profile has it
-        const tier = profile?.tier || 0;
 
         setUser({
           name: profile?.name || authUser.email?.split("@")[0] || "Founder",
           email: authUser.email!,
-          tier,
+          tier: contextTier,
         });
       } catch (e) {
         console.error("Error fetching user", e);
@@ -73,7 +72,36 @@ export default function DashboardPage() {
       }
     }
     getUserData();
-  }, [router]);
+  }, [router, contextTier]);
+
+  // Keep user.tier in sync with contextTier when it changes
+  useEffect(() => {
+    if (user) {
+      setUser(prev => prev ? { ...prev, tier: contextTier } : prev);
+    }
+  }, [contextTier]);
+
+  // Handle post-Stripe checkout success redirect
+  useEffect(() => {
+    const isSuccess = searchParams.get("success") === "true";
+    if (isSuccess) {
+      // Poll for tier update (webhook may not have processed yet)
+      let attempts = 0;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        await refreshTier();
+        if (attempts >= 5) {
+          clearInterval(pollInterval);
+        }
+      }, 2000);
+
+      toast.success("Payment successful! Your plan has been upgraded.");
+      // Clean up URL
+      router.replace("/dashboard", { scroll: false });
+
+      return () => clearInterval(pollInterval);
+    }
+  }, [searchParams, router, refreshTier]);
 
   // Loading state
   if (loading) {
