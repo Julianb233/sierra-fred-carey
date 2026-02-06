@@ -60,7 +60,8 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 - [ ] **Phase 07: Dashboard Integration & Strategy Completion** - Fix dashboard wiring, complete strategy UI
   - Closes: REALITY-LENS-WIRING, STRAT-COMPONENTS, dashboard nav gaps
-  - [ ] 07-01-PLAN.md — Fix Reality Lens wiring, add missing nav links, complete strategy UI components, cleanup legacy routes
+  - [ ] 07-01-PLAN.md — Fix Reality Lens wiring to FRED API, remove legacy route
+  - [ ] 07-02-PLAN.md — Fix dashboard nav (History link, Investor Readiness link)
 
 ### Parallel Track
 
