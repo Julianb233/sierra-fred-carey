@@ -111,7 +111,7 @@ const navItems: NavItem[] = [
   },
   {
     name: "Weekly Check-ins",
-    href: "/dashboard/check-ins",
+    href: "/dashboard/sms",
     icon: <CheckCircledIcon className="h-4 w-4" />,
     tier: 1,
     badge: "Pro",
