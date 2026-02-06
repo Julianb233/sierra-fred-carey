@@ -1,32 +1,32 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (04-04 re-execution)
+**Session:** gsd-execute-plan (04-05 execution)
 
 ---
 
 ## Position
 
 **Current Phase:** 04 - Studio Tier Features (IN PROGRESS)
-**Current Plan:** 04-01, 04-02, 04-03, 04-04 complete, 3 remaining
-**Status:** In progress - Wave 2 complete
-**Last activity:** 2026-02-06 - Completed 04-04-PLAN.md (Growth Agent + Dashboard UI + Dispatch Modal)
+**Current Plan:** 04-01 through 04-05 complete, 2 remaining
+**Status:** In progress - Wave 3 complete
+**Last activity:** 2026-02-06 - Completed 04-05-PLAN.md (Twilio SMS Weekly Check-ins)
 
-Progress: [====================--------] 57% (4/7 Phase 04 plans)
+Progress: [=========================---] 71% (5/7 Phase 04 plans)
 
 ---
 
 ## Next Action
 
-**Action:** Execute Phase 04 Wave 3 (04-05 SMS check-ins)
+**Action:** Execute Phase 04 Wave 4 (04-06, 04-07 parallel)
 **Type:** execute
 **Blocked By:** None
 
 Phase 04 progress:
 - Wave 1: 04-01 Architecture foundation -- COMPLETE
 - Wave 2: 04-02, 04-03, 04-04 Three specialist agents + dashboard -- COMPLETE
-- Wave 3: 04-05 SMS check-ins (Twilio + cron) -- NEXT
-- Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel)
+- Wave 3: 04-05 SMS check-ins (Twilio + cron) -- COMPLETE
+- Wave 4: 04-06, 04-07 Boardy integration + Studio Stripe (parallel) -- NEXT
 
 ---
 
@@ -62,12 +62,12 @@ Phase 04 progress:
   - [x] 03-07: Strategy Document Generation full implementation (gap closure)
 
 ### What's In Progress
-- [ ] **Phase 04: Studio Tier Features** (IN PROGRESS - 4/7 complete)
+- [ ] **Phase 04: Studio Tier Features** (IN PROGRESS - 5/7 complete)
   - [x] 04-01: Virtual agent architecture (DB schema, types, orchestrator, base agent)
   - [x] 04-02: Founder Ops Agent + Agent API Routes
   - [x] 04-03: Fundraising Agent implementation
   - [x] 04-04: Growth Agent + dashboard UI + dispatch modal
-  - [ ] 04-05: Twilio SMS weekly check-ins with accountability tracking
+  - [x] 04-05: Twilio SMS weekly check-ins with accountability tracking
   - [ ] 04-06: Boardy integration for investor/advisor matching
   - [ ] 04-07: Studio tier Stripe integration and SMS settings UI
 
@@ -94,6 +94,7 @@ Phase 04 progress:
 | 2026-02-06 | 04-03 execution | Fundraising Agent: 4 domain tools + system prompt + runner (Wave 2 parallel) |
 | 2026-02-06 | 04-04 execution | Growth Agent (4 tools) + dashboard UI + tasks API + dispatch modal |
 | 2026-02-06 | 04-04 re-execution | Added generateStructuredReliable to fred-client + Zod v4 fix |
+| 2026-02-06 | 04-05 execution | SMS pipeline: Twilio client, templates, scheduler, webhook, cron, DB ops |
 
 ---
 
@@ -122,6 +123,10 @@ Phase 04 progress:
 - useUserTier hook for runtime tier gating in dashboard components
 - generateStructuredReliable with circuit breaker + fallback for all agent tools
 - Zod v4 requires z.record(z.string(), z.unknown()) not z.record(z.unknown())
+- Lazy-initialized Twilio client following Stripe pattern for build-time safety
+- 160 char SMS limit with highlight truncation for single-segment messages
+- Return empty TwiML on webhook errors to prevent Twilio retry storms
+- ISO week idempotency for cron dispatch to prevent duplicate messages
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -143,13 +148,16 @@ Phase 04 progress:
 - Base agent wrapping AI SDK generateText with tools + stopWhen
 - Tool execute pattern: build prompt from params, define Zod output schema, generateStructuredReliable, return result.object
 - Dashboard pattern: fetch tasks on mount, compute per-agent stats, dispatch modal with pre-selection
+- Lazy client init pattern: null client, initialize on first use, throw on missing env vars (Stripe, Twilio)
+- Webhook pattern: validate signature, process, return provider-expected response format (TwiML for Twilio)
+- Cron pattern: Bearer CRON_SECRET auth, idempotent dispatch, extensive logging for unattended execution
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T01:09:00Z
-Stopped at: Completed 04-04-PLAN.md (Growth Agent + Dashboard UI + fixes)
+Last session: 2026-02-06T01:20:00Z
+Stopped at: Completed 04-05-PLAN.md (Twilio SMS Weekly Check-ins)
 Resume file: None
 
 ---
