@@ -29,11 +29,22 @@ export async function POST(request: NextRequest) {
 
     const { priceId, tier } = await request.json();
 
+    // Map user-facing tier names to PLANS keys
+    // Dashboard sends tier="pro"/"studio" but PLANS keys are FUNDRAISING/VENTURE_STUDIO
+    const TIER_TO_PLAN_KEY: Record<string, string> = {
+      PRO: "FUNDRAISING",
+      STUDIO: "VENTURE_STUDIO",
+      // Direct keys also work
+      FREE: "FREE",
+      FUNDRAISING: "FUNDRAISING",
+      VENTURE_STUDIO: "VENTURE_STUDIO",
+    };
+
     // Support both direct priceId and tier-based lookup
     let resolvedPriceId = priceId;
     if (!resolvedPriceId && tier) {
-      const tierKey = tier.toUpperCase();
-      if (tierKey in PLANS) {
+      const tierKey = TIER_TO_PLAN_KEY[tier.toUpperCase()];
+      if (tierKey && tierKey in PLANS) {
         resolvedPriceId = PLANS[tierKey as keyof typeof PLANS].priceId;
       }
     }
