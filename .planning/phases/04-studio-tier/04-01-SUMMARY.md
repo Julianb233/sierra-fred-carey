@@ -27,8 +27,8 @@ key-files:
 decisions:
   - id: use-stopWhen-not-maxSteps
     summary: "AI SDK 6 uses stopWhen(stepCountIs(N)) instead of deprecated maxSteps"
-  - id: use-supabase-direct-client
-    summary: "agent-tasks.ts uses direct Supabase createClient with service role key matching documents.ts pattern"
+  - id: use-createServiceClient
+    summary: "agent-tasks.ts uses createServiceClient from lib/supabase/server matching fred-memory.ts pattern"
   - id: dynamic-imports-for-agents
     summary: "Orchestrator uses dynamic import() for specialist agents to avoid circular deps"
   - id: totalUsage-for-token-tracking
@@ -65,7 +65,7 @@ Created the agent routing machine following lib/fred/machine.ts pattern:
 - **8 states**: idle, routing, executing_founder_ops, executing_fundraising, executing_growth, complete, error, failed
 - **3 guards**: isFounderOpsTask, isFundraisingTask, isGrowthTask -- check `context.currentTask.agentType`
 - **3 actors**: Dynamic imports for specialist agents (resolved at runtime when Plans 04-02/03/04 are implemented)
-- **Actions**: logTransition, storeTask, storeResult, storeError, addActiveAgent, removeActiveAgent, clearTask
+- **Actions**: logTransition, storeTask, storeResult, storeError, storeRoutingError, clearTask
 - **Error recovery**: error state accepts DISPATCH to retry with new task, or CANCEL to transition to failed (final)
 
 ## Decisions Made
@@ -73,7 +73,7 @@ Created the agent routing machine following lib/fred/machine.ts pattern:
 | # | Decision | Reasoning |
 |---|----------|-----------|
 | 1 | Use `stopWhen(stepCountIs(N))` instead of `maxSteps` | AI SDK 6 replaced `maxSteps` with `stopWhen` + `stepCountIs()` helper |
-| 2 | Use direct Supabase `createClient` with service role | Matches lib/db/documents.ts pattern for server-side CRUD operations |
+| 2 | Use `createServiceClient` from lib/supabase/server | Matches lib/db/fred-memory.ts pattern for server-side CRUD operations |
 | 3 | Dynamic `import()` for specialist agents | Avoids circular dependencies; agents don't exist yet (Plans 02-04) |
 | 4 | Use `result.totalUsage` for token tracking | AI SDK 6 provides `totalUsage` for aggregate across all steps |
 | 5 | Tool call property is `input` not `args` | AI SDK 6 TypedToolCall uses `input` property for tool arguments |
