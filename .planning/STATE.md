@@ -1,7 +1,7 @@
 # Current State
 
 **Last Updated:** 2026-02-06
-**Session:** gsd-execute-plan (05-02 execution)
+**Session:** gsd-execute-plan (06-02 execution)
 
 ---
 
@@ -18,13 +18,13 @@ Progress: [==============================] 100% (2/2 Phase 06 plans)
 
 ## Next Action
 
-**Action:** Execute 06-02-PLAN.md (Dashboard layout, post-checkout refresh, settings fix)
-**Type:** execute
+**Action:** Phase 06 complete. All tier wiring done.
+**Type:** complete
 **Blocked By:** None
 
 Phase 06 progress:
 - Wave 1: 06-01 Tier infrastructure foundation -- COMPLETE
-- Wave 1: 06-02 Dashboard layout + post-checkout + settings -- PENDING
+- Wave 2: 06-02 Dashboard layout + post-checkout + settings -- COMPLETE
 
 ---
 
@@ -69,9 +69,9 @@ Phase 06 progress:
 - [x] **Phase 05: Auth & Onboarding Fix**
   - [x] 05-01: Auth infrastructure (proxy route protection, profiles migration, onboarding auth gate)
   - [x] 05-02: Signup password collection, API validation, dashboard real user data
-- [ ] **Phase 06: Tier Display & Stripe Wiring**
+- [x] **Phase 06: Tier Display & Stripe Wiring**
   - [x] 06-01: Tier infrastructure foundation (TierProvider mount, response shape fix, middleware table fix, migrations)
-  - [ ] 06-02: Dashboard layout, post-checkout refresh, settings page fix
+  - [x] 06-02: Dashboard layout, post-checkout refresh, settings page fix
 
 ### What's Blocked
 - Nothing currently blocked
@@ -102,6 +102,7 @@ Phase 06 progress:
 | 2026-02-06 | 04-06 execution | Boardy integration: strategy pattern client, AI mock, CRUD, API endpoints, dashboard with filter tabs |
 | 2026-02-06 | 06-01 execution | Tier infrastructure: TierProvider mount, response shape fix, middleware table fix, 2 DB migrations |
 | 2026-02-06 | 05-02 execution | Signup password field, API password validation, dashboard avatar loading guard |
+| 2026-02-06 | 06-02 execution | Dashboard consumer wiring: real user data + tier context in layout, page, settings |
 
 ---
 
@@ -148,6 +149,8 @@ Phase 06 progress:
 - Both "active" and "trialing" subscription statuses grant tier access
 - Require real password on signup (no crypto.randomUUID fallback); validate min 6 chars on client and server
 - Avatar initials guard: use (name || "?") to prevent crash during async user data loading
+- Post-checkout polling: refreshTier() 5x at 2s intervals to handle Stripe webhook processing delay
+- Disable Manage Subscription button when no active subscription (Stripe portal requires existing sub)
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -178,13 +181,14 @@ Phase 06 progress:
 - Strategy pattern for external integrations: interface + mock + factory allows swapping implementations without changing callers
 - Match lifecycle dashboard: filter tabs + status-aware action buttons for relationship progression tracking
 - Centralized tier derivation: getUserSubscription() -> getPlanByPriceId() -> getTierFromString() chain for server-side; TierProvider -> /api/user/subscription -> getTierFromString() for client-side
+- Post-checkout success pattern: detect ?success=true, poll refreshTier(), toast notification, clean URL via router.replace
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-06T02:06:00Z
-Stopped at: Completed 05-02-PLAN.md (Signup Password & Dashboard Real User Data)
+Last session: 2026-02-06T02:07:00Z
+Stopped at: Completed 06-02-PLAN.md (Dashboard Consumer Wiring) -- Phase 06 complete
 Resume file: None
 
 ---
