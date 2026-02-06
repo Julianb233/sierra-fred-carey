@@ -273,7 +273,8 @@ export default function DashboardLayout({
             <Button
               variant="outline"
               size="icon"
-              className="fixed bottom-6 right-4 z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 safe-area-inset-bottom"
+              className="fixed z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 right-4"
+              style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
             >
               {sidebarOpen ? (
                 <Cross2Icon className="h-5 w-5" />
