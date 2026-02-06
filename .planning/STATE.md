@@ -92,6 +92,7 @@ Phase 04 progress:
 | 2026-02-06 | 04-01 execution | Agent architecture foundation (4 migrations, types, base agent, orchestrator, CRUD) |
 | 2026-02-06 | 04-02 execution | Founder Ops Agent (4 tools) + Agent API routes (dispatch, list, status) |
 | 2026-02-06 | 04-03 execution | Fundraising Agent: 4 domain tools + system prompt + runner (Wave 2 parallel) |
+| 2026-02-06 | 04-03 TS fix | Resolved tool() type errors across all 3 agent tool files (inputSchema pattern) |
 | 2026-02-06 | 04-04 execution | Growth Agent (4 tools) + dashboard UI + tasks API + dispatch modal |
 | 2026-02-06 | 04-04 re-execution | Added generateStructuredReliable to fred-client + Zod v4 fix |
 | 2026-02-06 | 04-05 execution | SMS pipeline: Twilio client, templates, scheduler, webhook, cron, DB ops |
@@ -123,6 +124,7 @@ Phase 04 progress:
 - useUserTier hook for runtime tier gating in dashboard components
 - generateStructuredReliable with circuit breaker + fallback for all agent tools
 - Zod v4 requires z.record(z.string(), z.unknown()) not z.record(z.unknown())
+- AI SDK 6 tool() requires `inputSchema` (not `parameters`) for proper TypeScript inference; extract Zod schemas as named consts + z.infer<typeof> on execute
 - Lazy-initialized Twilio client following Stripe pattern for build-time safety
 - 160 char SMS limit with highlight truncation for single-segment messages
 - Return empty TwiML on webhook errors to prevent Twilio retry storms
@@ -156,8 +158,8 @@ Phase 04 progress:
 
 ## Session Continuity
 
-Last session: 2026-02-06T01:20:00Z
-Stopped at: Completed 04-05-PLAN.md (Twilio SMS Weekly Check-ins)
+Last session: 2026-02-06T01:10:00Z
+Stopped at: Completed 04-03-PLAN.md TypeScript fixes and verification
 Resume file: None
 
 ---
