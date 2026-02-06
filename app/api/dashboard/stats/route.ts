@@ -37,37 +37,41 @@ export async function GET() {
     ] = await Promise.all([
       // Ideas analyzed: count fred_episodic_memory conversation entries
       // or reality lens assessments
-      supabase
-        .from("fred_episodic_memory")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("event_type", "conversation")
-        .then((r) => r.count ?? 0)
+      Promise.resolve(
+        supabase
+          .from("fred_episodic_memory")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("event_type", "conversation")
+      ).then((r) => r.count ?? 0)
         .catch(() => 0),
 
       // Pitch decks reviewed
-      supabase
-        .from("pitch_reviews")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .then((r) => r.count ?? 0)
+      Promise.resolve(
+        supabase
+          .from("pitch_reviews")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+      ).then((r) => r.count ?? 0)
         .catch(() => 0),
 
       // Check-ins completed
-      supabase
-        .from("sms_checkins")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .then((r) => r.count ?? 0)
+      Promise.resolve(
+        supabase
+          .from("sms_checkins")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+      ).then((r) => r.count ?? 0)
         .catch(() => 0),
 
       // Active agents (running or pending)
-      supabase
-        .from("agent_tasks")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .in("status", ["running", "pending"])
-        .then((r) => r.count ?? 0)
+      Promise.resolve(
+        supabase
+          .from("agent_tasks")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("status", ["running", "pending"])
+      ).then((r) => r.count ?? 0)
         .catch(() => 0),
 
       // Recent activity: last 5 items across tables

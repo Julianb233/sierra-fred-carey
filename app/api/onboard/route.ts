@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // For full onboard, name is required
-    if (!isQuickOnboard && !name) {
+    if (!isQuickOnboard && stage !== "waitlist" && !name) {
       return NextResponse.json(
         { error: "Name is required" },
         { status: 400 }
@@ -34,6 +34,26 @@ export async function POST(request: NextRequest) {
     const userName = name || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
 
     const supabase = await createClient();
+
+    // Waitlist signups: no account needed, just record the interest
+    if (stage === "waitlist") {
+      await supabase.from("contact_submissions").insert({
+        name: userName,
+        email: email.toLowerCase(),
+        company: challenges?.[0] || null,
+        message: "Waitlist signup",
+        source: "waitlist",
+      });
+
+      return NextResponse.json({
+        success: true,
+        user: {
+          email: email.toLowerCase(),
+          name: userName,
+          stage: "waitlist",
+        },
+      });
+    }
 
     // Check if user already exists
     const { data: existingUser } = await supabase
