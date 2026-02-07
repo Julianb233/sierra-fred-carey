@@ -22,7 +22,7 @@
 - [ ] **VOICE-13**: COACHING_PROMPTS and getPromptForTopic used by chat API for topic-specific conversations
 - [ ] **VOICE-14**: getFredGreeting used in onboarding flow
 
-### Missing Features — Free Tier (FREE)
+### Missing Features -- Free Tier (FREE)
 
 - [ ] **FREE-01**: Red Flag Detection engine identifies risks during FRED chat conversations
 - [ ] **FREE-02**: Red Flag Detection renders inline visual indicators in chat UI (warning badges, highlighted text)
@@ -35,7 +35,7 @@
 - [ ] **FREE-09**: Founder Intake Snapshot: viewable snapshot document on dashboard showing current founder profile
 - [ ] **FREE-10**: Strategy & Execution Reframing: dedicated UI feature (not just general chat) that applies Fred's 9-step framework
 
-### Missing Features — Studio Tier (STUDIO)
+### Missing Features -- Studio Tier (STUDIO)
 
 - [ ] **STUDIO-01**: Inbox Ops Agent: in-app message hub page aggregating notifications from all agents
 - [ ] **STUDIO-02**: Inbox Ops Agent: displays agent task completions, recommendations, and action items
@@ -56,7 +56,7 @@
 - [ ] **PROD-01**: Root middleware.ts for edge-level auth protection on dashboard, settings, agents, chat routes
 - [ ] **PROD-02**: robots.txt created in /public/ with correct directives
 - [ ] **PROD-03**: Dynamic sitemap generation via app/sitemap.ts covering all public pages
-- [ ] **PROD-04**: Image optimization audit — convert img tags to next/image across codebase
+- [ ] **PROD-04**: Image optimization audit -- convert img tags to next/image across codebase
 - [ ] **PROD-05**: Redis/Upstash rate limiting replacing in-memory store for multi-instance scaling
 - [ ] **PROD-06**: CORS configuration applied to all API routes
 - [ ] **PROD-07**: Startup validation script checking all required env vars are present
@@ -66,10 +66,10 @@
 - [ ] **PWA-01**: Dedicated offline fallback page with Sahara branding and retry functionality
 - [ ] **PWA-02**: Custom "Add to Home Screen" install prompt component (detects installability, shows on first visit)
 - [ ] **PWA-03**: PWA install instructions page with step-by-step guides for iOS Safari and Android Chrome
-- [ ] **PWA-04**: Smooth install experience — guided flow from prompt to installed app
+- [ ] **PWA-04**: Smooth install experience -- guided flow from prompt to installed app
 - [ ] **PWA-05**: Pricing comparison table mobile layout fix (card-based alternative below 768px)
 - [ ] **PWA-06**: Fixed-width component audit and fix across 17 identified files
-- [ ] **PWA-07**: Touch target audit — all interactive elements meet 44px minimum
+- [ ] **PWA-07**: Touch target audit -- all interactive elements meet 44px minimum
 - [ ] **PWA-08**: All dashboard pages verified on 375px viewport (iPhone 12/13/14)
 
 ### Admin Training Docs (ADMIN)
@@ -84,7 +84,7 @@
 
 - [ ] **DATA-01**: Capital raised standardized to one correct number across all pages (homepage, about, footer)
 - [ ] **DATA-02**: Years of experience fixed to "50+" in all AI prompts and marketing copy
-- [ ] **DATA-03**: SMS Check-ins tier placement resolved — single consistent tier across pricing, constants, and nav
+- [ ] **DATA-03**: SMS Check-ins tier placement resolved -- single consistent tier across pricing, constants, and nav
 - [ ] **DATA-04**: Studio features "Coming Soon" labels synchronized with actual feature availability
 - [ ] **DATA-05**: Interactive page stats reconciled with homepage stats (or clearly differentiated)
 - [ ] **DATA-06**: About page timeline corrected to match Fred's actual history from fred-brain.ts
@@ -117,19 +117,75 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VOICE-01 through VOICE-14 | TBD | Pending |
-| FREE-01 through FREE-10 | TBD | Pending |
-| STUDIO-01 through STUDIO-13 | TBD | Pending |
-| PROD-01 through PROD-07 | TBD | Pending |
-| PWA-01 through PWA-08 | TBD | Pending |
-| ADMIN-01 through ADMIN-05 | TBD | Pending |
-| DATA-01 through DATA-06 | TBD | Pending |
+| VOICE-01 | Phase 13 | Pending |
+| VOICE-02 | Phase 13 | Pending |
+| VOICE-03 | Phase 13 | Pending |
+| VOICE-04 | Phase 13 | Pending |
+| VOICE-05 | Phase 13 | Pending |
+| VOICE-06 | Phase 14 | Pending |
+| VOICE-07 | Phase 14 | Pending |
+| VOICE-08 | Phase 14 | Pending |
+| VOICE-09 | Phase 14 | Pending |
+| VOICE-10 | Phase 14 | Pending |
+| VOICE-11 | Phase 15 | Pending |
+| VOICE-12 | Phase 15 | Pending |
+| VOICE-13 | Phase 15 | Pending |
+| VOICE-14 | Phase 15 | Pending |
+| FREE-01 | Phase 16 | Pending |
+| FREE-02 | Phase 16 | Pending |
+| FREE-03 | Phase 16 | Pending |
+| FREE-04 | Phase 17 | Pending |
+| FREE-05 | Phase 17 | Pending |
+| FREE-06 | Phase 17 | Pending |
+| FREE-07 | Phase 18 | Pending |
+| FREE-08 | Phase 18 | Pending |
+| FREE-09 | Phase 18 | Pending |
+| FREE-10 | Phase 18 | Pending |
+| STUDIO-01 | Phase 19 | Pending |
+| STUDIO-02 | Phase 19 | Pending |
+| STUDIO-03 | Phase 19 | Pending |
+| STUDIO-04 | Phase 19 | Pending |
+| STUDIO-05 | Phase 20 | Pending |
+| STUDIO-06 | Phase 20 | Pending |
+| STUDIO-07 | Phase 20 | Pending |
+| STUDIO-08 | Phase 20 | Pending |
+| STUDIO-09 | Phase 20 | Pending |
+| STUDIO-10 | Phase 20 | Pending |
+| STUDIO-11 | Phase 21 | Pending |
+| STUDIO-12 | Phase 21 | Pending |
+| STUDIO-13 | Phase 21 | Pending |
+| PROD-01 | Phase 12 | Pending |
+| PROD-02 | Phase 12 | Pending |
+| PROD-03 | Phase 12 | Pending |
+| PROD-04 | Phase 12 | Pending |
+| PROD-05 | Phase 12 | Pending |
+| PROD-06 | Phase 12 | Pending |
+| PROD-07 | Phase 12 | Pending |
+| PWA-01 | Phase 22 | Pending |
+| PWA-02 | Phase 22 | Pending |
+| PWA-03 | Phase 22 | Pending |
+| PWA-04 | Phase 22 | Pending |
+| PWA-05 | Phase 22 | Pending |
+| PWA-06 | Phase 22 | Pending |
+| PWA-07 | Phase 22 | Pending |
+| PWA-08 | Phase 22 | Pending |
+| ADMIN-01 | Phase 23 | Pending |
+| ADMIN-02 | Phase 23 | Pending |
+| ADMIN-03 | Phase 23 | Pending |
+| ADMIN-04 | Phase 23 | Pending |
+| ADMIN-05 | Phase 23 | Pending |
+| DATA-01 | Phase 12 | Pending |
+| DATA-02 | Phase 12 | Pending |
+| DATA-03 | Phase 12 | Pending |
+| DATA-04 | Phase 12 | Pending |
+| DATA-05 | Phase 12 | Pending |
+| DATA-06 | Phase 12 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 63 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 63
+- Mapped to phases: 63
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after gap analysis audit*
+*Last updated: 2026-02-07 -- traceability updated with phase mappings*
