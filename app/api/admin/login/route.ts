@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { createAdminSession } from "@/lib/auth/admin-sessions";
 
 /**
  * Constant-time string comparison to prevent timing attacks
@@ -16,6 +18,15 @@ function safeCompare(a: string, b: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 3 admin login attempts per minute per IP (stricter than user login)
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    const rateLimitResult = checkRateLimit(`admin-login:${ip}`, { limit: 3, windowSeconds: 60 });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const { adminKey } = await request.json();
 
     if (!adminKey || typeof adminKey !== "string") {
@@ -44,14 +55,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // SECURITY: Store the admin key in the cookie (httpOnly + secure)
-    // The cookie value is verified server-side against ADMIN_SECRET_KEY on each request
+    // SECURITY: Create a session token instead of storing the raw admin key
+    // The session token is a random UUID that maps to an in-memory session
+    const sessionToken = createAdminSession();
     const cookieStore = await cookies();
-    cookieStore.set("adminKey", adminKey, {
+    cookieStore.set("admin_session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 86400, // 24 hours
       path: "/",
     });
 
