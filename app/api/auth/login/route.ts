@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signIn } from "@/lib/auth";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 login attempts per minute per IP
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    const rateLimitResult = checkRateLimit(`auth-login:${ip}`, { limit: 5, windowSeconds: 60 });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
