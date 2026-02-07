@@ -280,9 +280,21 @@ export function createRateLimitHeaders(
  */
 export function sanitizeInput(input: string): string {
   return input
-    .replace(/[<>]/g, '')
+    .replace(/[<>'"&]/g, (char) => {
+      const entities: Record<string, string> = {
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+        '&': '&amp;',
+      };
+      return entities[char] || char;
+    })
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/on\w+=/gi, '')
     .trim()
-    .slice(0, 1000); // Limit length
+    .slice(0, 1000);
 }
 
 /**
