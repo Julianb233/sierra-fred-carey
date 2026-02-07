@@ -6,7 +6,8 @@
   "title": "Investor list upload, CSV parser, and AI matching engine",
   "description": "Create investor tables migration, CSV parser with validation, AI matching engine, upload and match API endpoints, investor targeting dashboard page and matches page.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-07T22:30:00Z"
+  "createdAt": "2026-02-07T22:30:00Z",
+  "completedAt": "2026-02-07T23:45:00Z"
 }
