@@ -18,7 +18,9 @@ import type {
   ExtractedEntity,
   ClarificationRequest,
   CoachingTopic,
+  BurnoutSignals,
 } from "../types";
+import { detectBurnoutSignals } from "./burnout-detector";
 
 /**
  * Validate and parse user input
@@ -81,6 +83,9 @@ export async function validateInputActor(
   // Detect coaching topic (orthogonal to intent)
   const topic = detectTopic(sanitizedMessage, keywords);
 
+  // Detect burnout signals for founder wellbeing
+  const burnoutSignals = detectBurnoutSignals(sanitizedMessage);
+
   return {
     originalMessage: input.message,
     intent: intentResult.intent,
@@ -91,6 +96,7 @@ export async function validateInputActor(
     keywords,
     sentiment,
     urgency,
+    burnoutSignals,
   };
 }
 

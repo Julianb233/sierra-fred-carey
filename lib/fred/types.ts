@@ -122,6 +122,8 @@ export interface ValidatedInput {
   sentiment: "positive" | "negative" | "neutral" | "mixed";
   /** Urgency level detected */
   urgency: "low" | "medium" | "high" | "critical";
+  /** Burnout signals detected from message analysis */
+  burnoutSignals?: BurnoutSignals;
 }
 
 /**
@@ -244,6 +246,8 @@ export interface SynthesisResult {
   nextSteps: string[];
   /** Follow-up questions FRED might ask */
   followUpQuestions: string[];
+  /** Detected red flags from risk analysis */
+  redFlags?: RedFlag[];
 }
 
 /**
@@ -507,3 +511,46 @@ export const DEFAULT_FRED_CONFIG: FredConfig = {
     relationships: 0.1,
   },
 };
+
+// ============================================================================
+// Founder Wellbeing Types
+// ============================================================================
+
+/**
+ * Burnout signal detection results from analyzing founder messages
+ */
+export interface BurnoutSignals {
+  /** Whether burnout signals were detected above threshold */
+  detected: boolean;
+  /** Overall stress level score (0-100) */
+  stressLevel: number;
+  /** Specific indicators found, e.g. ["sleep_issues", "overwhelm", "isolation"] */
+  indicators: string[];
+  /** Brief supportive message in Fred's voice */
+  recommendation: string;
+  /** Whether to suggest the wellbeing check-in page */
+  suggestCheckIn: boolean;
+}
+
+// ============================================================================
+// Red Flag Types
+// ============================================================================
+
+export type RedFlagCategory = "market" | "financial" | "team" | "product" | "legal" | "competitive";
+
+export type Severity = "critical" | "high" | "medium" | "low";
+
+export type FlagStatus = "active" | "acknowledged" | "resolved" | "dismissed";
+
+export interface RedFlag {
+  id?: string;
+  userId?: string;
+  category: RedFlagCategory;
+  severity: Severity;
+  title: string;
+  description: string;
+  status: FlagStatus;
+  sourceMessageId?: string;
+  detectedAt: string;
+  resolvedAt?: string;
+}

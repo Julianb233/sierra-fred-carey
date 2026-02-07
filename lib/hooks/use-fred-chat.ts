@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import type { RedFlag, BurnoutSignals } from "@/lib/fred/types";
 
 // ============================================================================
 // Types
@@ -84,6 +85,12 @@ export interface UseFredChatReturn {
   clearError: () => void;
   /** Reset the conversation */
   reset: () => void;
+  /** Detected red flags from conversation */
+  redFlags: RedFlag[];
+  /** Burnout signals detected from chat messages */
+  wellbeingAlert: BurnoutSignals | null;
+  /** Dismiss the wellbeing alert */
+  dismissWellbeingAlert: () => void;
 }
 
 // ============================================================================
@@ -155,6 +162,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const [analysis, setAnalysis] = useState<FredAnalysis | null>(null);
   const [synthesis, setSynthesis] = useState<FredSynthesis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [redFlags, setRedFlags] = useState<RedFlag[]>([]);
+  const [wellbeingAlert, setWellbeingAlert] = useState<BurnoutSignals | null>(null);
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -287,6 +296,22 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
               setState("synthesizing");
               break;
 
+            case "red_flag": {
+              const rfData = data as { type: string; flags: RedFlag[] };
+              if (rfData.flags && rfData.flags.length > 0) {
+                setRedFlags(prev => [...prev, ...rfData.flags]);
+              }
+              break;
+            }
+
+            case "wellbeing": {
+              const wellbeingData = data as { signals: BurnoutSignals };
+              if (wellbeingData.signals?.detected) {
+                setWellbeingAlert(wellbeingData.signals);
+              }
+              break;
+            }
+
             case "response":
               const responseData = data as {
                 content: string;
@@ -362,6 +387,11 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   }, [context, storeInMemory]);
 
   // Clear error
+  // Dismiss wellbeing alert
+  const dismissWellbeingAlert = useCallback(() => {
+    setWellbeingAlert(null);
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
     if (state === "error") {
@@ -380,6 +410,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setAnalysis(null);
     setSynthesis(null);
     setError(null);
+    setRedFlags([]);
 
     // Generate new session ID
     const newSessionId = crypto.randomUUID();
@@ -400,5 +431,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     error,
     clearError,
     reset,
+    redFlags,
+    wellbeingAlert,
+    dismissWellbeingAlert,
   };
 }

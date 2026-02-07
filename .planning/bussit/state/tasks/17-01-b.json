@@ -6,7 +6,8 @@
   "title": "Founder wellbeing detection, check-in page, and mindset coaching",
   "description": "Build burnout-detector actor, wire stress signals in validate-input, add wellbeing check-in page with WellnessAssessment component, BurnoutAlert component, and check-in API endpoint.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-07T22:30:00Z"
+  "createdAt": "2026-02-07T22:30:00Z",
+  "completedAt": "2026-02-07T23:45:00Z"
 }

@@ -24,6 +24,7 @@ import { getModelForTier } from "@/lib/ai/tier-routing";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
 import { createServiceClient } from "@/lib/supabase/server";
+import { createRedFlag } from "@/lib/db/red-flags";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -389,6 +390,24 @@ export async function POST(req: NextRequest) {
               confidence: update.context.synthesis.confidence,
               reasoning: update.context.synthesis.reasoning,
             });
+          }
+
+          // Persist and emit red flags if detected during synthesis
+          if (update.context.synthesis?.redFlags && update.context.synthesis.redFlags.length > 0) {
+            try {
+              const persistedFlags = await Promise.all(
+                update.context.synthesis.redFlags.map((flag) =>
+                  createRedFlag({
+                    ...flag,
+                    userId,
+                    status: flag.status || "active",
+                  })
+                )
+              );
+              send("red_flag", { type: "red_flag", flags: persistedFlags });
+            } catch (rfError) {
+              console.warn("[FRED Chat] Failed to persist red flags:", rfError);
+            }
           }
 
           // Send final response
