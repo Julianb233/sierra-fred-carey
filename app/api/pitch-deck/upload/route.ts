@@ -98,15 +98,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     if (error instanceof Response) return error as NextResponse<UploadResponse>;
 
     // Handle all other errors (500 Internal Server Error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
-    console.error('File upload error:', error);
+    console.error('[PitchDeckUpload] Upload error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: 'Upload failed',
-        details: errorMessage,
+        error: 'An unexpected error occurred during upload',
       },
       { status: 500 }
     );

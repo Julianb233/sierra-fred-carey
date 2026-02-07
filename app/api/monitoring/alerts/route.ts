@@ -88,14 +88,13 @@ export async function GET(request: NextRequest) {
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    console.error("[Monitoring API] Error fetching alerts:", error);
+  } catch (error) {
+    console.error("[Monitoring Alerts] Error fetching alerts:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch alerts",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -198,14 +197,13 @@ export async function POST(request: NextRequest) {
         results,
       },
     });
-  } catch (error: any) {
-    console.error("[Monitoring API] Error sending notification:", error);
+  } catch (error) {
+    console.error("[Monitoring Alerts] Error sending notification:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to send notification",
-        message: error.message,
       },
       { status: 500 }
     );

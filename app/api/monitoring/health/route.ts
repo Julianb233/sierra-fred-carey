@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch health data",
+        error: "Failed to fetch health data",
       },
       { status: 500 }
     );
@@ -116,12 +116,13 @@ async function checkDatabaseHealth(): Promise<{
       message: responseTime > 500 ? "Database experiencing high latency" : undefined,
     };
   } catch (error) {
+    console.error("[Health API] Database health check failed:", error);
     return {
       name: "Database",
       status: "down",
       responseTime: Date.now() - start,
       lastCheck: new Date(),
-      message: `Database unreachable: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: "Database unreachable",
     };
   }
 }

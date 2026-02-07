@@ -61,19 +61,18 @@ export async function GET(
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     const { name } = await params;
     console.error(
       `[Monitoring API] Error fetching experiment ${name}:`,
       error
     );
 
-    if (error.message.includes("not found")) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return NextResponse.json(
         {
           success: false,
           error: "Experiment not found",
-          message: error.message,
         },
         { status: 404 }
       );
@@ -83,7 +82,6 @@ export async function GET(
       {
         success: false,
         error: "Failed to fetch experiment metrics",
-        message: error.message,
       },
       { status: 500 }
     );

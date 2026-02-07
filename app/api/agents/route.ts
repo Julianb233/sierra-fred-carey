@@ -314,7 +314,7 @@ async function startAgentExecution(
         console.error(`[Agent API] Orchestrator error for task ${taskId}:`, err);
         updateAgentTask(taskId, {
           status: "failed",
-          error: err instanceof Error ? err.message : String(err),
+          error: "Agent execution failed",
           completedAt: new Date(),
         }).catch(() => {});
       },
@@ -358,7 +358,7 @@ async function startAgentExecution(
     console.error(`[Agent API] startAgentExecution failed for task ${taskId}:`, error);
     await updateAgentTask(taskId, {
       status: "failed",
-      error: error instanceof Error ? error.message : String(error),
+      error: "Agent execution failed",
       completedAt: new Date(),
     });
   }

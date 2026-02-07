@@ -156,8 +156,7 @@ export async function POST(req: NextRequest) {
         success: false,
         error: {
           code: "INTERNAL_ERROR",
-          message:
-            error instanceof Error ? error.message : "Assessment failed",
+          message: "Assessment failed",
         },
         meta: {
           latencyMs,

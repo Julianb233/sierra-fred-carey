@@ -148,13 +148,12 @@ export async function POST(req: NextRequest) {
       return error;
     }
 
-    console.error("[FRED Analyze] Error:", error);
+    console.error("[FredAnalyze] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to analyze message",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );

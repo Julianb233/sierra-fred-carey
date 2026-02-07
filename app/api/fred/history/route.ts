@@ -125,13 +125,12 @@ export async function GET(req: NextRequest) {
       return error;
     }
 
-    console.error("[FRED History API] Error:", error);
+    console.error("[FredHistory] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to retrieve history",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );

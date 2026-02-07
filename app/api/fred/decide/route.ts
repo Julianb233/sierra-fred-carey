@@ -234,13 +234,12 @@ export async function POST(req: NextRequest) {
       return error;
     }
 
-    console.error("[FRED Decide] Error:", error);
+    console.error("[FredDecide] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to process decision",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );

@@ -74,19 +74,18 @@ export async function GET(
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     const { name } = await params;
     console.error(
       `[Promotion API] Error checking eligibility for ${name}:`,
       error
     );
 
-    if (error.message.includes("not found")) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return NextResponse.json(
         {
           success: false,
           error: "Experiment not found",
-          message: error.message,
         },
         { status: 404 }
       );
@@ -96,7 +95,6 @@ export async function GET(
       {
         success: false,
         error: "Failed to check promotion eligibility",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -175,7 +173,7 @@ export async function POST(
     if (userId) {
       try {
         await notifyPromotion(userId, record, eligibility);
-      } catch (notifyError: any) {
+      } catch (notifyError) {
         console.error(
           `[Promotion API] Failed to send notification:`,
           notifyError
@@ -193,27 +191,25 @@ export async function POST(
       message: `Successfully promoted variant ${record.promotedVariantName} to production`,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     const { name } = await params;
     console.error(`[Promotion API] Error promoting winner for ${name}:`, error);
 
-    if (error.message.includes("not eligible")) {
+    if (error instanceof Error && error.message.includes("not eligible")) {
       return NextResponse.json(
         {
           success: false,
           error: "Promotion not allowed",
-          message: error.message,
         },
         { status: 400 }
       );
     }
 
-    if (error.message.includes("not found")) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return NextResponse.json(
         {
           success: false,
           error: "Experiment not found",
-          message: error.message,
         },
         { status: 404 }
       );
@@ -223,7 +219,6 @@ export async function POST(
       {
         success: false,
         error: "Failed to promote winner",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -281,19 +276,18 @@ export async function DELETE(
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     const { name } = await params;
     console.error(
       `[Promotion API] Error rolling back promotion for ${name}:`,
       error
     );
 
-    if (error.message.includes("not found")) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return NextResponse.json(
         {
           success: false,
           error: "No active promotion found",
-          message: error.message,
         },
         { status: 404 }
       );
@@ -303,7 +297,6 @@ export async function DELETE(
       {
         success: false,
         error: "Failed to rollback promotion",
-        message: error.message,
       },
       { status: 500 }
     );

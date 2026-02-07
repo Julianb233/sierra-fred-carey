@@ -169,18 +169,18 @@ export async function POST(request: NextRequest) {
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 
     console.error("[POST /api/notifications/send]", error);
 
     // Check for rate limiting
-    if (error.message?.includes("Rate limit")) {
+    if (error instanceof Error && error.message?.includes("Rate limit")) {
       return NextResponse.json(
         {
           success: false,
-          error: error.message,
+          error: "Rate limit exceeded",
         },
         { status: 429 }
       );
@@ -190,7 +190,6 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Failed to send notification",
-        message: error.message,
       },
       { status: 500 }
     );
@@ -280,13 +279,12 @@ async function handleBatchSend(
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[Batch Send Error]", error);
     return NextResponse.json(
       {
         success: false,
         error: "Batch send failed",
-        message: error.message,
       },
       { status: 500 }
     );

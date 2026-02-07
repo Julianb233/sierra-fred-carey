@@ -252,8 +252,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to retrieve memories",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );
@@ -365,8 +364,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to store memory",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );
@@ -421,8 +419,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to delete memory",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );

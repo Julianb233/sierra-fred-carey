@@ -295,9 +295,9 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (error) {
-        console.error("[FRED Chat] Streaming error:", error);
+        console.error("[FredChat] Streaming error:", error);
         send("error", {
-          message: error instanceof Error ? error.message : "Unknown error",
+          message: "An error occurred while processing your request",
         });
       } finally {
         close();
@@ -316,13 +316,12 @@ export async function POST(req: NextRequest) {
       return error;
     }
 
-    console.error("[FRED Chat] Error:", error);
+    console.error("[FredChat] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to process chat",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
       },
       { status: 500 }
     );

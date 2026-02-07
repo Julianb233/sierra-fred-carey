@@ -105,7 +105,6 @@ export async function GET(
       {
         success: false,
         error: "Failed to check promotion eligibility",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -230,7 +229,6 @@ export async function POST(
       {
         success: false,
         error: "Failed to promote variant",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -346,7 +344,6 @@ export async function DELETE(
       {
         success: false,
         error: "Failed to rollback promotion",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

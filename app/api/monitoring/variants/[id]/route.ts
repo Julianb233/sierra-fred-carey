@@ -75,7 +75,6 @@ export async function GET(
       {
         success: false,
         error: "Failed to fetch variant metrics",
-        message: error.message,
       },
       { status: 500 }
     );

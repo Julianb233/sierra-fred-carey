@@ -194,16 +194,12 @@ export async function POST(
     if (error instanceof Response) return error as NextResponse<ParseResponse>;
 
     // Handle all other errors (500 Internal Server Error)
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
-
     console.error("[PDF Parse] Unexpected error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Parse failed",
-        details: errorMessage,
+        error: "An unexpected error occurred while parsing",
       },
       { status: 500 }
     );

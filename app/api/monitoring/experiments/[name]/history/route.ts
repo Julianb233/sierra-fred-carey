@@ -48,7 +48,6 @@ export async function GET(
       {
         success: false,
         error: "Failed to fetch promotion history",
-        message: error.message,
       },
       { status: 500 }
     );
