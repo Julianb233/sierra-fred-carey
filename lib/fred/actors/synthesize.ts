@@ -5,6 +5,7 @@
  * with 7-factor scoring.
  */
 
+import { logger } from "@/lib/logger";
 import type {
   ValidatedInput,
   MentalModelResult,
@@ -30,7 +31,7 @@ export async function synthesizeActor(
   mentalModels: MentalModelResult[],
   memoryContext: MemoryContext | null
 ): Promise<SynthesisResult> {
-  console.log(
+  logger.log(
     "[FRED] Synthesizing from",
     mentalModels.length,
     "mental models"

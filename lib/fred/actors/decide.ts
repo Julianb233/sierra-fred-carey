@@ -15,6 +15,7 @@ import type {
   DecisionAction,
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
+import { logger } from "@/lib/logger";
 
 /**
  * Decide what action to take based on synthesis
@@ -23,7 +24,7 @@ export async function decideActor(
   synthesis: SynthesisResult,
   validatedInput: ValidatedInput
 ): Promise<DecisionResult> {
-  console.log(
+  logger.log(
     "[FRED] Deciding action | Confidence:",
     synthesis.confidence,
     "| Score:",

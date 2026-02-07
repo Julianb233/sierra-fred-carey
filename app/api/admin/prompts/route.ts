@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { clearConfigCache } from "@/lib/ai/config-loader";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/prompts
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     const name = searchParams.get("name");
     const activeOnly = searchParams.get("active_only") === "true";
 
-    console.log("[Admin Prompts GET] Fetching prompts", {
+    logger.log("[Admin Prompts GET] Fetching prompts", {
       category,
       name,
       activeOnly,
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin Prompts POST] Creating new version of prompt: ${name}`);
+    logger.log(`[Admin Prompts POST] Creating new version of prompt: ${name}`);
 
     // Get the current max version for this prompt name
     const maxVersionResult = await sql`
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
         created_by as "createdBy"
     `;
 
-    console.log(
+    logger.log(
       `[Admin Prompts POST] Created prompt ${name} v${newVersion} (ID: ${result[0].id})`
     );
 
@@ -193,7 +194,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin Prompts PATCH] Updating prompt ${id} to is_active=${is_active}`);
+    logger.log(`[Admin Prompts PATCH] Updating prompt ${id} to is_active=${is_active}`);
 
     // Get the prompt name first
     const promptResult = await sql`
@@ -211,7 +212,7 @@ export async function PATCH(request: NextRequest) {
 
     // If activating this prompt, deactivate all other versions of the same name
     if (is_active) {
-      console.log(
+      logger.log(
         `[Admin Prompts PATCH] Deactivating other versions of ${promptName}`
       );
 
@@ -241,7 +242,7 @@ export async function PATCH(request: NextRequest) {
     // Clear the prompt cache so changes take effect immediately
     clearConfigCache();
 
-    console.log(
+    logger.log(
       `[Admin Prompts PATCH] Updated prompt ${id}, cache cleared`
     );
 

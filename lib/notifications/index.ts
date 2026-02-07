@@ -3,13 +3,18 @@
  * Handles multi-channel notification delivery with intelligent routing and spam prevention
  */
 
+import { logger } from "@/lib/logger";
 import { sql } from "@/lib/db/supabase-sql";
 import { sendSlackNotification, testSlackWebhook } from "./slack";
 import {
   sendPagerDutyNotification,
   testPagerDutyIntegration,
 } from "./pagerduty";
-import { sendEmailNotification, testEmailNotification } from "./email";
+import {
+  sendEmailNotification,
+  sendDigestEmail,
+  testEmailNotification,
+} from "./email";
 import {
   NotificationPayload,
   NotificationResult,
@@ -106,7 +111,7 @@ export async function sendNotification(
     // Check rate limits
     const rateLimitResult = await checkRateLimit(payload);
     if (!rateLimitResult.allowed) {
-      console.log(
+      logger.log(
         `[Notifications] Rate limit exceeded: ${rateLimitResult.reason}`
       );
       return [
@@ -126,7 +131,7 @@ export async function sendNotification(
     );
 
     if (configs.length === 0) {
-      console.log(
+      logger.log(
         `[Notifications] No enabled configs for user ${payload.userId} at level ${payload.level}`
       );
       return [];
@@ -144,7 +149,7 @@ export async function sendNotification(
     );
 
     if (filteredConfigs.length === 0) {
-      console.log(
+      logger.log(
         `[Notifications] No configs match routing rules for event type: ${payload.type}`
       );
       return [];
@@ -604,8 +609,14 @@ export async function sendBatchNotifications(
 
   for (const config of configs) {
     if (config.channel === "email") {
-      // Send digest email
-      // TODO: Implement digest email template
+      // Send digest email compiling all notifications into a single summary
+      if (config.emailAddress) {
+        const result = await sendDigestEmail(
+          config.emailAddress,
+          notifications
+        );
+        results.push(result);
+      }
     } else if (config.channel === "slack") {
       // Send summary to Slack
       const { sendSlackAlertSummary } = await import("./slack");

@@ -21,6 +21,7 @@ import {
   DEFAULT_SCORING_CONFIG,
 } from "./types";
 import { buildScoringPrompt } from "./prompts";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Zod Schemas for Structured Output
@@ -65,7 +66,7 @@ export async function scoreDecision(
   // Detect or use provided decision type
   const decisionType = options.decisionType || detectDecisionType(decision);
 
-  console.log(`[FRED Scoring] Scoring decision as "${decisionType.name}"`, {
+  logger.log(`[FRED Scoring] Scoring decision as "${decisionType.name}"`, {
     useAI,
     decision: decision.substring(0, 100),
   });

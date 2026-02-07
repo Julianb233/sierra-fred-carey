@@ -6,6 +6,7 @@
  * retry logic, and integration with the monitoring system.
  */
 
+import { logger } from "@/lib/logger";
 import { sendNotification, sendBatchNotifications } from "./index";
 import { sendSlackNotification, testSlackWebhook } from "./slack";
 import { sendEmailNotification, testEmailNotification } from "./email";
@@ -82,7 +83,7 @@ export class NotificationService {
    */
   async send(payload: NotificationPayload): Promise<NotificationResult[]> {
     if (!this.config.enabled) {
-      console.log("[NotificationService] Notifications disabled");
+      logger.log("[NotificationService] Notifications disabled");
       return [];
     }
 
@@ -286,7 +287,7 @@ export class NotificationService {
 
       // Retry on failure
       if (retries > 0) {
-        console.log(`[NotificationService] Retrying... (${retries} attempts left)`);
+        logger.log(`[NotificationService] Retrying... (${retries} attempts left)`);
         await this.delay(delay);
         return this.withRetry(fn, retries - 1, delay * 2);
       }
@@ -294,7 +295,7 @@ export class NotificationService {
       return result;
     } catch (error: any) {
       if (retries > 0) {
-        console.log(`[NotificationService] Error, retrying... (${retries} attempts left)`);
+        logger.log(`[NotificationService] Error, retrying... (${retries} attempts left)`);
         await this.delay(delay);
         return this.withRetry(fn, retries - 1, delay * 2);
       }

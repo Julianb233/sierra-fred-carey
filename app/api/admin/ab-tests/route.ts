@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/ab-tests
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[Admin A/B Tests GET] Fetching all experiments");
+    logger.log("[Admin A/B Tests GET] Fetching all experiments");
 
     // Get all experiments
     const experiments = await sql`
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin A/B Tests POST] Creating experiment: ${experimentName}`);
+    logger.log(`[Admin A/B Tests POST] Creating experiment: ${experimentName}`);
 
     // Get user ID from header (optional for now)
     const userId = request.headers.get("x-user-id") || null;
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    console.log(
+    logger.log(
       `[Admin A/B Tests POST] Created experiment ${experiment.id} with control variant`
     );
 
@@ -244,7 +245,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin A/B Tests PATCH] Updating variant ${variantId}`, body);
+    logger.log(`[Admin A/B Tests PATCH] Updating variant ${variantId}`, body);
 
     // Get the variant's experiment ID first
     const variantCheck = await sql`
@@ -343,7 +344,7 @@ export async function PATCH(request: NextRequest) {
       SELECT name FROM ab_experiments WHERE id = ${experimentId}
     `;
 
-    console.log(`[Admin A/B Tests PATCH] Updated variant ${variantId}`);
+    logger.log(`[Admin A/B Tests PATCH] Updated variant ${variantId}`);
 
     return NextResponse.json({
       success: true,

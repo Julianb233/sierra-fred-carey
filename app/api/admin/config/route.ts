@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { clearConfigCache } from "@/lib/ai/config-loader";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/config
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[Admin Config GET] Fetching all analyzer configs");
+    logger.log("[Admin Config GET] Fetching all analyzer configs");
 
     const configs = await sql`
       SELECT
@@ -88,7 +89,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin Config PATCH] Updating config for ${analyzer}`, body);
+    logger.log(`[Admin Config PATCH] Updating config for ${analyzer}`, body);
 
     // Validate temperature if provided
     if (temperature !== undefined && (temperature < 0 || temperature > 2)) {
@@ -156,7 +157,7 @@ export async function PATCH(request: NextRequest) {
     // Clear the config cache so changes take effect immediately
     clearConfigCache();
 
-    console.log(
+    logger.log(
       `[Admin Config PATCH] Updated config for ${analyzer}, cache cleared`
     );
 
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin Config POST] Creating config for ${analyzer}`);
+    logger.log(`[Admin Config POST] Creating config for ${analyzer}`);
 
     const result = await sql`
       INSERT INTO ai_config (
@@ -248,7 +249,7 @@ export async function POST(request: NextRequest) {
         updated_at as "updatedAt"
     `;
 
-    console.log(`[Admin Config POST] Created config for ${analyzer}`);
+    logger.log(`[Admin Config POST] Created config for ${analyzer}`);
 
     return NextResponse.json(
       {

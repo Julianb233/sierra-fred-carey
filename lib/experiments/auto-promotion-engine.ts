@@ -3,6 +3,7 @@
  * Monitors experiments and automatically promotes winners based on configured thresholds
  */
 
+import { logger } from "@/lib/logger";
 import { sql } from "@/lib/db/supabase-sql";
 import {
   ExperimentComparison,
@@ -330,7 +331,7 @@ export async function promoteWinner(
 
     if (!eligibility.eligible) {
       result.error = `Not eligible: ${eligibility.reasons.join("; ")}`;
-      console.log(`[Auto-Promotion] ${experimentName} not eligible:`, eligibility.reasons);
+      logger.log(`[Auto-Promotion] ${experimentName} not eligible:`, eligibility.reasons);
       return result;
     }
 
@@ -346,10 +347,10 @@ export async function promoteWinner(
 
     // Dry run mode - log but don't execute
     if (config.dryRun) {
-      console.log(`[Auto-Promotion] DRY RUN - Would promote ${result.promotedVariantName} in ${experimentName}`);
-      console.log(`  Confidence: ${result.confidence}%`);
-      console.log(`  Improvement: ${result.improvement?.toFixed(2)}%`);
-      console.log(`  Safety checks:`, eligibility.safetyChecks);
+      logger.log(`[Auto-Promotion] DRY RUN - Would promote ${result.promotedVariantName} in ${experimentName}`);
+      logger.log(`  Confidence: ${result.confidence}%`);
+      logger.log(`  Improvement: ${result.improvement?.toFixed(2)}%`);
+      logger.log(`  Safety checks:`, eligibility.safetyChecks);
       result.success = true;
       return result;
     }
@@ -402,7 +403,7 @@ export async function promoteWinner(
     result.promotionId = promotionRecord[0].id;
     result.success = true;
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Successfully promoted ${result.promotedVariantName} in ${experimentName}`
     );
 
@@ -475,7 +476,7 @@ async function sendPromotionNotifications(
       }
     }
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Sent ${notificationCount} promotion notifications`
     );
     return notificationCount;
@@ -504,7 +505,7 @@ export async function scanAndPromoteWinners(
     throw new Error(`Invalid configuration: ${validation.errors.join(", ")}`);
   }
 
-  console.log(`[Auto-Promotion] Starting scan (dryRun: ${finalConfig.dryRun})`);
+  logger.log(`[Auto-Promotion] Starting scan (dryRun: ${finalConfig.dryRun})`);
 
   const stats = {
     scanned: 0,
@@ -524,7 +525,7 @@ export async function scanAndPromoteWinners(
     `;
 
     stats.scanned = experiments.length;
-    console.log(`[Auto-Promotion] Found ${stats.scanned} active experiments`);
+    logger.log(`[Auto-Promotion] Found ${stats.scanned} active experiments`);
 
     // Check current promotions count
     const currentPromotions = await sql`
@@ -538,7 +539,7 @@ export async function scanAndPromoteWinners(
     const remainingSlots = finalConfig.maxConcurrentPromotions - recentPromotions;
 
     if (remainingSlots <= 0) {
-      console.log(
+      logger.log(
         `[Auto-Promotion] Max concurrent promotions reached (${recentPromotions}/${finalConfig.maxConcurrentPromotions})`
       );
       return stats;
@@ -547,7 +548,7 @@ export async function scanAndPromoteWinners(
     // Process each experiment
     for (const exp of experiments) {
       if (stats.promoted >= remainingSlots && !finalConfig.dryRun) {
-        console.log(
+        logger.log(
           `[Auto-Promotion] Reached promotion limit (${remainingSlots}), stopping scan`
         );
         break;
@@ -566,7 +567,7 @@ export async function scanAndPromoteWinners(
       }
     }
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Scan complete: ${stats.eligible} eligible, ${stats.promoted} promoted`
     );
 
@@ -594,7 +595,7 @@ export async function rollbackPromotion(
         AND rollback_at IS NULL
     `;
 
-    console.log(`[Auto-Promotion] Rolled back promotion ${promotionId}: ${reason}`);
+    logger.log(`[Auto-Promotion] Rolled back promotion ${promotionId}: ${reason}`);
 
     return { success: true };
   } catch (error: any) {

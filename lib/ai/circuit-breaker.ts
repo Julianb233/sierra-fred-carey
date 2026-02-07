@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 /**
  * Circuit Breaker Pattern for AI Provider Reliability
  *
@@ -197,7 +198,7 @@ export class CircuitBreaker {
    */
   reset(provider: string): void {
     this.health.set(provider, this.createInitialHealth());
-    console.log(`[CircuitBreaker] Manually reset circuit for ${provider}`);
+    logger.log(`[CircuitBreaker] Manually reset circuit for ${provider}`);
   }
 
   /**
@@ -205,7 +206,7 @@ export class CircuitBreaker {
    */
   resetAll(): void {
     this.health.clear();
-    console.log("[CircuitBreaker] All circuits reset");
+    logger.log("[CircuitBreaker] All circuits reset");
   }
 
   // ============================================================================
@@ -294,10 +295,10 @@ export class CircuitBreaker {
       );
     } else if (newState === "half-open") {
       health.consecutiveSuccesses = 0;
-      console.log(`[CircuitBreaker] Testing ${provider} (half-open)`);
+      logger.log(`[CircuitBreaker] Testing ${provider} (half-open)`);
     } else if (newState === "closed") {
       health.openedAt = null;
-      console.log(`[CircuitBreaker] CLOSED circuit for ${provider} - recovered`);
+      logger.log(`[CircuitBreaker] CLOSED circuit for ${provider} - recovered`);
     }
 
     // Notify callback if configured

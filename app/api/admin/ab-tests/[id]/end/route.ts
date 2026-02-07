@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/admin/ab-tests/[id]/end
@@ -26,7 +27,7 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const { winningVariantId } = body;
 
-    console.log(`[Admin A/B Test End] Ending experiment ${experimentId}`);
+    logger.log(`[Admin A/B Test End] Ending experiment ${experimentId}`);
 
     // Check if experiment exists
     const experimentCheck = await sql`
@@ -82,7 +83,7 @@ export async function POST(
         );
       } else {
         winningVariant = variantCheck[0];
-        console.log(
+        logger.log(
           `[Admin A/B Test End] Marked variant '${winningVariant.variantName}' as winner`
         );
       }
@@ -117,7 +118,7 @@ export async function POST(
       isWinner: winningVariantId === variant.id,
     }));
 
-    console.log(`[Admin A/B Test End] Ended experiment '${experimentName}'`);
+    logger.log(`[Admin A/B Test End] Ended experiment '${experimentName}'`);
 
     return NextResponse.json({
       success: true,

@@ -6,6 +6,7 @@
 import { sql } from "@/lib/db/supabase-sql";
 import { compareExperimentVariants, VariantMetrics } from "./ab-test-metrics";
 import { sendNotification } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
 /**
  * Promotion Configuration
@@ -372,7 +373,7 @@ export async function promoteWinner(
       WHERE id = ${comparison.experimentId}
     `;
 
-    console.log(
+    logger.log(
       `[AutoPromotion] Successfully promoted variant ${winner.variantName} for experiment ${experimentName}`
     );
 
@@ -443,7 +444,7 @@ export async function rollbackPromotion(
       WHERE id = ${promotion.experimentId}
     `;
 
-    console.log(
+    logger.log(
       `[AutoPromotion] Successfully rolled back promotion for experiment ${experimentName}`
     );
   } catch (error: any) {
@@ -524,7 +525,7 @@ export async function notifyPromotion(
       },
     });
 
-    console.log(
+    logger.log(
       `[AutoPromotion] Sent promotion notification for experiment ${record.experimentName}`
     );
   } catch (error: any) {
@@ -587,7 +588,7 @@ export async function autoCheckPromotions(
       }
     }
 
-    console.log(
+    logger.log(
       `[AutoPromotion] Auto-check completed: ${checked} checked, ${promoted_experiments.length} promoted`
     );
 

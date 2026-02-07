@@ -1,5 +1,6 @@
 import { generateChatResponse } from "./client";
 import { sql } from "@/lib/db/supabase-sql";
+import { logger } from "@/lib/logger";
 
 export interface ExtractedInsight {
   type: "breakthrough" | "warning" | "opportunity" | "pattern" | "recommendation";
@@ -64,7 +65,7 @@ export async function extractInsights(
   aiResponse: string,
   context?: string
 ): Promise<ExtractedInsight[]> {
-  console.log(`[Insights] Extracting insights from ${sourceType} ${sourceId}`);
+  logger.log(`[Insights] Extracting insights from ${sourceType} ${sourceId}`);
 
   try {
     // Build context-aware user prompt
@@ -81,7 +82,7 @@ export async function extractInsights(
     );
 
     if (process.env.NODE_ENV === "development") {
-      console.log("[Insights] Raw extraction response:", response);
+      logger.log("[Insights] Raw extraction response:", response);
     }
 
     // Parse JSON response
@@ -146,7 +147,7 @@ export async function extractInsights(
       return true;
     });
 
-    console.log(`[Insights] Extracted ${validInsights.length} valid insights`);
+    logger.log(`[Insights] Extracted ${validInsights.length} valid insights`);
     return validInsights;
   } catch (error) {
     console.error("[Insights] Error extracting insights:", error);
@@ -170,11 +171,11 @@ export async function saveInsights(
   insights: ExtractedInsight[]
 ): Promise<void> {
   if (insights.length === 0) {
-    console.log("[Insights] No insights to save");
+    logger.log("[Insights] No insights to save");
     return;
   }
 
-  console.log(`[Insights] Saving ${insights.length} insights for user ${userId}`);
+  logger.log(`[Insights] Saving ${insights.length} insights for user ${userId}`);
 
   try {
     // Insert all insights in one query
@@ -203,7 +204,7 @@ export async function saveInsights(
       `;
     }
 
-    console.log(`[Insights] Successfully saved ${insights.length} insights`);
+    logger.log(`[Insights] Successfully saved ${insights.length} insights`);
   } catch (error) {
     console.error("[Insights] Error saving insights:", error);
     throw error;
@@ -228,7 +229,7 @@ export async function extractAndSaveInsights(
   aiResponse: string,
   context?: string
 ): Promise<ExtractedInsight[]> {
-  console.log(
+  logger.log(
     `[Insights] Extract and save for ${sourceType} ${sourceId}`
   );
 
@@ -274,7 +275,7 @@ export async function getUserInsights(
     }
   >
 > {
-  console.log(`[Insights] Getting insights for user ${userId}`, options);
+  logger.log(`[Insights] Getting insights for user ${userId}`, options);
 
   try {
     let query = sql`
@@ -315,7 +316,7 @@ export async function getUserInsights(
 
     const result = await query;
 
-    console.log(`[Insights] Found ${result.length} insights`);
+    logger.log(`[Insights] Found ${result.length} insights`);
     return result as any;
   } catch (error) {
     console.error("[Insights] Error getting user insights:", error);
@@ -333,7 +334,7 @@ export async function dismissInsight(
   userId: string,
   insightId: string
 ): Promise<void> {
-  console.log(`[Insights] Dismissing insight ${insightId} for user ${userId}`);
+  logger.log(`[Insights] Dismissing insight ${insightId} for user ${userId}`);
 
   try {
     await sql`
@@ -343,7 +344,7 @@ export async function dismissInsight(
         AND user_id = ${userId}
     `;
 
-    console.log(`[Insights] Dismissed insight ${insightId}`);
+    logger.log(`[Insights] Dismissed insight ${insightId}`);
   } catch (error) {
     console.error("[Insights] Error dismissing insight:", error);
     throw error;

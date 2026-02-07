@@ -7,6 +7,7 @@
  * even without a live Boardy API.
  */
 
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateStructuredReliable } from "@/lib/ai/fred-client";
 import {
@@ -93,7 +94,7 @@ Requirements:
         storedMatches.push(match);
       }
 
-      console.log(
+      logger.log(
         `[MockBoardy] Generated ${storedMatches.length} matches for user ${request.userId} (provider: ${result.provider})`
       );
 

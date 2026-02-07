@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db/supabase-sql";
 import crypto from "crypto";
 import { logVariantAssignment } from "@/lib/monitoring/ab-test-metrics";
+import { logger } from "@/lib/logger";
 
 export interface ABVariant {
   id: string;
@@ -41,13 +42,13 @@ function hashUserExperiment(userId: string, experimentName: string): number {
 export async function getActiveExperiments(): Promise<string[]> {
   // Check cache
   if (experimentsCache && experimentsCache.expiry > Date.now()) {
-    console.log("[A/B Test] Using cached experiments");
+    logger.log("[A/B Test] Using cached experiments");
     return experimentsCache.experiments
       .filter((e) => e.isActive)
       .map((e) => e.name);
   }
 
-  console.log("[A/B Test] Loading active experiments from database");
+  logger.log("[A/B Test] Loading active experiments from database");
 
   try {
     const result = await sql`
@@ -68,7 +69,7 @@ export async function getActiveExperiments(): Promise<string[]> {
       expiry: Date.now() + CACHE_TTL,
     };
 
-    console.log(`[A/B Test] Found ${experiments.length} active experiments`);
+    logger.log(`[A/B Test] Found ${experiments.length} active experiments`);
     return experiments.map((e) => e.name);
   } catch (error) {
     console.error("[A/B Test] Error loading experiments:", error);
@@ -90,7 +91,7 @@ export async function getVariantAssignment(
   experimentName: string,
   sessionId?: string
 ): Promise<ABVariant | null> {
-  console.log(`[A/B Test] Getting variant for user ${userId} in ${experimentName}`);
+  logger.log(`[A/B Test] Getting variant for user ${userId} in ${experimentName}`);
 
   try {
     // Get experiment and variants
@@ -111,7 +112,7 @@ export async function getVariantAssignment(
     `;
 
     if (result.length === 0) {
-      console.log(`[A/B Test] No active experiment found: ${experimentName}`);
+      logger.log(`[A/B Test] No active experiment found: ${experimentName}`);
       return null;
     }
 
@@ -125,7 +126,7 @@ export async function getVariantAssignment(
     for (const variant of variants) {
       cumulativePercentage += variant.trafficPercentage;
       if (hashValue < cumulativePercentage) {
-        console.log(
+        logger.log(
           `[A/B Test] Assigned user ${userId} to variant '${variant.variantName}' (hash: ${hashValue}, threshold: ${cumulativePercentage})`
         );
         
@@ -143,7 +144,7 @@ export async function getVariantAssignment(
 
     // Fallback to last variant if percentages don't add to 100
     const fallbackVariant = variants[variants.length - 1];
-    console.log(
+    logger.log(
       `[A/B Test] Fallback assignment to variant '${fallbackVariant.variantName}'`
     );
     
@@ -176,13 +177,13 @@ export async function recordVariantUsage(
   variantId: string,
   requestId: string
 ): Promise<void> {
-  console.log(`[A/B Test] Recording variant ${variantId} usage for request ${requestId}`);
+  logger.log(`[A/B Test] Recording variant ${variantId} usage for request ${requestId}`);
 
   try {
     // The variant_id is already stored in ai_requests table
     // This function is kept for potential future analytics tracking
     // For now, it's a no-op since the link is in ai_requests.variant_id
-    console.log("[A/B Test] Variant usage recorded via ai_requests table");
+    logger.log("[A/B Test] Variant usage recorded via ai_requests table");
   } catch (error) {
     console.error("[A/B Test] Error recording variant usage:", error);
     // Don't throw - this is non-critical
@@ -206,7 +207,7 @@ export async function getVariantStats(
     errorRate: number;
   }>
 > {
-  console.log(`[A/B Test] Getting stats for experiment ${experimentName}`);
+  logger.log(`[A/B Test] Getting stats for experiment ${experimentName}`);
 
   try {
     const result = await sql`
@@ -231,7 +232,7 @@ export async function getVariantStats(
       errorRate: parseFloat(row.errorRate) || 0,
     }));
 
-    console.log(`[A/B Test] Retrieved stats for ${stats.length} variants`);
+    logger.log(`[A/B Test] Retrieved stats for ${stats.length} variants`);
     return stats;
   } catch (error) {
     console.error(`[A/B Test] Error getting variant stats:`, error);
@@ -258,7 +259,7 @@ export async function createExperiment(
   }>,
   userId: string
 ): Promise<string> {
-  console.log(`[A/B Test] Creating experiment: ${name}`);
+  logger.log(`[A/B Test] Creating experiment: ${name}`);
 
   try {
     // Validate traffic percentages sum to 100
@@ -304,7 +305,7 @@ export async function createExperiment(
     // Clear cache
     experimentsCache = null;
 
-    console.log(`[A/B Test] Created experiment ${name} with ${variants.length} variants`);
+    logger.log(`[A/B Test] Created experiment ${name} with ${variants.length} variants`);
     return experimentId;
   } catch (error) {
     console.error(`[A/B Test] Error creating experiment:`, error);
@@ -318,7 +319,7 @@ export async function createExperiment(
  * @param experimentName - Name of the experiment to end
  */
 export async function endExperiment(experimentName: string): Promise<void> {
-  console.log(`[A/B Test] Ending experiment: ${experimentName}`);
+  logger.log(`[A/B Test] Ending experiment: ${experimentName}`);
 
   try {
     await sql`
@@ -332,7 +333,7 @@ export async function endExperiment(experimentName: string): Promise<void> {
     // Clear cache
     experimentsCache = null;
 
-    console.log(`[A/B Test] Ended experiment: ${experimentName}`);
+    logger.log(`[A/B Test] Ended experiment: ${experimentName}`);
   } catch (error) {
     console.error(`[A/B Test] Error ending experiment:`, error);
     throw error;

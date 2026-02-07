@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { runAlertNotificationCheck } from "@/lib/monitoring/alert-scheduler";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/monitoring/alerts/check
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[Alert Check API] Running scheduled alert notification check...");
+    logger.log("[Alert Check API] Running scheduled alert notification check...");
 
     const result = await runAlertNotificationCheck();
 
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { minimumLevel = "warning" } = body;
 
-    console.log(
+    logger.log(
       `[Alert Check API] Running manual alert check (minimumLevel: ${minimumLevel})`
     );
 

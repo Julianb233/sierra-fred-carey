@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { testNotificationConfig } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/notifications/test
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Notifications Test] Testing config ${configId} for user ${userId}`);
+    logger.log(`[Notifications Test] Testing config ${configId} for user ${userId}`);
 
     const result = await testNotificationConfig(configId, userId);
 

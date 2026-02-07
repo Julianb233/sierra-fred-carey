@@ -12,6 +12,7 @@ import type {
   MatchRequest,
 } from "./types";
 import { MockBoardyClient } from "./mock";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Client Class
@@ -60,7 +61,7 @@ export function getBoardyClient(): BoardyClient {
     // Future: if (process.env.BOARDY_API_KEY) { _client = new BoardyClient(new RealBoardyClient()); }
     const implementation = new MockBoardyClient();
     _client = new BoardyClient(implementation);
-    console.log("[Boardy] Initialized with MockBoardyClient (AI-generated matches)");
+    logger.log("[Boardy] Initialized with MockBoardyClient (AI-generated matches)");
   }
   return _client;
 }

@@ -6,6 +6,7 @@
  */
 
 import type { DecisionResult, ValidatedInput, FredResponse } from "../types";
+import { logger } from "@/lib/logger";
 
 /**
  * Execute the decision and generate the response
@@ -16,7 +17,7 @@ export async function executeActor(
   userId: string,
   sessionId: string
 ): Promise<FredResponse> {
-  console.log(
+  logger.log(
     "[FRED] Executing action:",
     decision.action,
     "| Requires approval:",

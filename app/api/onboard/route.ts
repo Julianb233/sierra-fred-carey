@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
           // Clean up orphaned auth user to avoid inconsistent state
           try {
             await supabase.auth.admin.deleteUser(userId);
-            console.log("[onboard] Cleaned up orphaned auth user:", userId);
+            logger.log("[onboard] Cleaned up orphaned auth user:", userId);
           } catch (cleanupErr) {
             console.error("[onboard] Failed to clean up auth user:", cleanupErr);
           }

@@ -6,6 +6,7 @@
  * Handles STOP/START keywords for compliance and stores inbound check-in responses.
  */
 
+import { logger } from "@/lib/logger";
 import { getISOWeek, getISOWeekYear } from 'date-fns';
 import {
   findUserByPhoneNumber,
@@ -58,7 +59,7 @@ export async function processInboundSMS(
   // Look up user by phone number
   const user = await findUserByPhoneNumber(normalizedPhone);
   if (!user) {
-    console.log(
+    logger.log(
       `[SMS Webhook] Ignoring message from unknown number: ${normalizedPhone}`
     );
     return;
@@ -66,7 +67,7 @@ export async function processInboundSMS(
 
   // Handle STOP keyword - unsubscribe from check-ins
   if (upperBody === 'STOP') {
-    console.log(
+    logger.log(
       `[SMS Webhook] STOP received from user ${user.userId}, disabling check-ins`
     );
     await updateSMSPreferences(user.userId, { checkinEnabled: false });
@@ -75,7 +76,7 @@ export async function processInboundSMS(
 
   // Handle START keyword - re-subscribe to check-ins
   if (upperBody === 'START') {
-    console.log(
+    logger.log(
       `[SMS Webhook] START received from user ${user.userId}, enabling check-ins`
     );
     await updateSMSPreferences(user.userId, { checkinEnabled: true });
@@ -108,7 +109,7 @@ export async function processInboundSMS(
     receivedAt: now,
   });
 
-  console.log(
+  logger.log(
     `[SMS Webhook] Stored inbound check-in response from user ${user.userId} (week ${weekNumber}/${year})`
   );
 }

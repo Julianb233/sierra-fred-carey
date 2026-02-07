@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * PATCH /api/admin/ab-tests/[id]/traffic
@@ -36,7 +37,7 @@ export async function PATCH(
       );
     }
 
-    console.log(`[Admin A/B Traffic] Adjusting traffic for experiment ${experimentId}`);
+    logger.log(`[Admin A/B Traffic] Adjusting traffic for experiment ${experimentId}`);
 
     // Check if experiment exists and is active
     const experimentCheck = await sql`
@@ -140,7 +141,7 @@ export async function PATCH(
       updatedVariants.push(result[0]);
     }
 
-    console.log(
+    logger.log(
       `[Admin A/B Traffic] Updated traffic for ${updatedVariants.length} variants in experiment '${experimentName}'`
     );
 

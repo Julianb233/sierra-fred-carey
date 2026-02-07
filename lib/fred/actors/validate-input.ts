@@ -5,6 +5,7 @@
  * if clarification is needed before proceeding.
  */
 
+import { logger } from "@/lib/logger";
 import type {
   UserInput,
   ValidatedInput,
@@ -21,7 +22,7 @@ export async function validateInputActor(
   input: UserInput,
   memoryContext: MemoryContext | null
 ): Promise<ValidatedInput> {
-  console.log("[FRED] Validating input:", input.message.substring(0, 100));
+  logger.log("[FRED] Validating input:", input.message.substring(0, 100));
 
   // Extract intent from the message
   const intentResult = await detectIntent(input.message);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/ab-tests/[id]
@@ -20,7 +21,7 @@ export async function GET(
   try {
     const { id: experimentId } = await params;
 
-    console.log(`[Admin A/B Test GET] Fetching experiment ${experimentId}`);
+    logger.log(`[Admin A/B Test GET] Fetching experiment ${experimentId}`);
 
     // Get experiment
     const experimentResult = await sql`
@@ -146,7 +147,7 @@ export async function DELETE(
   try {
     const { id: experimentId } = await params;
 
-    console.log(`[Admin A/B Test DELETE] Ending experiment ${experimentId}`);
+    logger.log(`[Admin A/B Test DELETE] Ending experiment ${experimentId}`);
 
     // Check if experiment exists
     const experimentCheck = await sql`
@@ -171,7 +172,7 @@ export async function DELETE(
       WHERE id = ${experimentId}
     `;
 
-    console.log(`[Admin A/B Test DELETE] Ended experiment ${experimentName}`);
+    logger.log(`[Admin A/B Test DELETE] Ended experiment ${experimentName}`);
 
     return NextResponse.json({
       success: true,
@@ -212,7 +213,7 @@ export async function PATCH(
     const body = await request.json();
     const { description, isActive } = body;
 
-    console.log(`[Admin A/B Test PATCH] Updating experiment ${experimentId}`, body);
+    logger.log(`[Admin A/B Test PATCH] Updating experiment ${experimentId}`, body);
 
     // Check if experiment exists
     const experimentCheck = await sql`
@@ -275,7 +276,7 @@ export async function PATCH(
 
     const result: Record<string, unknown>[] = await sql.execute(query, values);
 
-    console.log(`[Admin A/B Test PATCH] Updated experiment ${experimentId}`);
+    logger.log(`[Admin A/B Test PATCH] Updated experiment ${experimentId}`);
 
     return NextResponse.json({
       success: true,
@@ -336,7 +337,7 @@ export async function POST(
       );
     }
 
-    console.log(
+    logger.log(
       `[Admin A/B Test POST Variant] Adding variant ${variantName} to experiment ${experimentId}`
     );
 
@@ -398,7 +399,7 @@ export async function POST(
         created_at as "createdAt"
     `;
 
-    console.log(
+    logger.log(
       `[Admin A/B Test POST Variant] Created variant ${variantName} for experiment ${experimentCheck[0].name}`
     );
 

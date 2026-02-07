@@ -29,6 +29,7 @@ import { applyMentalModelsActor } from "./actors/mental-models";
 import { synthesizeActor } from "./actors/synthesize";
 import { decideActor } from "./actors/decide";
 import { executeActor } from "./actors/execute";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Initial Context
@@ -151,7 +152,7 @@ export const fredMachine = setup({
      * Log state transition for observability
      */
     logTransition: ({ context, event }) => {
-      console.log(
+      logger.log(
         `[FRED] Transition | Session: ${context.sessionId} | Event: ${event.type} | Retry: ${context.retryCount}`
       );
     },

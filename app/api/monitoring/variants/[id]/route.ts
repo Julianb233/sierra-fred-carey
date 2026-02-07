@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { collectVariantMetrics } from "@/lib/monitoring/ab-test-metrics";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/monitoring/variants/[id]
@@ -38,7 +39,7 @@ export async function GET(
       endDate = new Date(searchParams.get("endDate")!);
     }
 
-    console.log(
+    logger.log(
       `[Monitoring API] Fetching metrics for variant: ${variantId}`,
       { startDate, endDate }
     );

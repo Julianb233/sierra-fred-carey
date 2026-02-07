@@ -7,6 +7,7 @@
 import { sendNotification, NotificationPayload } from "@/lib/notifications";
 import { Alert } from "./ab-test-metrics";
 import { sql } from "@/lib/db/supabase-sql";
+import { logger } from "@/lib/logger";
 
 /**
  * Configuration for alert notification behavior
@@ -60,7 +61,7 @@ export async function notifyAlerts(
   };
 
   if (alerts.length === 0) {
-    console.log("[Alert Notifier] No alerts to notify");
+    logger.log("[Alert Notifier] No alerts to notify");
     return stats;
   }
 
@@ -72,13 +73,13 @@ export async function notifyAlerts(
   );
 
   if (filteredAlerts.length === 0) {
-    console.log(
+    logger.log(
       `[Alert Notifier] No alerts meet minimum level: ${minimumLevel}`
     );
     return stats;
   }
 
-  console.log(
+  logger.log(
     `[Alert Notifier] Processing ${filteredAlerts.length} alerts (minimum level: ${minimumLevel})`
   );
 
@@ -87,13 +88,13 @@ export async function notifyAlerts(
     const subscribers = await getAlertSubscribers(experimentName);
 
     if (subscribers.length === 0) {
-      console.log(
+      logger.log(
         "[Alert Notifier] No subscribers found for alerts, skipping notifications"
       );
       return stats;
     }
 
-    console.log(
+    logger.log(
       `[Alert Notifier] Found ${subscribers.length} subscribers to notify`
     );
 
@@ -140,7 +141,7 @@ export async function notifyAlerts(
       });
     }
 
-    console.log(
+    logger.log(
       `[Alert Notifier] Sent ${stats.notificationsSent} notifications, ${stats.notificationsFailed} failed`
     );
   } catch (error: any) {
@@ -288,7 +289,7 @@ export async function notifyUserAlerts(
  * This can be called periodically to check for new alerts and notify subscribers
  */
 export async function scheduleAlertNotifications(): Promise<void> {
-  console.log("[Alert Notifier] Running scheduled alert check...");
+  logger.log("[Alert Notifier] Running scheduled alert check...");
 
   try {
     // Import here to avoid circular dependencies
@@ -299,7 +300,7 @@ export async function scheduleAlertNotifications(): Promise<void> {
 
     // Process critical alerts first
     if (dashboard.criticalAlerts.length > 0) {
-      console.log(
+      logger.log(
         `[Alert Notifier] Found ${dashboard.criticalAlerts.length} critical alerts`
       );
       await notifyAlerts(dashboard.criticalAlerts, {
@@ -311,7 +312,7 @@ export async function scheduleAlertNotifications(): Promise<void> {
     // Process alerts from all active experiments
     for (const experiment of dashboard.activeExperiments) {
       if (experiment.alerts.length > 0) {
-        console.log(
+        logger.log(
           `[Alert Notifier] Processing ${experiment.alerts.length} alerts for experiment: ${experiment.experimentName}`
         );
 
@@ -324,7 +325,7 @@ export async function scheduleAlertNotifications(): Promise<void> {
       }
     }
 
-    console.log("[Alert Notifier] Scheduled alert check completed");
+    logger.log("[Alert Notifier] Scheduled alert check completed");
   } catch (error) {
     console.error("[Alert Notifier] Error in scheduled check:", error);
   }
@@ -338,7 +339,7 @@ export async function scheduleAlertNotifications(): Promise<void> {
 export async function scheduleAutoPromotionChecks(
   userId: string
 ): Promise<void> {
-  console.log("[Alert Notifier] Running scheduled auto-promotion check...");
+  logger.log("[Alert Notifier] Running scheduled auto-promotion check...");
 
   try {
     // Import here to avoid circular dependencies
@@ -361,15 +362,15 @@ export async function scheduleAutoPromotionChecks(
     });
 
     if (results.promoted > 0) {
-      console.log(
+      logger.log(
         `[Alert Notifier] Auto-promoted ${results.promoted} experiment(s): ${results.promoted_experiments.join(", ")}`
       );
     } else if (results.eligible.length > 0) {
-      console.log(
+      logger.log(
         `[Alert Notifier] ${results.eligible.length} experiment(s) eligible but awaiting manual approval: ${results.eligible.join(", ")}`
       );
     } else {
-      console.log(
+      logger.log(
         `[Alert Notifier] No experiments eligible for auto-promotion (checked: ${results.checked})`
       );
     }

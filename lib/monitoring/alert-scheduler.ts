@@ -5,6 +5,7 @@
  */
 
 import { scheduleAlertNotifications } from "./alert-notifier";
+import { logger } from "@/lib/logger";
 
 /**
  * Run alert notification check
@@ -16,7 +17,7 @@ export async function runAlertNotificationCheck(): Promise<{
   timestamp: string;
 }> {
   const startTime = Date.now();
-  console.log("[Alert Scheduler] Starting alert notification check...");
+  logger.log("[Alert Scheduler] Starting alert notification check...");
 
   try {
     await scheduleAlertNotifications();
@@ -24,7 +25,7 @@ export async function runAlertNotificationCheck(): Promise<{
     const duration = Date.now() - startTime;
     const message = `Alert notification check completed in ${duration}ms`;
 
-    console.log(`[Alert Scheduler] ${message}`);
+    logger.log(`[Alert Scheduler] ${message}`);
 
     return {
       success: true,
@@ -56,11 +57,11 @@ export class AlertScheduler {
    */
   start(intervalMinutes: number = 15): void {
     if (this.isRunning) {
-      console.log("[Alert Scheduler] Scheduler already running");
+      logger.log("[Alert Scheduler] Scheduler already running");
       return;
     }
 
-    console.log(
+    logger.log(
       `[Alert Scheduler] Starting scheduler with ${intervalMinutes}min interval`
     );
 
@@ -83,11 +84,11 @@ export class AlertScheduler {
    */
   stop(): void {
     if (!this.isRunning) {
-      console.log("[Alert Scheduler] Scheduler not running");
+      logger.log("[Alert Scheduler] Scheduler not running");
       return;
     }
 
-    console.log("[Alert Scheduler] Stopping scheduler");
+    logger.log("[Alert Scheduler] Stopping scheduler");
 
     if (this.intervalId) {
       clearInterval(this.intervalId);

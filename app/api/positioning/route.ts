@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import { logger } from "@/lib/logger";
 
 // Fallback system prompt if not loaded from database
 const POSITIONING_ASSESSMENT_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. You specialize in positioning clarity diagnostics - helping founders understand whether their positioning is sharp enough to resonate with their target market.
@@ -291,7 +292,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate AI analysis using tracked response
-    console.log("[Positioning] Analyzing positioning for user:", userId);
+    logger.log("[Positioning] Analyzing positioning for user:", userId);
 
     const trackedResult = await generateTrackedResponse(
       [
@@ -469,7 +470,7 @@ export async function POST(request: NextRequest) {
 
     const savedAssessment = result[0];
 
-    console.log(
+    logger.log(
       "[Positioning] Assessment saved with ID:",
       savedAssessment.id
     );

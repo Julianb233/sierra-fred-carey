@@ -12,6 +12,7 @@ import {
 import { NotificationPayload } from "@/lib/notifications/types";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/notifications/pagerduty
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log("[PagerDuty API] Resolving incident:", { dedupKey });
+      logger.log("[PagerDuty API] Resolving incident:", { dedupKey });
 
       const result = await resolvePagerDutyIncident(finalRoutingKey, dedupKey);
 
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest) {
       metadata,
     };
 
-    console.log("[PagerDuty API] Triggering incident:", {
+    logger.log("[PagerDuty API] Triggering incident:", {
       level,
       type,
       title,

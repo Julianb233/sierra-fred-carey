@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth, getOptionalUserId } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/ai/rating
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[AI Rating] Recording rating for response ${responseId}`, {
+    logger.log(`[AI Rating] Recording rating for response ${responseId}`, {
       rating,
       variant,
       hasTags: !!feedback.tags?.length,
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    console.log(`[AI Rating] Saved rating ${result[0].id} for response ${responseId}`);
+    logger.log(`[AI Rating] Saved rating ${result[0].id} for response ${responseId}`);
 
     return NextResponse.json({
       success: true,

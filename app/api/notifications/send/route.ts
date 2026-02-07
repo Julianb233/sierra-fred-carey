@@ -11,6 +11,7 @@ import { requireAuth } from "@/lib/auth";
 import { sendNotification, sendBatchNotifications } from "@/lib/notifications";
 import { validateNotificationPayload } from "@/lib/notifications/validators";
 import type { NotificationPayload, AlertLevel, AlertType } from "@/lib/notifications/types";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/notifications/send
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Notifications Send API] Sending ${level} ${type} notification for user ${userId}`);
+    logger.log(`[Notifications Send API] Sending ${level} ${type} notification for user ${userId}`);
 
     // Send notification to all configured channels
     const results = await sendNotification(payload);
@@ -254,7 +255,7 @@ async function handleBatchSend(
       );
     }
 
-    console.log(`[Notifications Send API] Batch sending ${payloads.length} notifications for user ${userId}`);
+    logger.log(`[Notifications Send API] Batch sending ${payloads.length} notifications for user ${userId}`);
 
     // Send batch notifications
     const results = await sendBatchNotifications(userId, payloads);

@@ -4,6 +4,7 @@ import { extractJSON } from "@/lib/ai/extract-json";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import { logger } from "@/lib/logger";
 
 // Quick clarity check prompt - lightweight diagnostic
 const QUICK_CLARITY_CHECK_PROMPT = `You are Fred Carey, a startup advisor. Perform a QUICK positioning clarity check on the provided startup description.
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[Positioning Quick Check] Checking clarity for user:", userId);
+    logger.log("[Positioning Quick Check] Checking clarity for user:", userId);
 
     // Generate quick clarity check
     const trackedResult = await generateTrackedResponse(
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
+    logger.log(
       "[Positioning Quick Check] Clarity:",
       analysis.clarity,
       "Path:",

@@ -36,6 +36,7 @@ import {
   generateChartData,
 } from "@/types/monitoring";
 import type { FilterState } from "@/components/monitoring/DashboardFilters";
+import { logger } from "@/lib/logger";
 
 export default function MonitoringDashboard() {
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,9 @@ export default function MonitoringDashboard() {
   const [experiments, setExperiments] = useState<UIExperiment[]>([]);
   const [alerts, setAlerts] = useState<UIAlert[]>([]);
   const [criticalAlertCount, setCriticalAlertCount] = useState(0);
+
+  // Active tab (controlled for programmatic switching)
+  const [activeTab, setActiveTab] = useState("experiments");
 
   // Filters
   const [filters, setFilters] = useState<FilterState>({
@@ -91,7 +95,7 @@ export default function MonitoringDashboard() {
       setExperiments(activeExperiments.map(transformExperiment));
       setCriticalAlertCount(criticalAlerts.length);
 
-      console.log("[Dashboard] Data loaded successfully", {
+      logger.log("[Dashboard] Data loaded successfully", {
         experiments: activeExperiments.length,
         totalRequests: totalRequests24h,
         criticalAlerts: criticalAlerts.length,
@@ -130,7 +134,7 @@ export default function MonitoringDashboard() {
         const transformedAlerts = alertsData.data.alerts.map(transformAlert);
         setAlerts(transformedAlerts);
 
-        console.log("[Dashboard] Alerts loaded successfully", {
+        logger.log("[Dashboard] Alerts loaded successfully", {
           total: alertsData.data.total,
           critical: alertsData.data.breakdown.critical,
           warning: alertsData.data.breakdown.warning,
@@ -149,7 +153,7 @@ export default function MonitoringDashboard() {
 
     // Auto-refresh every 30 seconds to keep dashboard data current
     const interval = setInterval(() => {
-      console.log("[Dashboard] Auto-refreshing data...");
+      logger.log("[Dashboard] Auto-refreshing data...");
       fetchDashboardData();
       fetchAlerts();
     }, 30000);
@@ -166,23 +170,50 @@ export default function MonitoringDashboard() {
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    console.log("[Dashboard] Filters updated:", newFilters);
-    // In a real implementation, you would re-fetch data with the new filters
-    // For now, we just log the change
+    logger.log("[Dashboard] Filters updated:", newFilters);
+    fetchDashboardData();
+    fetchAlerts();
   };
 
   const handleExportCSV = () => {
-    console.log("[Dashboard] Exporting CSV with filters:", filters);
-    // In a real implementation, this would generate and download a CSV file
-    // with the filtered data
-    alert("CSV export would be triggered here");
+    logger.log("[Dashboard] Exporting CSV with filters:", filters);
+    const rows = [
+      ["Experiment", "Status", "Variants", "Total Requests", "Avg Latency", "Error Rate"],
+      ...experiments.map(exp => [
+        exp.name,
+        exp.isActive ? "Active" : "Ended",
+        String(exp.variantCount ?? 0),
+        String(exp.totalRequests ?? 0),
+        String(exp.avgLatency ?? 0),
+        String(exp.errorRate ?? 0),
+      ]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleExportJSON = () => {
-    console.log("[Dashboard] Exporting JSON with filters:", filters);
-    // In a real implementation, this would generate and download a JSON file
-    // with the filtered data
-    alert("JSON export would be triggered here");
+    logger.log("[Dashboard] Exporting JSON with filters:", filters);
+    const data = {
+      exportedAt: new Date().toISOString(),
+      filters,
+      metrics: { totalRequests, avgLatency, errorRate, activeExperimentCount },
+      experiments,
+      alerts,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // Generate chart data using utility function
@@ -318,7 +349,7 @@ export default function MonitoringDashboard() {
                   </p>
                 </div>
               </div>
-              <Button variant="destructive" size="sm">
+              <Button variant="destructive" size="sm" onClick={() => setActiveTab("alerts")}>
                 View Details
               </Button>
             </div>
@@ -379,7 +410,7 @@ export default function MonitoringDashboard() {
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="experiments" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="experiments">Experiments</TabsTrigger>
           <TabsTrigger value="promotion">Auto-Promotion</TabsTrigger>

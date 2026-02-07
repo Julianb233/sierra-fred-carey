@@ -33,6 +33,7 @@ import {
   type FallbackConfig,
 } from "./fallback-chain";
 import { withRetry as withRetryAdvanced, RETRY_PRESETS } from "./retry";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -101,7 +102,7 @@ export interface BatchEmbeddingResult {
  *
  * @example
  * const result = await generate("What is 2+2?");
- * console.log(result.text); // "4"
+ * logger.log(result.text); // "4"
  */
 export async function generate(
   prompt: string,
@@ -184,7 +185,7 @@ export async function generateFromMessages(
  *   "Extract: John is 25 years old",
  *   schema
  * );
- * console.log(result.object); // { name: "John", age: 25 }
+ * logger.log(result.object); // { name: "John", age: 25 }
  */
 export async function generateStructured<T extends z.ZodType>(
   prompt: string,
@@ -345,7 +346,7 @@ export function streamToReadableStream(
  * const schema = z.object({ items: z.array(z.string()) });
  * const stream = await streamStructured("List 5 colors", schema);
  * for await (const partial of stream.partialObjectStream) {
- *   console.log(partial); // { items: ["red"] }, { items: ["red", "blue"] }, ...
+ *   logger.log(partial); // { items: ["red"] }, { items: ["red", "blue"] }, ...
  * }
  */
 export async function streamStructured<T extends z.ZodType>(
@@ -375,7 +376,7 @@ export async function streamStructured<T extends z.ZodType>(
  *
  * @example
  * const result = await generateEmbedding("Hello world");
- * console.log(result.embedding); // [0.1, 0.2, ...]
+ * logger.log(result.embedding); // [0.1, 0.2, ...]
  */
 export async function generateEmbedding(
   text: string,
@@ -401,7 +402,7 @@ export async function generateEmbedding(
  *
  * @example
  * const result = await generateEmbeddings(["Hello", "World"]);
- * console.log(result.embeddings); // [[0.1, ...], [0.2, ...]]
+ * logger.log(result.embeddings); // [[0.1, ...], [0.2, ...]]
  */
 export async function generateEmbeddings(
   texts: string[],
@@ -514,7 +515,7 @@ export interface ReliableGenerateOptions extends GenerateOptions {
  * @example
  * const schema = z.object({ name: z.string(), age: z.number() });
  * const result = await generateStructuredReliable("John is 25", schema);
- * console.log(result.object); // { name: "John", age: 25 }
+ * logger.log(result.object); // { name: "John", age: 25 }
  */
 export async function generateStructuredReliable<T extends z.ZodType>(
   prompt: string,

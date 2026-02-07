@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { clearConfigCache } from "@/lib/ai/config-loader";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/admin/prompts/activate
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Admin Prompts Activate] Activating prompt ${promptId}`);
+    logger.log(`[Admin Prompts Activate] Activating prompt ${promptId}`);
 
     // Get the prompt details first
     const promptResult = await sql`
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     const prompt = promptResult[0];
 
     // Deactivate all other versions of the same prompt name
-    console.log(
+    logger.log(
       `[Admin Prompts Activate] Deactivating other versions of ${prompt.name}`
     );
 
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Clear the prompt cache so changes take effect immediately
     clearConfigCache();
 
-    console.log(
+    logger.log(
       `[Admin Prompts Activate] Activated ${prompt.name} v${prompt.version}, cache cleared`
     );
 

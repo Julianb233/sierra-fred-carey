@@ -1,5 +1,6 @@
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { createServiceClient } from '@/lib/supabase/server';
+import { logger } from "@/lib/logger";
 
 /**
  * Voice AI Agent Service
@@ -133,7 +134,7 @@ export async function spawnAgent(config: AgentConfig): Promise<AgentSession | nu
 
     // In production, this would trigger a separate agent worker process
     // For now, we return the token that can be used by a frontend/worker
-    console.log(`[VoiceAgent] Agent spawned for room: ${config.roomName}`);
+    logger.log(`[VoiceAgent] Agent spawned for room: ${config.roomName}`);
 
     return session;
   } catch (error) {
@@ -190,7 +191,7 @@ export async function removeAgent(roomName: string): Promise<boolean> {
     }
 
     activeSessions.delete(roomName);
-    console.log(`[VoiceAgent] Agent removed from room: ${roomName}`);
+    logger.log(`[VoiceAgent] Agent removed from room: ${roomName}`);
 
     return true;
   } catch (error) {

@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/supabase-sql";
+import { logger } from "@/lib/logger";
 
 export interface AIConfig {
   analyzer: string;
@@ -31,11 +32,11 @@ export async function getAIConfig(analyzer: string): Promise<AIConfig> {
   // Check cache first
   const cached = configCache.get(analyzer);
   if (cached && cached.expiry > Date.now()) {
-    console.log(`[AI Config] Cache hit for ${analyzer}`);
+    logger.log(`[AI Config] Cache hit for ${analyzer}`);
     return cached.config;
   }
 
-  console.log(`[AI Config] Loading config for ${analyzer} from database`);
+  logger.log(`[AI Config] Loading config for ${analyzer} from database`);
 
   try {
     const result = await sql`
@@ -64,7 +65,7 @@ export async function getAIConfig(analyzer: string): Promise<AIConfig> {
       expiry: Date.now() + CACHE_TTL,
     });
 
-    console.log(`[AI Config] Loaded and cached config for ${analyzer}`);
+    logger.log(`[AI Config] Loaded and cached config for ${analyzer}`);
     return config;
   } catch (error) {
     console.error(`[AI Config] Error loading config for ${analyzer}:`, error);
@@ -83,11 +84,11 @@ export async function getActivePrompt(
   // Check cache first
   const cached = promptCache.get(promptName);
   if (cached && cached.expiry > Date.now()) {
-    console.log(`[AI Prompt] Cache hit for ${promptName}`);
+    logger.log(`[AI Prompt] Cache hit for ${promptName}`);
     return cached.prompt;
   }
 
-  console.log(`[AI Prompt] Loading prompt ${promptName} from database`);
+  logger.log(`[AI Prompt] Loading prompt ${promptName} from database`);
 
   try {
     const result = await sql`
@@ -104,7 +105,7 @@ export async function getActivePrompt(
     `;
 
     if (result.length === 0) {
-      console.log(`[AI Prompt] No active prompt found for ${promptName}`);
+      logger.log(`[AI Prompt] No active prompt found for ${promptName}`);
       return null;
     }
 
@@ -116,7 +117,7 @@ export async function getActivePrompt(
       expiry: Date.now() + CACHE_TTL,
     });
 
-    console.log(
+    logger.log(
       `[AI Prompt] Loaded and cached prompt ${promptName} (v${prompt.version})`
     );
     return prompt;
@@ -131,7 +132,7 @@ export async function getActivePrompt(
  * Useful when configs are updated and need to be reloaded
  */
 export function clearConfigCache(): void {
-  console.log("[AI Config] Clearing config cache");
+  logger.log("[AI Config] Clearing config cache");
   configCache.clear();
   promptCache.clear();
 }
@@ -159,7 +160,7 @@ export async function getMultipleConfigs(
 
   // Load uncached configs
   if (toLoad.length > 0) {
-    console.log(`[AI Config] Batch loading configs for: ${toLoad.join(", ")}`);
+    logger.log(`[AI Config] Batch loading configs for: ${toLoad.join(", ")}`);
 
     try {
       const result = await sql`
@@ -186,7 +187,7 @@ export async function getMultipleConfigs(
         });
       }
 
-      console.log(`[AI Config] Loaded ${result.length} configs from database`);
+      logger.log(`[AI Config] Loaded ${result.length} configs from database`);
     } catch (error) {
       console.error("[AI Config] Error batch loading configs:", error);
       throw error;
@@ -210,7 +211,7 @@ export async function updateAIConfig(
     scoreThresholds?: Record<string, number>;
   }
 ): Promise<AIConfig> {
-  console.log(`[AI Config] Updating config for ${analyzer}`, updates);
+  logger.log(`[AI Config] Updating config for ${analyzer}`, updates);
 
   try {
     const setters: string[] = [];
@@ -277,7 +278,7 @@ export async function updateAIConfig(
       expiry: Date.now() + CACHE_TTL,
     });
 
-    console.log(`[AI Config] Updated config for ${analyzer}`);
+    logger.log(`[AI Config] Updated config for ${analyzer}`);
     return config;
   } catch (error) {
     console.error(`[AI Config] Error updating config for ${analyzer}:`, error);

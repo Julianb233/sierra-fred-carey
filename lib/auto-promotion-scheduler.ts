@@ -14,6 +14,7 @@ import {
 } from "@/lib/experiment-promoter";
 import { sendNotification } from "@/lib/notifications";
 import type { PromotionConfig } from "@/types/promotion";
+import { logger } from "@/lib/logger";
 
 /**
  * Scheduler configuration
@@ -82,7 +83,7 @@ export async function checkExperimentsForPromotion(
   const startTime = new Date();
   const finalConfig = { ...DEFAULT_SCHEDULER_CONFIG, ...config };
 
-  console.log(`[Auto-Promotion Scheduler] Starting run ${runId}`, {
+  logger.log(`[Auto-Promotion Scheduler] Starting run ${runId}`, {
     enabled: finalConfig.enabled,
     dryRun: finalConfig.dryRun,
   });
@@ -101,7 +102,7 @@ export async function checkExperimentsForPromotion(
 
   // If disabled, return early
   if (!finalConfig.enabled) {
-    console.log(`[Auto-Promotion Scheduler] Auto-promotion is disabled`);
+    logger.log(`[Auto-Promotion Scheduler] Auto-promotion is disabled`);
     result.endTime = new Date();
     result.durationMs = result.endTime.getTime() - result.startTime.getTime();
     return result;
@@ -123,7 +124,7 @@ export async function checkExperimentsForPromotion(
 
     result.experimentsChecked = experimentsResult.length;
 
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Found ${result.experimentsChecked} active experiments`
     );
 
@@ -163,7 +164,7 @@ export async function checkExperimentsForPromotion(
   result.endTime = new Date();
   result.durationMs = result.endTime.getTime() - result.startTime.getTime();
 
-  console.log(
+  logger.log(
     `[Auto-Promotion Scheduler] Run ${runId} completed in ${result.durationMs}ms`,
     {
       checked: result.experimentsChecked,
@@ -194,7 +195,7 @@ async function checkAndPromoteExperiment(
     (Date.now() - new Date(experiment.startDate).getTime()) / (1000 * 60 * 60);
 
   if (runtimeHours < config.minRuntimeHours) {
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Experiment ${experiment.name} runtime ${runtimeHours.toFixed(1)}h < required ${config.minRuntimeHours}h - skipping`
     );
     return;
@@ -207,7 +208,7 @@ async function checkAndPromoteExperiment(
   const winnerAnalysis = hasClearWinner(comparison.variants, config);
 
   if (!winnerAnalysis.hasWinner) {
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Experiment ${experiment.name} not ready for promotion:`,
       winnerAnalysis.reasons
     );
@@ -217,7 +218,7 @@ async function checkAndPromoteExperiment(
   // Mark as eligible
   result.experimentsEligible++;
 
-  console.log(
+  logger.log(
     `[Auto-Promotion Scheduler] Experiment ${experiment.name} is eligible for promotion`,
     {
       winner: winnerAnalysis.winnerVariant!.variantName,
@@ -228,7 +229,7 @@ async function checkAndPromoteExperiment(
 
   // Check manual approval requirement
   if (config.requireManualApproval) {
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Manual approval required for ${experiment.name} - notifying admin`
     );
 
@@ -246,7 +247,7 @@ async function checkAndPromoteExperiment(
 
   // Dry run mode - don't actually promote
   if (config.dryRun) {
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] DRY RUN: Would promote ${winnerAnalysis.winnerVariant!.variantName} for ${experiment.name}`
     );
     return;
@@ -312,7 +313,7 @@ async function checkAndPromoteExperiment(
       improvement: winnerAnalysis.improvement,
     });
 
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Successfully promoted ${winnerAnalysis.winnerVariant!.variantName} for experiment ${experiment.name} (audit log: ${auditLog.id})`
     );
 
@@ -373,7 +374,7 @@ async function sendPromotionNotification(
       },
     });
 
-    console.log(
+    logger.log(
       `[Auto-Promotion Scheduler] Sent ${status} notification for ${experimentName}`
     );
   } catch (error) {

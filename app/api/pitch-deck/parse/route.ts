@@ -9,6 +9,7 @@ import {
   updateDocumentMetadata,
 } from "@/lib/db/documents";
 import type { Chunk } from "@/lib/documents/types";
+import { logger } from "@/lib/logger";
 
 /**
  * Error response structure
@@ -65,7 +66,7 @@ export async function POST(
       }) as NextResponse<ParseResponse>;
     }
 
-    console.log(`[PDF Parse] Request from user: ${userId}`);
+    logger.log(`[PDF Parse] Request from user: ${userId}`);
 
     // Parse JSON body
     const body = (await request.json()) as ParseRequest;
@@ -96,12 +97,12 @@ export async function POST(
       );
     }
 
-    console.log(`[PDF Parse] Parsing PDF from: ${body.fileUrl}`);
+    logger.log(`[PDF Parse] Parsing PDF from: ${body.fileUrl}`);
 
     // Parse the PDF from the URL
     const parsed = await parsePDFFromUrl(body.fileUrl);
 
-    console.log(
+    logger.log(
       `[PDF Parse] Successfully parsed ${parsed.totalPages} pages, ${parsed.fullText.length} characters`
     );
 
@@ -110,7 +111,7 @@ export async function POST(
     let chunksStored = false;
     if (body.documentId) {
       try {
-        console.log(`[PDF Parse] Storing chunks for document ${body.documentId}`);
+        logger.log(`[PDF Parse] Storing chunks for document ${body.documentId}`);
 
         // Convert parsed slides into Chunk format for storage
         const chunks: (Chunk & { embedding: number[] })[] = parsed.slides.map(
@@ -144,7 +145,7 @@ export async function POST(
           await updateDocumentStatus(body.documentId, "ready");
           chunksStored = true;
 
-          console.log(
+          logger.log(
             `[PDF Parse] Stored ${chunks.length} chunks for document ${body.documentId}`
           );
         }

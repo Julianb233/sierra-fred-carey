@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PhoneVerify } from "@/components/check-ins/PhoneVerify";
 import Footer from "@/components/footer";
+import { logger } from "@/lib/logger";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const CHECK_IN_TYPES = [
@@ -23,7 +24,7 @@ export default function ConfigureCheckInsPage() {
   const [phoneVerified, setPhoneVerified] = useState(false);
 
   const handleSave = () => {
-    console.log({ selectedDay, selectedTime, selectedType });
+    logger.log({ selectedDay, selectedTime, selectedType });
   };
 
   return (

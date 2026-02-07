@@ -5,6 +5,7 @@
 
 import { sendNotification } from '@/lib/notifications';
 import { AlertLevel, AlertType } from '@/lib/notifications/types';
+import { logger } from "@/lib/logger";
 
 /**
  * Alert Thresholds Configuration
@@ -318,7 +319,7 @@ export async function runMonitoringCheck(userId: string) {
       );
     }
 
-    console.log('[Monitoring] Check completed successfully');
+    logger.log('[Monitoring] Check completed successfully');
   } catch (error) {
     console.error('[Monitoring] Error during monitoring check:', error);
   }

@@ -5,6 +5,7 @@
  */
 
 import type { FredContext, FredResponse, FredEvent } from "./types";
+import { logger } from "@/lib/logger";
 
 export interface StateTransition {
   from: string;
@@ -89,7 +90,7 @@ export class FredObservability {
     this.lastStateTime = now;
 
     // Console log for development
-    console.log(
+    logger.log(
       `[FRED] ${from} → ${to} (${duration}ms)`,
       context.error ? `[ERROR: ${context.error.message}]` : ""
     );
@@ -149,7 +150,7 @@ export class FredObservability {
     const metrics = this.buildMetrics(response, duration);
     this.finalMetrics = metrics;
 
-    console.log(
+    logger.log(
       `[FRED] Complete | Action: ${response.action} | Confidence: ${Math.round(response.confidence * 100)}% | Duration: ${duration}ms`
     );
 
@@ -199,7 +200,7 @@ export class FredObservability {
 
     // For development, we can optionally log structured metrics
     if (process.env.FRED_DEBUG_METRICS === "true") {
-      console.log("[FRED Metric]", JSON.stringify(metric));
+      logger.log("[FRED Metric]", JSON.stringify(metric));
     }
   }
 
@@ -250,12 +251,12 @@ export function createTraceId(): string {
 export const fredLogger = {
   debug: (message: string, data?: Record<string, unknown>) => {
     if (process.env.NODE_ENV === "development" || process.env.FRED_DEBUG === "true") {
-      console.log(`[FRED:DEBUG] ${message}`, data || "");
+      logger.log(`[FRED:DEBUG] ${message}`, data || "");
     }
   },
 
   info: (message: string, data?: Record<string, unknown>) => {
-    console.log(`[FRED:INFO] ${message}`, data || "");
+    logger.log(`[FRED:INFO] ${message}`, data || "");
   },
 
   warn: (message: string, data?: Record<string, unknown>) => {
@@ -276,7 +277,7 @@ export const fredLogger = {
     };
 
     if (process.env.FRED_DEBUG_METRICS === "true") {
-      console.log("[FRED:METRIC]", JSON.stringify(metric));
+      logger.log("[FRED:METRIC]", JSON.stringify(metric));
     }
   },
 };

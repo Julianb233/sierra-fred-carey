@@ -4,6 +4,7 @@
  * with comprehensive audit logging and rollback capabilities
  */
 
+import { logger } from "@/lib/logger";
 import { sql } from "@/lib/db/supabase-sql";
 import { compareExperimentVariants, type VariantMetrics } from "@/lib/monitoring/ab-test-metrics";
 import {
@@ -62,7 +63,7 @@ export async function checkPromotionEligibility(
   experimentName: string,
   customRules?: Partial<PromotionRules>
 ): Promise<PromotionEligibility> {
-  console.log(`[Auto-Promotion] Checking eligibility for ${experimentName}`);
+  logger.log(`[Auto-Promotion] Checking eligibility for ${experimentName}`);
 
   try {
     // Get experiment data from monitoring system
@@ -130,7 +131,7 @@ export async function checkPromotionEligibility(
       customRules
     );
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Eligibility for ${experimentName}: ${eligibility.recommendation} - ${eligibility.reason}`
     );
 
@@ -156,7 +157,7 @@ export async function promoteWinningVariant(
 ): Promise<PromotionResult> {
   const { userId = null, triggeredBy = "auto", customRules, force = false } = options;
 
-  console.log(`[Auto-Promotion] Promoting winner for ${experimentName} (triggered by: ${triggeredBy})`);
+  logger.log(`[Auto-Promotion] Promoting winner for ${experimentName} (triggered by: ${triggeredBy})`);
 
   try {
     // Check eligibility (unless forced)
@@ -164,7 +165,7 @@ export async function promoteWinningVariant(
       const eligibility = await checkPromotionEligibility(experimentName, customRules);
 
       if (!eligibility.eligible && eligibility.recommendation !== "manual_review") {
-        console.log(`[Auto-Promotion] Not eligible for promotion: ${eligibility.reason}`);
+        logger.log(`[Auto-Promotion] Not eligible for promotion: ${eligibility.reason}`);
         return {
           success: false,
           experimentId: eligibility.experimentId,
@@ -178,7 +179,7 @@ export async function promoteWinningVariant(
 
       // If manual review recommended but auto-triggered, don't promote
       if (eligibility.recommendation === "manual_review" && triggeredBy === "auto") {
-        console.log(`[Auto-Promotion] Manual review required, skipping auto-promotion`);
+        logger.log(`[Auto-Promotion] Manual review required, skipping auto-promotion`);
         return {
           success: false,
           experimentId: eligibility.experimentId,
@@ -239,7 +240,7 @@ export async function promoteWinningVariant(
 
     // Check if already promoted (100% traffic)
     if (parseFloat(winningVariant.trafficPercentage) === 100) {
-      console.log(`[Auto-Promotion] Already promoted: ${comparison.winningVariant}`);
+      logger.log(`[Auto-Promotion] Already promoted: ${comparison.winningVariant}`);
       return {
         success: true,
         experimentId: experiment.id,
@@ -314,7 +315,7 @@ export async function promoteWinningVariant(
 
     const auditLogId = auditLogResult[0]?.id as string;
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Successfully promoted ${comparison.winningVariant} to 100% (audit log: ${auditLogId})`
     );
 
@@ -356,7 +357,7 @@ export async function rollbackPromotion(
 ): Promise<RollbackResult> {
   const { userId = null, reason, restoreTraffic } = options;
 
-  console.log(`[Auto-Promotion] Rolling back promotion for ${experimentName}`);
+  logger.log(`[Auto-Promotion] Rolling back promotion for ${experimentName}`);
 
   try {
     // Get experiment
@@ -476,7 +477,7 @@ export async function rollbackPromotion(
 
     const rollbackAuditId = rollbackAuditResult[0]?.id as string;
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Successfully rolled back promotion for ${experimentName} (audit log: ${rollbackAuditId})`
     );
 
@@ -555,7 +556,7 @@ export async function checkAllExperimentsForPromotion(
   promoted: string[];
   errors: Array<{ experimentName: string; error: string }>;
 }> {
-  console.log(`[Auto-Promotion] Checking all active experiments`);
+  logger.log(`[Auto-Promotion] Checking all active experiments`);
 
   try {
     // Get all active experiments
@@ -609,7 +610,7 @@ export async function checkAllExperimentsForPromotion(
       }
     }
 
-    console.log(
+    logger.log(
       `[Auto-Promotion] Checked ${results.checked} experiments, found ${results.eligible.length} eligible, promoted ${results.promoted.length}`
     );
 

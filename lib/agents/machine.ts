@@ -10,6 +10,7 @@
  * Pattern follows lib/fred/machine.ts (the FRED decision engine state machine).
  */
 
+import { logger } from "@/lib/logger";
 import { setup, assign, fromPromise } from "xstate";
 import type {
   AgentTask,
@@ -104,7 +105,7 @@ export const agentOrchestratorMachine = setup({
      * Log state transition for observability
      */
     logTransition: ({ context, event }) => {
-      console.log(
+      logger.log(
         `[Agent Orchestrator] Transition | User: ${context.userId} | Event: ${event.type} | Task: ${context.currentTask?.id ?? "none"} | Agent: ${context.currentTask?.agentType ?? "none"}`
       );
     },

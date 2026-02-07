@@ -110,7 +110,7 @@ export async function logAIRequest(
     `;
 
     const requestId = result[0].id as string;
-    console.log(`[AI Logging] Request logged: ${requestId} (${analyzer})`);
+    logger.log(`[AI Logging] Request logged: ${requestId} (${analyzer})`);
     return requestId;
   } catch (error) {
     console.error("[AI Logging] Failed to log request:", error);
@@ -177,7 +177,7 @@ export async function logAIResponse(params: LogResponseParams): Promise<string> 
     `;
 
     const responseId = result[0].id as string;
-    console.log(
+    logger.log(
       `[AI Logging] Response logged: ${responseId} (${latencyMs}ms, ${finishReason || "complete"})`
     );
     return responseId;
@@ -201,6 +201,7 @@ import {
 } from "./fred-client";
 import { type z } from "zod";
 import type { ModelMessage } from "@ai-sdk/provider-utils";
+import { logger } from "@/lib/logger";
 
 export interface TrackedGenerateOptions extends GenerateOptions {
   userId?: string;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { getMonitoringDashboard } from "@/lib/monitoring/ab-test-metrics";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/monitoring/dashboard
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[Monitoring API] Fetching dashboard data");
+    logger.log("[Monitoring API] Fetching dashboard data");
 
     const dashboard = await getMonitoringDashboard();
 

@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 /**
  * Deck Review API
@@ -233,7 +234,7 @@ ${deckDescription}
 Provide a thorough IC-perspective review with slide-by-slide analysis, objection mapping, and recommendations.
 `;
 
-    console.log("[Deck Review] Starting review for user:", userId);
+    logger.log("[Deck Review] Starting review for user:", userId);
 
     // Call AI
     const trackedResult = await generateTrackedResponse(
@@ -300,7 +301,7 @@ Provide a thorough IC-perspective review with slide-by-slide analysis, objection
 
     const savedReview = result[0];
 
-    console.log("[Deck Review] Review saved with ID:", savedReview.id);
+    logger.log("[Deck Review] Review saved with ID:", savedReview.id);
 
     // Update evaluation if linked
     if (evaluationId) {

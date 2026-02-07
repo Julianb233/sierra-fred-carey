@@ -21,12 +21,14 @@ import {
   storeChunks,
 } from '@/lib/db/documents';
 import type { DocumentType, ChunkOptions } from './types';
+import { logger } from "@/lib/logger";
+import { clientEnv, serverEnv } from "@/lib/env";
 
 // Lazy Supabase client (avoids module-level init during static generation)
 function getSupabase() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
+    serverEnv.SUPABASE_SERVICE_ROLE_KEY
   );
 }
 
@@ -44,11 +46,11 @@ export async function processDocument(
   documentType: DocumentType,
   options: ProcessOptions = {}
 ): Promise<void> {
-  console.log(`[ProcessDocument] Starting processing for ${documentId}`);
+  logger.log(`[ProcessDocument] Starting processing for ${documentId}`);
 
   try {
     // 1. Download from storage
-    console.log(`[ProcessDocument] Downloading file...`);
+    logger.log(`[ProcessDocument] Downloading file...`);
     const buffer = await downloadFile(fileUrl);
 
     // Validate PDF
@@ -57,15 +59,15 @@ export async function processDocument(
     }
 
     // 2. Extract text
-    console.log(`[ProcessDocument] Extracting text...`);
+    logger.log(`[ProcessDocument] Extracting text...`);
     const extracted = await extractText(buffer);
-    console.log(`[ProcessDocument] Extracted ${extracted.pageCount} pages`);
+    logger.log(`[ProcessDocument] Extracted ${extracted.pageCount} pages`);
 
     // Update metadata
     await updateDocumentMetadata(documentId, extracted.metadata, extracted.pageCount);
 
     // 3. Chunk document
-    console.log(`[ProcessDocument] Chunking document...`);
+    logger.log(`[ProcessDocument] Chunking document...`);
     const chunkOptions: ChunkOptions = {
       // Use page chunking for pitch decks, semantic for others
       strategy: options.chunkStrategy ||
@@ -74,24 +76,24 @@ export async function processDocument(
     };
 
     const chunks = chunkDocument(extracted.text, extracted.pages, chunkOptions);
-    console.log(`[ProcessDocument] Created ${chunks.length} chunks`);
+    logger.log(`[ProcessDocument] Created ${chunks.length} chunks`);
 
     if (chunks.length === 0) {
       throw new Error('No content could be extracted from document');
     }
 
     // 4. Generate embeddings
-    console.log(`[ProcessDocument] Generating embeddings...`);
+    logger.log(`[ProcessDocument] Generating embeddings...`);
     const chunksWithEmbeddings = await embedChunks(chunks);
-    console.log(`[ProcessDocument] Generated ${chunksWithEmbeddings.length} embeddings`);
+    logger.log(`[ProcessDocument] Generated ${chunksWithEmbeddings.length} embeddings`);
 
     // 5. Store chunks
-    console.log(`[ProcessDocument] Storing chunks...`);
+    logger.log(`[ProcessDocument] Storing chunks...`);
     await storeChunks(documentId, chunksWithEmbeddings);
 
     // 6. Update status to ready
     await updateDocumentStatus(documentId, 'ready');
-    console.log(`[ProcessDocument] Processing complete for ${documentId}`);
+    logger.log(`[ProcessDocument] Processing complete for ${documentId}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[ProcessDocument] Processing failed: ${message}`);

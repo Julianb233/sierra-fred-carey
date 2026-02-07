@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { getPromotionHistory } from "@/lib/monitoring/auto-promotion";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/monitoring/experiments/[name]/history
@@ -20,7 +21,7 @@ export async function GET(
     const { name } = await params;
     const experimentName = decodeURIComponent(name);
 
-    console.log(
+    logger.log(
       `[Promotion History API] Fetching history for experiment: ${experimentName}`
     );
 

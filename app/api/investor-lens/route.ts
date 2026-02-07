@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 // Type definitions
 
@@ -535,7 +536,7 @@ export async function POST(request: NextRequest) {
     const profileSummary = formatProfileForPrompt(profile, fundingStage);
     const systemPrompt = getSystemPrompt(fundingStage);
 
-    console.log("[Investor Lens] Evaluating startup for user:", userId, "Stage:", fundingStage);
+    logger.log("[Investor Lens] Evaluating startup for user:", userId, "Stage:", fundingStage);
 
     // Call AI
     const trackedResult = await generateTrackedResponse(
@@ -715,7 +716,7 @@ export async function POST(request: NextRequest) {
 
     const savedEvaluation = result[0];
 
-    console.log("[Investor Lens] Evaluation saved with ID:", savedEvaluation.id);
+    logger.log("[Investor Lens] Evaluation saved with ID:", savedEvaluation.id);
 
     // Extract insights (async, non-blocking)
     extractInsights(

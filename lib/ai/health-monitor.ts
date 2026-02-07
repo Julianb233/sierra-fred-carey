@@ -15,6 +15,7 @@ import {
 } from "./providers";
 import { circuitBreaker } from "./circuit-breaker";
 import type { ProviderName } from "./fallback-chain";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -235,7 +236,7 @@ export class HealthMonitor {
       return;
     }
 
-    console.log(
+    logger.log(
       `[HealthMonitor] Starting health monitoring (interval: ${this.config.checkInterval}ms)`
     );
 
@@ -256,7 +257,7 @@ export class HealthMonitor {
             : health.status === "degraded"
               ? "⚠"
               : "✗";
-        console.log(
+        logger.log(
           `[HealthMonitor] ${statusEmoji} ${health.healthyCount}/${health.totalCount} providers healthy`
         );
       } catch (error) {
@@ -272,7 +273,7 @@ export class HealthMonitor {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
-      console.log("[HealthMonitor] Stopped health monitoring");
+      logger.log("[HealthMonitor] Stopped health monitoring");
     }
   }
 

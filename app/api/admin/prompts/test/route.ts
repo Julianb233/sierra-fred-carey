@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/admin/prompts/test
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[Admin Prompts Test] Testing prompt", {
+    logger.log("[Admin Prompts Test] Testing prompt", {
       promptId: promptId || "inline",
       hasTestInput: Object.keys(testInput).length > 0,
     });

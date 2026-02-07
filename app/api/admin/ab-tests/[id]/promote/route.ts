@@ -6,6 +6,7 @@ import {
 } from "@/lib/ab-testing/auto-promotion";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/ab-tests/[id]/promote
@@ -30,7 +31,7 @@ export async function GET(
   try {
     const { id: experimentId } = await params;
 
-    console.log(
+    logger.log(
       `[Admin AB Promote GET] Checking promotion eligibility for experiment ${experimentId}`
     );
 
@@ -137,7 +138,7 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const { force = false, customRules } = body;
 
-    console.log(
+    logger.log(
       `[Admin AB Promote POST] Promoting experiment ${experimentId} (force: ${force})`
     );
 
@@ -205,7 +206,7 @@ export async function POST(
       ORDER BY variant_name
     `;
 
-    console.log(
+    logger.log(
       `[Admin AB Promote POST] Successfully promoted ${result.winningVariant} for experiment ${experiment.name}`
     );
 
@@ -267,7 +268,7 @@ export async function DELETE(
       );
     }
 
-    console.log(
+    logger.log(
       `[Admin AB Promote DELETE] Rolling back promotion for experiment ${experimentId}`
     );
 
@@ -322,7 +323,7 @@ export async function DELETE(
       ORDER BY variant_name
     `;
 
-    console.log(
+    logger.log(
       `[Admin AB Promote DELETE] Successfully rolled back promotion for experiment ${experiment.name}`
     );
 

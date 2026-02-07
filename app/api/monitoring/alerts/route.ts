@@ -3,6 +3,7 @@ import { isAdminRequest } from "@/lib/auth/admin";
 import { getMonitoringDashboard } from "@/lib/monitoring/ab-test-metrics";
 import { sendNotification, NotificationPayload } from "@/lib/notifications";
 import { notifyAlerts } from "@/lib/monitoring/alert-notifier";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/monitoring/alerts
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     const typeFilter = searchParams.get("type");
     const shouldNotify = searchParams.get("notify") === "true";
 
-    console.log("[Monitoring API] Fetching alerts", { levelFilter, typeFilter, shouldNotify });
+    logger.log("[Monitoring API] Fetching alerts", { levelFilter, typeFilter, shouldNotify });
 
     const dashboard = await getMonitoringDashboard();
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Send notifications if requested
     if (shouldNotify && allAlerts.length > 0) {
-      console.log(`[Monitoring API] Sending notifications for ${allAlerts.length} alerts`);
+      logger.log(`[Monitoring API] Sending notifications for ${allAlerts.length} alerts`);
 
       // Use the enhanced alert notifier to send to all subscribed users
       notifyAlerts(allAlerts, {
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         minimumLevel: levelFilter as any || "warning",
       })
         .then((stats) => {
-          console.log(
+          logger.log(
             `[Monitoring API] Notified ${stats.notificationsSent} subscribers (${stats.notificationsFailed} failed)`
           );
           if (stats.errors.length > 0) {
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
       metadata,
     };
 
-    console.log("[Monitoring API] Sending manual notification:", payload);
+    logger.log("[Monitoring API] Sending manual notification:", payload);
 
     // Send notification
     const results = await sendNotification(payload);

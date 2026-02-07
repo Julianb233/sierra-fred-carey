@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import {
@@ -57,7 +58,7 @@ export async function GET(
       }),
     };
 
-    console.log(
+    logger.log(
       `[Promotion API] Checking eligibility for experiment: ${experimentName}`,
       { config }
     );
@@ -143,7 +144,7 @@ export async function POST(
       );
     }
 
-    console.log(
+    logger.log(
       `[Promotion API] Promoting winner for experiment: ${experimentName}`,
       { promotionType, promotedBy }
     );
@@ -262,7 +263,7 @@ export async function DELETE(
       );
     }
 
-    console.log(
+    logger.log(
       `[Promotion API] Rolling back promotion for experiment: ${experimentName}`,
       { reason, rolledBackBy }
     );

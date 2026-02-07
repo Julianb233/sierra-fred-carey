@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/supabase-sql";
+import { logger } from "@/lib/logger";
 
 /**
  * A/B Test Metrics Collection System
@@ -223,7 +224,7 @@ export async function compareExperimentVariants(
           });
         })
         .then((stats) => {
-          console.log(
+          logger.log(
             `[Monitoring] Auto-notified ${stats.notificationsSent} alerts for experiment: ${experiment.name}`
           );
           if (stats.errors.length > 0) {
@@ -461,5 +462,5 @@ export async function logVariantAssignment(
   experimentName: string,
   sessionId?: string
 ): Promise<void> {
-  console.log(`[Monitoring] Variant assignment: user=${userId}, variant=${variantId}, experiment=${experimentName}, session=${sessionId}`);
+  logger.log(`[Monitoring] Variant assignment: user=${userId}, variant=${variantId}, experiment=${experimentName}, session=${sessionId}`);
 }

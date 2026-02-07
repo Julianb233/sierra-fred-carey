@@ -9,6 +9,7 @@ import { sendSlackNotification } from "@/lib/notifications/slack";
 import { NotificationPayload } from "@/lib/notifications/types";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/notifications/slack
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       metadata,
     };
 
-    console.log("[Slack API] Sending notification:", {
+    logger.log("[Slack API] Sending notification:", {
       level,
       type,
       title,

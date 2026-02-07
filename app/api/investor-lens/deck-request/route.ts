@@ -5,6 +5,7 @@ import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import { logger } from "@/lib/logger";
 
 /**
  * Deck Request Protocol
@@ -174,7 +175,7 @@ ${reason ? `REASON FOR DECK REQUEST: ${reason}` : ""}
 Remember: Default to NOT requesting a deck unless specific visual/detailed information is truly needed that cannot be gathered through conversation.
 `;
 
-    console.log("[Deck Request] Evaluating deck need for user:", userId);
+    logger.log("[Deck Request] Evaluating deck need for user:", userId);
 
     // Call AI
     const trackedResult = await generateTrackedResponse(

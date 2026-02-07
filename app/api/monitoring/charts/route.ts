@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { sql } from "@/lib/db/supabase-sql";
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     const chartType = searchParams.get("type") || "conversion";
     const timeRange = (searchParams.get("range") || "7d") as TimeRange;
 
-    console.log(`[Charts API] Fetching ${chartType} data for range: ${timeRange}`);
+    logger.log(`[Charts API] Fetching ${chartType} data for range: ${timeRange}`);
 
     let data;
 

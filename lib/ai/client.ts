@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { sql } from "@/lib/db/supabase-sql";
 import { getAIConfig, getActivePrompt } from "./config-loader";
 import { getVariantAssignment } from "./ab-testing";
+import { logger } from "@/lib/logger";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -173,7 +174,7 @@ async function logAIRequest(
     `;
 
     const requestId = result[0].id as string;
-    console.log(`[AI Client] Logged request ${requestId} for analyzer ${analyzer}`);
+    logger.log(`[AI Client] Logged request ${requestId} for analyzer ${analyzer}`);
     return requestId;
   } catch (error) {
     console.error("[AI Client] Error logging request:", error);
@@ -218,7 +219,7 @@ async function logAIResponse(
     `;
 
     const responseId = result[0].id as string;
-    console.log(`[AI Client] Logged response ${responseId} for request ${requestId}`);
+    logger.log(`[AI Client] Logged response ${responseId} for request ${requestId}`);
     return responseId;
   } catch (error) {
     console.error("[AI Client] Error logging response:", error);
@@ -242,7 +243,7 @@ export async function generateChatResponse(
 
   for (const provider of providers) {
     try {
-      console.log(`[AI] Trying ${provider}...`);
+      logger.log(`[AI] Trying ${provider}...`);
 
       switch (provider) {
         case "openai":
@@ -349,7 +350,7 @@ export async function generateTrackedResponse(
   try {
     // If analyzer is specified, load config from database
     if (options?.analyzer) {
-      console.log(`[AI Client] Loading config for analyzer: ${options.analyzer}`);
+      logger.log(`[AI Client] Loading config for analyzer: ${options.analyzer}`);
 
       try {
         const config = await getAIConfig(options.analyzer);
@@ -357,7 +358,7 @@ export async function generateTrackedResponse(
         temperature = config.temperature;
         maxTokens = config.maxTokens;
 
-        console.log(
+        logger.log(
           `[AI Client] Using config: model=${model}, temp=${temperature}, maxTokens=${maxTokens}`
         );
       } catch (error) {
@@ -373,7 +374,7 @@ export async function generateTrackedResponse(
         if (prompt) {
           finalSystemPrompt = prompt.content;
           promptVersion = prompt.version;
-          console.log(
+          logger.log(
             `[AI Client] Using prompt version ${promptVersion} for ${options.analyzer}`
           );
         }
@@ -396,7 +397,7 @@ export async function generateTrackedResponse(
             variant = variantAssignment.variantName;
             variantId = variantAssignment.id;
 
-            console.log(
+            logger.log(
               `[AI Client] A/B test variant: ${variant} for ${options.analyzer}`
             );
 
@@ -418,7 +419,7 @@ export async function generateTrackedResponse(
                 `;
                 if (variantPrompt.length > 0) {
                   finalSystemPrompt = variantPrompt[0].content as string;
-                  console.log(
+                  logger.log(
                     `[AI Client] Using variant-specific prompt for ${variant}`
                   );
                 }
@@ -455,7 +456,7 @@ export async function generateTrackedResponse(
     }
 
     // Generate response with configured parameters
-    console.log(
+    logger.log(
       `[AI Client] Generating response with model=${model}, temp=${temperature}`
     );
 
@@ -506,7 +507,7 @@ export async function generateTrackedResponse(
 
     const finalLatencyMs = Date.now() - startTime;
 
-    console.log(
+    logger.log(
       `[AI Client] Response generated in ${finalLatencyMs}ms (requestId: ${requestId})`
     );
 

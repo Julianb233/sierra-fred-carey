@@ -34,6 +34,7 @@ import {
   calculateOverallScore,
 } from "./schemas/reality-lens";
 import { nanoid } from "nanoid";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -363,8 +364,8 @@ function getHeuristicSynthesis(
  *   context: { stage: "mvp", funding: "pre-seed" }
  * });
  *
- * console.log(result.overallScore); // 72
- * console.log(result.verdict); // "promising"
+ * logger.log(result.overallScore); // 72
+ * logger.log(result.verdict); // "promising"
  */
 export async function assessIdea(
   input: RealityLensInput,
@@ -373,7 +374,7 @@ export async function assessIdea(
   const startTime = Date.now();
   const assessmentId = nanoid();
 
-  console.log(`[Reality Lens] Starting assessment ${assessmentId}`, {
+  logger.log(`[Reality Lens] Starting assessment ${assessmentId}`, {
     ideaLength: input.idea.length,
     hasContext: !!input.context,
     useHeuristics: options.useHeuristics,
@@ -443,7 +444,7 @@ export async function assessIdea(
     },
   };
 
-  console.log(`[Reality Lens] Assessment ${assessmentId} complete`, {
+  logger.log(`[Reality Lens] Assessment ${assessmentId} complete`, {
     overallScore,
     verdict,
     processingTimeMs,

@@ -5,6 +5,7 @@
  * Each mental model provides a different lens for understanding the problem.
  */
 
+import { logger } from "@/lib/logger";
 import type {
   ValidatedInput,
   MemoryContext,
@@ -19,7 +20,7 @@ export async function applyMentalModelsActor(
   validatedInput: ValidatedInput,
   memoryContext: MemoryContext | null
 ): Promise<MentalModelResult[]> {
-  console.log("[FRED] Applying mental models to:", validatedInput.intent);
+  logger.log("[FRED] Applying mental models to:", validatedInput.intent);
 
   // Select relevant models based on input
   const relevantModels = selectRelevantModels(validatedInput);

@@ -3,6 +3,7 @@ import { sql } from "@/lib/db/supabase-sql";
 import { generateChatResponse } from "@/lib/ai/client";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 type DocumentType = "gtm" | "competitive" | "financial" | "memo";
 
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
       ? `\n\nCompany Context:\n${JSON.stringify(context, null, 2)}`
       : "";
 
-    console.log(`[Documents] Generating ${type} document for user ${userId}`);
+    logger.log(`[Documents] Generating ${type} document for user ${userId}`);
 
     // Generate document content using AI
     const content = await generateChatResponse(
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    console.log(`[Documents] Created document ${result[0].id}`);
+    logger.log(`[Documents] Created document ${result[0].id}`);
 
     return NextResponse.json({
       success: true,

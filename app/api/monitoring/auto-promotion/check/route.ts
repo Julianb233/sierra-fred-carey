@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[Auto-Promotion] Starting auto-check cycle", {
+    logger.log("[Auto-Promotion] Starting auto-check cycle", {
       userId,
       config,
     });

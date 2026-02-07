@@ -12,12 +12,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sendWeeklyCheckins } from '@/lib/sms/scheduler';
+import { logger } from "@/lib/logger";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  console.log('[Cron: Weekly Check-in] Starting scheduled dispatch');
+  logger.log('[Cron: Weekly Check-in] Starting scheduled dispatch');
 
   try {
     // Verify authorization via CRON_SECRET
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     const result = await sendWeeklyCheckins();
     const duration = Date.now() - startTime;
 
-    console.log(
+    logger.log(
       `[Cron: Weekly Check-in] Completed in ${duration}ms:`,
       JSON.stringify({
         sent: result.sent,

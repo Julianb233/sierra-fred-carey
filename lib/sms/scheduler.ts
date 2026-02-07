@@ -17,6 +17,7 @@ import {
   updateCheckinStatus,
 } from '@/lib/db/sms';
 import { getAgentTasks } from '@/lib/db/agent-tasks';
+import { logger } from "@/lib/logger";
 
 /**
  * Send weekly check-in SMS to all opted-in users.
@@ -38,12 +39,12 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
 
   // Get all opted-in users with verified phone numbers
   const users = await getOptedInUsers();
-  console.log(
+  logger.log(
     `[Weekly Check-in] Starting dispatch for ${users.length} opted-in users`
   );
 
   if (users.length === 0) {
-    console.log('[Weekly Check-in] No opted-in users found, skipping');
+    logger.log('[Weekly Check-in] No opted-in users found, skipping');
     return result;
   }
 
@@ -64,7 +65,7 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
       );
 
       if (alreadySent) {
-        console.log(
+        logger.log(
           `[Weekly Check-in] Skipping user ${user.userId} - already sent this week (${weekNumber}/${year})`
         );
         result.skipped++;
@@ -110,7 +111,7 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
         const messageSid = await sendSMS(user.phoneNumber!, message);
         await updateCheckinStatus(checkin.id, 'sent', messageSid);
         result.sent++;
-        console.log(
+        logger.log(
           `[Weekly Check-in] Sent to user ${user.userId} (SID: ${messageSid})`
         );
       } catch (sendErr) {
@@ -135,7 +136,7 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
     }
   }
 
-  console.log(
+  logger.log(
     `[Weekly Check-in] Dispatch complete: ${result.sent} sent, ${result.failed} failed, ${result.skipped} skipped`
   );
 

@@ -4,6 +4,7 @@
  * determining clear winners, and applying promotions with audit logging
  */
 
+import { logger } from "@/lib/logger";
 import { sql } from "@/lib/db/supabase-sql";
 import type { VariantMetrics } from "@/lib/monitoring/ab-test-metrics";
 import type {
@@ -239,7 +240,7 @@ export async function applyPromotion(
         WHERE experiment_id = ${experimentId}
       `;
 
-      console.log(
+      logger.log(
         `[Promoter] Applied gradual promotion: 75% traffic to winner ${winnerVariantId}`
       );
 
@@ -263,7 +264,7 @@ export async function applyPromotion(
         WHERE experiment_id = ${experimentId}
       `;
 
-      console.log(
+      logger.log(
         `[Promoter] Applied immediate promotion: 100% traffic to winner ${winnerVariantId}`
       );
 
@@ -362,7 +363,7 @@ export async function createPromotionAuditLog(
 
     const auditLog = result[0] as PromotionAuditLog;
 
-    console.log(
+    logger.log(
       `[Promoter] Created audit log ${auditLog.id} for experiment ${experimentName}`
     );
 
@@ -393,7 +394,7 @@ export async function archiveLosingVariants(
         AND is_archived = false
     `;
 
-    console.log(
+    logger.log(
       `[Promoter] Archived losing variants for experiment ${experimentId}, keeping winner ${winnerVariantId}`
     );
   } catch (error) {
