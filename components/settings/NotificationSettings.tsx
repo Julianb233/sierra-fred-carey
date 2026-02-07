@@ -33,6 +33,7 @@ import {
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface NotificationConfig {
   id: string;
@@ -235,7 +236,7 @@ export function NotificationSettings() {
         throw new Error(data.error || "Test failed");
       }
 
-      alert("Test notification sent successfully!");
+      toast.success("Test notification sent successfully!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Test failed");
     } finally {

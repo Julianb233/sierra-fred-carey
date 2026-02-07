@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, FileText, Copy, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,13 +40,29 @@ export function ExportMenu({ content, title }: ExportMenuProps) {
   };
 
   const handleExportPDF = () => {
-    // In a real app, this would generate a PDF
-    alert("PDF export coming soon! This would generate a beautifully formatted PDF document.");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Exported as text file");
   };
 
   const handleExportDOCX = () => {
-    // In a real app, this would generate a DOCX file
-    alert("DOCX export coming soon! This would generate a Microsoft Word document.");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Exported as text file");
   };
 
   return (
