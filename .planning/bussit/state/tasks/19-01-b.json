@@ -1,0 +1,12 @@
+{
+  "id": "19-01-b",
+  "type": "build",
+  "phase": 19,
+  "planPath": ".planning/phases/19-inbox-ops-agent/19-01-PLAN.md",
+  "title": "Inbox Ops Agent hub and message aggregation",
+  "description": "Create inbox types, aggregator to collect agent task outputs and recommendations, inbox API endpoint, inbox dashboard page with message components, and filtering/prioritization.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T22:30:00Z"
+}

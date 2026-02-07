@@ -1,0 +1,12 @@
+{
+  "id": "18-02-b",
+  "type": "build",
+  "phase": 18,
+  "planPath": ".planning/phases/18-intake-snapshot-strategy/18-02-PLAN.md",
+  "title": "Auto-enrichment from conversation and strategy reframing UI",
+  "description": "Build enrichment extractor for conversation analysis, wire into chat route for auto-enrichment, create strategy reframing page with Fred's 9-step framework UI, and reframe API endpoint.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": ["18-01-b"],
+  "createdAt": "2026-02-07T22:30:00Z"
+}

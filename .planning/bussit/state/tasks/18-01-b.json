@@ -1,0 +1,12 @@
+{
+  "id": "18-01-b",
+  "type": "build",
+  "phase": 18,
+  "planPath": ".planning/phases/18-intake-snapshot-strategy/18-01-PLAN.md",
+  "title": "Enriched onboarding questionnaire and founder profile snapshot",
+  "description": "Extend startup-info-step with industry/revenue/team/funding fields, update use-onboarding hook, persist enriched data via onboard API, add profile snapshot page and API.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T22:30:00Z"
+}

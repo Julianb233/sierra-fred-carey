@@ -1,0 +1,12 @@
+{
+  "id": "23-01-b",
+  "type": "build",
+  "phase": 23,
+  "planPath": ".planning/phases/23-admin-training-docs/23-01-PLAN.md",
+  "title": "Admin training docs route and 5 content pages",
+  "description": "Create admin-only /admin/training route with role-based access, training layout, index page, and 4 content pages: communication style guide, framework reference, agent behavior guide, FRED identity & background.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T22:30:00Z"
+}

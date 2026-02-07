@@ -1,0 +1,12 @@
+{
+  "id": "21-01-b",
+  "type": "build",
+  "phase": 21,
+  "planPath": ".planning/phases/21-memory-compute-tiers/21-01-PLAN.md",
+  "title": "Tier-differentiated AI models, memory depth, and memory gating",
+  "description": "Create tier-routing.ts for model selection by user tier, update base-agent.ts and agent API to use tier routing, configure memory depth limits in load-memory actor, gate memory features to Pro+ tiers.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T22:30:00Z"
+}
