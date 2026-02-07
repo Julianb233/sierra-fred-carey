@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Every feature promised on the website has real logic, all AI speaks in Fred's voice, and the app is production-ready and installable on mobile.
-**Current focus:** v2.0 Production & Voice Parity -- Phase 12 (planned, ready to execute)
+**Current focus:** v2.0 Production & Voice Parity -- Phase 12 complete, Phase 13 next
 
 ## Current Position
 
-Phase: 12 of 23 (Data Fixes & Production Hardening)
-Plan: 0 of 2 in current phase
-Status: Planned -- ready to execute
-Last activity: 2026-02-07 -- Phase 12 planned (2 plans: data fixes + production hardening)
+Phase: 12 of 23 (Data Fixes & Production Hardening) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Complete -- all plans executed and verified
+Last activity: 2026-02-07 -- Phase 12 executed (2 plans: data fixes + production hardening)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
+Progress: [██████████░░░░░░░░░░░░░░░░░░░░] ~8% (1 of 12 v2.0 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v2.0)
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 2 (v2.0)
+- Average duration: ~7.5min
+- Total execution time: ~15 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 12 | 2 | ~15min | ~7.5min |
 
 **Recent Trend:**
-- Last 5 plans: n/a
-- Trend: n/a
+- Last 2 plans: 12-01 (5min), 12-02 (10min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - Phase 12: SMS Check-Ins placed in Studio tier (matches backend code in nav, scheduler)
 - Phase 12: CORS applied via root middleware to all API routes (not per-route)
 - Phase 12: Rate limiting uses Upstash with in-memory fallback for dev
+- Phase 12: checkRateLimit/checkRateLimitForUser made async for Upstash; all 14 callers updated
+- Phase 12: DI pattern for DB modules (user-scoped vs service-role) established in Phase 11
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Phase 12 planned and verified. Ready for /gsd:execute-phase 12.
+Stopped at: Phase 12 complete. Queue empty. Next: Phase 13 (Voice -- Core AI Engines).
 Resume file: None
