@@ -110,10 +110,10 @@ Plans:
   2. Chat greetings and SMS use getRandomQuote, getExperienceStatement, or getCredibilityStatement dynamically
   3. Chat API routes topic-specific conversations through COACHING_PROMPTS and getPromptForTopic
   4. Onboarding flow uses getFredGreeting for personalized welcome
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 15-01: Activate fred-brain.ts helpers and coaching prompts
+- [ ] 15-01-PLAN.md -- Activate all 8 unused fred-brain.ts/prompts.ts exports (credibility in IRS/strategy prompts, dynamic chat greeting, SMS quotes, topic detection + COACHING_PROMPTS routing, onboarding getFredGreeting)
 
 ### Phase 16: Red Flag Detection
 **Goal**: FRED identifies risks during conversations and surfaces them persistently so founders can track and address them
@@ -240,7 +240,7 @@ Plans:
 | 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 13. Voice -- Core AI Engines | v2.0 | 0/1 | Not started | - |
 | 14. Voice -- Agents & Channels | v2.0 | 0/2 | Not started | - |
-| 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Not started | - |
+| 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Planned | - |
 | 16. Red Flag Detection | v2.0 | 0/1 | Not started | - |
 | 17. Founder Wellbeing | v2.0 | 0/1 | Not started | - |
 | 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | Not started | - |
