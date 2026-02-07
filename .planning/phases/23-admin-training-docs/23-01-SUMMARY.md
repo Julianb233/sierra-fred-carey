@@ -35,6 +35,6 @@ completedAt: "2026-02-07"
 - All 6 new files created and exist at expected paths
 - Admin layout contains `/admin/training` nav link
 - Communication and identity pages import data from `lib/fred-brain.ts`
-- `npx tsc --noEmit` passes with 0 errors
+- `npx tsc --noEmit` -- no errors in training files (1 pre-existing error in `lib/hooks/use-fred-chat.ts` unrelated to this phase)
 - No new dependencies added
 - No database changes
