@@ -16,6 +16,7 @@ import {
   createTierErrorResponse,
 } from "@/lib/api/tier-middleware";
 import { getMatches } from "@/lib/db/boardy";
+import { createClient } from "@/lib/supabase/server";
 import { getBoardyClient } from "@/lib/boardy/client";
 import {
   isValidMatchType,
@@ -72,8 +73,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Get matches from DB
-    const matches = await getMatches(userId, {
+    // 4. Get matches from DB — user-scoped client (Phase 11-06)
+    const supabase = await createClient();
+    const matches = await getMatches(supabase, userId, {
       matchType: (matchType as BoardyMatchType) || undefined,
       status: (status as BoardyMatchStatus) || undefined,
     });

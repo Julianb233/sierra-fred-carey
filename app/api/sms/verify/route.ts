@@ -18,6 +18,7 @@ import {
   createTierErrorResponse,
 } from "@/lib/api/tier-middleware";
 import { sendSMS } from "@/lib/sms/client";
+// TODO: Switch to user-scoped client when RLS policies are configured
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";

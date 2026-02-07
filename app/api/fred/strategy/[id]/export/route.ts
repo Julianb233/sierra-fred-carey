@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
+import { createServiceClient } from '@/lib/supabase/server';
 import { getStrategyDocumentById } from '@/lib/fred/strategy';
 import { exportToPDF } from '@/lib/documents/export';
 
@@ -33,7 +34,8 @@ export async function GET(
     const userId = tierCheck.user.id;
     const { id } = await params;
 
-    const doc = await getStrategyDocumentById(userId, id);
+    const supabase = createServiceClient();
+    const doc = await getStrategyDocumentById(supabase, userId, id);
     if (!doc) {
       return NextResponse.json(
         { error: 'Strategy document not found' },

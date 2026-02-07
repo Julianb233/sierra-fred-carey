@@ -14,6 +14,7 @@ import {
   updateSMSPreferences,
   getCheckinHistory,
 } from '@/lib/db/sms';
+import { createServiceClient } from '@/lib/supabase/server';
 
 /**
  * Normalize a phone number to E.164 format.
@@ -56,8 +57,11 @@ export async function processInboundSMS(
   const trimmedBody = body.trim();
   const upperBody = trimmedBody.toUpperCase();
 
+  // Create service client at the top level for all DB operations
+  const supabase = createServiceClient();
+
   // Look up user by phone number
-  const user = await findUserByPhoneNumber(normalizedPhone);
+  const user = await findUserByPhoneNumber(supabase, normalizedPhone);
   if (!user) {
     logger.log(
       `[SMS Webhook] Ignoring message from unknown number: ${normalizedPhone}`
@@ -70,7 +74,7 @@ export async function processInboundSMS(
     logger.log(
       `[SMS Webhook] STOP received from user ${user.userId}, disabling check-ins`
     );
-    await updateSMSPreferences(user.userId, { checkinEnabled: false });
+    await updateSMSPreferences(supabase, user.userId, { checkinEnabled: false });
     return;
   }
 
@@ -79,7 +83,7 @@ export async function processInboundSMS(
     logger.log(
       `[SMS Webhook] START received from user ${user.userId}, enabling check-ins`
     );
-    await updateSMSPreferences(user.userId, { checkinEnabled: true });
+    await updateSMSPreferences(supabase, user.userId, { checkinEnabled: true });
     return;
   }
 
@@ -89,7 +93,7 @@ export async function processInboundSMS(
   const year = getISOWeekYear(now);
 
   // Find the most recent outbound check-in for this user this week (to link as parent)
-  const recentCheckins = await getCheckinHistory(user.userId, {
+  const recentCheckins = await getCheckinHistory(supabase, user.userId, {
     weekNumber,
     year,
     limit: 1,
@@ -97,7 +101,7 @@ export async function processInboundSMS(
   const outboundCheckin = recentCheckins.find((c) => c.direction === 'outbound');
 
   // Create inbound check-in record
-  await createCheckin({
+  await createCheckin(supabase, {
     userId: user.userId,
     phoneNumber: normalizedPhone,
     direction: 'inbound',

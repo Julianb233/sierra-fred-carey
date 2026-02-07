@@ -7,6 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+// TODO: Switch to user-scoped client when RLS policies are configured
 import { createServiceClient } from "@/lib/supabase/server";
 
 interface DashboardStats {

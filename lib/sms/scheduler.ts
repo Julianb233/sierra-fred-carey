@@ -16,6 +16,7 @@ import {
   createCheckin,
   updateCheckinStatus,
 } from '@/lib/db/sms';
+import { createServiceClient } from '@/lib/supabase/server';
 import { getAgentTasks } from '@/lib/db/agent-tasks';
 import { logger } from "@/lib/logger";
 
@@ -37,8 +38,11 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
     errors: [],
   };
 
+  // Create service client at the top level for all DB operations
+  const supabase = createServiceClient();
+
   // Get all opted-in users with verified phone numbers
-  const users = await getOptedInUsers();
+  const users = await getOptedInUsers(supabase);
   logger.log(
     `[Weekly Check-in] Starting dispatch for ${users.length} opted-in users`
   );
@@ -56,7 +60,7 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
   for (const user of users) {
     try {
       // Idempotency check: skip if check-in already sent this week
-      const existingCheckins = await getCheckinHistory(user.userId, {
+      const existingCheckins = await getCheckinHistory(supabase, user.userId, {
         weekNumber,
         year,
       });
@@ -96,7 +100,7 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
       const message = getCheckinTemplate(founderName, highlights);
 
       // Create outbound check-in record with 'queued' status
-      const checkin = await createCheckin({
+      const checkin = await createCheckin(supabase, {
         userId: user.userId,
         phoneNumber: user.phoneNumber!,
         direction: 'outbound',
@@ -109,13 +113,13 @@ export async function sendWeeklyCheckins(): Promise<WeeklyCheckinResult> {
       // Send SMS via Twilio
       try {
         const messageSid = await sendSMS(user.phoneNumber!, message);
-        await updateCheckinStatus(checkin.id, 'sent', messageSid);
+        await updateCheckinStatus(supabase, checkin.id, 'sent', messageSid);
         result.sent++;
         logger.log(
           `[Weekly Check-in] Sent to user ${user.userId} (SID: ${messageSid})`
         );
       } catch (sendErr) {
-        await updateCheckinStatus(checkin.id, 'failed');
+        await updateCheckinStatus(supabase, checkin.id, 'failed');
         result.failed++;
         const errorMsg =
           sendErr instanceof Error ? sendErr.message : String(sendErr);

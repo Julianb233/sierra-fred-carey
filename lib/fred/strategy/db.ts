@@ -1,31 +1,27 @@
 /**
  * Strategy Document Database Operations
  * Phase 03: Pro Tier Features
+ *
+ * All functions accept a SupabaseClient parameter (dependency injection)
+ * so callers can pass either a user-scoped or service-role client.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   GeneratedDocument,
   GeneratedSection,
   StrategyDocType,
 } from './types';
-import { clientEnv, serverEnv } from "@/lib/env";
-
-function getSupabase() {
-  return createClient(
-    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv.SUPABASE_SERVICE_ROLE_KEY
-  );
-}
 
 /**
  * Save a generated strategy document to the database.
  */
 export async function saveStrategyDocument(
+  supabase: SupabaseClient,
   userId: string,
   doc: GeneratedDocument
 ): Promise<GeneratedDocument> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('strategy_documents')
     .insert({
       user_id: userId,
@@ -54,10 +50,11 @@ export async function saveStrategyDocument(
  * List strategy documents for a user with optional filters.
  */
 export async function getStrategyDocuments(
+  supabase: SupabaseClient,
   userId: string,
   filters?: { type?: StrategyDocType; limit?: number }
 ): Promise<GeneratedDocument[]> {
-  let query = getSupabase()
+  let query = supabase
     .from('strategy_documents')
     .select('*')
     .eq('user_id', userId)
@@ -85,10 +82,11 @@ export async function getStrategyDocuments(
  * Returns null if not found.
  */
 export async function getStrategyDocumentById(
+  supabase: SupabaseClient,
   userId: string,
   docId: string
 ): Promise<GeneratedDocument | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('strategy_documents')
     .select('*')
     .eq('id', docId)
@@ -107,12 +105,13 @@ export async function getStrategyDocumentById(
  * Update a strategy document. Bumps version and sets updated_at.
  */
 export async function updateStrategyDocument(
+  supabase: SupabaseClient,
   userId: string,
   docId: string,
   updates: { content?: string; title?: string; sections?: GeneratedSection[] }
 ): Promise<GeneratedDocument> {
   // First fetch the current document to get the version
-  const current = await getStrategyDocumentById(userId, docId);
+  const current = await getStrategyDocumentById(supabase, userId, docId);
   if (!current) {
     throw new Error('Strategy document not found');
   }
@@ -126,7 +125,7 @@ export async function updateStrategyDocument(
   if (updates.title !== undefined) updateData.title = updates.title;
   if (updates.sections !== undefined) updateData.sections = updates.sections;
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('strategy_documents')
     .update(updateData)
     .eq('id', docId)
@@ -145,10 +144,11 @@ export async function updateStrategyDocument(
  * Delete a strategy document with ownership check.
  */
 export async function deleteStrategyDocument(
+  supabase: SupabaseClient,
   userId: string,
   docId: string
 ): Promise<void> {
-  const { error } = await getSupabase()
+  const { error } = await supabase
     .from('strategy_documents')
     .delete()
     .eq('id', docId)

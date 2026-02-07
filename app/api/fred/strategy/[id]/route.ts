@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
+// TODO: Switch to user-scoped client when RLS policies are configured
+import { createServiceClient } from '@/lib/supabase/server';
 import {
   getStrategyDocumentById,
   updateStrategyDocument,
@@ -38,7 +40,8 @@ export async function GET(
     const userId = tierCheck.user.id;
     const { id } = await params;
 
-    const document = await getStrategyDocumentById(userId, id);
+    const supabase = createServiceClient();
+    const document = await getStrategyDocumentById(supabase, userId, id);
     if (!document) {
       return NextResponse.json(
         { error: 'Strategy document not found' },
@@ -84,7 +87,8 @@ export async function PUT(
     const body = await request.json();
     const { content, title, sections } = body;
 
-    const updated = await updateStrategyDocument(userId, id, {
+    const supabase = createServiceClient();
+    const updated = await updateStrategyDocument(supabase, userId, id, {
       content,
       title,
       sections,
@@ -133,7 +137,8 @@ export async function DELETE(
     const userId = tierCheck.user.id;
     const { id } = await params;
 
-    await deleteStrategyDocument(userId, id);
+    const supabase = createServiceClient();
+    await deleteStrategyDocument(supabase, userId, id);
 
     return NextResponse.json({
       success: true,

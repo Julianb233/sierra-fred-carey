@@ -15,6 +15,7 @@ import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { getMatchById, updateMatchStatus } from "@/lib/db/boardy";
+import { createClient } from "@/lib/supabase/server";
 import { isValidMatchStatus } from "@/lib/boardy/types";
 
 // ============================================================================
@@ -73,8 +74,9 @@ export async function POST(request: NextRequest) {
 
     const { matchId, status } = parsed.data;
 
-    // 3. Verify match exists and belongs to user
-    const match = await getMatchById(matchId);
+    // 3. Verify match exists and belongs to user — user-scoped client (Phase 11-06)
+    const supabase = await createClient();
+    const match = await getMatchById(supabase, matchId);
     if (!match) {
       // Return 404 for both non-existent and other-user matches (security)
       return NextResponse.json(
@@ -93,6 +95,7 @@ export async function POST(request: NextRequest) {
 
     // 4. Update match status
     const updatedMatch = await updateMatchStatus(
+      supabase,
       matchId,
       status as "suggested" | "connected" | "intro_sent" | "meeting_scheduled" | "declined"
     );

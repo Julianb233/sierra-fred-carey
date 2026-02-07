@@ -3,37 +3,16 @@
  * Phase 04: Studio Tier Features - Plan 06
  *
  * CRUD operations for the boardy_matches table.
- * Follows the pattern from lib/db/agent-tasks.ts using Supabase client.
+ * All functions accept a SupabaseClient parameter (dependency injection)
+ * so callers can pass either a user-scoped or service-role client.
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   BoardyMatch,
   BoardyMatchType,
   BoardyMatchStatus,
 } from "@/lib/boardy/types";
-
-// Lazy-initialized Supabase client to avoid build-time crashes when env vars aren't set
-let _supabase: SupabaseClient | null = null;
-
-function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-      throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    }
-    _supabase = createClient(url, key);
-  }
-  return _supabase;
-}
-
-// Proxy for backward compatibility -- all usages of `supabase` go through lazy init
-const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
-  },
-});
 
 // ============================================================================
 // Create
@@ -42,16 +21,19 @@ const supabase = new Proxy({} as SupabaseClient, {
 /**
  * Create a new Boardy match record
  */
-export async function createMatch(params: {
-  userId: string;
-  matchType: BoardyMatchType;
-  matchName: string;
-  matchDescription: string;
-  matchScore: number;
-  status: BoardyMatchStatus;
-  boardyReferenceId?: string;
-  metadata?: Record<string, unknown>;
-}): Promise<BoardyMatch> {
+export async function createMatch(
+  supabase: SupabaseClient,
+  params: {
+    userId: string;
+    matchType: BoardyMatchType;
+    matchName: string;
+    matchDescription: string;
+    matchScore: number;
+    status: BoardyMatchStatus;
+    boardyReferenceId?: string;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<BoardyMatch> {
   const { data, error } = await supabase
     .from("boardy_matches")
     .insert({
@@ -82,6 +64,7 @@ export async function createMatch(params: {
  * Get matches for a user with optional filters
  */
 export async function getMatches(
+  supabase: SupabaseClient,
   userId: string,
   opts?: {
     matchType?: BoardyMatchType;
@@ -136,6 +119,7 @@ export async function getMatches(
  * Update the status of a match
  */
 export async function updateMatchStatus(
+  supabase: SupabaseClient,
   matchId: string,
   status: BoardyMatchStatus
 ): Promise<BoardyMatch> {
@@ -164,6 +148,7 @@ export async function updateMatchStatus(
  * Delete matches by status for a user (used for refresh - delete old suggestions)
  */
 export async function deleteMatchesByStatus(
+  supabase: SupabaseClient,
   userId: string,
   status: BoardyMatchStatus,
   olderThanHours: number = 1
@@ -185,6 +170,7 @@ export async function deleteMatchesByStatus(
  * Get a single match by ID (for ownership verification)
  */
 export async function getMatchById(
+  supabase: SupabaseClient,
   matchId: string
 ): Promise<BoardyMatch | null> {
   try {

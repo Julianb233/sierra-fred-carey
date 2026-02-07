@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
+import { createServiceClient } from '@/lib/supabase/server';
 import { getDocumentById, getDocumentChunks } from '@/lib/db/documents';
 import {
   reviewPitchDeck,
@@ -121,7 +122,8 @@ export async function POST(request: NextRequest) {
     const review = await reviewPitchDeck({ documentId, pages });
 
     // Save to database
-    const savedReview = await savePitchReview(userId, review);
+    const supabase = createServiceClient();
+    const savedReview = await savePitchReview(supabase, userId, review);
 
     return NextResponse.json({
       success: true,
@@ -160,9 +162,11 @@ export async function GET(request: NextRequest) {
     const documentId = searchParams.get('documentId');
     const limit = parseInt(searchParams.get('limit') || '10');
 
+    const supabase = createServiceClient();
+
     if (documentId) {
       // Get review for a specific document
-      const review = await getPitchReviewByDocument(userId, documentId);
+      const review = await getPitchReviewByDocument(supabase, userId, documentId);
       return NextResponse.json({
         success: true,
         review,
@@ -170,7 +174,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all reviews
-    const reviews = await getPitchReviews(userId, limit);
+    const reviews = await getPitchReviews(supabase, userId, limit);
 
     return NextResponse.json({
       success: true,

@@ -4,6 +4,9 @@
  *
  * GET /api/sms/preferences - Returns SMS preferences for authenticated user
  * POST /api/sms/preferences - Updates SMS preferences for authenticated user
+ *
+ * Phase 11-06: Uses createClient (user-scoped) instead of createServiceClient
+ * to reduce blast radius of service role key for user-initiated requests.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,7 +18,7 @@ import {
   updateSMSPreferences,
   getCheckinHistory,
 } from "@/lib/db/sms";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +45,9 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const includeHistory = url.searchParams.get("include") === "history";
 
-    const preferences = await getUserSMSPreferences(userId);
+    // User-scoped client for user-initiated request (Phase 11-06)
+    const supabase = await createClient();
+    const preferences = await getUserSMSPreferences(supabase, userId);
 
     const responseData: Record<string, unknown> = {
       preferences: preferences || {
@@ -61,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Include check-in history if requested
     if (includeHistory) {
       try {
-        const checkins = await getCheckinHistory(userId, { limit: 50 });
+        const checkins = await getCheckinHistory(supabase, userId, { limit: 50 });
         responseData.checkins = checkins;
       } catch (historyError) {
         console.error("[SMS Preferences GET] Error fetching history:", historyError);
@@ -131,9 +136,11 @@ export async function POST(request: NextRequest) {
 
     const updates = parsed.data;
 
+    // User-scoped client for user-initiated request (Phase 11-06)
+    const supabase = await createClient();
+
     // If a phone number is being set, verify it has been confirmed
     if (updates.phoneNumber) {
-      const supabase = createServiceClient();
       const { data: verification } = await supabase
         .from("phone_verifications")
         .select("verified")
@@ -153,7 +160,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const preferences = await updateSMSPreferences(userId, {
+    const preferences = await updateSMSPreferences(supabase, userId, {
       phoneNumber: updates.phoneNumber,
       phoneVerified: updates.phoneNumber ? true : undefined,
       checkinEnabled: updates.checkinEnabled,

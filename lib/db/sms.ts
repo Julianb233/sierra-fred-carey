@@ -3,37 +3,16 @@
  * Phase 04: Studio Tier Features - Plan 05
  *
  * CRUD operations for sms_checkins and user_sms_preferences tables.
- * Follows the pattern from lib/db/documents.ts using Supabase client.
+ * All functions accept a SupabaseClient parameter (dependency injection)
+ * so callers can pass either a user-scoped or service-role client.
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CheckinRecord,
   SMSStatus,
   UserSMSPreferences,
-} from '@/lib/sms/types';
-
-// Lazy-initialized Supabase client to avoid build-time crashes when env vars aren't set
-let _supabase: SupabaseClient | null = null;
-
-function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-      throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    }
-    _supabase = createClient(url, key);
-  }
-  return _supabase;
-}
-
-// Proxy for backward compatibility -- all usages of `supabase` go through lazy init
-const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
-  },
-});
+} from "@/lib/sms/types";
 
 // ============================================================================
 // Check-in Records
@@ -43,10 +22,11 @@ const supabase = new Proxy({} as SupabaseClient, {
  * Create a new check-in record
  */
 export async function createCheckin(
-  params: Omit<CheckinRecord, 'id' | 'createdAt'>
+  supabase: SupabaseClient,
+  params: Omit<CheckinRecord, "id" | "createdAt">
 ): Promise<CheckinRecord> {
   const { data, error } = await supabase
-    .from('sms_checkins')
+    .from("sms_checkins")
     .insert({
       user_id: params.userId,
       phone_number: params.phoneNumber,
@@ -75,20 +55,21 @@ export async function createCheckin(
  * Get check-in history for a user with optional filters
  */
 export async function getCheckinHistory(
+  supabase: SupabaseClient,
   userId: string,
   opts?: { limit?: number; weekNumber?: number; year?: number }
 ): Promise<CheckinRecord[]> {
   let query = supabase
-    .from('sms_checkins')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .from("sms_checkins")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (opts?.weekNumber !== undefined) {
-    query = query.eq('week_number', opts.weekNumber);
+    query = query.eq("week_number", opts.weekNumber);
   }
   if (opts?.year !== undefined) {
-    query = query.eq('year', opts.year);
+    query = query.eq("year", opts.year);
   }
   if (opts?.limit) {
     query = query.limit(opts.limit);
@@ -107,16 +88,17 @@ export async function getCheckinHistory(
  * Get a check-in record by Twilio message SID
  */
 export async function getCheckinByMessageSid(
+  supabase: SupabaseClient,
   messageSid: string
 ): Promise<CheckinRecord | null> {
   const { data, error } = await supabase
-    .from('sms_checkins')
-    .select('*')
-    .eq('message_sid', messageSid)
+    .from("sms_checkins")
+    .select("*")
+    .eq("message_sid", messageSid)
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
+    if (error.code === "PGRST116") return null; // Not found
     throw new Error(`Failed to get checkin by message SID: ${error.message}`);
   }
 
@@ -127,16 +109,17 @@ export async function getCheckinByMessageSid(
  * Find a user by phone number from the SMS preferences table
  */
 export async function findUserByPhoneNumber(
+  supabase: SupabaseClient,
   phoneNumber: string
 ): Promise<{ userId: string } | null> {
   const { data, error } = await supabase
-    .from('user_sms_preferences')
-    .select('user_id')
-    .eq('phone_number', phoneNumber)
+    .from("user_sms_preferences")
+    .select("user_id")
+    .eq("phone_number", phoneNumber)
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
+    if (error.code === "PGRST116") return null; // Not found
     throw new Error(`Failed to find user by phone number: ${error.message}`);
   }
 
@@ -147,6 +130,7 @@ export async function findUserByPhoneNumber(
  * Update check-in status and optionally set message SID
  */
 export async function updateCheckinStatus(
+  supabase: SupabaseClient,
   checkinId: string,
   status: SMSStatus,
   messageSid?: string
@@ -155,14 +139,14 @@ export async function updateCheckinStatus(
   if (messageSid) {
     updates.message_sid = messageSid;
   }
-  if (status === 'sent') {
+  if (status === "sent") {
     updates.sent_at = new Date().toISOString();
   }
 
   const { error } = await supabase
-    .from('sms_checkins')
+    .from("sms_checkins")
     .update(updates)
-    .eq('id', checkinId);
+    .eq("id", checkinId);
 
   if (error) {
     throw new Error(`Failed to update checkin status: ${error.message}`);
@@ -177,20 +161,27 @@ export async function updateCheckinStatus(
  * Get SMS preferences for a user
  */
 export async function getUserSMSPreferences(
+  supabase: SupabaseClient,
   userId: string
 ): Promise<UserSMSPreferences | null> {
   try {
     const { data, error } = await supabase
-      .from('user_sms_preferences')
-      .select('*')
-      .eq('user_id', userId)
+      .from("user_sms_preferences")
+      .select("*")
+      .eq("user_id", userId)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
+      if (error.code === "PGRST116") return null; // Not found
       // PGRST205 = table doesn't exist (migrations not applied)
-      if (error.code === 'PGRST205' || error.message?.includes('relation') || error.code === '42P01') {
-        console.warn('[getUserSMSPreferences] Table does not exist, returning null');
+      if (
+        error.code === "PGRST205" ||
+        error.message?.includes("relation") ||
+        error.code === "42P01"
+      ) {
+        console.warn(
+          "[getUserSMSPreferences] Table does not exist, returning null"
+        );
         return null;
       }
       throw new Error(`Failed to get SMS preferences: ${error.message}`);
@@ -200,8 +191,14 @@ export async function getUserSMSPreferences(
   } catch (err) {
     // Gracefully handle missing table or connection issues
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('PGRST205')) {
-      console.warn('[getUserSMSPreferences] Table does not exist, returning null');
+    if (
+      msg.includes("relation") ||
+      msg.includes("does not exist") ||
+      msg.includes("PGRST205")
+    ) {
+      console.warn(
+        "[getUserSMSPreferences] Table does not exist, returning null"
+      );
       return null;
     }
     throw err;
@@ -212,6 +209,7 @@ export async function getUserSMSPreferences(
  * Upsert SMS preferences for a user
  */
 export async function updateSMSPreferences(
+  supabase: SupabaseClient,
   userId: string,
   updates: Partial<UserSMSPreferences>
 ): Promise<UserSMSPreferences> {
@@ -220,16 +218,21 @@ export async function updateSMSPreferences(
     updated_at: new Date().toISOString(),
   };
 
-  if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
-  if (updates.phoneVerified !== undefined) dbUpdates.phone_verified = updates.phoneVerified;
-  if (updates.checkinEnabled !== undefined) dbUpdates.checkin_enabled = updates.checkinEnabled;
-  if (updates.checkinDay !== undefined) dbUpdates.checkin_day = updates.checkinDay;
-  if (updates.checkinHour !== undefined) dbUpdates.checkin_hour = updates.checkinHour;
+  if (updates.phoneNumber !== undefined)
+    dbUpdates.phone_number = updates.phoneNumber;
+  if (updates.phoneVerified !== undefined)
+    dbUpdates.phone_verified = updates.phoneVerified;
+  if (updates.checkinEnabled !== undefined)
+    dbUpdates.checkin_enabled = updates.checkinEnabled;
+  if (updates.checkinDay !== undefined)
+    dbUpdates.checkin_day = updates.checkinDay;
+  if (updates.checkinHour !== undefined)
+    dbUpdates.checkin_hour = updates.checkinHour;
   if (updates.timezone !== undefined) dbUpdates.timezone = updates.timezone;
 
   const { data, error } = await supabase
-    .from('user_sms_preferences')
-    .upsert(dbUpdates, { onConflict: 'user_id' })
+    .from("user_sms_preferences")
+    .upsert(dbUpdates, { onConflict: "user_id" })
     .select()
     .single();
 
@@ -244,15 +247,15 @@ export async function updateSMSPreferences(
  * Get all opted-in users with verified phone numbers.
  * Joins with auth metadata to get user name.
  */
-export async function getOptedInUsers(): Promise<
-  Array<UserSMSPreferences & { name?: string }>
-> {
+export async function getOptedInUsers(
+  supabase: SupabaseClient
+): Promise<Array<UserSMSPreferences & { name?: string }>> {
   const { data, error } = await supabase
-    .from('user_sms_preferences')
-    .select('*')
-    .eq('checkin_enabled', true)
-    .not('phone_number', 'is', null)
-    .eq('phone_verified', true);
+    .from("user_sms_preferences")
+    .select("*")
+    .eq("checkin_enabled", true)
+    .not("phone_number", "is", null)
+    .eq("phone_verified", true);
 
   if (error) {
     throw new Error(`Failed to get opted-in users: ${error.message}`);
@@ -274,15 +277,18 @@ function mapCheckin(row: Record<string, unknown>): CheckinRecord {
     userId: row.user_id as string,
     phoneNumber: row.phone_number as string,
     messageSid: (row.message_sid as string) || undefined,
-    direction: row.direction as CheckinRecord['direction'],
+    direction: row.direction as CheckinRecord["direction"],
     body: row.body as string,
-    status: row.status as CheckinRecord['status'],
+    status: row.status as CheckinRecord["status"],
     weekNumber: row.week_number as number,
     year: row.year as number,
     parentCheckinId: (row.parent_checkin_id as string) || undefined,
-    accountabilityScore: (row.accountability_score as Record<string, unknown>) || undefined,
+    accountabilityScore:
+      (row.accountability_score as Record<string, unknown>) || undefined,
     sentAt: row.sent_at ? new Date(row.sent_at as string) : undefined,
-    receivedAt: row.received_at ? new Date(row.received_at as string) : undefined,
+    receivedAt: row.received_at
+      ? new Date(row.received_at as string)
+      : undefined,
     createdAt: new Date(row.created_at as string),
   };
 }
@@ -295,7 +301,7 @@ function mapPreferences(row: Record<string, unknown>): UserSMSPreferences {
     checkinEnabled: (row.checkin_enabled as boolean) ?? true,
     checkinDay: (row.checkin_day as number) ?? 1,
     checkinHour: (row.checkin_hour as number) ?? 9,
-    timezone: (row.timezone as string) || 'America/New_York',
+    timezone: (row.timezone as string) || "America/New_York",
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
   };

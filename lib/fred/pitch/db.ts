@@ -1,27 +1,23 @@
 /**
  * Pitch Review Database Operations
  * Phase 03: Pro Tier Features
+ *
+ * All functions accept a SupabaseClient parameter (dependency injection)
+ * so callers can pass either a user-scoped or service-role client.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PitchReview, SlideAnalysis, SlideType } from './types';
-import { clientEnv, serverEnv } from "@/lib/env";
-
-function getSupabase() {
-  return createClient(
-    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv.SUPABASE_SERVICE_ROLE_KEY
-  );
-}
 
 /**
  * Save pitch review result to database
  */
 export async function savePitchReview(
+  supabase: SupabaseClient,
   userId: string,
   review: PitchReview
 ): Promise<PitchReview> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('pitch_reviews')
     .insert({
       user_id: userId,
@@ -49,10 +45,11 @@ export async function savePitchReview(
  * Get a specific pitch review by ID
  */
 export async function getPitchReview(
+  supabase: SupabaseClient,
   userId: string,
   reviewId: string
 ): Promise<PitchReview | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('pitch_reviews')
     .select('*')
     .eq('id', reviewId)
@@ -71,10 +68,11 @@ export async function getPitchReview(
  * Get user's pitch reviews list (newest first)
  */
 export async function getPitchReviews(
+  supabase: SupabaseClient,
   userId: string,
   limit: number = 10
 ): Promise<PitchReview[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('pitch_reviews')
     .select('*')
     .eq('user_id', userId)
@@ -92,10 +90,11 @@ export async function getPitchReviews(
  * Get latest review for a specific document
  */
 export async function getPitchReviewByDocument(
+  supabase: SupabaseClient,
   userId: string,
   documentId: string
 ): Promise<PitchReview | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('pitch_reviews')
     .select('*')
     .eq('user_id', userId)

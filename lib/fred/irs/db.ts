@@ -1,27 +1,23 @@
 /**
  * IRS Database Operations
  * Phase 03: Pro Tier Features
+ *
+ * All functions accept a SupabaseClient parameter (dependency injection)
+ * so callers can pass either a user-scoped or service-role client.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { IRSResult, IRSCategory, CategoryScore, Recommendation } from './types';
-import { clientEnv, serverEnv } from "@/lib/env";
-
-function getSupabase() {
-  return createClient(
-    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv.SUPABASE_SERVICE_ROLE_KEY
-  );
-}
 
 /**
  * Save IRS result to database
  */
 export async function saveIRSResult(
+  supabase: SupabaseClient,
   userId: string,
   result: IRSResult
 ): Promise<IRSResult> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('investor_readiness_scores')
     .insert({
       user_id: userId,
@@ -47,10 +43,11 @@ export async function saveIRSResult(
  * Get user's IRS history
  */
 export async function getIRSHistory(
+  supabase: SupabaseClient,
   userId: string,
   limit: number = 10
 ): Promise<IRSResult[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('investor_readiness_scores')
     .select('*')
     .eq('user_id', userId)
@@ -67,8 +64,8 @@ export async function getIRSHistory(
 /**
  * Get latest IRS result for user
  */
-export async function getLatestIRS(userId: string): Promise<IRSResult | null> {
-  const { data, error } = await getSupabase()
+export async function getLatestIRS(supabase: SupabaseClient, userId: string): Promise<IRSResult | null> {
+  const { data, error } = await supabase
     .from('investor_readiness_scores')
     .select('*')
     .eq('user_id', userId)
@@ -88,10 +85,11 @@ export async function getLatestIRS(userId: string): Promise<IRSResult | null> {
  * Get specific IRS result by ID
  */
 export async function getIRSById(
+  supabase: SupabaseClient,
   userId: string,
   irsId: string
 ): Promise<IRSResult | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('investor_readiness_scores')
     .select('*')
     .eq('id', irsId)
@@ -109,8 +107,8 @@ export async function getIRSById(
 /**
  * Delete IRS result
  */
-export async function deleteIRS(userId: string, irsId: string): Promise<void> {
-  const { error } = await getSupabase()
+export async function deleteIRS(supabase: SupabaseClient, userId: string, irsId: string): Promise<void> {
+  const { error } = await supabase
     .from('investor_readiness_scores')
     .delete()
     .eq('id', irsId)

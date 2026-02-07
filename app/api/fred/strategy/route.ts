@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
+// TODO: Switch to user-scoped client when RLS policies are configured
+import { createServiceClient } from '@/lib/supabase/server';
 import {
   generateDocument,
   saveStrategyDocument,
@@ -70,7 +72,8 @@ export async function POST(request: NextRequest) {
     const document = await generateDocument(input);
 
     // Save to database
-    const savedDoc = await saveStrategyDocument(userId, document);
+    const supabase = createServiceClient();
+    const savedDoc = await saveStrategyDocument(supabase, userId, document);
 
     return NextResponse.json({
       success: true,
@@ -110,7 +113,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
 
     // Fetch documents
-    const documents = await getStrategyDocuments(userId, {
+    const supabase = createServiceClient();
+    const documents = await getStrategyDocuments(supabase, userId, {
       type: type && STRATEGY_DOC_TYPES.includes(type) ? type : undefined,
       limit: Math.min(limit, 100),
     });

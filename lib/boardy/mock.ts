@@ -15,6 +15,7 @@ import {
   getMatches as dbGetMatches,
   deleteMatchesByStatus,
 } from "@/lib/db/boardy";
+import { createServiceClient } from "@/lib/supabase/server";
 import type {
   BoardyClientInterface,
   BoardyMatch,
@@ -79,10 +80,11 @@ Requirements:
       });
 
       // Store generated matches in DB
+      const supabase = createServiceClient();
       const storedMatches: BoardyMatch[] = [];
 
       for (const suggestion of result.object.matches) {
-        const match = await createMatch({
+        const match = await createMatch(supabase, {
           userId: request.userId,
           matchType: suggestion.matchType as BoardyMatchType,
           matchName: suggestion.matchName,
@@ -113,7 +115,8 @@ Requirements:
    */
   async refreshMatches(userId: string): Promise<BoardyMatch[]> {
     // Delete old suggested matches
-    await deleteMatchesByStatus(userId, "suggested");
+    const supabase = createServiceClient();
+    await deleteMatchesByStatus(supabase, userId, "suggested");
 
     // Generate new matches with default parameters
     return this.getMatches({

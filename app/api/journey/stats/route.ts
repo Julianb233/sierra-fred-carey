@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+// TODO: Switch to user-scoped client when RLS policies are configured
 import { createServiceClient } from "@/lib/supabase/server";
 
 // Helper to safely execute a Supabase query with a fallback

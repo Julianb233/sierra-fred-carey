@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
+// TODO: Switch to user-scoped client when RLS policies are configured
 import { createServiceClient } from "@/lib/supabase/server";
 import { checkRateLimitForUser } from "@/lib/api/rate-limit";
 

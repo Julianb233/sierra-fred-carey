@@ -37,7 +37,7 @@ export async function GET(
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     const { name } = await params;
     console.error(
       `[Promotion History API] Error fetching history for ${name}:`,

@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
       if (signUpError) {
         console.error("[onboard] Supabase auth signup error:", signUpError);
         return NextResponse.json(
-          { error: signUpError.message || "Failed to create account" },
+          { error: "Account creation failed. Please try again." },
           { status: 400 }
         );
       }

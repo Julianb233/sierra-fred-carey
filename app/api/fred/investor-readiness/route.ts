@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
+// TODO: Switch to user-scoped client when RLS policies are configured
+import { createServiceClient } from '@/lib/supabase/server';
 import {
   calculateIRS,
   saveIRSResult,
@@ -61,7 +63,8 @@ export async function POST(request: NextRequest) {
     const result = await calculateIRS(input);
 
     // Save to database
-    const savedResult = await saveIRSResult(userId, result);
+    const supabase = createServiceClient();
+    const savedResult = await saveIRSResult(supabase, userId, result);
 
     return NextResponse.json({
       success: true,
@@ -100,9 +103,11 @@ export async function GET(request: NextRequest) {
     const latest = searchParams.get('latest') === 'true';
     const limit = parseInt(searchParams.get('limit') || '10');
 
+    const supabase = createServiceClient();
+
     if (latest) {
       // Get just the latest score
-      const result = await getLatestIRS(userId);
+      const result = await getLatestIRS(supabase, userId);
       return NextResponse.json({
         success: true,
         result,
@@ -110,7 +115,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get history
-    const history = await getIRSHistory(userId, limit);
+    const history = await getIRSHistory(supabase, userId, limit);
 
     return NextResponse.json({
       success: true,
