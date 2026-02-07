@@ -95,11 +95,11 @@ Plans:
   3. Growth Agent tool responses (4 tools) use Fred's growth philosophy and real examples
   4. SMS check-in messages are motivational and personal in Fred's voice, not corporate templates
   5. Voice agent identifies as Fred Cary with no reference to "A Startup Biz" persona
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: Agent tool prompt voice rewrite
-- [ ] 14-02: SMS and voice agent voice rewrite
+- [ ] 14-01-PLAN.md -- Agent tool prompt voice rewrite (shared FRED_AGENT_VOICE module, 3 agent prompts, 11 tool system params)
+- [ ] 14-02-PLAN.md -- SMS and voice agent voice rewrite (SMS templates, voice agent identity, admin API defaults, DB migration)
 
 ### Phase 15: Voice -- Helpers & Activation
 **Goal**: All fred-brain.ts exports are actively used -- quotes appear in greetings, coaching prompts drive topic conversations, and media/testimonials enrich relevant interactions
@@ -239,7 +239,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 13. Voice -- Core AI Engines | v2.0 | 0/1 | Planned | - |
-| 14. Voice -- Agents & Channels | v2.0 | 0/2 | Not started | - |
+| 14. Voice -- Agents & Channels | v2.0 | 0/2 | Planned | - |
 | 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Planned | - |
 | 16. Red Flag Detection | v2.0 | 0/1 | Not started | - |
 | 17. Founder Wellbeing | v2.0 | 0/1 | Not started | - |
