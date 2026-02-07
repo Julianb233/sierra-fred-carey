@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
 import { redirectToCheckoutByTier } from "@/lib/stripe/client";
+import { RedFlagsWidget } from "@/components/dashboard/red-flags-widget";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -251,6 +252,9 @@ function DashboardContent() {
           </Card>
         ))}
       </div>
+
+      {/* Red Flag Alerts */}
+      <RedFlagsWidget />
 
       {/* Quick Actions */}
       <div>

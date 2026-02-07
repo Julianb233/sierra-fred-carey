@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import type { RedFlag } from "@/lib/fred/types";
+import { RedFlagBadge } from "./red-flag-badge";
 
 export interface Message {
   id: string;
@@ -14,9 +16,10 @@ export interface Message {
 interface ChatMessageProps {
   message: Message;
   index: number;
+  risks?: RedFlag[];
 }
 
-export function ChatMessage({ message, index }: ChatMessageProps) {
+export function ChatMessage({ message, index, risks }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
@@ -87,6 +90,25 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
             {message.content}
           </p>
         </motion.div>
+
+        {/* Red Flag Badges */}
+        {risks && risks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.05 + 0.25 }}
+            className="flex flex-wrap gap-1.5 mt-2 px-1"
+          >
+            {risks.map((flag, i) => (
+              <RedFlagBadge
+                key={flag.id || i}
+                category={flag.category}
+                severity={flag.severity}
+                title={flag.title}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {/* Timestamp */}
         <motion.span

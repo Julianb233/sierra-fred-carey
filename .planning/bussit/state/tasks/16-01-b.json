@@ -6,7 +6,8 @@
   "title": "Red flag detection engine, inline chat badges, and dashboard widget",
   "description": "Build detection engine in lib/fred/risks/, DB migration for red_flags table, chat API integration in synthesize actor, inline red-flag-badge component in chat messages, and dashboard red-flags-widget.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-07T22:30:00Z"
+  "createdAt": "2026-02-07T22:30:00Z",
+  "completedAt": "2026-02-07T23:45:00Z"
 }

@@ -15,8 +15,10 @@ import type {
   FactorScores,
   Alternative,
   Risk,
+  RedFlag,
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
+import { detectRedFlags } from "../risks/detection-engine";
 import {
   scoreDecision,
   detectDecisionType,
@@ -57,6 +59,14 @@ export async function synthesizeActor(
   // Identify risks
   const risks = identifyRisks(validatedInput, mentalModels);
 
+  // Detect and classify red flags from identified risks
+  const redFlagSynthesis: SynthesisResult = {
+    recommendation: "", confidence: 0, reasoning: "",
+    factors, alternatives: [], assumptions: [],
+    risks, nextSteps: [], followUpQuestions: [],
+  };
+  const redFlags = detectRedFlags(redFlagSynthesis, "");
+
   // Build reasoning chain
   const reasoning = buildReasoning(validatedInput, mentalModels, factors);
 
@@ -85,6 +95,7 @@ export async function synthesizeActor(
     risks,
     nextSteps,
     followUpQuestions,
+    redFlags,
   };
 }
 
