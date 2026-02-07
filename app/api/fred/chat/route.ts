@@ -1,9 +1,15 @@
 /**
  * FRED Chat API Endpoint
+ * Phase 21: Tier-based model routing and memory gating
  *
  * POST /api/fred/chat
  * Interactive chat with FRED using streaming responses.
  * Returns Server-Sent Events (SSE) with real-time updates.
+ *
+ * Tier behavior:
+ * - Free:   session-only memory, fast model (GPT-4o-mini)
+ * - Pro:    persistent 30-day memory, primary model (GPT-4o)
+ * - Studio: persistent 90-day memory, primary model (GPT-4o), higher token limit
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,8 +19,11 @@ import { createFredService } from "@/lib/fred/service";
 import { storeEpisode } from "@/lib/db/fred-memory";
 import { checkRateLimitForUser, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
-import { UserTier } from "@/lib/constants";
+import { UserTier, TIER_NAMES } from "@/lib/constants";
+import { getModelForTier } from "@/lib/ai/tier-routing";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
+import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
+import { createServiceClient } from "@/lib/supabase/server";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -69,6 +78,102 @@ function createSSEStream() {
 }
 
 // ============================================================================
+// Enrichment Helper (fire-and-forget)
+// ============================================================================
+
+/**
+ * Run enrichment extraction on conversation messages and persist any new data
+ * to the profiles table. This is best-effort; errors are logged but never thrown.
+ */
+function fireEnrichment(
+  userId: string,
+  messages: Array<{ role: string; content: string }>
+): void {
+  // Fire-and-forget: do NOT await
+  (async () => {
+    try {
+      const enrichment = extractProfileEnrichment(messages);
+      if (!enrichment) return;
+
+      const supabase = createServiceClient();
+
+      // Fetch current profile to avoid overwriting existing data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("industry, enrichment_data")
+        .eq("id", userId)
+        .single();
+
+      // Build update payload -- only fill in fields that are currently empty
+      const updates: Record<string, unknown> = {};
+
+      if (enrichment.industry && !profile?.industry) {
+        updates.industry = enrichment.industry;
+      }
+
+      // Merge enrichment data into existing enrichment_data JSONB column
+      const existingData = (profile?.enrichment_data as Record<string, unknown>) || {};
+      const newData: Record<string, unknown> = { ...existingData };
+      let hasNewData = false;
+
+      if (enrichment.revenueHint && !existingData.revenueHint) {
+        newData.revenueHint = enrichment.revenueHint;
+        hasNewData = true;
+      }
+      if (enrichment.teamSizeHint && !existingData.teamSizeHint) {
+        newData.teamSizeHint = enrichment.teamSizeHint;
+        hasNewData = true;
+      }
+      if (enrichment.fundingHint && !existingData.fundingHint) {
+        newData.fundingHint = enrichment.fundingHint;
+        hasNewData = true;
+      }
+      if (enrichment.challenges && enrichment.challenges.length > 0) {
+        const prev = (existingData.challenges as string[]) || [];
+        const merged = [...new Set([...prev, ...enrichment.challenges])];
+        if (merged.length > prev.length) {
+          newData.challenges = merged;
+          hasNewData = true;
+        }
+      }
+      if (enrichment.competitorsMentioned && enrichment.competitorsMentioned.length > 0) {
+        const prev = (existingData.competitorsMentioned as string[]) || [];
+        const merged = [...new Set([...prev, ...enrichment.competitorsMentioned])];
+        if (merged.length > prev.length) {
+          newData.competitorsMentioned = merged;
+          hasNewData = true;
+        }
+      }
+      if (enrichment.metricsShared && Object.keys(enrichment.metricsShared).length > 0) {
+        const prev = (existingData.metricsShared as Record<string, string>) || {};
+        const merged = { ...prev, ...enrichment.metricsShared };
+        if (Object.keys(merged).length > Object.keys(prev).length) {
+          newData.metricsShared = merged;
+          hasNewData = true;
+        }
+      }
+
+      if (hasNewData) {
+        updates.enrichment_data = newData;
+      }
+
+      // Only update if there's something new
+      if (Object.keys(updates).length > 0) {
+        updates.enriched_at = new Date().toISOString();
+        updates.enrichment_source = "conversation";
+
+        await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("id", userId);
+      }
+    } catch (error) {
+      console.warn("[FRED Chat] Enrichment extraction failed (non-blocking):", error);
+    }
+  })();
+}
+
+// ============================================================================
 // Route Handler
 // ============================================================================
 
@@ -86,6 +191,13 @@ export async function POST(req: NextRequest) {
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
+
+    // Resolve tier name for model routing and memory gating (Phase 21)
+    const tierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+    const _modelProviderKey = getModelForTier(tierName, "chat");
+
+    // Determine if this tier gets persistent memory (Pro+ only)
+    const hasPersistentMemory = userTier >= UserTier.PRO;
 
     // Parse and validate request body
     const body = await req.json();
@@ -122,6 +234,9 @@ export async function POST(req: NextRequest) {
     const message = sanitizeUserInput(rawMessage);
     const effectiveSessionId = sessionId || crypto.randomUUID();
 
+    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only
+    const shouldPersistMemory = storeInMemory && hasPersistentMemory;
+
     // Create FRED service
     const fredService = createFredService({
       userId,
@@ -139,8 +254,8 @@ export async function POST(req: NextRequest) {
 
       const latencyMs = Date.now() - startTime;
 
-      // Store in episodic memory if requested
-      if (storeInMemory) {
+      // Store in episodic memory only for Pro+ tiers (Phase 21)
+      if (shouldPersistMemory) {
         try {
           await storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "user",
@@ -158,6 +273,12 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Phase 18-02: Fire-and-forget enrichment extraction
+      fireEnrichment(userId, [
+        { role: "user", content: message },
+        { role: "assistant", content: result.response.content },
+      ]);
+
       return NextResponse.json({
         success: true,
         sessionId: effectiveSessionId,
@@ -173,6 +294,9 @@ export async function POST(req: NextRequest) {
           topic: result.context.validatedInput?.topic || null,
           confidence: result.context.validatedInput?.confidence || 0,
         },
+        wellbeing: result.context.validatedInput?.burnoutSignals?.detected
+          ? { signals: result.context.validatedInput.burnoutSignals }
+          : null,
         synthesis: result.context.synthesis
           ? {
               recommendation: result.context.synthesis.recommendation,
@@ -182,6 +306,8 @@ export async function POST(req: NextRequest) {
         meta: {
           latencyMs,
           finalState: result.finalState,
+          tier: tierName,
+          persistentMemory: hasPersistentMemory,
         },
       });
     }
@@ -196,10 +322,11 @@ export async function POST(req: NextRequest) {
         send("connected", {
           sessionId: effectiveSessionId,
           timestamp: new Date().toISOString(),
+          tier: tierName,
         });
 
-        // Store user message in memory
-        if (storeInMemory) {
+        // Store user message in memory (Pro+ only, Phase 21)
+        if (shouldPersistMemory) {
           try {
             await storeEpisode(userId, effectiveSessionId, "conversation", {
               role: "user",
@@ -236,6 +363,14 @@ export async function POST(req: NextRequest) {
               confidence: update.context.validatedInput.confidence,
               entities: update.context.validatedInput.entities,
             });
+
+            // Emit wellbeing event when burnout signals detected (Phase 17)
+            if (update.context.validatedInput.burnoutSignals?.detected) {
+              send("wellbeing", {
+                type: "wellbeing",
+                signals: update.context.validatedInput.burnoutSignals,
+              });
+            }
           }
 
           if (update.context.mentalModels.length > 0 && !update.isComplete) {
@@ -273,11 +408,13 @@ export async function POST(req: NextRequest) {
               meta: {
                 latencyMs,
                 finalState: update.state,
+                tier: tierName,
+                persistentMemory: hasPersistentMemory,
               },
             });
 
-            // Store assistant response in memory
-            if (storeInMemory) {
+            // Store assistant response in memory (Pro+ only, Phase 21)
+            if (shouldPersistMemory) {
               try {
                 await storeEpisode(userId, effectiveSessionId, "conversation", {
                   role: "assistant",
@@ -294,6 +431,12 @@ export async function POST(req: NextRequest) {
               sessionId: effectiveSessionId,
               latencyMs,
             });
+
+            // Phase 18-02: Fire-and-forget enrichment extraction
+            fireEnrichment(userId, [
+              { role: "user", content: message },
+              { role: "assistant", content: response.content },
+            ]);
           }
         }
       } catch (error) {

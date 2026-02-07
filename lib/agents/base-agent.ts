@@ -1,6 +1,7 @@
 /**
  * Base Agent Runner
  * Phase 04: Studio Tier Features
+ * Phase 21: Tier-based model routing
  *
  * Wraps Vercel AI SDK generateText with tools and stopWhen
  * to provide a reusable agent execution function.
@@ -12,6 +13,7 @@
 
 import { generateText, stepCountIs } from 'ai';
 import { getModel } from '@/lib/ai/providers';
+import { getModelForTier } from '@/lib/ai/tier-routing';
 import type { ProviderKey } from '@/lib/ai/providers';
 import type { AgentTask, AgentResult, BaseAgentConfig } from './types';
 
@@ -25,14 +27,22 @@ import type { AgentTask, AgentResult, BaseAgentConfig } from './types';
  *
  * @param config - Agent configuration (system prompt, tools, maxSteps)
  * @param task - The agent task to execute
+ * @param userTier - Optional user subscription tier for model routing (defaults to "free")
  * @returns AgentResult with output text, tool calls, and token usage
  */
 export async function runAgent(
   config: BaseAgentConfig,
-  task: AgentTask
+  task: AgentTask,
+  userTier?: string
 ): Promise<AgentResult> {
   try {
-    const model = getModel((config.model as ProviderKey) || 'primary');
+    // Use tier-routed model if no explicit model override in config;
+    // otherwise fall back to the config's model or 'primary'
+    const providerKey: ProviderKey = config.model
+      ? (config.model as ProviderKey)
+      : getModelForTier(userTier || 'free', 'agent');
+
+    const model = getModel(providerKey);
 
     const result = await generateText({
       model,

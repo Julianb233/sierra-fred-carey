@@ -169,3 +169,37 @@ export function getTierFromString(tier: string): UserTier {
   if (normalized === "studio" || normalized === "venture_studio") return UserTier.STUDIO;
   return UserTier.FREE;
 }
+
+// ============================================
+// MEMORY & COMPUTE CONFIG (Phase 21)
+// ============================================
+
+/**
+ * Per-tier memory depth and retention settings.
+ *
+ * - Free:   session-only context (5 messages, no persistence, no episodic)
+ * - Pro:    30-day persistent memory (20 messages, 10 episodic items)
+ * - Studio: 90-day deep memory (50 messages, 25 episodic items)
+ */
+export const MEMORY_CONFIG = {
+  free: {
+    maxMessages: 5,
+    retentionDays: 0,
+    loadEpisodic: false,
+    maxEpisodicItems: 0,
+  },
+  pro: {
+    maxMessages: 20,
+    retentionDays: 30,
+    loadEpisodic: true,
+    maxEpisodicItems: 10,
+  },
+  studio: {
+    maxMessages: 50,
+    retentionDays: 90,
+    loadEpisodic: true,
+    maxEpisodicItems: 25,
+  },
+} as const;
+
+export type MemoryTier = keyof typeof MEMORY_CONFIG;

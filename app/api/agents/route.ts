@@ -1,6 +1,7 @@
 /**
  * Agent API Routes
  * Phase 04: Studio Tier Features - Plan 02
+ * Phase 21: Tier-based model routing
  *
  * POST /api/agents - Dispatch a task to an agent (Studio tier required)
  * GET  /api/agents - List agent tasks for the authenticated user
@@ -12,7 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
-import { UserTier } from "@/lib/constants";
+import { UserTier, TIER_NAMES } from "@/lib/constants";
 import {
   getUserTier,
   createTierErrorResponse,
@@ -119,26 +120,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Create task in database
+    // 5. Resolve tier name for agent model routing (Phase 21)
+    const userTierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+
+    // 6. Create task in database (embed userTier in input for agent routing)
     const task = await createAgentTask({
       userId,
       agentType,
       taskType,
       description: sanitizedDescription,
-      input: input || {},
+      input: { ...input, userTier: userTierName },
     });
 
-    // 6. Start agent execution asynchronously (fire-and-forget)
+    // 7. Start agent execution asynchronously (fire-and-forget)
     // The orchestrator runs in the background and updates the DB task status.
     // We do NOT await completion -- agents may take 30+ seconds.
-    startAgentExecution(userId, task.id, task).catch((err) => {
+    startAgentExecution(userId, task.id, task, userTierName).catch((err) => {
       console.error(
         `[Agent API] Failed to start agent execution for task ${task.id}:`,
         err
       );
     });
 
-    // 7. Return immediately with task ID
+    // 8. Return immediately with task ID
     return NextResponse.json(
       {
         success: true,
@@ -260,11 +264,17 @@ export async function GET(request: NextRequest) {
  * Start agent execution in the background.
  * Creates an XState actor from the orchestrator machine,
  * dispatches the task, and updates the DB as the agent progresses.
+ *
+ * @param userId - Authenticated user ID
+ * @param taskId - Database task ID
+ * @param task - Task details for the orchestrator
+ * @param userTier - User's subscription tier name for model routing (Phase 21)
  */
 async function startAgentExecution(
   userId: string,
   taskId: string,
-  task: { id: string; agentType: AgentType; taskType: string; description: string; input: Record<string, unknown> }
+  task: { id: string; agentType: AgentType; taskType: string; description: string; input: Record<string, unknown> },
+  userTier: string = "free"
 ) {
   try {
     // Mark task as running
@@ -321,6 +331,7 @@ async function startAgentExecution(
     });
 
     // Start the actor and dispatch the task
+    // Phase 21: userTier is embedded in task.input for specialist agents to access
     actor.start();
     actor.send({
       type: "DISPATCH",
@@ -331,7 +342,7 @@ async function startAgentExecution(
         taskType: task.taskType,
         description: task.description,
         status: "running",
-        input: task.input,
+        input: { ...task.input, userTier },
         createdAt: new Date(),
         updatedAt: new Date(),
       },
