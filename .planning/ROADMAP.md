@@ -207,11 +207,11 @@ Plans:
   2. Custom install prompt detects installability and guides users through "Add to Home Screen" on first visit
   3. PWA install instructions page provides step-by-step guides for both iOS Safari and Android Chrome
   4. Pricing table, all 17 fixed-width files, and all interactive elements render correctly on 375px viewport with 44px touch targets
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 22-01: PWA install experience
-- [ ] 22-02: Mobile responsive fixes
+- [ ] 22-01-PLAN.md -- PWA install experience (offline fallback page, install prompt hook/component, install instructions page, SW update)
+- [ ] 22-02-PLAN.md -- Mobile responsive fixes (pricing table card layout, fixed-width audit across 5 HIGH files, TabsList scroll on 8 files, touch target CSS)
 
 ### Phase 23: Admin Training Docs
 **Goal**: Admin users have an in-app reference documenting how FRED communicates, what frameworks it uses, and how each agent behaves
@@ -247,5 +247,5 @@ Plans:
 | 19. Inbox Ops Agent | v2.0 | 0/1 | Not started | - |
 | 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | Not started | - |
 | 21. Memory & Compute Tiers | v2.0 | 0/1 | Not started | - |
-| 22. PWA & Mobile Polish | v2.0 | 0/2 | Not started | - |
+| 22. PWA & Mobile Polish | v2.0 | 0/2 | Planned | - |
 | 23. Admin Training Docs | v2.0 | 0/1 | Not started | - |
