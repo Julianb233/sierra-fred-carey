@@ -96,7 +96,7 @@ vi.mock("@/lib/ai/fred-client", () => ({
 
 // Mock rate limiting
 vi.mock("@/lib/api/rate-limit", () => ({
-  checkRateLimitForUser: vi.fn().mockReturnValue({
+  checkRateLimitForUser: vi.fn().mockResolvedValue({
     response: null,
     result: { success: true, limit: 20, remaining: 19, reset: 60 },
   }),

@@ -110,7 +110,7 @@ vi.mock('@/lib/db/documents', () => ({
 
 // Mock rate limiter (used by FRED Reality Lens API)
 vi.mock('@/lib/api/rate-limit', () => ({
-  checkRateLimit: vi.fn(() => ({ success: true, limit: 5, remaining: 4, reset: 86400 })),
+  checkRateLimit: vi.fn(() => Promise.resolve({ success: true, limit: 5, remaining: 4, reset: 86400 })),
   applyRateLimitHeaders: vi.fn(),
   createRateLimitResponse: vi.fn(),
 }));
