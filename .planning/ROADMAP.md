@@ -96,6 +96,17 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - [x] 10b-02-PLAN.md — Delete account server endpoint + settings page wiring
   - [x] 10b-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
 
+### Security Hardening (from v1.0 verification audit)
+
+- [ ] **Phase 11: Security Hardening** - Auth rate limiting, security headers, admin session tokens, git scrub, service role scoping
+  - Closes: Remaining security findings from v1.0 verification audit (2026-02-06)
+  - [ ] 11-01-PLAN.md — Auth endpoint rate limiting (login, admin login, signup)
+  - [ ] 11-02-PLAN.md — Security headers (CSP, X-Frame-Options, HSTS, Permissions-Policy)
+  - [ ] 11-03-PLAN.md — Admin session tokens (replace raw cookie with UUID session)
+  - [ ] 11-04-PLAN.md — Remove logout GET handler + strengthen input sanitization
+  - [ ] 11-05-PLAN.md — Git history scrub + credential rotation (manual steps)
+  - [ ] 11-06-PLAN.md — Service role key scoping + error message sanitization
+
 ### Parallel Track
 
 - [ ] **A2P 10DLC Registration** - Start during Phase 01, required for SMS in Phase 04
