@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Every feature promised on the website has real logic, all AI speaks in Fred's voice, and the app is production-ready and installable on mobile.
-**Current focus:** v2.0 Production & Voice Parity -- Phase 22 complete, Waves 2+3 remaining
+**Current focus:** v2.0 Production & Voice Parity -- Phase 15 complete, Waves 2+3 remaining
 
 ## Current Position
 
-Phase: 22 of 23 (PWA & Mobile Polish) -- Plan 02 COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 22 complete -- both plans executed and verified
-Last activity: 2026-02-07 -- Completed 22-02-PLAN.md (Mobile Responsive Fixes)
+Phase: 15 of 23 (Voice -- Helpers & Activation) -- COMPLETE
+Plan: 1 of 1 in current phase
+Status: Phase 15 complete -- all 8 unused exports activated
+Last activity: 2026-02-07 -- Completed 15-01-PLAN.md (Activate fred-brain Helpers and Coaching Prompts)
 
-Progress: [████████████░░░░░░░░░░░░░░░░░░] ~41% (7 of 17 v2.0 plans)
+Progress: [████████████░░░░░░░░░░░░░░░░░░] ~47% (8 of 17 v2.0 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7 (v2.0)
+- Total plans completed: 8 (v2.0)
 - Average duration: ~7min
-- Total execution time: ~50 min
+- Total execution time: ~57 min
 
 **By Phase:**
 
@@ -30,12 +30,12 @@ Progress: [████████████░░░░░░░░░░░
 | 12 | 2 | ~15min | ~7.5min |
 | 13 | 1 | ~8min | ~8min |
 | 14 | 2 | ~12min | ~6min |
-| 15 | 1 | ~5min | ~5min |
-| 22 | 1 | ~5min | ~5min |
+| 15 | 1 | ~7min | ~7min |
+| 22 | 2 | ~10min | ~5min |
 
 **Recent Trend:**
-- Last 3 plans: 14-02 (~6min), 15-01 (~5min), 22-02 (~5min)
-- Trend: stable/improving
+- Last 3 plans: 15-01 (~7min), 22-01 (~5min), 22-02 (~5min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -56,8 +56,11 @@ Recent decisions affecting current work:
 - Phase 12: Rate limiting uses Upstash with in-memory fallback for dev
 - Phase 12: checkRateLimit/checkRateLimitForUser made async for Upstash; all 14 callers updated
 - Phase 12: DI pattern for DB modules (user-scoped vs service-role) established in Phase 11
-- Phase 22-02: BusinessHoursEditor min-w-[140px] left unchanged -- acceptable in flex-col context on mobile
-- Phase 22-02: Low-priority files (chat, onboarding, PhoneMockup, navbar) left unchanged -- decorative or already contained
+- Phase 15: SMS only uses getRandomQuote (not getExperienceStatement/getCredibilityStatement) due to 160-char limit
+- Phase 15: Topic detection uses simple keyword matching, consistent with existing intent detection pattern
+- Phase 15: CoachingTopic field optional on ValidatedInput to avoid breaking existing code
+- Phase 15: COACHING_PROMPTS used directly in decide actor (not getPromptForTopic, which duplicates system prompt)
+- Phase 15: getFredGreeting enhanced with optional startupContext parameter rather than separate function
 - Phase 22-02: Scrollable TabsList pattern established: overflow-x-auto wrapper with inline-flex/sm:grid responsive classes
 - Phase 22-02: Touch target global CSS rule extended to cover all form inputs, textareas, selects, and Radix role attributes
 
@@ -72,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed 14-02-PLAN.md (SMS and Voice Agent Voice Rewrite). SMS templates rewritten in Fred's voice, voice agent identity updated across all 3 config sources. Remaining: Wave 2 (16-18) and Wave 3 (19-21, 23).
+Stopped at: Completed 15-01-PLAN.md (Activate fred-brain Helpers and Coaching Prompts). All 8 unused exports activated. Remaining: Wave 2 (16-18) and Wave 3 (19-21, 23).
 Resume file: None
