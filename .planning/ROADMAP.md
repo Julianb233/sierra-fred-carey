@@ -3,7 +3,7 @@
 ## Milestones
 
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
-- [ ] **v2.0 Production & Voice Parity** - Phases 12-23 (in progress)
+- [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 
 ## Phases
 
@@ -44,14 +44,14 @@ See MILESTONES.md for full details.
 - [x] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
 - [x] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
 - [x] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
-- [ ] **Phase 16: Red Flag Detection** - Inline chat warnings and dashboard widget for risk identification
-- [ ] **Phase 17: Founder Wellbeing** - Burnout detection, check-in page, and mindset coaching
-- [ ] **Phase 18: Intake Snapshot & Strategy Reframing** - Enriched founder profiles and dedicated strategy UI
-- [ ] **Phase 19: Inbox Ops Agent** - In-app message hub aggregating agent outputs and notifications
-- [ ] **Phase 20: Investor Targeting, Outreach & Pipeline** - CSV uploads, AI matching, outreach sequences, CRM-lite tracker
-- [ ] **Phase 21: Memory & Compute Tiers** - Tier-differentiated AI models, memory depth, and memory gating
+- [x] **Phase 16: Red Flag Detection** - Inline chat warnings and dashboard widget for risk identification
+- [x] **Phase 17: Founder Wellbeing** - Burnout detection, check-in page, and mindset coaching
+- [x] **Phase 18: Intake Snapshot & Strategy Reframing** - Enriched founder profiles and dedicated strategy UI
+- [x] **Phase 19: Inbox Ops Agent** - In-app message hub aggregating agent outputs and notifications
+- [x] **Phase 20: Investor Targeting, Outreach & Pipeline** - CSV uploads, AI matching, outreach sequences, CRM-lite tracker
+- [x] **Phase 21: Memory & Compute Tiers** - Tier-differentiated AI models, memory depth, and memory gating
 - [x] **Phase 22: PWA & Mobile Polish** - Offline fallback, install flow, responsive fixes, touch targets
-- [ ] **Phase 23: Admin Training Docs** - Admin-only documentation section with voice rules and framework guides
+- [x] **Phase 23: Admin Training Docs** - Admin-only documentation section with voice rules and framework guides
 
 ## Phase Details
 
@@ -126,7 +126,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 16-01-PLAN.md -- Red Flag Detection engine, DB, API, chat integration, and dashboard widget
+- [x] 16-01-PLAN.md -- Red Flag Detection engine, DB, API, chat integration, and dashboard widget
 
 ### Phase 17: Founder Wellbeing
 **Goal**: FRED proactively supports founder mental health through detection, check-ins, and coaching grounded in Fred's philosophy
@@ -139,7 +139,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 17-01-PLAN.md -- Burnout detection engine, wellbeing check-in page, and mindset coaching mode
+- [x] 17-01-PLAN.md -- Burnout detection engine, wellbeing check-in page, and mindset coaching mode
 
 ### Phase 18: Intake Snapshot & Strategy Reframing
 **Goal**: Founders have a rich, evolving profile generated from onboarding and conversations, plus a dedicated strategy reframing tool
@@ -153,8 +153,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 18-01-PLAN.md -- Enriched onboarding, founder profile snapshot, and snapshot page
-- [ ] 18-02-PLAN.md -- Auto-enrichment from chat, strategy reframing page with 9-step framework
+- [x] 18-01-PLAN.md -- Enriched onboarding, founder profile snapshot, and snapshot page
+- [x] 18-02-PLAN.md -- Auto-enrichment from chat, strategy reframing page with 9-step framework
 
 ### Phase 19: Inbox Ops Agent
 **Goal**: Studio founders have a centralized message hub that aggregates and prioritizes output from all agents
@@ -168,7 +168,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 19-01-PLAN.md -- Inbox message hub, agent task aggregation, priority sorting, and Studio tier gating
+- [x] 19-01-PLAN.md -- Inbox message hub, agent task aggregation, priority sorting, and Studio tier gating
 
 ### Phase 20: Investor Targeting, Outreach & Pipeline
 **Goal**: Studio founders can upload investor lists, get AI-matched recommendations, generate personalized outreach, and track their fundraising pipeline
@@ -182,8 +182,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 20-01-PLAN.md -- Investor CSV upload, DB tables, AI matching algorithm, targeting page
-- [ ] 20-02-PLAN.md -- Outreach sequence generation, pipeline Kanban board, CRM tracking
+- [x] 20-01-PLAN.md -- Investor CSV upload, DB tables, AI matching algorithm, targeting page
+- [x] 20-02-PLAN.md -- Outreach sequence generation, pipeline Kanban board, CRM tracking
 
 ### Phase 21: Memory & Compute Tiers
 **Goal**: Higher-paying tiers get measurably better AI (faster models, deeper context) and memory features are properly gated
@@ -196,7 +196,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 21-01-PLAN.md -- Tier-based model routing, memory depth config, memory gating, chat route integration
+- [x] 21-01-PLAN.md -- Tier-based model routing, memory depth config, memory gating, chat route integration
 
 ### Phase 22: PWA & Mobile Polish
 **Goal**: Sahara is installable as a PWA with a guided experience, and every page renders correctly on mobile devices
@@ -210,7 +210,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- PWA install experience (offline fallback page, install prompt hook/component, install instructions page, SW update)
+- [x] 22-01-PLAN.md -- PWA install experience (offline fallback page, install prompt hook/component, install instructions page, SW update)
 - [x] 22-02-PLAN.md -- Mobile responsive fixes (pricing table card layout, fixed-width audit across 5 HIGH files, TabsList scroll on 8 files, touch target CSS)
 
 ### Phase 23: Admin Training Docs
@@ -226,7 +226,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
+- [x] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
 
 ## Progress
 
@@ -241,11 +241,11 @@ Plans:
 | 13. Voice -- Core AI Engines | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 14. Voice -- Agents & Channels | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 15. Voice -- Helpers & Activation | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 16. Red Flag Detection | v2.0 | 0/1 | In Progress | - |
-| 17. Founder Wellbeing | v2.0 | 0/1 | In Progress | - |
-| 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | In Progress | - |
-| 19. Inbox Ops Agent | v2.0 | 0/1 | In Progress | - |
-| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | In Progress | - |
-| 21. Memory & Compute Tiers | v2.0 | 0/1 | In Progress | - |
+| 16. Red Flag Detection | v2.0 | 1/1 | Complete | 2026-02-07 |
+| 17. Founder Wellbeing | v2.0 | 1/1 | Complete | 2026-02-07 |
+| 18. Intake Snapshot & Strategy Reframing | v2.0 | 2/2 | Complete | 2026-02-07 |
+| 19. Inbox Ops Agent | v2.0 | 1/1 | Complete | 2026-02-07 |
+| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 2/2 | Complete | 2026-02-07 |
+| 21. Memory & Compute Tiers | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 22. PWA & Mobile Polish | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 23. Admin Training Docs | v2.0 | 0/1 | In Progress | - |
+| 23. Admin Training Docs | v2.0 | 1/1 | Complete | 2026-02-07 |
