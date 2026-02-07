@@ -2,13 +2,10 @@
  * SMS Message Templates
  * Phase 04: Studio Tier Features - Plan 05
  * Phase 14: Fred Cary Voice Rewrite
- * Phase 15: Voice Helpers Activation
  *
  * Message templates for weekly check-ins and lifecycle events.
  * All templates target under 160 characters (single SMS segment) where possible.
  */
-
-import { getRandomQuote } from "@/lib/fred-brain";
 
 const MAX_SMS_LENGTH = 160;
 
@@ -24,34 +21,35 @@ export function getCheckinTemplate(
   founderName: string,
   highlights?: string[]
 ): string {
-  const cta = 'Reply with your top 3 priorities.';
+  // Fred's voice: motivational, direct, personal
+  // Rotate messages for variety (deterministic based on name length)
+  const messages = [
+    `${founderName} -- it's Fred. What's your biggest win this week? Reply with your top 3 priorities.`,
+    `Hey ${founderName}, Fred here. Quick check-in: what moved the needle this week? Top 3 priorities -- go.`,
+    `${founderName}, how's the grind? Tell me your #1 win and your biggest blocker. --Fred`,
+  ];
 
   if (!highlights || highlights.length === 0) {
-    // Try to include a Fred quote when no highlights
-    const quote = getRandomQuote();
-    const withQuote = `Hey ${founderName}! "${quote}" - Fred. ${cta}`;
-    if (withQuote.length <= MAX_SMS_LENGTH) {
-      return withQuote;
-    }
-    // Fall back if quote makes message too long
-    const simple = `Hey ${founderName}! Weekly check-in from Sahara. ${cta}`;
-    return simple.slice(0, MAX_SMS_LENGTH);
+    const index = founderName.length % messages.length;
+    return messages[index].slice(0, MAX_SMS_LENGTH);
   }
 
-  // Existing highlights logic (unchanged)
-  const greeting = `Hey ${founderName}! Weekly check-in from Sahara.`;
-  const highlightPrefix = 'Your agents completed: ';
-  const availableSpace = MAX_SMS_LENGTH - greeting.length - cta.length - highlightPrefix.length - 3;
+  // With highlights, use a shorter base to leave room
+  const base = `${founderName}, Fred here. Your agents finished: `;
+  const cta = ' What are your priorities?';
+  const availableSpace = MAX_SMS_LENGTH - base.length - cta.length;
 
   let highlightText = highlights.join(', ');
   if (highlightText.length > availableSpace) {
     highlightText = highlightText.slice(0, availableSpace - 3) + '...';
   }
 
-  const message = `${greeting} ${highlightPrefix}${highlightText}. ${cta}`;
+  const message = `${base}${highlightText}.${cta}`;
 
+  // Final safety truncation -- fall back to base message if highlights make it too long
   if (message.length > MAX_SMS_LENGTH) {
-    return `${greeting} ${cta}`.slice(0, MAX_SMS_LENGTH);
+    const index = founderName.length % messages.length;
+    return messages[index].slice(0, MAX_SMS_LENGTH);
   }
 
   return message;
@@ -65,7 +63,7 @@ export function getCheckinTemplate(
  * @returns SMS message body (max 160 chars)
  */
 export function getWelcomeTemplate(founderName: string): string {
-  return `Welcome aboard, ${founderName}! Fred here. We'll check in weekly to keep you on track. Reply STOP to opt out.`.slice(
+  return `${founderName}, it's Fred Cary. I'll text you weekly for a quick accountability check. Think of me as your co-founder in your pocket. Reply STOP to opt out.`.slice(
     0,
     MAX_SMS_LENGTH
   );
