@@ -6,7 +6,7 @@
   "title": "Data consistency fixes (MARKETING_STATS, about page, SMS tier, Coming Soon labels)",
   "description": "Fix all data inconsistencies across marketing site, AI prompts, and feature labels. Create MARKETING_STATS constant, rewrite about page, fix SMS tier placement, sync Coming Soon labels.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
   "createdAt": "2026-02-07T12:00:00Z"
 }

@@ -40,7 +40,7 @@ See MILESTONES.md for full details.
 - Wave 2 (soft dependency on Phase 13 for voice foundation): Phases 16, 17, 18, 19, 20, 21 -- all can run in parallel
 - Wave 3 (depends on voice completion): Phase 23 -- after Phases 13, 14, 15
 
-- [ ] **Phase 12: Data Fixes & Production Hardening** - Fix data inconsistencies and harden production infrastructure
+- [x] **Phase 12: Data Fixes & Production Hardening** - Fix data inconsistencies and harden production infrastructure
 - [ ] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
 - [ ] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
 - [ ] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
@@ -68,8 +68,8 @@ See MILESTONES.md for full details.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md -- Data consistency fixes (MARKETING_STATS constant, capital raised, years of experience, SMS tier, Coming Soon labels, about page rewrite)
-- [ ] 12-02-PLAN.md -- Production infrastructure hardening (root middleware, robots.ts, sitemap.ts, CORS utility, Upstash rate limiting, env validation)
+- [x] 12-01-PLAN.md -- Data consistency fixes (MARKETING_STATS constant, capital raised, years of experience, SMS tier, Coming Soon labels, about page rewrite)
+- [x] 12-02-PLAN.md -- Production infrastructure hardening (root middleware, robots.ts, sitemap.ts, CORS utility, Upstash rate limiting, env validation)
 
 ### Phase 13: Voice -- Core AI Engines
 **Goal**: The five core AI features (chat, Reality Lens, Investor Readiness, Strategy Docs, Pitch Deck) all speak unmistakably as Fred Cary
@@ -237,7 +237,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Data Fixes & Production Hardening | v2.0 | 0/2 | Planned | - |
+| 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 13. Voice -- Core AI Engines | v2.0 | 0/1 | Not started | - |
 | 14. Voice -- Agents & Channels | v2.0 | 0/2 | Not started | - |
 | 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Not started | - |
