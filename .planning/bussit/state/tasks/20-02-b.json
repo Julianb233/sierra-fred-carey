@@ -6,7 +6,8 @@
   "title": "Outreach sequencing and pipeline tracking",
   "description": "Create pipeline tables migration, outreach sequence generation API with Fred's voice, pipeline CRUD API, outreach page for email sequence management, and CRM-lite pipeline view.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
+  "completedAt": "2026-02-07T23:50:00Z",
   "dependencies": ["20-01-b"],
   "createdAt": "2026-02-07T22:30:00Z"
 }
