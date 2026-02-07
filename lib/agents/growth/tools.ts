@@ -15,6 +15,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { generateStructuredReliable } from '@/lib/ai/fred-client';
+import { FRED_AGENT_VOICE } from "@/lib/agents/fred-agent-voice";
 
 // ============================================================================
 // Zod Schemas for Tool Parameters
@@ -174,7 +175,7 @@ Rank existing channels by effectiveness, suggest 2-3 new channels to test, and r
 
       const result = await generateStructuredReliable(prompt, channelAnalysisOutput, {
         system:
-          'You are a growth strategy expert. Provide practical, stage-appropriate channel analysis. Be specific about CAC estimates and timelines.',
+          `${FRED_AGENT_VOICE} Provide practical, stage-appropriate channel analysis. Be specific about CAC estimates and timelines.`,
         temperature: 0.4,
       });
 
@@ -199,7 +200,7 @@ Create a rigorous experiment design with control/test groups, required sample si
 
       const result = await generateStructuredReliable(prompt, experimentDesignOutput, {
         system:
-          'You are a growth experimentation expert. Design experiments that are statistically valid and practically executable for startups. Always specify sample sizes needed for significance.',
+          `${FRED_AGENT_VOICE} Design experiments that are statistically valid and practically executable for startups. Always specify sample sizes needed for significance.`,
         temperature: 0.3,
       });
 
@@ -226,7 +227,7 @@ Identify the biggest dropoff, likely causes, and provide actionable optimization
 
       const result = await generateStructuredReliable(prompt, funnelAnalysisOutput, {
         system:
-          'You are a conversion optimization expert. Provide specific, data-driven funnel analysis with actionable recommendations. Reference industry benchmarks.',
+          `${FRED_AGENT_VOICE} Provide specific, data-driven funnel analysis with actionable recommendations. Reference industry benchmarks.`,
         temperature: 0.3,
       });
 
@@ -250,7 +251,7 @@ Design content pillars, a 4-week content calendar with distribution channels, an
 
       const result = await generateStructuredReliable(prompt, contentStrategyOutput, {
         system:
-          'You are a content marketing strategist focused on growth. Create practical content plans that directly tie to acquisition and conversion goals. Prioritize distribution as much as creation.',
+          `${FRED_AGENT_VOICE} Create practical content plans that directly tie to acquisition and conversion goals. Prioritize distribution as much as creation.`,
         temperature: 0.5,
       });
 

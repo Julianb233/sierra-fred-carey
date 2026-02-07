@@ -14,6 +14,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { generateStructuredReliable } from '@/lib/ai/fred-client';
+import { FRED_AGENT_VOICE } from "@/lib/agents/fred-agent-voice";
 
 // ============================================================================
 // Parameter Schemas (extracted for explicit typing)
@@ -100,6 +101,7 @@ Be specific and actionable. Explain the reasoning behind each recommendation.`;
     });
 
     const result = await generateStructuredReliable(prompt, schema, {
+      system: `${FRED_AGENT_VOICE}\n\nResearch investors with the eye of someone who has sat across the table from hundreds of them.`,
       temperature: 0.6,
     });
 
@@ -164,6 +166,7 @@ Also provide:
     });
 
     const result = await generateStructuredReliable(prompt, schema, {
+      system: `${FRED_AGENT_VOICE}\n\nDraft investor outreach the way I would -- every word earns its place. Lead with traction, not vision. Warm intros beat cold outreach 10:1.`,
       temperature: 0.7,
     });
 
@@ -219,6 +222,7 @@ Be specific about WHAT to do, WHEN to do it, and WHY it matters. Fundraising is 
     });
 
     const result = await generateStructuredReliable(prompt, schema, {
+      system: `${FRED_AGENT_VOICE}\n\nManage fundraising pipelines like I manage deal flow -- track everything, follow up relentlessly, and kill dead leads fast. Time kills deals.`,
       temperature: 0.5,
     });
 
@@ -288,6 +292,7 @@ ${meetingType === 'due-diligence' ? '- Be prepared for deep dives into financial
     });
 
     const result = await generateStructuredReliable(prompt, schema, {
+      system: `${FRED_AGENT_VOICE} Prepare founders for investor meetings like I would -- know your numbers cold, anticipate tough questions, and have a clear ask.`,
       temperature: 0.5,
     });
 

@@ -15,6 +15,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { generateStructuredReliable } from "@/lib/ai/fred-client";
+import { FRED_AGENT_VOICE } from "@/lib/agents/fred-agent-voice";
 
 // ============================================================================
 // Parameter Schemas (extracted for explicit typing)
@@ -106,7 +107,7 @@ Requirements:
 
     const result = await generateStructuredReliable(prompt, emailSchema, {
       system:
-        "You are an expert email writer for startup founders. Write concise, professional emails that get responses.",
+        `${FRED_AGENT_VOICE}\n\nYou are drafting an email for a founder you're mentoring. Write direct, purposeful, no corporate fluff.`,
       temperature: 0.6,
     });
 
@@ -177,7 +178,7 @@ Requirements:
 
     const result = await generateStructuredReliable(prompt, meetingSchema, {
       system:
-        "You are an expert meeting facilitator for startup founders. Design focused agendas that drive decisions and outcomes.",
+        `${FRED_AGENT_VOICE}\n\nYou are preparing a meeting agenda. Meetings should have clear agendas and measurable outcomes.`,
       temperature: 0.5,
     });
 
@@ -238,9 +239,7 @@ Requirements:
       prioritiesSchema,
       {
         system:
-          "You are Fred Cary, a veteran venture builder who has helped hundreds of founders. " +
-          "You prioritize ruthlessly and always tie operational work to business outcomes. " +
-          "You are known for telling founders what to STOP doing as much as what to START.",
+          `${FRED_AGENT_VOICE}\n\nHelp founders ruthlessly prioritize. Most startups fail from doing too much, not too little.`,
         temperature: 0.6,
       }
     );
