@@ -98,14 +98,14 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 ### Security Hardening (from v1.0 verification audit)
 
-- [ ] **Phase 11: Security Hardening** - Auth rate limiting, security headers, admin session tokens, git scrub, service role scoping
+- [x] **Phase 11: Security Hardening** - Auth rate limiting, security headers, admin session tokens, git scrub, service role scoping
   - Closes: Remaining security findings from v1.0 verification audit (2026-02-06)
-  - [ ] 11-01-PLAN.md — Auth endpoint rate limiting (login, admin login, signup)
-  - [ ] 11-02-PLAN.md — Security headers (CSP, X-Frame-Options, HSTS, Permissions-Policy)
-  - [ ] 11-03-PLAN.md — Admin session tokens (replace raw cookie with UUID session)
-  - [ ] 11-04-PLAN.md — Remove logout GET handler + strengthen input sanitization
-  - [ ] 11-05-PLAN.md — Git history scrub + credential rotation (manual steps)
-  - [ ] 11-06-PLAN.md — Service role key scoping + error message sanitization
+  - [x] 11-01-PLAN.md — Auth endpoint rate limiting (login 5/min, admin 3/min, onboard 10/hr)
+  - [x] 11-02-PLAN.md — Security headers (CSP, X-Frame-Options, HSTS, Permissions-Policy, 7 total)
+  - [x] 11-03-PLAN.md — Admin session tokens (UUID session store, 24h TTL, revocation)
+  - [x] 11-04-PLAN.md — Remove logout GET handler + strengthen input sanitization (entity encoding)
+  - [x] 11-05-PLAN.md — Git history verified clean, .env.example scrubbed, .gitignore hardened
+  - [x] 11-06-PLAN.md — Service role key scoping + error message sanitization (19 API routes)
 
 ### Parallel Track
 

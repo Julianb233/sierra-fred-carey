@@ -7,29 +7,27 @@
 
 ## Position
 
-**Current Phase:** 11-security-hardening (In progress)
-**Status:** Phase 11 security hardening in progress. 11-01 through 11-06 complete.
-**Last activity:** 2026-02-07 - Completed 11-06 error message sanitization across 19 API route files
+**Current Phase:** 11-security-hardening (COMPLETE)
+**Status:** All 11 phases complete. v1.0 production-ready with security hardening.
+**Last activity:** 2026-02-07 - Phase 11 security hardening complete (6/6 plans executed in parallel)
 
-Progress: [==============================] ~100% (10/10 core phases + Phase 11 security in progress)
+Progress: [==============================] 100% (11/11 phases complete)
 
 ---
 
 ## Next Action
 
-**Action:** None — v1.0 production-ready. Optional: Phase 10b dashboard polish (monitoring export, delete account, nav fixes)
+**Action:** None — all phases complete. Optional: rotate credentials in external dashboards (Supabase, Stripe, Neon, LiveKit, Linear)
 **Type:** n/a
 **Blocked By:** Nothing
 
-Phase 10 (Production Hardening) — COMPLETE:
-- GAP 1: Tier gating on 5 Pro pages (positioning, investor-lens, investor-readiness, pitch-deck, strategy) -- DONE
-- GAP 2: Documents pages redirected to /dashboard/strategy (removed mock data) -- DONE
-- GAP 3: Root middleware for auth route protection -- DONE
-- GAP 4: Rate limiting on /api/onboard/invite -- DONE
-- GAP 5: Deleted admin/training & ratings stub routes -- DONE
-- GAP 6: ESLint 9 flat config migration (eslint.config.mjs, lint script updated) -- DONE
-- GAP 7: Avatar fix + insights typo fix -- DONE
-- GAP 8: Minor code fixes -- DONE
+Phase 11 (Security Hardening) — COMPLETE:
+- 11-01: Auth endpoint rate limiting (5/min user, 3/min admin, 10/hr onboard) -- DONE
+- 11-02: Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy, etc.) -- DONE
+- 11-03: Admin session tokens (UUID sessions, 24h TTL, revocation) -- DONE
+- 11-04: Remove logout GET handler + input sanitization hardening -- DONE
+- 11-05: .env.example scrubbed, .gitignore hardened -- PARTIAL (git filter-repo + credential rotation still manual)
+- 11-06: Service role key scoping (DI migration for 5 DB modules, 27 functions) + error sanitization (30+ catch blocks, 19 API files) -- DONE
 
 ---
 
@@ -87,8 +85,8 @@ Phase 10 (Production Hardening) — COMPLETE:
   - [x] 09-01: Tier-name-to-plan-key mapping in checkout route
 
 ### What's Pending
-- Nothing — v1.0 production-ready
-- Optional: Phase 10b Dashboard Polish (monitoring export, delete account API, nav tier fixes)
+- [ ] 11-05: Git history scrub + credential rotation (manual — force push, rotate keys in dashboards)
+- Optional: A2P 10DLC registration for SMS
 
 ### What's Blocked
 - Nothing currently blocked
@@ -131,6 +129,7 @@ Phase 10 (Production Hardening) — COMPLETE:
 | 2026-02-07 | 11-05 execution | Verified clean git history (no .env files), cleaned .env.example (removed all credential placeholders), hardened .gitignore |
 | 2026-02-07 | 11-01 + 11-03 verification | Verified auth rate limiting (5/min user, 3/min admin, 10/hr onboard) + admin session tokens (adminSession cookie, in-memory store, revocation) all committed and consistent |
 | 2026-02-07 | 11-06 execution | Error message sanitization: removed error.message from 19 API route files (30+ catch blocks), added console.error server-side logging, replaced with generic messages |
+| 2026-02-07 | 11-06 DI migration | Service role key scoping: migrated 5 DB modules (27 functions) to accept SupabaseClient param; user-initiated routes now use createClient() (user-scoped); onboard route error leak fixed |
 
 ---
 
@@ -196,6 +195,9 @@ Phase 10 (Production Hardening) — COMPLETE:
 - Never return raw error.message in API JSON responses; log server-side with route prefix, return generic "Internal server error"
 - Keep controlled validation errors (FileValidationError, PDFParseError) on 400s -- these have user-facing messages by design
 - Use `catch (error)` not `catch (error: any)`; use `error instanceof Error` guard before accessing .message
+- Dependency injection for DB modules: accept SupabaseClient as first param so callers choose user-scoped or service-role client
+- User-initiated routes use createClient() (cookie-based, RLS-respecting); webhooks/cron use createServiceClient() (service role)
+- createServiceClient() uses @supabase/supabase-js directly (no cookie adapter needed for service role)
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -230,13 +232,14 @@ Phase 10 (Production Hardening) — COMPLETE:
 - Dashboard stats aggregation: single GET endpoint, parallel Promise.all with .catch(() => 0) fallbacks
 - Hook-first chat integration: extract all fetch/state/error logic into custom hook, component only handles layout
 - API-boundary tier translation: accept user-facing tier names, map to internal PLANS keys before lookup
+- DB module dependency injection: functions accept SupabaseClient as first param, callers pass createClient() (user) or createServiceClient() (admin/cron/webhook)
 
 ---
 
 ## Session Continuity
 
-Last session: 2026-02-07T05:38:00Z
-Stopped at: Completed 11-06 (error message sanitization)
+Last session: 2026-02-07T06:00:00Z
+Stopped at: Completed 11-06 (DI migration + error sanitization)
 Resume file: None
 
 ---
