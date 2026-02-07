@@ -8,10 +8,17 @@
 import OpenAI from 'openai';
 import type { Chunk } from './types';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialized OpenAI client (prevents build-time crash when OPENAI_API_KEY is missing)
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required for embeddings');
+    }
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
 
 // Embedding model configuration
 const EMBEDDING_MODEL = 'text-embedding-3-small';
@@ -26,7 +33,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   // Truncate if necessary
   const truncatedText = truncateToTokenLimit(text);
 
-  const response = await openai.embeddings.create({
+  const response = await getOpenAI().embeddings.create({
     model: EMBEDDING_MODEL,
     input: truncatedText,
     dimensions: EMBEDDING_DIMENSIONS,
@@ -49,7 +56,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   const allEmbeddings: number[][] = [];
 
   for (const batch of batches) {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAI().embeddings.create({
       model: EMBEDDING_MODEL,
       input: batch,
       dimensions: EMBEDDING_DIMENSIONS,
