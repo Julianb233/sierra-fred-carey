@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // The session token is a random UUID that maps to an in-memory session
     const sessionToken = createAdminSession();
     const cookieStore = await cookies();
-    cookieStore.set("admin_session", sessionToken, {
+    cookieStore.set("adminSession", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
