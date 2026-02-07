@@ -35,13 +35,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.env.vercel
-.env.vercel
 
 # Environment files with secrets
 .env
+.env.local
 .env.production
-server.log
+.env.development
+.env.vercel
 .swarm/
 
 # Audit/test temp files
