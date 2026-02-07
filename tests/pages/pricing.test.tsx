@@ -100,8 +100,9 @@ describe('Pricing Page (/pricing)', () => {
     const featureElements = screen.getAllByText('Feature');
     expect(featureElements.length).toBeGreaterThan(0);
 
-    // Check for price columns in table header
-    expect(screen.getByText('Free')).toBeInTheDocument();
+    // Check for price columns (may appear in both table header and mobile cards)
+    const freeElements = screen.getAllByText('Free');
+    expect(freeElements.length).toBeGreaterThan(0);
   });
 
   it('should show guiding principles section', async () => {
