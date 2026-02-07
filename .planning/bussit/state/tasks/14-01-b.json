@@ -1,0 +1,12 @@
+{
+  "id": "14-01-b",
+  "type": "build",
+  "phase": 14,
+  "planPath": ".planning/phases/14-voice-agents-channels/14-01-PLAN.md",
+  "title": "Agent tool prompt voice rewrite (Founder Ops, Fundraising, Growth agents + 11 tool prompts)",
+  "description": "Create lib/agents/fred-agent-voice.ts shared preamble. Rewrite all 3 agent system prompts and 11 tool-level system params to use Fred Cary's voice instead of generic expert personas.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T14:00:00Z"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "13-01-b",
+  "type": "build",
+  "phase": 13,
+  "planPath": ".planning/phases/13-voice-core-ai-engines/13-01-PLAN.md",
+  "title": "Core AI engine voice unification (voice.ts utility, Reality Lens, IRS, Strategy, Pitch, Chat pipeline)",
+  "description": "Create lib/fred/voice.ts buildFredVoicePreamble utility. Rewrite system prompts in Reality Lens, IRS, Strategy Generator, and Pitch Analyzer to use Fred Cary identity from fred-brain.ts. Rewrite chat pipeline templates in decide.ts and synthesize.ts with Fred's voice.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T14:00:00Z"
+}

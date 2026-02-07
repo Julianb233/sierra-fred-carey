@@ -1,0 +1,12 @@
+{
+  "id": "15-01-b",
+  "type": "build",
+  "phase": 15,
+  "planPath": ".planning/phases/15-voice-helpers-activation/15-01-PLAN.md",
+  "title": "Activate fred-brain.ts helpers and coaching prompts (FRED_MEDIA, quotes, topic routing, getFredGreeting)",
+  "description": "Wire up unused fred-brain.ts exports: FRED_MEDIA/FRED_TESTIMONIALS in IRS/strategy, getRandomQuote/getExperienceStatement/getCredibilityStatement in chat greeting and SMS, COACHING_PROMPTS topic routing in chat pipeline, getFredGreeting in onboarding.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T14:00:00Z"
+}
