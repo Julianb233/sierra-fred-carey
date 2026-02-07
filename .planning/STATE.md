@@ -129,6 +129,7 @@ Phase 10 (Production Hardening) — COMPLETE:
 | 2026-02-07 | Phase 10 execution | Closed 8/8 gaps: tier gating, doc redirects, middleware, rate limiting, stub cleanup, ESLint 9, avatar fix, typo fix |
 | 2026-02-07 | 11-04 execution | Removed logout GET handler (CSRF fix), hardened sanitizeInput with sequential entity encoding, whitespace-aware URI stripping |
 | 2026-02-07 | 11-05 execution | Verified clean git history (no .env files), cleaned .env.example (removed all credential placeholders), hardened .gitignore |
+| 2026-02-07 | 11-01 + 11-03 verification | Verified auth rate limiting (5/min user, 3/min admin, 10/hr onboard) + admin session tokens (adminSession cookie, in-memory store, revocation) all committed and consistent |
 
 ---
 
@@ -189,6 +190,8 @@ Phase 10 (Production Hardening) — COMPLETE:
 - HTML entity encoding over character stripping for sanitizeInput (preserves semantic meaning while neutralizing XSS)
 - Sequential & encoding first to prevent double-encoding; &#x27; per OWASP; \s* in URI patterns for whitespace obfuscation; \b word boundary on event handlers
 - POST-only logout endpoints (GET logout is CSRF-vulnerable via img tags/prefetch)
+- Admin session tokens via in-memory Map with 24h TTL; cookie name `adminSession` (camelCase); session cookie checked before x-admin-key header fallback
+- Auth rate limits: user login 5/min, admin login 3/min (stricter), onboard 10/hour -- all IP-based via sliding window
 
 ### Critical Pitfalls to Avoid
 1. AI reliability math - 95% x 20 steps = 36% success
@@ -228,8 +231,8 @@ Phase 10 (Production Hardening) — COMPLETE:
 
 ## Session Continuity
 
-Last session: 2026-02-07T06:00:00Z
-Stopped at: Completed 11-04-PLAN.md execution (admin logout hardening + verification)
+Last session: 2026-02-07T05:35:00Z
+Stopped at: Verified 11-01 (auth rate limiting) + 11-03 (admin session tokens) plans complete
 Resume file: None
 
 ---
