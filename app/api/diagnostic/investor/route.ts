@@ -12,6 +12,7 @@ import {
   CORE_VC_AXES,
   type InvestorStage,
 } from "@/lib/ai/frameworks/investor-lens";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 /** Rate limit config for expensive AI diagnostic operations */
 const DIAGNOSTIC_RATE_LIMIT = { limit: 10, windowSeconds: 60 } as const;
@@ -89,6 +90,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // SECURITY: Check for prompt injection attempts
+    const injectionCheck = detectInjectionAttempt(businessDescription);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { error: "Input rejected: potentially harmful content detected" },
+        { status: 400 }
+      );
+    }
+    const sanitizedDescription = sanitizeUserInput(businessDescription);
+
     const investorStage: InvestorStage = stage || "pre-seed";
 
     if (!["pre-seed", "seed", "series-a"].includes(investorStage)) {
@@ -104,7 +115,7 @@ export async function POST(req: NextRequest) {
         content: `Please evaluate this startup for ${investorStage} investment readiness:
 
 **Business Description:**
-${businessDescription}
+${sanitizedDescription}
 
 **Stage:** ${investorStage}
 ${traction ? `**Current Traction:** ${traction}` : ""}

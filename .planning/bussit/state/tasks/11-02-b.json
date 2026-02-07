@@ -1,0 +1,12 @@
+{
+  "id": "11-02-b",
+  "type": "build",
+  "phase": 11,
+  "planPath": ".planning/phases/11-security-hardening/11-02-PLAN.md",
+  "title": "Security headers",
+  "description": "Add CSP, X-Frame-Options, HSTS, Permissions-Policy to next.config.mjs headers()",
+  "priority": "P1",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-06T21:30:00Z"
+}

@@ -7,6 +7,7 @@ import { extractInsights } from "@/lib/ai/insight-extractor";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { logger } from "@/lib/logger";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 // Fallback system prompt if not loaded from database
 const POSITIONING_ASSESSMENT_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. You specialize in positioning clarity diagnostics - helping founders understand whether their positioning is sharp enough to resonate with their target market.
@@ -264,8 +265,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Check for prompt injection attempts
+    const injectionCheck = detectInjectionAttempt(companyDescription);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { success: false, error: "Input rejected: potentially harmful content detected" },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize user inputs before passing to AI
+    const sanitizedDescription = sanitizeUserInput(companyDescription.trim());
+
     // Build context for AI analysis
-    let contextualInput = `COMPANY/PRODUCT DESCRIPTION:\n${companyDescription.trim()}`;
+    let contextualInput = `COMPANY/PRODUCT DESCRIPTION:\n${sanitizedDescription}`;
 
     if (targetCustomer) {
       contextualInput += `\n\nTARGET CUSTOMER:\n${targetCustomer.trim()}`;

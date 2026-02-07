@@ -1,0 +1,13 @@
+{
+  "id": "11-05-b",
+  "type": "build",
+  "phase": 11,
+  "planPath": ".planning/phases/11-security-hardening/11-05-PLAN.md",
+  "title": "Git history scrub + credential rotation",
+  "description": "Remove .env files from git history with git-filter-repo, rotate all exposed credentials, update .env.example",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "notes": "Requires manual dashboard access for credential rotation. Force-push required.",
+  "createdAt": "2026-02-06T21:30:00Z"
+}

@@ -18,6 +18,7 @@ import {
 import { checkRateLimitForUser, applyRateLimitHeaders, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 // ============================================================================
 // Request Schema
@@ -90,8 +91,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { decision, decisionType, context, sessionId, trackCalibration } =
+    const { decision: rawDecision, decisionType, context, sessionId, trackCalibration } =
       parsed.data;
+
+    // Prompt injection guard
+    const injectionCheck = detectInjectionAttempt(rawDecision);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { success: false, error: "Your message could not be processed. Please rephrase and try again." },
+        { status: 400 }
+      );
+    }
+
+    const decision = sanitizeUserInput(rawDecision);
     const effectiveSessionId = sessionId || crypto.randomUUID();
 
     // Detect decision type if not provided

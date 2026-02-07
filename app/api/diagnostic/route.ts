@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai/diagnostic-engine";
 import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 /**
  * POST /api/diagnostic
@@ -34,10 +35,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // SECURITY: Check user messages for prompt injection attempts
+    const userMessages = messages.filter((m: { role: string; content: string }) => m.role === "user");
+    const lastUserMessage = userMessages[userMessages.length - 1];
+    if (lastUserMessage) {
+      const injectionCheck = detectInjectionAttempt(lastUserMessage.content);
+      if (injectionCheck.isInjection) {
+        return NextResponse.json(
+          { error: "Input rejected: potentially harmful content detected" },
+          { status: 400 }
+        );
+      }
+    }
+
     const context: ConversationContext = {
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role === "user" ? "user" : "assistant",
-        content: m.content,
+        content: m.role === "user" ? sanitizeUserInput(m.content) : m.content,
       })),
       hasUploadedDeck: hasUploadedDeck || false,
       userProfile: userProfile || undefined,

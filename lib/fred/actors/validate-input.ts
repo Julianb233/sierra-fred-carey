@@ -6,6 +6,10 @@
  */
 
 import { logger } from "@/lib/logger";
+import {
+  detectInjectionAttempt,
+  sanitizeUserInput,
+} from "@/lib/ai/guards/prompt-guard";
 import type {
   UserInput,
   ValidatedInput,
@@ -24,11 +28,37 @@ export async function validateInputActor(
 ): Promise<ValidatedInput> {
   logger.log("[FRED] Validating input:", input.message.substring(0, 100));
 
+  // Check for prompt injection attempts
+  const injectionCheck = detectInjectionAttempt(input.message);
+  if (injectionCheck.isInjection) {
+    logger.log(
+      `[FRED] Prompt injection blocked (confidence: ${injectionCheck.confidence.toFixed(2)}):`,
+      injectionCheck.patterns.join(", ")
+    );
+    return {
+      originalMessage: input.message,
+      intent: "unknown",
+      entities: [],
+      confidence: 0,
+      clarificationNeeded: [{
+        question: "I wasn't able to process that input. Could you rephrase your question?",
+        reason: "Input validation failed",
+        required: true,
+      }],
+      keywords: [],
+      sentiment: "neutral",
+      urgency: "low",
+    };
+  }
+
+  // Sanitize input for downstream processing
+  const sanitizedMessage = sanitizeUserInput(input.message);
+
   // Extract intent from the message
-  const intentResult = await detectIntent(input.message);
+  const intentResult = await detectIntent(sanitizedMessage);
 
   // Extract entities from the message
-  const entities = await extractEntities(input.message);
+  const entities = await extractEntities(sanitizedMessage);
 
   // Determine if clarification is needed
   const clarificationNeeded = determineClarificationNeeds(
@@ -39,13 +69,13 @@ export async function validateInputActor(
   );
 
   // Analyze sentiment
-  const sentiment = analyzeSentiment(input.message);
+  const sentiment = analyzeSentiment(sanitizedMessage);
 
   // Detect urgency
-  const urgency = detectUrgency(input.message, intentResult.intent);
+  const urgency = detectUrgency(sanitizedMessage, intentResult.intent);
 
   // Extract keywords
-  const keywords = extractKeywords(input.message);
+  const keywords = extractKeywords(sanitizedMessage);
 
   return {
     originalMessage: input.message,

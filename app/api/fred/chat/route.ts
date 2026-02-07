@@ -14,6 +14,7 @@ import { storeEpisode } from "@/lib/db/fred-memory";
 import { checkRateLimitForUser, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -104,7 +105,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, context, sessionId, stream, storeInMemory } = parsed.data;
+    const { message: rawMessage, context, sessionId, stream, storeInMemory } = parsed.data;
+
+    // Prompt injection guard
+    const injectionCheck = detectInjectionAttempt(rawMessage);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Your message could not be processed. Please rephrase and try again.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const message = sanitizeUserInput(rawMessage);
     const effectiveSessionId = sessionId || crypto.randomUUID();
 
     // Create FRED service

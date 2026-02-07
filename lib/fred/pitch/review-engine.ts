@@ -15,6 +15,14 @@ import type {
 import { REQUIRED_SLIDES } from './types';
 import { classifyDeck } from './slide-classifier';
 import { analyzeSlide } from './analyzers';
+import { logger } from "@/lib/logger";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_SLIDES = 100;
+const MAX_SLIDE_CONTENT_LENGTH = 50_000; // chars per slide
 
 // ============================================================================
 // Main Engine
@@ -24,15 +32,28 @@ import { analyzeSlide } from './analyzers';
  * Run a full pitch deck review: classify slides, analyze each, compute scores
  */
 export async function reviewPitchDeck(input: PitchReviewInput): Promise<PitchReview> {
+  // Validate slide count to prevent DoS
+  if (input.pages.length > MAX_SLIDES) {
+    throw new Error(`Deck exceeds maximum of ${MAX_SLIDES} slides (received ${input.pages.length})`);
+  }
+
+  // Truncate oversized slide content
+  const sanitizedPages = input.pages.map((page) => ({
+    ...page,
+    content: page.content.length > MAX_SLIDE_CONTENT_LENGTH
+      ? page.content.substring(0, MAX_SLIDE_CONTENT_LENGTH)
+      : page.content,
+  }));
+
   // 1. Classify all slides in a single batch call
-  const structure = await classifyDeck(input.pages);
+  const structure = await classifyDeck(sanitizedPages);
 
   // 2. Analyze each slide in parallel
   // Build a classification map by page number for safe lookup.
   // Classifier returns one classification per input page in order,
   // so structure.slides[i] corresponds to input.pages[i].
   const slideAnalyses = await Promise.all(
-    input.pages.map((page, index) => {
+    sanitizedPages.map((page, index) => {
       // Use index to match — classifier output is 1:1 with input pages
       const classification = structure.slides[index];
       if (!classification && index < structure.slides.length) {

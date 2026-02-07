@@ -12,6 +12,7 @@ import { createFredService } from "@/lib/fred/service";
 import { checkRateLimitForUser, applyRateLimitHeaders, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 // ============================================================================
 // Request Schema
@@ -73,7 +74,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, context, sessionId } = parsed.data;
+    const { message: rawMessage, context, sessionId } = parsed.data;
+
+    // Prompt injection guard
+    const injectionCheck = detectInjectionAttempt(rawMessage);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { success: false, error: "Your message could not be processed. Please rephrase and try again." },
+        { status: 400 }
+      );
+    }
+
+    const message = sanitizeUserInput(rawMessage);
     const effectiveSessionId = sessionId || crypto.randomUUID();
 
     // Create FRED service and process the message

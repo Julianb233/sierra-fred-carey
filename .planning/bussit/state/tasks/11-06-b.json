@@ -1,0 +1,12 @@
+{
+  "id": "11-06-b",
+  "type": "build",
+  "phase": 11,
+  "planPath": ".planning/phases/11-security-hardening/11-06-PLAN.md",
+  "title": "Service role scoping + error sanitization",
+  "description": "Replace service role client with user-scoped client in 5 DB modules, sanitize error messages in API responses",
+  "priority": "P2",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-06T21:30:00Z"
+}

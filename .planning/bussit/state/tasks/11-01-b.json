@@ -1,0 +1,12 @@
+{
+  "id": "11-01-b",
+  "type": "build",
+  "phase": 11,
+  "planPath": ".planning/phases/11-security-hardening/11-01-PLAN.md",
+  "title": "Auth endpoint rate limiting",
+  "description": "Add rate limiting to /api/auth/login (5/min), /api/admin/login (3/min), /api/onboard (10/hr)",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-06T21:30:00Z"
+}

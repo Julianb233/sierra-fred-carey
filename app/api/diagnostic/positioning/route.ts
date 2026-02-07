@@ -8,6 +8,7 @@ import {
   CATEGORY_ORDER,
 } from "@/lib/ai/frameworks/positioning";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 const POSITIONING_ASSESSMENT_PROMPT = `
 You are evaluating a founder's positioning readiness using the Positioning Readiness Framework.
@@ -64,12 +65,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // SECURITY: Check for prompt injection attempts
+    const injectionCheck = detectInjectionAttempt(businessDescription);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { error: "Input rejected: potentially harmful content detected" },
+        { status: 400 }
+      );
+    }
+    const sanitizedDescription = sanitizeUserInput(businessDescription);
+
     const messages: ChatMessage[] = [
       {
         role: "user",
         content: `Please evaluate the positioning readiness for this business:
 
-${businessDescription}
+${sanitizedDescription}
 
 ${additionalContext ? `Additional context: ${additionalContext}` : ""}
 

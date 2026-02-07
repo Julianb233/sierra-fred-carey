@@ -26,6 +26,7 @@ import {
 import { createActor } from "xstate";
 import { agentOrchestratorMachine } from "@/lib/agents/machine";
 import type { AgentType, AgentStatus } from "@/lib/agents/types";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
 // ============================================================================
 // Request Validation
@@ -82,6 +83,16 @@ export async function POST(request: NextRequest) {
 
     const { agentType, taskType, description, input } = parsed.data;
 
+    // SECURITY: Check for prompt injection attempts in description
+    const injectionCheck = detectInjectionAttempt(description);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        { success: false, error: "Input rejected: potentially harmful content detected" },
+        { status: 400 }
+      );
+    }
+    const sanitizedDescription = sanitizeUserInput(description);
+
     // 3. Check Studio tier gating
     const userTier = await getUserTier(userId);
     if (userTier < UserTier.STUDIO) {
@@ -113,7 +124,7 @@ export async function POST(request: NextRequest) {
       userId,
       agentType,
       taskType,
-      description,
+      description: sanitizedDescription,
       input: input || {},
     });
 
