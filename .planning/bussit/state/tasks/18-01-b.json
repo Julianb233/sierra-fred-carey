@@ -6,7 +6,8 @@
   "title": "Enriched onboarding questionnaire and founder profile snapshot",
   "description": "Extend startup-info-step with industry/revenue/team/funding fields, update use-onboarding hook, persist enriched data via onboard API, add profile snapshot page and API.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-07T22:30:00Z"
+  "createdAt": "2026-02-07T22:30:00Z",
+  "completedAt": "2026-02-07T23:15:00Z"
 }

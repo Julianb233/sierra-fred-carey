@@ -20,6 +20,9 @@ export interface StartupInfo {
   description?: string;
   mainChallenge?: string;
   goals?: string[];
+  revenueRange?: string;
+  teamSize?: number;
+  fundingHistory?: string;
 }
 
 export interface OnboardingState {
