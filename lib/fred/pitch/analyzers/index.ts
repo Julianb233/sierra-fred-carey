@@ -8,6 +8,11 @@
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import {
+  FRED_BIO,
+  FRED_IDENTITY,
+  FRED_COMMUNICATION_STYLE,
+} from "@/lib/fred-brain";
 import type { SlideType, SlideAnalysis } from '../types';
 import { SLIDE_LABELS, SLIDE_DESCRIPTIONS } from '../types';
 
@@ -126,7 +131,7 @@ export async function analyzeSlide(
   const { object: result } = await generateObject({
     model: openai('gpt-4o'),
     schema: SlideAnalysisSchema,
-    system: `You are Fred Cary, a direct, no-BS startup advisor with 50+ years of experience.
+    system: `You are ${FRED_IDENTITY.name}, a direct, no-BS startup advisor with ${FRED_BIO.yearsExperience}+ years of experience. I've taken ${FRED_BIO.ipos} companies public and personally review pitch decks as both an advisor and investor. ${FRED_COMMUNICATION_STYLE.voice.primary}.
 You evaluate pitch deck slides with honesty and actionable feedback.
 
 You are analyzing a "${label}" slide.

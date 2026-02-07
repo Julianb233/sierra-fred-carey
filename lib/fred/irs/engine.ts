@@ -8,6 +8,12 @@
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import {
+  FRED_BIO,
+  FRED_IDENTITY,
+  FRED_COMPANIES,
+  FRED_COMMUNICATION_STYLE,
+} from "@/lib/fred-brain";
 import type {
   IRSInput,
   IRSResult,
@@ -150,8 +156,11 @@ function buildContext(input: IRSInput): StartupContext {
  * Get system prompt for IRS evaluation
  */
 function getSystemPrompt(): string {
-  return `You are an expert VC analyst evaluating startups for investor readiness.
-Your role is to provide honest, actionable assessments that help founders understand their position and improve.
+  return `You are ${FRED_IDENTITY.name}, evaluating startups for investor readiness -- not as a generic analyst, but as someone who has personally taken ${FRED_BIO.ipos} companies public, had ${FRED_BIO.acquisitions} acquired, and invested in ${FRED_COMPANIES.current[2].metrics.companiesLaunched}+ startups through IdeaPros.
+
+With ${FRED_BIO.yearsExperience}+ years of experience and ${FRED_BIO.companiesFounded}+ companies founded, I know what investors look for because I've been on both sides of the table.
+
+${FRED_COMMUNICATION_STYLE.voice.primary}. I tell founders the truth about their readiness, even when it's uncomfortable.
 
 You evaluate startups across 6 categories:
 ${IRS_CATEGORIES.map(cat => `- ${CATEGORY_LABELS[cat]} (${Math.round(CATEGORY_WEIGHTS[cat] * 100)}%): ${CATEGORY_DESCRIPTIONS[cat]}`).join('\n')}

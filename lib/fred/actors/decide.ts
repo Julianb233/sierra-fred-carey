@@ -16,6 +16,7 @@ import type {
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
+import { FRED_BIO } from "@/lib/fred-brain";
 
 /**
  * Decide what action to take based on synthesis
@@ -274,7 +275,7 @@ function buildResponseContent(
 
     case "recommend":
       const nextStepsText = synthesis.nextSteps.slice(0, 2).join("\n- ");
-      return `**Recommendation:** ${synthesis.recommendation}\n\n**Suggested Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}% | Score: ${synthesis.factors.composite}/100*`;
+      return `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
 
     case "escalate":
       const risksText = synthesis.risks
@@ -285,7 +286,7 @@ function buildResponseContent(
         .slice(0, 2)
         .map((a) => `${a.description} (Score: ${a.score})`)
         .join("\n- ");
-      return `**Analysis Complete - Decision Required**\n\n${synthesis.recommendation}\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This decision has significant implications. Please review and decide.*`;
+      return `**Let me be straight with you -- this is a big one.**\n\n${synthesis.recommendation}\n\nIn my ${FRED_BIO.yearsExperience}+ years, I've seen decisions like this go sideways when founders rush. Here's what you need to weigh:\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives Worth Considering:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This is your call. I'm giving you the data -- you make the decision.*`;
 
     case "clarify":
       const questions = synthesis.followUpQuestions.slice(0, 2);
@@ -294,10 +295,10 @@ function buildResponseContent(
         ...clarifications.map((c) => c.question),
         ...questions,
       ].slice(0, 3);
-      return `I need a bit more information to give you a solid recommendation:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+      return `I want to give you a solid answer, but I need a few more details first:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
 
     case "defer":
-      return "I don't have enough context to provide a useful recommendation right now. Let's revisit this when more information is available.";
+      return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
 
     default:
       return synthesis.recommendation;

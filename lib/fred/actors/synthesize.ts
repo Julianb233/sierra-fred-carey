@@ -6,6 +6,7 @@
  */
 
 import { logger } from "@/lib/logger";
+import { FRED_BIO } from "@/lib/fred-brain";
 import type {
   ValidatedInput,
   MentalModelResult,
@@ -267,20 +268,20 @@ function generateRecommendation(
   // Build recommendation based on input type
   if (input.intent === "decision_request") {
     if (factors.composite >= 70) {
-      return `Based on analysis across ${models.length} frameworks, I recommend proceeding with this opportunity. Key considerations: ${topInsights.join(". ")}`;
+      return `After looking at this from ${models.length} angles, I'd say go for it. Here's why: ${topInsights.join(". ")}`;
     } else if (factors.composite >= 50) {
-      return `This is a balanced decision. Consider: ${topInsights.join(". ")} The composite score of ${factors.composite}/100 suggests further evaluation may be valuable.`;
+      return `This one's a toss-up. I've seen similar decisions go both ways across my ${FRED_BIO.companiesFounded}+ companies. Consider: ${topInsights.join(". ")} The score of ${factors.composite}/100 tells me you need more data before committing.`;
     } else {
-      return `I'd advise caution here. The analysis suggests potential concerns: ${topInsights.join(". ")} Consider alternatives or gathering more information.`;
+      return `I'm going to be honest with you -- I have concerns here. ${topInsights.join(". ")} I'd either rethink the approach or gather more information before moving forward.`;
     }
   }
 
   if (input.intent === "question") {
-    return `Here's what the analysis reveals: ${topInsights.join(". ")}`;
+    return `Here's what I see: ${topInsights.join(". ")}`;
   }
 
   // Default response
-  return `Analysis complete. Key insights: ${topInsights.slice(0, 2).join(". ")}`;
+  return `Here's the bottom line: ${topInsights.slice(0, 2).join(". ")}`;
 }
 
 /**

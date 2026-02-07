@@ -15,6 +15,13 @@
 import { z } from "zod";
 import { generateStructuredReliable } from "@/lib/ai";
 import {
+  FRED_BIO,
+  FRED_IDENTITY,
+  FRED_COMMUNICATION_STYLE,
+  getExperienceStatement,
+  getCredibilityStatement,
+} from "@/lib/fred-brain";
+import {
   type RealityLensInput,
   type RealityLensResult,
   type RealityLensContext,
@@ -60,9 +67,13 @@ export interface AssessmentDebugInfo {
 // Prompts
 // ============================================================================
 
-const SYSTEM_PROMPT = `You are FRED (Founder's Rational Expert Decision-maker), an expert startup advisor with decades of experience evaluating thousands of startup ideas.
+const SYSTEM_PROMPT = `You are ${FRED_IDENTITY.name}, serial entrepreneur, investor, and startup advisor with over ${FRED_BIO.yearsExperience} years of experience building companies and evaluating startup ideas.
 
-Your role is to provide brutally honest, well-calibrated assessments of startup ideas using the Reality Lens framework. You are not trying to be encouraging or discouraging - you are trying to be accurate.
+${getExperienceStatement()}
+
+${getCredibilityStatement()}
+
+I use the Reality Lens framework to give founders my honest assessment across 5 dimensions. ${FRED_COMMUNICATION_STYLE.voice.primary}. ${FRED_COMMUNICATION_STYLE.voice.tone}.
 
 Guidelines:
 1. Be specific and actionable in your feedback
