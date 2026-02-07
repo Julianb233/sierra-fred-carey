@@ -1,368 +1,806 @@
 # Phase 20: Investor Targeting, Outreach & Pipeline - Research
 
 **Researched:** 2026-02-07
-**Domain:** CSV upload, AI investor matching, outreach email sequences, CRM pipeline tracking
+**Domain:** Investor list management, AI-driven matching, outreach generation, CRM-lite pipeline tracking
 **Confidence:** HIGH
 
-## Phase Overview
+## Summary
 
-Phase 20 builds a complete investor relationship management workflow for Studio tier founders. It covers CSV upload of investor lists (both admin-managed partner lists and founder-uploaded contact lists), AI-powered matching of founders to relevant investors, personalized outreach email generation with follow-up sequences, and a CRM-lite pipeline view tracking conversations through fundraising stages.
+This research investigates what exists in the Sahara codebase relevant to building investor targeting, outreach sequencing, and pipeline tracking for Studio-tier founders. The investigation covers 6 requirements: STUDIO-05 through STUDIO-10.
 
-### Requirements
+**Key findings:**
 
-| ID | Description | Tier |
-|----|-------------|------|
-| STUDIO-05 | Admin can upload partner investor lists via CSV | Studio |
-| STUDIO-06 | Founders can upload their own investor contact lists via CSV | Studio |
-| STUDIO-07 | AI matches founders to relevant investors based on stage, sector, check size | Studio |
-| STUDIO-08 | AI generates personalized outreach email sequences | Studio |
-| STUDIO-09 | Follow-up templates with timing recommendations | Studio |
-| STUDIO-10 | CRM-lite pipeline view tracking investor conversations through stages | Studio |
+1. **The fundraising agent already exists** (`lib/agents/fundraising/`) with 4 tools (investorResearch, outreachDraft, pipelineAnalysis, meetingPrep) that produce structured output via `generateStructuredReliable`. These tools currently operate on in-memory data -- there is no persistent investor database, no CSV upload, and no pipeline table. The AI generates hypothetical investor matches from its training data rather than querying a real investor database.
 
-### Success Criteria
+2. **No investor/contact tables exist.** The database has `investor_readiness_scores`, `investor_lens_evaluations`, and `investor_scores` tables, but none store actual investor contact data. There is no `investors` table, no `investor_lists` table, no `pipeline_stages` table, and no `outreach_sequences` table.
 
-1. Admin can upload partner investor lists via CSV; founders can upload their own contact lists
-2. AI matches founders to relevant investors based on stage, sector, and check size
-3. AI generates personalized outreach email sequences with follow-up templates and timing recommendations
-4. CRM-lite pipeline view tracks investor conversations through stages (contacted, meeting, passed, committed)
+3. **CSV infrastructure is partial.** The codebase has a robust CSV *export* system (`lib/export/csv-generator.ts` with `CSVGenerator` class, `csvToJSON` parser, `downloadCSV` helper) but no CSV *import/upload* API endpoint. File uploads exist for PDFs via `app/api/documents/upload/route.ts` using FormData + Supabase Storage, which is a reusable pattern.
 
-## What Exists in the Codebase
+4. **Email infrastructure uses Resend** (`lib/notifications/email.ts`) for A/B test alert emails. There is no outreach email sending -- all outreach tools generate email *drafts* as structured text, not sent emails. This is the correct approach for Phase 20: generate drafts, not send emails.
 
-### Fundraising Agent Tools (lib/agents/fundraising/tools.ts)
+5. **Tier gating is well-established.** Studio features use `getUserTier()` + `UserTier.STUDIO` check in API routes and `FeatureLock` component on pages. The agents API (`app/api/agents/route.ts`) is the canonical pattern for Studio-gated API routes.
 
-The fundraising agent already has four AI-powered tools that provide the intelligence backbone:
+**Primary recommendation:** Phase 20 requires 3 new database tables (investor_contacts, fundraising_pipelines, outreach_sequences), 2 new API routes (CSV upload, pipeline CRUD), 2-3 new dashboard pages (investor list management, pipeline view, outreach drafts), and enhancements to wire the existing fundraising agent tools to query real investor data. The existing `csvToJSON` utility and document upload pattern provide reusable foundations.
 
-1. **investorResearch** -- Research investors by stage, sector, check size, geographic focus. Returns investor profiles with thesis fit analysis and intro strategies.
+## Standard Stack
 
-2. **outreachDraft** -- Draft personalized outreach emails given investor details, founder background, traction metrics, and warm/cold intro context.
+### Core (already in project)
+| Library | Purpose | Why Relevant |
+|---------|---------|--------------|
+| Vercel AI SDK 6 (`ai`, `@ai-sdk/openai`) | `generateObject`, `generateText`, `generateStructuredReliable` | AI matching + outreach generation |
+| Zod | Structured output schemas | Investor match schemas, outreach schemas |
+| Supabase (`@supabase/supabase-js`) | Database + Storage | New tables, CSV file storage |
+| XState v5 (`xstate`) | Agent orchestration | Existing agent dispatch pattern |
+| `lib/export/csv-generator.ts` | CSV parsing + generation | `csvToJSON()` for CSV import, `CSVGenerator` for export |
+| `lib/agents/fundraising/tools.ts` | Fundraising agent tools | Existing investorResearch, outreachDraft, pipelineAnalysis |
+| `lib/agents/fred-agent-voice.ts` | Fred voice preamble for agents | Already used by all fundraising tools |
+| `lib/api/tier-middleware.ts` | Studio tier gating | `getUserTier()`, `requireTier()`, `checkTierForRequest()` |
+| `components/tier/feature-lock.tsx` | Client-side tier gating | `FeatureLock` component for page wrapping |
+| `date-fns` | Date formatting | Timeline views, follow-up scheduling |
 
-3. **pipelineAnalysis** -- Analyze a fundraising pipeline array with investor names, stages (identified, outreach_sent, meeting_scheduled, term_sheet, passed), last contact dates, and notes.
+### New Dependencies Needed
+| Library | Purpose | Why |
+|---------|---------|-----|
+| None | -- | All required functionality can be built with existing deps. `csvToJSON` in `lib/export/csv-generator.ts` handles CSV parsing. No external CSV parser needed. |
 
-4. **meetingPrep** -- Prepare for investor meetings by meeting type (first-call, partner-meeting, follow-up, due-diligence) with company metrics and previous interaction history.
+## Architecture Patterns
 
-These tools use `generateStructuredReliable()` for AI output and already have Fred's voice via `FRED_AGENT_VOICE`. They provide the AI backbone but currently have no persistent data layer -- they generate outputs as one-off agent task results.
+### Current State: Complete Audit of Existing Investor Infrastructure
 
-### Upload Infrastructure (lib/storage/upload.ts)
+#### 1. Fundraising Agent (`lib/agents/fundraising/`)
 
-The file upload module uses `@vercel/blob` for storage:
-- `put()` and `del()` from `@vercel/blob`
-- File type validation (currently PDF and PPTX only for pitch decks)
-- File size validation
-- `UploadResult` interface: `{ url, name, size, type, uploadedAt }`
+**Files:**
+- `agent.ts` (41 lines) -- Runner using `runAgent()` base with `FUNDRAISING_SYSTEM_PROMPT` and `fundraisingTools`
+- `prompts.ts` (27 lines) -- System prompt importing `FRED_BIO`, speaks as Fred Cary with fundraising principles
+- `tools.ts` (312 lines) -- 4 tools, each using `generateStructuredReliable` with `FRED_AGENT_VOICE`
 
-This needs to be extended to support CSV files for investor list uploads.
+**Tool 1: `investorResearch`**
+- Input: `stage` (enum: pre-seed, seed, series-a, series-b), `sector` (string), `checkSizeMin` (number), `checkSizeMax` (number), `geographicFocus` (optional string)
+- Output schema: `{ investors: [{ name, firm, thesis, recentDeals, whyFit, introStrategy }], searchStrategy }`
+- Current behavior: AI generates hypothetical investor matches from training data. No database query.
+- **Phase 20 change needed:** Query the `investor_contacts` table first, then use AI to rank/score matches and explain fit. The tool should blend database results with AI-generated insights.
 
-### Investor Lens Pages (app/dashboard/investor-lens/)
+**Tool 2: `outreachDraft`**
+- Input: `investorName`, `investorFirm`, `investorThesis`, `founderBackground`, `companyOneLiner`, `traction`, `askAmount`, `isWarmIntro`, `introContext`
+- Output schema: `{ subject, body, followUpSchedule: [{ day, action }], doNotMention: string[] }`
+- Current behavior: Generates a single outreach email with follow-up schedule.
+- **Phase 20 change needed:** Save generated sequences to `outreach_sequences` table. Add template variants (initial, follow-up 1, follow-up 2, break-up email). Wire to pipeline tracking.
 
-The investor lens page provides AI-powered VC evaluation. It uses the Investor Lens framework from `lib/ai/frameworks/investor-lens.ts` which evaluates startups from an investor's perspective across stages (Pre-Seed, Seed, Series A).
+**Tool 3: `pipelineAnalysis`**
+- Input: `pipeline: [{ investorName, stage (identified|outreach_sent|meeting_scheduled|term_sheet|passed), lastContact, notes }]`
+- Output schema: `{ summary, priorityActions: [{ investor, action, urgency, reasoning }], staleLeads, pipelineHealth, recommendations }`
+- Current behavior: Takes pipeline data as input parameter (no database). Analyzes and returns recommendations.
+- **Phase 20 change needed:** Load pipeline data from `fundraising_pipelines` table instead of requiring it as input. Save analysis results.
 
-### Investor Readiness Page (app/dashboard/investor-readiness/)
+**Tool 4: `meetingPrep`**
+- Input: `investorName`, `investorFirm`, `meetingType` (first-call|partner-meeting|follow-up|due-diligence), `companyMetrics`, `previousInteractions`
+- Output schema: `{ talkingPoints, anticipatedQuestions: [{ question, suggestedAnswer }], metricsToHighlight, closingAsk, redFlags }`
+- Current behavior: Generates meeting prep based on input parameters. No persistence.
+- **Phase 20 change needed:** Pull investor context from `investor_contacts` and `fundraising_pipelines` tables automatically. Save prep for later reference.
 
-The investor readiness page scores a founder's fundraising readiness. Both investor pages are Pro tier features.
+#### 2. Existing Investor-Related Pages
 
-### Admin Infrastructure (app/admin/)
+**Investor Lens** (`app/dashboard/investor-lens/page.tsx`):
+- Pro-tier gated via `FeatureLock` with `UserTier.PRO`
+- Renders `InvestorLensEvaluation` component -- VC evaluation framework with 8 core axes
+- Evaluates the STARTUP from an investor perspective. Different from Phase 20.
 
-The admin panel has:
-- Layout with auth gating (`isAdminSession()`)
-- Navigation: Dashboard, Prompts, Config, A/B Tests
-- Login page
-- Components directory
+**Investor Readiness** (`app/dashboard/investor-readiness/page.tsx`):
+- Pro-tier gated via `FeatureLock` with `UserTier.PRO`
+- Shows IRS score with 6-category breakdown (team, market, product, traction, financials, pitch)
+- Evaluates FOUNDER readiness to raise. Complementary to Phase 20 but separate.
 
-The admin route structure supports adding new sub-pages like `/admin/investor-lists` for partner list uploads.
+**Investor Evaluation** (`app/dashboard/investor-evaluation/page.tsx`):
+- Pro-tier gated. Listed in dashboard nav.
 
-### Agent Task Output (lib/agents/types.ts)
+**Key insight:** Phase 20 targets are fundamentally different from existing investor pages. Existing pages evaluate the *startup* from an investor perspective. Phase 20 manages *actual investor contacts* and outreach campaigns. The new pages belong in a Studio-tier section of the dashboard.
 
-Agent task results store output as `Record<string, unknown>` in the `agent_tasks` table. The fundraising agent's tool outputs (investor lists, outreach drafts, pipeline analyses) end up here but are not structured for CRM use.
+#### 3. Database Schema -- What Exists
 
-## What Needs to Be Built
+**`investor_readiness_scores`** (migration 025):
+- Columns: `id UUID`, `user_id UUID`, `overall_score DECIMAL(5,2)`, `category_scores JSONB`, `strengths TEXT[]`, `weaknesses TEXT[]`, `recommendations JSONB`, `source_documents UUID[]`, `startup_context JSONB`, `metadata JSONB`, `created_at TIMESTAMPTZ`
+- Per-user, timestamped. Used by the IRS engine.
+- NOT relevant to investor contact management.
 
-### 1. New Database Tables (6 tables)
+**`investor_lens_evaluations`** (migration 017):
+- Columns: `id SERIAL`, `user_id VARCHAR(255)`, `funding_stage`, `ic_verdict`, 8 evaluation axes with scores + feedback, `hidden_filters JSONB`, `top_pass_reasons JSONB`, `derisking_actions JSONB`, stage-specific outputs, `input_data JSONB`
+- Per-user, timestamped. Used by the Investor Lens page.
+- NOT relevant to investor contact management.
 
-**investors** -- Master investor database
+**`investor_scores`** (migration 004):
+- Older/simpler version of IRS with 8 dimension scores (team, traction, market, product, financials, legal, materials, network)
+- Likely superseded by migration 025.
+- NOT relevant to investor contact management.
+
+**`agent_tasks`** (migration 028):
+- Columns: `id UUID`, `user_id UUID`, `agent_type TEXT` (founder_ops|fundraising|growth), `task_type TEXT`, `description TEXT`, `status TEXT`, `input JSONB`, `output JSONB`, `error TEXT`, timestamps
+- Fundraising agent task outputs stored here as JSONB. No structured pipeline data.
+
+**`uploaded_documents`** (migration 024):
+- Columns: `id`, `user_id`, `name`, `type`, `file_url`, `file_size`, `page_count`, `status`, `error_message`, `metadata`
+- Used for PDF uploads to Supabase Storage.
+- Pattern reusable for CSV uploads.
+
+**Conclusion:** No tables exist for investor contacts, fundraising pipelines, or outreach sequences. All 3 must be created.
+
+#### 4. CSV Infrastructure
+
+**Export (EXISTS):** `lib/export/csv-generator.ts` (450 lines)
+- `CSVGenerator<T>` class with type-safe column mapping, streaming support, Excel BOM
+- `generateCSV()` convenience function for synchronous generation
+- `downloadCSV()` browser-side download trigger using Blob + URL.createObjectURL
+- `csvToJSON<T>()` parser -- handles quoted fields, escaped quotes, delimiters, headers, empty lines
+- `parseCSVLine()` internal parser -- correctly handles double-quoted fields with escaped inner quotes
+- `sanitizeFilename()` and `getTimestampedFilename()` helpers
+
+**Import (DOES NOT EXIST):** No CSV upload API endpoint. But the patterns are clear:
+- File upload pattern: `app/api/documents/upload/route.ts` using `request.formData()`, `file.arrayBuffer()`, Supabase Storage `.upload()`
+- CSV parsing: `csvToJSON()` from `lib/export/csv-generator.ts` -- already built, handles edge cases
+- Validation: Zod schemas can validate each parsed row before insertion
+
+**Admin upload pattern:** Admin routes exist at `app/api/admin/` (voice-agent config, A/B tests, prompts, training data). Admin auth uses `app/api/admin/login/route.ts` and `app/api/admin/logout/route.ts`. For STUDIO-05 (admin uploads partner investor lists), a new `app/api/admin/investors/upload/route.ts` would follow the admin API pattern.
+
+#### 5. Email/Outreach Infrastructure
+
+**SMS:** `lib/sms/client.ts` uses Twilio for SMS sending with lazy-initialized client. `lib/sms/templates.ts` has message templates using Fred's voice.
+
+**Email:** `lib/notifications/email.ts` uses Resend API (`https://api.resend.com/emails`) for HTML email notifications. Env vars: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME`. The email infrastructure is built around A/B test alerts, not investor outreach.
+
+**Critical design decision:** Phase 20 should NOT send emails automatically. The fundraising agent's `outreachDraft` tool already generates email *text* as structured output. Phase 20 should:
+1. Generate email drafts and store them in `outreach_sequences`
+2. Display them for the founder to review, edit, and copy/paste
+3. Provide a "Copy to Clipboard" button
+4. Track send status manually (founder marks as "sent" after sending from their own email)
+
+This avoids: domain reputation issues, email deliverability complexity, SPF/DKIM setup, and founders losing control of their fundraising communications.
+
+#### 6. Tier Gating Patterns
+
+**API-side (server) -- from `app/api/agents/route.ts`:**
+```typescript
+import { requireAuth } from "@/lib/auth";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
+
+const userId = await requireAuth();
+const userTier = await getUserTier(userId);
+if (userTier < UserTier.STUDIO) {
+  return createTierErrorResponse({ allowed: false, userTier, requiredTier: UserTier.STUDIO, userId });
+}
+```
+
+**Page-side (client) -- from `app/dashboard/investor-lens/page.tsx`:**
+```typescript
+import { FeatureLock } from "@/components/tier/feature-lock";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
+
+const { tier, isLoading } = useUserTier();
+<FeatureLock requiredTier={UserTier.STUDIO} currentTier={tier} featureName="Investor Pipeline">
+  <PipelineContent />
+</FeatureLock>
+```
+
+**Dashboard nav (sidebar) -- from `app/dashboard/layout.tsx`:**
+```typescript
+// In navItems array. tier: 2 = Studio, badge: "Studio"
+{ name: "Weekly Check-ins", href: "/dashboard/sms", icon: <CheckCircledIcon />, tier: 2, badge: "Studio" },
+{ name: "Virtual Team", href: "/dashboard/agents", icon: <RocketIcon />, tier: 2, badge: "Studio" },
+```
+Note: `app/dashboard/layout.tsx` is listed in file modification constraints (pre-commit hooks may auto-revert changes). Workaround: create adapter routes or wrapper files instead of modifying locked files, or test if nav additions are allowed.
+
+#### 7. AI Pattern: `generateStructuredReliable` for Tool Outputs
+
+All fundraising agent tools use this pattern (from `lib/agents/fundraising/tools.ts`):
+```typescript
+import { generateStructuredReliable } from '@/lib/ai/fred-client';
+import { FRED_AGENT_VOICE } from "@/lib/agents/fred-agent-voice";
+
+const result = await generateStructuredReliable(prompt, schema, {
+  system: `${FRED_AGENT_VOICE}\n\nDomain-specific instructions here.`,
+  temperature: 0.5,
+});
+return result.object;
+```
+
+`generateStructuredReliable` (in `lib/ai/fred-client.ts`, 568 lines) provides: automatic provider fallback (OpenAI -> Anthropic -> Google), circuit breaker, retry logic with exponential backoff, and Zod schema validation. Use it for all new AI-powered operations in Phase 20.
+
+#### 8. Base Agent Runner Pattern
+
+`lib/agents/base-agent.ts` (102 lines) wraps `generateText` from Vercel AI SDK 6 with tools and `stopWhen(stepCountIs(N))`:
+```typescript
+const result = await generateText({
+  model,
+  system: config.systemPrompt,
+  prompt: buildPrompt(task),
+  tools: config.tools,
+  stopWhen: stepCountIs(config.maxSteps),
+});
+```
+
+The fundraising agent uses `maxSteps: 8`. Tool results are extracted from `result.steps.flatMap(step => step.toolCalls)`.
+
+Agent execution is fire-and-forget via XState actor in `app/api/agents/route.ts`. The API returns immediately with a task ID; the orchestrator runs in the background and updates the `agent_tasks` table.
+
+### Proposed New Database Tables
+
+#### Table 1: `investor_contacts`
+Stores investor records uploaded by admins (partner lists) or founders (own contacts).
+
 ```sql
-CREATE TABLE investors (
+CREATE TABLE IF NOT EXISTS investor_contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Ownership
+  user_id UUID,                        -- NULL for admin-uploaded partner lists (shared)
+  uploaded_by UUID NOT NULL,           -- Who uploaded this record
+  source TEXT NOT NULL DEFAULT 'manual'
+    CHECK (source IN ('admin_csv', 'founder_csv', 'manual', 'agent')),
+
+  -- Investor info
   name TEXT NOT NULL,
   firm TEXT,
   email TEXT,
   linkedin_url TEXT,
-  website TEXT,
-  stages TEXT[],           -- ['pre-seed', 'seed', 'series-a']
-  sectors TEXT[],           -- ['fintech', 'saas', 'healthtech']
-  check_size_min BIGINT,   -- in cents
-  check_size_max BIGINT,
-  geographic_focus TEXT[],
-  thesis TEXT,              -- investment thesis description
-  source TEXT NOT NULL,     -- 'admin_upload', 'founder_upload', 'ai_research'
-  uploaded_by UUID REFERENCES auth.users(id),
-  is_partner BOOLEAN DEFAULT FALSE,  -- admin-curated partner list
-  metadata JSONB DEFAULT '{}'::JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  title TEXT,                          -- e.g., "Partner", "Principal"
+
+  -- Investment criteria
+  stages TEXT[] DEFAULT '{}',          -- e.g., ['pre-seed', 'seed']
+  sectors TEXT[] DEFAULT '{}',         -- e.g., ['fintech', 'healthtech']
+  check_size_min INTEGER,             -- In USD
+  check_size_max INTEGER,             -- In USD
+  geographic_focus TEXT[] DEFAULT '{}',
+  thesis TEXT,
+
+  -- Relationship
+  warm_intro_available BOOLEAN DEFAULT FALSE,
+  intro_path TEXT,
+  notes TEXT,
+
+  -- Metadata
+  tags TEXT[] DEFAULT '{}',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_investors_stages ON investors USING GIN(stages);
-CREATE INDEX idx_investors_sectors ON investors USING GIN(sectors);
-CREATE INDEX idx_investors_source ON investors(source);
+CREATE INDEX idx_investor_contacts_user ON investor_contacts(user_id);
+CREATE INDEX idx_investor_contacts_source ON investor_contacts(source);
+CREATE INDEX idx_investor_contacts_stages ON investor_contacts USING GIN(stages);
+CREATE INDEX idx_investor_contacts_sectors ON investor_contacts USING GIN(sectors);
 ```
 
-**investor_uploads** -- Track CSV upload jobs
-```sql
-CREATE TABLE investor_uploads (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  file_url TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  row_count INT,
-  processed_count INT DEFAULT 0,
-  failed_count INT DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'pending', -- pending, processing, complete, failed
-  errors JSONB DEFAULT '[]'::JSONB,
-  is_admin_upload BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  completed_at TIMESTAMPTZ
-);
-```
+Key decisions:
+- `user_id = NULL` for admin-uploaded partner lists (visible to all Studio users)
+- `user_id = <uuid>` for founder-uploaded personal contacts (visible only to that founder)
+- GIN indexes on array columns for efficient `@>` (contains) queries on stages/sectors
 
-**investor_matches** -- AI-generated founder-investor matches
-```sql
-CREATE TABLE investor_matches (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  investor_id UUID NOT NULL REFERENCES investors(id) ON DELETE CASCADE,
-  match_score REAL NOT NULL,  -- 0-1
-  match_reasons JSONB,        -- { stage_fit: true, sector_match: true, ... }
-  status TEXT DEFAULT 'suggested', -- suggested, accepted, rejected
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id, investor_id)
-);
-```
+#### Table 2: `fundraising_pipelines`
+Tracks investor conversations through stages.
 
-**outreach_sequences** -- Email outreach sequences
 ```sql
-CREATE TABLE outreach_sequences (
+CREATE TABLE IF NOT EXISTS fundraising_pipelines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  investor_id UUID NOT NULL REFERENCES investors(id) ON DELETE CASCADE,
-  match_id UUID REFERENCES investor_matches(id),
-  emails JSONB NOT NULL,      -- Array of { step: 1, subject, body, send_after_days, status }
-  status TEXT DEFAULT 'draft', -- draft, active, paused, completed
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
+  user_id UUID NOT NULL,
+  investor_contact_id UUID REFERENCES investor_contacts(id) ON DELETE SET NULL,
 
-**pipeline_entries** -- CRM pipeline tracking
-```sql
-CREATE TABLE pipeline_entries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  investor_id UUID NOT NULL REFERENCES investors(id) ON DELETE CASCADE,
-  stage TEXT NOT NULL DEFAULT 'identified', -- identified, contacted, meeting, due_diligence, term_sheet, committed, passed
+  -- Pipeline stage
+  stage TEXT NOT NULL DEFAULT 'identified'
+    CHECK (stage IN ('identified', 'researching', 'outreach_drafted', 'contacted',
+      'meeting_scheduled', 'meeting_done', 'follow_up', 'term_sheet',
+      'committed', 'passed', 'not_interested')),
+
+  -- Denormalized for display + manual entries without investor_contact
+  investor_name TEXT NOT NULL,
+  investor_firm TEXT,
+
+  -- Context
   notes TEXT,
   next_action TEXT,
   next_action_date DATE,
-  last_contact_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id, investor_id)
+  last_contact_date DATE,
+
+  -- AI insights
+  ai_match_score DECIMAL(5,2),
+  ai_match_reasoning TEXT,
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_pipeline_user ON fundraising_pipelines(user_id);
+CREATE INDEX idx_pipeline_stage ON fundraising_pipelines(stage);
+CREATE INDEX idx_pipeline_investor ON fundraising_pipelines(investor_contact_id);
+CREATE INDEX idx_pipeline_next_action ON fundraising_pipelines(next_action_date)
+  WHERE next_action_date IS NOT NULL;
 ```
 
-**pipeline_activity** -- Activity log for pipeline entries
+Key decisions:
+- Pipeline entries can exist without `investor_contact_id` (for manually-added investors)
+- Denormalized `investor_name` and `investor_firm` to avoid joins on every list render
+- 11 pipeline stages covering the full fundraising lifecycle
+- `ai_match_score` and `ai_match_reasoning` populated by the matching engine
+
+#### Table 3: `outreach_sequences`
+Stores AI-generated outreach drafts and follow-up templates.
+
 ```sql
-CREATE TABLE pipeline_activity (
+CREATE TABLE IF NOT EXISTS outreach_sequences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  pipeline_entry_id UUID NOT NULL REFERENCES pipeline_entries(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  action TEXT NOT NULL,       -- 'stage_change', 'note_added', 'email_sent', 'meeting_scheduled'
-  from_stage TEXT,
-  to_stage TEXT,
-  details JSONB DEFAULT '{}'::JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  user_id UUID NOT NULL,
+  pipeline_id UUID REFERENCES fundraising_pipelines(id) ON DELETE CASCADE,
+  investor_contact_id UUID REFERENCES investor_contacts(id) ON DELETE SET NULL,
+
+  -- Sequence position
+  sequence_type TEXT NOT NULL
+    CHECK (sequence_type IN ('initial', 'follow_up_1', 'follow_up_2', 'follow_up_3', 'break_up')),
+  send_after_days INTEGER NOT NULL DEFAULT 0,
+
+  -- Content
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  personalization_notes TEXT,
+
+  -- Status
+  status TEXT NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft', 'reviewed', 'sent', 'responded', 'bounced')),
+  sent_at TIMESTAMPTZ,
+  response_received_at TIMESTAMPTZ,
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_outreach_user ON outreach_sequences(user_id);
+CREATE INDEX idx_outreach_pipeline ON outreach_sequences(pipeline_id);
+CREATE INDEX idx_outreach_status ON outreach_sequences(status);
 ```
 
-### 2. CSV Parser (lib/investors/csv-parser.ts)
+### Proposed Page Structure
 
-A CSV parsing module for investor list uploads:
+| Page | Route | Tier | Purpose |
+|------|-------|------|---------|
+| Investor Contacts | `/dashboard/investor-contacts` | Studio | View/search/upload investor lists |
+| Investor Pipeline | `/dashboard/investor-pipeline` | Studio | List/card view of pipeline stages |
+| Outreach Drafts | `/dashboard/outreach` | Studio | View/edit/copy outreach sequences |
+
+### Proposed API Routes
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/investors` | GET | List investor contacts (shared + user's own) |
+| `/api/investors` | POST | Create single investor contact manually |
+| `/api/investors/upload` | POST | CSV upload for founders |
+| `/api/investors/match` | POST | AI matching for a specific user |
+| `/api/admin/investors/upload` | POST | Admin CSV upload for partner lists |
+| `/api/pipeline` | GET | List pipeline entries for user |
+| `/api/pipeline` | POST | Create/update pipeline entry |
+| `/api/pipeline/[id]` | PATCH | Update pipeline stage |
+| `/api/pipeline/[id]` | DELETE | Remove pipeline entry |
+| `/api/outreach` | GET | List outreach sequences for user |
+| `/api/outreach/generate` | POST | Generate outreach sequence for a pipeline entry |
+
+### CSV Upload Flow (STUDIO-05, STUDIO-06)
+
+**Admin upload (STUDIO-05):**
+1. Admin uploads CSV via `/api/admin/investors/upload`
+2. Server reads FormData, extracts CSV file via `file.text()`
+3. `csvToJSON()` from `lib/export/csv-generator.ts` parses CSV into row objects
+4. Zod validates each row against `InvestorContactRowSchema`
+5. Bulk insert into `investor_contacts` with `source: 'admin_csv'`, `user_id: NULL`
+6. Return success with count of imported/skipped/errored rows
+
+**Founder upload (STUDIO-06):**
+1. Founder uploads CSV via `/api/investors/upload` (Studio-gated)
+2. Same parsing flow, but `source: 'founder_csv'`, `user_id: <founder_id>`
+3. Contacts are private to the founder
 
 **Expected CSV columns:**
-- name (required)
-- firm
-- email
-- linkedin_url
-- website
-- stages (comma-separated)
-- sectors (comma-separated)
-- check_size_min
-- check_size_max
-- geographic_focus (comma-separated)
-- thesis
+```
+Name,Firm,Email,Title,Stages,Sectors,Check Size Min,Check Size Max,Geographic Focus,Thesis,Notes
+```
 
-**Validation:**
-- Name is required
-- Email format validation
-- Stage values must match allowed set
-- Check size must be numeric
+Stages and Sectors columns accept comma-separated values within the cell (e.g., `"pre-seed,seed"`).
 
-**Output:** Array of validated investor records ready for database insertion.
+### AI Matching Flow (STUDIO-07)
 
-### 3. AI Matching Algorithm (lib/investors/matching.ts)
+1. Fetch founder's startup context from onboarding profile + IRS data
+2. Fetch all accessible investors (admin shared where `user_id IS NULL` + founder's own contacts)
+3. Deterministic pre-filter: stage overlap, sector overlap, check size range
+4. AI score filtered subset using `generateStructuredReliable`:
+   - Stage alignment (investor stages vs. founder stage)
+   - Sector alignment (investor sectors vs. founder industry)
+   - Check size alignment (investor range vs. founder's ask)
+   - Thesis alignment (free-text comparison via AI)
+5. Return ranked list with scores and reasoning
+6. Optionally auto-create pipeline entries for top matches
 
-Matches founders to investors using profile data:
+**Performance consideration:** For large investor lists (500+), use two-pass approach: deterministic pre-filtering (stage + sector + check size) reduces to ~20-50 candidates. AI scores only the filtered subset. Use `gpt-4o-mini` (fast model) for initial scoring.
 
-**Matching criteria:**
-- **Stage match:** Founder's current stage vs investor's stage preferences (weight: 35%)
-- **Sector match:** Founder's industry vs investor's sector focus (weight: 30%)
-- **Check size match:** Founder's raise target vs investor's check size range (weight: 20%)
-- **Geographic match:** Founder's location vs investor's geographic focus (weight: 15%)
+### Outreach Generation Flow (STUDIO-08, STUDIO-09)
 
-**Approach:**
-1. Filter investors by hard requirements (must match stage)
-2. Score remaining investors on multi-factor criteria
-3. Rank by composite score
-4. Return top N matches with explanations
+1. Select a pipeline entry (investor in "researching" or "outreach_drafted" stage)
+2. Pull investor context from `investor_contacts`
+3. Pull founder context from profile + IRS + strategy docs
+4. Generate each sequence step via `generateStructuredReliable`:
+   - Initial email (send day 0)
+   - Follow-up 1 (send day 3-5)
+   - Follow-up 2 (send day 7-10)
+   - Break-up email (send day 14-21)
+5. Save all drafts to `outreach_sequences`
+6. Display in the Outreach Drafts page for review/edit
+7. Founder copies text and sends from their own email client
+8. Founder marks as "sent" to update pipeline stage
 
-**AI enhancement:** Use the fundraising agent's `investorResearch` tool for supplementary analysis on top matches.
+The existing `outreachDraft` tool output schema already includes `followUpSchedule: [{ day, action }]` and `doNotMention: string[]`. The generation flow can call this tool multiple times with varying context (warm intro vs cold, initial vs follow-up framing).
 
-### 4. Outreach Sequence UI (app/dashboard/investor-outreach/page.tsx)
+### Pipeline CRM View (STUDIO-10)
 
-Interface for managing outreach email sequences:
+The pipeline view shows all investor conversations grouped by stage. Two view options:
 
-- Select an investor from matches
-- AI generates a multi-email sequence (initial, follow-up 1, follow-up 2, break-up email)
-- Each email shows: subject, body preview, send timing, status
-- Edit/approve individual emails before "activating" the sequence
-- Track: draft, sent, replied, no-reply
+**List view (primary):** Table with sortable columns: investor name, firm, stage, last contact date, next action, match score. Filter buttons for each stage. Click to expand details (notes, outreach history, AI recommendations). Quick-action buttons (mark as contacted, schedule meeting, mark passed).
 
-Uses the fundraising agent's `outreachDraft` tool for email generation.
+**Card view (secondary):** Cards grouped by stage columns. Each card shows investor name, firm, and stage indicator. Simpler than a full Kanban -- use button-click stage transitions, not drag-and-drop.
 
-### 5. Pipeline Kanban (app/dashboard/investor-pipeline/page.tsx)
+Both views support:
+- Filter by stage
+- Sort by last contact date, match score, or next action date
+- Click to expand details
+- Quick-action buttons for stage transitions
 
-A CRM-lite Kanban board for tracking investor conversations:
+### File-by-File Change Map
 
-**Columns (stages):**
-1. Identified -- initial list
-2. Contacted -- outreach sent
-3. Meeting -- scheduled or completed meeting
-4. Due Diligence -- investor actively evaluating
-5. Term Sheet -- offer received
-6. Committed -- deal closed
-7. Passed -- investor declined
+| File | Change Type | Complexity |
+|------|-------------|------------|
+| `lib/db/migrations/036_investor_pipeline.sql` (NEW) | Create investor_contacts, fundraising_pipelines, outreach_sequences tables | Medium |
+| `lib/db/investor-contacts.ts` (NEW) | CRUD for investor_contacts table | Medium |
+| `lib/db/fundraising-pipeline.ts` (NEW) | CRUD for fundraising_pipelines table | Medium |
+| `lib/db/outreach-sequences.ts` (NEW) | CRUD for outreach_sequences table | Medium |
+| `app/api/investors/route.ts` (NEW) | GET/POST for investor contacts | Medium |
+| `app/api/investors/upload/route.ts` (NEW) | CSV upload endpoint for founders | Medium |
+| `app/api/investors/match/route.ts` (NEW) | AI matching endpoint | High |
+| `app/api/admin/investors/upload/route.ts` (NEW) | Admin CSV upload endpoint | Medium |
+| `app/api/pipeline/route.ts` (NEW) | GET/POST for pipeline entries | Medium |
+| `app/api/pipeline/[id]/route.ts` (NEW) | PATCH/DELETE for individual pipeline entries | Low |
+| `app/api/outreach/route.ts` (NEW) | GET for outreach sequences | Low |
+| `app/api/outreach/generate/route.ts` (NEW) | POST to generate outreach sequence | High |
+| `app/dashboard/investor-contacts/page.tsx` (NEW) | Investor list management page with upload | High |
+| `app/dashboard/investor-pipeline/page.tsx` (NEW) | Pipeline CRM view | High |
+| `app/dashboard/outreach/page.tsx` (NEW) | Outreach drafts page | Medium |
+| `app/dashboard/layout.tsx` | Add 3 new Studio nav items (may need workaround for pre-commit hooks) | Low |
+| `lib/constants.ts` | Add new Studio features to TIER_FEATURES and DASHBOARD_NAV | Low |
 
-**Card display:** Investor name, firm, last contact, next action, notes preview
-**Drag-and-drop:** Move cards between columns to update stage
-**Activity log:** Click a card to see full history of interactions
+## Don't Hand-Roll
 
-### 6. API Endpoints
+| Problem | Don't Build | Use Instead | Why |
+|---------|-------------|-------------|-----|
+| CSV parsing | Custom parser | `csvToJSON()` from `lib/export/csv-generator.ts` | Already built with proper quote handling, escape handling, and header parsing |
+| Structured AI output | Raw API calls | `generateStructuredReliable` from `lib/ai/fred-client.ts` | Handles fallback, retry, circuit breaker automatically |
+| File upload | Custom multipart handling | `request.formData()` + Supabase Storage (pattern from `app/api/documents/upload/route.ts`) | Already proven in codebase |
+| Tier gating (server) | Custom auth checks | `getUserTier()` + `UserTier.STUDIO` from `lib/api/tier-middleware.ts` | Canonical pattern used by all Studio API routes |
+| Tier gating (client) | Custom lock UI | `FeatureLock` from `components/tier/feature-lock.tsx` | Handles lock overlay and upgrade CTA |
+| Agent voice | Hardcoded persona | `FRED_AGENT_VOICE` from `lib/agents/fred-agent-voice.ts` | Single source of truth for Fred's voice in agent tools |
+| Email sending | Build email sender for investor outreach | Don't send emails at all -- generate drafts only | Founders should send from their own email to maintain reputation and control |
+| DB access layer | Inline Supabase queries in routes | Create dedicated `lib/db/*.ts` files following `lib/db/agent-tasks.ts` pattern | Lazy-init Supabase, mapper functions, proper error handling |
 
-**POST /api/investors/upload** -- Upload CSV file (admin or founder)
-**GET /api/investors** -- List investors (filtered by source, stage, sector)
-**GET /api/investors/matches** -- Get AI-generated matches for current user
-**POST /api/investors/matches/generate** -- Trigger AI matching
-**GET /api/outreach/[investorId]** -- Get outreach sequence for an investor
-**POST /api/outreach/generate** -- Generate outreach sequence via AI
-**PATCH /api/outreach/[id]** -- Update sequence (edit emails, change status)
-**GET /api/pipeline** -- Get pipeline entries for current user
-**PATCH /api/pipeline/[id]** -- Update pipeline entry (stage change, notes)
-**GET /api/pipeline/[id]/activity** -- Get activity log for a pipeline entry
+## Common Pitfalls
 
-**Admin-only:**
-**POST /api/admin/investors/upload** -- Upload partner investor list
+### Pitfall 1: Sending Outreach Emails Directly
+**What goes wrong:** Building email sending infrastructure to send outreach directly from Sahara. Domain reputation issues, deliverability problems, SPF/DKIM configuration, founders losing control of their fundraising communications.
+**Why it happens:** The natural instinct to "complete" the outreach flow end-to-end.
+**How to avoid:** Generate drafts only. Provide "Copy to Clipboard" functionality. Let founders send from their own email clients (Gmail, Outlook). Track status via manual "mark as sent" actions.
+**Warning signs:** Any discussion of SMTP configuration, email domain verification, bounce handling, or email warm-up periods.
 
-### 7. Upload Extension (lib/storage/upload.ts)
+### Pitfall 2: Over-Engineering the Pipeline View
+**What goes wrong:** Building a full-featured Kanban with drag-and-drop, real-time sync, undo/redo for the pipeline view. This adds significant complexity and likely requires a new dependency (`@dnd-kit`, `react-beautiful-dnd`).
+**Why it happens:** CRM tools like HubSpot or Pipedrive have polished Kanban boards.
+**How to avoid:** Start with a list/table view with stage filter buttons. Add a simple visual card layout grouped by stage. Use button-click stage transitions, not drag-and-drop. Defer drag-and-drop to a future iteration if founders request it.
+**Warning signs:** Adding drag-and-drop libraries as dependencies in the first plan.
 
-Extend the existing upload module to support CSV files:
-- Add `text/csv` and `.csv` to allowed types
-- Add CSV-specific size limit (e.g., 5MB)
-- Return upload URL for processing
+### Pitfall 3: AI Matching Without Pre-Filtering
+**What goes wrong:** Sending all 500+ investors to an AI model for scoring. Expensive, slow, and may hit context window limits.
+**Why it happens:** Treating AI as the sole matching engine.
+**How to avoid:** Use deterministic pre-filtering first: filter by stage overlap, sector overlap, check size range. Only AI-score the filtered subset (typically 20-50 investors). Use `gpt-4o-mini` (fast model via `getModel('fast')`) for initial scoring, `gpt-4o` (primary model) for top-10 deep analysis.
+**Warning signs:** Token usage spikes, 30+ second API response times, costs exceeding $0.50 per match run.
 
-## Integration Points
+### Pitfall 4: Not Handling the Dashboard Layout Lock
+**What goes wrong:** Editing `app/dashboard/layout.tsx` directly, then pre-commit hooks revert the changes.
+**Why it happens:** The file is in the pre-commit hook protection list per the project constraints.
+**How to avoid:** Either coordinate with the hook configuration to allow the change, or test the modification first. If hooks revert, consider creating the new pages at routes that work with the existing nav, or add nav items via a separate configuration.
+**Warning signs:** Git commits silently reverting layout.tsx changes.
 
-| Component | Integrates With | How |
-|-----------|----------------|-----|
-| CSV parser | upload.ts | Extended file validation + blob storage |
-| Matching algorithm | Founder profile (profiles table + semantic memory) | Reads founder stage, industry, raise target |
-| Matching algorithm | investors table | Queries investors by criteria |
-| Outreach generation | fundraising/tools.ts outreachDraft | Uses existing AI tool for email generation |
-| Pipeline | pipeline_entries + pipeline_activity tables | CRUD operations |
-| Admin upload | admin auth (isAdminSession) | Admin-only route |
-| All pages | FeatureLock (Studio tier) | Tier gating |
-| Dashboard nav | constants.ts | New nav entries |
+### Pitfall 5: Tight Coupling Between Agent Tools and Database
+**What goes wrong:** Making agent tools directly query the database, breaking the existing fire-and-forget agent pattern. Agent tools should remain pure AI functions that take structured input and return structured output.
+**Why it happens:** The natural desire to make `investorResearch` query real investor data inside the tool.
+**How to avoid:** The API route (not the agent tool) should fetch data from the database and pass it to the agent tool via the `input` field. The agent tools accept pre-fetched data as parameters, not query the DB themselves. This preserves the clean architecture where tools are stateless AI functions.
+**Warning signs:** Supabase imports inside `lib/agents/fundraising/tools.ts`.
 
-## Suggested Plan Structure
+### Pitfall 6: Missing RLS Policies on New Tables
+**What goes wrong:** Investor contacts from one user are visible to other users. Pipeline data leaks between accounts.
+**Why it happens:** Forgetting to add Row Level Security policies to new tables.
+**How to avoid:** Every new table must have RLS enabled and policies that restrict: (1) founder-uploaded contacts and pipeline data to the owning user, (2) admin-uploaded shared contacts (user_id IS NULL) visible to all authenticated Studio users. Follow the RLS pattern from existing tables.
+**Warning signs:** Users seeing investors they did not upload or add.
 
-### Plan 20-01: Investor Upload + AI Matching
+## Code Examples
 
-**Scope:** CSV upload (admin + founder), investor database, AI matching
+### Example 1: CSV Upload API Route (Founder Upload)
 
-1. Create database migrations (investors, investor_uploads, investor_matches tables)
-2. Extend upload.ts for CSV support
-3. Create CSV parser module (`lib/investors/csv-parser.ts`)
-4. Create investor DB access layer (`lib/db/investors.ts`)
-5. Create AI matching algorithm (`lib/investors/matching.ts`)
-6. Create upload API routes (POST /api/investors/upload, POST /api/admin/investors/upload)
-7. Create matching API routes (GET /api/investors/matches, POST /api/investors/matches/generate)
-8. Create investor list page (`app/dashboard/investor-list/page.tsx`)
-9. Add admin upload page (`app/admin/investor-lists/page.tsx`)
-10. Tests for CSV parser and matching algorithm
+Source: Derived from `app/api/documents/upload/route.ts` pattern + `lib/export/csv-generator.ts` csvToJSON.
 
-### Plan 20-02: Outreach Sequences + Pipeline Tracking
+```typescript
+// app/api/investors/upload/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireAuth } from "@/lib/auth";
+import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
+import { csvToJSON } from "@/lib/export/csv-generator";
 
-**Scope:** Email generation, sequence management, CRM pipeline
+const InvestorRowSchema = z.object({
+  Name: z.string().min(1),
+  Firm: z.string().optional().default(""),
+  Email: z.string().email().optional().or(z.literal("")).default(""),
+  Title: z.string().optional().default(""),
+  Stages: z.string().optional().default(""),       // comma-separated
+  Sectors: z.string().optional().default(""),       // comma-separated
+  "Check Size Min": z.string().optional().default(""),
+  "Check Size Max": z.string().optional().default(""),
+  "Geographic Focus": z.string().optional().default(""),
+  Thesis: z.string().optional().default(""),
+  Notes: z.string().optional().default(""),
+});
 
-1. Create database migrations (outreach_sequences, pipeline_entries, pipeline_activity tables)
-2. Create outreach DB access layer (`lib/db/outreach.ts`)
-3. Create pipeline DB access layer (`lib/db/pipeline.ts`)
-4. Create outreach API routes (generate, CRUD)
-5. Create pipeline API routes (CRUD, activity log)
-6. Create outreach sequence page (`app/dashboard/investor-outreach/page.tsx`)
-7. Create pipeline Kanban page (`app/dashboard/investor-pipeline/page.tsx`)
-8. Create Kanban column and card components
-9. Wire outreach generation to fundraising agent's outreachDraft tool
-10. Add dashboard navigation entries
-11. Tests for outreach and pipeline APIs
+export async function POST(request: NextRequest) {
+  const userId = await requireAuth();
+  const userTier = await getUserTier(userId);
+  if (userTier < UserTier.STUDIO) {
+    return createTierErrorResponse({
+      allowed: false, userTier, requiredTier: UserTier.STUDIO, userId
+    });
+  }
 
-## Key Files to Reference
+  const formData = await request.formData();
+  const file = formData.get("file") as File | null;
+  if (!file || !file.name.endsWith(".csv")) {
+    return NextResponse.json({ error: "CSV file required" }, { status: 400 });
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: "File exceeds 5MB limit" }, { status: 400 });
+  }
 
-| File | Purpose | Lines of Interest |
-|------|---------|-------------------|
-| `lib/agents/fundraising/tools.ts` | investorResearch, outreachDraft, pipelineAnalysis, meetingPrep tools | Full file |
-| `lib/storage/upload.ts` | File upload with Vercel Blob (extend for CSV) | Full file |
-| `lib/db/agent-tasks.ts` | CRUD pattern for Supabase operations | Full file |
-| `app/admin/layout.tsx` | Admin auth gating pattern | 1-60 |
-| `app/dashboard/investor-lens/page.tsx` | Existing investor evaluation UI | Full file |
-| `app/dashboard/investor-readiness/page.tsx` | Investor readiness scoring UI | Full file |
-| `lib/agents/fred-agent-voice.ts` | Voice preamble for Fred-voiced outputs | Full file |
-| `lib/agents/fundraising/prompts.ts` | Fundraising agent system prompt | Full file |
-| `lib/constants.ts` | DASHBOARD_NAV, UserTier.STUDIO | 135-151 |
-| `lib/ai/frameworks/investor-lens.ts` | Investor evaluation framework | Full file |
+  const csvText = await file.text();
+  const rows = csvToJSON<Record<string, string>>(csvText);
+
+  const imported: string[] = [];
+  const errors: { row: number; error: string }[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const parsed = InvestorRowSchema.safeParse(rows[i]);
+    if (!parsed.success) {
+      errors.push({ row: i + 2, error: parsed.error.issues[0]?.message || "Invalid row" });
+      continue;
+    }
+    // Insert into investor_contacts with user_id and source: 'founder_csv'
+    imported.push(parsed.data.Name);
+  }
+
+  return NextResponse.json({
+    success: true,
+    imported: imported.length,
+    errors: errors.length,
+    errorDetails: errors.slice(0, 10),
+  });
+}
+```
+
+### Example 2: AI Matching with Pre-Filtering
+
+```typescript
+// Conceptual matching flow for /api/investors/match
+import { generateStructuredReliable } from "@/lib/ai/fred-client";
+import { FRED_AGENT_VOICE } from "@/lib/agents/fred-agent-voice";
+import { z } from "zod";
+
+const MatchResultSchema = z.object({
+  matches: z.array(z.object({
+    investorId: z.string(),
+    score: z.number().min(0).max(100),
+    reasoning: z.string(),
+    introStrategy: z.string(),
+  })),
+  summary: z.string(),
+});
+
+async function matchInvestors(founderProfile: FounderProfile, investors: InvestorContact[]) {
+  // Step 1: Deterministic pre-filter
+  const candidates = investors.filter(inv => {
+    const stageMatch = inv.stages.length === 0 ||
+      inv.stages.some(s => s === founderProfile.stage);
+    const sectorMatch = inv.sectors.length === 0 ||
+      inv.sectors.some(s => founderProfile.industry.toLowerCase().includes(s.toLowerCase()));
+    const sizeMatch = !inv.checkSizeMin ||
+      !founderProfile.askAmount ||
+      founderProfile.askAmount >= inv.checkSizeMin;
+    return stageMatch || sectorMatch || sizeMatch;
+  });
+
+  // Step 2: AI scoring on filtered subset
+  const investorDescriptions = candidates.map((inv, i) =>
+    `${i+1}. ${inv.name} at ${inv.firm || "Independent"} -- ` +
+    `stages: ${inv.stages.join(",") || "any"}; ` +
+    `sectors: ${inv.sectors.join(",") || "generalist"}; ` +
+    `check: $${inv.checkSizeMin || "?"}-$${inv.checkSizeMax || "?"}; ` +
+    `thesis: ${inv.thesis || "N/A"}`
+  ).join("\n");
+
+  const prompt = `Evaluate these ${candidates.length} investors for fit:
+
+Startup: ${founderProfile.name} (${founderProfile.stage}, ${founderProfile.industry})
+Ask: ${founderProfile.askAmount}
+Description: ${founderProfile.description}
+
+Investors:
+${investorDescriptions}
+
+Score each 0-100 on fit. Explain WHY each is/isn't a good match. Suggest intro strategies.`;
+
+  const result = await generateStructuredReliable(prompt, MatchResultSchema, {
+    system: `${FRED_AGENT_VOICE}\n\nMatch investors the way I would -- look for real thesis alignment, not just sector overlap. The best investors add strategic value beyond capital.`,
+    temperature: 0.4,
+    model: candidates.length > 30 ? 'fast' : 'primary',
+  });
+
+  return result.object;
+}
+```
+
+### Example 3: Pipeline Page with FeatureLock
+
+```typescript
+// app/dashboard/investor-pipeline/page.tsx
+"use client";
+
+import { FeatureLock } from "@/components/tier/feature-lock";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
+
+export default function InvestorPipelinePage() {
+  const { tier, isLoading } = useUserTier();
+  if (isLoading) return null;
+
+  return (
+    <FeatureLock
+      requiredTier={UserTier.STUDIO}
+      currentTier={tier}
+      featureName="Investor Pipeline"
+      description="Track your fundraising conversations from first contact to commitment."
+    >
+      <PipelineContent />
+    </FeatureLock>
+  );
+}
+
+function PipelineContent() {
+  // Fetch pipeline data, render list/card view with stage filters
+  // Follow pattern from app/dashboard/investor-readiness/page.tsx
+}
+```
+
+### Example 4: Dashboard Nav Entry
+
+```typescript
+// Addition to navItems in app/dashboard/layout.tsx
+{
+  name: "Investor Contacts",
+  href: "/dashboard/investor-contacts",
+  icon: <PersonIcon className="h-4 w-4" />,
+  tier: 2,
+  badge: "Studio",
+},
+{
+  name: "Investor Pipeline",
+  href: "/dashboard/investor-pipeline",
+  icon: <ActivityLogIcon className="h-4 w-4" />,
+  tier: 2,
+  badge: "Studio",
+},
+```
+
+## State of the Art
+
+| Old Approach | Current Approach | When Changed | Impact |
+|--------------|------------------|--------------|--------|
+| No investor database | AI generates hypothetical matches from training data | v1.0 (Phase 04) | Fundraising tools work but produce generic, non-persistent results |
+| No pipeline tracking | Pipeline data passed as tool input parameter | v1.0 (Phase 04) | Each analysis is stateless; no history across sessions |
+| No outreach persistence | Outreach emails generated and displayed once as agent output | v1.0 (Phase 04) | Founders must copy text immediately or lose it |
+| No CSV import | Only CSV export (monitoring dashboard) | v1.0 (Phase 10) | `csvToJSON` parser exists but no upload endpoint |
 
 ## Open Questions
 
-1. **Partner list visibility:** Should admin-uploaded partner investor lists be visible to all Studio users, or per-user? Recommendation: All Studio users see the partner list. Founders only see their own uploaded lists + the shared partner list.
+1. **Admin authentication for CSV upload**
+   - What we know: Admin routes exist at `app/api/admin/` with their own auth (login/logout routes, session management).
+   - What's unclear: Whether the existing admin auth should be used for investor CSV uploads, or if a simpler approach (ADMIN_API_KEY env var check) is sufficient.
+   - Recommendation: Use the existing admin auth pattern for consistency. STUDIO-05 specifies "admin can upload," implying the admin panel UI.
 
-2. **Outreach execution:** Should the system actually send emails, or just generate drafts? Recommendation: Draft-only in this phase. Actual sending requires email deliverability infrastructure (SPF, DKIM, warm-up) which is a separate concern. Users copy drafts to their own email client.
+2. **Shared vs. private investor visibility**
+   - What we know: Admin-uploaded partner lists should be visible to all Studio founders. Founder-uploaded contacts should be private.
+   - What's unclear: Should founders see which other founders are targeting the same investor? This would be useful for warm intro coordination but raises privacy concerns.
+   - Recommendation: Keep it simple -- admin lists are shared (read-only), founder lists are private. No cross-founder visibility in Phase 20.
 
-3. **Duplicate handling:** How to handle the same investor appearing in both admin and founder uploads? Recommendation: Deduplicate by (name + firm) combination. Show the most complete record. Track both sources in metadata.
+3. **Pipeline stage granularity**
+   - What we know: The ROADMAP specifies 4 stages: contacted, meeting, passed, committed. The existing `pipelineAnalysis` tool uses 5: identified, outreach_sent, meeting_scheduled, term_sheet, passed.
+   - What's unclear: The optimal number of stages for the MVP.
+   - Recommendation: Use the 11-stage model proposed in the table design (identified, researching, outreach_drafted, contacted, meeting_scheduled, meeting_done, follow_up, term_sheet, committed, passed, not_interested). Display grouped as 4-5 visual columns in the pipeline view. This covers the full lifecycle without overwhelming the UI.
 
-4. **Pipeline data source:** Should the pipeline auto-populate from outreach sequence status, or be manually managed? Recommendation: Auto-create a pipeline entry when an outreach sequence is activated. Allow manual stage changes thereafter.
+4. **Dashboard layout.tsx modification constraint**
+   - What we know: `app/dashboard/layout.tsx` has pre-commit hooks that may auto-revert changes.
+   - What's unclear: Whether the hooks specifically target content changes (like adding nav items) or only structural changes.
+   - Recommendation: Test the modification first. If hooks revert, consider adding nav items via a dynamic configuration file or extending the `navItems` array from a separate module that layout.tsx imports.
 
-5. **Data privacy:** Investor contact information (emails) may be sensitive. Should we encrypt PII at rest? Recommendation: Yes, encrypt email and linkedin_url columns. Use Supabase Column Level Security or application-level encryption.
+5. **Integration with existing fundraising agent tools**
+   - What we know: The 4 existing tools are pure AI functions that take structured input and return structured output via `generateStructuredReliable`.
+   - What's unclear: Whether to modify these tools to accept pre-fetched data, or create new database-aware wrapper functions.
+   - Recommendation: Keep existing tools unchanged. Create new API routes that: (1) fetch data from DB, (2) format it as tool input, (3) call the tool, (4) save results to DB. This preserves backward compatibility and the clean stateless tool architecture.
+
+6. **Duplicate investor handling across uploads**
+   - What we know: The same investor may appear in both admin-uploaded partner lists and founder-uploaded contact lists.
+   - What's unclear: Should duplicates be merged, flagged, or kept as separate records?
+   - Recommendation: Keep as separate records for now. The founder's copy may have personal notes/context the admin version lacks. Add a "possible duplicate" flag based on (name + firm) matching for future UI enhancement.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `lib/agents/fundraising/tools.ts` -- All four fundraising tools (direct reading)
-- `lib/storage/upload.ts` -- Upload infrastructure (direct reading)
-- `lib/agents/types.ts` -- Agent type system (direct reading)
-- `lib/db/agent-tasks.ts` -- DB access patterns (direct reading)
-- `app/admin/layout.tsx` -- Admin auth gating (direct reading)
+- `lib/agents/fundraising/agent.ts` -- Read in full (41 lines), agent runner documented
+- `lib/agents/fundraising/prompts.ts` -- Read in full (27 lines), system prompt with fred-brain imports
+- `lib/agents/fundraising/tools.ts` -- Read in full (312 lines), all 4 tools with input/output schemas documented
+- `lib/agents/base-agent.ts` -- Read in full (102 lines), `runAgent()` with `generateText` + `stepCountIs`
+- `lib/agents/types.ts` -- Read in full (110 lines), all agent types documented
+- `lib/agents/fred-agent-voice.ts` -- Read in full (18 lines), voice constant documented
+- `lib/fred/irs/engine.ts` -- Read in full (354 lines), IRS engine with `generateObject` pattern
+- `lib/fred/irs/types.ts` -- Read in full (263 lines), IRS type system documented
+- `lib/fred/irs/db.ts` -- Read in full (136 lines), DB operations pattern documented
+- `lib/fred/irs/index.ts` -- Read in full (13 lines), module exports documented
+- `lib/ai/fred-client.ts` -- Read in full (568 lines), `generateStructuredReliable` documented
+- `lib/ai/providers.ts` -- Read in full (241 lines), model configuration and fallback chain documented
+- `lib/export/csv-generator.ts` -- Read in full (450 lines), `csvToJSON`, `CSVGenerator`, `downloadCSV`, `parseCSVLine`
+- `lib/export/types.ts` -- Read in full (229 lines), export type system documented
+- `lib/db/agent-tasks.ts` -- Read in full (227 lines), CRUD pattern with lazy Supabase init documented
+- `lib/db/documents.ts` -- Read in full (373 lines), document upload DB pattern documented
+- `lib/db/migrations/025_investor_readiness_scores.sql` -- Read in full, schema documented
+- `lib/db/migrations/017_investor_lens.sql` -- Read in full (142 lines), investor lens + deck reviews schema
+- `lib/db/migrations/004_investor_score.sql` -- Read in full, older investor score schema
+- `lib/db/migrations/028_agent_tasks.sql` -- Read in full, agent tasks schema
+- `app/api/documents/upload/route.ts` -- Read in full (151 lines), file upload pattern with FormData + Supabase Storage
+- `app/api/agents/route.ts` -- Read in full (365 lines), Studio-gated agent dispatch with XState orchestrator
+- `lib/api/tier-middleware.ts` -- Read in full (254 lines), `getUserTier`, `requireTier`, `checkTierForRequest`, `createTierErrorResponse`
+- `lib/notifications/email.ts` -- Read in full (809 lines), Resend email sending infrastructure
+- `lib/sms/client.ts` -- Read in full (83 lines), Twilio SMS client with lazy init
+- `lib/sms/templates.ts` -- Read in full (76 lines), SMS templates with Fred voice
+- `lib/constants.ts` -- Read in full (146 lines), tier definitions, feature lists, nav config, startup stages
+- `components/tier/feature-lock.tsx` -- Read in full (228 lines), FeatureLock, InlineFeatureLock, ComingSoonBadge, UpgradePromptCard
+- `components/investor-lens/investor-lens-evaluation.tsx` -- Read in full (486 lines), evaluation UI with form + results tabs
+- `app/dashboard/investor-lens/page.tsx` -- Read in full (23 lines), Pro-tier page with FeatureLock
+- `app/dashboard/investor-readiness/page.tsx` -- Read in full (413 lines), IRS page with form + score display + history
+- `app/dashboard/layout.tsx` -- Read in full (334 lines), sidebar nav with tier gating and user profile
+- `components/agents/dispatch-task-modal.tsx` -- Read in full (385 lines), agent task dispatch UI pattern
+- `lib/fred/voice.ts` -- Read in full (73 lines), composable voice preamble builder
+- `lib/agents/fundraising/prompts.ts` -- Read in full (27 lines), agent system prompt
+- `.planning/REQUIREMENTS.md` -- Read in full (191 lines), STUDIO-05 through STUDIO-10 documented
+- `.planning/ROADMAP.md` -- Read in full (251 lines), Phase 20 context, success criteria, and plan structure
+- Full grep across codebase for CSV, email, investor, pipeline, outreach, papaparse, sendgrid, resend, postmark, nodemailer patterns
 
-### Secondary (MEDIUM confidence)
-- `.planning/ROADMAP.md` -- Phase scope and success criteria
-- `lib/ai/frameworks/investor-lens.ts` -- Investor evaluation framework (directory listing)
+## Metadata
+
+**Confidence breakdown:**
+- Standard stack: HIGH -- all files read directly, no new dependencies needed
+- Architecture: HIGH -- every relevant file in the agent/investor/upload pipeline read and documented
+- Database design: HIGH -- all existing investor-related migrations read, gap analysis complete, new table schemas proposed with specific columns and indexes
+- CSV infrastructure: HIGH -- existing csvToJSON and upload patterns fully documented with working code paths
+- Tier gating: HIGH -- both server and client patterns fully understood from source code
+- Pitfalls: HIGH -- derived from direct code analysis and documented codebase constraints, not speculation
 
 **Research date:** 2026-02-07
-**Valid until:** Next fundraising agent or admin system refactor
+**Valid until:** Indefinite (no external dependencies; only dependent on project source code which was read directly)
