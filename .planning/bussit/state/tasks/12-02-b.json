@@ -1,0 +1,12 @@
+{
+  "id": "12-02-b",
+  "type": "build",
+  "phase": 12,
+  "planPath": ".planning/phases/12-data-fixes-production-hardening/12-02-PLAN.md",
+  "title": "Production infrastructure (middleware, robots, sitemap, CORS, Upstash rate limiting, env validation)",
+  "description": "Harden production infrastructure: root middleware for auth, robots.txt, sitemap.xml, CORS utility, Upstash Redis rate limiting, env var validation script.",
+  "priority": "P0",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T12:00:00Z"
+}

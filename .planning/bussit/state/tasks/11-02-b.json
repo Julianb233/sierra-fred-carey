@@ -6,7 +6,8 @@
   "title": "Security headers",
   "description": "Add CSP, X-Frame-Options, HSTS, Permissions-Policy to next.config.mjs headers()",
   "priority": "P1",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-06T21:30:00Z"
+  "createdAt": "2026-02-06T21:30:00Z",
+  "completedAt": "2026-02-07T12:00:00Z"
 }

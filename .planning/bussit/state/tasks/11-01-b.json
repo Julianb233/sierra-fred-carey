@@ -6,7 +6,8 @@
   "title": "Auth endpoint rate limiting",
   "description": "Add rate limiting to /api/auth/login (5/min), /api/admin/login (3/min), /api/onboard (10/hr)",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-06T21:30:00Z"
+  "createdAt": "2026-02-06T21:30:00Z",
+  "completedAt": "2026-02-07T12:00:00Z"
 }

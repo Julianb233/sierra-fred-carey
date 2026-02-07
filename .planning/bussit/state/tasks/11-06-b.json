@@ -6,7 +6,8 @@
   "title": "Service role scoping + error sanitization",
   "description": "Replace service role client with user-scoped client in 5 DB modules, sanitize error messages in API responses",
   "priority": "P2",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-06T21:30:00Z"
+  "createdAt": "2026-02-06T21:30:00Z",
+  "completedAt": "2026-02-07T12:00:00Z"
 }
