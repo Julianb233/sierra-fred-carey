@@ -123,10 +123,10 @@ Plans:
   1. During a FRED chat conversation, the system detects and flags business risks (market, financial, team, etc.)
   2. Flagged risks appear as inline visual indicators in the chat UI (warning badges or highlighted text)
   3. Dashboard widget shows a persistent list of all current red flags with severity levels
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 16-01: Red Flag Detection engine and UI
+- [ ] 16-01-PLAN.md -- Red Flag Detection engine, DB, API, chat integration, and dashboard widget
 
 ### Phase 17: Founder Wellbeing
 **Goal**: FRED proactively supports founder mental health through detection, check-ins, and coaching grounded in Fred's philosophy
@@ -136,10 +136,10 @@ Plans:
   1. During conversation, FRED detects burnout/stress signals and proactively offers support
   2. Founders can visit a dedicated check-in page to self-assess their mental state
   3. Mindset coaching mode is available using Fred's 6 philosophy principles (grit, resilience, etc.)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 17-01: Founder Wellbeing detection, check-in page, and coaching mode
+- [ ] 17-01-PLAN.md -- Burnout detection engine, wellbeing check-in page, and mindset coaching mode
 
 ### Phase 18: Intake Snapshot & Strategy Reframing
 **Goal**: Founders have a rich, evolving profile generated from onboarding and conversations, plus a dedicated strategy reframing tool
@@ -150,11 +150,11 @@ Plans:
   2. FRED auto-generates and enriches the founder profile from ongoing conversations over time
   3. Dashboard displays a viewable snapshot document showing the current founder profile
   4. Strategy & Execution Reframing has a dedicated UI applying Fred's 9-step framework (not just general chat)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 18-01: Founder Intake Snapshot
-- [ ] 18-02: Strategy & Execution Reframing UI
+- [ ] 18-01-PLAN.md -- Enriched onboarding, founder profile snapshot, and snapshot page
+- [ ] 18-02-PLAN.md -- Auto-enrichment from chat, strategy reframing page with 9-step framework
 
 ### Phase 19: Inbox Ops Agent
 **Goal**: Studio founders have a centralized message hub that aggregates and prioritizes output from all agents
@@ -165,10 +165,10 @@ Plans:
   2. Agent task completions, recommendations, and action items are displayed as messages
   3. Messages are categorized and priority-surfaced (urgent items first)
   4. Inbox Agent responses use Fred Cary's voice consistently with other agents
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 19-01: Inbox Ops Agent hub and message aggregation
+- [ ] 19-01-PLAN.md -- Inbox message hub, agent task aggregation, priority sorting, and Studio tier gating
 
 ### Phase 20: Investor Targeting, Outreach & Pipeline
 **Goal**: Studio founders can upload investor lists, get AI-matched recommendations, generate personalized outreach, and track their fundraising pipeline
@@ -179,11 +179,11 @@ Plans:
   2. AI matches founders to relevant investors based on stage, sector, and check size
   3. AI generates personalized outreach email sequences with follow-up templates and timing recommendations
   4. CRM-lite pipeline view tracks investor conversations through stages (contacted, meeting, passed, committed)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 20-01: Investor list upload and AI targeting
-- [ ] 20-02: Outreach sequencing and pipeline tracking
+- [ ] 20-01-PLAN.md -- Investor CSV upload, DB tables, AI matching algorithm, targeting page
+- [ ] 20-02-PLAN.md -- Outreach sequence generation, pipeline Kanban board, CRM tracking
 
 ### Phase 21: Memory & Compute Tiers
 **Goal**: Higher-paying tiers get measurably better AI (faster models, deeper context) and memory features are properly gated
@@ -193,10 +193,10 @@ Plans:
   1. Studio tier users get higher-quality AI models or queue priority compared to lower tiers
   2. Studio tier loads more episodic context and has longer memory retention than Pro
   3. Memory features (persistent context, conversation history beyond session) are restricted to Pro+ tiers
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 21-01: Priority compute and tiered memory
+- [ ] 21-01-PLAN.md -- Tier-based model routing, memory depth config, memory gating, chat route integration
 
 ### Phase 22: PWA & Mobile Polish
 **Goal**: Sahara is installable as a PWA with a guided experience, and every page renders correctly on mobile devices
@@ -223,10 +223,10 @@ Plans:
   3. Framework Reference page covers 9-Step Startup Process, Positioning, Investor Lens, and Reality Lens
   4. Agent Behavior guide documents how each agent responds with examples
   5. FRED Identity & Background page shows bio, companies, philosophy, and media presence
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 23-01: Admin training docs route and content pages
+- [ ] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
 
 ## Progress
 
@@ -241,11 +241,11 @@ Plans:
 | 13. Voice -- Core AI Engines | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 14. Voice -- Agents & Channels | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 15. Voice -- Helpers & Activation | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 16. Red Flag Detection | v2.0 | 0/1 | Planned | - |
-| 17. Founder Wellbeing | v2.0 | 0/1 | Planned | - |
-| 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | Planned | - |
-| 19. Inbox Ops Agent | v2.0 | 0/1 | Planned | - |
-| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | Planned | - |
-| 21. Memory & Compute Tiers | v2.0 | 0/1 | Planned | - |
+| 16. Red Flag Detection | v2.0 | 0/1 | In Progress | - |
+| 17. Founder Wellbeing | v2.0 | 0/1 | In Progress | - |
+| 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | In Progress | - |
+| 19. Inbox Ops Agent | v2.0 | 0/1 | In Progress | - |
+| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | In Progress | - |
+| 21. Memory & Compute Tiers | v2.0 | 0/1 | In Progress | - |
 | 22. PWA & Mobile Polish | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 23. Admin Training Docs | v2.0 | 0/1 | Planned | - |
+| 23. Admin Training Docs | v2.0 | 0/1 | In Progress | - |
