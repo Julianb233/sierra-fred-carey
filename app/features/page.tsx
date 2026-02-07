@@ -84,7 +84,6 @@ export default function FeaturesPage() {
         {
           name: "Boardy Integration",
           description: "Investor matching and warm-intro workflows to the right funds.",
-          comingSoon: true,
         },
         {
           name: "Investor Targeting Guidance",
@@ -99,17 +98,14 @@ export default function FeaturesPage() {
         {
           name: "Founder Ops Agent",
           description: "Weekly sprint planning, decision tracking, priority management.",
-          comingSoon: true,
         },
         {
           name: "Fundraise Ops Agent",
           description: "Investor list building, email drafts, meeting prep & summaries.",
-          comingSoon: true,
         },
         {
           name: "Growth Ops Agent",
           description: "Content calendars, social post drafting, landing page iterations.",
-          comingSoon: true,
         },
         {
           name: "Inbox Ops Agent",

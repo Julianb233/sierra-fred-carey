@@ -166,14 +166,16 @@ export default function SettingsPage() {
     }
     try {
       setDeleteLoading(true)
-      const supabase = createClient()
-      // Note: actual account deletion would need a server-side endpoint
-      // For now, sign out and redirect
+      const res = await fetch("/api/user/delete", { method: "DELETE" })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Failed to delete account")
+      }
       localStorage.clear()
-      await supabase.auth.signOut()
       window.location.href = "/login"
     } catch (err) {
       console.error("Delete error:", err)
+      toast.error(err instanceof Error ? err.message : "Failed to delete account")
     } finally {
       setDeleteLoading(false)
     }

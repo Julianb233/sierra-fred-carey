@@ -19,7 +19,7 @@ const FROM_NAME = process.env.RESEND_FROM_NAME || "A/B Testing Platform";
 /**
  * Email template type
  */
-type EmailTemplate = "significance" | "winner" | "error" | "performance";
+type EmailTemplate = "significance" | "winner" | "error" | "performance" | "digest";
 
 /**
  * Send email notification using Resend
@@ -520,6 +520,269 @@ function formatMetricValue(metric: string, value: number): string {
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+/**
+ * Send a digest email that compiles multiple notifications into a single summary
+ */
+export async function sendDigestEmail(
+  toEmail: string,
+  notifications: NotificationPayload[]
+): Promise<NotificationResult> {
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      throw new Error(
+        "RESEND_API_KEY not configured. Please set it in your environment variables."
+      );
+    }
+
+    if (!toEmail || !isValidEmail(toEmail)) {
+      throw new Error(`Invalid email address: ${toEmail}`);
+    }
+
+    if (notifications.length === 0) {
+      return {
+        success: false,
+        channel: "email",
+        error: "No notifications to include in digest",
+        timestamp: new Date(),
+      };
+    }
+
+    const template = generateDigestTemplate(notifications);
+
+    const emailPayload = {
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [toEmail],
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      tags: [
+        { name: "alert_level", value: "digest" },
+        { name: "alert_type", value: "digest" },
+        { name: "alert_count", value: String(notifications.length) },
+      ],
+    };
+
+    const response = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(emailPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        `Resend API error: ${response.status} - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      channel: "email",
+      messageId: result.id,
+      timestamp: new Date(),
+    };
+  } catch (error: any) {
+    console.error("[Email] Failed to send digest email:", error);
+    return {
+      success: false,
+      channel: "email",
+      error: error.message,
+      timestamp: new Date(),
+    };
+  }
+}
+
+/**
+ * Generate digest email template that summarizes multiple notifications
+ */
+function generateDigestTemplate(notifications: NotificationPayload[]): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const dashboardUrl = `${baseUrl}/dashboard`;
+
+  // Count notifications by level
+  const criticalCount = notifications.filter(
+    (n) => n.level === "critical"
+  ).length;
+  const warningCount = notifications.filter(
+    (n) => n.level === "warning"
+  ).length;
+  const infoCount = notifications.filter((n) => n.level === "info").length;
+
+  // Count notifications by type
+  const byType: Record<string, number> = {};
+  for (const n of notifications) {
+    byType[n.type] = (byType[n.type] || 0) + 1;
+  }
+
+  // Determine the highest severity for the subject line
+  const highestLevel: AlertLevel = criticalCount > 0
+    ? "critical"
+    : warningCount > 0
+      ? "warning"
+      : "info";
+  const subjectEmoji = getLevelEmoji(highestLevel);
+
+  // Sort notifications by severity (critical first)
+  const sorted = [...notifications].sort((a, b) => {
+    const levelOrder: Record<AlertLevel, number> = {
+      critical: 3,
+      warning: 2,
+      info: 1,
+    };
+    return levelOrder[b.level] - levelOrder[a.level];
+  });
+
+  // Build the summary counts row
+  const summaryCountsHtml = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
+      <tr>
+        <td style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 6px 0 0 6px;">
+          <div style="font-size: 24px; font-weight: 700; color: #dc2626;">${criticalCount}</div>
+          <div style="font-size: 12px; color: #991b1b; text-transform: uppercase; font-weight: 600;">Critical</div>
+        </td>
+        <td style="text-align: center; padding: 12px; background-color: #fffbeb;">
+          <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">${warningCount}</div>
+          <div style="font-size: 12px; color: #92400e; text-transform: uppercase; font-weight: 600;">Warning</div>
+        </td>
+        <td style="text-align: center; padding: 12px; background-color: #eff6ff; border-radius: 0 6px 6px 0;">
+          <div style="font-size: 24px; font-weight: 700; color: #3b82f6;">${infoCount}</div>
+          <div style="font-size: 12px; color: #1e40af; text-transform: uppercase; font-weight: 600;">Info</div>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  // Build individual notification rows (show all, but cap at 10 for email length)
+  const displayNotifications = sorted.slice(0, 10);
+  const notificationRowsHtml = displayNotifications
+    .map((n) => {
+      const levelColor = getLevelColor(n.level);
+      const emoji = getLevelEmoji(n.level);
+      const experimentLabel = n.experimentName
+        ? `<span style="color: #6b7280; font-size: 13px;"> &mdash; ${n.experimentName}</span>`
+        : "";
+      const metricLabel =
+        n.metric && n.value !== undefined
+          ? `<div style="margin-top: 4px; font-size: 13px; color: #6b7280;">${n.metric.replace(/_/g, " ")}: <strong>${formatMetricValue(n.metric, n.value)}</strong>${n.threshold !== undefined ? ` (threshold: ${formatMetricValue(n.metric, n.threshold)})` : ""}</div>`
+          : "";
+
+      return `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">
+            <div style="border-left: 4px solid ${levelColor}; padding-left: 12px;">
+              <div style="font-weight: 600; color: #374151;">
+                ${emoji} ${n.title}${experimentLabel}
+              </div>
+              <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+                ${n.message}
+              </div>
+              ${metricLabel}
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const overflowNote =
+    notifications.length > 10
+      ? `<tr><td style="padding: 12px; text-align: center; color: #6b7280; font-style: italic;">And ${notifications.length - 10} more alerts&hellip;</td></tr>`
+      : "";
+
+  // Build the alert type breakdown
+  const typeBreakdownHtml = Object.entries(byType)
+    .map(
+      ([type, count]) =>
+        `<span style="display: inline-block; background-color: #f3f4f6; border-radius: 12px; padding: 4px 12px; margin: 2px 4px; font-size: 13px; color: #374151;">${type}: <strong>${count}</strong></span>`
+    )
+    .join(" ");
+
+  const html = generateHtmlWrapper(
+    highestLevel,
+    `
+    <h1 style="color: #374151; margin: 0 0 8px 0;">
+      Alert Digest Summary
+    </h1>
+    <p style="font-size: 16px; color: #6b7280; margin: 0 0 24px 0;">
+      ${notifications.length} alert${notifications.length !== 1 ? "s" : ""} collected since your last digest.
+    </p>
+
+    ${summaryCountsHtml}
+
+    <div style="margin: 0 0 16px 0;">
+      <strong style="font-size: 14px; color: #374151;">By type:</strong>
+      <div style="margin-top: 8px;">${typeBreakdownHtml}</div>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e5e7eb; border-radius: 6px; margin: 24px 0;">
+      <tr style="background-color: #f9fafb;">
+        <th style="text-align: left; color: #6b7280; font-weight: 600; font-size: 14px; padding: 12px; border-bottom: 1px solid #e5e7eb;">
+          Alerts (sorted by severity)
+        </th>
+      </tr>
+      ${notificationRowsHtml}
+      ${overflowNote}
+    </table>
+
+    ${generateActionButton("View Dashboard", dashboardUrl, "#3b82f6")}
+  `
+  );
+
+  // Build plain-text version
+  const textLines = [
+    `Alert Digest Summary`,
+    ``,
+    `${notifications.length} alert${notifications.length !== 1 ? "s" : ""} collected since your last digest.`,
+    ``,
+    `Summary:`,
+    `  Critical: ${criticalCount}`,
+    `  Warning: ${warningCount}`,
+    `  Info: ${infoCount}`,
+    ``,
+    `By type: ${Object.entries(byType).map(([t, c]) => `${t}: ${c}`).join(", ")}`,
+    ``,
+    `--- Alerts (sorted by severity) ---`,
+    ``,
+  ];
+
+  for (const n of displayNotifications) {
+    textLines.push(
+      `[${n.level.toUpperCase()}] ${n.title}${n.experimentName ? ` - ${n.experimentName}` : ""}`
+    );
+    textLines.push(`  ${n.message}`);
+    if (n.metric && n.value !== undefined) {
+      textLines.push(
+        `  ${n.metric}: ${formatMetricValue(n.metric, n.value)}${n.threshold !== undefined ? ` (threshold: ${formatMetricValue(n.metric, n.threshold)})` : ""}`
+      );
+    }
+    textLines.push(``);
+  }
+
+  if (notifications.length > 10) {
+    textLines.push(`And ${notifications.length - 10} more alerts...`);
+    textLines.push(``);
+  }
+
+  textLines.push(`View dashboard: ${dashboardUrl}`);
+
+  return {
+    subject: `${subjectEmoji} Alert Digest: ${notifications.length} alert${notifications.length !== 1 ? "s" : ""}${criticalCount > 0 ? ` (${criticalCount} critical)` : ""}`,
+    html,
+    text: textLines.join("\n").trim(),
+  };
 }
 
 /**

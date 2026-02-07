@@ -14,12 +14,13 @@ import { isValidPdf } from '@/lib/documents/pdf-processor';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
 import type { DocumentType } from '@/lib/documents/types';
+import { clientEnv, serverEnv } from '@/lib/env';
 
 // Lazy Supabase client (avoids module-level init during static generation)
 function getSupabase() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
+    serverEnv.SUPABASE_SERVICE_ROLE_KEY
   );
 }
 

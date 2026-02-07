@@ -13,6 +13,9 @@ import {
   DocumentList,
   DocumentPreview,
 } from "@/components/strategy";
+import { FeatureLock } from "@/components/tier/feature-lock";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
 import type {
   StrategyDocType,
   GeneratedDocument,
@@ -21,6 +24,29 @@ import { DOC_TYPE_LABELS } from "@/lib/fred/strategy/types";
 import { TEMPLATES } from "@/lib/fred/strategy/templates";
 
 export default function StrategyPage() {
+  const { tier, isLoading: isTierLoading } = useUserTier();
+
+  if (isTierLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      </div>
+    );
+  }
+
+  return (
+    <FeatureLock
+      requiredTier={UserTier.PRO}
+      currentTier={tier}
+      featureName="Strategy Documents"
+      description="Generate AI-powered strategic documents tailored to your startup."
+    >
+      <StrategyContent />
+    </FeatureLock>
+  );
+}
+
+function StrategyContent() {
   // Document list state
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);

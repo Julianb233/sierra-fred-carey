@@ -37,7 +37,7 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
       >
         {isUser ? (
           <Avatar className="h-10 w-10 border-2 border-[#ff6a1a]/50 ring-2 ring-[#ff6a1a]/20">
-            <AvatarImage src="/avatars/user.png" />
+            <AvatarImage src="" />
             <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-500 text-white text-sm font-semibold">
               U
             </AvatarFallback>

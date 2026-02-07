@@ -75,6 +75,14 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - Closes: Dashboard CTA → Stripe checkout 400 error, Flow 2 partial break
   - [x] 09-01-PLAN.md — Add TIER_TO_PLAN_KEY mapping so "pro"→FUNDRAISING, "studio"→VENTURE_STUDIO
 
+### Dashboard Polish (from v1.0 comprehensive audit)
+
+- [ ] **Phase 10: Dashboard Polish & Missing Wiring** - Fix dead buttons, delete account, nav gaps, tier mismatch
+  - Closes: Monitoring page dead buttons, settings delete account stub, nav tier mismatch, hidden pages
+  - [ ] 10-01-PLAN.md — Monitoring page fixes (View Details button, CSV/JSON export, filter re-fetch, stale TODO)
+  - [ ] 10-02-PLAN.md — Delete account server endpoint + settings page wiring
+  - [ ] 10-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
+
 ### Parallel Track
 
 - [ ] **A2P 10DLC Registration** - Start during Phase 01, required for SMS in Phase 04

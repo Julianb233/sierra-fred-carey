@@ -97,6 +97,12 @@ function formatPagerDutyEvent(
     customDetails.metadata = payload.metadata;
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  if (!appUrl) {
+    console.warn("[PagerDuty] NEXT_PUBLIC_APP_URL is not set; client_url and dashboard links will be omitted from PagerDuty events.");
+  }
+
   const event: PagerDutyEvent = {
     routing_key: routingKey,
     event_action: "trigger",
@@ -112,14 +118,14 @@ function formatPagerDutyEvent(
       custom_details: customDetails,
     },
     client: "Sierra Fred Carey",
-    client_url: process.env.NEXT_PUBLIC_APP_URL || "https://app.example.com",
+    ...(appUrl ? { client_url: appUrl } : {}),
   };
 
   // Add links to dashboard if available
-  if (payload.experimentName) {
+  if (payload.experimentName && appUrl) {
     event.links = [
       {
-        href: `${process.env.NEXT_PUBLIC_APP_URL || ""}/admin/intelligence?tab=monitoring`,
+        href: `${appUrl}/admin/intelligence?tab=monitoring`,
         text: "View Monitoring Dashboard",
       },
     ];

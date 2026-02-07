@@ -14,6 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ReviewSummary, DeckOverview, SlideAnalysisPanel } from "@/components/pitch";
+import { FeatureLock } from "@/components/tier/feature-lock";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
 import type { PitchReview } from "@/lib/fred/pitch/types";
 
 interface UploadedDoc {
@@ -26,6 +29,29 @@ interface UploadedDoc {
 }
 
 export default function PitchDeckReviewPage() {
+  const { tier, isLoading: isTierLoading } = useUserTier();
+
+  if (isTierLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      </div>
+    );
+  }
+
+  return (
+    <FeatureLock
+      requiredTier={UserTier.PRO}
+      currentTier={tier}
+      featureName="Pitch Deck Review"
+      description="Get AI-powered slide-by-slide analysis of your pitch deck."
+    >
+      <PitchDeckReviewContent />
+    </FeatureLock>
+  );
+}
+
+function PitchDeckReviewContent() {
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [review, setReview] = useState<PitchReview | null>(null);

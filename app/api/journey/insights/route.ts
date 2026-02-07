@@ -128,7 +128,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Insight ${action}ned`
+      message: `Insight ${action === "pin" ? "pinned" : "unpinned"}`
     });
   } catch (error) {
     console.error("[PATCH /api/journey/insights]", error);

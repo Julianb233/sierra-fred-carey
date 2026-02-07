@@ -7,10 +7,36 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScoreGauge, CategoryBreakdown, RecommendationList } from "@/components/irs";
+import { FeatureLock } from "@/components/tier/feature-lock";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { IRSResult } from "@/lib/fred/irs/types";
 
 export default function InvestorReadinessPage() {
+  const { tier, isLoading: isTierLoading } = useUserTier();
+
+  if (isTierLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      </div>
+    );
+  }
+
+  return (
+    <FeatureLock
+      requiredTier={UserTier.PRO}
+      currentTier={tier}
+      featureName="Investor Readiness Score"
+      description="Evaluate your fundraising readiness across 6 key categories."
+    >
+      <InvestorReadinessContent />
+    </FeatureLock>
+  );
+}
+
+function InvestorReadinessContent() {
   const [result, setResult] = useState<IRSResult | null>(null);
   const [history, setHistory] = useState<IRSResult[]>([]);
   const [loading, setLoading] = useState(true);

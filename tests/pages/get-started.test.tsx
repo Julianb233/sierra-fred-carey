@@ -260,7 +260,7 @@ describe('Get Started Page (/get-started)', () => {
     }, { timeout: 1000 });
 
     const emailInput = screen.getByPlaceholderText('you@company.com') as HTMLInputElement;
-    const passwordInput = screen.getByPlaceholderText('Create a password (8+ chars, A-Z, 0-9)') as HTMLInputElement;
+    const passwordInput = screen.getByPlaceholderText('Create a password') as HTMLInputElement;
     const submitButton = screen.getByText('Start Free Trial');
 
     await act(async () => {

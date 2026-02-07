@@ -5,11 +5,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { IRSResult, IRSCategory, CategoryScore, Recommendation } from './types';
+import { clientEnv, serverEnv } from "@/lib/env";
 
 function getSupabase() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
+    serverEnv.SUPABASE_SERVICE_ROLE_KEY
   );
 }
 

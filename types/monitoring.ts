@@ -61,6 +61,11 @@ export interface UIExperiment {
   endDate?: string;
   winner?: string;
   significance?: number;
+  isActive?: boolean;
+  variantCount?: number;
+  totalRequests?: number;
+  avgLatency?: number;
+  errorRate?: number;
 }
 
 export interface UIAlert {
@@ -106,6 +111,14 @@ export function transformExperiment(exp: ExperimentComparison): UIExperiment {
     ? exp.variants.reduce((sum, v) => sum + v.trafficPercentage, 0) / exp.variants.length
     : 0;
 
+  const totalRequests = exp.variants.reduce((sum, v) => sum + v.totalRequests, 0);
+  const avgLatency = exp.variants.length > 0
+    ? exp.variants.reduce((sum, v) => sum + v.avgLatencyMs, 0) / exp.variants.length
+    : 0;
+  const avgErrorRate = exp.variants.length > 0
+    ? exp.variants.reduce((sum, v) => sum + v.errorRate, 0) / exp.variants.length
+    : 0;
+
   return {
     id: exp.experimentId,
     name: exp.experimentName,
@@ -116,6 +129,11 @@ export function transformExperiment(exp: ExperimentComparison): UIExperiment {
     endDate: exp.endDate?.toISOString(),
     winner: exp.winningVariant,
     significance: exp.confidenceLevel,
+    isActive: exp.isActive,
+    variantCount: exp.variants.length,
+    totalRequests,
+    avgLatency: Math.round(avgLatency),
+    errorRate: avgErrorRate,
   };
 }
 

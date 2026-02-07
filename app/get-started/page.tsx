@@ -459,18 +459,32 @@ const OnboardingPage = () => {
                           />
                         </div>
 
-                        <div className="relative">
-                          <label htmlFor="onboard-password" className="sr-only">Password</label>
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            id="onboard-password"
-                            type="password"
-                            placeholder="Create a password (8+ chars, A-Z, 0-9)"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
-                          />
+                        <div>
+                          <div className="relative">
+                            <label htmlFor="onboard-password" className="sr-only">Password</label>
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                              id="onboard-password"
+                              type="password"
+                              placeholder="Create a password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
+                            />
+                          </div>
+                          {/* Inline password requirements */}
+                          <div className="mt-2 space-y-1 text-xs">
+                            <p className={password.length >= 8 ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}>
+                              {password.length >= 8 ? "\u2713" : "\u2022"} At least 8 characters
+                            </p>
+                            <p className={/[A-Z]/.test(password) ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}>
+                              {/[A-Z]/.test(password) ? "\u2713" : "\u2022"} One uppercase letter
+                            </p>
+                            <p className={/[0-9]/.test(password) ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}>
+                              {/[0-9]/.test(password) ? "\u2713" : "\u2022"} One number
+                            </p>
+                          </div>
                         </div>
 
                         {error && (

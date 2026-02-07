@@ -23,8 +23,6 @@ import {
   TargetIcon,
   EyeOpenIcon,
   CountdownTimerIcon,
-  ListBulletIcon,
-  MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -56,12 +54,6 @@ const navItems: NavItem[] = [
     name: "Your Journey",
     href: "/dashboard/journey",
     icon: <RocketIcon className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Startup Process",
-    href: "/dashboard/startup-process",
-    icon: <ListBulletIcon className="h-4 w-4" />,
     badge: "Free",
   },
   {
@@ -100,13 +92,6 @@ const navItems: NavItem[] = [
     name: "Investor Readiness",
     href: "/dashboard/investor-readiness",
     icon: <PersonIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Investor Evaluation",
-    href: "/dashboard/investor-evaluation",
-    icon: <MagnifyingGlassIcon className="h-4 w-4" />,
     tier: 1,
     badge: "Pro",
   },
@@ -152,7 +137,7 @@ const navItems: NavItem[] = [
   },
 ];
 
-export default function DashboardLayout({
+export default function DashboardShell({
   children,
 }: {
   children: React.ReactNode;
