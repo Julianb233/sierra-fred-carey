@@ -6,7 +6,8 @@
   "title": "Inbox Ops Agent hub and message aggregation",
   "description": "Create inbox types, aggregator to collect agent task outputs and recommendations, inbox API endpoint, inbox dashboard page with message components, and filtering/prioritization.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
   "dependencies": [],
-  "createdAt": "2026-02-07T22:30:00Z"
+  "createdAt": "2026-02-07T22:30:00Z",
+  "completedAt": "2026-02-07T23:45:00Z"
 }
