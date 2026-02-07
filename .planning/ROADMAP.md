@@ -41,8 +41,8 @@ See MILESTONES.md for full details.
 - Wave 3 (depends on voice completion): Phase 23 -- after Phases 13, 14, 15
 
 - [x] **Phase 12: Data Fixes & Production Hardening** - Fix data inconsistencies and harden production infrastructure
-- [ ] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
-- [ ] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
+- [x] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
+- [x] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
 - [ ] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
 - [ ] **Phase 16: Red Flag Detection** - Inline chat warnings and dashboard widget for risk identification
 - [ ] **Phase 17: Founder Wellbeing** - Burnout detection, check-in page, and mindset coaching
@@ -83,7 +83,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 13-01-PLAN.md -- Core AI engine voice unification (shared voice.ts utility, Reality Lens + IRS persona swap, Strategy + Pitch fred-brain imports, Chat template voice injection)
+- [x] 13-01-PLAN.md -- Core AI engine voice unification (shared voice.ts utility, Reality Lens + IRS persona swap, Strategy + Pitch fred-brain imports, Chat template voice injection)
 
 ### Phase 14: Voice -- Agents & Channels
 **Goal**: All three virtual agents (12 tool prompts), SMS check-ins, and the voice agent speak as Fred Cary
@@ -98,8 +98,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md -- Agent tool prompt voice rewrite (shared FRED_AGENT_VOICE module, 3 agent prompts, 11 tool system params)
-- [ ] 14-02-PLAN.md -- SMS and voice agent voice rewrite (SMS templates, voice agent identity, admin API defaults, DB migration)
+- [x] 14-01-PLAN.md -- Agent tool prompt voice rewrite (shared FRED_AGENT_VOICE module, 3 agent prompts, 11 tool system params)
+- [x] 14-02-PLAN.md -- SMS and voice agent voice rewrite (SMS templates, voice agent identity, admin API defaults, DB migration)
 
 ### Phase 15: Voice -- Helpers & Activation
 **Goal**: All fred-brain.ts exports are actively used -- quotes appear in greetings, coaching prompts drive topic conversations, and media/testimonials enrich relevant interactions
@@ -113,7 +113,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 15-01-PLAN.md -- Activate all 8 unused fred-brain.ts/prompts.ts exports (credibility in IRS/strategy prompts, dynamic chat greeting, SMS quotes, topic detection + COACHING_PROMPTS routing, onboarding getFredGreeting)
+- [x] 15-01-PLAN.md -- Activate all 8 unused fred-brain.ts/prompts.ts exports (credibility in IRS/strategy prompts, dynamic chat greeting, SMS quotes, topic detection + COACHING_PROMPTS routing, onboarding getFredGreeting)
 
 ### Phase 16: Red Flag Detection
 **Goal**: FRED identifies risks during conversations and surfaces them persistently so founders can track and address them
@@ -238,14 +238,14 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 13. Voice -- Core AI Engines | v2.0 | 0/1 | Planned | - |
-| 14. Voice -- Agents & Channels | v2.0 | 0/2 | Planned | - |
-| 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Planned | - |
+| 13. Voice -- Core AI Engines | v2.0 | 1/1 | Complete | 2026-02-07 |
+| 14. Voice -- Agents & Channels | v2.0 | 2/2 | Complete | 2026-02-07 |
+| 15. Voice -- Helpers & Activation | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 16. Red Flag Detection | v2.0 | 0/1 | Not started | - |
 | 17. Founder Wellbeing | v2.0 | 0/1 | Not started | - |
 | 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | Not started | - |
 | 19. Inbox Ops Agent | v2.0 | 0/1 | Not started | - |
 | 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | Not started | - |
 | 21. Memory & Compute Tiers | v2.0 | 0/1 | Not started | - |
-| 22. PWA & Mobile Polish | v2.0 | 0/2 | Planned | - |
+| 22. PWA & Mobile Polish | v2.0 | 1/2 | In progress | - |
 | 23. Admin Training Docs | v2.0 | 0/1 | Not started | - |

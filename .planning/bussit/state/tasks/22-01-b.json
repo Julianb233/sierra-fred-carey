@@ -1,0 +1,13 @@
+{
+  "id": "22-01-b",
+  "type": "build",
+  "phase": 22,
+  "planPath": ".planning/phases/22-pwa-mobile-polish/22-01-PLAN.md",
+  "title": "PWA install experience (offline page, install prompt, install instructions)",
+  "description": "Create offline fallback page with Sahara branding, custom beforeinstallprompt hook and InstallPrompt component, update service worker for offline caching, create /install instructions page for iOS/Android/Desktop.",
+  "priority": "P1",
+  "status": "completed",
+  "completedAt": "2026-02-07T14:12:00Z",
+  "dependencies": [],
+  "createdAt": "2026-02-07T14:10:00Z"
+}

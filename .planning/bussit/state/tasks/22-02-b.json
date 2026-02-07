@@ -1,0 +1,12 @@
+{
+  "id": "22-02-b",
+  "type": "build",
+  "phase": 22,
+  "planPath": ".planning/phases/22-pwa-mobile-polish/22-02-PLAN.md",
+  "title": "Mobile responsive fixes (pricing table, TabsLists, fixed-width elements)",
+  "description": "Convert pricing comparison table to card layout below 768px, add scrollable wrappers to TabsList components with 4+ columns, fix genuine fixed-width issues that cause layout problems at 375px viewport.",
+  "priority": "P1",
+  "status": "pending",
+  "dependencies": [],
+  "createdAt": "2026-02-07T14:10:00Z"
+}

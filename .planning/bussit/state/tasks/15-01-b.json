@@ -6,7 +6,8 @@
   "title": "Activate fred-brain.ts helpers and coaching prompts (FRED_MEDIA, quotes, topic routing, getFredGreeting)",
   "description": "Wire up unused fred-brain.ts exports: FRED_MEDIA/FRED_TESTIMONIALS in IRS/strategy, getRandomQuote/getExperienceStatement/getCredibilityStatement in chat greeting and SMS, COACHING_PROMPTS topic routing in chat pipeline, getFredGreeting in onboarding.",
   "priority": "P0",
-  "status": "pending",
+  "status": "done",
+  "completedAt": "2026-02-07T15:00:00Z",
   "dependencies": [],
   "createdAt": "2026-02-07T14:00:00Z"
 }

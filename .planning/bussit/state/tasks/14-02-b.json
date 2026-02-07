@@ -6,7 +6,8 @@
   "title": "SMS and voice agent voice rewrite (templates, voice agent identity, admin API, DB migration)",
   "description": "Rewrite SMS templates in Fred's voice. Replace voice agent identity (code fallback, admin API defaults, DB migration). Change AccessToken name to Fred Cary. Create migration 014.",
   "priority": "P0",
-  "status": "pending",
+  "status": "completed",
+  "completedAt": "2026-02-07T14:12:00Z",
   "dependencies": [],
   "createdAt": "2026-02-07T14:00:00Z"
 }
