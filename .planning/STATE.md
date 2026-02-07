@@ -5,33 +5,37 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Every feature promised on the website has real logic, all AI speaks in Fred's voice, and the app is production-ready and installable on mobile.
-**Current focus:** v2.0 Production & Voice Parity -- Phase 12 complete, Phase 13 next
+**Current focus:** v2.0 Production & Voice Parity -- Phase 22 complete, Waves 2+3 remaining
 
 ## Current Position
 
-Phase: 12 of 23 (Data Fixes & Production Hardening) -- COMPLETE
+Phase: 22 of 23 (PWA & Mobile Polish) -- Plan 02 COMPLETE
 Plan: 2 of 2 in current phase
-Status: Complete -- all plans executed and verified
-Last activity: 2026-02-07 -- Phase 12 executed (2 plans: data fixes + production hardening)
+Status: Phase 22 complete -- both plans executed and verified
+Last activity: 2026-02-07 -- Completed 22-02-PLAN.md (Mobile Responsive Fixes)
 
-Progress: [██████████░░░░░░░░░░░░░░░░░░░░] ~8% (1 of 12 v2.0 phases)
+Progress: [████████████░░░░░░░░░░░░░░░░░░] ~41% (7 of 17 v2.0 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2 (v2.0)
-- Average duration: ~7.5min
-- Total execution time: ~15 min
+- Total plans completed: 7 (v2.0)
+- Average duration: ~7min
+- Total execution time: ~50 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 12 | 2 | ~15min | ~7.5min |
+| 13 | 1 | ~8min | ~8min |
+| 14 | 2 | ~12min | ~6min |
+| 15 | 1 | ~5min | ~5min |
+| 22 | 1 | ~5min | ~5min |
 
 **Recent Trend:**
-- Last 2 plans: 12-01 (5min), 12-02 (10min)
-- Trend: stable
+- Last 3 plans: 14-02 (~6min), 15-01 (~5min), 22-02 (~5min)
+- Trend: stable/improving
 
 *Updated after each plan completion*
 
@@ -52,6 +56,10 @@ Recent decisions affecting current work:
 - Phase 12: Rate limiting uses Upstash with in-memory fallback for dev
 - Phase 12: checkRateLimit/checkRateLimitForUser made async for Upstash; all 14 callers updated
 - Phase 12: DI pattern for DB modules (user-scoped vs service-role) established in Phase 11
+- Phase 22-02: BusinessHoursEditor min-w-[140px] left unchanged -- acceptable in flex-col context on mobile
+- Phase 22-02: Low-priority files (chat, onboarding, PhoneMockup, navbar) left unchanged -- decorative or already contained
+- Phase 22-02: Scrollable TabsList pattern established: overflow-x-auto wrapper with inline-flex/sm:grid responsive classes
+- Phase 22-02: Touch target global CSS rule extended to cover all form inputs, textareas, selects, and Radix role attributes
 
 ### Pending Todos
 
@@ -64,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Phase 12 complete. Queue empty. Next: Phase 13 (Voice -- Core AI Engines).
+Stopped at: Phase 22 complete (22-02-PLAN.md). Remaining: Wave 2 (16-18) and Wave 3 (19-21, 23).
 Resume file: None
