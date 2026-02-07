@@ -8,7 +8,7 @@
 
 **Fred Cary** brings unparalleled experience to Sahara:
 - **10,000+ founders coached** through their startup journeys
-- **$50M+ raised** across various ventures
+- **$100M+ raised** across various ventures
 - Deep expertise in startup strategy, fundraising, and founder psychology
 
 Sahara isn't just another SaaS tool - it's the distillation of decades of real-world founder experience into an AI-powered operating system.

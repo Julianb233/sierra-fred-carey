@@ -79,7 +79,6 @@ export const TIER_FEATURES = {
     "Investor Readiness Score",
     "Pitch Deck Review & Scorecard",
     "Strategy Documents",
-    "Automated Weekly SMS Check-Ins",
     "Persistent founder memory",
   ],
   [UserTier.STUDIO]: [

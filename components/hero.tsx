@@ -174,7 +174,7 @@ export default function Hero() {
           >
             {[
               { icon: Users, text: "10,000+ Founders Coached" },
-              { icon: CheckIcon, text: "$50M+ Raised" },
+              { icon: CheckIcon, text: "$100M+ Raised" },
               { icon: Sparkles, text: "By Fred Cary" },
             ].map((item, i) => (
               <motion.div

@@ -16,34 +16,34 @@ import {
 
 const stats = [
   { value: "10,000+", label: "Founders Coached" },
-  { value: "20+", label: "Years Experience" },
+  { value: "50+", label: "Years Experience" },
   { value: "$100M+", label: "Capital Raised" },
-  { value: "500+", label: "Startups Launched" },
+  { value: "40+", label: "Companies Founded" },
 ];
 
 const timeline = [
   {
-    year: "2004",
+    year: "1974",
     title: "The Beginning",
-    description: "Started coaching founders on decision-making frameworks after selling first startup.",
+    description: "Started first venture at age 17 as a musician in a rock band, learning the hustle that would define a career.",
     icon: RocketIcon,
   },
   {
-    year: "2010",
-    title: "Scaling Impact",
-    description: "Developed systematic approach to founder decision-making after working with 1,000+ founders.",
+    year: "1984",
+    title: "Legal Foundation",
+    description: "Earned JD from Thomas Jefferson School of Law, adding legal expertise to entrepreneurial drive.",
     icon: TargetIcon,
   },
   {
-    year: "2018",
-    title: "AI Integration",
-    description: "Began researching how AI could enhance founder decision-making processes.",
+    year: "2000s",
+    title: "Building & Scaling",
+    description: "Founded Boxlot ($50M IPO), Path1 Network ($120M acquisition), and Imagine Communications, reaching 75% of world TV households.",
     icon: LightningBoltIcon,
   },
   {
     year: "2024",
-    title: "Decision OS Launch",
-    description: "Launched the AI-powered Founder Decision OS to democratize access to world-class decision frameworks.",
+    title: "Sahara Launch",
+    description: "Launched the AI-powered Founder Decision OS, bringing 50+ years of entrepreneurial wisdom to every founder.",
     icon: CheckCircledIcon,
   },
 ];
@@ -67,7 +67,7 @@ const values = [
   {
     icon: CheckCircledIcon,
     title: "Data-Driven",
-    description: "Decisions informed by 20+ years of founder patterns, powered by AI insights.",
+    description: "Decisions informed by 50+ years of founder patterns, powered by AI insights.",
   },
 ];
 
@@ -116,7 +116,7 @@ export default function AboutPage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              After coaching <span className="text-[#ff6a1a] font-semibold">10,000+ founders</span> over two decades,
+              After coaching <span className="text-[#ff6a1a] font-semibold">10,000+ founders</span> over five decades,
               I built the AI-powered decision system I wish I had when starting my first company.
             </p>
 
@@ -195,12 +195,12 @@ export default function AboutPage() {
               <Card className="border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-[#ff6a1a]/30 transition-colors shadow-sm">
                 <CardContent className="p-8 space-y-4">
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-                    I started my first company in 1999, fresh out of college with more passion than sense.
-                    Like most founders, I made decisions by gut feeling, copying what worked for others,
-                    and hoping for the best. Some decisions turned out brilliantly. Others nearly sank the company.
+                    I started hustling at 17 — first as a musician in a rock band, then slinging tacos at 22.
+                    By the time I got my law degree, I already knew the courtroom wasn&apos;t going to be my only arena.
+                    Over the next five decades, I founded 40+ companies, took 3 public, and had 2 acquired.
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-                    After successfully exiting that startup, I became obsessed with understanding{" "}
+                    Along the way, I became obsessed with understanding{" "}
                     <span className="font-semibold text-[#ff6a1a]">why some founders consistently made better decisions than others</span>.
                     Was it pattern recognition? Mental models? Or something else entirely?
                   </p>
@@ -217,8 +217,8 @@ export default function AboutPage() {
               <Card className="border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-[#ff6a1a]/30 transition-colors shadow-sm">
                 <CardContent className="p-8 space-y-4">
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-                    Over the next 20 years, I had the privilege of coaching over 10,000 founders.
-                    I noticed patterns emerging - certain decision frameworks worked consistently across
+                    Over the next five decades, I had the privilege of coaching over 10,000 founders.
+                    I noticed patterns emerging — certain decision frameworks worked consistently across
                     industries, stages, and founder personalities. I codified these into a systematic approach.
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
@@ -239,7 +239,7 @@ export default function AboutPage() {
                 <CardContent className="p-8 space-y-4">
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     <span className="font-bold text-xl text-[#ff6a1a]">The Founder Decision OS</span> is the culmination
-                    of this journey. It combines two decades of founder coaching insights with cutting-edge AI to
+                    of this journey. It combines five decades of entrepreneurial experience with cutting-edge AI to
                     give every founder access to world-class decision-making frameworks.
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">

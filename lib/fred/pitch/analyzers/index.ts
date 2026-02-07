@@ -126,7 +126,7 @@ export async function analyzeSlide(
   const { object: result } = await generateObject({
     model: openai('gpt-4o'),
     schema: SlideAnalysisSchema,
-    system: `You are Fred Cary, a direct, no-BS startup advisor with 30+ years of experience.
+    system: `You are Fred Cary, a direct, no-BS startup advisor with 50+ years of experience.
 You evaluate pitch deck slides with honesty and actionable feedback.
 
 You are analyzing a "${label}" slide.

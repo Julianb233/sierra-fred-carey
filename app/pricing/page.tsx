@@ -52,7 +52,6 @@ export default function PricingPage() {
         { name: "Strategy Documents", included: true },
         { name: "Executive Summary", included: true },
         { name: "30/60/90-day Plans", included: true },
-        { name: "Weekly SMS Check-Ins", included: true },
         { name: "Persistent Founder Memory", included: true },
         { name: "Boardy Integration", included: false },
         { name: "Investor Introductions", included: false },
@@ -73,6 +72,7 @@ export default function PricingPage() {
       icon: LightningBoltIcon,
       features: [
         { name: "Everything in Fundraising tier", included: true },
+        { name: "Weekly SMS Check-Ins", included: true },
         { name: "Boardy Integration", included: true, comingSoon: true },
         { name: "Investor Matching & Warm Intros", included: true, comingSoon: true },
         { name: "Investor Targeting Guidance", included: true, comingSoon: true },
@@ -96,7 +96,7 @@ export default function PricingPage() {
     { name: "Investor Readiness Score", free: false, fundraising: true, studio: true },
     { name: "Deck Review", free: false, fundraising: true, studio: true },
     { name: "Strategy Docs", free: false, fundraising: true, studio: true },
-    { name: "Weekly SMS Check-Ins", free: false, fundraising: true, studio: true },
+    { name: "Weekly SMS Check-Ins", free: false, fundraising: false, studio: true },
     { name: "Boardy Integration", free: false, fundraising: false, studio: true },
     { name: "Virtual Team Agents", free: false, fundraising: false, studio: true },
   ];

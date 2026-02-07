@@ -253,7 +253,7 @@ export default function Testimonials() {
               <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#ff6a1a] rounded-full" />
-                  <span>$50M+ raised by users</span>
+                  <span>$100M+ raised by users</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-orange-400 rounded-full" />

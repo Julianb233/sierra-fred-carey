@@ -55,7 +55,7 @@ const Footer = () => {
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-sm">
               The AI-powered decision operating system for startup founders.
-              Built by Fred Cary — 10,000+ founders coached, $50M+ raised.
+              Built by Fred Cary — 10,000+ founders coached, $100M+ raised.
             </p>
             <Button
               asChild

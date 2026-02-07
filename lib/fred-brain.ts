@@ -393,6 +393,20 @@ export const SAHARA_MESSAGING = {
 } as const;
 
 // ============================================================================
+// MARKETING STATS (Single source of truth for all marketing copy)
+// ============================================================================
+
+export const MARKETING_STATS = {
+  capitalRaised: "$100M+",
+  foundersCoached: "10,000+",
+  yearsExperience: "50+",
+  companiesFounded: "40+",
+  startupsLaunched: "300+",
+  ipos: "3",
+  acquisitions: "2",
+} as const;
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 

@@ -66,10 +66,6 @@ export default function FeaturesPage() {
           description: "Executive summary, diagnosis, options & tradeoffs, 30/60/90-day plans.",
         },
         {
-          name: "Weekly SMS Check-Ins",
-          description: "Automated accountability that keeps you on track.",
-        },
-        {
           name: "Persistent Founder Memory",
           description: "We remember your strategy and execution state across sessions.",
         },
@@ -82,8 +78,13 @@ export default function FeaturesPage() {
       description: "Leverage, execution, and capital connectivity.",
       features: [
         {
+          name: "Weekly SMS Check-Ins",
+          description: "Automated accountability that keeps you on track.",
+        },
+        {
           name: "Boardy Integration",
           description: "Investor matching and warm-intro workflows to the right funds.",
+          comingSoon: true,
         },
         {
           name: "Investor Targeting Guidance",
@@ -98,14 +99,17 @@ export default function FeaturesPage() {
         {
           name: "Founder Ops Agent",
           description: "Weekly sprint planning, decision tracking, priority management.",
+          comingSoon: true,
         },
         {
           name: "Fundraise Ops Agent",
           description: "Investor list building, email drafts, meeting prep & summaries.",
+          comingSoon: true,
         },
         {
           name: "Growth Ops Agent",
           description: "Content calendars, social post drafting, landing page iterations.",
+          comingSoon: true,
         },
         {
           name: "Inbox Ops Agent",
