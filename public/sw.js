@@ -1,11 +1,13 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = "sahara-v1";
+const CACHE_NAME = "sahara-v2";
+const OFFLINE_URL = "/offline";
 const STATIC_ASSETS = [
   "/icon.svg",
   "/icon-192.png",
   "/icon-512.png",
   "/apple-icon-180.png",
+  OFFLINE_URL,
 ];
 
 self.addEventListener("install", (event) => {
@@ -66,7 +68,7 @@ self.addEventListener("fetch", (event) => {
   // Network-first for pages (HTML navigation)
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match(request))
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
     );
   }
 });

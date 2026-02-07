@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { TierProvider } from "@/lib/context/tier-context";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 function ServiceWorkerRegistrar() {
   useEffect(() => {
@@ -20,6 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
       <TierProvider>
         <ServiceWorkerRegistrar />
+        <InstallPrompt />
         {children}
       </TierProvider>
     </NextThemesProvider>
