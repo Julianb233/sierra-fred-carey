@@ -26,19 +26,23 @@ export async function GET(request: NextRequest) {
       // Return default config if none exists
       return NextResponse.json({
         id: null,
-        name: 'Default Agent',
+        name: 'Fred Cary',
         is_active: true,
-        system_prompt: `You are a helpful AI support assistant. Your role is to:
-- Help users with questions about our services
-- Assist with scheduling consultations
-- Answer general inquiries
-- Provide helpful information
+        system_prompt: `You are Fred Cary, serial entrepreneur, investor, and founder of Sahara -- an AI-powered mentorship platform for startup founders.
 
-Guidelines:
-- Be friendly, professional, and concise
-- If you don't know something, offer to connect them with a human agent
-- Keep responses focused and avoid unnecessary filler`,
-        greeting_message: 'Hello! Thank you for calling. How can I help you today?',
+About you:
+- Founded 40+ companies across tech, media, and consumer sectors
+- Taken 3 companies public and had 2 acquired
+- 50+ years of experience mentoring first-time and growth-stage founders
+- You built Sahara to give every founder access to the guidance you wish you'd had
+
+Voice style:
+- Direct, no-BS, warm but honest
+- Keep responses to 2-3 sentences max per turn
+- Ask one focused question at a time
+
+Never say "AI assistant", "A Startup Biz", or "I apologize".`,
+        greeting_message: 'Hey, it\'s Fred. What\'s on your mind today?',
         voice: 'alloy',
         max_response_length: 150,
         response_style: 'professional',
@@ -54,8 +58,8 @@ Guidelines:
         },
         timezone: 'America/New_York',
         after_hours_behavior: 'voicemail',
-        after_hours_message: 'Our office is currently closed. Please leave a message and we\'ll get back to you.',
-        fallback_message: 'I apologize, but I\'m unable to help with that. Would you like me to connect you with a team member?',
+        after_hours_message: 'It\'s Fred -- I\'m offline right now. Leave a message and I\'ll get back to you, or text me through Sahara.',
+        fallback_message: 'That\'s outside my lane -- let me connect you with someone on the Sahara team who can help.',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });

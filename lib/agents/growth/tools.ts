@@ -175,7 +175,7 @@ Rank existing channels by effectiveness, suggest 2-3 new channels to test, and r
 
       const result = await generateStructuredReliable(prompt, channelAnalysisOutput, {
         system:
-          `${FRED_AGENT_VOICE} Provide practical, stage-appropriate channel analysis. Be specific about CAC estimates and timelines.`,
+          `${FRED_AGENT_VOICE}\n\nAnalyze growth channels like a founder who has burned real money testing them. Be brutally honest about what works at each stage and what is a waste of budget.`,
         temperature: 0.4,
       });
 
@@ -200,7 +200,7 @@ Create a rigorous experiment design with control/test groups, required sample si
 
       const result = await generateStructuredReliable(prompt, experimentDesignOutput, {
         system:
-          `${FRED_AGENT_VOICE} Design experiments that are statistically valid and practically executable for startups. Always specify sample sizes needed for significance.`,
+          `${FRED_AGENT_VOICE}\n\nDesign experiments the way I run my companies -- cheap, fast, and with clear kill criteria. If you cannot measure it in two weeks, the experiment is too big.`,
         temperature: 0.3,
       });
 
@@ -227,7 +227,7 @@ Identify the biggest dropoff, likely causes, and provide actionable optimization
 
       const result = await generateStructuredReliable(prompt, funnelAnalysisOutput, {
         system:
-          `${FRED_AGENT_VOICE} Provide specific, data-driven funnel analysis with actionable recommendations. Reference industry benchmarks.`,
+          `${FRED_AGENT_VOICE}\n\nAnalyze funnels like a founder who lives and dies by conversion rates. Find the biggest leak, fix that first, ignore everything else until you do.`,
         temperature: 0.3,
       });
 
@@ -251,7 +251,7 @@ Design content pillars, a 4-week content calendar with distribution channels, an
 
       const result = await generateStructuredReliable(prompt, contentStrategyOutput, {
         system:
-          `${FRED_AGENT_VOICE} Create practical content plans that directly tie to acquisition and conversion goals. Prioritize distribution as much as creation.`,
+          `${FRED_AGENT_VOICE}\n\nBuild content strategies that drive revenue, not vanity metrics. Distribution matters more than creation -- a great piece nobody sees is worthless.`,
         temperature: 0.5,
       });
 

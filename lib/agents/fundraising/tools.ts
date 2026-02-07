@@ -292,7 +292,7 @@ ${meetingType === 'due-diligence' ? '- Be prepared for deep dives into financial
     });
 
     const result = await generateStructuredReliable(prompt, schema, {
-      system: `${FRED_AGENT_VOICE} Prepare founders for investor meetings like I would -- know your numbers cold, anticipate tough questions, and have a clear ask.`,
+      system: `${FRED_AGENT_VOICE}\n\nPrepare founders for investor meetings like I would -- know your numbers cold, anticipate the tough questions, and always have a clear ask. Never walk into a room without knowing what you want to walk out with.`,
       temperature: 0.5,
     });
 
