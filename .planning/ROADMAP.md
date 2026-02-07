@@ -43,14 +43,14 @@ See MILESTONES.md for full details.
 - [x] **Phase 12: Data Fixes & Production Hardening** - Fix data inconsistencies and harden production infrastructure
 - [x] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
 - [x] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
-- [ ] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
+- [x] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
 - [ ] **Phase 16: Red Flag Detection** - Inline chat warnings and dashboard widget for risk identification
 - [ ] **Phase 17: Founder Wellbeing** - Burnout detection, check-in page, and mindset coaching
 - [ ] **Phase 18: Intake Snapshot & Strategy Reframing** - Enriched founder profiles and dedicated strategy UI
 - [ ] **Phase 19: Inbox Ops Agent** - In-app message hub aggregating agent outputs and notifications
 - [ ] **Phase 20: Investor Targeting, Outreach & Pipeline** - CSV uploads, AI matching, outreach sequences, CRM-lite tracker
 - [ ] **Phase 21: Memory & Compute Tiers** - Tier-differentiated AI models, memory depth, and memory gating
-- [ ] **Phase 22: PWA & Mobile Polish** - Offline fallback, install flow, responsive fixes, touch targets
+- [x] **Phase 22: PWA & Mobile Polish** - Offline fallback, install flow, responsive fixes, touch targets
 - [ ] **Phase 23: Admin Training Docs** - Admin-only documentation section with voice rules and framework guides
 
 ## Phase Details
@@ -211,7 +211,7 @@ Plans:
 
 Plans:
 - [ ] 22-01-PLAN.md -- PWA install experience (offline fallback page, install prompt hook/component, install instructions page, SW update)
-- [ ] 22-02-PLAN.md -- Mobile responsive fixes (pricing table card layout, fixed-width audit across 5 HIGH files, TabsList scroll on 8 files, touch target CSS)
+- [x] 22-02-PLAN.md -- Mobile responsive fixes (pricing table card layout, fixed-width audit across 5 HIGH files, TabsList scroll on 8 files, touch target CSS)
 
 ### Phase 23: Admin Training Docs
 **Goal**: Admin users have an in-app reference documenting how FRED communicates, what frameworks it uses, and how each agent behaves
@@ -241,11 +241,11 @@ Plans:
 | 13. Voice -- Core AI Engines | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 14. Voice -- Agents & Channels | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 15. Voice -- Helpers & Activation | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 16. Red Flag Detection | v2.0 | 0/1 | Not started | - |
-| 17. Founder Wellbeing | v2.0 | 0/1 | Not started | - |
-| 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | Not started | - |
-| 19. Inbox Ops Agent | v2.0 | 0/1 | Not started | - |
-| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | Not started | - |
-| 21. Memory & Compute Tiers | v2.0 | 0/1 | Not started | - |
-| 22. PWA & Mobile Polish | v2.0 | 1/2 | In progress | - |
-| 23. Admin Training Docs | v2.0 | 0/1 | Not started | - |
+| 16. Red Flag Detection | v2.0 | 0/1 | Planned | - |
+| 17. Founder Wellbeing | v2.0 | 0/1 | Planned | - |
+| 18. Intake Snapshot & Strategy Reframing | v2.0 | 0/2 | Planned | - |
+| 19. Inbox Ops Agent | v2.0 | 0/1 | Planned | - |
+| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 0/2 | Planned | - |
+| 21. Memory & Compute Tiers | v2.0 | 0/1 | Planned | - |
+| 22. PWA & Mobile Polish | v2.0 | 2/2 | Complete | 2026-02-07 |
+| 23. Admin Training Docs | v2.0 | 0/1 | Planned | - |

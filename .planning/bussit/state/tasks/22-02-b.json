@@ -6,7 +6,8 @@
   "title": "Mobile responsive fixes (pricing table, TabsLists, fixed-width elements)",
   "description": "Convert pricing comparison table to card layout below 768px, add scrollable wrappers to TabsList components with 4+ columns, fix genuine fixed-width issues that cause layout problems at 375px viewport.",
   "priority": "P1",
-  "status": "pending",
+  "status": "completed",
+  "completedAt": "2026-02-07T22:09:07Z",
   "dependencies": [],
   "createdAt": "2026-02-07T14:10:00Z"
 }
