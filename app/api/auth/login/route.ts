@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || request.headers.get("x-real-ip")
       || "unknown";
-    const rateLimitResult = checkRateLimit(`auth-login:${ip}`, { limit: 5, windowSeconds: 60 });
+    const rateLimitResult = await checkRateLimit(`auth-login:${ip}`, { limit: 5, windowSeconds: 60 });
     if (!rateLimitResult.success) {
       return createRateLimitResponse(rateLimitResult);
     }

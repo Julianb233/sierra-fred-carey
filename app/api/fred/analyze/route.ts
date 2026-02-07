@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const userTier = await getUserTier(userId);
     const rateLimitKey = TIER_TO_RATE_KEY[userTier] ?? "free";
     const { response: rateLimitResponse, result: rateLimitResult } =
-      checkRateLimitForUser(req, userId, rateLimitKey);
+      await checkRateLimitForUser(req, userId, rateLimitKey);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

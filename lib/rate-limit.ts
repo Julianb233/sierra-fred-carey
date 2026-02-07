@@ -1,4 +1,8 @@
 /**
+ * @deprecated Use lib/api/rate-limit.ts instead (Upstash Redis backend).
+ * This in-memory rate limiter is kept only for the single consumer
+ * (app/api/onboard/invite/route.ts) that imports RateLimiter directly.
+ *
  * Simple in-memory sliding window rate limiter
  *
  * IP-based tracking with configurable window and max requests.

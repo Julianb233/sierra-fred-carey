@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       identifier: "user" as const,
     };
     const identifier = `reality-lens:${userId}`;
-    const rateLimitResult = checkRateLimit(identifier, rateConfig);
+    const rateLimitResult = await checkRateLimit(identifier, rateConfig);
 
     if (!rateLimitResult.success) {
       return createRateLimitResponse(rateLimitResult);

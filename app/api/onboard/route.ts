@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || request.headers.get("x-real-ip")
       || "unknown";
-    const rateLimitResult = checkRateLimit(`onboard:${ip}`, { limit: 10, windowSeconds: 3600 });
+    const rateLimitResult = await checkRateLimit(`onboard:${ip}`, { limit: 10, windowSeconds: 3600 });
     if (!rateLimitResult.success) {
       return createRateLimitResponse(rateLimitResult);
     }

@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     const userId = await requireAuth();
 
     // Check rate limit
-    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, "pro");
+    const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, "pro");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

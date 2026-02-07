@@ -20,6 +20,12 @@ const serverEnvSchema = z.object({
     .string()
     .min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
+  // Stripe (optional in dev, required in production via validate-env script)
+  STRIPE_SECRET_KEY: z.string().optional().default(""),
+  STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
+  // Upstash Redis (optional in dev -- falls back to in-memory rate limiting)
+  UPSTASH_REDIS_REST_URL: z.string().optional().default(""),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional().default(""),
 });
 
 const clientEnvSchema = z.object({
@@ -29,6 +35,11 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
     .min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
+  NEXT_PUBLIC_APP_URL: z
+    .string()
+    .url()
+    .optional()
+    .default("http://localhost:3000"),
 });
 
 // ============================================================================
@@ -54,6 +65,7 @@ export const clientEnv: ClientEnv = new Proxy({} as ClientEnv, {
       _clientEnv = clientEnvSchema.parse({
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
       });
     }
     return _clientEnv[prop as keyof ClientEnv];

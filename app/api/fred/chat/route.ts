@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     // Check rate limit using actual user tier
     const userTier = await getUserTier(userId);
     const rateLimitKey = TIER_TO_RATE_KEY[userTier] ?? "free";
-    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, rateLimitKey);
+    const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, rateLimitKey);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

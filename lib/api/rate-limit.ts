@@ -1,11 +1,13 @@
 /**
- * Rate Limiting Middleware
+ * Rate Limiting Middleware -- Upstash Redis Backend
  *
- * Simple in-memory rate limiter using sliding window algorithm.
- * For production, consider using Redis or Upstash Rate Limit.
+ * Production-ready rate limiter using @upstash/ratelimit with Redis.
+ * Falls back to in-memory for development when UPSTASH vars are not set.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 // ============================================================================
 // Types
@@ -22,50 +24,6 @@ export interface RateLimitConfig {
   getIdentifier?: (req: NextRequest) => string | null;
 }
 
-interface RateLimitEntry {
-  timestamps: number[];
-  blocked: boolean;
-  blockedUntil?: number;
-}
-
-// ============================================================================
-// In-Memory Store
-// ============================================================================
-
-const store = new Map<string, RateLimitEntry>();
-
-// Clean up old entries periodically
-const CLEANUP_INTERVAL = 60000; // 1 minute
-let lastCleanup = Date.now();
-
-function cleanupStore(windowSeconds: number) {
-  const now = Date.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL) return;
-
-  lastCleanup = now;
-  const cutoff = now - windowSeconds * 1000 * 2;
-
-  for (const [key, entry] of store.entries()) {
-    // Remove entries with no recent activity
-    const recentTimestamps = entry.timestamps.filter((t) => t > cutoff);
-    // Also expire blocked entries whose block period has passed
-    const blockExpired = entry.blocked && entry.blockedUntil && now >= entry.blockedUntil;
-    if (recentTimestamps.length === 0 && (!entry.blocked || blockExpired)) {
-      store.delete(key);
-    } else {
-      entry.timestamps = recentTimestamps;
-      if (blockExpired) {
-        entry.blocked = false;
-        entry.blockedUntil = undefined;
-      }
-    }
-  }
-}
-
-// ============================================================================
-// Rate Limit Logic
-// ============================================================================
-
 export interface RateLimitResult {
   success: boolean;
   limit: number;
@@ -74,28 +32,93 @@ export interface RateLimitResult {
   retryAfter?: number;
 }
 
-/**
- * Check and update rate limit for an identifier
- */
-export function checkRateLimit(
+// ============================================================================
+// Upstash Redis Client (module-scope for connection reuse)
+// ============================================================================
+
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+// Cache of Ratelimit instances by config key to avoid recreating
+const limiterCache = new Map<string, Ratelimit>();
+
+function getUpstashLimiter(limit: number, windowSeconds: number): Ratelimit {
+  const key = `${limit}:${windowSeconds}`;
+  let limiter = limiterCache.get(key);
+  if (!limiter && redis) {
+    limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
+      prefix: `rl:${key}`,
+    });
+    limiterCache.set(key, limiter);
+  }
+  return limiter!;
+}
+
+// ============================================================================
+// In-Memory Fallback (dev mode)
+// ============================================================================
+
+interface InMemoryEntry {
+  timestamps: number[];
+  blocked: boolean;
+  blockedUntil?: number;
+}
+
+const memoryStore = new Map<string, InMemoryEntry>();
+let lastCleanup = Date.now();
+let fallbackWarned = false;
+
+function cleanupMemoryStore(windowSeconds: number) {
+  const now = Date.now();
+  if (now - lastCleanup < 60000) return;
+  lastCleanup = now;
+  const cutoff = now - windowSeconds * 1000 * 2;
+  for (const [key, entry] of memoryStore.entries()) {
+    const recent = entry.timestamps.filter((t) => t > cutoff);
+    const blockExpired =
+      entry.blocked && entry.blockedUntil && now >= entry.blockedUntil;
+    if (recent.length === 0 && (!entry.blocked || blockExpired)) {
+      memoryStore.delete(key);
+    } else {
+      entry.timestamps = recent;
+      if (blockExpired) {
+        entry.blocked = false;
+        entry.blockedUntil = undefined;
+      }
+    }
+  }
+}
+
+function checkRateLimitInMemory(
   identifier: string,
   config: RateLimitConfig
 ): RateLimitResult {
+  if (!fallbackWarned) {
+    fallbackWarned = true;
+    console.warn(
+      "[rate-limit] UPSTASH_REDIS_REST_URL not set, using in-memory fallback (not suitable for production)"
+    );
+  }
+
   const now = Date.now();
   const windowMs = config.windowSeconds * 1000;
   const cutoff = now - windowMs;
 
-  // Periodic cleanup
-  cleanupStore(config.windowSeconds);
+  cleanupMemoryStore(config.windowSeconds);
 
-  // Get or create entry
-  let entry = store.get(identifier);
+  let entry = memoryStore.get(identifier);
   if (!entry) {
     entry = { timestamps: [], blocked: false };
-    store.set(identifier, entry);
+    memoryStore.set(identifier, entry);
   }
 
-  // Check if blocked
   if (entry.blocked && entry.blockedUntil && now < entry.blockedUntil) {
     return {
       success: false,
@@ -106,21 +129,16 @@ export function checkRateLimit(
     };
   }
 
-  // Reset block if expired
   if (entry.blocked && entry.blockedUntil && now >= entry.blockedUntil) {
     entry.blocked = false;
     entry.blockedUntil = undefined;
   }
 
-  // Filter timestamps in current window
   entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
 
-  // Check limit
   if (entry.timestamps.length >= config.limit) {
-    // Block for the remainder of the window
     entry.blocked = true;
     entry.blockedUntil = entry.timestamps[0] + windowMs;
-
     return {
       success: false,
       limit: config.limit,
@@ -130,10 +148,7 @@ export function checkRateLimit(
     };
   }
 
-  // Add current timestamp
   entry.timestamps.push(now);
-
-  // Calculate reset time (when oldest request falls out of window)
   const reset =
     entry.timestamps.length > 0
       ? Math.ceil((entry.timestamps[0] + windowMs - now) / 1000)
@@ -148,12 +163,40 @@ export function checkRateLimit(
 }
 
 // ============================================================================
-// Middleware Factory
+// Rate Limit Logic (async -- uses Upstash when available)
 // ============================================================================
 
 /**
- * Default rate limit configurations by tier
+ * Check and update rate limit for an identifier.
+ * Uses Upstash Redis in production, falls back to in-memory in dev.
  */
+export async function checkRateLimit(
+  identifier: string,
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  // Use Upstash when available
+  if (redis) {
+    const limiter = getUpstashLimiter(config.limit, config.windowSeconds);
+    const result = await limiter.limit(identifier);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: Math.ceil(result.reset / 1000),
+      retryAfter: result.success
+        ? undefined
+        : Math.ceil((result.reset - Date.now()) / 1000),
+    };
+  }
+
+  // Fallback to in-memory
+  return checkRateLimitInMemory(identifier, config);
+}
+
+// ============================================================================
+// Tier Configurations
+// ============================================================================
+
 export const RATE_LIMIT_TIERS = {
   free: { limit: 20, windowSeconds: 60 },
   pro: { limit: 100, windowSeconds: 60 },
@@ -161,9 +204,10 @@ export const RATE_LIMIT_TIERS = {
   unlimited: { limit: 10000, windowSeconds: 60 },
 } as const;
 
-/**
- * Create rate limit headers
- */
+// ============================================================================
+// Response Helpers
+// ============================================================================
+
 function createRateLimitHeaders(result: RateLimitResult): Headers {
   const headers = new Headers();
   headers.set("X-RateLimit-Limit", String(result.limit));
@@ -176,9 +220,11 @@ function createRateLimitHeaders(result: RateLimitResult): Headers {
 }
 
 /**
- * Create a rate limit response
+ * Create a 429 rate limit response
  */
-export function createRateLimitResponse(result: RateLimitResult): NextResponse {
+export function createRateLimitResponse(
+  result: RateLimitResult
+): NextResponse {
   return NextResponse.json(
     {
       success: false,
@@ -194,27 +240,25 @@ export function createRateLimitResponse(result: RateLimitResult): NextResponse {
   );
 }
 
-/**
- * Extract identifier from request
- */
+// ============================================================================
+// Request Identifier Extraction
+// ============================================================================
+
 function getRequestIdentifier(
   req: NextRequest,
   config: RateLimitConfig,
   userId?: string
 ): string {
-  // Use custom identifier if provided
   if (config.getIdentifier) {
     const custom = config.getIdentifier(req);
     if (custom) return custom;
   }
 
-  // Get IP address
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     req.headers.get("x-real-ip") ||
     "unknown";
 
-  // Determine identifier based on config
   switch (config.identifier) {
     case "user":
       return userId || `anon:${ip}`;
@@ -226,6 +270,10 @@ function getRequestIdentifier(
   }
 }
 
+// ============================================================================
+// Middleware Factory
+// ============================================================================
+
 /**
  * Rate limit wrapper for API route handlers
  */
@@ -235,16 +283,14 @@ export function withRateLimit<T>(
 ) {
   return async (req: NextRequest, ...args: T[]): Promise<NextResponse> => {
     const identifier = getRequestIdentifier(req, config);
-    const result = checkRateLimit(identifier, config);
+    const result = await checkRateLimit(identifier, config);
 
     if (!result.success) {
       return createRateLimitResponse(result);
     }
 
-    // Call the actual handler
     const response = await handler(req, ...args);
 
-    // Add rate limit headers to response
     const headers = createRateLimitHeaders(result);
     headers.forEach((value, key) => {
       response.headers.set(key, value);
@@ -255,17 +301,17 @@ export function withRateLimit<T>(
 }
 
 /**
- * Rate limit check for use inside route handlers
- * Returns null if allowed, NextResponse if rate limited
+ * Rate limit check for use inside route handlers.
+ * Returns null if allowed, NextResponse if rate limited.
  */
-export function checkRateLimitForUser(
+export async function checkRateLimitForUser(
   req: NextRequest,
   userId: string,
   tier: keyof typeof RATE_LIMIT_TIERS = "free"
-): { response: NextResponse | null; result: RateLimitResult } {
+): Promise<{ response: NextResponse | null; result: RateLimitResult }> {
   const config = { ...RATE_LIMIT_TIERS[tier], identifier: "user" as const };
   const identifier = `user:${userId}`;
-  const result = checkRateLimit(identifier, config);
+  const result = await checkRateLimit(identifier, config);
 
   if (!result.success) {
     return { response: createRateLimitResponse(result), result };

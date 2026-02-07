@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // SECURITY: Rate limit expensive AI diagnostic calls to prevent abuse
     const identifier = userId || req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
-    const rateLimitResult = checkRateLimit(`diagnostic:positioning:${identifier}`, {
+    const rateLimitResult = await checkRateLimit(`diagnostic:positioning:${identifier}`, {
       limit: 10,
       windowSeconds: 60,
     });

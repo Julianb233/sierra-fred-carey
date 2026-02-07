@@ -109,19 +109,3 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     );
   }
 }
-
-/**
- * OPTIONS /api/pitch-deck/upload
- * CORS preflight handler
- */
-export async function OPTIONS(): Promise<NextResponse> {
-  const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': allowedOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}

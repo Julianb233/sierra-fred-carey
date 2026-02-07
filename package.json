@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:slack": "tsx scripts/test-slack-webhook.ts"
+    "test:slack": "tsx scripts/test-slack-webhook.ts",
+    "validate-env": "tsx scripts/validate-env.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.37",
@@ -49,6 +50,8 @@
     "@stripe/stripe-js": "^8.6.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "@vercel/blob": "^2.0.0",
     "@xstate/react": "^6.0.0",
     "ai": "^6.0.72",

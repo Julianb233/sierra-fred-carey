@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || request.headers.get("x-real-ip")
       || "unknown";
-    const rateLimitResult = checkRateLimit(`admin-login:${ip}`, { limit: 3, windowSeconds: 60 });
+    const rateLimitResult = await checkRateLimit(`admin-login:${ip}`, { limit: 3, windowSeconds: 60 });
     if (!rateLimitResult.success) {
       return createRateLimitResponse(rateLimitResult);
     }

@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
 
     // Check rate limit (higher limit for reads)
     const { response: rateLimitResponse, result: rateLimitResult } =
-      checkRateLimitForUser(req, userId, "pro"); // 100 req/min for memory reads
+      await checkRateLimitForUser(req, userId, "pro"); // 100 req/min for memory reads
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
     const userId = await requireAuth();
 
     // Check rate limit
-    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, "free");
+    const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, "free");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
@@ -379,7 +379,7 @@ export async function DELETE(req: NextRequest) {
     const userId = await requireAuth();
 
     // Check rate limit
-    const { response: rateLimitResponse } = checkRateLimitForUser(req, userId, "free");
+    const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, "free");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

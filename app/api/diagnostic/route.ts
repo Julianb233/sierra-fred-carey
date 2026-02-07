@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     // SECURITY: Rate limit diagnostic analysis to prevent abuse
     const identifier = userId || req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
-    const rateLimitResult = checkRateLimit(`diagnostic:analyze:${identifier}`, {
+    const rateLimitResult = await checkRateLimit(`diagnostic:analyze:${identifier}`, {
       limit: 30,
       windowSeconds: 60,
     });
