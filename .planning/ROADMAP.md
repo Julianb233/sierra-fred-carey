@@ -2,7 +2,7 @@
 
 **Project:** Sahara - AI-Powered Founder Operating System
 **Current Milestone:** v1.0 MVP
-**Status:** In Progress
+**Status:** Complete
 **Started:** 2026-02-05
 
 ---
@@ -90,11 +90,11 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
 
 ### Dashboard Polish (optional, from v1.0 comprehensive audit)
 
-- [ ] **Phase 10b: Dashboard Polish & Missing Wiring** - Fix dead buttons, delete account, nav gaps, tier mismatch
+- [x] **Phase 10b: Dashboard Polish & Missing Wiring** - Fix dead buttons, delete account, nav gaps, tier mismatch
   - Closes: Monitoring page dead buttons, settings delete account stub, nav tier mismatch, hidden pages
-  - [ ] 10b-01-PLAN.md — Monitoring page fixes (View Details button, CSV/JSON export, filter re-fetch, stale TODO)
-  - [ ] 10b-02-PLAN.md — Delete account server endpoint + settings page wiring
-  - [ ] 10b-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
+  - [x] 10b-01-PLAN.md — Monitoring page fixes (View Details button, CSV/JSON export, filter re-fetch, stale TODO)
+  - [x] 10b-02-PLAN.md — Delete account server endpoint + settings page wiring
+  - [x] 10b-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
 
 ### Parallel Track
 
