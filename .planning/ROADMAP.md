@@ -65,11 +65,11 @@ See MILESTONES.md for full details.
   3. All dashboard/settings/agents/chat routes are protected by edge middleware requiring authentication
   4. robots.txt, sitemap.ts, and CORS headers are present and correct for production deployment
   5. Rate limiting uses Redis/Upstash (not in-memory) and startup validation script confirms all required env vars
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: Data consistency fixes
-- [ ] 12-02: Production infrastructure hardening
+- [ ] 12-01-PLAN.md -- Data consistency fixes (MARKETING_STATS constant, capital raised, years of experience, SMS tier, Coming Soon labels, about page rewrite)
+- [ ] 12-02-PLAN.md -- Production infrastructure hardening (root middleware, robots.ts, sitemap.ts, CORS utility, Upstash rate limiting, env validation)
 
 ### Phase 13: Voice -- Core AI Engines
 **Goal**: The five core AI features (chat, Reality Lens, Investor Readiness, Strategy Docs, Pitch Deck) all speak unmistakably as Fred Cary
@@ -237,7 +237,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Data Fixes & Production Hardening | v2.0 | 0/2 | Not started | - |
+| 12. Data Fixes & Production Hardening | v2.0 | 0/2 | Planned | - |
 | 13. Voice -- Core AI Engines | v2.0 | 0/1 | Not started | - |
 | 14. Voice -- Agents & Channels | v2.0 | 0/2 | Not started | - |
 | 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Not started | - |
