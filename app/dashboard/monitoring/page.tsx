@@ -411,22 +411,24 @@ export default function MonitoringDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="experiments">Experiments</TabsTrigger>
-          <TabsTrigger value="promotion">Auto-Promotion</TabsTrigger>
-          <TabsTrigger value="alerts">
-            Alerts
-            {alerts.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
-                {alerts.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <GearIcon className="mr-2 h-4 w-4" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:max-w-2xl sm:grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="experiments" className="text-xs sm:text-sm whitespace-nowrap">Experiments</TabsTrigger>
+            <TabsTrigger value="promotion" className="text-xs sm:text-sm whitespace-nowrap">Auto-Promotion</TabsTrigger>
+            <TabsTrigger value="alerts" className="text-xs sm:text-sm whitespace-nowrap">
+              Alerts
+              {alerts.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
+                  {alerts.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm whitespace-nowrap">
+              <GearIcon className="mr-2 h-4 w-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="experiments" className="space-y-6">
           <ExperimentList experiments={experiments} loading={loading} />

@@ -236,11 +236,24 @@ export function getPromptForTopic(topic: keyof typeof COACHING_PROMPTS): string 
 /**
  * Generate a contextual greeting based on time of day and Fred's style
  */
-export function getFredGreeting(): string {
+export function getFredGreeting(startupContext?: {
+  name?: string;
+  stage?: string;
+  mainChallenge?: string;
+}): string {
   const greetings = [
     "Hey there! I'm Fred Cary — I've built 40+ companies over 50 years and coached 10,000+ founders. Think of me as your digital co-founder, available 24/7. What's on your mind?",
     "Welcome! I'm Fred. I started slinging tacos at 17, became an attorney, and built a company whose technology is in 75% of the world's TV households. Now I'm here to help you. What are you working on?",
     "Hey! Fred Cary here. I've seen what works and what doesn't across 40+ companies and 50 years. Let's skip the fluff and get to what matters. What's your biggest challenge right now?",
   ];
-  return greetings[Math.floor(Math.random() * greetings.length)];
+  const base = greetings[Math.floor(Math.random() * greetings.length)];
+
+  if (startupContext?.name) {
+    const name = startupContext.name;
+    const stage = (startupContext.stage || "startup").replace("-", " ");
+    const challenge = startupContext.mainChallenge || "growth";
+    return `${base}\n\nSo you're working on ${name} at the ${stage} stage, focusing on ${challenge}. Let's dig in.`;
+  }
+
+  return base;
 }

@@ -8,24 +8,27 @@ import { TypingIndicator } from "./typing-indicator";
 import { CognitiveStepIndicator } from "./cognitive-state-indicator";
 import { FloatingOrbs } from "@/components/premium/GradientBg";
 import { useFredChat } from "@/lib/hooks/use-fred-chat";
+import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from "@/lib/fred-brain";
 import { cn } from "@/lib/utils";
 
 interface ChatInterfaceProps {
   className?: string;
 }
 
-const FRED_GREETING: Message = {
-  id: "greeting",
-  content:
-    "Hey there! I'm Fred Cary \u2014 I started slinging tacos at 17, became a rock musician, then an attorney, and went on to build 40+ companies over 50 years. I've taken 3 companies public, created technology used in 75% of the world's TV households, and coached 10,000+ founders.\n\nThink of me as your digital co-founder, available 24/7. Whether you're validating an idea, preparing for fundraising, or figuring out your next big move \u2014 I'm here to give you the straight truth.\n\nF**k average, be legendary. What's on your mind?",
-  role: "assistant",
-  timestamp: new Date(),
-};
+function buildFredGreeting(): Message {
+  return {
+    id: "greeting",
+    content: `Hey there! I'm Fred Cary. ${getExperienceStatement()}\n\n${getCredibilityStatement()}\n\nThink of me as your digital co-founder, available 24/7. Whether you're validating an idea, preparing for fundraising, or figuring out your next big move \u2014 I'm here to give you the straight truth.\n\n"${getRandomQuote()}" What's on your mind?`,
+    role: "assistant",
+    timestamp: new Date(),
+  };
+}
 
 export function ChatInterface({ className }: ChatInterfaceProps) {
   const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [greeting] = useState<Message>(() => buildFredGreeting());
 
   // Map FredMessage[] to Message[] (compatible shape) and prepend greeting
   const messages: Message[] = useMemo(() => {
@@ -35,8 +38,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       role: m.role,
       timestamp: m.timestamp,
     }));
-    return [FRED_GREETING, ...mapped];
-  }, [fredMessages]);
+    return [greeting, ...mapped];
+  }, [fredMessages, greeting]);
 
   // Auto-scroll to latest message
   useEffect(() => {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { getFredGreeting } from "@/lib/ai/prompts";
 import type { StartupInfo } from "@/lib/hooks/use-onboarding";
 
 interface FredIntroStepProps {
@@ -30,27 +31,19 @@ export function FredIntroStep({ startupInfo, onNext, onBack }: FredIntroStepProp
 
   // Generate personalized welcome message
   useEffect(() => {
-    const generateWelcome = () => {
-      const name = startupInfo.name || "your startup";
-      const stage = startupInfo.stage || "startup";
-      const challenge = startupInfo.mainChallenge || "growth";
+    const welcomeMessage = getFredGreeting({
+      name: startupInfo.name || undefined,
+      stage: startupInfo.stage || undefined,
+      mainChallenge: startupInfo.mainChallenge || undefined,
+    });
 
-      const welcomeMessage = `Hey! So you're working on ${name} — that's exciting. Being at the ${stage.replace("-", " ")} stage is a wild ride. I see ${challenge} is your main focus right now.
-
-Here's the deal: I'm not going to BS you. I've helped 10,000+ founders, and I've seen what works and what doesn't. Most advice out there is generic. Mine won't be.
-
-Ask me anything about your startup, your challenges, or even if you're just feeling stuck. What's on your mind?`;
-
-      setMessages([
-        {
-          id: "welcome",
-          role: "assistant",
-          content: welcomeMessage,
-        },
-      ]);
-    };
-
-    generateWelcome();
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: welcomeMessage,
+      },
+    ]);
   }, [startupInfo]);
 
   // Auto-scroll

@@ -103,7 +103,10 @@
       hsl(var(--background));
   }
 
-  button, a, [role="button"], input[type="button"], input[type="submit"], input[type="reset"] {
+  button, a, [role="button"], input[type="button"], input[type="submit"], input[type="reset"],
+  input[type="text"], input[type="email"], input[type="password"], input[type="search"],
+  input[type="tel"], input[type="url"], input[type="number"], input[type="date"],
+  textarea, select, [role="checkbox"], [role="radio"], [role="switch"], [role="tab"] {
     min-height: 44px;
   }
 

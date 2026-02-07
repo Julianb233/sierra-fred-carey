@@ -17,6 +17,7 @@ import type {
   InputIntent,
   ExtractedEntity,
   ClarificationRequest,
+  CoachingTopic,
 } from "../types";
 
 /**
@@ -77,9 +78,13 @@ export async function validateInputActor(
   // Extract keywords
   const keywords = extractKeywords(sanitizedMessage);
 
+  // Detect coaching topic (orthogonal to intent)
+  const topic = detectTopic(sanitizedMessage, keywords);
+
   return {
     originalMessage: input.message,
     intent: intentResult.intent,
+    topic,
     entities,
     confidence: intentResult.confidence,
     clarificationNeeded,
@@ -390,4 +395,34 @@ function extractKeywords(message: string): string[] {
 
   // Return unique keywords, limited to top 10
   return [...new Set(words)].slice(0, 10);
+}
+
+/**
+ * Detect coaching topic from message content and extracted keywords.
+ * Maps to COACHING_PROMPTS keys in prompts.ts.
+ */
+function detectTopic(message: string, keywords: string[]): CoachingTopic | undefined {
+  const topicKeywords: Record<CoachingTopic, string[]> = {
+    fundraising: ["fundrais", "raise", "investor", "vc", "capital", "funding", "round", "valuation", "term sheet", "series"],
+    pitchReview: ["pitch", "deck", "slides", "presentation", "investor deck"],
+    strategy: ["strategy", "plan", "roadmap", "pivot", "direction", "prioritize", "execute", "next steps"],
+    positioning: ["positioning", "differentiat", "market fit", "value prop", "brand", "competitive", "messaging"],
+    mindset: ["mindset", "motivat", "stuck", "overwhelm", "doubt", "confidence", "fear", "burnout", "stressed", "anxious"],
+  };
+
+  const lowerMessage = message.toLowerCase();
+  let bestTopic: CoachingTopic | undefined;
+  let bestScore = 0;
+
+  for (const [topic, words] of Object.entries(topicKeywords) as [CoachingTopic, string[]][]) {
+    const score = words.filter(w =>
+      lowerMessage.includes(w) || keywords.some(k => k.includes(w))
+    ).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestTopic = topic;
+    }
+  }
+
+  return bestScore > 0 ? bestTopic : undefined;
 }

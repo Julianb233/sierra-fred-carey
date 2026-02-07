@@ -165,7 +165,7 @@ export function KnowledgeBaseEditor({ entries, configId, onSave, onDelete }: Kno
             />
           </div>
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>

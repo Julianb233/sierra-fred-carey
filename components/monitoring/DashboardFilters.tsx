@@ -168,7 +168,7 @@ export function DashboardFilters({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0" align="start">
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[280px] p-0" align="start">
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-sm">Select Experiments</h4>

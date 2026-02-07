@@ -17,6 +17,7 @@ import type {
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
 import { FRED_BIO } from "@/lib/fred-brain";
+import { COACHING_PROMPTS } from "@/lib/ai/prompts";
 
 /**
  * Decide what action to take based on synthesis
@@ -270,14 +271,26 @@ function buildResponseContent(
   input: ValidatedInput
 ): string {
   switch (action) {
-    case "auto_execute":
-      return synthesis.recommendation;
+    case "auto_execute": {
+      let content = synthesis.recommendation;
+      if (input.topic && input.topic in COACHING_PROMPTS) {
+        const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
+        content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
+      }
+      return content;
+    }
 
-    case "recommend":
+    case "recommend": {
       const nextStepsText = synthesis.nextSteps.slice(0, 2).join("\n- ");
-      return `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
+      let content = `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
+      if (input.topic && input.topic in COACHING_PROMPTS) {
+        const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
+        content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
+      }
+      return content;
+    }
 
-    case "escalate":
+    case "escalate": {
       const risksText = synthesis.risks
         .slice(0, 2)
         .map((r) => r.description)
@@ -286,7 +299,13 @@ function buildResponseContent(
         .slice(0, 2)
         .map((a) => `${a.description} (Score: ${a.score})`)
         .join("\n- ");
-      return `**Let me be straight with you -- this is a big one.**\n\n${synthesis.recommendation}\n\nIn my ${FRED_BIO.yearsExperience}+ years, I've seen decisions like this go sideways when founders rush. Here's what you need to weigh:\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives Worth Considering:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This is your call. I'm giving you the data -- you make the decision.*`;
+      let escalateContent = `**Let me be straight with you -- this is a big one.**\n\n${synthesis.recommendation}\n\nIn my ${FRED_BIO.yearsExperience}+ years, I've seen decisions like this go sideways when founders rush. Here's what you need to weigh:\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives Worth Considering:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This is your call. I'm giving you the data -- you make the decision.*`;
+      if (input.topic && input.topic in COACHING_PROMPTS) {
+        const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
+        escalateContent += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
+      }
+      return escalateContent;
+    }
 
     case "clarify":
       const questions = synthesis.followUpQuestions.slice(0, 2);

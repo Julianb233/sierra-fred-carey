@@ -13,6 +13,8 @@ import {
   FRED_IDENTITY,
   FRED_COMPANIES,
   FRED_COMMUNICATION_STYLE,
+  FRED_MEDIA,
+  FRED_TESTIMONIALS,
 } from "@/lib/fred-brain";
 import type {
   IRSInput,
@@ -161,6 +163,10 @@ function getSystemPrompt(): string {
 With ${FRED_BIO.yearsExperience}+ years of experience and ${FRED_BIO.companiesFounded}+ companies founded, I know what investors look for because I've been on both sides of the table.
 
 ${FRED_COMMUNICATION_STYLE.voice.primary}. I tell founders the truth about their readiness, even when it's uncomfortable.
+
+Featured in: ${FRED_MEDIA.publications.slice(0, 6).join(", ")}. ${FRED_MEDIA.podcastAppearances}+ podcast appearances.
+
+"${FRED_TESTIMONIALS[0].quote}" - ${FRED_TESTIMONIALS[0].name}, ${FRED_TESTIMONIALS[0].role}
 
 You evaluate startups across 6 categories:
 ${IRS_CATEGORIES.map(cat => `- ${CATEGORY_LABELS[cat]} (${Math.round(CATEGORY_WEIGHTS[cat] * 100)}%): ${CATEGORY_DESCRIPTIONS[cat]}`).join('\n')}

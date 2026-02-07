@@ -167,28 +167,30 @@ export function InvestorLensEvaluation() {
         {/* Form */}
         <Card className="p-6">
           <Tabs defaultValue="team" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="team" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Team</span>
-              </TabsTrigger>
-              <TabsTrigger value="market" className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Market</span>
-              </TabsTrigger>
-              <TabsTrigger value="traction" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                <span className="hidden sm:inline">Traction</span>
-              </TabsTrigger>
-              <TabsTrigger value="business" className="flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                <span className="hidden sm:inline">Business</span>
-              </TabsTrigger>
-              <TabsTrigger value="funding" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Funding</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-5 lg:w-auto lg:inline-grid">
+                <TabsTrigger value="team" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Team</span>
+                </TabsTrigger>
+                <TabsTrigger value="market" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden sm:inline">Market</span>
+                </TabsTrigger>
+                <TabsTrigger value="traction" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Traction</span>
+                </TabsTrigger>
+                <TabsTrigger value="business" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Layers className="h-4 w-4" />
+                  <span className="hidden sm:inline">Business</span>
+                </TabsTrigger>
+                <TabsTrigger value="funding" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden sm:inline">Funding</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Team Tab */}
             <TabsContent value="team" className="space-y-6 mt-6">

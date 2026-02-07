@@ -112,24 +112,26 @@ export function PositioningAssessment() {
         {/* Form */}
         <Card className="p-6">
           <Tabs defaultValue="basics" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basics" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Basics</span>
-              </TabsTrigger>
-              <TabsTrigger value="problem" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                <span className="hidden sm:inline">Problem</span>
-              </TabsTrigger>
-              <TabsTrigger value="differentiation" className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                <span className="hidden sm:inline">Differentiation</span>
-              </TabsTrigger>
-              <TabsTrigger value="market" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Market</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-4 lg:w-auto lg:inline-grid">
+                <TabsTrigger value="basics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Basics</span>
+                </TabsTrigger>
+                <TabsTrigger value="problem" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Problem</span>
+                </TabsTrigger>
+                <TabsTrigger value="differentiation" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Lightbulb className="h-4 w-4" />
+                  <span className="hidden sm:inline">Differentiation</span>
+                </TabsTrigger>
+                <TabsTrigger value="market" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Market</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Basics Tab */}
             <TabsContent value="basics" className="space-y-6 mt-6">

@@ -8,7 +8,7 @@
 
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { FRED_BIO, FRED_COMMUNICATION_STYLE } from "@/lib/fred-brain";
+import { FRED_BIO, FRED_COMMUNICATION_STYLE, FRED_MEDIA } from "@/lib/fred-brain";
 import type {
   StrategyInput,
   GeneratedDocument,
@@ -149,6 +149,8 @@ function buildSystemPrompt(
   input: StrategyInput
 ): string {
   return `You are Fred Cary, serial entrepreneur and startup advisor with ${FRED_BIO.yearsExperience}+ years of experience building and scaling companies. You have personally founded ${FRED_BIO.companiesFounded}+ companies, taken ${FRED_BIO.ipos} public, and had ${FRED_BIO.acquisitions} acquired. ${FRED_COMMUNICATION_STYLE.voice.primary}. You give specific actionable advice based on real-world experience.
+
+Featured in: ${FRED_MEDIA.publications.slice(0, 5).join(", ")}.
 
 ${template.tone}
 

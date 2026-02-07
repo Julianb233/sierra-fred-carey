@@ -311,23 +311,14 @@ export default function PricingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="text-left p-4 sm:p-6 font-semibold text-gray-900 dark:text-white">Feature</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-gray-600 dark:text-gray-400">Free</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-[#ff6a1a]">$99</th>
-                    <th className="text-center p-4 sm:p-6 font-semibold text-orange-600">$249</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonFeatures.map((feature, index) => (
-                    <tr
-                      key={feature.name}
-                      className={`${index % 2 === 0 ? "bg-white dark:bg-gray-950" : "bg-gray-50 dark:bg-gray-900"} hover:bg-[#ff6a1a]/5 transition-colors`}
-                    >
-                      <td className="p-4 sm:p-6 text-sm text-gray-700 dark:text-gray-300">{feature.name}</td>
-                      <td className="text-center p-4 sm:p-6">
+              {/* Mobile card layout */}
+              <div className="md:hidden space-y-3 p-4">
+                {comparisonFeatures.map((feature) => (
+                  <div key={feature.name} className="bg-white dark:bg-gray-950 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+                    <h4 className="font-medium text-sm mb-3 text-gray-900 dark:text-white">{feature.name}</h4>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Free</span>
                         {feature.free ? (
                           <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
                             <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
@@ -335,8 +326,9 @@ export default function PricingPage() {
                         ) : (
                           <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
-                      </td>
-                      <td className="text-center p-4 sm:p-6">
+                      </div>
+                      <div>
+                        <span className="text-xs text-[#ff6a1a] block mb-1">$99</span>
                         {feature.fundraising ? (
                           <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
                             <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
@@ -344,8 +336,9 @@ export default function PricingPage() {
                         ) : (
                           <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
-                      </td>
-                      <td className="text-center p-4 sm:p-6">
+                      </div>
+                      <div>
+                        <span className="text-xs text-orange-600 block mb-1">$249</span>
                         {feature.studio ? (
                           <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
                             <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
@@ -353,11 +346,61 @@ export default function PricingPage() {
                         ) : (
                           <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
                         )}
-                      </td>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table layout */}
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="text-left p-4 sm:p-6 font-semibold text-gray-900 dark:text-white">Feature</th>
+                      <th className="text-center p-4 sm:p-6 font-semibold text-gray-600 dark:text-gray-400">Free</th>
+                      <th className="text-center p-4 sm:p-6 font-semibold text-[#ff6a1a]">$99</th>
+                      <th className="text-center p-4 sm:p-6 font-semibold text-orange-600">$249</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {comparisonFeatures.map((feature, index) => (
+                      <tr
+                        key={feature.name}
+                        className={`${index % 2 === 0 ? "bg-white dark:bg-gray-950" : "bg-gray-50 dark:bg-gray-900"} hover:bg-[#ff6a1a]/5 transition-colors`}
+                      >
+                        <td className="p-4 sm:p-6 text-sm text-gray-700 dark:text-gray-300">{feature.name}</td>
+                        <td className="text-center p-4 sm:p-6">
+                          {feature.free ? (
+                            <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                              <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
+                            </div>
+                          ) : (
+                            <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center p-4 sm:p-6">
+                          {feature.fundraising ? (
+                            <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                              <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
+                            </div>
+                          ) : (
+                            <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center p-4 sm:p-6">
+                          {feature.studio ? (
+                            <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                              <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
+                            </div>
+                          ) : (
+                            <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </motion.div>
         </div>

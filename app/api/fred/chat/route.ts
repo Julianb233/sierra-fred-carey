@@ -170,6 +170,7 @@ export async function POST(req: NextRequest) {
         },
         analysis: {
           intent: result.context.validatedInput?.intent || "unknown",
+          topic: result.context.validatedInput?.topic || null,
           confidence: result.context.validatedInput?.confidence || 0,
         },
         synthesis: result.context.synthesis
@@ -231,6 +232,7 @@ export async function POST(req: NextRequest) {
           if (update.context.validatedInput && !update.isComplete) {
             send("analysis", {
               intent: update.context.validatedInput.intent,
+              topic: update.context.validatedInput.topic || null,
               confidence: update.context.validatedInput.confidence,
               entities: update.context.validatedInput.entities,
             });

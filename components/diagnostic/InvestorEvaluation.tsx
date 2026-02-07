@@ -202,12 +202,14 @@ export function InvestorEvaluation({ onComplete }: InvestorEvaluationProps) {
         </Card>
 
         <Tabs defaultValue="scores" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="scores">Axis Scores</TabsTrigger>
-            <TabsTrigger value="pass-reasons">Pass Reasons</TabsTrigger>
-            <TabsTrigger value="de-risk">De-Risk Actions</TabsTrigger>
-            <TabsTrigger value="milestones">Milestones</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-4 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="scores" className="text-xs sm:text-sm whitespace-nowrap">Axis Scores</TabsTrigger>
+              <TabsTrigger value="pass-reasons" className="text-xs sm:text-sm whitespace-nowrap">Pass Reasons</TabsTrigger>
+              <TabsTrigger value="de-risk" className="text-xs sm:text-sm whitespace-nowrap">De-Risk Actions</TabsTrigger>
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm whitespace-nowrap">Milestones</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="scores" className="mt-4">
             <div className="grid gap-3">

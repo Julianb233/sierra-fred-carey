@@ -263,56 +263,58 @@ export default function BoardyPage() {
           onValueChange={(v) => setActiveTab(v as FilterTab)}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all" className="text-xs sm:text-sm">
-              All
-              <CountBadge count={matches.length} />
-            </TabsTrigger>
-            <TabsTrigger value="investors" className="text-xs sm:text-sm">
-              <Briefcase className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-              Investors
-              <CountBadge
-                count={
-                  matches.filter((m) => m.matchType === "investor").length
-                }
-              />
-            </TabsTrigger>
-            <TabsTrigger value="advisors" className="text-xs sm:text-sm">
-              <Users className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-              Advisors
-              <CountBadge
-                count={
-                  matches.filter(
-                    (m) =>
-                      m.matchType === "advisor" ||
-                      m.matchType === "mentor" ||
-                      m.matchType === "partner"
-                  ).length
-                }
-              />
-            </TabsTrigger>
-            <TabsTrigger value="active" className="text-xs sm:text-sm">
-              <CheckCircle className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-              Active
-              <CountBadge
-                count={
-                  matches.filter(
-                    (m) =>
-                      m.status !== "declined" && m.status !== "suggested"
-                  ).length
-                }
-              />
-            </TabsTrigger>
-            <TabsTrigger value="declined" className="text-xs sm:text-sm">
-              <XCircle className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-              Declined
-              <CountBadge
-                count={
-                  matches.filter((m) => m.status === "declined").length
-                }
-              />
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-5 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="all" className="text-xs sm:text-sm whitespace-nowrap">
+                All
+                <CountBadge count={matches.length} />
+              </TabsTrigger>
+              <TabsTrigger value="investors" className="text-xs sm:text-sm whitespace-nowrap">
+                <Briefcase className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                Investors
+                <CountBadge
+                  count={
+                    matches.filter((m) => m.matchType === "investor").length
+                  }
+                />
+              </TabsTrigger>
+              <TabsTrigger value="advisors" className="text-xs sm:text-sm whitespace-nowrap">
+                <Users className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                Advisors
+                <CountBadge
+                  count={
+                    matches.filter(
+                      (m) =>
+                        m.matchType === "advisor" ||
+                        m.matchType === "mentor" ||
+                        m.matchType === "partner"
+                    ).length
+                  }
+                />
+              </TabsTrigger>
+              <TabsTrigger value="active" className="text-xs sm:text-sm whitespace-nowrap">
+                <CheckCircle className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                Active
+                <CountBadge
+                  count={
+                    matches.filter(
+                      (m) =>
+                        m.status !== "declined" && m.status !== "suggested"
+                    ).length
+                  }
+                />
+              </TabsTrigger>
+              <TabsTrigger value="declined" className="text-xs sm:text-sm whitespace-nowrap">
+                <XCircle className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                Declined
+                <CountBadge
+                  count={
+                    matches.filter((m) => m.status === "declined").length
+                  }
+                />
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
 
         {/* Match List */}

@@ -237,28 +237,30 @@ export default function VoiceAgentAdminPage() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Agent Config</span>
-          </TabsTrigger>
-          <TabsTrigger value="escalation" className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4" />
-            <span className="hidden sm:inline">Escalation</span>
-          </TabsTrigger>
-          <TabsTrigger value="knowledge" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Knowledge</span>
-          </TabsTrigger>
-          <TabsTrigger value="hours" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="hidden sm:inline">Hours</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytics</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="config" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Agent Config</span>
+            </TabsTrigger>
+            <TabsTrigger value="escalation" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <ShieldAlert className="h-4 w-4" />
+              <span className="hidden sm:inline">Escalation</span>
+            </TabsTrigger>
+            <TabsTrigger value="knowledge" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Knowledge</span>
+            </TabsTrigger>
+            <TabsTrigger value="hours" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Hours</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="config">
           {config ? (

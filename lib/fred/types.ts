@@ -108,6 +108,8 @@ export interface ValidatedInput {
   originalMessage: string;
   /** Detected intent */
   intent: InputIntent;
+  /** Detected coaching topic (maps to COACHING_PROMPTS keys) */
+  topic?: CoachingTopic;
   /** Extracted entities */
   entities: ExtractedEntity[];
   /** Confidence in intent detection (0-1) */
@@ -121,6 +123,12 @@ export interface ValidatedInput {
   /** Urgency level detected */
   urgency: "low" | "medium" | "high" | "critical";
 }
+
+/**
+ * Coaching topic detected from user message.
+ * Maps to keys in COACHING_PROMPTS from prompts.ts.
+ */
+export type CoachingTopic = "fundraising" | "pitchReview" | "strategy" | "positioning" | "mindset";
 
 /**
  * Detected user intent

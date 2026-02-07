@@ -44,7 +44,7 @@ export function PerformanceCharts({ className }: PerformanceChartsProps) {
               Performance Analytics
             </CardTitle>
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -59,24 +59,26 @@ export function PerformanceCharts({ className }: PerformanceChartsProps) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="conversion" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="conversion" className="gap-2">
-                <ActivityLogIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Conversions</span>
-              </TabsTrigger>
-              <TabsTrigger value="latency" className="gap-2">
-                <TimerIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Latency</span>
-              </TabsTrigger>
-              <TabsTrigger value="traffic" className="gap-2">
-                <PieChartIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Traffic</span>
-              </TabsTrigger>
-              <TabsTrigger value="errors" className="gap-2">
-                <ExclamationTriangleIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Errors</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-4 lg:w-auto lg:inline-grid">
+                <TabsTrigger value="conversion" className="gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <ActivityLogIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Conversions</span>
+                </TabsTrigger>
+                <TabsTrigger value="latency" className="gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <TimerIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Latency</span>
+                </TabsTrigger>
+                <TabsTrigger value="traffic" className="gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <PieChartIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Traffic</span>
+                </TabsTrigger>
+                <TabsTrigger value="errors" className="gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Errors</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="conversion" className="space-y-4">
               <ConversionRateChart timeRange={timeRange} />

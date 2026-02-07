@@ -300,24 +300,26 @@ export default function InsightsDashboardPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="trends" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="trends">
-            Trends
-          </TabsTrigger>
-          <TabsTrigger value="insights">
-            Top Insights
-            <Badge variant="secondary" className="ml-2">
-              {topInsights.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="ab-tests">
-            A/B Tests
-            <Badge variant="secondary" className="ml-2">
-              {abTests.filter((t) => t.isActive).length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="analytics">AI Analytics</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:grid sm:w-full sm:grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="trends" className="text-xs sm:text-sm whitespace-nowrap">
+              Trends
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm whitespace-nowrap">
+              Top Insights
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
+                {topInsights.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="ab-tests" className="text-xs sm:text-sm whitespace-nowrap">
+              A/B Tests
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
+                {abTests.filter((t) => t.isActive).length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm whitespace-nowrap">AI Analytics</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Trends Tab */}
         <TabsContent value="trends" className="space-y-4">
