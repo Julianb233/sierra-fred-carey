@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { RateLimiter } from "@/lib/rate-limit";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_INVITES = 10;
 
-// TODO: Add rate limiting for this public endpoint.
-// This route is unauthenticated by design (users invite friends before signing up),
-// but should be rate-limited per IP to prevent abuse (e.g., 10 requests/min).
-// Consider using a middleware-level rate limiter or Vercel's built-in rate limiting.
+// 5 requests per minute per IP
+const inviteRateLimiter = new RateLimiter({ windowMs: 60_000, max: 5 });
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit by IP
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    if (!inviteRateLimiter.check(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { emails, referrerEmail } = await request.json();
 
     if (!Array.isArray(emails) || emails.length === 0) {
