@@ -75,13 +75,26 @@ Build the core Sahara platform with FRED cognitive engine, tiered features, and 
   - Closes: Dashboard CTA → Stripe checkout 400 error, Flow 2 partial break
   - [x] 09-01-PLAN.md — Add TIER_TO_PLAN_KEY mapping so "pro"→FUNDRAISING, "studio"→VENTURE_STUDIO
 
-### Dashboard Polish (from v1.0 comprehensive audit)
+### Production Hardening (from final audit)
 
-- [ ] **Phase 10: Dashboard Polish & Missing Wiring** - Fix dead buttons, delete account, nav gaps, tier mismatch
+- [x] **Phase 10: Production Hardening** - Tier gating, auth middleware, rate limiting, ESLint 9, stub cleanup
+  - Closes: 8 gaps found in production readiness audit
+  - [x] GAP 1 — Tier gating (FeatureLock) on 5 Pro-tier pages (positioning, investor-lens, investor-readiness, pitch-deck, strategy)
+  - [x] GAP 2 — Documents pages redirected to /dashboard/strategy (removed mock data imports)
+  - [x] GAP 3 — Root middleware.ts for auth route protection (dashboard, onboarding, chat, agents, documents, settings, profile)
+  - [x] GAP 4 — Rate limiting on /api/onboard/invite (10 req/min per IP)
+  - [x] GAP 5 — Deleted admin/training & ratings stub routes (503 stubs)
+  - [x] GAP 6 — ESLint 9 flat config migration (eslint.config.mjs, `eslint .` lint script)
+  - [x] GAP 7 — Avatar fix (broken image src) + insights API typo fix
+  - [x] GAP 8 — Minor code quality fixes
+
+### Dashboard Polish (optional, from v1.0 comprehensive audit)
+
+- [ ] **Phase 10b: Dashboard Polish & Missing Wiring** - Fix dead buttons, delete account, nav gaps, tier mismatch
   - Closes: Monitoring page dead buttons, settings delete account stub, nav tier mismatch, hidden pages
-  - [ ] 10-01-PLAN.md — Monitoring page fixes (View Details button, CSV/JSON export, filter re-fetch, stale TODO)
-  - [ ] 10-02-PLAN.md — Delete account server endpoint + settings page wiring
-  - [ ] 10-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
+  - [ ] 10b-01-PLAN.md — Monitoring page fixes (View Details button, CSV/JSON export, filter re-fetch, stale TODO)
+  - [ ] 10b-02-PLAN.md — Delete account server endpoint + settings page wiring
+  - [ ] 10b-03-PLAN.md — Navigation fixes (SMS tier correction, add Startup Process + Investor Evaluation to nav)
 
 ### Parallel Track
 
