@@ -1,8 +1,3 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
 // ---------------------------------------------------------------------------
 // Content-Security-Policy – allow self, Stripe, Supabase, and AI providers
 // ---------------------------------------------------------------------------
@@ -12,7 +7,7 @@ const ContentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com",
+  "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -21,8 +16,7 @@ const ContentSecurityPolicy = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: ".next",
-  generateBuildId: () => "production-build",
+  // NOTE: Do NOT add generateBuildId with a static string — it breaks Turbopack builds
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas"],
   transpilePackages: ["framer-motion"],
   typescript: {

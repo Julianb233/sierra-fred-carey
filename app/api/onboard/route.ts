@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 signup attempts per hour per IP
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    const rateLimitResult = checkRateLimit(`onboard:${ip}`, { limit: 10, windowSeconds: 3600 });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password, qualifying, ref } = await request.json();
 
     // Validate required fields - for quick onboard, only email is required
