@@ -80,10 +80,10 @@ Plans:
   2. Reality Lens analysis reads as Fred Cary giving his honest take, not a generic assessment tool
   3. Investor Readiness reports use Fred's investor perspective and credentials, not a generic "VC analyst"
   4. Strategy documents and Pitch Deck reviews cite "50+ years" and import personality from fred-brain.ts
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 13-01: Core AI engine voice unification
+- [ ] 13-01-PLAN.md -- Core AI engine voice unification (shared voice.ts utility, Reality Lens + IRS persona swap, Strategy + Pitch fred-brain imports, Chat template voice injection)
 
 ### Phase 14: Voice -- Agents & Channels
 **Goal**: All three virtual agents (12 tool prompts), SMS check-ins, and the voice agent speak as Fred Cary
@@ -238,7 +238,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 13. Voice -- Core AI Engines | v2.0 | 0/1 | Not started | - |
+| 13. Voice -- Core AI Engines | v2.0 | 0/1 | Planned | - |
 | 14. Voice -- Agents & Channels | v2.0 | 0/2 | Not started | - |
 | 15. Voice -- Helpers & Activation | v2.0 | 0/1 | Planned | - |
 | 16. Red Flag Detection | v2.0 | 0/1 | Not started | - |
