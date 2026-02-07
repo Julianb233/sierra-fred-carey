@@ -278,28 +278,28 @@ export function createRateLimitHeaders(
 /**
  * Sanitize user input to prevent XSS
  *
- * - HTML-entity-encodes dangerous characters: < > ' " &
- * - Strips javascript: and data: URI schemes
+ * - HTML-entity-encodes dangerous characters: < > & " '
+ * - Strips javascript: and data: URI schemes (with whitespace bypass protection)
  * - Strips inline event handler patterns (on*=)
  * - Trims whitespace and limits length to 1000 characters
  */
 export function sanitizeInput(input: string): string {
-  return input
-    .replace(/[<>'"&]/g, (char) => {
-      const entities: Record<string, string> = {
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;',
-        '&': '&amp;',
-      };
-      return entities[char] || char;
-    })
-    .replace(/javascript:/gi, '')
-    .replace(/data:/gi, '')
-    .replace(/on\w+=/gi, '')
+  let sanitized = input
+    // HTML-entity-encode dangerous characters (& first to avoid double-encoding)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    // Strip javascript: and data: URI schemes (case-insensitive, allowing whitespace tricks)
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:/gi, '')
+    // Strip inline event handler patterns (on*=)
+    .replace(/\bon\w+\s*=/gi, '');
+
+  return sanitized
     .trim()
-    .slice(0, 1000);
+    .slice(0, 1000); // Limit length
 }
 
 /**
