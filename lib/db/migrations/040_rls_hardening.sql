@@ -1309,6 +1309,115 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ============================================================================
+-- GAP FILL: Add missing service_role bypass to tables that already have RLS
+-- but were missing a service_role policy for backend operations.
+-- ============================================================================
+
+-- fred_calibration_records: has user SELECT/INSERT/UPDATE but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages fred_calibration_records"
+    ON fred_calibration_records FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- fred_red_flags: has user CRUD but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages fred_red_flags"
+    ON fred_red_flags FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_requests: has user SELECT/INSERT but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_requests"
+    ON ai_requests FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_responses: has user SELECT/INSERT but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_responses"
+    ON ai_responses FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_insights: has user SELECT/INSERT/UPDATE but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_insights"
+    ON ai_insights FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_ratings: has user CRUD but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_ratings"
+    ON ai_ratings FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_config: has SELECT-only policy but no service_role bypass for writes
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_config"
+    ON ai_config FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ai_prompts: has SELECT-only policy but no service_role bypass for writes
+DO $$ BEGIN
+  CREATE POLICY "Service role manages ai_prompts"
+    ON ai_prompts FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- experiment_promotions: has SELECT/INSERT/UPDATE but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages experiment_promotions"
+    ON experiment_promotions FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- milestones: has user CRUD (via current_setting) but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages milestones"
+    ON milestones FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- journey_events: has user SELECT/INSERT (via current_setting) but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages journey_events"
+    ON journey_events FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- notification_configs: has user CRUD (via current_setting) but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages notification_configs"
+    ON notification_configs FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- notification_logs: has user SELECT + system INSERT but no service_role bypass
+DO $$ BEGIN
+  CREATE POLICY "Service role manages notification_logs"
+    ON notification_logs FOR ALL
+    USING (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ============================================================================
 -- SUMMARY
 -- ============================================================================
 -- This migration adds RLS to 27 previously unprotected tables:
@@ -1335,5 +1444,10 @@ END $$;
 --
 -- System tables (service_role only):
 --   users, ab_promotion_audit_log
+--
+-- Gap-fill service_role bypass policies added to 13 existing RLS tables:
+--   fred_calibration_records, fred_red_flags, ai_requests, ai_responses,
+--   ai_insights, ai_ratings, ai_config, ai_prompts, experiment_promotions,
+--   milestones, journey_events, notification_configs, notification_logs
 
 COMMIT;
