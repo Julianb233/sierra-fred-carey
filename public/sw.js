@@ -72,3 +72,94 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// ---------- Web Push Notification Handlers ----------
+
+/**
+ * Handle incoming push notifications.
+ * Payload is expected to be JSON: { title, body, icon?, badge?, url?, tag?, data? }
+ */
+self.addEventListener("push", (event) => {
+  const DEFAULT_ICON = "/icon-192.png";
+  const DEFAULT_BADGE = "/icon-192.png";
+
+  let payload = {
+    title: "Sahara",
+    body: "You have a new notification",
+    icon: DEFAULT_ICON,
+    badge: DEFAULT_BADGE,
+    url: "/dashboard",
+  };
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      payload = {
+        title: data.title || payload.title,
+        body: data.body || payload.body,
+        icon: data.icon || DEFAULT_ICON,
+        badge: data.badge || DEFAULT_BADGE,
+        url: data.url || "/dashboard",
+      };
+      // Preserve extra data fields
+      if (data.data) {
+        payload.data = data.data;
+      }
+      if (data.tag) {
+        payload.tag = data.tag;
+      }
+    } catch {
+      // If JSON parsing fails, try to use as plain text
+      const text = event.data.text();
+      if (text) {
+        payload.body = text;
+      }
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon,
+    badge: payload.badge,
+    tag: payload.tag || undefined,
+    data: {
+      url: payload.url,
+      ...(payload.data || {}),
+    },
+    // Vibrate pattern for mobile devices
+    vibrate: [100, 50, 100],
+    // Require interaction on desktop
+    requireInteraction: false,
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
+});
+
+/**
+ * Handle notification click events.
+ * Opens the URL from the notification data, or falls back to /dashboard.
+ */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || "/dashboard";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // If there's already a window open, focus it and navigate
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.focus();
+            client.navigate(targetUrl);
+            return;
+          }
+        }
+        // Otherwise, open a new window
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
+        }
+      })
+  );
+});
