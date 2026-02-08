@@ -10,12 +10,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { NotificationSettings } from "@/components/settings/NotificationSettings"
+import { VoiceSettings } from "@/components/settings/voice-settings"
 import { useTier } from "@/lib/context/tier-context"
 import { createClient } from "@/lib/supabase/client"
 import { UserTier, TIER_FEATURES } from "@/lib/constants"
 import { redirectToPortal } from "@/lib/stripe/client"
 import { UpgradeTier } from "@/components/dashboard/UpgradeTier"
 import { toast } from "sonner"
+import { Volume2 } from "lucide-react"
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -474,6 +476,24 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Voice & TTS Settings - Pro+ only */}
+      {tier >= UserTier.PRO && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Volume2 className="h-5 w-5 text-[#ff6a1a]" />
+              Voice &amp; TTS
+            </CardTitle>
+            <CardDescription>
+              Configure how FRED sounds when reading responses aloud.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VoiceSettings />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Danger Zone Section */}
       <Card className="border-destructive">

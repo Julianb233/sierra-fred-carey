@@ -14,6 +14,7 @@ import {
   DocumentPreview,
 } from "@/components/strategy";
 import { FeatureLock } from "@/components/tier/feature-lock";
+import { ShareButton } from "@/components/sharing/share-button";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import type {
@@ -47,6 +48,8 @@ export default function StrategyPage() {
 }
 
 function StrategyContent() {
+  const { tier } = useUserTier();
+
   // Document list state
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,11 +260,21 @@ function StrategyContent() {
 
         {/* Document Preview (when viewing) */}
         {selectedDoc && (
-          <DocumentPreview
-            document={selectedDoc}
-            onExport={() => handleExport(selectedDoc.id!)}
-            onClose={() => setSelectedDoc(null)}
-          />
+          <div className="space-y-3">
+            <DocumentPreview
+              document={selectedDoc}
+              onExport={() => handleExport(selectedDoc.id!)}
+              onClose={() => setSelectedDoc(null)}
+            />
+            <div className="flex justify-end">
+              <ShareButton
+                resourceType="strategy_document"
+                resourceId={selectedDoc.id!}
+                tier={tier}
+                label="Share Document"
+              />
+            </div>
+          </div>
         )}
 
         {/* Section 1: Generate New Document */}

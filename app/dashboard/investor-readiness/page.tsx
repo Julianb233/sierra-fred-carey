@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScoreGauge, CategoryBreakdown, RecommendationList } from "@/components/irs";
 import { FeatureLock } from "@/components/tier/feature-lock";
+import { ShareButton } from "@/components/sharing/share-button";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export default function InvestorReadinessPage() {
 }
 
 function InvestorReadinessContent() {
+  const { tier } = useUserTier();
   const [result, setResult] = useState<IRSResult | null>(null);
   const [history, setHistory] = useState<IRSResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,6 +163,14 @@ function InvestorReadinessContent() {
           </div>
 
           <div className="flex items-center gap-2">
+            {result?.id && (
+              <ShareButton
+                resourceType="investor_readiness"
+                resourceId={result.id}
+                tier={tier}
+                label="Share Report"
+              />
+            )}
             <Button
               variant="outline"
               onClick={calculateNewScore}
