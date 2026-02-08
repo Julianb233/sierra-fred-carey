@@ -89,32 +89,26 @@ export default function FeaturesPage() {
         {
           name: "Investor Targeting Guidance",
           description: "Find the funds that actually invest in your stage and sector.",
-          comingSoon: true,
         },
         {
           name: "Outreach Sequencing",
           description: "Follow-up logic and fund-fit reality checks.",
-          comingSoon: true,
         },
         {
           name: "Founder Ops Agent",
           description: "Weekly sprint planning, decision tracking, priority management.",
-          comingSoon: true,
         },
         {
           name: "Fundraise Ops Agent",
           description: "Investor list building, email drafts, meeting prep & summaries.",
-          comingSoon: true,
         },
         {
           name: "Growth Ops Agent",
           description: "Content calendars, social post drafting, landing page iterations.",
-          comingSoon: true,
         },
         {
           name: "Inbox Ops Agent",
           description: "Email triage, draft responses, priority surfacing.",
-          comingSoon: true,
         },
       ],
     },

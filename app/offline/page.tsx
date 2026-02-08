@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 export default function OfflinePage() {
   useEffect(() => {
@@ -17,22 +16,23 @@ export default function OfflinePage() {
   }, []);
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 text-center">
-      <div className="max-w-md mx-auto">
-        <img
-          src="/sahara-logo.svg"
-          alt="Sahara"
-          className="h-10 mx-auto mb-8"
-        />
+    <main className="min-h-dvh flex flex-col items-center justify-center bg-gray-950 relative overflow-hidden px-4 text-center">
+      {/* Background gradient blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff6a1a]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-400/15 rounded-full blur-[100px]" />
+      </div>
 
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center">
+      <div className="relative z-10 max-w-md mx-auto">
+        {/* Logo / Brand mark */}
+        <div className="w-16 h-16 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex items-center justify-center shadow-lg shadow-[#ff6a1a]/25">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="32"
             height="32"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#ff6a1a"
+            stroke="white"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -47,22 +47,21 @@ export default function OfflinePage() {
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+        <h1 className="text-3xl font-bold text-white mb-3">
           You&apos;re Offline
         </h1>
 
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          It looks like you&apos;ve lost your internet connection. We&apos;ll
-          automatically reconnect when you&apos;re back online.
+        <p className="text-gray-400 mb-8 leading-relaxed">
+          It looks like you&apos;ve lost your internet connection.
+          Check your network and try again.
         </p>
 
-        <Button
-          size="lg"
-          className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+        <button
           onClick={() => window.location.reload()}
+          className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-gradient-to-r from-[#ff6a1a] to-orange-400 text-white font-medium shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 hover:brightness-110 transition-all duration-300"
         >
           Try Again
-        </Button>
+        </button>
       </div>
     </main>
   );
