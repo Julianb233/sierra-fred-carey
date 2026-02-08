@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: Wave 2+4 executing (Phases 28, 29, 30, 32, 33)
+Phase: Wave 2+3+4 executing (Phases 28-33)
 Plan: Multiple parallel workers
 Status: Autonomous execution
-Last activity: 2026-02-08 -- Wave 1 complete (Phases 24-27), spawning Wave 2+4
+Last activity: 2026-02-08 -- Completed 31-01-PLAN.md (Email Infrastructure & Weekly Digest)
 
-Progress: [████████████░░░░░░░░░░░░░░░░░░░] 40% (8/20 plans)
+Progress: [██████████████░░░░░░░░░░░░░░░░░] 45% (9/20 plans)
 
 ## Wave Status
 
@@ -22,7 +22,7 @@ Progress: [████████████░░░░░░░░░░░
 |------|--------|--------|------------|
 | Wave 1 | 24, 25, 26, 27 | COMPLETE | 8/8 |
 | Wave 2 | 28, 29, 30 | IN PROGRESS | 0/6 |
-| Wave 3 | 31, 32 | BLOCKED (waiting on 30) | 0/4 |
+| Wave 3 | 31, 32 | IN PROGRESS | 1/4 |
 | Wave 4 | 33 | IN PROGRESS | 0/2 |
 
 ## Phase Completion
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░░░░
 | 28 | Web Push Notifications | PENDING | BLOCKED |
 | 29 | Video Coaching Sessions | PENDING | BLOCKED |
 | 30 | Product Analytics & Growth | PENDING | BLOCKED |
-| 31 | Email Engagement | BLOCKED | BLOCKED |
+| 31 | Email Engagement | DONE | PENDING |
 | 32 | FRED Intelligence Upgrade | PENDING | BLOCKED |
 | 33 | Collaboration & Sharing | PENDING | BLOCKED |
 
@@ -63,6 +63,8 @@ v3.0 execution decisions:
 - Wave 1: 1339-line RLS migration covering 27 tables
 - Wave 1: CI gates made blocking (lint, tsc, test)
 - Wave 1: 10 API routes switched to user-scoped Supabase clients
+- Wave 3: Resend SDK singleton with null fallback for graceful degradation
+- Wave 3: Email preferences read from profiles.metadata.notification_prefs (unified with settings UI)
 
 ### Blockers/Concerns
 
@@ -75,6 +77,6 @@ v3.0 execution decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-08
-Stopped at: Wave 1 complete. Wave 2+4 spawning.
+Last session: 2026-02-08T05:04:01Z
+Stopped at: Completed 31-01-PLAN.md (Email Infrastructure & Weekly Digest)
 Resume file: None
