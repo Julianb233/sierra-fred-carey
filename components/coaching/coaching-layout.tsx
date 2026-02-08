@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Video,
@@ -10,8 +10,11 @@ import {
   Clock,
   Shield,
   X,
+  Circle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { VideoRoom } from "@/components/video/VideoRoom";
 import { CoachingSidebar } from "@/components/coaching/coaching-sidebar";
@@ -27,6 +30,8 @@ interface CoachingLayoutProps {
   userId: string;
   userName?: string;
   className?: string;
+  /** Current user tier (0=Free, 1=Pro, 2=Studio) */
+  userTier?: number;
 }
 
 // ============================================================================
@@ -42,15 +47,56 @@ const COACHING_TIPS = [
 ];
 
 // ============================================================================
+// Session Lifecycle Helpers
+// ============================================================================
+
+async function createSession(roomName: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/coaching/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomName }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.session?.id ?? null;
+  } catch {
+    console.error("[CoachingLayout] Failed to create session");
+    return null;
+  }
+}
+
+async function updateSession(
+  sessionId: string,
+  updates: Record<string, unknown>
+): Promise<void> {
+  try {
+    await fetch("/api/coaching/sessions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: sessionId, ...updates }),
+    });
+  } catch {
+    console.error("[CoachingLayout] Failed to update session");
+  }
+}
+
+// ============================================================================
 // Lobby Component
 // ============================================================================
 
 function CoachingLobby({
   roomName,
   onConnect,
+  showRecordingToggle,
+  enableRecording,
+  onToggleRecording,
 }: {
   roomName: string;
   onConnect: () => void;
+  showRecordingToggle: boolean;
+  enableRecording: boolean;
+  onToggleRecording: (enabled: boolean) => void;
 }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
@@ -89,6 +135,23 @@ function CoachingLobby({
             </span>
           </div>
 
+          {/* Recording Toggle (Studio only) */}
+          {showRecordingToggle && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <Circle className="h-3.5 w-3.5 text-red-500" />
+                <Label htmlFor="recording-toggle" className="text-sm font-medium cursor-pointer">
+                  Record session
+                </Label>
+              </div>
+              <Switch
+                id="recording-toggle"
+                checked={enableRecording}
+                onCheckedChange={onToggleRecording}
+              />
+            </div>
+          )}
+
           {/* Connect Button */}
           <Button
             onClick={onConnect}
@@ -122,10 +185,15 @@ export function CoachingLayout({
   userId,
   userName,
   className,
+  userTier = 0,
 }: CoachingLayoutProps) {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("lobby");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [enableRecording, setEnableRecording] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const startedAtRef = useRef<Date | null>(null);
+  const isStudio = userTier >= 2;
 
   // Generate a unique room name for this session
   const roomName = useMemo(
@@ -133,21 +201,83 @@ export function CoachingLayout({
     [userId]
   );
 
-  const handleConnect = useCallback(() => {
-    setConnectionState("connecting");
-    // The VideoRoom component handles the actual connection
-    // We transition to "connected" immediately since VideoRoom manages its own state
-    setConnectionState("connected");
+  // Handle browser close / tab close -- attempt to complete session
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sessionIdRef.current && startedAtRef.current) {
+        const endedAt = new Date();
+        const durationSeconds = Math.floor(
+          (endedAt.getTime() - startedAtRef.current.getTime()) / 1000
+        );
+        // Use fetch with keepalive for reliability during page unload
+        // (sendBeacon only supports POST, but we need PATCH)
+        fetch("/api/coaching/sessions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sessionIdRef.current,
+            status: "completed",
+            ended_at: endedAt.toISOString(),
+            duration_seconds: durationSeconds,
+          }),
+          keepalive: true,
+        }).catch(() => {
+          // Best-effort -- stale session cleanup handles missed completions
+        });
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
-  const handleLeave = useCallback(() => {
+  const handleConnect = useCallback(async () => {
+    setConnectionState("connecting");
+
+    // Create session record and mark as in_progress
+    const sessionId = await createSession(roomName);
+    if (sessionId) {
+      sessionIdRef.current = sessionId;
+      const now = new Date();
+      startedAtRef.current = now;
+      await updateSession(sessionId, {
+        status: "in_progress",
+        started_at: now.toISOString(),
+      });
+    }
+
+    setConnectionState("connected");
+  }, [roomName]);
+
+  const handleLeave = useCallback(async () => {
+    // Mark session as completed with duration
+    if (sessionIdRef.current && startedAtRef.current) {
+      const endedAt = new Date();
+      const durationSeconds = Math.floor(
+        (endedAt.getTime() - startedAtRef.current.getTime()) / 1000
+      );
+      await updateSession(sessionIdRef.current, {
+        status: "completed",
+        ended_at: endedAt.toISOString(),
+        duration_seconds: durationSeconds,
+      });
+      sessionIdRef.current = null;
+      startedAtRef.current = null;
+    }
+
     setConnectionState("lobby");
   }, []);
 
   // Lobby state
   if (connectionState === "lobby") {
     return (
-      <CoachingLobby roomName={roomName} onConnect={handleConnect} />
+      <CoachingLobby
+        roomName={roomName}
+        onConnect={handleConnect}
+        showRecordingToggle={isStudio}
+        enableRecording={enableRecording}
+        onToggleRecording={setEnableRecording}
+      />
     );
   }
 
@@ -156,9 +286,17 @@ export function CoachingLayout({
     <div className={cn("flex flex-col h-[calc(100vh-4rem)]", className)}>
       {/* Mobile sidebar toggle */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-800 lg:hidden">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Coaching Session
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Coaching Session
+          </span>
+          {enableRecording && isStudio && (
+            <span className="flex items-center gap-1 text-xs text-red-500">
+              <Circle className="h-2 w-2 fill-red-500 animate-pulse" />
+              REC
+            </span>
+          )}
+        </div>
         <Button
           variant="outline"
           size="sm"
@@ -196,6 +334,7 @@ export function CoachingLayout({
             <VideoRoom
               roomName={roomName}
               userName={userName}
+              sessionId={sessionIdRef.current ?? undefined}
               onLeave={handleLeave}
             />
           )}
@@ -215,7 +354,11 @@ export function CoachingLayout({
                 "h-full"
               )}
             >
-              <CoachingSidebar className="h-full" />
+              <CoachingSidebar
+                className="h-full"
+                sessionId={sessionIdRef.current ?? undefined}
+                onDisconnectPersist
+              />
             </motion.div>
           )}
         </AnimatePresence>

@@ -8,6 +8,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { MEMORY_CONFIG, type MemoryTier } from "@/lib/constants";
 
 // ============================================================================
 // Types
@@ -661,6 +662,66 @@ export async function getRecentDecisions(
   }
 
   return (data || []).map(transformDecisionRow);
+}
+
+// ============================================================================
+// Retention Enforcement (Phase 32-02)
+// ============================================================================
+
+/**
+ * Enforce tier-based memory retention limits.
+ * Deletes episodic memories that exceed the tier's retention window or item cap.
+ */
+export async function enforceRetentionLimits(
+  userId: string,
+  tier: MemoryTier
+): Promise<number> {
+  const config = MEMORY_CONFIG[tier];
+  const supabase = createServiceClient();
+  let deletedCount = 0;
+
+  // For Free tier (0 days retention), delete all episodic memories
+  if (config.retentionDays === 0) {
+    const { data } = await supabase
+      .from("fred_episodic_memory")
+      .delete()
+      .eq("user_id", userId)
+      .select("id");
+    deletedCount += data?.length ?? 0;
+    return deletedCount;
+  }
+
+  // Delete episodes older than retention period
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - config.retentionDays);
+  const { data: expired } = await supabase
+    .from("fred_episodic_memory")
+    .delete()
+    .eq("user_id", userId)
+    .lt("created_at", cutoff.toISOString())
+    .select("id");
+  deletedCount += expired?.length ?? 0;
+
+  // Delete excess episodes beyond maxEpisodicItems (keep newest)
+  if (config.maxEpisodicItems > 0) {
+    const { data: all } = await supabase
+      .from("fred_episodic_memory")
+      .select("id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (all && all.length > config.maxEpisodicItems) {
+      const idsToDelete = all.slice(config.maxEpisodicItems).map((r) => r.id);
+      const { data: removed } = await supabase
+        .from("fred_episodic_memory")
+        .delete()
+        .in("id", idsToDelete)
+        .select("id");
+      deletedCount += removed?.length ?? 0;
+    }
+  }
+
+  return deletedCount;
 }
 
 // ============================================================================

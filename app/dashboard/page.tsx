@@ -22,6 +22,7 @@ import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
 import { redirectToCheckoutByTier } from "@/lib/stripe/client";
 import { RedFlagsWidget } from "@/components/dashboard/red-flags-widget";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -219,6 +220,9 @@ function DashboardContent() {
           Here&apos;s what&apos;s happening with your startup today.
         </p>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

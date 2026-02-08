@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Video,
@@ -11,6 +11,9 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle,
+  MessageSquare,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,7 +76,7 @@ function statusColor(status: string): string {
   switch (status) {
     case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "active":
+    case "in_progress":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
     case "scheduled":
       return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
@@ -82,6 +85,11 @@ function statusColor(status: string): string {
     default:
       return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
   }
+}
+
+function statusLabel(status: string): string {
+  if (status === "in_progress") return "In Progress";
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 // ============================================================================
@@ -166,6 +174,24 @@ export function SessionDetail({
 
   const hasUnsavedChanges = notes !== (session.notes || "");
 
+  // Parse FRED chat log from session notes
+  const [chatExpanded, setChatExpanded] = useState(false);
+  const fredChatLog = useMemo(() => {
+    const raw = session.notes || "";
+    const marker = "--- FRED Coaching Chat ---";
+    const idx = raw.indexOf(marker);
+    if (idx === -1) return null;
+    const chatSection = raw.slice(idx + marker.length).trim();
+    if (!chatSection) return null;
+    return chatSection.split("\n").map((line) => {
+      const match = line.match(/^\[([^\]]*)\]\s*(You|FRED):\s*(.*)$/);
+      if (match) {
+        return { time: match[1], role: match[2] as "You" | "FRED", content: match[3] };
+      }
+      return { time: "", role: "FRED" as const, content: line };
+    });
+  }, [session.notes]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -198,11 +224,11 @@ export function SessionDetail({
               <div>
                 <span
                   className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium capitalize",
+                    "px-2.5 py-1 rounded-full text-xs font-medium",
                     statusColor(session.status)
                   )}
                 >
-                  {session.status}
+                  {statusLabel(session.status)}
                 </span>
               </div>
             </div>
@@ -284,6 +310,51 @@ export function SessionDetail({
           </div>
         </CardContent>
       </Card>
+
+      {/* FRED Coaching Notes */}
+      {fredChatLog && fredChatLog.length > 0 && (
+        <Card>
+          <CardHeader
+            className="cursor-pointer"
+            onClick={() => setChatExpanded(!chatExpanded)}
+          >
+            <CardTitle className="flex items-center justify-between text-base">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-[#ff6a1a]" />
+                FRED Coaching Notes
+                <span className="text-xs text-gray-400 font-normal">
+                  ({fredChatLog.length} messages)
+                </span>
+              </div>
+              {chatExpanded ? (
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              )}
+            </CardTitle>
+          </CardHeader>
+          {chatExpanded && (
+            <CardContent className="space-y-2 pt-0">
+              {fredChatLog.map((entry, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "text-xs rounded-lg px-3 py-2",
+                    entry.role === "You"
+                      ? "bg-[#ff6a1a]/10 text-gray-900 dark:text-gray-100 ml-8"
+                      : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 mr-8"
+                  )}
+                >
+                  <span className="font-medium text-gray-500 dark:text-gray-400">
+                    {entry.time && `${entry.time} · `}{entry.role}:
+                  </span>{" "}
+                  {entry.content}
+                </div>
+              ))}
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {/* Danger Zone */}
       <Card className="border-red-200 dark:border-red-900/50">

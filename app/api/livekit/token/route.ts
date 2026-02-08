@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { roomName, participantName } = await request.json();
+    const { roomName, participantName, enableRecording } = await request.json();
 
     if (!roomName || !participantName) {
       return NextResponse.json(
@@ -83,13 +83,20 @@ export async function POST(request: NextRequest) {
     });
 
     // Grant permissions for the user-scoped room
-    at.addGrant({
+    const grants: Record<string, unknown> = {
       room: scopedRoom,
       roomJoin: true,
       canPublish: true,
       canPublishData: true,
       canSubscribe: true,
-    });
+    };
+
+    // Phase 29-02: Add recording permission for Studio users
+    if (enableRecording) {
+      grants.recorder = true;
+    }
+
+    at.addGrant(grants as any);
 
     const token = await at.toJwt();
 
@@ -97,6 +104,7 @@ export async function POST(request: NextRequest) {
       token,
       url: process.env.LIVEKIT_URL,
       room: scopedRoom,
+      recording: !!enableRecording,
     });
   } catch (error) {
     // Handle auth errors

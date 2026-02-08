@@ -4,10 +4,40 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export default function ChatPage() {
+  const handleExport = async (format: "json" | "markdown" | "csv") => {
+    try {
+      const res = await fetch(`/api/fred/export?format=${format}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        throw new Error(err.error || "Export failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const ext = format === "markdown" ? "md" : format;
+      a.download = `fred-chat-export-${new Date().toISOString().split("T")[0]}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Chat history exported");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Export failed");
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-white via-orange-50/30 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 overflow-hidden">
       {/* Enhanced background with multiple layers */}
@@ -50,15 +80,36 @@ export default function ChatPage() {
               </h1>
             </div>
 
-            <Link href="/">
-              <Image
-                src="/sahara-logo.svg"
-                alt="Sahara"
-                width={80}
-                height={20}
-                className="h-5 sm:h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-              />
-            </Link>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2">
+                    <Download className="h-4 w-4" />
+                    <span className="hidden sm:inline text-xs">Export</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport("json")}>
+                    Export as JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("markdown")}>
+                    Export as Markdown
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>
+                    Export as CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Link href="/">
+                <Image
+                  src="/sahara-logo.svg"
+                  alt="Sahara"
+                  width={80}
+                  height={20}
+                  className="h-5 sm:h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                />
+              </Link>
+            </div>
           </div>
         </div>
       </motion.header>

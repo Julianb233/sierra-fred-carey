@@ -18,6 +18,9 @@ import { redirectToPortal } from "@/lib/stripe/client"
 import { UpgradeTier } from "@/components/dashboard/UpgradeTier"
 import { toast } from "sonner"
 import { Volume2 } from "lucide-react"
+import { TeamSettings } from "@/components/settings/team-settings"
+import { trackEvent } from "@/lib/analytics"
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events"
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -116,6 +119,7 @@ export default function SettingsPage() {
         .eq("id", authUser.id)
 
       if (error) throw error
+      trackEvent(ANALYTICS_EVENTS.ENGAGEMENT.SETTINGS_UPDATED, { settingChanged: "profile" })
       setSaveMessage({ type: 'success', text: 'Profile saved successfully' })
       setTimeout(() => setSaveMessage(null), 3000)
     } catch (err) {
@@ -154,6 +158,7 @@ export default function SettingsPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      trackEvent(ANALYTICS_EVENTS.ENGAGEMENT.DOCUMENT_EXPORTED, { exportFormat: "json" })
     } catch (err) {
       console.error("Export error:", err)
     } finally {
@@ -493,6 +498,11 @@ export default function SettingsPage() {
             <VoiceSettings />
           </CardContent>
         </Card>
+      )}
+
+      {/* Team & Collaboration - Studio only */}
+      {tier >= UserTier.STUDIO && (
+        <TeamSettings currentTier={tier} />
       )}
 
       {/* Danger Zone Section */}

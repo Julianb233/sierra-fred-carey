@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, MessageSquare, RotateCcw } from "lucide-react";
 import { useFredChat, type FredMessage } from "@/lib/hooks/use-fred-chat";
@@ -15,6 +15,10 @@ interface CoachingSidebarProps {
   className?: string;
   /** Maximum messages to display (scrollable) */
   maxVisible?: number;
+  /** Session ID for persisting chat to session notes */
+  sessionId?: string;
+  /** Auto-persist chat to session notes on unmount */
+  onDisconnectPersist?: boolean;
 }
 
 // ============================================================================
@@ -56,6 +60,8 @@ function CompactMessage({ message }: { message: FredMessage }) {
 export function CoachingSidebar({
   className,
   maxVisible = 10,
+  sessionId,
+  onDisconnectPersist = false,
 }: CoachingSidebarProps) {
   const {
     messages,
@@ -98,6 +104,45 @@ export function CoachingSidebar({
       handleSend();
     }
   };
+
+  // Persist chat to session notes on unmount (disconnect)
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  const persistChatToNotes = useCallback(async () => {
+    const msgs = messagesRef.current;
+    if (!sessionId || msgs.length === 0) return;
+    const chatLog = msgs
+      .map((m) => {
+        const time = m.timestamp
+          ? new Date(m.timestamp).toLocaleTimeString()
+          : "";
+        return `[${time}] ${m.role === "user" ? "You" : "FRED"}: ${m.content}`;
+      })
+      .join("\n");
+
+    try {
+      await fetch("/api/coaching/sessions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: sessionId,
+          notes: `\n\n--- FRED Coaching Chat ---\n${chatLog}`,
+          appendNotes: true,
+        }),
+      });
+    } catch {
+      console.error("[CoachingSidebar] Failed to persist chat to session");
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!onDisconnectPersist) return;
+    return () => {
+      persistChatToNotes();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onDisconnectPersist]);
 
   return (
     <div

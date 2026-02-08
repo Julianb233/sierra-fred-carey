@@ -17,10 +17,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { createFredService } from "@/lib/fred/service";
-import { storeEpisode } from "@/lib/db/fred-memory";
+import { storeEpisode, enforceRetentionLimits } from "@/lib/db/fred-memory";
 import { checkRateLimitForUser, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
-import { UserTier, TIER_NAMES } from "@/lib/constants";
+import { UserTier, TIER_NAMES, type MemoryTier } from "@/lib/constants";
 import { getModelForTier } from "@/lib/ai/tier-routing";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
@@ -28,6 +28,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createRedFlag } from "@/lib/db/red-flags";
 import { withLogging } from "@/lib/api/with-logging";
 import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
+import { serverTrack } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -236,7 +238,14 @@ async function handlePost(req: NextRequest) {
     }
 
     const message = sanitizeUserInput(rawMessage);
+    const isNewSession = !sessionId;
     const effectiveSessionId = sessionId || crypto.randomUUID();
+
+    // Analytics: track chat events (server-side, fire-and-forget)
+    serverTrack(userId, ANALYTICS_EVENTS.CHAT.MESSAGE_SENT, { tier: tierName, messageLength: message.length });
+    if (isNewSession) {
+      serverTrack(userId, ANALYTICS_EVENTS.CHAT.SESSION_STARTED, { tier: tierName });
+    }
 
     // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
@@ -282,6 +291,13 @@ async function handlePost(req: NextRequest) {
         { role: "user", content: message },
         { role: "assistant", content: result.response.content },
       ]);
+
+      // Phase 32-02: Fire-and-forget retention enforcement
+      if (shouldPersistMemory) {
+        enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
+          console.warn("[FRED Chat] Retention enforcement failed:", err)
+        );
+      }
 
       // Phase 28-02: Fire-and-forget push for wellbeing alerts (non-streaming)
       if (result.context.validatedInput?.burnoutSignals?.detected) {
@@ -486,6 +502,13 @@ async function handlePost(req: NextRequest) {
               { role: "user", content: message },
               { role: "assistant", content: response.content },
             ]);
+
+            // Phase 32-02: Fire-and-forget retention enforcement
+            if (shouldPersistMemory) {
+              enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
+                console.warn("[FRED Chat] Retention enforcement failed:", err)
+              );
+            }
           }
         }
       } catch (error) {

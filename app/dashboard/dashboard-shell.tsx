@@ -24,6 +24,7 @@ import {
   EyeOpenIcon,
   CountdownTimerIcon,
 } from "@radix-ui/react-icons";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
@@ -129,6 +130,11 @@ const navItems: NavItem[] = [
     icon: <LockClosedIcon className="h-4 w-4" />,
     tier: 2,
     badge: "Studio",
+  },
+  {
+    name: "Notifications",
+    href: "/dashboard/notifications",
+    icon: <Bell className="h-4 w-4" />,
   },
   {
     name: "Settings",
