@@ -9,8 +9,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSharedResource } from "@/lib/sharing";
+import { getSharedResource, isTeamRecipient } from "@/lib/sharing";
 import { logger } from "@/lib/logger";
+import { createClient } from "@/lib/supabase/server";
 
 const log = logger.child({ module: "api/share/[token]" });
 
@@ -43,6 +44,45 @@ export async function GET(
         },
         { status: 404 }
       );
+    }
+
+    // Team-only links require the viewer to be an active team member
+    if (shared.link.is_team_only) {
+      let viewerUserId: string | null = null;
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        viewerUserId = user?.id ?? null;
+      } catch {
+        // Not authenticated
+      }
+
+      if (!viewerUserId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This link is restricted to team members. Please sign in to continue.",
+            teamOnly: true,
+          },
+          { status: 403 }
+        );
+      }
+
+      // Owner always has access
+      const isOwner = viewerUserId === shared.link.user_id;
+      if (!isOwner) {
+        const hasAccess = await isTeamRecipient(shared.link.id, viewerUserId);
+        if (!hasAccess) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "This link is restricted to team members. You do not have access.",
+              teamOnly: true,
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // Strip sensitive fields from the resource before returning

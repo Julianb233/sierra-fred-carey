@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { resourceType, resourceId, expiresIn, maxViews } = body;
+    const { resourceType, resourceId, expiresIn, maxViews, isTeamOnly, teamMemberIds } = body;
 
     // Validate resource type
     if (!resourceType || !isValidResourceType(resourceType)) {
@@ -64,6 +64,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate team sharing params
+    if (isTeamOnly && (!Array.isArray(teamMemberIds) || teamMemberIds.length === 0)) {
+      return NextResponse.json(
+        { success: false, error: "teamMemberIds are required for team-only shares" },
+        { status: 400 }
+      );
+    }
+
     // Build options
     const options: ShareLinkOptions = {};
     if (typeof expiresIn === "number" && expiresIn > 0) {
@@ -71,6 +79,10 @@ export async function POST(request: NextRequest) {
     }
     if (typeof maxViews === "number" && maxViews > 0) {
       options.maxViews = maxViews;
+    }
+    if (isTeamOnly) {
+      options.isTeamOnly = true;
+      options.teamMemberIds = teamMemberIds;
     }
 
     const link = await createShareLink(userId, resourceType, resourceId, options);

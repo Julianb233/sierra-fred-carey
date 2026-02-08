@@ -25,6 +25,7 @@ export interface ShareLink {
   max_views: number | null;
   view_count: number;
   is_active: boolean;
+  is_team_only: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +37,10 @@ export interface ShareLinkOptions {
   expiresInHours?: number | null;
   /** Maximum number of views. Null = unlimited */
   maxViews?: number | null;
+  /** Restrict access to specific team members only */
+  isTeamOnly?: boolean;
+  /** Team member IDs to grant access (required when isTeamOnly is true) */
+  teamMemberIds?: string[];
 }
 
 export interface SharedResource {
@@ -131,6 +136,7 @@ export async function createShareLink(
       access_level: options.accessLevel || "view",
       expires_at: expiresAt,
       max_views: options.maxViews ?? null,
+      is_team_only: options.isTeamOnly ?? false,
     })
     .select()
     .single();
@@ -140,10 +146,31 @@ export async function createShareLink(
     throw new Error("Failed to create share link");
   }
 
+  // If team-only, insert recipient entries
+  if (options.isTeamOnly && options.teamMemberIds?.length) {
+    const recipients = options.teamMemberIds.map((tmId) => ({
+      shared_link_id: data.id,
+      team_member_id: tmId,
+    }));
+
+    const { error: recipientError } = await supabase
+      .from("shared_link_recipients")
+      .insert(recipients);
+
+    if (recipientError) {
+      log.error("Failed to insert share recipients", {
+        error: recipientError,
+        linkId: data.id,
+      });
+      // Don't fail the whole operation — link is created, recipients are best-effort
+    }
+  }
+
   log.info("Share link created", {
     linkId: data.id,
     resourceType,
     userId,
+    isTeamOnly: options.isTeamOnly ?? false,
   });
 
   return data as ShareLink;
@@ -280,4 +307,88 @@ export async function getSharedResource(
     resource: data as Record<string, unknown>,
     resourceType: link.resource_type as ShareableResourceType,
   };
+}
+
+/**
+ * Check if a user is an authorised recipient for a team-only share link.
+ * Returns true if the user's member record appears in shared_link_recipients.
+ * Uses service client for cross-user lookup.
+ */
+export async function isTeamRecipient(
+  linkId: string,
+  memberUserId: string
+): Promise<boolean> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("shared_link_recipients")
+    .select("id")
+    .eq("shared_link_id", linkId)
+    .limit(50);
+
+  if (error || !data || data.length === 0) {
+    return false;
+  }
+
+  // Get team member IDs from recipients
+  const recipientIds = data.map((r: { id: string }) => r.id);
+
+  // Check if the user is an active team member linked to any recipient entry
+  const { data: recipientData, error: recipientError } = await supabase
+    .from("shared_link_recipients")
+    .select(`
+      id,
+      team_member_id
+    `)
+    .eq("shared_link_id", linkId);
+
+  if (recipientError || !recipientData) {
+    return false;
+  }
+
+  const teamMemberIds = recipientData.map(
+    (r: { team_member_id: string }) => r.team_member_id
+  );
+
+  // Check if any of those team_member entries belong to this user
+  const { count, error: memberError } = await supabase
+    .from("team_members")
+    .select("id", { count: "exact", head: true })
+    .in("id", teamMemberIds)
+    .eq("member_user_id", memberUserId)
+    .eq("status", "active");
+
+  if (memberError) {
+    log.error("Failed to check team recipient", { linkId, memberUserId, error: memberError });
+    return false;
+  }
+
+  return (count ?? 0) > 0;
+}
+
+/**
+ * Get the list of active team members for a user (for team sharing UI).
+ * Returns only active (accepted) team members.
+ */
+export async function getActiveTeamMembersForSharing(
+  ownerUserId: string
+): Promise<Array<{ id: string; email: string; role: string }>> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select("id, member_email, role")
+    .eq("owner_user_id", ownerUserId)
+    .eq("status", "active")
+    .order("member_email");
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map((m: { id: string; member_email: string; role: string }) => ({
+    id: m.id,
+    email: m.member_email,
+    role: m.role,
+  }));
 }

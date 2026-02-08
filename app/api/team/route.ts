@@ -30,12 +30,27 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // GET /api/team - List team members
 // ============================================================================
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const userId = await requireAuth();
-    const members = await getTeamMembers(userId);
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get("active") === "true";
 
-    return NextResponse.json({ success: true, members });
+    const allMembers = await getTeamMembers(userId);
+
+    if (activeOnly) {
+      // Return simplified format for sharing UI: only active members
+      const active = allMembers
+        .filter((m) => m.status === "active")
+        .map((m) => ({
+          id: m.id,
+          email: m.member_email,
+          role: m.role,
+        }));
+      return NextResponse.json({ success: true, members: active });
+    }
+
+    return NextResponse.json({ success: true, members: allMembers });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to fetch team members";

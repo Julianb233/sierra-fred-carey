@@ -17,5 +17,40 @@
     "p": "plan"
   },
   "priorityFormula": "phase * 100 + plan * 10 + typeOffset",
-  "initialized": "2026-02-05T09:59:00Z"
+  "initialized": "2026-02-05T09:59:00Z",
+  "linearIntegration": {
+    "enabled": true,
+    "teamId": "9a9d11aa-c8a5-4dc5-855c-c1da260db615",
+    "teamKey": "AI",
+    "projectId": "d884374c-0c58-4e7c-a19a-d62c4daf55e2",
+    "projectName": "Sahara - AI Founder OS",
+    "syncTasks": true,
+    "syncProgress": true,
+    "labelMapping": {
+      "plan": "Planning",
+      "build": "In Development",
+      "test": "Testing",
+      "debug": "Bug Fix",
+      "review": "Review"
+    },
+    "statusMapping": {
+      "pending": "Backlog",
+      "claimed": "In Progress",
+      "running": "In Progress",
+      "done": "Done",
+      "failed": "Backlog",
+      "blocked": "Backlog"
+    },
+    "workflowStates": {
+      "backlog": "1414377a-e0d6-4c23-bdfc-3d51049c1b19",
+      "todo": "455d246f-ccf7-46d5-b7a4-c02985ee1390",
+      "in_progress": "58f2d9c4-1937-4bfa-be94-09e91831a8f5",
+      "in_review": "9ff7fe5c-d98b-4ac4-ab19-82e20b7baf4b",
+      "done": "99712028-3475-4157-9052-8ba749ded0da",
+      "canceled": "9cd681fe-34f9-40b8-92ba-9c2c06c77968"
+    },
+    "autoCreateIssues": true,
+    "autoUpdateStatus": true,
+    "lastSynced": null
+  }
 }

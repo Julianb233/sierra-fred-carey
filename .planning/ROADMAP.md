@@ -4,7 +4,7 @@
 
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
-- [ ] **v3.0 Scale, Activate & Engage** - Phases 24-33
+- [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
 
 ## Phases
 
@@ -243,12 +243,12 @@ Plans:
 - [x] **Phase 25: Production Observability** - Sentry error tracking, structured Pino logging, CI quality gates
 - [x] **Phase 26: E2E Testing & Coverage** - Playwright setup, critical flow E2E tests, coverage thresholds
 - [x] **Phase 27: RLS Security Hardening** - Comprehensive RLS policies, user-scoped clients, isolation tests
-- [ ] **Phase 28: Web Push Notifications** - Service worker push, subscriptions, preferences
-- [ ] **Phase 29: Video Coaching Sessions** - LiveKit UI activation, FRED sidebar
-- [ ] **Phase 30: Product Analytics & Growth** - PostHog, funnels, onboarding checklist
+- [x] **Phase 28: Web Push Notifications** - Service worker push, subscriptions, preferences
+- [x] **Phase 29: Video Coaching Sessions** - LiveKit UI activation, FRED sidebar
+- [x] **Phase 30: Product Analytics & Growth** - PostHog, funnels, onboarding checklist
 - [x] **Phase 31: Email Engagement** - Weekly digest, milestones, re-engagement
-- [ ] **Phase 32: FRED Intelligence Upgrade** - TTS voice, memory browser, export
-- [ ] **Phase 33: Collaboration & Sharing** - Co-founder invites, shareable links
+- [x] **Phase 32: FRED Intelligence Upgrade** - TTS voice, memory browser, export
+- [x] **Phase 33: Collaboration & Sharing** - Co-founder invites, shareable links
 
 ### Phase 31: Email Engagement
 **Goal**: Founders receive timely, relevant emails that keep them engaged -- weekly activity digests, milestone celebrations, and re-engagement nudges for inactive users
@@ -312,4 +312,9 @@ Plans:
 | 25. Production Observability | v3.0 | 2/2 | Complete | 2026-02-08 |
 | 26. E2E Testing & Coverage | v3.0 | 2/2 | Complete | 2026-02-08 |
 | 27. RLS Security Hardening | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 28. Web Push Notifications | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 29. Video Coaching Sessions | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 30. Product Analytics & Growth | v3.0 | 2/2 | Complete | 2026-02-08 |
 | 31. Email Engagement | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 32. FRED Intelligence Upgrade | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 33. Collaboration & Sharing | v3.0 | 2/2 | Complete | 2026-02-08 |
