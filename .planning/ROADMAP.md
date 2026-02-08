@@ -246,7 +246,7 @@ Plans:
 - [ ] **Phase 28: Web Push Notifications** - Service worker push, subscriptions, preferences
 - [ ] **Phase 29: Video Coaching Sessions** - LiveKit UI activation, FRED sidebar
 - [ ] **Phase 30: Product Analytics & Growth** - PostHog, funnels, onboarding checklist
-- [ ] **Phase 31: Email Engagement** - Weekly digest, milestones, re-engagement
+- [x] **Phase 31: Email Engagement** - Weekly digest, milestones, re-engagement
 - [ ] **Phase 32: FRED Intelligence Upgrade** - TTS voice, memory browser, export
 - [ ] **Phase 33: Collaboration & Sharing** - Co-founder invites, shareable links
 
@@ -262,8 +262,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 31-01-PLAN.md -- Email infrastructure (Resend SDK, shared layout, preferences, types) + weekly digest system (data aggregation, template, cron route)
-- [ ] 31-02-PLAN.md -- Milestone celebration emails (trigger on completion, Fred quote template) + re-engagement system (inactive detection, graduated templates, daily cron)
+- [x] 31-01-PLAN.md -- Email infrastructure (Resend SDK, shared layout, preferences, types) + weekly digest system (data aggregation, template, cron route)
+- [x] 31-02-PLAN.md -- Milestone celebration emails (trigger on completion, Fred quote template) + re-engagement system (inactive detection, graduated templates, daily cron)
 
 Plans:
 - [x] 24-01-PLAN.md -- Coming Soon badge removal + offline page
@@ -274,8 +274,8 @@ Plans:
 - [x] 26-02-PLAN.md -- Coverage thresholds, premium flow E2E tests, CI integration
 - [x] 27-01-PLAN.md -- RLS policy SQL migration (27 tables, 140+ policies)
 - [x] 27-02-PLAN.md -- User-scoped client switch (10 routes) + RLS isolation tests
-- [ ] 31-01-PLAN.md -- Email infrastructure + weekly digest system
-- [ ] 31-02-PLAN.md -- Milestone celebration + re-engagement emails
+- [x] 31-01-PLAN.md -- Email infrastructure + weekly digest system
+- [x] 31-02-PLAN.md -- Milestone celebration + re-engagement emails
 
 ## Progress
 
@@ -312,3 +312,4 @@ Plans:
 | 25. Production Observability | v3.0 | 2/2 | Complete | 2026-02-08 |
 | 26. E2E Testing & Coverage | v3.0 | 2/2 | Complete | 2026-02-08 |
 | 27. RLS Security Hardening | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 31. Email Engagement | v3.0 | 2/2 | Complete | 2026-02-08 |
