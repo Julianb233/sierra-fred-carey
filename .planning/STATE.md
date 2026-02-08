@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v3.0 Scale, Activate & Engage -- Wave 1 COMPLETE, Wave 2+4 IN PROGRESS
+**Current focus:** v3.0 Scale, Activate & Engage -- Wave 1 COMPLETE, Wave 2+3+4 IN PROGRESS
 
 ## Current Position
 
 Phase: Wave 2+3+4 executing (Phases 28-33)
 Plan: Multiple parallel workers
 Status: Autonomous execution
-Last activity: 2026-02-08 -- Completed 31-01-PLAN.md (Email Infrastructure & Weekly Digest)
+Last activity: 2026-02-08 -- Completed 31-02-PLAN.md (Milestone & Re-engagement Emails)
 
-Progress: [██████████████░░░░░░░░░░░░░░░░░] 45% (9/20 plans)
+Progress: [████████████████░░░░░░░░░░░░░░░] 50% (10/20 plans)
 
 ## Wave Status
 
@@ -22,7 +22,7 @@ Progress: [██████████████░░░░░░░░░
 |------|--------|--------|------------|
 | Wave 1 | 24, 25, 26, 27 | COMPLETE | 8/8 |
 | Wave 2 | 28, 29, 30 | IN PROGRESS | 0/6 |
-| Wave 3 | 31, 32 | IN PROGRESS | 1/4 |
+| Wave 3 | 31, 32 | IN PROGRESS | 2/4 |
 | Wave 4 | 33 | IN PROGRESS | 0/2 |
 
 ## Phase Completion
@@ -36,7 +36,7 @@ Progress: [██████████████░░░░░░░░░
 | 28 | Web Push Notifications | PENDING | BLOCKED |
 | 29 | Video Coaching Sessions | PENDING | BLOCKED |
 | 30 | Product Analytics & Growth | PENDING | BLOCKED |
-| 31 | Email Engagement | DONE | PENDING |
+| 31 | Email Engagement | DONE | DONE |
 | 32 | FRED Intelligence Upgrade | PENDING | BLOCKED |
 | 33 | Collaboration & Sharing | PENDING | BLOCKED |
 
@@ -65,6 +65,9 @@ v3.0 execution decisions:
 - Wave 1: 10 API routes switched to user-scoped Supabase clients
 - Wave 3: Resend SDK singleton with null fallback for graceful degradation
 - Wave 3: Email preferences read from profiles.metadata.notification_prefs (unified with settings UI)
+- Wave 3: Fire-and-forget milestone email trigger (non-blocking, catch-all error handling)
+- Wave 3: Graduated re-engagement with 14-day duplicate prevention window
+- Wave 3: Batch activity detection with in-memory join (avoids N+1 queries)
 
 ### Blockers/Concerns
 
@@ -77,6 +80,6 @@ v3.0 execution decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-08T05:04:01Z
-Stopped at: Completed 31-01-PLAN.md (Email Infrastructure & Weekly Digest)
+Last session: 2026-02-08T05:07:00Z
+Stopped at: Completed 31-02-PLAN.md (Milestone & Re-engagement Emails)
 Resume file: None
