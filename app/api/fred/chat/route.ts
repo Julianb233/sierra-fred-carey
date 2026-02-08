@@ -25,6 +25,7 @@ import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/promp
 import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createRedFlag } from "@/lib/db/red-flags";
+import { withLogging } from "@/lib/api/with-logging";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -178,7 +179,7 @@ function fireEnrichment(
 // Route Handler
 // ============================================================================
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   const startTime = Date.now();
 
   try {
@@ -491,3 +492,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// Phase 25-02: Wrap with structured logging
+export const POST = withLogging(handlePost as (request: Request, context?: unknown) => Promise<Response>);

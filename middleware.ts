@@ -7,6 +7,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
 
+  // Phase 25-02: Correlation ID for structured logging
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID();
+
   // Handle CORS preflight (OPTIONS) for API routes
   if (request.method === "OPTIONS" && pathname.startsWith("/api/")) {
     const preflightResponse = new NextResponse(null, { status: 204 });
@@ -14,6 +17,7 @@ export async function middleware(request: NextRequest) {
     for (const [key, value] of Object.entries(headers)) {
       preflightResponse.headers.set(key, value);
     }
+    preflightResponse.headers.set("X-Request-ID", requestId);
     return preflightResponse;
   }
 
@@ -32,9 +36,13 @@ export async function middleware(request: NextRequest) {
   if (isProtectedRoute(pathname) && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    redirectResponse.headers.set("X-Request-ID", requestId);
+    return redirectResponse;
   }
 
+  // Propagate correlation ID on every response
+  response.headers.set("X-Request-ID", requestId);
   return response;
 }
 
