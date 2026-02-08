@@ -83,6 +83,7 @@
     "react-dom": "19.1.1",
     "react-email": "^5.1.0",
     "recharts": "^3.6.0",
+    "resend": "^6.9.1",
     "sonner": "^2.0.7",
     "stripe": "^20.1.0",
     "tailwind-merge": "^3.3.1",
