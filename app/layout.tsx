@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
+import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -67,8 +68,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.className} antialiased`}>
         <Providers>
-          <NavBar />
-          {children}
+          <AnalyticsProvider>
+            <NavBar />
+            {children}
+          </AnalyticsProvider>
           <Toaster
             position="top-right"
             toastOptions={{
