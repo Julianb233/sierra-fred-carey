@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { sendMilestoneEmail } from "@/lib/email/milestones/triggers";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/journey/milestones/[id]
@@ -175,6 +177,11 @@ export async function PATCH(
           category: updated.category
         })})
       `;
+
+      // Fire-and-forget: send milestone celebration email
+      sendMilestoneEmail(userId, 'milestone_completed', updated.title).catch(err =>
+        logger.error('[Milestones] Failed to send milestone email', err)
+      );
     }
 
     return NextResponse.json({
