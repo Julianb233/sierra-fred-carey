@@ -280,4 +280,69 @@ describe("Push Notification Triggers", () => {
       expect(userId).toBe("user-no-push");
     });
   });
+
+  // ---------- Preference gating: disabled category skips push ----------
+
+  describe("preference gating", () => {
+    it("should NOT send push when red_flags category is disabled", async () => {
+      mockIsCategoryEnabled.mockResolvedValue(false);
+
+      notifyRedFlag("user-prefs-off", {
+        id: "flag-x",
+        category: "Revenue",
+        title: "MRR declining",
+        severity: "high",
+      });
+
+      // Wait for the fire-and-forget async to settle
+      await new Promise((r) => setTimeout(r, 100));
+
+      expect(mockIsCategoryEnabled).toHaveBeenCalledWith("user-prefs-off", "red_flags");
+      expect(mockSendPushToUser).not.toHaveBeenCalled();
+    });
+
+    it("should NOT send push when wellbeing_alerts category is disabled", async () => {
+      mockIsCategoryEnabled.mockResolvedValue(false);
+
+      notifyWellbeingAlert("user-prefs-off", {
+        type: "burnout",
+        message: "Take a break",
+        severity: "medium",
+      });
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      expect(mockIsCategoryEnabled).toHaveBeenCalledWith("user-prefs-off", "wellbeing_alerts");
+      expect(mockSendPushToUser).not.toHaveBeenCalled();
+    });
+
+    it("should NOT send push when agent_completions category is disabled", async () => {
+      mockIsCategoryEnabled.mockResolvedValue(false);
+
+      notifyAgentComplete("user-prefs-off", "Research", {
+        agentName: "Research",
+        result: "success",
+      });
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      expect(mockIsCategoryEnabled).toHaveBeenCalledWith("user-prefs-off", "agent_completions");
+      expect(mockSendPushToUser).not.toHaveBeenCalled();
+    });
+
+    it("should NOT send push when inbox_messages category is disabled", async () => {
+      mockIsCategoryEnabled.mockResolvedValue(false);
+
+      notifyInboxMessage("user-prefs-off", {
+        id: "msg-99",
+        subject: "Ignored message",
+        preview: "This should not trigger push",
+      });
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      expect(mockIsCategoryEnabled).toHaveBeenCalledWith("user-prefs-off", "inbox_messages");
+      expect(mockSendPushToUser).not.toHaveBeenCalled();
+    });
+  });
 });
