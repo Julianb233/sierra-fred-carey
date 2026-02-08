@@ -10,6 +10,8 @@ import { FloatingOrbs } from "@/components/premium/GradientBg";
 import { useFredChat } from "@/lib/hooks/use-fred-chat";
 import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from "@/lib/fred-brain";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 interface ChatInterfaceProps {
   className?: string;
@@ -29,6 +31,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [greeting] = useState<Message>(() => buildFredGreeting());
+  const sessionTrackedRef = useRef(false);
 
   // Map FredMessage[] to Message[] (compatible shape) and prepend greeting
   const messages: Message[] = useMemo(() => {
@@ -47,6 +50,10 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   }, [messages, isProcessing]);
 
   const handleSendMessage = async (content: string) => {
+    if (!sessionTrackedRef.current) {
+      trackEvent(ANALYTICS_EVENTS.CHAT.SESSION_STARTED);
+      sessionTrackedRef.current = true;
+    }
     await sendMessage(content);
   };
 

@@ -13,6 +13,8 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function OnboardingPage() {
         return;
       }
       setAuthChecked(true);
+      trackEvent(ANALYTICS_EVENTS.ONBOARDING.STARTED);
     };
     checkAuth();
   }, [router]);
@@ -108,7 +111,7 @@ export default function OnboardingPage() {
             {currentStep === "welcome" && (
               <WelcomeStep
                 key="welcome"
-                onNext={() => completeStep("welcome")}
+                onNext={() => { trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, { step: "welcome" }); completeStep("welcome"); }}
                 onSkip={skipOnboarding}
               />
             )}
@@ -118,7 +121,7 @@ export default function OnboardingPage() {
                 key="startup-info"
                 startupInfo={startupInfo}
                 onUpdate={updateStartupInfo}
-                onNext={() => completeStep("startup-info")}
+                onNext={() => { trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, { step: "startup-info" }); completeStep("startup-info"); }}
                 onBack={prevStep}
               />
             )}
@@ -127,7 +130,7 @@ export default function OnboardingPage() {
               <FredIntroStep
                 key="fred-intro"
                 startupInfo={startupInfo}
-                onNext={() => completeStep("fred-intro")}
+                onNext={() => { trackEvent(ANALYTICS_EVENTS.ONBOARDING.COMPLETED); completeStep("fred-intro"); }}
                 onBack={prevStep}
               />
             )}
