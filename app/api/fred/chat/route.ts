@@ -1,6 +1,7 @@
 /**
  * FRED Chat API Endpoint
  * Phase 21: Tier-based model routing and memory gating
+ * Phase 28-02: Push notification triggers for red flags and wellbeing alerts
  *
  * POST /api/fred/chat
  * Interactive chat with FRED using streaming responses.
@@ -26,6 +27,7 @@ import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createRedFlag } from "@/lib/db/red-flags";
 import { withLogging } from "@/lib/api/with-logging";
+import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -281,6 +283,16 @@ async function handlePost(req: NextRequest) {
         { role: "assistant", content: result.response.content },
       ]);
 
+      // Phase 28-02: Fire-and-forget push for wellbeing alerts (non-streaming)
+      if (result.context.validatedInput?.burnoutSignals?.detected) {
+        const burnout = result.context.validatedInput.burnoutSignals;
+        notifyWellbeingAlert(userId, {
+          type: "burnout",
+          message: burnout.recommendation || "FRED detected signs of burnout. Take a moment to check in.",
+          severity: burnout.stressLevel > 70 ? "high" : burnout.stressLevel > 40 ? "medium" : "low",
+        });
+      }
+
       return NextResponse.json({
         success: true,
         sessionId: effectiveSessionId,
@@ -372,6 +384,13 @@ async function handlePost(req: NextRequest) {
                 type: "wellbeing",
                 signals: update.context.validatedInput.burnoutSignals,
               });
+
+              // Phase 28-02: Fire-and-forget push for wellbeing alerts
+              notifyWellbeingAlert(userId, {
+                type: "burnout",
+                message: update.context.validatedInput.burnoutSignals.recommendation || "FRED detected signs of burnout. Take a moment to check in.",
+                severity: update.context.validatedInput.burnoutSignals.stressLevel > 70 ? "high" : update.context.validatedInput.burnoutSignals.stressLevel > 40 ? "medium" : "low",
+              });
             }
           }
 
@@ -406,6 +425,16 @@ async function handlePost(req: NextRequest) {
                 )
               );
               send("red_flag", { type: "red_flag", flags: persistedFlags });
+
+              // Phase 28-02: Fire-and-forget push for each red flag
+              for (const flag of persistedFlags) {
+                notifyRedFlag(userId, {
+                  id: flag.id,
+                  category: flag.category || "general",
+                  title: flag.title || flag.description || "New red flag detected",
+                  severity: flag.severity || "medium",
+                });
+              }
             } catch (rfError) {
               console.warn("[FRED Chat] Failed to persist red flags:", rfError);
             }

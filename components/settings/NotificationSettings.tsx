@@ -31,9 +31,11 @@ import {
   TrashIcon,
   GearIcon,
   ExclamationTriangleIcon,
+  BellIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { usePushSubscription } from "@/lib/hooks/use-push-subscription";
 
 interface NotificationConfig {
   id: string;
@@ -98,6 +100,17 @@ export function NotificationSettings() {
   const [testing, setTesting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Push notification state
+  const {
+    isSupported: pushSupported,
+    permission: pushPermission,
+    isSubscribed: pushSubscribed,
+    subscribe: pushSubscribe,
+    unsubscribe: pushUnsubscribe,
+    loading: pushLoading,
+    error: pushError,
+  } = usePushSubscription();
+
   // Dialog state
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newChannel, setNewChannel] = useState<"slack" | "pagerduty" | "email">("slack");
@@ -128,6 +141,21 @@ export function NotificationSettings() {
   useEffect(() => {
     fetchConfigs();
   }, []);
+
+  // Handle push notification toggle
+  const handlePushToggle = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        await pushSubscribe();
+        toast.success("Push notifications enabled");
+      } else {
+        await pushUnsubscribe();
+        toast.success("Push notifications disabled");
+      }
+    } catch {
+      // Error is surfaced via pushError from the hook
+    }
+  };
 
   // Add new config
   const handleAddConfig = async () => {
@@ -264,7 +292,7 @@ export function NotificationSettings() {
           <div>
             <CardTitle>Alert Notifications</CardTitle>
             <CardDescription>
-              Configure Slack, PagerDuty, or email notifications for A/B test alerts
+              Configure push, Slack, PagerDuty, or email notifications for alerts
             </CardDescription>
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -413,10 +441,10 @@ export function NotificationSettings() {
 
       <CardContent className="space-y-6">
         {/* Error display */}
-        {error && (
+        {(error || pushError) && (
           <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950 text-red-600 rounded-lg">
             <ExclamationTriangleIcon className="h-4 w-4" />
-            <span className="text-sm">{error}</span>
+            <span className="text-sm">{error || pushError}</span>
             <button
               onClick={() => setError(null)}
               className="ml-auto text-red-400 hover:text-red-600"
@@ -425,6 +453,80 @@ export function NotificationSettings() {
             </button>
           </div>
         )}
+
+        {/* Browser Push Notifications Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <BellIcon className="h-5 w-5 text-[#ff6a1a]" />
+            <h3 className="font-semibold text-base">Browser Push Notifications</h3>
+          </div>
+
+          {!pushSupported ? (
+            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <ExclamationTriangleIcon className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-500">
+                Push notifications are not supported in this browser.
+              </span>
+            </div>
+          ) : pushPermission === "denied" ? (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+              <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600" />
+              <span className="text-sm text-yellow-700 dark:text-yellow-400">
+                Notifications are blocked. Please update your browser settings.
+              </span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "flex items-center justify-between p-4 rounded-lg border",
+                pushSubscribed
+                  ? "border-gray-200 dark:border-gray-800"
+                  : "border-gray-100 dark:border-gray-900"
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={cn(
+                    "p-2 rounded-lg",
+                    pushSubscribed
+                      ? "bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                  )}
+                >
+                  <BellIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Browser Push</span>
+                    {pushSubscribed ? (
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">Disabled</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Receive real-time alerts directly in your browser
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {pushLoading && (
+                  <ReloadIcon className="h-4 w-4 animate-spin text-gray-400" />
+                )}
+                <Switch
+                  checked={pushSubscribed}
+                  onCheckedChange={handlePushToggle}
+                  disabled={pushLoading}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Separator />
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">

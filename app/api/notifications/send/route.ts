@@ -2,7 +2,7 @@
  * Unified Notification Send API
  * POST /api/notifications/send
  *
- * Triggers notifications across all configured channels (Slack, Email, PagerDuty)
+ * Triggers notifications across all configured channels (Slack, Email, PagerDuty, Push)
  * This is the main entry point for programmatically sending notifications.
  */
 
@@ -11,6 +11,7 @@ import { requireAuth } from "@/lib/auth";
 import { sendNotification, sendBatchNotifications } from "@/lib/notifications";
 import { validateNotificationPayload } from "@/lib/notifications/validators";
 import type { NotificationPayload, AlertLevel, AlertType } from "@/lib/notifications/types";
+import { sendPushToUser } from "@/lib/push";
 import { logger } from "@/lib/logger";
 
 /**
@@ -22,6 +23,8 @@ import { logger } from "@/lib/logger";
  *   - type: AlertType ('performance' | 'errors' | 'traffic' | 'significance' | 'winner') - required
  *   - title: string - required
  *   - message: string - required
+ *   - channel?: string - optional, when 'push' sends browser push only
+ *   - url?: string - optional, deep link for push notifications
  *   - experimentName?: string - optional
  *   - variantName?: string - optional
  *   - metric?: string - optional
@@ -42,6 +45,11 @@ export async function POST(request: NextRequest) {
     // Check if this is a batch request
     if (body.batch && Array.isArray(body.batch)) {
       return handleBatchSend(userId, body.batch);
+    }
+
+    // Handle push channel directly
+    if (body.channel === "push") {
+      return handlePushSend(userId, body);
     }
 
     // Validate required fields
@@ -115,8 +123,17 @@ export async function POST(request: NextRequest) {
 
     logger.log(`[Notifications Send API] Sending ${level} ${type} notification for user ${userId}`);
 
-    // Send notification to all configured channels
+    // Send notification to all configured channels (slack, email, pagerduty)
     const results = await sendNotification(payload);
+
+    // Also send via push (fire-and-forget, best-effort)
+    sendPushToUser(userId, {
+      title,
+      body: message,
+      url: body.url ?? "/dashboard",
+    }).catch(() => {
+      // Push delivery is best-effort — swallow errors
+    });
 
     // Count successes and failures
     const sent = results.filter((r) => r.success).length;
@@ -192,6 +209,50 @@ export async function POST(request: NextRequest) {
         error: "Failed to send notification",
       },
       { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handle push-only notification sending
+ */
+async function handlePushSend(
+  userId: string,
+  body: { title?: string; message?: string; url?: string },
+): Promise<NextResponse> {
+  const { title, message, url } = body;
+
+  if (!title || !message) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Missing required fields for push: title, message",
+      },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const result = await sendPushToUser(userId, {
+      title,
+      body: message,
+      url: url ?? "/dashboard",
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        channel: "push",
+        sent: result.sent,
+        failed: result.failed,
+        removed: result.removed,
+      },
+    });
+  } catch (err) {
+    console.error("[Push Send Error]", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to send push notification" },
+      { status: 500 },
     );
   }
 }
@@ -316,6 +377,8 @@ export async function GET(request: NextRequest) {
       description: "Send notifications to all configured channels",
       requiredFields: ["level", "type", "title", "message"],
       optionalFields: [
+        "channel",
+        "url",
         "experimentName",
         "variantName",
         "metric",
@@ -324,6 +387,7 @@ export async function GET(request: NextRequest) {
         "metadata",
         "batch",
       ],
+      channels: ["slack", "pagerduty", "email", "push"],
       alertLevels: ["info", "warning", "critical"],
       alertTypes: ["performance", "errors", "traffic", "significance", "winner"],
       batchSupport: true,
@@ -343,6 +407,12 @@ export async function GET(request: NextRequest) {
           metric: "error_rate",
           value: 7.5,
           threshold: 5.0,
+        },
+        push: {
+          channel: "push",
+          title: "New Inbox Message",
+          message: "You have a new message from your co-founder",
+          url: "/dashboard/inbox",
         },
         batch: {
           batch: [
