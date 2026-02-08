@@ -11,7 +11,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:slack": "tsx scripts/test-slack-webhook.ts",
-    "validate-env": "tsx scripts/validate-env.ts"
+    "validate-env": "tsx scripts/validate-env.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.37",
@@ -47,6 +50,7 @@
     "@react-email/components": "^1.0.2",
     "@react-email/render": "^2.0.0",
     "@react-pdf/renderer": "^4.3.1",
+    "@sentry/nextjs": "^10.38.0",
     "@stripe/stripe-js": "^8.6.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
@@ -85,6 +89,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.13",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
