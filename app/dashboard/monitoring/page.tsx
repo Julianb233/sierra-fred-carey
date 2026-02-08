@@ -36,6 +36,7 @@ import {
   generateChartData,
 } from "@/types/monitoring";
 import type { FilterState } from "@/components/monitoring/DashboardFilters";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
 export default function MonitoringDashboard() {
@@ -95,11 +96,11 @@ export default function MonitoringDashboard() {
       setExperiments(activeExperiments.map(transformExperiment));
       setCriticalAlertCount(criticalAlerts.length);
 
-      logger.log("[Dashboard] Data loaded successfully", {
+      logger.log({
         experiments: activeExperiments.length,
         totalRequests: totalRequests24h,
         criticalAlerts: criticalAlerts.length,
-      });
+      }, "[Dashboard] Data loaded successfully");
 
     } catch (err) {
       console.error("[Dashboard] Failed to fetch dashboard data:", err);
@@ -134,12 +135,12 @@ export default function MonitoringDashboard() {
         const transformedAlerts = alertsData.data.alerts.map(transformAlert);
         setAlerts(transformedAlerts);
 
-        logger.log("[Dashboard] Alerts loaded successfully", {
+        logger.log({
           total: alertsData.data.total,
           critical: alertsData.data.breakdown.critical,
           warning: alertsData.data.breakdown.warning,
           info: alertsData.data.breakdown.info,
-        });
+        }, "[Dashboard] Alerts loaded successfully");
       }
     } catch (err) {
       console.error("[Dashboard] Failed to fetch alerts:", err);
@@ -170,50 +171,85 @@ export default function MonitoringDashboard() {
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    logger.log("[Dashboard] Filters updated:", newFilters);
+    logger.log({ filters: newFilters }, "[Dashboard] Filters updated");
     fetchDashboardData();
     fetchAlerts();
   };
 
   const handleExportCSV = () => {
-    logger.log("[Dashboard] Exporting CSV with filters:", filters);
-    const rows = [
-      ["Experiment", "Status", "Variants", "Total Requests", "Avg Latency", "Error Rate"],
-      ...experiments.map(exp => [
-        exp.name,
-        exp.isActive ? "Active" : "Ended",
-        String(exp.variantCount ?? 0),
-        String(exp.totalRequests ?? 0),
-        String(exp.avgLatency ?? 0),
-        String(exp.errorRate ?? 0),
-      ]),
-    ];
-    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      logger.log({ filters }, "[Dashboard] Exporting CSV");
+      const rows = [
+        ["Experiment", "Status", "Variants", "Total Requests", "Avg Latency", "Error Rate"],
+        ...experiments.map(exp => [
+          exp.name,
+          exp.isActive ? "Active" : "Ended",
+          String(exp.variantCount ?? 0),
+          String(exp.totalRequests ?? 0),
+          String(exp.avgLatency ?? 0),
+          String(exp.errorRate ?? 0),
+        ]),
+      ];
+
+      // Add alerts section with blank row separator
+      if (alerts.length > 0) {
+        rows.push([]); // blank row separator
+        rows.push(["Severity", "Message", "Timestamp", "Resolved", "Source"]);
+        alerts.forEach(alert => {
+          rows.push([
+            alert.type,
+            alert.message,
+            alert.timestamp,
+            alert.resolved ? "Yes" : "No",
+            alert.source ?? "",
+          ]);
+        });
+      }
+
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Export downloaded");
+    } catch (err) {
+      logger.error({ err }, "[Dashboard] CSV export failed");
+      toast.error("Failed to export CSV");
+    }
   };
 
   const handleExportJSON = () => {
-    logger.log("[Dashboard] Exporting JSON with filters:", filters);
-    const data = {
-      exportedAt: new Date().toISOString(),
-      filters,
-      metrics: { totalRequests, avgLatency, errorRate, activeExperimentCount },
-      experiments,
-      alerts,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      logger.log({ filters }, "[Dashboard] Exporting JSON");
+      const data = {
+        exportedAt: new Date().toISOString(),
+        filters,
+        metrics: { totalRequests, avgLatency, errorRate, activeExperimentCount },
+        experiments,
+        alerts: alerts.map(alert => ({
+          id: alert.id,
+          severity: alert.type,
+          message: alert.message,
+          timestamp: alert.timestamp,
+          resolved: alert.resolved ?? false,
+          source: alert.source ?? null,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `monitoring-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Export downloaded");
+    } catch (err) {
+      logger.error({ err }, "[Dashboard] JSON export failed");
+      toast.error("Failed to export JSON");
+    }
   };
 
   // Generate chart data using utility function

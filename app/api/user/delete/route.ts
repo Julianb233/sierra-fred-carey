@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { sql } from "@/lib/db/supabase-sql";
 import { createServiceClient } from "@/lib/supabase/server";
+import { stripe } from "@/lib/stripe/server";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(_request: NextRequest) {
   try {
@@ -18,6 +20,18 @@ export async function DELETE(_request: NextRequest) {
     // Delete user data in dependency order (children before parents).
     // Each deletion is wrapped in try/catch so missing tables don't crash the whole operation.
     const tables = [
+      // v2.0 tables (children first)
+      { table: "red_flags", column: "user_id" },
+      { table: "check_ins", column: "user_id" },
+      { table: "investor_scores", column: "user_id" },
+      { table: "investor_pipeline", column: "user_id" },
+      { table: "outreach_sequences", column: "user_id" },
+      { table: "inbox_items", column: "user_id" },
+      { table: "journey_events", column: "user_id" },
+      { table: "pitch_reviews", column: "user_id" },
+      { table: "contact_submissions", column: "user_id" },
+      { table: "notification_configs", column: "user_id" },
+      // v1.0 tables
       { table: "agent_tasks", column: "user_id" },
       { table: "fred_episodic_memory", column: "user_id" },
       { table: "fred_semantic_memory", column: "user_id" },
@@ -28,8 +42,6 @@ export async function DELETE(_request: NextRequest) {
       { table: "boardy_matches", column: "user_id" },
       { table: "documents", column: "user_id" },
       { table: "strategy_documents", column: "user_id" },
-      { table: "user_subscriptions", column: "user_id" },
-      { table: "profiles", column: "id" },
     ];
 
     for (const { table, column } of tables) {
@@ -37,7 +49,36 @@ export async function DELETE(_request: NextRequest) {
         await sql`DELETE FROM ${sql.unsafe(table)} WHERE ${sql.unsafe(column)} = ${userId}`;
       } catch (err) {
         // Log but continue - table may not exist in this environment
-        console.warn(`[user/delete] Failed to delete from ${table}:`, err);
+        logger.warn({ err, table }, `[user/delete] Failed to delete from ${table}`);
+      }
+    }
+
+    // Cancel active Stripe subscription before deleting subscription records
+    try {
+      const subRows = await sql`
+        SELECT stripe_subscription_id FROM user_subscriptions
+        WHERE user_id = ${userId}
+          AND status = 'active'
+          AND stripe_subscription_id IS NOT NULL
+        LIMIT 1
+      `;
+      if (subRows.length > 0 && subRows[0].stripe_subscription_id) {
+        await stripe.subscriptions.cancel(subRows[0].stripe_subscription_id);
+        logger.info({ subscriptionId: subRows[0].stripe_subscription_id }, "[user/delete] Stripe subscription cancelled");
+      }
+    } catch (err) {
+      logger.warn({ err }, "[user/delete] Failed to cancel Stripe subscription");
+    }
+
+    // Now delete subscription records and profile
+    for (const { table, column } of [
+      { table: "user_subscriptions", column: "user_id" },
+      { table: "profiles", column: "id" },
+    ]) {
+      try {
+        await sql`DELETE FROM ${sql.unsafe(table)} WHERE ${sql.unsafe(column)} = ${userId}`;
+      } catch (err) {
+        logger.warn({ err, table }, `[user/delete] Failed to delete from ${table}`);
       }
     }
 
@@ -45,19 +86,20 @@ export async function DELETE(_request: NextRequest) {
     const supabase = createServiceClient();
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
     if (authError) {
-      console.error("[user/delete] Failed to delete auth user:", authError);
+      logger.error({ err: authError }, "[user/delete] Failed to delete auth user");
       return NextResponse.json(
         { error: "Failed to delete auth user" },
         { status: 500 }
       );
     }
 
+    logger.info({ userId }, "[user/delete] Account deletion completed");
     return NextResponse.json({ success: true });
   } catch (error) {
     // Handle auth errors (thrown as Response by requireAuth)
     if (error instanceof Response) return error;
 
-    console.error("[user/delete] Error:", error);
+    logger.error({ err: error }, "[user/delete] Error");
     return NextResponse.json(
       { error: "Failed to delete account" },
       { status: 500 }
