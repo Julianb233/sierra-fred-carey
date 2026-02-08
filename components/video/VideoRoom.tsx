@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   LiveKitRoom,
   VideoConference,
   RoomAudioRenderer,
-  ControlBar,
   useTracks,
   GridLayout,
   ParticipantTile,
@@ -16,15 +15,55 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
+import { Video } from 'lucide-react';
 
 interface VideoRoomProps {
   roomName?: string;
   userName?: string;
+  sessionId?: string;
   onLeave?: () => void;
 }
 
-export function VideoRoom({ roomName: initialRoom, userName: initialName, onLeave }: VideoRoomProps) {
+// ============================================================================
+// Participant Tracking Helpers
+// ============================================================================
+
+async function recordParticipantJoin(
+  sessionId: string,
+  name: string
+): Promise<string | null> {
+  try {
+    const res = await fetch('/api/coaching/participants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, name }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.participant?.id ?? null;
+  } catch {
+    console.error('[VideoRoom] Failed to record participant join');
+    return null;
+  }
+}
+
+async function recordParticipantLeave(participantId: string): Promise<void> {
+  try {
+    await fetch('/api/coaching/participants', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantId }),
+    });
+  } catch {
+    console.error('[VideoRoom] Failed to record participant leave');
+  }
+}
+
+// ============================================================================
+// VideoRoom Component
+// ============================================================================
+
+export function VideoRoom({ roomName: initialRoom, userName: initialName, sessionId, onLeave }: VideoRoomProps) {
   const [token, setToken] = useState<string>('');
   const [serverUrl, setServerUrl] = useState<string>('');
   const [roomName, setRoomName] = useState(initialRoom || '');
@@ -32,6 +71,17 @@ export function VideoRoom({ roomName: initialRoom, userName: initialName, onLeav
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
+  const participantIdRef = useRef<string | null>(null);
+
+  // Clean up participant on unmount (safety net)
+  useEffect(() => {
+    return () => {
+      if (participantIdRef.current) {
+        recordParticipantLeave(participantIdRef.current);
+        participantIdRef.current = null;
+      }
+    };
+  }, []);
 
   const joinRoom = useCallback(async () => {
     if (!roomName.trim() || !userName.trim()) {
@@ -61,14 +111,28 @@ export function VideoRoom({ roomName: initialRoom, userName: initialName, onLeav
       setToken(data.token);
       setServerUrl(data.url);
       setIsConnected(true);
+
+      // Record participant join if we have a sessionId
+      if (sessionId) {
+        const pid = await recordParticipantJoin(sessionId, userName.trim());
+        if (pid) {
+          participantIdRef.current = pid;
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join room');
     } finally {
       setIsJoining(false);
     }
-  }, [roomName, userName]);
+  }, [roomName, userName, sessionId]);
 
-  const handleDisconnect = useCallback(() => {
+  const handleDisconnect = useCallback(async () => {
+    // Record participant leave
+    if (participantIdRef.current) {
+      await recordParticipantLeave(participantIdRef.current);
+      participantIdRef.current = null;
+    }
+
     setToken('');
     setServerUrl('');
     setIsConnected(false);

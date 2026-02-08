@@ -200,11 +200,13 @@ export async function PATCH(request: NextRequest) {
 
     // Parse body
     const body = await request.json().catch(() => ({}));
-    const { id, notes, status, duration_seconds } = body as {
+    const { id, notes, status, duration_seconds, started_at, ended_at } = body as {
       id?: string;
       notes?: string | null;
       status?: string;
       duration_seconds?: number;
+      started_at?: string;
+      ended_at?: string;
     };
 
     if (!id || typeof id !== "string") {
@@ -222,7 +224,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (status !== undefined) {
-      const validStatuses = ["scheduled", "active", "completed", "cancelled"];
+      const validStatuses = ["scheduled", "in_progress", "completed", "cancelled"];
       if (!validStatuses.includes(status)) {
         return NextResponse.json(
           { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
@@ -242,9 +244,31 @@ export async function PATCH(request: NextRequest) {
       updates.duration_seconds = Math.floor(duration_seconds);
     }
 
+    if (started_at !== undefined) {
+      const parsed = new Date(started_at);
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json(
+          { error: "started_at must be a valid ISO date string" },
+          { status: 400 }
+        );
+      }
+      updates.started_at = parsed.toISOString();
+    }
+
+    if (ended_at !== undefined) {
+      const parsed = new Date(ended_at);
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json(
+          { error: "ended_at must be a valid ISO date string" },
+          { status: 400 }
+        );
+      }
+      updates.ended_at = parsed.toISOString();
+    }
+
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields to update. Provide notes, status, or duration_seconds." },
+        { error: "No valid fields to update. Provide notes, status, duration_seconds, started_at, or ended_at." },
         { status: 400 }
       );
     }

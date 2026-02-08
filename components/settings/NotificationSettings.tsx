@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { usePushSubscription } from "@/lib/hooks/use-push-subscription";
+import type { PushCategory, PushCategoryConfig } from "@/lib/push/preferences";
 
 interface NotificationConfig {
   id: string;
@@ -110,6 +111,74 @@ export function NotificationSettings() {
     loading: pushLoading,
     error: pushError,
   } = usePushSubscription();
+
+  // Push category preferences
+  const [pushPreferences, setPushPreferences] = useState<Record<PushCategory, PushCategoryConfig> | null>(null);
+  const [prefLoading, setPrefLoading] = useState(false);
+
+  // Fetch push category preferences when push is subscribed
+  useEffect(() => {
+    if (!pushSubscribed) {
+      setPushPreferences(null);
+      return;
+    }
+
+    const fetchPreferences = async () => {
+      try {
+        setPrefLoading(true);
+        const response = await fetch("/api/push/preferences");
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success) {
+          setPushPreferences(data.data);
+        }
+      } catch {
+        // Silently fail — preferences will show defaults
+      } finally {
+        setPrefLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, [pushSubscribed]);
+
+  // Toggle a push category preference
+  const handleCategoryToggle = async (category: PushCategory, enabled: boolean) => {
+    // Optimistic update
+    if (pushPreferences) {
+      setPushPreferences({
+        ...pushPreferences,
+        [category]: { ...pushPreferences[category], enabled },
+      });
+    }
+
+    try {
+      const response = await fetch("/api/push/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, enabled }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update preference");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setPushPreferences(data.data);
+        toast.success(`${enabled ? "Enabled" : "Disabled"} ${pushPreferences?.[category]?.label ?? category}`);
+      }
+    } catch {
+      // Revert optimistic update
+      if (pushPreferences) {
+        setPushPreferences({
+          ...pushPreferences,
+          [category]: { ...pushPreferences[category], enabled: !enabled },
+        });
+      }
+      toast.error("Failed to update notification preference");
+    }
+  };
 
   // Dialog state
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -522,6 +591,41 @@ export function NotificationSettings() {
                   disabled={pushLoading}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Push Notification Categories — shown when push is active */}
+          {pushSubscribed && pushPreferences && (
+            <div className="mt-4 space-y-2">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Push Notification Categories
+              </h4>
+              {prefLoading ? (
+                <div className="flex items-center gap-2 py-2">
+                  <ReloadIcon className="h-4 w-4 animate-spin text-gray-400" />
+                  <span className="text-sm text-gray-500">Loading preferences...</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(Object.entries(pushPreferences) as [PushCategory, PushCategoryConfig][]).map(
+                    ([category, config]) => (
+                      <div
+                        key={category}
+                        className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-900"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium">{config.label}</span>
+                          <p className="text-xs text-gray-500 mt-0.5">{config.description}</p>
+                        </div>
+                        <Switch
+                          checked={config.enabled}
+                          onCheckedChange={(enabled) => handleCategoryToggle(category, enabled)}
+                        />
+                      </div>
+                    ),
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

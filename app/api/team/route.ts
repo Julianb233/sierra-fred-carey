@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getCurrentUser } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import {
@@ -19,6 +19,7 @@ import {
   updateMemberRole,
   isValidTeamRole,
 } from "@/lib/sharing/teams";
+import { sendInviteEmail } from "@/lib/email/invite";
 import { logger } from "@/lib/logger";
 
 const log = logger.child({ module: "api/team" });
@@ -97,6 +98,17 @@ export async function POST(request: NextRequest) {
     }
 
     const member = await inviteTeamMember(userId, email, memberRole);
+
+    // Fire-and-forget: send invite email notification
+    // Don't block the API response on email delivery
+    const user = await getCurrentUser();
+    const inviterName = user?.name || user?.email || "A team member";
+    sendInviteEmail(email, inviterName, memberRole).catch((err) => {
+      log.error("Failed to send invite email (fire-and-forget)", {
+        error: err instanceof Error ? err.message : String(err),
+        email,
+      });
+    });
 
     return NextResponse.json({ success: true, member });
   } catch (error) {

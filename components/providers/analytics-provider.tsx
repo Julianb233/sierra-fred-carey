@@ -46,7 +46,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
                 created_at: newSession.user.created_at,
               });
               identifiedRef.current = true;
-            } else if (!newSession) {
+            } else if (!newSession && identifiedRef.current) {
+              trackEvent(ANALYTICS_EVENTS.AUTH.LOGOUT);
               resetUser();
               identifiedRef.current = false;
             }

@@ -22,6 +22,8 @@ import {
   InfoCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // ---------------------------------------------------------------------------
 // Types matching the FRED Reality Lens API response
@@ -113,6 +115,7 @@ export default function RealityLensPage() {
       }
 
       setResults(data.data || null);
+      trackEvent(ANALYTICS_EVENTS.FEATURES.REALITY_LENS_USED, { featureName: "reality_lens" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
       console.error("Reality Lens error:", err);

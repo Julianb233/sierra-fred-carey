@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 /**
  * Login Page
@@ -63,7 +65,8 @@ function LoginContent() {
         throw new Error(data.error || "Failed to sign in");
       }
 
-      // Success - redirect to intended page
+      // Success - track login and redirect
+      trackEvent(ANALYTICS_EVENTS.AUTH.LOGIN, { method: "email" });
       router.push(redirect);
       router.refresh();
     } catch (err) {

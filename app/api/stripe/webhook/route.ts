@@ -11,6 +11,8 @@ import {
 import { getPlanByPriceId } from "@/lib/stripe/config";
 import { getTierFromString, UserTier } from "@/lib/constants";
 import Stripe from "stripe";
+import { serverTrack } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // Helper to get period timestamps from subscription
 function getSubscriptionPeriod(subscription: Stripe.Subscription) {
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
             break;
           }
           await handleSubscriptionUpdate(subscription, userId);
+          serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.CHECKOUT_COMPLETED, { priceId: subscription.items.data[0]?.price.id });
         }
         break;
       }
@@ -135,6 +138,8 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = await resolveUserIdFromSubscription(subscription);
         if (userId) {
+          const newTier = getUserTierFromSubscription(subscription);
+          serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.TIER_CHANGED, { toTier: newTier, priceId: subscription.items.data[0]?.price.id });
           await handleSubscriptionUpdate(subscription, userId);
         } else {
           console.error(`[Webhook] No userId found for subscription ${subscription.id}`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Inbox,
+  Users,
 } from "lucide-react";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { SessionDetail } from "@/components/coaching/session-detail";
@@ -40,6 +41,7 @@ interface CoachingSession {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  participant_count?: number;
 }
 
 interface PaginationInfo {
@@ -76,7 +78,7 @@ function statusColor(status: string): string {
   switch (status) {
     case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "active":
+    case "in_progress":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
     case "scheduled":
       return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
@@ -85,6 +87,11 @@ function statusColor(status: string): string {
     default:
       return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
   }
+}
+
+function statusLabel(status: string): string {
+  if (status === "in_progress") return "In Progress";
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 // ============================================================================
@@ -130,17 +137,23 @@ function SessionRow({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {session.participant_count != null && session.participant_count > 0 && (
+            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <Users className="h-3 w-3" />
+              <span>{session.participant_count}</span>
+            </div>
+          )}
           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <Clock className="h-3 w-3" />
             <span>{formatDuration(session.duration_seconds)}</span>
           </div>
           <span
             className={cn(
-              "px-2 py-0.5 rounded-full text-xs font-medium capitalize",
+              "px-2 py-0.5 rounded-full text-xs font-medium",
               statusColor(session.status)
             )}
           >
-            {session.status}
+            {statusLabel(session.status)}
           </span>
         </div>
       </div>
@@ -217,9 +230,31 @@ function HistoryContent() {
     }
   }, []);
 
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     fetchSessions(1);
   }, [fetchSessions]);
+
+  // Auto-refresh every 30 seconds if any session is in_progress
+  useEffect(() => {
+    const hasActiveSessions = sessions.some(
+      (s) => s.status === "in_progress"
+    );
+
+    if (hasActiveSessions) {
+      refreshIntervalRef.current = setInterval(() => {
+        fetchSessions(pagination.page);
+      }, 30_000);
+    }
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    };
+  }, [sessions, pagination.page, fetchSessions]);
 
   const handlePageChange = useCallback(
     (newPage: number) => {

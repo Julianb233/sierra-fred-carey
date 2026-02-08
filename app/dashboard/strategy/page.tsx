@@ -23,6 +23,8 @@ import type {
 } from "@/lib/fred/strategy/types";
 import { DOC_TYPE_LABELS } from "@/lib/fred/strategy/types";
 import { TEMPLATES } from "@/lib/fred/strategy/templates";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 export default function StrategyPage() {
   const { tier, isLoading: isTierLoading } = useUserTier();
@@ -156,6 +158,7 @@ function StrategyContent() {
         setCurrentSection(sectionCount);
 
         // Add document to list and show preview
+        trackEvent(ANALYTICS_EVENTS.FEATURES.STRATEGY_CREATED, { featureName: "strategy", documentType: selectedType });
         setDocuments((prev) => [data.document, ...prev]);
         setSelectedDoc(data.document);
 

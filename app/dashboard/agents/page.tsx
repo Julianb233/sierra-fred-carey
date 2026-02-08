@@ -21,6 +21,8 @@ import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import type { AgentType, AgentTask } from "@/lib/agents/types";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // ============================================================================
 // Types
@@ -107,6 +109,7 @@ export default function AgentsPage() {
 
   // Dispatch handler
   const handleDispatch = (agentType: AgentType) => {
+    trackEvent(ANALYTICS_EVENTS.FEATURES.AGENT_DISPATCHED, { agentType, featureName: "agents" });
     setSelectedAgentType(agentType);
     setIsModalOpen(true);
   };

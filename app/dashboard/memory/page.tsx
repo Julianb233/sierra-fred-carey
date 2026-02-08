@@ -13,16 +13,31 @@ import {
   Tag,
   Clock,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   AlertCircle,
+  AlertTriangle,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { MemoryManager } from "@/components/memory/memory-manager";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // ============================================================================
 // Types
@@ -77,6 +92,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   challenges: "Challenges",
   decisions: "Decisions",
 };
+
+const PAGE_SIZE = 20;
 
 // ============================================================================
 // Page Component
@@ -163,11 +180,20 @@ function MemoryBrowser() {
   const [episodes, setEpisodes] = useState<EpisodicItem[]>([]);
   const [decisions, setDecisions] = useState<DecisionItem[]>([]);
 
+  // Pagination state per tab
+  const [factsPage, setFactsPage] = useState(1);
+  const [episodesPage, setEpisodesPage] = useState(1);
+  const [decisionsPage, setDecisionsPage] = useState(1);
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<{ category: string; key: string; factKey: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const fetchData = useCallback(async (tab: TabKey) => {
     setIsLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ type: tab, limit: "50" });
+      const params = new URLSearchParams({ type: tab, limit: "100" });
       const res = await fetch(`/api/fred/memory?${params}`);
       const json = await res.json();
 
@@ -223,18 +249,54 @@ function MemoryBrowser() {
     fetchData(activeTab);
   }, [activeTab, fetchData]);
 
-  const handleDeleteFact = async (category: string, key: string) => {
+  // Reset pages when search query changes
+  useEffect(() => {
+    setFactsPage(1);
+    setEpisodesPage(1);
+    setDecisionsPage(1);
+  }, [searchQuery]);
+
+  // Delete fact with confirmation dialog
+  const handleDeleteFact = async () => {
+    if (!deleteTarget) return;
+    const { category, key: factKey } = deleteTarget;
+
+    // Optimistic removal
+    const previousFacts = facts;
+    setFacts((prev) => prev.filter((f) => !(f.category === category && f.key === factKey)));
+    setIsDeleting(true);
+
     try {
       const res = await fetch("/api/fred/memory", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, key }),
+        body: JSON.stringify({ category, key: factKey }),
       });
       if (res.ok) {
-        setFacts((prev) => prev.filter((f) => !(f.category === category && f.key === key)));
+        toast.success(`Deleted "${factKey}"`);
+      } else {
+        // Restore on failure
+        setFacts(previousFacts);
+        toast.error("Failed to delete memory");
       }
     } catch {
-      // Silently fail delete
+      // Restore on failure
+      setFacts(previousFacts);
+      toast.error("Failed to delete memory");
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  // Copy fact value to clipboard
+  const handleCopyValue = async (value: Record<string, unknown>) => {
+    try {
+      const text = formatValue(value);
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Failed to copy to clipboard");
     }
   };
 
@@ -271,15 +333,42 @@ function MemoryBrowser() {
     );
   }, [decisions, searchQuery]);
 
-  // Group facts by category
+  // Paginated data
+  const paginatedFacts = useMemo(() => {
+    const start = (factsPage - 1) * PAGE_SIZE;
+    return filteredFacts.slice(start, start + PAGE_SIZE);
+  }, [filteredFacts, factsPage]);
+
+  const paginatedEpisodes = useMemo(() => {
+    const start = (episodesPage - 1) * PAGE_SIZE;
+    return filteredEpisodes.slice(start, start + PAGE_SIZE);
+  }, [filteredEpisodes, episodesPage]);
+
+  const paginatedDecisions = useMemo(() => {
+    const start = (decisionsPage - 1) * PAGE_SIZE;
+    return filteredDecisions.slice(start, start + PAGE_SIZE);
+  }, [filteredDecisions, decisionsPage]);
+
+  // Page counts
+  const factsPageCount = Math.max(1, Math.ceil(filteredFacts.length / PAGE_SIZE));
+  const episodesPageCount = Math.max(1, Math.ceil(filteredEpisodes.length / PAGE_SIZE));
+  const decisionsPageCount = Math.max(1, Math.ceil(filteredDecisions.length / PAGE_SIZE));
+
+  // Group paginated facts by category
   const groupedFacts = useMemo(() => {
     const groups: Record<string, SemanticFact[]> = {};
-    for (const fact of filteredFacts) {
+    for (const fact of paginatedFacts) {
       if (!groups[fact.category]) groups[fact.category] = [];
       groups[fact.category].push(fact);
     }
     return groups;
-  }, [filteredFacts]);
+  }, [paginatedFacts]);
+
+  // Current page/total for active tab
+  const currentPage = activeTab === "facts" ? factsPage : activeTab === "episodes" ? episodesPage : decisionsPage;
+  const totalPages = activeTab === "facts" ? factsPageCount : activeTab === "episodes" ? episodesPageCount : decisionsPageCount;
+  const totalItems = activeTab === "facts" ? filteredFacts.length : activeTab === "episodes" ? filteredEpisodes.length : filteredDecisions.length;
+  const setCurrentPage = activeTab === "facts" ? setFactsPage : activeTab === "episodes" ? setEpisodesPage : setDecisionsPage;
 
   return (
     <div className="space-y-4">
@@ -298,6 +387,7 @@ function MemoryBrowser() {
       <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
         {TABS.map((tab) => {
           const Icon = tab.icon;
+          const count = tab.key === "facts" ? filteredFacts.length : tab.key === "episodes" ? filteredEpisodes.length : filteredDecisions.length;
           return (
             <button
               key={tab.key}
@@ -311,6 +401,9 @@ function MemoryBrowser() {
             >
               <Icon className="h-4 w-4" />
               {tab.label}
+              <Badge variant="secondary" className="ml-1 text-[10px] h-5 min-w-5 px-1.5">
+                {count}
+              </Badge>
             </button>
           );
         })}
@@ -339,18 +432,86 @@ function MemoryBrowser() {
               <FactsPanel
                 key="facts"
                 grouped={groupedFacts}
-                onDelete={handleDeleteFact}
+                onRequestDelete={(category, factKey) =>
+                  setDeleteTarget({ category, key: factKey, factKey })
+                }
+                onCopyValue={handleCopyValue}
               />
             )}
             {activeTab === "episodes" && (
-              <EpisodesPanel key="episodes" episodes={filteredEpisodes} />
+              <EpisodesPanel key="episodes" episodes={paginatedEpisodes} />
             )}
             {activeTab === "decisions" && (
-              <DecisionsPanel key="decisions" decisions={filteredDecisions} />
+              <DecisionsPanel key="decisions" decisions={paginatedDecisions} />
             )}
           </AnimatePresence>
         </ScrollArea>
       )}
+
+      {/* Pagination */}
+      {!isLoading && totalItems > 0 && (
+        <div className="flex items-center justify-between px-1 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, totalItems)}&ndash;{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-700 dark:text-gray-300 min-w-[4rem] text-center">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Delete Memory?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deleteTarget?.factKey}&quot;?
+              This action cannot be undone and FRED will no longer remember this fact.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFact}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  Deleting...
+                </>
+              ) : (
+                "Yes, Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -361,10 +522,12 @@ function MemoryBrowser() {
 
 function FactsPanel({
   grouped,
-  onDelete,
+  onRequestDelete,
+  onCopyValue,
 }: {
   grouped: Record<string, SemanticFact[]>;
-  onDelete: (category: string, key: string) => void;
+  onRequestDelete: (category: string, key: string) => void;
+  onCopyValue: (value: Record<string, unknown>) => void;
 }) {
   const categories = Object.keys(grouped);
 
@@ -386,7 +549,8 @@ function FactsPanel({
           key={category}
           category={category}
           facts={grouped[category]}
-          onDelete={onDelete}
+          onRequestDelete={onRequestDelete}
+          onCopyValue={onCopyValue}
         />
       ))}
     </motion.div>
@@ -396,11 +560,13 @@ function FactsPanel({
 function CategoryGroup({
   category,
   facts,
-  onDelete,
+  onRequestDelete,
+  onCopyValue,
 }: {
   category: string;
   facts: SemanticFact[];
-  onDelete: (category: string, key: string) => void;
+  onRequestDelete: (category: string, key: string) => void;
+  onCopyValue: (value: Record<string, unknown>) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -437,7 +603,7 @@ function CategoryGroup({
               {facts.map((fact) => (
                 <div
                   key={fact.id}
-                  className="flex items-start justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -451,14 +617,26 @@ function CategoryGroup({
                       <span>{formatDate(fact.updatedAt)}</span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(fact.category, fact.key)}
-                    className="shrink-0 h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onCopyValue(fact.value)}
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-[#ff6a1a]"
+                      title="Copy value"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRequestDelete(fact.category, fact.key)}
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+                      title="Delete fact"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

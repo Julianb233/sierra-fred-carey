@@ -25,6 +25,8 @@ import {
   Sparkles,
   PartyPopper,
 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // Types
 type Step = 1 | 2 | 3 | "wink";
@@ -231,6 +233,8 @@ const OnboardingPage = () => {
         throw new Error(data.error || "Something went wrong");
       }
 
+      // Track successful signup
+      trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email" });
       // Show the wink!
       setCurrentStep("wink");
     } catch (err) {

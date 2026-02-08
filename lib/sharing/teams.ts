@@ -277,3 +277,162 @@ export async function acceptInvite(
 
   return count > 0;
 }
+
+/**
+ * Accept a single team invite by ID.
+ * Verifies the invite email matches the requesting user's email.
+ * Uses service client because the member may not be the owner (RLS would block).
+ */
+export async function acceptInviteById(
+  inviteId: string,
+  memberUserId: string,
+  memberEmail: string
+): Promise<{ success: boolean; error?: string; member?: TeamMember }> {
+  const supabase = createServiceClient();
+
+  // Fetch the invite to verify it exists and matches
+  const { data: invite, error: fetchError } = await supabase
+    .from("team_members")
+    .select("*")
+    .eq("id", inviteId)
+    .single();
+
+  if (fetchError || !invite) {
+    log.error("Invite not found", { inviteId, fetchError });
+    return { success: false, error: "Invitation not found" };
+  }
+
+  const member = invite as TeamMember;
+
+  // Check if already accepted
+  if (member.status === "active") {
+    return { success: false, error: "Invitation has already been accepted" };
+  }
+
+  // Check if revoked
+  if (member.status === "revoked") {
+    return { success: false, error: "Invitation has been revoked" };
+  }
+
+  // Check email match
+  if (member.member_email !== memberEmail.toLowerCase()) {
+    log.warn("Invite email mismatch", {
+      inviteId,
+      inviteEmail: member.member_email,
+      requestEmail: memberEmail,
+    });
+    return { success: false, error: "This invitation was sent to a different email address" };
+  }
+
+  // Accept the invite
+  const { data: updated, error: updateError } = await supabase
+    .from("team_members")
+    .update({
+      member_user_id: memberUserId,
+      status: "active",
+      accepted_at: new Date().toISOString(),
+    })
+    .eq("id", inviteId)
+    .eq("status", "invited")
+    .select()
+    .single();
+
+  if (updateError || !updated) {
+    log.error("Failed to accept invite by ID", { inviteId, updateError });
+    return { success: false, error: "Failed to accept invitation" };
+  }
+
+  log.info("Invite accepted by ID", { inviteId, memberUserId, memberEmail });
+  return { success: true, member: updated as TeamMember };
+}
+
+/**
+ * Get pending invitations for a user by email.
+ * Uses service client for cross-user lookup.
+ */
+export async function getPendingInvitations(
+  userEmail: string
+): Promise<TeamMember[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select("*")
+    .eq("member_email", userEmail.toLowerCase())
+    .eq("status", "invited")
+    .order("invited_at", { ascending: false });
+
+  if (error) {
+    log.error("Failed to fetch pending invitations", { error, userEmail });
+    return [];
+  }
+
+  return (data || []) as TeamMember[];
+}
+
+/**
+ * Count pending invitations for a user by email.
+ * Uses service client for cross-user lookup.
+ */
+export async function getPendingInvitationCount(
+  userEmail: string
+): Promise<number> {
+  const supabase = createServiceClient();
+
+  const { count, error } = await supabase
+    .from("team_members")
+    .select("id", { count: "exact", head: true })
+    .eq("member_email", userEmail.toLowerCase())
+    .eq("status", "invited");
+
+  if (error) {
+    log.error("Failed to count pending invitations", { error, userEmail });
+    return 0;
+  }
+
+  return count || 0;
+}
+
+/**
+ * Decline (revoke) a single invite by ID from the invitee's perspective.
+ * Uses service client because the member is not the owner.
+ */
+export async function declineInvite(
+  inviteId: string,
+  memberEmail: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServiceClient();
+
+  // Verify the invite belongs to this email before declining
+  const { data: invite, error: fetchError } = await supabase
+    .from("team_members")
+    .select("member_email, status")
+    .eq("id", inviteId)
+    .single();
+
+  if (fetchError || !invite) {
+    return { success: false, error: "Invitation not found" };
+  }
+
+  if (invite.member_email !== memberEmail.toLowerCase()) {
+    return { success: false, error: "This invitation was sent to a different email address" };
+  }
+
+  if (invite.status !== "invited") {
+    return { success: false, error: "Invitation is no longer pending" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("team_members")
+    .update({ status: "revoked" })
+    .eq("id", inviteId)
+    .eq("status", "invited");
+
+  if (updateError) {
+    log.error("Failed to decline invite", { inviteId, updateError });
+    return { success: false, error: "Failed to decline invitation" };
+  }
+
+  log.info("Invite declined", { inviteId, memberEmail });
+  return { success: true };
+}

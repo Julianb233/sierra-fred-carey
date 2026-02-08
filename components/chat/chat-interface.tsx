@@ -69,7 +69,12 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       >
         <AnimatePresence mode="popLayout">
           {messages.map((message, index) => (
-            <ChatMessage key={message.id} message={message} index={index} />
+            <ChatMessage
+              key={message.id}
+              message={message}
+              index={index}
+              showTts={message.role === "assistant" && message.content.length > 20}
+            />
           ))}
           {isProcessing && <TypingIndicator key="typing" />}
         </AnimatePresence>

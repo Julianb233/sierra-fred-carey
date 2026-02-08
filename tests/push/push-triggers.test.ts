@@ -9,9 +9,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock sendPushToUser before importing triggers
 const mockSendPushToUser = vi.fn();
+const mockIsCategoryEnabled = vi.fn();
 
 vi.mock("@/lib/push", () => ({
   sendPushToUser: (...args: unknown[]) => mockSendPushToUser(...args),
+}));
+
+vi.mock("@/lib/push/preferences", () => ({
+  isCategoryEnabled: (...args: unknown[]) => mockIsCategoryEnabled(...args),
 }));
 
 import {
@@ -24,7 +29,9 @@ import {
 describe("Push Notification Triggers", () => {
   beforeEach(() => {
     mockSendPushToUser.mockReset();
+    mockIsCategoryEnabled.mockReset();
     mockSendPushToUser.mockResolvedValue({ sent: 1, failed: 0, removed: 0 });
+    mockIsCategoryEnabled.mockResolvedValue(true);
   });
 
   // ---------- notifyRedFlag ----------
@@ -47,7 +54,7 @@ describe("Push Notification Triggers", () => {
       expect(userId).toBe("user-123");
       expect(payload.title).toBe("Red Flag: Cash Flow");
       expect(payload.body).toBe("Runway dropping below 3 months");
-      expect(payload.url).toBe("/dashboard/red-flags");
+      expect(payload.url).toBe("/dashboard");
       expect(payload.tag).toBe("red-flag-flag-1");
       expect(payload.data).toEqual({
         type: "red_flag",
@@ -144,7 +151,7 @@ describe("Push Notification Triggers", () => {
       expect(userId).toBe("user-123");
       expect(payload.title).toBe("Agent Inbox Ops completed");
       expect(payload.body).toBe("Processed 5 messages and drafted 3 replies.");
-      expect(payload.url).toBe("/dashboard");
+      expect(payload.url).toBe("/dashboard/agents");
       expect(payload.tag).toBe("agent-Inbox Ops");
       expect(payload.data).toEqual({
         type: "agent_complete",

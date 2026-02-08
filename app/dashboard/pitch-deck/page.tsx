@@ -18,6 +18,8 @@ import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import type { PitchReview } from "@/lib/fred/pitch/types";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 interface UploadedDoc {
   id: string;
@@ -147,6 +149,7 @@ function PitchDeckReviewContent() {
         // Success -- review is ready
         if (res.ok && data.success && data.review) {
           setReview(data.review);
+          trackEvent(ANALYTICS_EVENTS.FEATURES.PITCH_DECK_UPLOADED, { featureName: "pitch_deck_review" });
           // Refresh documents list to get updated statuses
           fetchDocuments();
           return;

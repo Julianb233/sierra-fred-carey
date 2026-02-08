@@ -22,6 +22,8 @@ import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // ============================================================================
 // Types
@@ -176,6 +178,7 @@ function InvestorTargetingContent() {
         return;
       }
 
+      trackEvent(ANALYTICS_EVENTS.FEATURES.INVESTOR_READINESS_USED, { featureName: "investor_targeting" });
       setSuccessMessage(
         `AI matching complete! Found ${data.count} investor matches. View results below.`
       );
