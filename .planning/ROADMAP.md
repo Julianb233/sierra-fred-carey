@@ -229,13 +229,53 @@ Plans:
 Plans:
 - [x] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
 
-### v3.0 Launch Readiness
+### v3.0 Scale, Activate & Engage
 
-**Milestone Goal:** Make Sahara production-confident for real paying users by adding observability, analytics, user-facing email, and activating dormant integrations already 85-95% built.
+**Milestone Goal:** Make Sahara production-confident for real paying users by adding observability, testing, security hardening, analytics, user-facing email, and activating dormant integrations.
 
-**Phase Numbering:** Integer phases (24+). Decimal phases (e.g., 24.1) reserved for urgent insertions.
+**Parallelism:**
+- Wave 1 (no interdependencies): Phases 24, 25, 26, 27
+- Wave 2 (after Phase 25): Phases 28, 29, 30
+- Wave 3 (after Phases 25+30): Phases 31, 32
+- Wave 4 (after Phase 27): Phase 33
 
-*(Phases to be created via /gsd:create-roadmap)*
+- [x] **Phase 24: Feature Activation & Quick Fixes** - Remove false "Coming Soon", fix stubs, enhance exports/deletion
+- [x] **Phase 25: Production Observability** - Sentry error tracking, structured Pino logging, CI quality gates
+- [x] **Phase 26: E2E Testing & Coverage** - Playwright setup, critical flow E2E tests, coverage thresholds
+- [x] **Phase 27: RLS Security Hardening** - Comprehensive RLS policies, user-scoped clients, isolation tests
+- [ ] **Phase 28: Web Push Notifications** - Service worker push, subscriptions, preferences
+- [ ] **Phase 29: Video Coaching Sessions** - LiveKit UI activation, FRED sidebar
+- [ ] **Phase 30: Product Analytics & Growth** - PostHog, funnels, onboarding checklist
+- [ ] **Phase 31: Email Engagement** - Weekly digest, milestones, re-engagement
+- [ ] **Phase 32: FRED Intelligence Upgrade** - TTS voice, memory browser, export
+- [ ] **Phase 33: Collaboration & Sharing** - Co-founder invites, shareable links
+
+### Phase 31: Email Engagement
+**Goal**: Founders receive timely, relevant emails that keep them engaged -- weekly activity digests, milestone celebrations, and re-engagement nudges for inactive users
+**Depends on**: Phase 30 (analytics data sources for digest content)
+**Success Criteria** (what must be TRUE):
+  1. Opted-in founders receive a branded weekly digest email every Monday summarizing their activity (conversations, milestones, tasks, red flags)
+  2. When a founder completes a milestone, they receive a celebration email with a Fred quote and next step suggestion
+  3. Inactive users (7/14/30 days) receive graduated re-engagement emails that respect marketing preferences
+  4. All emails respect notification preference toggles in settings (email master, weekly, marketing)
+  5. Duplicate emails are prevented via idempotent tracking in email_sends table
+**Plans**: 2 plans
+
+Plans:
+- [ ] 31-01-PLAN.md -- Email infrastructure (Resend SDK, shared layout, preferences, types) + weekly digest system (data aggregation, template, cron route)
+- [ ] 31-02-PLAN.md -- Milestone celebration emails (trigger on completion, Fred quote template) + re-engagement system (inactive detection, graduated templates, daily cron)
+
+Plans:
+- [x] 24-01-PLAN.md -- Coming Soon badge removal + offline page
+- [x] 24-02-PLAN.md -- Monitoring export enhancement + account deletion cascade
+- [x] 25-01-PLAN.md -- Sentry integration (client, server, global-error, CSP, utility)
+- [x] 25-02-PLAN.md -- Structured Pino logging, correlation IDs, CI quality gates
+- [x] 26-01-PLAN.md -- Playwright setup + critical flow E2E tests (signup, login, chat, reality lens)
+- [x] 26-02-PLAN.md -- Coverage thresholds, premium flow E2E tests, CI integration
+- [x] 27-01-PLAN.md -- RLS policy SQL migration (27 tables, 140+ policies)
+- [x] 27-02-PLAN.md -- User-scoped client switch (10 routes) + RLS isolation tests
+- [ ] 31-01-PLAN.md -- Email infrastructure + weekly digest system
+- [ ] 31-02-PLAN.md -- Milestone celebration + re-engagement emails
 
 ## Progress
 
@@ -260,3 +300,15 @@ Plans:
 | 21. Memory & Compute Tiers | v2.0 | 1/1 | Complete | 2026-02-07 |
 | 22. PWA & Mobile Polish | v2.0 | 2/2 | Complete | 2026-02-07 |
 | 23. Admin Training Docs | v2.0 | 1/1 | Complete | 2026-02-07 |
+
+### v3.0 Execution (Wave 1 COMPLETE)
+
+**Execution Order:**
+- Wave 1 (parallel): Phases 24, 25, 26, 27
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 24. Feature Activation & Quick Fixes | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 25. Production Observability | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 26. E2E Testing & Coverage | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 27. RLS Security Hardening | v3.0 | 2/2 | Complete | 2026-02-08 |
