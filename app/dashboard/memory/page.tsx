@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FeatureLock } from "@/components/tier/feature-lock";
+import { MemoryManager } from "@/components/memory/memory-manager";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -135,6 +136,12 @@ export default function MemoryBrowserPage() {
         description="Browse and manage FRED's knowledge about your startup with the Pro plan."
         className="min-h-[400px]"
       >
+        {/* Memory Manager: stats, usage bar, category filter, bulk delete */}
+        <div className="mb-6">
+          <MemoryManager />
+        </div>
+
+        {/* Memory Browser: search + tabs */}
         <MemoryBrowser />
       </FeatureLock>
     </div>
