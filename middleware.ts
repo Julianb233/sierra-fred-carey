@@ -21,29 +21,37 @@ export async function middleware(request: NextRequest) {
     return preflightResponse;
   }
 
-  // Refresh auth session on every request
-  const { response, user } = await updateSession(request);
+  try {
+    // Refresh auth session on every request
+    const { response, user } = await updateSession(request);
 
-  // Apply CORS headers to API responses (skip webhooks -- they use signature verification)
-  if (pathname.startsWith("/api/") && !isWebhookPath(pathname)) {
-    const headers = corsHeaders(origin);
-    for (const [key, value] of Object.entries(headers)) {
-      response.headers.set(key, value);
+    // Apply CORS headers to API responses (skip webhooks -- they use signature verification)
+    if (pathname.startsWith("/api/") && !isWebhookPath(pathname)) {
+      const headers = corsHeaders(origin);
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value);
+      }
     }
-  }
 
-  // Check if this route requires authentication
-  if (isProtectedRoute(pathname) && !user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    const redirectResponse = NextResponse.redirect(loginUrl);
-    redirectResponse.headers.set("X-Request-ID", requestId);
-    return redirectResponse;
-  }
+    // Check if this route requires authentication
+    if (isProtectedRoute(pathname) && !user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.headers.set("X-Request-ID", requestId);
+      return redirectResponse;
+    }
 
-  // Propagate correlation ID on every response
-  response.headers.set("X-Request-ID", requestId);
-  return response;
+    // Propagate correlation ID on every response
+    response.headers.set("X-Request-ID", requestId);
+    return response;
+  } catch {
+    // If session refresh or auth check fails, continue without auth
+    // rather than crashing the entire middleware and returning 500
+    const fallback = NextResponse.next();
+    fallback.headers.set("X-Request-ID", requestId);
+    return fallback;
+  }
 }
 
 export const config = {
