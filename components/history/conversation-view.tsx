@@ -10,6 +10,11 @@ import {
   Brain,
   Lightbulb,
   Clock,
+  Download,
+  ChevronDown,
+  FileJson,
+  FileText,
+  Table,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +65,14 @@ const CONFIDENCE_COLORS = {
   low: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 };
 
+type ExportFormat = "json" | "markdown" | "csv";
+
+const EXPORT_OPTIONS: { format: ExportFormat; label: string; icon: typeof FileJson }[] = [
+  { format: "json", label: "JSON", icon: FileJson },
+  { format: "markdown", label: "Markdown", icon: FileText },
+  { format: "csv", label: "CSV", icon: Table },
+];
+
 export function ConversationView({
   sessionId,
   onContinue,
@@ -68,13 +81,28 @@ export function ConversationView({
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (sessionId) {
       fetchSessionDetail();
     }
   }, [sessionId]);
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    if (exportOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [exportOpen]);
 
   const fetchSessionDetail = async () => {
     try {
@@ -94,6 +122,35 @@ export function ConversationView({
       setError(err instanceof Error ? err.message : "Failed to load conversation");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleExport = async (fmt: ExportFormat) => {
+    setExportOpen(false);
+    try {
+      const url = `/api/fred/export?sessionId=${sessionId}&format=${fmt}`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        console.error("[ConversationView] Export failed:", res.status);
+        return;
+      }
+
+      // Trigger browser download
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+      const filename = filenameMatch?.[1] || `fred-chat-export.${fmt === "markdown" ? "md" : fmt}`;
+
+      const anchor = document.createElement("a");
+      anchor.href = URL.createObjectURL(blob);
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(anchor.href);
+    } catch (err) {
+      console.error("[ConversationView] Export error:", err);
     }
   };
 
@@ -143,16 +200,57 @@ export function ConversationView({
           )}
         </div>
 
-        {onContinue && (
-          <Button
-            size="sm"
-            onClick={onContinue}
-            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
-          >
-            Continue
-            <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Export dropdown */}
+          <div className="relative" ref={exportRef}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExportOpen(!exportOpen)}
+              className="flex items-center gap-1.5"
+            >
+              <Download className="h-4 w-4" />
+              Export
+              <ChevronDown className={cn("h-3 w-3 transition-transform", exportOpen && "rotate-180")} />
+            </Button>
+
+            <AnimatePresence>
+              {exportOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute right-0 top-full mt-1 z-20 w-40 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden"
+                >
+                  {EXPORT_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.format}
+                        onClick={() => handleExport(opt.format)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <Icon className="h-4 w-4 text-gray-400" />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {onContinue && (
+            <Button
+              size="sm"
+              onClick={onContinue}
+              className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+            >
+              Continue
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

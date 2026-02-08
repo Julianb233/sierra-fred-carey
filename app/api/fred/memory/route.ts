@@ -2,7 +2,10 @@
  * FRED Memory API Endpoint
  *
  * GET /api/fred/memory
- * Retrieve user's stored memories (recent episodes, facts, or semantic search).
+ * Retrieve user's stored memories (recent episodes, facts, decisions, or semantic search).
+ * Supports ?type=facts|episodes|decisions|search|all
+ * Supports ?search=<text> for content-based filtering
+ * Supports ?category=<cat> for fact category filtering
  *
  * POST /api/fred/memory
  * Store a new fact or episode in FRED's memory.
@@ -34,44 +37,34 @@ import { checkRateLimitForUser, applyRateLimitHeaders } from "@/lib/api/rate-lim
 // Request Schemas
 // ============================================================================
 
+const VALID_CATEGORIES = [
+  "startup_facts",
+  "user_preferences",
+  "market_knowledge",
+  "team_info",
+  "investor_info",
+  "product_details",
+  "metrics",
+  "goals",
+  "challenges",
+  "decisions",
+] as const;
+
 const getMemoryQuerySchema = z.object({
-  type: z.enum(["episodes", "facts", "decisions", "search"]).default("facts"),
-  category: z
-    .enum([
-      "startup_facts",
-      "user_preferences",
-      "market_knowledge",
-      "team_info",
-      "investor_info",
-      "product_details",
-      "metrics",
-      "goals",
-      "challenges",
-      "decisions",
-    ])
-    .optional(),
+  type: z.enum(["episodes", "facts", "decisions", "search", "all"]).default("facts"),
+  category: z.enum(VALID_CATEGORIES).optional(),
   key: z.string().optional(),
   sessionId: z.string().uuid().optional(),
   eventType: z.enum(["conversation", "decision", "outcome", "feedback"]).optional(),
   query: z.string().optional(), // For semantic search
+  search: z.string().optional(), // For text-based filtering
   limit: z.coerce.number().min(1).max(100).default(10),
 });
 
 const storeMemorySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("fact"),
-    category: z.enum([
-      "startup_facts",
-      "user_preferences",
-      "market_knowledge",
-      "team_info",
-      "investor_info",
-      "product_details",
-      "metrics",
-      "goals",
-      "challenges",
-      "decisions",
-    ]),
+    category: z.enum(VALID_CATEGORIES),
     key: z.string().min(1).max(255),
     value: z.record(z.string(), z.unknown()),
     confidence: z.number().min(0).max(1).optional(),
@@ -90,20 +83,22 @@ const storeMemorySchema = z.discriminatedUnion("type", [
 ]);
 
 const deleteMemorySchema = z.object({
-  category: z.enum([
-    "startup_facts",
-    "user_preferences",
-    "market_knowledge",
-    "team_info",
-    "investor_info",
-    "product_details",
-    "metrics",
-    "goals",
-    "challenges",
-    "decisions",
-  ]),
+  category: z.enum(VALID_CATEGORIES),
   key: z.string().min(1),
 });
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Perform a case-insensitive text search on an array of objects.
+ * Serialises each item to JSON and checks for substring match.
+ */
+function textFilter<T>(items: T[], searchText: string): T[] {
+  const q = searchText.toLowerCase();
+  return items.filter((item) => JSON.stringify(item).toLowerCase().includes(q));
+}
 
 // ============================================================================
 // Route Handlers
@@ -142,16 +137,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { type, category, key, sessionId, eventType, query, limit } = parsed.data;
+    const { type, category, key, sessionId, eventType, query, search, limit } = parsed.data;
 
     // Handle different retrieval types
     switch (type) {
       case "episodes": {
-        const episodes = await retrieveRecentEpisodes(userId, {
+        let episodes = await retrieveRecentEpisodes(userId, {
           limit,
           sessionId,
           eventType: eventType as EpisodeEventType | undefined,
         });
+        if (search) {
+          episodes = textFilter(episodes, search);
+        }
         return NextResponse.json({
           success: true,
           type: "episodes",
@@ -172,7 +170,10 @@ export async function GET(req: NextRequest) {
         }
         // If category specified, get all in that category
         if (category) {
-          const facts = await getFactsByCategory(userId, category as SemanticCategory);
+          let facts = await getFactsByCategory(userId, category as SemanticCategory);
+          if (search) {
+            facts = textFilter(facts, search);
+          }
           return NextResponse.json({
             success: true,
             type: "facts",
@@ -182,7 +183,10 @@ export async function GET(req: NextRequest) {
           });
         }
         // Otherwise get all user facts
-        const allFacts = await getAllUserFacts(userId);
+        let allFacts = await getAllUserFacts(userId);
+        if (search) {
+          allFacts = textFilter(allFacts, search);
+        }
         return NextResponse.json({
           success: true,
           type: "facts",
@@ -192,12 +196,45 @@ export async function GET(req: NextRequest) {
       }
 
       case "decisions": {
-        const decisions = await getRecentDecisions(userId, { limit });
+        let decisions = await getRecentDecisions(userId, { limit });
+        if (search) {
+          decisions = textFilter(decisions, search);
+        }
         return NextResponse.json({
           success: true,
           type: "decisions",
           data: decisions,
           count: decisions.length,
+        });
+      }
+
+      case "all": {
+        // Return facts, episodes, and decisions together
+        const [allFacts, allEpisodes, allDecisions] = await Promise.all([
+          getAllUserFacts(userId),
+          retrieveRecentEpisodes(userId, { limit: 50 }),
+          getRecentDecisions(userId, { limit: 20 }),
+        ]);
+
+        const applySearch = search
+          ? <T,>(items: T[]) => textFilter(items, search)
+          : <T,>(items: T[]) => items;
+
+        return NextResponse.json({
+          success: true,
+          type: "all",
+          facts: {
+            data: applySearch(allFacts),
+            count: applySearch(allFacts).length,
+          },
+          episodes: {
+            data: applySearch(allEpisodes),
+            count: applySearch(allEpisodes).length,
+          },
+          decisions: {
+            data: applySearch(allDecisions),
+            count: applySearch(allDecisions).length,
+          },
         });
       }
 

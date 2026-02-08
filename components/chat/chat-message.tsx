@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
 import { RedFlagBadge } from "./red-flag-badge";
+import { TtsButton } from "./tts-button";
 
 export interface Message {
   id: string;
@@ -17,9 +18,11 @@ interface ChatMessageProps {
   message: Message;
   index: number;
   risks?: RedFlag[];
+  /** When true, show the TTS playback button on assistant messages. Requires Pro+. */
+  showTts?: boolean;
 }
 
-export function ChatMessage({ message, index, risks }: ChatMessageProps) {
+export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
@@ -110,15 +113,22 @@ export function ChatMessage({ message, index, risks }: ChatMessageProps) {
           </motion.div>
         )}
 
-        {/* Timestamp */}
-        <motion.span
+        {/* Message actions: TTS + Timestamp */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2, delay: index * 0.05 + 0.2 }}
-          className="text-xs text-muted-foreground mt-1.5 px-2"
+          className="flex items-center gap-1 mt-1.5 px-2"
         >
-          {formatTimestamp(message.timestamp)}
-        </motion.span>
+          {/* TTS button -- assistant messages only, Pro+ tier */}
+          {!isUser && showTts && (
+            <TtsButton text={message.content} />
+          )}
+
+          <span className="text-xs text-muted-foreground">
+            {formatTimestamp(message.timestamp)}
+          </span>
+        </motion.div>
       </div>
     </motion.div>
   );
