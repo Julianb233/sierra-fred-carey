@@ -52,6 +52,7 @@ export const DEFAULT_PUBLIC_ROUTES: PublicRouteConfig = {
     /^\/_next\//,
     /^\/public\//,
     /\.json$|\.xml$|\.txt$/,
+    /^\/api\/share\/[a-f0-9]+$/,  // Phase 33-01: public shareable links
   ],
 };
 
