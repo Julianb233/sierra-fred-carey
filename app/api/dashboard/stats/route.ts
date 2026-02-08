@@ -7,8 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-// TODO: Switch to user-scoped client when RLS policies are configured
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 interface DashboardStats {
   ideasAnalyzed: number;
@@ -26,7 +25,7 @@ interface DashboardStats {
 export async function GET() {
   try {
     const userId = await requireAuth();
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
     // Run all count queries in parallel with graceful fallbacks
     const [
@@ -102,7 +101,7 @@ export async function GET() {
 }
 
 async function getRecentActivity(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string
 ): Promise<DashboardStats["recentActivity"]> {
   try {

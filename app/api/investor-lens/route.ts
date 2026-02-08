@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { extractJSON } from "@/lib/ai/extract-json";
 import { sql } from "@/lib/db/supabase-sql";
-// TODO: Switch to user-scoped client when RLS policies are configured
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { extractInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
@@ -812,7 +811,7 @@ export async function GET(request: NextRequest) {
     const verdict = searchParams.get("verdict") as ICVerdict | null;
 
     // Use Supabase query builder for composable filtering
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
     // Build count query
     let countQuery = supabase

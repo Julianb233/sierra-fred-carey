@@ -18,8 +18,7 @@ import {
   createTierErrorResponse,
 } from "@/lib/api/tier-middleware";
 import { sendSMS } from "@/lib/sms/client";
-// TODO: Switch to user-scoped client when RLS policies are configured
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
     // Store verification code in DB (upsert so re-sends overwrite previous codes)
-    const supabase = createServiceClient();
+    const supabase = await createClient();
     const { error: upsertError } = await supabase
       .from("phone_verifications")
       .upsert(
@@ -140,7 +139,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Look up the verification record
-    const supabase = createServiceClient();
+    const supabase = await createClient();
     const { data: verification, error: fetchError } = await supabase
       .from("phone_verifications")
       .select("*")

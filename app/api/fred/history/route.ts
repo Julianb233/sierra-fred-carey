@@ -8,8 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
-// TODO: Switch to user-scoped client when RLS policies are configured
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { checkRateLimitForUser } from "@/lib/api/rate-limit";
 
 // ============================================================================
@@ -94,7 +93,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { sessionId, limit, offset } = parsed.data;
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
     // If sessionId provided, return detailed session view
     if (sessionId) {
@@ -143,7 +142,7 @@ export async function GET(req: NextRequest) {
 // ============================================================================
 
 async function getSessionList(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   limit: number,
   offset: number
@@ -240,7 +239,7 @@ async function getSessionList(
 }
 
 async function getSessionCount(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string
 ): Promise<number> {
   const { data, error } = await supabase
@@ -259,7 +258,7 @@ async function getSessionCount(
 }
 
 async function getSessionDetail(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   sessionId: string
 ): Promise<SessionDetail> {

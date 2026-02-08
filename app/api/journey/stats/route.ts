@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-// TODO: Switch to user-scoped client when RLS policies are configured
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 // Helper to safely execute a Supabase query with a fallback
 async function safeQuery<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
     // Fetch multiple stats in parallel with individual error handling
     const [

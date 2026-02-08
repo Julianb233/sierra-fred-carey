@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db/supabase-sql";
+import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 
 /**
@@ -36,6 +36,26 @@ export interface DiagnosticStateResponse {
   updatedAt: string;
 }
 
+function mapRowToResponse(row: any): DiagnosticStateResponse {
+  return {
+    userId: row.user_id,
+    positioningClarity: row.positioning_clarity,
+    investorReadiness: row.investor_readiness,
+    positioningFrameworkIntroduced: row.positioning_framework_introduced,
+    positioningFrameworkIntroducedAt: row.positioning_framework_introduced_at,
+    positioningFrameworkTrigger: row.positioning_framework_trigger,
+    investorLensIntroduced: row.investor_lens_introduced,
+    investorLensIntroducedAt: row.investor_lens_introduced_at,
+    investorLensTrigger: row.investor_lens_trigger,
+    positioningSignals: row.positioning_signals,
+    investorSignals: row.investor_signals,
+    formalAssessmentsOffered: row.formal_assessments_offered,
+    formalAssessmentsAccepted: row.formal_assessments_accepted,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 /**
  * GET /api/diagnostic/state
  * Get current diagnostic state for authenticated user
@@ -45,56 +65,42 @@ export interface DiagnosticStateResponse {
 export async function GET() {
   try {
     const userId = await requireAuth();
+    const supabase = await createClient();
 
-    // Get or create diagnostic state for user
-    let state = await sql`
-      SELECT
-        user_id as "userId",
-        positioning_clarity as "positioningClarity",
-        investor_readiness as "investorReadiness",
-        positioning_framework_introduced as "positioningFrameworkIntroduced",
-        positioning_framework_introduced_at as "positioningFrameworkIntroducedAt",
-        positioning_framework_trigger as "positioningFrameworkTrigger",
-        investor_lens_introduced as "investorLensIntroduced",
-        investor_lens_introduced_at as "investorLensIntroducedAt",
-        investor_lens_trigger as "investorLensTrigger",
-        positioning_signals as "positioningSignals",
-        investor_signals as "investorSignals",
-        formal_assessments_offered as "formalAssessmentsOffered",
-        formal_assessments_accepted as "formalAssessmentsAccepted",
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM diagnostic_states
-      WHERE user_id = ${userId}
-    `;
+    // Get diagnostic state for user
+    const { data: existing, error: selectError } = await supabase
+      .from("diagnostic_states")
+      .select("*")
+      .eq("user_id", userId)
+      .limit(1);
+
+    if (selectError) {
+      console.error("[GET /api/diagnostic/state] Select error:", selectError);
+      throw selectError;
+    }
+
+    // If state exists, return it
+    if (existing && existing.length > 0) {
+      return NextResponse.json({
+        success: true,
+        data: mapRowToResponse(existing[0]),
+      });
+    }
 
     // If no state exists, create one
-    if (!state || state.length === 0) {
-      state = await sql`
-        INSERT INTO diagnostic_states (user_id)
-        VALUES (${userId})
-        RETURNING
-          user_id as "userId",
-          positioning_clarity as "positioningClarity",
-          investor_readiness as "investorReadiness",
-          positioning_framework_introduced as "positioningFrameworkIntroduced",
-          positioning_framework_introduced_at as "positioningFrameworkIntroducedAt",
-          positioning_framework_trigger as "positioningFrameworkTrigger",
-          investor_lens_introduced as "investorLensIntroduced",
-          investor_lens_introduced_at as "investorLensIntroducedAt",
-          investor_lens_trigger as "investorLensTrigger",
-          positioning_signals as "positioningSignals",
-          investor_signals as "investorSignals",
-          formal_assessments_offered as "formalAssessmentsOffered",
-          formal_assessments_accepted as "formalAssessmentsAccepted",
-          created_at as "createdAt",
-          updated_at as "updatedAt"
-      `;
+    const { data: inserted, error: insertError } = await supabase
+      .from("diagnostic_states")
+      .insert({ user_id: userId })
+      .select();
+
+    if (insertError) {
+      console.error("[GET /api/diagnostic/state] Insert error:", insertError);
+      throw insertError;
     }
 
     return NextResponse.json({
       success: true,
-      data: state[0] as DiagnosticStateResponse,
+      data: mapRowToResponse(inserted[0]),
     });
   } catch (error) {
     // Handle auth errors (thrown as Response)
@@ -121,6 +127,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const userId = await requireAuth();
+    const supabase = await createClient();
     const body = await request.json();
 
     const {
@@ -136,129 +143,71 @@ export async function PUT(request: NextRequest) {
       formalAssessmentsAccepted,
     } = body;
 
-    // Build update fields dynamically
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    // Helper to add update field
-    const addUpdate = (field: string, value: any) => {
-      if (value !== undefined) {
-        updates.push(`${field} = $${paramIndex}`);
-        values.push(value);
-        paramIndex++;
-      }
+    // Build update data object with only defined fields
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString(),
     };
 
-    addUpdate("positioning_clarity", positioningClarity);
-    addUpdate("investor_readiness", investorReadiness);
-    addUpdate("formal_assessments_offered", formalAssessmentsOffered);
-    addUpdate("formal_assessments_accepted", formalAssessmentsAccepted);
+    if (positioningClarity !== undefined) {
+      updateData.positioning_clarity = positioningClarity;
+    }
+    if (investorReadiness !== undefined) {
+      updateData.investor_readiness = investorReadiness;
+    }
+    if (formalAssessmentsOffered !== undefined) {
+      updateData.formal_assessments_offered = formalAssessmentsOffered;
+    }
+    if (formalAssessmentsAccepted !== undefined) {
+      updateData.formal_assessments_accepted = formalAssessmentsAccepted;
+    }
 
     // Handle framework introduction with timestamps
     if (positioningFrameworkIntroduced !== undefined) {
-      addUpdate("positioning_framework_introduced", positioningFrameworkIntroduced);
+      updateData.positioning_framework_introduced = positioningFrameworkIntroduced;
       if (positioningFrameworkIntroduced) {
-        addUpdate("positioning_framework_introduced_at", new Date().toISOString());
-        addUpdate("positioning_framework_trigger", positioningFrameworkTrigger || null);
+        updateData.positioning_framework_introduced_at = new Date().toISOString();
+        updateData.positioning_framework_trigger = positioningFrameworkTrigger || null;
       }
     }
 
     if (investorLensIntroduced !== undefined) {
-      addUpdate("investor_lens_introduced", investorLensIntroduced);
+      updateData.investor_lens_introduced = investorLensIntroduced;
       if (investorLensIntroduced) {
-        addUpdate("investor_lens_introduced_at", new Date().toISOString());
-        addUpdate("investor_lens_trigger", investorLensTrigger || null);
+        updateData.investor_lens_introduced_at = new Date().toISOString();
+        updateData.investor_lens_trigger = investorLensTrigger || null;
       }
     }
 
     // Handle signals arrays
     if (positioningSignals !== undefined) {
-      addUpdate("positioning_signals", JSON.stringify(positioningSignals));
+      updateData.positioning_signals = positioningSignals;
     }
-
     if (investorSignals !== undefined) {
-      addUpdate("investor_signals", JSON.stringify(investorSignals));
+      updateData.investor_signals = investorSignals;
     }
 
-    // Always update updated_at
-    updates.push(`updated_at = NOW()`);
-
-    if (updates.length === 1) {
-      // Only updated_at, nothing to update
+    // Only updated_at means nothing meaningful to update
+    if (Object.keys(updateData).length <= 1) {
       return NextResponse.json({
         success: true,
         message: "No fields to update",
       });
     }
 
-    // Use raw query for dynamic update
-    values.push(userId);
-    const updateQuery = `
-      UPDATE diagnostic_states
-      SET ${updates.join(", ")}
-      WHERE user_id = $${paramIndex}
-      RETURNING
-        user_id as "userId",
-        positioning_clarity as "positioningClarity",
-        investor_readiness as "investorReadiness",
-        positioning_framework_introduced as "positioningFrameworkIntroduced",
-        positioning_framework_introduced_at as "positioningFrameworkIntroducedAt",
-        positioning_framework_trigger as "positioningFrameworkTrigger",
-        investor_lens_introduced as "investorLensIntroduced",
-        investor_lens_introduced_at as "investorLensIntroducedAt",
-        investor_lens_trigger as "investorLensTrigger",
-        positioning_signals as "positioningSignals",
-        investor_signals as "investorSignals",
-        formal_assessments_offered as "formalAssessmentsOffered",
-        formal_assessments_accepted as "formalAssessmentsAccepted",
-        updated_at as "updatedAt"
-    `;
+    const { data: result, error: updateError } = await supabase
+      .from("diagnostic_states")
+      .update(updateData)
+      .eq("user_id", userId)
+      .select();
 
-    // Execute with template literal for Supabase compatibility
-    const result = await sql`
-      UPDATE diagnostic_states
-      SET
-        positioning_clarity = COALESCE(${positioningClarity}, positioning_clarity),
-        investor_readiness = COALESCE(${investorReadiness}, investor_readiness),
-        positioning_framework_introduced = COALESCE(${positioningFrameworkIntroduced}, positioning_framework_introduced),
-        positioning_framework_introduced_at = CASE
-          WHEN ${positioningFrameworkIntroduced} = true THEN NOW()
-          ELSE positioning_framework_introduced_at
-        END,
-        positioning_framework_trigger = COALESCE(${positioningFrameworkTrigger}, positioning_framework_trigger),
-        investor_lens_introduced = COALESCE(${investorLensIntroduced}, investor_lens_introduced),
-        investor_lens_introduced_at = CASE
-          WHEN ${investorLensIntroduced} = true THEN NOW()
-          ELSE investor_lens_introduced_at
-        END,
-        investor_lens_trigger = COALESCE(${investorLensTrigger}, investor_lens_trigger),
-        positioning_signals = COALESCE(${positioningSignals ? JSON.stringify(positioningSignals) : null}::jsonb, positioning_signals),
-        investor_signals = COALESCE(${investorSignals ? JSON.stringify(investorSignals) : null}::jsonb, investor_signals),
-        formal_assessments_offered = COALESCE(${formalAssessmentsOffered}, formal_assessments_offered),
-        formal_assessments_accepted = COALESCE(${formalAssessmentsAccepted}, formal_assessments_accepted),
-        updated_at = NOW()
-      WHERE user_id = ${userId}
-      RETURNING
-        user_id as "userId",
-        positioning_clarity as "positioningClarity",
-        investor_readiness as "investorReadiness",
-        positioning_framework_introduced as "positioningFrameworkIntroduced",
-        positioning_framework_introduced_at as "positioningFrameworkIntroducedAt",
-        positioning_framework_trigger as "positioningFrameworkTrigger",
-        investor_lens_introduced as "investorLensIntroduced",
-        investor_lens_introduced_at as "investorLensIntroducedAt",
-        investor_lens_trigger as "investorLensTrigger",
-        positioning_signals as "positioningSignals",
-        investor_signals as "investorSignals",
-        formal_assessments_offered as "formalAssessmentsOffered",
-        formal_assessments_accepted as "formalAssessmentsAccepted",
-        updated_at as "updatedAt"
-    `;
+    if (updateError) {
+      console.error("[PUT /api/diagnostic/state] Update error:", updateError);
+      throw updateError;
+    }
 
     return NextResponse.json({
       success: true,
-      data: result[0] as DiagnosticStateResponse,
+      data: mapRowToResponse(result[0]),
     });
   } catch (error) {
     if (error instanceof Response) {
