@@ -142,9 +142,9 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    // Check if it's an auth error (Response thrown by requireAuth)
+    // Handle auth errors (NextResponse thrown by requireAuth)
     if (error instanceof Response) {
-      return error;
+      return error as NextResponse;
     }
 
     console.error("[Reality Lens API] Error:", error);

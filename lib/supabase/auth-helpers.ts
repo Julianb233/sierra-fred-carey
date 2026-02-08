@@ -1,4 +1,5 @@
 import { createClient } from "./server";
+import { NextResponse } from "next/server";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 /**
@@ -211,16 +212,13 @@ export async function requireAuth(): Promise<string> {
   const userId = await getUserId();
 
   if (!userId) {
-    throw new Response(
-      JSON.stringify({
+    throw NextResponse.json(
+      {
         success: false,
         error: "Authentication required",
         code: "AUTH_REQUIRED",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
+      },
+      { status: 401 }
     );
   }
 

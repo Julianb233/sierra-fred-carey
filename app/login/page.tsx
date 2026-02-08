@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
@@ -87,6 +88,14 @@ function LoginContent() {
 
       <div className="relative z-10 max-w-md w-full space-y-8">
         <div className="text-center">
+          <Image
+            src="/sahara-logo.svg"
+            alt="Sahara"
+            width={180}
+            height={40}
+            className="mx-auto mb-6"
+            priority
+          />
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Sign in to continue to your dashboard
