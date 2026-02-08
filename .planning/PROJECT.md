@@ -8,22 +8,27 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v2.0 Production & Voice Parity
+## Current Milestone: v3.0 Launch Readiness
 
-**Goal:** Close all gaps between what the website promises and what's actually built, unify Fred Cary's voice across all 21 AI interaction points, achieve production readiness, and deliver a polished PWA experience for mobile users.
+**Goal:** Make Sahara production-confident for real paying users by adding observability, analytics, user-facing email, and activating the dormant integrations that are already 85-95% built.
 
 **Target outcomes:**
-- Every feature listed on the website has real logic behind it
-- All AI interactions sound like Fred Cary (not generic experts)
-- PWA installable with guided "Add to Home Screen" experience
-- Mobile-first responsive across all pages
-- Production infrastructure hardened (auth middleware, SEO, rate limiting)
-- Admin training docs section for managing FRED's communication
+- Error tracking via Sentry — visibility into every production error
+- Product analytics (Vercel Analytics or PostHog) — track activation funnels and feature adoption
+- Health/uptime endpoint for production monitoring
+- Transactional user emails via Resend (welcome, weekly digest, milestone celebrations)
+- Slack notifications activated (95% built, needs webhook)
+- SMS check-ins activated (85% built, needs Twilio creds)
+- LiveKit video coaching activated for Studio tier (90% built, needs creds)
+- UX audit pass to catch broken/rough edges before real users arrive
+
+**Previous Milestone:** v2.0 Production & Voice Parity (SHIPPED 2026-02-07)
 
 ## Requirements
 
 ### Validated
 
+**v1.0 MVP (shipped 2026-02-07)**
 - [x] FRED Cognitive Engine — XState v5 state machine, 7-factor scoring, 12 mental models, memory persistence
 - [x] FRED Chat — SSE streaming, prompt injection guard, cognitive step indicators
 - [x] Reality Lens — 5-factor AI assessment with heuristic fallback, tier rate limits
@@ -39,63 +44,61 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - [x] Security Hardening — CSP headers, admin sessions, rate limiting, input sanitization, error sanitization
 - [x] Onboarding Flow — Multi-step with stage/challenge capture
 
+**v2.0 Production & Voice Parity (shipped 2026-02-07)**
+- [x] Fred Voice Unification — All 21 AI interaction points speak as Fred Cary
+- [x] Data Consistency — Capital raised, years of experience, tier placement standardized
+- [x] Production Hardening — Root middleware, robots.txt, sitemap, CORS, Upstash rate limiting
+- [x] Red Flag Detection — Inline chat warnings + dashboard widget
+- [x] Founder Wellbeing — Burnout detection + check-in page + mindset coaching
+- [x] Founder Intake Snapshot — Enriched onboarding + auto-generated profile from conversations
+- [x] Inbox Ops Agent — In-app message hub aggregating notifications and agent outputs
+- [x] Investor Targeting & Outreach — CSV uploads, AI matching, outreach sequences, pipeline CRM
+- [x] Strategy & Execution Reframing — Dedicated UI with Fred's 9-step framework
+- [x] Memory & Compute Tiers — Tier-differentiated models, memory depth, memory gating
+- [x] PWA & Mobile Polish — Offline fallback, install flow, responsive fixes, touch targets
+- [x] Admin Training Docs — In-app admin documentation with voice rules and framework guides
+
 ### Active
 
-**Fred Voice Unification**
-- [ ] All 21 AI interaction points use FRED_CAREY_SYSTEM_PROMPT or properly import fred-brain.ts
-- [ ] Agent tool prompts (12 tools) reflect Fred's voice, not generic experts
-- [ ] SMS templates rewritten in Fred's voice
-- [ ] Unused fred-brain.ts exports activated (FRED_MEDIA, FRED_TESTIMONIALS, helpers)
-- [ ] Data consistency fixed (years of experience, capital raised across all files)
+**Observability & Monitoring**
+- [ ] Sentry error tracking integrated across API routes and client components
+- [ ] Product analytics (Vercel Analytics or PostHog) tracking page views and feature adoption
+- [ ] Health/uptime endpoint (`/api/health`) with dependency checks (DB, AI, Stripe)
+- [ ] Structured logging for production debugging
 
-**Missing Promised Features**
-- [ ] Red Flag Detection — inline chat warnings + dashboard widget
-- [ ] Founder Wellbeing — burnout detection + dedicated check-in page + mindset coaching mode
-- [ ] Founder Intake Snapshot — enriched onboarding questionnaire + auto-generated profile from conversations
-- [ ] Inbox Ops Agent — in-app message hub aggregating notifications and agent outputs
-- [ ] Investor Targeting & Outreach — partner list uploads + custom outreach sequences + pipeline tracking
-- [ ] Strategy & Execution Reframing — distinct feature with dedicated UI
-- [ ] Priority Compute — tier-differentiated model selection or queue priority for Studio
-- [ ] Deeper Memory — tier-differentiated memory depth (more context for higher tiers)
-- [ ] Persistent Memory tier gating — actually restrict memory features to Pro+
+**User Email Communications**
+- [ ] Resend integration activated with transactional email templates
+- [ ] Welcome email on signup
+- [ ] Weekly digest email (FRED insights, activity summary, red flags)
+- [ ] Milestone celebration emails (first analysis, first strategy doc, etc.)
 
-**Production Readiness**
-- [ ] Root middleware.ts for edge auth protection
-- [ ] robots.txt in correct location
-- [ ] Sitemap generation (app/sitemap.ts)
-- [ ] Image optimization audit (convert to next/image)
-- [ ] Redis/Upstash rate limiting for multi-instance scaling
-- [ ] CORS configuration for all API routes
-- [ ] Voice agent cleanup (remove "A Startup Biz" persona)
+**Integration Activation**
+- [ ] Slack notifications wired to production events (errors, signups, payments)
+- [ ] SMS check-ins fully activated with Twilio credentials
+- [ ] LiveKit video coaching sessions activated for Studio tier
+- [ ] Email notifications (Resend) wired to agent completions and alerts
 
-**PWA & Mobile**
-- [ ] Dedicated offline fallback page
-- [ ] Custom "Add to Home Screen" install prompt component
-- [ ] PWA install instructions page (iOS + Android)
-- [ ] Pricing comparison table mobile layout fix
-- [ ] Fixed-width component audit (17 files)
-- [ ] Touch target audit (44px minimum)
-
-**Admin Training Docs**
-- [ ] In-app admin-only documentation section
-- [ ] Fred's communication rules extracted into readable guides
-- [ ] Framework reference docs (9-step, Positioning, Investor Lens, Reality Lens)
-- [ ] Agent behavior documentation
-
-**Data Consistency**
-- [ ] Capital raised: standardize across all pages
-- [ ] Years of experience: 50+ everywhere (fix 30+ and 40+ references)
-- [ ] SMS tier placement: resolve Pro vs Studio conflict
-- [ ] Studio "Coming Soon" vs active feature contradiction
+**UX Audit & Polish**
+- [ ] Full app walkthrough on 375px viewport — catch broken layouts
+- [ ] Navigation audit — every nav link leads to a working page
+- [ ] Form validation audit — all forms show clear errors
+- [ ] Loading/empty states — no blank pages when data is missing
+- [ ] Blog posts migrated from hardcoded to database-backed (12 posts currently hardcoded)
 
 ### Out of Scope
 
-- Native mobile app — deferred to future milestone after web is complete
-- Real-time video coaching — LiveKit infrastructure exists but not in v2 scope
+- Native mobile app — deferred; PWA-first strategy working
 - Custom AI model training — use existing providers with prompt engineering
 - White-label/multi-tenant — single brand (Sahara) only
-- Web Push notifications — defer to v2.1
 - Real Boardy API integration — keep mock until Boardy API is available
+- Founder community / peer matching — defer to v3.1+
+- Content library / courses — defer to v3.1+
+- Service marketplace — defer to v3.1+
+- Web Push notifications — defer to v3.1+
+- FRED voice output (TTS) — defer to v3.1+
+- Co-founder collaboration / sharing — defer to v3.1+
+- E2E test suite (Playwright) — defer to v3.1+
+- Row-Level Security audit — defer to v3.1+
 
 ## Context
 
@@ -166,4 +169,4 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 | Red flags: chat + dashboard | Inline warnings during chat AND persistent dashboard widget | — Pending |
 
 ---
-*Last updated: 2026-02-07 after v2.0 milestone initialization*
+*Last updated: 2026-02-07 after v3.0 Launch Readiness milestone initialization*

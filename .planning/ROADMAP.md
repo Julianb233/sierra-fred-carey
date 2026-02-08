@@ -4,6 +4,7 @@
 
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
+- [ ] **v3.0 Scale, Activate & Engage** - Phases 24-33
 
 ## Phases
 
@@ -228,7 +229,17 @@ Plans:
 Plans:
 - [x] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
 
+### v3.0 Launch Readiness
+
+**Milestone Goal:** Make Sahara production-confident for real paying users by adding observability, analytics, user-facing email, and activating dormant integrations already 85-95% built.
+
+**Phase Numbering:** Integer phases (24+). Decimal phases (e.g., 24.1) reserved for urgent insertions.
+
+*(Phases to be created via /gsd:create-roadmap)*
+
 ## Progress
+
+### v2.0 Execution (COMPLETE)
 
 **Execution Order:**
 - Wave 1 (parallel): Phases 12, 13, 14, 15, 22
