@@ -171,15 +171,25 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
   const tableName = tableMatch[1];
   remainder = remainder.substring(tableName.length).trim();
 
-  // Step 3: Extract WHERE, ORDER BY, LIMIT clauses
+  // Step 3: Extract WHERE, ORDER BY, LIMIT, OFFSET clauses
   let whereClause: string | undefined;
   let orderBy: string | undefined;
   let limit: string | undefined;
+  let offset: string | undefined;
 
-  // Find LIMIT first (at the end)
-  const limitMatch = remainder.match(/\s+LIMIT\s+(\d+)\s*$/i);
+  // Find OFFSET first (at the very end or before LIMIT)
+  const offsetMatch = remainder.match(/\s+OFFSET\s+(\$?\d+)\s*$/i);
+  if (offsetMatch) {
+    const offsetVal = offsetMatch[1];
+    offset = offsetVal.startsWith('$') ? params[parseInt(offsetVal.substring(1)) - 1]?.toString() : offsetVal;
+    remainder = remainder.substring(0, remainder.length - offsetMatch[0].length).trim();
+  }
+
+  // Find LIMIT (at the end after removing OFFSET)
+  const limitMatch = remainder.match(/\s+LIMIT\s+(\$?\d+)\s*$/i);
   if (limitMatch) {
-    limit = limitMatch[1];
+    const limitVal = limitMatch[1];
+    limit = limitVal.startsWith('$') ? params[parseInt(limitVal.substring(1)) - 1]?.toString() : limitVal;
     remainder = remainder.substring(0, remainder.length - limitMatch[0].length).trim();
   }
 
@@ -254,21 +264,60 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
         queryBuilder = queryBuilder.not(isNotNullMatch[1], 'is', null);
         continue;
       }
+
+      // Match COALESCE-style optional filter: ($1::text IS NULL OR column = $1)
+      const coalesceFilterMatch = condition.match(/\(\s*\$(\d+)::(?:text|int|boolean)\s+IS\s+NULL\s+OR\s+(\w+)\s*=\s*\$\d+\s*\)/i);
+      if (coalesceFilterMatch) {
+        const [, pIdx, column] = coalesceFilterMatch;
+        const value = params[parseInt(pIdx) - 1];
+        if (value !== null && value !== undefined) {
+          queryBuilder = queryBuilder.eq(column, value);
+        }
+        // If value is null, this is an optional filter -- skip it (match all)
+        continue;
+      }
+
+      // Match comparison operators: column >= $1, column <= $1, column > $1, column < $1
+      const cmpMatch = condition.match(/(\w+)\s*(>=|<=|>|<)\s*\$(\d+)/);
+      if (cmpMatch) {
+        const [, column, op, pIdx] = cmpMatch;
+        const value = params[parseInt(pIdx) - 1];
+        if (op === '>=') queryBuilder = queryBuilder.gte(column, value);
+        else if (op === '<=') queryBuilder = queryBuilder.lte(column, value);
+        else if (op === '>') queryBuilder = queryBuilder.gt(column, value);
+        else if (op === '<') queryBuilder = queryBuilder.lt(column, value);
+        continue;
+      }
     }
   }
 
-  // Handle ORDER BY
+  // Handle ORDER BY - supports multiple columns, skips CASE expressions
   if (orderBy) {
-    const orderMatch = orderBy.match(/(\w+)(?:\s+(ASC|DESC))?/i);
-    if (orderMatch) {
-      const [, column, direction] = orderMatch;
-      queryBuilder = queryBuilder.order(column, { ascending: direction?.toUpperCase() !== 'DESC' });
+    // Skip CASE ... END blocks for ordering (not supported by Supabase query builder)
+    const cleanedOrderBy = orderBy.replace(/CASE\s+[\s\S]*?END/gi, '').trim();
+    // Parse comma-separated order columns
+    const orderParts = cleanedOrderBy.split(',').map(p => p.trim()).filter(Boolean);
+    for (const part of orderParts) {
+      const orderMatch = part.match(/(\w+)(?:\s+(ASC|DESC))?/i);
+      if (orderMatch) {
+        const [, column, direction] = orderMatch;
+        if (column && column !== 'NULLS') {
+          queryBuilder = queryBuilder.order(column, { ascending: direction?.toUpperCase() !== 'DESC' });
+        }
+      }
     }
   }
 
   // Handle LIMIT
   if (limit) {
     queryBuilder = queryBuilder.limit(parseInt(limit));
+  }
+
+  // Handle OFFSET via range
+  if (offset && limit) {
+    const offsetNum = parseInt(offset);
+    const limitNum = parseInt(limit);
+    queryBuilder = queryBuilder.range(offsetNum, offsetNum + limitNum - 1);
   }
 
   const { data, error } = await queryBuilder;
@@ -313,20 +362,57 @@ async function handleUpdate(supabase: any, query: string, params: any[]) {
   const data: Record<string, any> = {};
   const setParts = setClause.split(',');
   for (const part of setParts) {
+    // Match parameterized: column = $1
     const setMatch = part.trim().match(/(\w+)\s*=\s*\$(\d+)/);
     if (setMatch) {
       const [, column, pIdx] = setMatch;
       data[column] = params[parseInt(pIdx) - 1];
+      continue;
+    }
+    // Match boolean literal: column = true/false
+    const boolMatch = part.trim().match(/(\w+)\s*=\s*(true|false)/i);
+    if (boolMatch) {
+      const [, column, boolValue] = boolMatch;
+      data[column] = boolValue.toLowerCase() === 'true';
+      continue;
+    }
+    // Match COALESCE pattern: column = COALESCE($1, column) — use param if not null
+    const coalesceMatch = part.trim().match(/(\w+)\s*=\s*COALESCE\s*\(\s*\$(\d+)\s*,\s*\w+\s*\)/i);
+    if (coalesceMatch) {
+      const [, column, pIdx] = coalesceMatch;
+      const value = params[parseInt(pIdx) - 1];
+      if (value !== undefined && value !== null) {
+        data[column] = value;
+      }
+      continue;
+    }
+    // Match NOW(): column = NOW()
+    const nowMatch = part.trim().match(/(\w+)\s*=\s*NOW\(\)/i);
+    if (nowMatch) {
+      data[nowMatch[1]] = new Date().toISOString();
+      continue;
     }
   }
 
   let queryBuilder = supabase.from(tableName).update(data);
 
-  // Parse WHERE clause
-  const eqMatch = whereClause.match(/(\w+)\s*=\s*\$(\d+)/);
-  if (eqMatch) {
-    const [, column, pIdx] = eqMatch;
-    queryBuilder = queryBuilder.eq(column, params[parseInt(pIdx) - 1]);
+  // Parse WHERE clause - handle ALL conditions (AND-separated)
+  const whereConditions = whereClause.split(/\s+AND\s+/i);
+  for (const condition of whereConditions) {
+    // Match parameterized conditions: column = $1
+    const eqMatch = condition.trim().match(/(\w+)\s*=\s*\$(\d+)/);
+    if (eqMatch) {
+      const [, column, pIdx] = eqMatch;
+      queryBuilder = queryBuilder.eq(column, params[parseInt(pIdx) - 1]);
+      continue;
+    }
+    // Match boolean literal conditions: column = true/false
+    const boolMatch = condition.trim().match(/(\w+)\s*=\s*(true|false)/i);
+    if (boolMatch) {
+      const [, column, boolValue] = boolMatch;
+      queryBuilder = queryBuilder.eq(column, boolValue.toLowerCase() === 'true');
+      continue;
+    }
   }
 
   const { data: result, error } = await queryBuilder.select();
@@ -357,11 +443,21 @@ async function handleDelete(supabase: any, query: string, params: any[]) {
 
   let queryBuilder = supabase.from(tableName).delete();
 
-  // Parse WHERE clause
-  const eqMatch = whereClause.match(/(\w+)\s*=\s*\$(\d+)/);
-  if (eqMatch) {
-    const [, column, pIdx] = eqMatch;
-    queryBuilder = queryBuilder.eq(column, params[parseInt(pIdx) - 1]);
+  // Parse WHERE clause - handle ALL conditions (AND-separated)
+  const whereConditions = whereClause.split(/\s+AND\s+/i);
+  for (const condition of whereConditions) {
+    const eqMatch = condition.trim().match(/(\w+)\s*=\s*\$(\d+)/);
+    if (eqMatch) {
+      const [, column, pIdx] = eqMatch;
+      queryBuilder = queryBuilder.eq(column, params[parseInt(pIdx) - 1]);
+      continue;
+    }
+    const boolMatch = condition.trim().match(/(\w+)\s*=\s*(true|false)/i);
+    if (boolMatch) {
+      const [, column, boolValue] = boolMatch;
+      queryBuilder = queryBuilder.eq(column, boolValue.toLowerCase() === 'true');
+      continue;
+    }
   }
 
   const { data, error } = await queryBuilder.select();

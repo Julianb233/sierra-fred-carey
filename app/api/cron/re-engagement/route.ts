@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual, createHmac } from "crypto";
 import { getReEngagementCandidates } from '@/lib/email/re-engagement/detector';
 import { RE_ENGAGEMENT_MESSAGES } from '@/lib/email/re-engagement/types';
 import { ReEngagementEmail } from '@/lib/email/templates/re-engagement';
@@ -40,7 +41,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expectedToken = `Bearer ${cronSecret}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader || "").digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
+    if (!authHeader || !timingSafeEqual(hmac1, hmac2)) {
       logger.warn('[Cron: Re-engagement] Invalid authorization');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -58,7 +62,7 @@ export async function GET(request: NextRequest) {
     const candidates = await getReEngagementCandidates();
 
     let sent = 0;
-    const skipped = 0;
+    let skipped = 0;
     let failed = 0;
 
     for (const candidate of candidates) {

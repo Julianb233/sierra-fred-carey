@@ -45,9 +45,17 @@ export async function middleware(request: NextRequest) {
     // Propagate correlation ID on every response
     response.headers.set("X-Request-ID", requestId);
     return response;
-  } catch {
-    // If session refresh or auth check fails, continue without auth
-    // rather than crashing the entire middleware and returning 500
+  } catch (err) {
+    console.error("[middleware] Auth check failed:", err);
+    // For protected routes, redirect to login rather than allowing unauthenticated access
+    if (isProtectedRoute(pathname)) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.headers.set("X-Request-ID", requestId);
+      return redirectResponse;
+    }
+    // For non-protected routes, allow through
     const fallback = NextResponse.next();
     fallback.headers.set("X-Request-ID", requestId);
     return fallback;

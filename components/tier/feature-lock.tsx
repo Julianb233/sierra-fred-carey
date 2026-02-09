@@ -54,10 +54,8 @@ export function FeatureLock({
   }
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Placeholder height when locked - don't mount children to avoid side effects */}
-
-      {/* Lock overlay */}
+    <div className={cn("relative min-h-[300px]", className)}>
+      {/* Lock overlay - uses min-height to ensure visibility when children not mounted */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

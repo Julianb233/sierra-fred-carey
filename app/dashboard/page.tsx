@@ -338,7 +338,7 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  {activity.score && (
+                  {typeof activity.score === 'number' && activity.score > 0 && (
                     <div className="ml-4 text-right">
                       <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-[#ff6a1a] font-bold text-sm">
                         {activity.score}

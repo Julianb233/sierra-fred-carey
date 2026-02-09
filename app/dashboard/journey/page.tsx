@@ -113,8 +113,8 @@ export default function JourneyDashboard() {
             content: insight.content,
             importance: insight.importance,
             sourceType: insight.sourceType,
-            isPinned: !insight.isDismissed, // Convert: not dismissed = pinned
-            isDismissed: insight.isDismissed,
+            isPinned: insight.isPinned ?? insight.is_pinned ?? false,
+            isDismissed: insight.isDismissed ?? insight.is_dismissed ?? false,
             createdAt: insight.createdAt,
           })));
         }

@@ -10,18 +10,20 @@
  *   2. x-admin-key header  -> timing-safe comparison against ADMIN_SECRET_KEY
  */
 
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual, createHmac } from "crypto";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/auth/admin-sessions";
 
 /**
- * Timing-safe string comparison to prevent timing attacks.
+ * Timing-safe string comparison that doesn't leak length information.
+ * Uses HMAC to normalize both inputs to the same length before comparing.
  */
 function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
   try {
-    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+    const hmac1 = createHmac("sha256", "admin-comparison-key").update(a).digest();
+    const hmac2 = createHmac("sha256", "admin-comparison-key").update(b).digest();
+    return timingSafeEqual(hmac1, hmac2);
   } catch {
     return false;
   }

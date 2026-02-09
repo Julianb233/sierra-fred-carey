@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendWeeklyCheckins } from '@/lib/sms/scheduler';
 import { logger } from "@/lib/logger";
+import { timingSafeEqual, createHmac } from "crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expectedToken = `Bearer ${cronSecret}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader || "").digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
+    if (!authHeader || !timingSafeEqual(hmac1, hmac2)) {
       console.warn('[Cron: Weekly Check-in] Invalid or missing authorization');
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -17,6 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual, createHmac } from "crypto";
 import { getISOWeek, getISOWeekYear } from 'date-fns';
 import { createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
@@ -45,7 +46,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expectedToken = `Bearer ${cronSecret}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader || "").digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
+    if (!authHeader || !timingSafeEqual(hmac1, hmac2)) {
       logger.warn('[Cron: Weekly Digest] Invalid or missing authorization');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -1,16 +1,17 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual, createHmac } from "crypto";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { createAdminSession } from "@/lib/auth/admin-sessions";
 
 /**
- * Constant-time string comparison to prevent timing attacks
+ * Timing-safe string comparison that doesn't leak length information.
  */
 function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
   try {
-    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+    const hmac1 = createHmac("sha256", "admin-comparison-key").update(a).digest();
+    const hmac2 = createHmac("sha256", "admin-comparison-key").update(b).digest();
+    return timingSafeEqual(hmac1, hmac2);
   } catch {
     return false;
   }

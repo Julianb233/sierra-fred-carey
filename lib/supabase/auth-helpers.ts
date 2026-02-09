@@ -198,11 +198,12 @@ export async function getUserId(): Promise<string | null> {
 }
 
 /**
- * Check if user is authenticated
+ * Check if user is authenticated (server-side verified)
  */
 export async function isAuthenticated(): Promise<boolean> {
-  const session = await getSession();
-  return session !== null;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user !== null;
 }
 
 /**
