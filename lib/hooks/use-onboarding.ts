@@ -47,14 +47,104 @@ async function syncCompletionToDb(state: OnboardingState) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase
+  // Build update object with all collected startup info
+  const updateData: Record<string, any> = {
+    onboarding_completed: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Add startup info fields that exist in profiles table
+  if (state.startupInfo.name) updateData.name = state.startupInfo.name;
+  if (state.startupInfo.stage) updateData.stage = state.startupInfo.stage;
+  if (state.startupInfo.industry) updateData.industry = state.startupInfo.industry;
+
+  // Store mainChallenge in challenges JSONB array
+  if (state.startupInfo.mainChallenge) {
+    updateData.challenges = [state.startupInfo.mainChallenge];
+  }
+
+  // Enrichment fields (from migration 037)
+  if (state.startupInfo.revenueRange) updateData.revenue_range = state.startupInfo.revenueRange;
+  if (state.startupInfo.teamSize !== undefined) updateData.team_size = state.startupInfo.teamSize;
+  if (state.startupInfo.fundingHistory) updateData.funding_history = state.startupInfo.fundingHistory;
+
+  // Track enrichment metadata
+  if (updateData.industry || updateData.revenue_range || updateData.team_size || updateData.funding_history) {
+    updateData.enriched_at = new Date().toISOString();
+    updateData.enrichment_source = "onboarding";
+  }
+
+  const { error } = await supabase
     .from("profiles")
-    .update({
-      onboarding_completed: true,
-      stage: state.startupInfo.stage || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq("id", user.id);
+
+  if (error) {
+    console.error("[useOnboarding] Failed to sync to database:", error);
+  } else {
+    console.log("[useOnboarding] Successfully synced onboarding data to database");
+  }
+
+  // Populate Fred's semantic memory with onboarding facts
+  await populateFredMemory(state.startupInfo);
+}
+
+/** Store onboarding facts in Fred's semantic memory via API */
+async function populateFredMemory(info: StartupInfo) {
+  const facts: Array<{ category: string; key: string; value: Record<string, unknown> }> = [];
+
+  if (info.name) {
+    facts.push({ category: "startup_facts", key: "company_name", value: { name: info.name } });
+  }
+  if (info.stage) {
+    facts.push({ category: "startup_facts", key: "funding_stage", value: { stage: info.stage } });
+  }
+  if (info.industry) {
+    facts.push({ category: "startup_facts", key: "industry", value: { industry: info.industry } });
+  }
+  if (info.description) {
+    facts.push({ category: "startup_facts", key: "description", value: { description: info.description } });
+  }
+  if (info.mainChallenge) {
+    facts.push({ category: "challenges", key: "primary_challenge", value: { description: info.mainChallenge } });
+  }
+  if (info.goals && info.goals.length > 0) {
+    facts.push({ category: "goals", key: "onboarding_goals", value: { goals: info.goals } });
+  }
+  if (info.revenueRange) {
+    facts.push({ category: "metrics", key: "revenue_range", value: { range: info.revenueRange } });
+  }
+  if (info.teamSize !== undefined) {
+    facts.push({ category: "team_info", key: "team_size", value: { size: info.teamSize } });
+  }
+  if (info.fundingHistory) {
+    facts.push({ category: "startup_facts", key: "funding_history", value: { history: info.fundingHistory } });
+  }
+
+  // Fire all fact storage requests in parallel
+  const results = await Promise.allSettled(
+    facts.map((fact) =>
+      fetch("/api/fred/memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "fact",
+          category: fact.category,
+          key: fact.key,
+          value: fact.value,
+          confidence: 1.0,
+          source: "onboarding",
+        }),
+      })
+    )
+  );
+
+  const failed = results.filter((r) => r.status === "rejected");
+  if (failed.length > 0) {
+    console.error(`[useOnboarding] Failed to store ${failed.length}/${facts.length} facts in Fred memory`);
+  } else if (facts.length > 0) {
+    console.log(`[useOnboarding] Stored ${facts.length} facts in Fred's semantic memory`);
+  }
 }
 
 export function useOnboarding() {

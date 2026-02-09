@@ -3,7 +3,7 @@ import { sql } from "@/lib/db/supabase-sql";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { extractJSON } from "@/lib/ai/extract-json";
 import { requireAuth } from "@/lib/auth";
-import { extractInsights } from "@/lib/ai/insight-extractor";
+import { extractAndSaveInsights } from "@/lib/ai/insight-extractor";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { logger } from "@/lib/logger";
@@ -488,16 +488,19 @@ export async function POST(request: NextRequest) {
       savedAssessment.id
     );
 
-    // Extract insights from the analysis (async, non-blocking)
-    extractInsights(
-      userId,
-      "positioning_assessment",
-      savedAssessment.id,
-      aiResponse,
-      `Positioning assessment for: ${companyDescription.substring(0, 100)}`
-    ).catch((err) =>
-      console.error("[Positioning] Insight extraction failed:", err)
-    );
+    // Extract insights in background (but await to ensure completion)
+    try {
+      await extractAndSaveInsights(
+        userId,
+        "positioning_assessment",
+        savedAssessment.id,
+        aiResponse,
+        `Positioning assessment for: ${companyDescription.substring(0, 100)}`
+      );
+    } catch (err) {
+      console.error("[Positioning] Failed to extract insights:", err);
+      // Don't fail the main request if insight extraction fails
+    }
 
     // Log journey event
     try {

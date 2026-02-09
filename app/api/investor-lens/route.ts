@@ -3,7 +3,7 @@ import { generateTrackedResponse } from "@/lib/ai/client";
 import { extractJSON } from "@/lib/ai/extract-json";
 import { sql } from "@/lib/db/supabase-sql";
 import { createClient } from "@/lib/supabase/server";
-import { extractInsights } from "@/lib/ai/insight-extractor";
+import { extractAndSaveInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -718,14 +718,19 @@ export async function POST(request: NextRequest) {
 
     logger.log("[Investor Lens] Evaluation saved with ID:", savedEvaluation.id);
 
-    // Extract insights (async, non-blocking)
-    extractInsights(
-      userId,
-      "investor_lens",
-      savedEvaluation.id,
-      aiResponse,
-      `Investor Lens IC evaluation - Verdict: ${evaluation.icVerdict}, Stage: ${fundingStage}`
-    ).catch((err) => console.error("[Investor Lens] Insight extraction failed:", err));
+    // Extract insights in background (but await to ensure completion)
+    try {
+      await extractAndSaveInsights(
+        userId,
+        "investor_lens",
+        savedEvaluation.id,
+        aiResponse,
+        `Investor Lens IC evaluation - Verdict: ${evaluation.icVerdict}, Stage: ${fundingStage}`
+      );
+    } catch (err) {
+      console.error("[Investor Lens] Failed to extract insights:", err);
+      // Don't fail the main request if insight extraction fails
+    }
 
     // Log journey event
     try {

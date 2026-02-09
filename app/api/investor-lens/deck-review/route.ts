@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse } from "@/lib/ai/client";
 import { sql } from "@/lib/db/supabase-sql";
 import { createClient } from "@/lib/supabase/server";
-import { extractInsights } from "@/lib/ai/insight-extractor";
+import { extractAndSaveInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -312,14 +312,19 @@ Provide a thorough IC-perspective review with slide-by-slide analysis, objection
       `;
     }
 
-    // Extract insights (async, non-blocking)
-    extractInsights(
-      userId,
-      "deck_review",
-      savedReview.id,
-      trackedResult.content,
-      `Deck review - Score: ${review.overallScore}, Type: ${deckType}`
-    ).catch((err) => console.error("[Deck Review] Insight extraction failed:", err));
+    // Extract insights in background (but await to ensure completion)
+    try {
+      await extractAndSaveInsights(
+        userId,
+        "deck_review",
+        savedReview.id,
+        trackedResult.content,
+        `Deck review - Score: ${review.overallScore}, Type: ${deckType}`
+      );
+    } catch (err) {
+      console.error("[Deck Review] Failed to extract insights:", err);
+      // Don't fail the main request if insight extraction fails
+    }
 
     // Log journey event
     try {
