@@ -100,14 +100,14 @@ export function useOnboardingChecklist(): ChecklistState {
       id: "first-chat",
       label: "Have your first chat with FRED",
       completed: statsLoaded ? (stats?.ideasAnalyzed ?? 0) > 0 : false,
-      href: "/dashboard",
+      href: "/chat",
       cta: "Chat now",
     },
     {
       id: "reality-lens",
       label: "Run a Reality Lens analysis",
       completed: false, // Will be checked via strategy_documents
-      href: "/dashboard/strategy",
+      href: "/dashboard/reality-lens",
       cta: "Analyze",
     },
     {
