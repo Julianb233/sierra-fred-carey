@@ -92,7 +92,7 @@ export function useOnboardingChecklist(): ChecklistState {
     {
       id: "complete-onboarding",
       label: "Complete your onboarding",
-      completed: statsLoaded ? (stats?.checkInsCompleted ?? 0) >= 0 && statsLoaded : false,
+      completed: true, // Users complete onboarding during signup (stage + challenge + account)
       href: "/onboarding",
       cta: "Start",
     },

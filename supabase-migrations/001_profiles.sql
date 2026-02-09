@@ -39,16 +39,45 @@ CREATE POLICY "Service role full access"
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
 
 -- Function to handle new user creation
+-- Updated to include all columns from migrations 032 and 037
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, name, stage, challenges)
+  INSERT INTO profiles (
+    id,
+    email,
+    name,
+    stage,
+    challenges,
+    teammate_emails,
+    tier,
+    onboarding_completed,
+    industry,
+    revenue_range,
+    team_size,
+    funding_history,
+    enriched_at,
+    enrichment_source,
+    created_at,
+    updated_at
+  )
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'name', NULL),
     COALESCE(NEW.raw_user_meta_data->>'stage', NULL),
-    COALESCE(NEW.raw_user_meta_data->'challenges', '[]'::jsonb)
+    COALESCE(NEW.raw_user_meta_data->'challenges', '[]'::jsonb),
+    '[]'::jsonb,
+    0,
+    false,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NOW(),
+    NOW()
   );
   RETURN NEW;
 END;

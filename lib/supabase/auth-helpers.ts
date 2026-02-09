@@ -1,4 +1,4 @@
-import { createClient } from "./server";
+import { createClient, createServiceClient } from "./server";
 import { NextResponse } from "next/server";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
@@ -85,12 +85,27 @@ export async function supabaseSignUp(
     }
 
     // Create or update user profile in profiles table
-    await createOrUpdateProfile(data.user.id, {
-      email: email.toLowerCase(),
-      name: metadata?.name || null,
-      stage: metadata?.stage || null,
-      challenges: metadata?.challenges || [],
-    });
+    try {
+      await createOrUpdateProfile(data.user.id, {
+        email: email.toLowerCase(),
+        name: metadata?.name || null,
+        stage: metadata?.stage || null,
+        challenges: metadata?.challenges || [],
+      });
+    } catch (profileError) {
+      console.error("[supabase-auth] Profile creation failed, cleaning up auth user:", profileError);
+      // Clean up orphaned auth user if profile creation fails (requires service role)
+      try {
+        const supabaseAdmin = createServiceClient();
+        await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+      } catch (cleanupError) {
+        console.error("[supabase-auth] Failed to cleanup orphaned user:", cleanupError);
+      }
+      return {
+        success: false,
+        error: profileError instanceof Error ? profileError.message : "Failed to create user profile"
+      };
+    }
 
     return {
       success: true,
@@ -228,6 +243,9 @@ export async function requireAuth(): Promise<string> {
 
 /**
  * Create or update user profile in profiles table
+ *
+ * NOTE: This now includes ALL profile table columns to match database schema
+ * (migrations 032 and 037 added teammate_emails, tier, onboarding_completed, enrichment fields)
  */
 async function createOrUpdateProfile(
   userId: string,
@@ -238,26 +256,35 @@ async function createOrUpdateProfile(
     challenges?: string[];
   }
 ): Promise<void> {
-  try {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { error } = await supabase.from("profiles").upsert(
-      {
-        id: userId,
-        email: profile.email,
-        name: profile.name,
-        stage: profile.stage,
-        challenges: profile.challenges || [],
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" }
-    );
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      email: profile.email,
+      name: profile.name,
+      stage: profile.stage,
+      challenges: profile.challenges || [],
+      // Include all columns added by migrations to prevent incomplete profiles
+      teammate_emails: [],
+      tier: 0, // Default to FREE tier
+      onboarding_completed: false,
+      // Enrichment fields default to NULL (optional)
+      industry: null,
+      revenue_range: null,
+      team_size: null,
+      funding_history: null,
+      enriched_at: null,
+      enrichment_source: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" }
+  );
 
-    if (error) {
-      console.error("[supabase-auth] Profile upsert error:", error);
-    }
-  } catch (error) {
-    console.error("[supabase-auth] Create/update profile error:", error);
+  if (error) {
+    console.error("[supabase-auth] Profile upsert error:", error);
+    // Throw error instead of silently catching - caller needs to know if profile creation failed
+    throw new Error(`Failed to create profile: ${error.message}`);
   }
 }
 

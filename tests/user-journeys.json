@@ -1,0 +1,1884 @@
+{
+  "metadata": {
+    "platform": "Sahara (joinsahara.com)",
+    "framework": "Next.js 16 + Supabase Auth + Stripe Billing",
+    "aiEngine": "FRED (Fred Cary Decision OS)",
+    "tiers": ["Free (tier 0)", "Pro/Fundraising (tier 1, $99/mo)", "Studio/Venture Studio (tier 2, $249/mo)"],
+    "generatedAt": "2026-02-09T00:00:00.000Z",
+    "version": "1.0.0",
+    "totalJourneys": 10,
+    "totalCheckpoints": 92
+  },
+  "journeys": [
+    {
+      "id": "journey-001",
+      "name": "New User Signup Flow",
+      "description": "End-to-end test of user registration through the 3-click get-started onboarding flow (stage selection, challenge selection, email/password signup) to dashboard landing with welcome modal",
+      "priority": "critical",
+      "estimatedDuration": "60s",
+      "preconditions": [
+        "No existing account with test email",
+        "Valid email address available",
+        "Supabase auth service is running",
+        "/api/onboard endpoint is operational"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-001-01",
+          "step": 1,
+          "action": "Navigate to joinsahara.com landing page",
+          "type": "ui",
+          "expected": {
+            "pageLoads": true,
+            "url": "/",
+            "elements": ["navbar", "Hero component", "Features section", "Stats section", "Testimonials", "Pricing section", "FAQ", "Footer"],
+            "httpStatus": 200,
+            "dynamicImports": ["Hero", "Features", "Stats", "Testimonials", "Pricing", "Faq", "Footer", "ScrollProgress"]
+          },
+          "failCriteria": "Page returns 500 or blank screen, or critical sections fail to render due to dynamic import failure",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-001-02",
+          "step": 2,
+          "action": "Click 'Get Started' CTA button in hero section or navbar",
+          "type": "ui",
+          "expected": {
+            "navigatesTo": "/get-started",
+            "pageLoads": true,
+            "elements": ["'3 clicks to get started' badge with Sparkles icon", "Step 1 heading 'What stage are you at?'", "4 stage option cards (Ideation, Pre-seed, Seed, Series A+)", "Progress dots (3 dots, first active)"],
+            "animations": "Framer Motion fade-in with y-axis slide"
+          },
+          "failCriteria": "Navigation fails, /get-started returns 404, or stage selection cards do not render",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-001-03",
+          "step": 3,
+          "action": "Click 1: Select a startup stage (e.g., 'Ideation')",
+          "type": "frontend",
+          "expected": {
+            "stateChanges": {
+              "selectedStage": "idea",
+              "currentStep": "auto-advances to 2 after 300ms delay"
+            },
+            "elements": ["Selected card shows orange border and CheckCircle2 icon", "Step 2 renders after transition: 'What's your #1 challenge?'", "6 challenge cards in 2x3 or 3x2 grid", "Back button appears"],
+            "animations": "AnimatePresence mode=wait exit animation followed by entry"
+          },
+          "failCriteria": "Stage selection does not highlight, auto-advance fails, or Step 2 does not render",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-001-04",
+          "step": 4,
+          "action": "Click 2: Select a challenge (e.g., 'Product-Market Fit')",
+          "type": "frontend",
+          "expected": {
+            "stateChanges": {
+              "selectedChallenge": "product-market-fit",
+              "currentStep": "auto-advances to 3 after 300ms delay"
+            },
+            "elements": ["Step 3 renders: 'Let's get started!'", "Summary chips showing selected stage and challenge", "Email input field with Mail icon (autofocused)", "Password input field with Lock icon", "Password requirement indicators (8+ chars, uppercase, number)", "'Start Free Trial' button", "'No credit card required' text", "Back button"]
+          },
+          "failCriteria": "Challenge selection does not register, auto-advance to Step 3 fails, or form inputs not rendered",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-001-05",
+          "step": 5,
+          "action": "Enter email and valid password (8+ chars, 1 uppercase, 1 number)",
+          "type": "frontend",
+          "expected": {
+            "validation": {
+              "emailFormat": "regex /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/",
+              "passwordMinLength": 8,
+              "passwordUppercase": "at least one uppercase letter",
+              "passwordNumber": "at least one digit"
+            },
+            "elements": ["Password requirement indicators turn green as criteria met", "Error message clears on valid input"],
+            "buttonState": "'Start Free Trial' button enabled when both fields valid"
+          },
+          "failCriteria": "Validation does not trigger inline feedback, or button remains disabled despite valid input",
+          "severity": "major"
+        },
+        {
+          "id": "CP-001-06",
+          "step": 6,
+          "action": "Click 3: Submit 'Start Free Trial' button",
+          "type": "integration",
+          "expected": {
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/onboard",
+              "body": {
+                "email": "test email (lowercased, trimmed)",
+                "password": "user password",
+                "stage": "selected stage id",
+                "challenges": ["selected challenge id"],
+                "isQuickOnboard": true
+              }
+            },
+            "uiDuringRequest": ["Button shows Loader2 spinner with 'Creating...' text", "Button is disabled"],
+            "onSuccess": {
+              "analyticsEvent": "AUTH.SIGNUP with method: email",
+              "stateChange": "currentStep transitions to 'wink'"
+            }
+          },
+          "failCriteria": "API returns non-200, error message displays, or signup fails silently",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-001-07",
+          "step": 7,
+          "action": "Observe celebration 'wink' screen",
+          "type": "ui",
+          "expected": {
+            "elements": ["PartyPopper icon in orange gradient circle", "'You're in!' heading", "'Welcome to Sahara' subtext", "Loader2 spinner with 'Preparing your dashboard...' text"],
+            "effects": ["canvas-confetti fires: initial burst (100 particles) + side bursts (50 each) at 200ms"],
+            "autoRedirect": {
+              "destination": "/dashboard?welcome=true",
+              "delay": "2500ms"
+            }
+          },
+          "failCriteria": "Wink screen does not render, confetti fails, or redirect does not fire after 2.5 seconds",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-001-08",
+          "step": 8,
+          "action": "Land on dashboard with welcome modal",
+          "type": "integration",
+          "expected": {
+            "url": "/dashboard",
+            "queryParamProcessed": "welcome=true triggers WelcomeModal, URL cleaned to /dashboard",
+            "elements": ["Welcome modal (WelcomeModal component) is open", "Dashboard header: 'Welcome back, {name}!'", "Stats grid (4 cards: Ideas Analyzed, Pitch Decks, Check-ins, Active Agents)", "Quick Actions grid", "OnboardingChecklist component", "RedFlagsWidget component"],
+            "apiCalls": ["/api/dashboard/stats fetched on mount"],
+            "authState": "Supabase auth.getUser() returns valid user"
+          },
+          "failCriteria": "Dashboard does not load, welcome modal does not appear, or user is redirected back to /login",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-001-09",
+          "step": 9,
+          "action": "Close welcome modal and verify dashboard is interactive",
+          "type": "frontend",
+          "expected": {
+            "onModalClose": "localStorage sets 'sahara_welcome_completed' = 'true'",
+            "dashboardInteractive": true,
+            "tierDisplayed": "Free (tier 0)",
+            "lockedFeatures": ["Pitch Decks Reviewed shows '-' with lock icon", "Check-ins Completed shows '-' with lock icon", "Active Agents shows '-' with lock icon"],
+            "upgradeCTA": "Upgrade CTA card visible at bottom for tier 0 users"
+          },
+          "failCriteria": "Modal close does not persist to localStorage, or dashboard remains in loading state",
+          "severity": "major"
+        }
+      ],
+      "successCriteria": "User successfully creates account via 3-click onboarding, sees celebration confetti, auto-redirects to dashboard with welcome modal displayed, and can interact with Free tier dashboard",
+      "failurePoints": [
+        {
+          "id": "FP-001-01",
+          "checkpoint": "CP-001-06",
+          "description": "Supabase auth signup fails via /api/onboard",
+          "impact": "User cannot create account, blocked from entire platform",
+          "rootCause": "Missing or invalid SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY env vars, Supabase project not configured, or email already registered",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-001-02",
+          "checkpoint": "CP-001-08",
+          "description": "Dashboard fails to load after successful signup",
+          "impact": "User has account but cannot access platform",
+          "rootCause": "Middleware auth check fails (updateSession returns no user), profiles table missing in Supabase, or TierProvider context not initialized",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-001-03",
+          "checkpoint": "CP-001-02",
+          "description": "Get-started page fails to render",
+          "impact": "Users cannot begin onboarding",
+          "rootCause": "Client-side hydration error with framer-motion, canvas-confetti import failure, or Next.js routing misconfiguration",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-001-04",
+          "checkpoint": "CP-001-05",
+          "description": "Password validation rejects valid passwords",
+          "impact": "Users frustrated during signup, increased drop-off",
+          "rootCause": "Regex mismatch between frontend validation and backend requirements",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "journey-002",
+      "name": "Returning User Login Flow",
+      "description": "Test existing user login through /login page with Supabase auth, including redirect handling, safe redirect validation, and dashboard access with tier-appropriate content",
+      "priority": "critical",
+      "estimatedDuration": "30s",
+      "preconditions": [
+        "User has existing account in Supabase",
+        "Valid email and password credentials",
+        "Supabase auth service is running",
+        "/api/auth/login endpoint is operational"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-002-01",
+          "step": 1,
+          "action": "Navigate to /login page",
+          "type": "ui",
+          "expected": {
+            "url": "/login",
+            "pageLoads": true,
+            "elements": ["Sahara logo (sahara-logo.svg, 180x40)", "'Welcome back' heading", "'Sign in to continue to your dashboard' subtext", "Email input with Mail icon and label", "Password input with Lock icon and label", "'Sign in' button with ArrowRight icon", "'Don't have an account? Get started free' link to /get-started"],
+            "suspenseFallback": "Loader2 spinner centered on screen while LoginContent loads"
+          },
+          "failCriteria": "Login page returns 404 or 500, form fields not rendered, or Suspense boundary shows error",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-002-02",
+          "step": 2,
+          "action": "Enter valid email and password in login form",
+          "type": "frontend",
+          "expected": {
+            "inputBehavior": {
+              "emailField": "type=email, autoComplete=email, required",
+              "passwordField": "type=password, autoComplete=current-password, required"
+            },
+            "submitButton": "Enabled when form is valid (HTML5 required validation)"
+          },
+          "failCriteria": "Input fields do not accept text, autocomplete attributes missing, or form submission blocked",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-002-03",
+          "step": 3,
+          "action": "Submit login form",
+          "type": "integration",
+          "expected": {
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/auth/login",
+              "body": { "email": "user email", "password": "user password" }
+            },
+            "uiDuringRequest": ["Button shows Loader2 spinner with 'Signing in...' text", "Button is disabled"],
+            "onSuccess": {
+              "analyticsEvent": "AUTH.LOGIN with method: email",
+              "redirect": "/dashboard (default) or safe redirect path from query param",
+              "routerAction": "router.push(redirect) followed by router.refresh()"
+            }
+          },
+          "failCriteria": "API returns error, login form shows error banner, or redirect fails",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-002-04",
+          "step": 4,
+          "action": "Verify safe redirect validation for ?redirect= parameter",
+          "type": "frontend",
+          "expected": {
+            "safeRedirects": {
+              "allowed": ["/dashboard", "/dashboard/settings", "/onboarding", "/pricing", "/settings"],
+              "blocked": ["//evil.com", "/\\evil.com", "https://evil.com", "/evil:exploit", "/chat (not in safePrefixes)"]
+            },
+            "defaultRedirect": "/dashboard when no redirect param or unsafe redirect detected"
+          },
+          "failCriteria": "Open redirect vulnerability allows navigation to external domain",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-002-05",
+          "step": 5,
+          "action": "Land on dashboard with authenticated session",
+          "type": "integration",
+          "expected": {
+            "url": "/dashboard",
+            "authCheck": "supabase.auth.getUser() returns valid user",
+            "profileFetch": "profiles table queried for user name",
+            "tierContext": "useTier() returns current tier from TierProvider",
+            "elements": ["Personalized greeting: 'Welcome back, {name}!'", "Stats grid with tier-appropriate data", "Quick Actions grid with tier-gated cards"]
+          },
+          "failCriteria": "Dashboard redirects to /login (auth session not established), or profile data not loaded",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-002-06",
+          "step": 6,
+          "action": "Verify invalid credentials error handling",
+          "type": "integration",
+          "expected": {
+            "onInvalidCredentials": {
+              "apiResponse": "400 or 401 with error message",
+              "uiError": "Red error banner displays above form with error message text",
+              "formState": "Email and password fields retain values, user can retry"
+            },
+            "errorDisplay": "bg-red-50 border-red-200 text-red-600 styled error div"
+          },
+          "failCriteria": "Invalid credentials silently fail without user feedback, or form clears user input on error",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-002-07",
+          "step": 7,
+          "action": "Verify middleware redirects unauthenticated users to login",
+          "type": "backend",
+          "expected": {
+            "protectedRoutes": ["/dashboard", "/agents", "/documents", "/settings", "/profile", "/chat"],
+            "middlewareBehavior": "isProtectedRoute() returns true, redirect to /login?redirect={originalPath}",
+            "correlationId": "X-Request-ID header set on redirect response"
+          },
+          "failCriteria": "Unauthenticated users can access protected routes, or redirect does not preserve original path",
+          "severity": "blocker"
+        }
+      ],
+      "successCriteria": "Returning user logs in with valid credentials, is redirected to dashboard with authenticated session, and sees tier-appropriate content",
+      "failurePoints": [
+        {
+          "id": "FP-002-01",
+          "checkpoint": "CP-002-03",
+          "description": "Supabase auth login API returns error",
+          "impact": "User cannot access their account",
+          "rootCause": "Supabase service down, incorrect credentials, or /api/auth/login route handler error",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-002-02",
+          "checkpoint": "CP-002-04",
+          "description": "Open redirect vulnerability in login redirect",
+          "impact": "Security risk: attacker can redirect users to phishing site after login",
+          "rootCause": "getSafeRedirect() validation bypass or new unsafe prefix not blocked",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-002-03",
+          "checkpoint": "CP-002-05",
+          "description": "Session cookie not set after successful login",
+          "impact": "User logs in but is immediately redirected back to /login on next navigation",
+          "rootCause": "updateSession middleware fails to refresh Supabase auth cookie, or cookie SameSite/Secure attributes misconfigured",
+          "severity": "blocker"
+        }
+      ]
+    },
+    {
+      "id": "journey-003",
+      "name": "Reality Lens Analysis",
+      "description": "Navigate to the Startup Reality Lens tool, submit a startup idea description, and receive AI-powered analysis across 5 dimensions (Feasibility, Economics, Demand, Distribution, Timing) with overall score, verdict, executive summary, strengths, risks, and next steps",
+      "priority": "critical",
+      "estimatedDuration": "45s",
+      "preconditions": [
+        "User is authenticated and on dashboard",
+        "FRED AI API (/api/fred/reality-lens) is operational",
+        "AI model (OpenAI/Anthropic) API keys configured",
+        "Feature available on Free tier (tier 0)"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-003-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/reality-lens from dashboard Quick Actions or sidebar",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/reality-lens",
+            "elements": ["'Startup Reality Lens' heading", "'Free' badge next to heading", "Description text about 5 critical dimensions", "Idea textarea with placeholder text", "Stage dropdown (Idea, MVP, Launched, Scaling)", "Target Market text input", "'Analyze Idea' button with RocketIcon (disabled until idea entered)"],
+            "layout": "max-w-4xl centered content area"
+          },
+          "failCriteria": "Page returns 404, form elements not rendered, or page shows auth redirect despite valid session",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-003-02",
+          "step": 2,
+          "action": "Enter startup idea description in textarea",
+          "type": "frontend",
+          "expected": {
+            "textareaAcceptsInput": true,
+            "buttonState": "'Analyze Idea' button becomes enabled when idea text is non-empty",
+            "optionalFields": "Stage dropdown and target market input remain optional"
+          },
+          "failCriteria": "Textarea does not accept input, or button remains disabled after entering text",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-003-03",
+          "step": 3,
+          "action": "Optionally select stage and enter target market",
+          "type": "frontend",
+          "expected": {
+            "stageDropdown": "Select component with 4 options (idea, mvp, launched, scaling)",
+            "marketInput": "Free-text input field",
+            "stateUpdates": "stage and market state variables updated"
+          },
+          "failCriteria": "Stage dropdown does not open or does not register selection",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-003-04",
+          "step": 4,
+          "action": "Click 'Analyze Idea' button to submit",
+          "type": "integration",
+          "expected": {
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/fred/reality-lens",
+              "body": {
+                "idea": "user-entered idea text",
+                "context": {
+                  "stage": "selected stage or undefined",
+                  "targetMarket": "entered market or undefined"
+                }
+              }
+            },
+            "uiDuringRequest": ["Button shows gear spinner with 'Analyzing...' text", "Button is disabled", "Loading skeleton appears: 1 score card + 5 dimension cards with pulse animation"],
+            "analyticsEvent": "FEATURES.REALITY_LENS_USED on success"
+          },
+          "failCriteria": "API call not initiated, loading state not shown, or request hangs indefinitely",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-003-05",
+          "step": 5,
+          "action": "Receive and display overall score and verdict",
+          "type": "integration",
+          "expected": {
+            "responseStructure": {
+              "overallScore": "number 0-100",
+              "verdict": "one of: strong, promising, needs-work, reconsider",
+              "verdictDescription": "string description",
+              "executiveSummary": "string"
+            },
+            "elements": ["'Overall Reality Score' label", "Large score number with color coding (green >= 75, amber >= 50, red < 50)", "Verdict badge with appropriate styling", "Executive Summary card with blue gradient background and InfoCircledIcon"]
+          },
+          "failCriteria": "Score or verdict not displayed, or score shows NaN/undefined",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-003-06",
+          "step": 6,
+          "action": "View factor analysis breakdown (5 dimensions)",
+          "type": "ui",
+          "expected": {
+            "factorCards": ["Feasibility", "Economics", "Demand", "Distribution", "Timing"],
+            "perFactor": {
+              "elements": ["Factor name heading", "Score badge (X/100) with color coding", "Confidence badge (High/Medium/Low)", "Description of what factor measures", "Progress bar reflecting score", "Summary text in gray background box", "Strengths bullet list (green dots)", "Weaknesses bullet list (red dots)"]
+            }
+          },
+          "failCriteria": "Not all 5 factors rendered, or factor data shows empty/undefined values",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-003-07",
+          "step": 7,
+          "action": "View Top Strengths and Critical Risks side by side",
+          "type": "ui",
+          "expected": {
+            "layout": "2-column grid on desktop, stacked on mobile",
+            "strengthsCard": "CheckCircledIcon with green, bulleted list of topStrengths array",
+            "risksCard": "CrossCircledIcon with red, bulleted list of criticalRisks array"
+          },
+          "failCriteria": "Strengths or risks cards empty when API returned data, or layout broken on mobile",
+          "severity": "major"
+        },
+        {
+          "id": "CP-003-08",
+          "step": 8,
+          "action": "View Recommended Next Steps",
+          "type": "ui",
+          "expected": {
+            "elements": ["Orange gradient card with InfoCircledIcon", "'Recommended Next Steps' heading", "Numbered list of nextSteps array items"],
+            "styling": "bg-gradient-to-br from-[#ff6a1a]/10 to-orange-400/10 border"
+          },
+          "failCriteria": "Next steps card not visible or shows empty list",
+          "severity": "major"
+        },
+        {
+          "id": "CP-003-09",
+          "step": 9,
+          "action": "Verify error handling when AI analysis fails",
+          "type": "integration",
+          "expected": {
+            "onApiError": {
+              "errorDisplay": "Red alert box with ExclamationTriangleIcon, 'Analysis Error' title, and error message",
+              "formState": "Form remains filled, user can retry",
+              "analyzingState": "Set to false, button re-enabled"
+            },
+            "errorParsing": "Handles both string errors and {code, message} object errors from FRED API"
+          },
+          "failCriteria": "Error silently swallowed, or unhandled promise rejection crashes page",
+          "severity": "critical"
+        }
+      ],
+      "successCriteria": "User submits startup idea, receives comprehensive AI analysis with overall score, 5-dimension breakdown, strengths, risks, and actionable next steps",
+      "failurePoints": [
+        {
+          "id": "FP-003-01",
+          "checkpoint": "CP-003-04",
+          "description": "FRED Reality Lens API returns 500 or timeout",
+          "impact": "User cannot get idea analysis, core value proposition fails",
+          "rootCause": "AI model API key expired/invalid, OpenAI/Anthropic rate limit hit, or /api/fred/reality-lens route handler throws",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-003-02",
+          "checkpoint": "CP-003-05",
+          "description": "AI response does not match expected RealityLensData schema",
+          "impact": "Results page renders with missing or undefined data",
+          "rootCause": "AI model returns malformed JSON, missing required fields in prompt response, or API contract change",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-003-03",
+          "checkpoint": "CP-003-04",
+          "description": "Request takes too long (> 30s) causing user to abandon",
+          "impact": "Poor UX, user perceives tool as broken",
+          "rootCause": "Large prompt causing slow AI inference, no request timeout configured, or network latency",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "journey-004",
+      "name": "Startup Process Wizard",
+      "description": "Navigate the 9-step startup process wizard, fill in data for each step, trigger AI validation via FRED /api/fred/analyze, track progress, and auto-save to localStorage",
+      "priority": "high",
+      "estimatedDuration": "120s",
+      "preconditions": [
+        "User is authenticated and on dashboard",
+        "FRED AI API (/api/fred/analyze) is operational",
+        "localStorage is available in browser"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-004-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/startup-process",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/startup-process",
+            "loadingState": "Loader2 spinner with 'Loading your startup process...' text",
+            "onFirstVisit": {
+              "elements": ["StartupProcessWizard component renders", "Step 1 'Define the Problem' is active (status: in_progress)", "Steps 2-9 are not_started", "Overall progress: 0%"],
+              "stepTitles": ["Define the Problem", "Identify Your Customer", "Your Founder Edge", "Simplest Solution", "Validate Demand", "Go-to-Market Strategy", "Weekly Execution", "Pilot Program", "Scale Decision"]
+            },
+            "onReturningVisit": "Process loaded from localStorage with previous progress preserved"
+          },
+          "failCriteria": "Page stuck in loading state, localStorage parse error crashes page, or wizard does not render",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-004-02",
+          "step": 2,
+          "action": "View Step 1 form and key questions",
+          "type": "ui",
+          "expected": {
+            "elements": ["Step title: 'Define the Problem'", "Step description: problem articulation guidance", "Key questions displayed from STEP_KEY_QUESTIONS[1]", "Form inputs for responding to questions", "Validate button", "Save button"],
+            "wizardComponents": ["StartupProcessWizard", "StepCard", "StepForm", "ProcessOverview", "ValidationFeedback"]
+          },
+          "failCriteria": "Step form fields not rendered, or key questions missing",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-004-03",
+          "step": 3,
+          "action": "Fill in Step 1 data (answer key questions about the problem)",
+          "type": "frontend",
+          "expected": {
+            "stateChanges": {
+              "stepData": "StepData object populated with user answers",
+              "stepStatus": "Changes from not_started to in_progress",
+              "hasUnsavedChanges": true
+            },
+            "autoSave": "Triggers after 2000ms debounce to localStorage"
+          },
+          "failCriteria": "Input data not captured in state, or auto-save fails silently",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-004-04",
+          "step": 4,
+          "action": "Click 'Validate' to trigger AI validation of Step 1",
+          "type": "integration",
+          "expected": {
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/fred/analyze",
+              "body": {
+                "type": "step_validation",
+                "context": {
+                  "stepNumber": 1,
+                  "stepTitle": "Define the Problem",
+                  "stepDescription": "problem articulation description",
+                  "keyQuestions": "array of key questions",
+                  "userResponses": "StepData from form"
+                }
+              }
+            },
+            "possibleResults": {
+              "pass": "Step marked as validated, completedAt timestamp set, next step (2) marked as in_progress",
+              "needs_work": "Step remains in_progress, feedback and suggestions displayed",
+              "blocked": "Step marked as blocked, blockerReasons displayed"
+            },
+            "progressUpdate": "overallProgress recalculated as (validatedSteps / 9) * 100"
+          },
+          "failCriteria": "Validation API fails, response not parsed correctly, or step status not updated",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-004-05",
+          "step": 5,
+          "action": "View validation feedback (pass, needs_work, or blocked)",
+          "type": "ui",
+          "expected": {
+            "validationFeedback": ["ValidationFeedback component renders", "Status indicator (pass/needs_work/blocked)", "Feedback text from AI", "Suggestions list (if needs_work)", "Blocker reasons (if blocked)"],
+            "onPass": "Step shows green validated indicator, next step becomes navigable"
+          },
+          "failCriteria": "Validation feedback component does not render, or shows stale data",
+          "severity": "major"
+        },
+        {
+          "id": "CP-004-06",
+          "step": 6,
+          "action": "Navigate to next step (Step 2: 'Identify Your Customer')",
+          "type": "frontend",
+          "expected": {
+            "stateChanges": {
+              "currentStep": 2,
+              "lastActivityAt": "updated timestamp"
+            },
+            "elements": ["Step 2 form loads with key questions about customer identification", "Step 1 shows validated checkmark in step overview"],
+            "navigation": "Step navigation controls allow forward/backward movement"
+          },
+          "failCriteria": "Cannot navigate to Step 2, or Step 1 validation state lost on navigation",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-004-07",
+          "step": 7,
+          "action": "Progress through multiple steps (fill and validate Steps 2-4)",
+          "type": "integration",
+          "expected": {
+            "progressTracking": "Overall progress bar updates incrementally (e.g., 33% after 3 validated steps)",
+            "localStorage": "Process state persisted after each validation",
+            "stepStatuses": "Validated steps show green, current step highlighted, future steps show not_started"
+          },
+          "failCriteria": "Progress calculation incorrect, localStorage data corrupted, or validated steps revert to in_progress",
+          "severity": "major"
+        },
+        {
+          "id": "CP-004-08",
+          "step": 8,
+          "action": "Verify empty step validation returns proper blocker feedback",
+          "type": "integration",
+          "expected": {
+            "emptyStepValidation": {
+              "status": "blocked",
+              "feedback": "Please fill in all required fields before validating.",
+              "blockerReasons": ["Required fields are empty"]
+            },
+            "noApiCall": "Validation returns immediately without calling /api/fred/analyze"
+          },
+          "failCriteria": "Empty step validation sends API request, or blocker feedback not displayed",
+          "severity": "major"
+        },
+        {
+          "id": "CP-004-09",
+          "step": 9,
+          "action": "Verify beforeunload warning on unsaved changes",
+          "type": "frontend",
+          "expected": {
+            "onUnsavedChanges": "Browser beforeunload event listener triggers confirmation dialog",
+            "onSavedChanges": "No confirmation dialog on navigation"
+          },
+          "failCriteria": "User can navigate away from unsaved changes without warning",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-004-10",
+          "step": 10,
+          "action": "Verify AI validation fallback when API is unavailable",
+          "type": "integration",
+          "expected": {
+            "fallbackBehavior": {
+              "status": "needs_work",
+              "feedback": "Unable to validate with AI right now. Please review your answers and try again.",
+              "suggestions": ["Ensure all key questions are addressed", "Be specific and include supporting data where possible"]
+            },
+            "noUICrash": "Page remains functional, user can continue editing"
+          },
+          "failCriteria": "API failure causes unhandled error, page crashes, or validation appears to succeed silently",
+          "severity": "critical"
+        }
+      ],
+      "successCriteria": "User navigates all 9 steps, fills in data, receives AI validation feedback, and sees progress tracked across the wizard with auto-save to localStorage",
+      "failurePoints": [
+        {
+          "id": "FP-004-01",
+          "checkpoint": "CP-004-04",
+          "description": "FRED /api/fred/analyze returns malformed validation response",
+          "impact": "Step validation status stuck, cannot progress through wizard",
+          "rootCause": "AI model response doesn't include status/feedback/suggestions fields, or JSON parse error",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-004-02",
+          "checkpoint": "CP-004-01",
+          "description": "localStorage JSON parse error on returning visit",
+          "impact": "Previous progress lost, wizard resets to Step 1",
+          "rootCause": "Corrupted localStorage data from version migration, or localStorage quota exceeded",
+          "severity": "major"
+        },
+        {
+          "id": "FP-004-03",
+          "checkpoint": "CP-004-07",
+          "description": "Progress percentage calculation off due to step status inconsistency",
+          "impact": "Progress bar shows incorrect percentage, confuses user",
+          "rootCause": "calculateProgress only counts 'validated' status but step may be marked differently",
+          "severity": "minor"
+        }
+      ]
+    },
+    {
+      "id": "journey-005",
+      "name": "Your Journey & Milestones",
+      "description": "View the Founder Journey dashboard with idea score, investor readiness, execution streak, AI-generated insights, milestone tracking, and journey timeline",
+      "priority": "high",
+      "estimatedDuration": "40s",
+      "preconditions": [
+        "User is authenticated",
+        "Journey API endpoints operational (/api/journey/stats, /api/journey/insights, /api/journey/milestones, /api/journey/timeline)",
+        "User has some previous activity (Reality Lens analysis, milestones)"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-005-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/journey",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/journey",
+            "loadingState": "Skeleton animation: title placeholder + 3 card placeholders + large content area placeholder",
+            "parallelDataFetch": [
+              "GET /api/journey/stats",
+              "GET /api/journey/insights?limit=10",
+              "GET /api/journey/milestones?limit=50",
+              "GET /api/journey/timeline?limit=20"
+            ]
+          },
+          "failCriteria": "Page stuck in skeleton loading state, or all 4 API calls fail simultaneously",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-005-02",
+          "step": 2,
+          "action": "View score overview cards (3-column grid)",
+          "type": "ui",
+          "expected": {
+            "cards": [
+              {
+                "title": "Idea Score",
+                "icon": "Lightbulb",
+                "border": "border-[#ff6a1a]",
+                "score": "X/100 with orange text or 'No score yet' with CTA button",
+                "link": "/dashboard/reality-lens"
+              },
+              {
+                "title": "Investor Ready",
+                "icon": "Target",
+                "border": "border-blue-500",
+                "score": "X% with blue text or 'Not assessed yet' with CTA button",
+                "link": "/dashboard/investor-readiness"
+              },
+              {
+                "title": "Execution Streak",
+                "icon": "Flame",
+                "border": "border-green-500",
+                "score": "X days with green text",
+                "motivationalText": "dynamic based on streak value"
+              }
+            ],
+            "progressBars": "Visible under Idea Score and Investor Readiness when scores > 0"
+          },
+          "failCriteria": "Score cards show NaN or undefined, or cards render without proper border styling",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-005-03",
+          "step": 3,
+          "action": "View tabbed content (Insights, Milestones, Timeline)",
+          "type": "ui",
+          "expected": {
+            "tabs": {
+              "defaultTab": "insights",
+              "tabList": ["Insights (with active count badge)", "Milestones (with in-progress count badge)", "Timeline"],
+              "tabsTriggerIcons": ["Lightbulb", "Target", "TrendingUp"]
+            },
+            "responsiveLayout": "Tabs scroll horizontally on mobile, grid on desktop"
+          },
+          "failCriteria": "Tabs not rendered, default tab not selected, or tab switching fails",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-005-04",
+          "step": 4,
+          "action": "View Insights tab content",
+          "type": "ui",
+          "expected": {
+            "withInsights": {
+              "elements": ["'Recent Insights' heading", "'AI-generated recommendations' subtext", "'Generate New' button linking to /dashboard/reality-lens", "InsightCard components sorted by pinned status"],
+              "insightCardFields": ["insightType (breakthrough/warning/opportunity/pattern/recommendation)", "title", "content", "importance", "sourceType", "pin/dismiss actions"]
+            },
+            "withoutInsights": "Empty state: Lightbulb icon, 'No insights yet', CTA to analyze idea"
+          },
+          "failCriteria": "Insights render with missing fields, or pin/dismiss actions not visible",
+          "severity": "major"
+        },
+        {
+          "id": "CP-005-05",
+          "step": 5,
+          "action": "Pin and dismiss insights",
+          "type": "integration",
+          "expected": {
+            "pinAction": {
+              "apiCall": "PATCH /api/journey/insights with {insightId, action: 'pin'}",
+              "optimisticUpdate": "Insight immediately shows pinned state in UI",
+              "onApiFailure": "Error logged to console (no user-facing error currently)"
+            },
+            "dismissAction": {
+              "apiCall": "PATCH /api/journey/insights with {insightId, action: 'dismiss'}",
+              "optimisticUpdate": "Insight removed from list immediately"
+            }
+          },
+          "failCriteria": "Pin/dismiss API calls fail silently with no optimistic update, or dismissed insight reappears on refresh",
+          "severity": "major"
+        },
+        {
+          "id": "CP-005-06",
+          "step": 6,
+          "action": "Switch to Milestones tab and view milestone list",
+          "type": "ui",
+          "expected": {
+            "elements": ["MilestoneList component renders", "Milestones grouped by status (pending, in_progress, completed, skipped)", "Category labels (fundraising, product, team, growth, legal)", "Target dates and completion dates", "'Add Milestone' button"],
+            "statusChangeFlow": "Click status to update via PATCH /api/journey/milestones/{id}"
+          },
+          "failCriteria": "Milestones tab shows empty when API returned data, or status changes not reflected",
+          "severity": "major"
+        },
+        {
+          "id": "CP-005-07",
+          "step": 7,
+          "action": "Add a new milestone via AddMilestoneModal",
+          "type": "integration",
+          "expected": {
+            "modalTrigger": "'Add Milestone' button opens AddMilestoneModal",
+            "formFields": ["title", "description", "category", "targetDate"],
+            "apiCall": "POST /api/journey/milestones with milestone data",
+            "onSuccess": "New milestone prepended to list, modal closes"
+          },
+          "failCriteria": "Modal does not open, form submission fails, or new milestone not added to list",
+          "severity": "major"
+        },
+        {
+          "id": "CP-005-08",
+          "step": 8,
+          "action": "Switch to Timeline tab and view journey history",
+          "type": "ui",
+          "expected": {
+            "withEvents": {
+              "elements": ["'Your Journey Timeline' heading", "'A complete history of your progress' subtext", "Timeline component with chronological events", "Score changes (scoreBefore/scoreAfter) where applicable"]
+            },
+            "withoutEvents": "Empty state: TrendingUp icon, 'No events yet' message"
+          },
+          "failCriteria": "Timeline events render out of order, or score change indicators show incorrect values",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-005-09",
+          "step": 9,
+          "action": "Verify graceful degradation when individual APIs fail",
+          "type": "integration",
+          "expected": {
+            "partialFailure": "If one API fails (e.g., milestones), other sections still render with their data",
+            "errorHandling": "Non-OK responses return {success: false}, state defaults to empty arrays",
+            "fullFailure": "Error card with AlertTriangle icon, error message, and Retry button"
+          },
+          "failCriteria": "Single API failure causes entire page to error, or partial data causes undefined reference errors",
+          "severity": "critical"
+        }
+      ],
+      "successCriteria": "User views journey dashboard with scores, browses insights/milestones/timeline tabs, interacts with pin/dismiss/add actions, and data persists correctly",
+      "failurePoints": [
+        {
+          "id": "FP-005-01",
+          "checkpoint": "CP-005-01",
+          "description": "All 4 journey API endpoints return errors",
+          "impact": "Entire journey dashboard shows error state",
+          "rootCause": "Supabase connection failure, missing database tables (journey_insights, journey_milestones, journey_timeline), or auth token expired",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-005-02",
+          "checkpoint": "CP-005-05",
+          "description": "Optimistic updates desynced from server state",
+          "impact": "User sees pinned/dismissed insight but server didn't process the change; reverts on refresh",
+          "rootCause": "API returns error after optimistic update applied, no rollback implemented",
+          "severity": "major"
+        },
+        {
+          "id": "FP-005-03",
+          "checkpoint": "CP-005-07",
+          "description": "Add milestone API fails with validation error",
+          "impact": "User fills in milestone form but it doesn't save",
+          "rootCause": "Missing required fields, invalid category value, or database constraint violation",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "journey-006",
+      "name": "Decision History & Chat",
+      "description": "View FRED conversation history, select past sessions, review decision conversations, start new FRED conversations, and export chat history",
+      "priority": "high",
+      "estimatedDuration": "50s",
+      "preconditions": [
+        "User is authenticated",
+        "FRED chat API is operational",
+        "User has at least one previous conversation (for history view)",
+        "Chat protected route requires auth"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-006-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/history",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/history",
+            "layout": "Sticky header + sidebar (session list, 320px) + main area (conversation view)",
+            "header": {
+              "elements": ["Back button to /dashboard", "History icon with orange background", "'Decision History' heading", "'Review past conversations with FRED' subtext", "'New Conversation' button linking to /chat"]
+            },
+            "animations": "Framer Motion: sidebar slides in from left (x: -20), main area fades in (delay: 0.1)"
+          },
+          "failCriteria": "Page returns 404, layout broken (sidebar overlaps main), or header actions not functional",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-006-02",
+          "step": 2,
+          "action": "View session list in sidebar",
+          "type": "ui",
+          "expected": {
+            "elements": ["SessionList component renders in aside element", "List of previous conversation sessions", "Each session shows summary/timestamp"],
+            "emptyState": "Appropriate message if no previous sessions exist"
+          },
+          "failCriteria": "Session list does not load, or shows loading spinner indefinitely",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-006-03",
+          "step": 3,
+          "action": "Select a conversation session from the sidebar",
+          "type": "frontend",
+          "expected": {
+            "stateChange": "selectedSessionId updated to clicked session's ID",
+            "mainArea": "ConversationView component loads with full conversation messages",
+            "selectedHighlight": "Selected session visually highlighted in sidebar"
+          },
+          "failCriteria": "Clicking session does not update main area, or conversation messages fail to load",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-006-04",
+          "step": 4,
+          "action": "View conversation details in ConversationView",
+          "type": "ui",
+          "expected": {
+            "elements": ["Full message thread between user and FRED", "Message timestamps", "Continue conversation button"],
+            "noSelectionState": "History icon (80px circle), 'Select a conversation' heading, instruction text"
+          },
+          "failCriteria": "Conversation messages truncated, malformed, or missing sender attribution",
+          "severity": "major"
+        },
+        {
+          "id": "CP-006-05",
+          "step": 5,
+          "action": "Click 'Continue' to resume a past conversation",
+          "type": "frontend",
+          "expected": {
+            "behavior": "Stores selectedSessionId in sessionStorage as 'fred-session-id'",
+            "navigation": "router.push('/chat') navigates to chat page",
+            "chatPage": "ChatInterface loads with session context from sessionStorage"
+          },
+          "failCriteria": "Session ID not stored in sessionStorage, or chat page does not load previous context",
+          "severity": "major"
+        },
+        {
+          "id": "CP-006-06",
+          "step": 6,
+          "action": "Navigate to /chat to start new FRED conversation",
+          "type": "ui",
+          "expected": {
+            "url": "/chat",
+            "elements": ["Sticky header with Back button, 'Talk to Fred' heading, Export dropdown, Sahara logo", "ChatInterface component filling viewport (100vh - 73px)", "Background: animated gradient glows (3 layers) with grid overlay"],
+            "exportOptions": ["Export as JSON", "Export as Markdown", "Export as CSV"]
+          },
+          "failCriteria": "Chat page does not render, ChatInterface component crashes, or header elements missing",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-006-07",
+          "step": 7,
+          "action": "Send a message to FRED in chat interface",
+          "type": "integration",
+          "expected": {
+            "chatInput": "Message input field accepts text and sends on submit",
+            "aiResponse": "FRED responds with contextual startup advice",
+            "typingIndicator": "Typing indicator shown while FRED generates response"
+          },
+          "failCriteria": "Message not sent, FRED does not respond, or chat interface becomes unresponsive",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-006-08",
+          "step": 8,
+          "action": "Export chat history",
+          "type": "integration",
+          "expected": {
+            "apiCall": "GET /api/fred/export?format={json|markdown|csv}",
+            "onSuccess": "Browser downloads file: fred-chat-export-{date}.{ext}",
+            "onFailure": "Toast error notification via sonner",
+            "fileFormats": {
+              "json": ".json file",
+              "markdown": ".md file",
+              "csv": ".csv file"
+            }
+          },
+          "failCriteria": "Export API returns error, file download does not trigger, or exported file is empty/corrupt",
+          "severity": "major"
+        }
+      ],
+      "successCriteria": "User can browse past FRED conversations, view full message threads, continue past sessions, start new conversations, and export chat history in multiple formats",
+      "failurePoints": [
+        {
+          "id": "FP-006-01",
+          "checkpoint": "CP-006-07",
+          "description": "FRED chat API fails to respond",
+          "impact": "Core chat functionality broken, user cannot interact with AI advisor",
+          "rootCause": "AI model API key expired, /api/fred/decide or streaming endpoint fails, or WebSocket connection drops",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-006-02",
+          "checkpoint": "CP-006-02",
+          "description": "Session list API returns empty despite user having conversations",
+          "impact": "User cannot access their conversation history",
+          "rootCause": "Database query filters by wrong user ID, or conversation sessions not persisted correctly",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-006-03",
+          "checkpoint": "CP-006-08",
+          "description": "Export API returns 401 or empty blob",
+          "impact": "User cannot export their data",
+          "rootCause": "Auth token not forwarded to export endpoint, or no conversations to export",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "journey-007",
+      "name": "Navigation & Public Pages",
+      "description": "Verify all public-facing pages (homepage, pricing, about, features, support, contact, terms, privacy) are accessible without authentication, render correctly, and navigation links work",
+      "priority": "high",
+      "estimatedDuration": "45s",
+      "preconditions": [
+        "Application deployed and accessible",
+        "No authentication required for public routes",
+        "All dynamic imports resolve correctly"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-007-01",
+          "step": 1,
+          "action": "Load homepage (/) and verify all sections",
+          "type": "ui",
+          "expected": {
+            "url": "/",
+            "sections": ["Hero (dynamic import)", "Features (dynamic import)", "Stats (dynamic import)", "Testimonials (dynamic import)", "Pricing (dynamic import)", "Faq (dynamic import)", "Footer (dynamic import)", "ScrollProgress indicator"],
+            "allDynamic": "All components loaded with { ssr: false } to avoid framer-motion SSG crash",
+            "httpStatus": 200
+          },
+          "failCriteria": "Homepage blank due to all components being dynamically imported with ssr:false failing, or hydration error",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-007-02",
+          "step": 2,
+          "action": "Verify navbar navigation links",
+          "type": "ui",
+          "expected": {
+            "navbarElements": ["Sahara logo linking to /", "Pricing link to /pricing", "See it in Action link to /product", "About link to /about"],
+            "featureDropdown": ["Startup Reality Lens", "and other feature items with icons"],
+            "ctaButtons": ["Get Started button", "Login/Dashboard link"],
+            "mobileNav": "Hamburger menu (Sheet component) for mobile breakpoints",
+            "scrollBehavior": "Navbar gets backdrop-blur background after scrolling > 20px"
+          },
+          "failCriteria": "Nav links broken (404), dropdown does not open, or mobile nav sheet does not render",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-007-03",
+          "step": 3,
+          "action": "Navigate to /pricing page",
+          "type": "ui",
+          "expected": {
+            "url": "/pricing",
+            "elements": ["3 plan cards: Free, Fundraising ($99), Venture Studio ($249)", "Feature comparison lists per plan", "CTA buttons for each plan", "Footer component"],
+            "planDetails": {
+              "free": {
+                "name": "Founder Decision OS",
+                "price": 0,
+                "includedFeatures": ["Core Fred Cary Decision OS", "Strategy & execution reframing", "Startup Reality Lens", "Founder wellbeing support", "Red Flag Detection", "Founder Intake Snapshot"],
+                "excludedFeatures": ["Investor Lens", "Pitch Deck Review", "Virtual Team Agents"]
+              },
+              "pro": {
+                "name": "Fundraising & Strategy",
+                "price": 99,
+                "audience": "Pre-seed and seed founders"
+              },
+              "studio": {
+                "name": "Venture Studio",
+                "price": 249
+              }
+            }
+          },
+          "failCriteria": "Pricing page returns 404, plan cards missing, or prices show incorrect values",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-007-04",
+          "step": 4,
+          "action": "Navigate to /about page",
+          "type": "ui",
+          "expected": {
+            "url": "/about",
+            "pageLoads": true,
+            "httpStatus": 200,
+            "elements": ["About content about Sahara and Fred Cary", "Team or mission information"]
+          },
+          "failCriteria": "About page returns 404 or renders blank",
+          "severity": "major"
+        },
+        {
+          "id": "CP-007-05",
+          "step": 5,
+          "action": "Navigate to /features page",
+          "type": "ui",
+          "expected": {
+            "url": "/features",
+            "pageLoads": true,
+            "httpStatus": 200,
+            "elements": ["Feature descriptions and capabilities", "Links or CTAs to try features"]
+          },
+          "failCriteria": "Features page returns 404 or content missing",
+          "severity": "major"
+        },
+        {
+          "id": "CP-007-06",
+          "step": 6,
+          "action": "Navigate to /support and /contact pages",
+          "type": "ui",
+          "expected": {
+            "supportPage": { "url": "/support", "httpStatus": 200 },
+            "contactPage": {
+              "url": "/contact",
+              "httpStatus": 200,
+              "elements": ["Contact form or contact information"]
+            }
+          },
+          "failCriteria": "Support or contact pages return 404",
+          "severity": "major"
+        },
+        {
+          "id": "CP-007-07",
+          "step": 7,
+          "action": "Navigate to /terms and /privacy pages",
+          "type": "ui",
+          "expected": {
+            "termsPage": { "url": "/terms", "httpStatus": 200, "content": "Terms of service text" },
+            "privacyPage": { "url": "/privacy", "httpStatus": 200, "content": "Privacy policy text" }
+          },
+          "failCriteria": "Legal pages return 404 or contain placeholder text only",
+          "severity": "major"
+        },
+        {
+          "id": "CP-007-08",
+          "step": 8,
+          "action": "Verify footer links and content on homepage",
+          "type": "ui",
+          "expected": {
+            "footerElements": ["Sahara branding/logo", "Navigation links (Pricing, About, Features)", "Legal links (Terms, Privacy)", "Social media links", "Copyright notice"],
+            "allLinksWork": "Every footer link navigates to correct destination without 404"
+          },
+          "failCriteria": "Footer not rendered (dynamic import failure), or links point to incorrect/broken URLs",
+          "severity": "major"
+        },
+        {
+          "id": "CP-007-09",
+          "step": 9,
+          "action": "Verify /signup redirects to /get-started",
+          "type": "frontend",
+          "expected": {
+            "initialUrl": "/signup",
+            "redirect": "router.replace('/get-started') fires on mount",
+            "loadingState": "Spinning circle with 'Redirecting to signup...' text shown briefly",
+            "finalUrl": "/get-started"
+          },
+          "failCriteria": "Redirect does not fire, or user sees infinite loading state on /signup",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-007-10",
+          "step": 10,
+          "action": "Verify public routes do not require authentication",
+          "type": "backend",
+          "expected": {
+            "publicRoutes": ["/", "/login", "/get-started", "/signup", "/pricing", "/about", "/features", "/support", "/contact", "/terms", "/privacy", "/blog", "/waitlist", "/product"],
+            "middlewareBehavior": "isProtectedRoute() returns false for all public paths, no redirect to /login"
+          },
+          "failCriteria": "Public page redirects to /login for unauthenticated users",
+          "severity": "blocker"
+        }
+      ],
+      "successCriteria": "All public pages load correctly, navigation links work, footer renders on homepage, /signup redirects properly, and no authentication is required for public routes",
+      "failurePoints": [
+        {
+          "id": "FP-007-01",
+          "checkpoint": "CP-007-01",
+          "description": "Homepage renders blank due to all dynamic imports failing",
+          "impact": "No landing page visible to any visitor",
+          "rootCause": "framer-motion@12 useContext crash during SSG (React 19 compatibility), or chunk loading failure in production",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-007-02",
+          "checkpoint": "CP-007-02",
+          "description": "Navbar dropdown menu does not render on mobile",
+          "impact": "Mobile users cannot navigate the site",
+          "rootCause": "Sheet component from shadcn/ui not properly configured, or z-index conflicts",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-007-03",
+          "checkpoint": "CP-007-10",
+          "description": "Middleware incorrectly protects public routes",
+          "impact": "Visitors cannot access landing pages, pricing, or legal pages",
+          "rootCause": "New route added to app but not excluded from protected route patterns in middleware-utils.ts",
+          "severity": "blocker"
+        }
+      ]
+    },
+    {
+      "id": "journey-008",
+      "name": "Settings & Profile Management",
+      "description": "View and edit profile information, check subscription tier and plan features, manage notification preferences, access Stripe billing portal, and handle data export/account deletion",
+      "priority": "high",
+      "estimatedDuration": "50s",
+      "preconditions": [
+        "User is authenticated",
+        "Profile exists in Supabase profiles table",
+        "TierProvider context is initialized",
+        "Stripe billing configured for paid users"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-008-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/settings",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/settings",
+            "layout": "max-w-4xl centered, stacked card sections",
+            "sections": ["Profile", "Subscription", "Alert Notification Settings", "General Notifications", "Voice & TTS (Pro+ only)", "Team & Collaboration (Studio only)", "Danger Zone"],
+            "heading": "'Settings' with 'Manage your account, subscription, and preferences.' subtext"
+          },
+          "failCriteria": "Settings page returns 404 or fails to load profile data",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-008-02",
+          "step": 2,
+          "action": "View and edit profile information",
+          "type": "frontend",
+          "expected": {
+            "profileCard": {
+              "elements": ["Avatar with initials fallback (orange bg, white text)", "Profile Picture description (PNG, JPG up to 2MB)", "Full Name input (editable)", "Email input (disabled, with note to contact support)", "Company Name input (editable)", "'Save Changes' button"]
+            },
+            "dataPopulation": "Fields pre-filled from Supabase profiles table on mount"
+          },
+          "failCriteria": "Profile fields empty despite profile existing, or email field is editable (security issue)",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-008-03",
+          "step": 3,
+          "action": "Save profile changes",
+          "type": "integration",
+          "expected": {
+            "apiCall": "Supabase profiles table UPDATE with name, metadata.company_name, updated_at",
+            "metadataMerge": "Existing metadata preserved, only company_name updated",
+            "onSuccess": {
+              "message": "'Profile saved successfully' in green text",
+              "messageTimeout": "Clears after 3000ms",
+              "analyticsEvent": "ENGAGEMENT.SETTINGS_UPDATED with settingChanged: profile"
+            },
+            "onFailure": "'Failed to save profile' error message in red"
+          },
+          "failCriteria": "Save overwrites existing metadata (loses notification_prefs), or success message never appears",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-008-04",
+          "step": 4,
+          "action": "View subscription section with current plan details",
+          "type": "ui",
+          "expected": {
+            "elements": ["Current Plan badge (Free/Pro/Studio) with orange styling", "Plan price ($0/month, $99/month, or $249/month)", "Plan features checklist from TIER_FEATURES constant", "'Manage Subscription' button (disabled for free users)", "'Upgrade' button via UpgradeTier component (hidden for Studio)"],
+            "tierSource": "useTier() context hook providing tier, tierName, isSubscriptionActive"
+          },
+          "failCriteria": "Tier displays incorrect plan name or price, or features list empty",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-008-05",
+          "step": 5,
+          "action": "Click 'Manage Subscription' to open Stripe billing portal",
+          "type": "integration",
+          "expected": {
+            "behavior": "Calls redirectToPortal() from lib/stripe/client",
+            "onSuccess": "Browser redirects to Stripe Customer Portal",
+            "onFailure": "Error logged to console",
+            "disabledState": "Button disabled when !isSubscriptionActive (free users)"
+          },
+          "failCriteria": "Portal redirect fails, Stripe portal URL not generated, or button enabled for free users",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-008-06",
+          "step": 6,
+          "action": "Configure general notification preferences",
+          "type": "frontend",
+          "expected": {
+            "toggleSwitches": [
+              { "id": "email-notifications", "label": "Email Notifications", "default": true },
+              { "id": "sms-reminders", "label": "SMS Check-in Reminders", "default": false },
+              { "id": "weekly-digest", "label": "Weekly Digest", "default": true },
+              { "id": "marketing-emails", "label": "Marketing Emails", "default": false }
+            ],
+            "saveButton": "'Save Preferences' button triggers handleSaveNotifications",
+            "persistTo": "Supabase profiles.metadata.notification_prefs"
+          },
+          "failCriteria": "Toggle switches do not respond, or save does not persist to database",
+          "severity": "major"
+        },
+        {
+          "id": "CP-008-07",
+          "step": 7,
+          "action": "Save notification preferences",
+          "type": "integration",
+          "expected": {
+            "apiCall": "Supabase profiles table UPDATE merging notification_prefs into metadata",
+            "onSuccess": "Toast notification: 'Notification preferences saved'",
+            "onFailure": "Toast error: 'Failed to save notification preferences'",
+            "dataMerge": "Existing metadata preserved, only notification_prefs key updated"
+          },
+          "failCriteria": "Save overwrites other metadata fields, or toast notification not shown",
+          "severity": "major"
+        },
+        {
+          "id": "CP-008-08",
+          "step": 8,
+          "action": "Verify tier-gated settings sections",
+          "type": "frontend",
+          "expected": {
+            "freeUser": {
+              "voiceSettings": "Voice & TTS card NOT rendered (tier >= PRO check fails)",
+              "teamSettings": "Team & Collaboration card NOT rendered (tier >= STUDIO check fails)"
+            },
+            "proUser": {
+              "voiceSettings": "VoiceSettings component renders inside Voice & TTS card",
+              "teamSettings": "Still NOT rendered"
+            },
+            "studioUser": {
+              "voiceSettings": "Rendered",
+              "teamSettings": "TeamSettings component renders"
+            }
+          },
+          "failCriteria": "Tier-gated sections visible to users without required tier, or sections missing for users with correct tier",
+          "severity": "major"
+        },
+        {
+          "id": "CP-008-09",
+          "step": 9,
+          "action": "Test data export in Danger Zone",
+          "type": "integration",
+          "expected": {
+            "exportBehavior": {
+              "dataFetched": "Supabase profiles.* for current user",
+              "fileGenerated": "JSON blob with exportedAt, profile, email fields",
+              "download": "Browser downloads fred-data-export-{YYYY-MM-DD}.json",
+              "analyticsEvent": "ENGAGEMENT.DOCUMENT_EXPORTED with exportFormat: json"
+            }
+          },
+          "failCriteria": "Export fails to download, file contains no data, or file is not valid JSON",
+          "severity": "major"
+        },
+        {
+          "id": "CP-008-10",
+          "step": 10,
+          "action": "Test account deletion flow (double-confirm pattern)",
+          "type": "integration",
+          "expected": {
+            "firstClick": "Button text changes to 'Click again to confirm', showDeleteConfirm set to true",
+            "secondClick": {
+              "apiCall": "DELETE /api/user/delete",
+              "onSuccess": "localStorage.clear(), redirect to /login",
+              "onFailure": "Toast error with error message"
+            },
+            "styling": "Delete button: border-destructive text-destructive, hover:bg-destructive hover:text-white"
+          },
+          "failCriteria": "Account deleted on single click without confirmation, or deletion fails but user redirected to login",
+          "severity": "blocker"
+        }
+      ],
+      "successCriteria": "User can view/edit profile, see correct subscription tier, manage notification preferences, access Stripe portal (paid users), export data, and safely delete account with double confirmation",
+      "failurePoints": [
+        {
+          "id": "FP-008-01",
+          "checkpoint": "CP-008-03",
+          "description": "Profile save overwrites notification preferences metadata",
+          "impact": "User's notification settings lost every time they save profile",
+          "rootCause": "handleSaveProfile does not fetch existing metadata before updating, or merge logic fails",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-008-02",
+          "checkpoint": "CP-008-05",
+          "description": "Stripe portal redirect fails for paid users",
+          "impact": "Users cannot manage billing, update payment method, or cancel subscription",
+          "rootCause": "STRIPE_SECRET_KEY env var missing, customer ID not found in Stripe, or Stripe API rate limit",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-008-03",
+          "checkpoint": "CP-008-10",
+          "description": "Account deletion API succeeds but localStorage not cleared",
+          "impact": "Residual user data remains in browser after account deletion",
+          "rootCause": "localStorage.clear() throws in certain browser contexts, or DELETE endpoint succeeds but redirect fires before clear()",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "journey-009",
+      "name": "Wellbeing Check-in",
+      "description": "Complete the founder wellness assessment via the WellnessAssessment component, submit results to the wellbeing API, view previous check-in history, and receive personalized recommendations from FRED",
+      "priority": "medium",
+      "estimatedDuration": "40s",
+      "preconditions": [
+        "User is authenticated",
+        "Wellbeing API (/api/wellbeing/check-in) is operational",
+        "WellnessAssessment component renders correctly"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-009-01",
+          "step": 1,
+          "action": "Navigate to /dashboard/wellbeing",
+          "type": "ui",
+          "expected": {
+            "url": "/dashboard/wellbeing",
+            "layout": "max-w-2xl centered, py-6 px-4",
+            "elements": ["'Wellbeing Check-in' heading", "Description text: Fred's philosophy on founder health", "WellnessAssessment component"],
+            "onMount": "GET /api/wellbeing/check-in fetches previous check-in history"
+          },
+          "failCriteria": "Page returns 404 or WellnessAssessment component fails to render",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-009-02",
+          "step": 2,
+          "action": "View previous check-in summary (if exists)",
+          "type": "ui",
+          "expected": {
+            "withHistory": {
+              "elements": ["'Last check-in' label with formatted date (Month Day, Year)", "Score badge with color coding (green >= 70, yellow >= 40, red < 40)"],
+              "condition": "Only shown when history.score !== null AND history.lastCheckIn is set AND assessment not yet completed"
+            },
+            "withoutHistory": "No previous check-in card displayed"
+          },
+          "failCriteria": "Previous check-in card shows when no history exists, or date format is incorrect",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-009-03",
+          "step": 3,
+          "action": "Complete the WellnessAssessment questionnaire",
+          "type": "frontend",
+          "expected": {
+            "assessmentFlow": "Multi-question assessment with rating inputs",
+            "onComplete": "Calls handleComplete(score, answers) callback with numeric score and answer record",
+            "inputTypes": "Rating scales (Record<string, number>)"
+          },
+          "failCriteria": "Assessment questions do not render, rating inputs non-functional, or completion callback not fired",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-009-04",
+          "step": 4,
+          "action": "Submit wellbeing check-in results",
+          "type": "integration",
+          "expected": {
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/wellbeing/check-in",
+              "body": { "score": "numeric wellness score", "answers": "Record<string, number>" }
+            },
+            "uiDuringRequest": "'Saving your results...' text with pulse animation",
+            "onSuccess": {
+              "recommendationsPopulated": "setRecommendations() called with API response data.recommendations",
+              "completedState": "completed = true"
+            },
+            "onFailure": "Assessment still shows results (graceful degradation), completed = true"
+          },
+          "failCriteria": "API call fails and assessment shows no results, or submitting state never resolves",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-009-05",
+          "step": 5,
+          "action": "View personalized recommendations from Fred",
+          "type": "ui",
+          "expected": {
+            "condition": "Only shown when completed=true AND recommendations array is non-empty",
+            "card": {
+              "heading": "Fred's Recommendations for You",
+              "border": "border-orange-200 dark:border-orange-800",
+              "recommendations": "Each rec shows priority badge (high=red, medium=yellow, low=green) + text"
+            },
+            "priorityBadges": {
+              "high": "border-red-500 text-red-600",
+              "medium": "border-yellow-500 text-yellow-600",
+              "low": "border-green-500 text-green-600"
+            }
+          },
+          "failCriteria": "Recommendations card not shown when API returned recommendations, or priority badges show wrong colors",
+          "severity": "major"
+        },
+        {
+          "id": "CP-009-06",
+          "step": 6,
+          "action": "View 'Talk to Fred' CTA after completion",
+          "type": "ui",
+          "expected": {
+            "condition": "Only shown when completed=true",
+            "elements": ["'Want to talk through what you're feeling?' text", "'Talk to Fred' button linking to /chat"],
+            "buttonStyling": "border-orange-500 text-orange-600 hover:bg-orange-50"
+          },
+          "failCriteria": "CTA not shown after assessment completion, or link to /chat broken",
+          "severity": "minor"
+        },
+        {
+          "id": "CP-009-07",
+          "step": 7,
+          "action": "Verify graceful degradation when wellbeing API fails",
+          "type": "integration",
+          "expected": {
+            "historyFetchFailure": "Silent failure (no error shown), loading=false, page still functional",
+            "submissionFailure": "Assessment still marks as completed, recommendations may be empty but page doesn't crash",
+            "noUICrash": "All catch blocks handle errors silently"
+          },
+          "failCriteria": "API failure causes unhandled error or blank page",
+          "severity": "critical"
+        }
+      ],
+      "successCriteria": "User views previous check-in history, completes the wellness assessment, receives personalized recommendations, and can navigate to chat for further support",
+      "failurePoints": [
+        {
+          "id": "FP-009-01",
+          "checkpoint": "CP-009-03",
+          "description": "WellnessAssessment component fails to render",
+          "impact": "Users cannot complete the wellbeing check-in at all",
+          "rootCause": "Component import error, missing props, or client-side hydration mismatch",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-009-02",
+          "checkpoint": "CP-009-04",
+          "description": "Wellbeing API returns 500 or malformed recommendations",
+          "impact": "No personalized recommendations shown to user",
+          "rootCause": "Database table missing, AI recommendation generation fails, or response schema mismatch",
+          "severity": "major"
+        },
+        {
+          "id": "FP-009-03",
+          "checkpoint": "CP-009-02",
+          "description": "Previous check-in score badge shows wrong color",
+          "impact": "Misleading visual feedback about wellness trend",
+          "rootCause": "Score threshold comparison logic incorrect (e.g., >= 70 vs > 70)",
+          "severity": "minor"
+        }
+      ]
+    },
+    {
+      "id": "journey-010",
+      "name": "Tier Gating & Upgrade Flow",
+      "description": "Verify that Free tier users see appropriate feature locks, upgrade prompts, and can initiate Stripe checkout for Pro/Studio tiers. Test the FeatureGate component, locked Quick Actions, locked stats, upgrade CTA card, and UpgradeTier dialog",
+      "priority": "critical",
+      "estimatedDuration": "55s",
+      "preconditions": [
+        "User is authenticated with Free tier (tier 0)",
+        "Stripe checkout configured with valid price IDs",
+        "TierProvider context properly initialized",
+        "TIER_FEATURES and TIER_NAMES constants defined"
+      ],
+      "checkpoints": [
+        {
+          "id": "CP-010-01",
+          "step": 1,
+          "action": "View dashboard as Free tier user and observe locked stats",
+          "type": "ui",
+          "expected": {
+            "statsGrid": [
+              { "label": "Ideas Analyzed", "locked": false, "value": "shows real count" },
+              { "label": "Pitch Decks Reviewed", "locked": true, "value": "shows '-' with LockClosedIcon", "requiredTier": "Pro badge" },
+              { "label": "Check-ins Completed", "locked": true, "value": "shows '-' with LockClosedIcon", "requiredTier": "Pro badge" },
+              { "label": "Active Agents", "locked": true, "value": "shows '-' with LockClosedIcon", "requiredTier": "Studio badge" }
+            ],
+            "lockIcon": "LockClosedIcon in absolute top-right position on locked cards"
+          },
+          "failCriteria": "Locked stats show real values to Free users, or lock icons missing",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-02",
+          "step": 2,
+          "action": "View locked Quick Actions on dashboard",
+          "type": "ui",
+          "expected": {
+            "quickActions": [
+              { "title": "Analyze New Idea", "href": "/dashboard/reality-lens", "tier": 0, "locked": false },
+              { "title": "Check Investor Readiness", "href": "/dashboard/investor-readiness", "tier": 1, "locked": true },
+              { "title": "Review Pitch Deck", "href": "/dashboard/pitch-deck", "tier": 1, "locked": true },
+              { "title": "Activate AI Agent", "href": "/dashboard/agents", "tier": 2, "locked": true }
+            ],
+            "lockOverlay": "Gray/black overlay with backdrop-blur, centered LockClosedIcon and 'Pro Feature' or 'Studio Feature' badge",
+            "linkBehavior": "Locked cards link to '#' instead of feature page"
+          },
+          "failCriteria": "Locked Quick Actions navigate to feature pages, or lock overlay not visible",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-03",
+          "step": 3,
+          "action": "View upgrade CTA card at bottom of dashboard (Free users only)",
+          "type": "ui",
+          "expected": {
+            "condition": "Only rendered when user.tier === 0",
+            "card": {
+              "background": "bg-gradient-to-br from-[#ff6a1a] to-[#ea580c] text-white",
+              "heading": "'Ready to raise capital?'",
+              "subtext": "'Upgrade to Pro for investor readiness scoring, pitch deck reviews, and more.'",
+              "button": "'Upgrade Now' with RocketIcon, white bg with orange text"
+            },
+            "decorativeElements": "Two blurred white/black circles in corners"
+          },
+          "failCriteria": "Upgrade CTA visible to Pro/Studio users, or not visible to Free users",
+          "severity": "major"
+        },
+        {
+          "id": "CP-010-04",
+          "step": 4,
+          "action": "Click 'Upgrade Now' button on dashboard CTA",
+          "type": "integration",
+          "expected": {
+            "behavior": "Calls redirectToCheckoutByTier('pro') from lib/stripe/client",
+            "onSuccess": "Browser redirects to Stripe Checkout page with Pro tier price ID",
+            "onFailure": "Toast error notification via sonner with error message"
+          },
+          "failCriteria": "Stripe Checkout session creation fails, or redirect does not happen",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-05",
+          "step": 5,
+          "action": "Open UpgradeTier dialog from Settings page",
+          "type": "ui",
+          "expected": {
+            "trigger": "Click 'Upgrade to Fundraising & Strategy' button (or 'Manage Plan' for Studio users)",
+            "dialog": {
+              "heading": "'Upgrade Your Plan'",
+              "description": "'Unlock more features and accelerate your founder journey.'",
+              "planCards": "3 cards: Free (current, green ring), Pro (most popular, orange border), Studio",
+              "perCard": ["Plan icon", "Plan name", "Price ($X/month)", "Feature list with checkmarks", "Action button"]
+            },
+            "buttonStates": {
+              "currentPlan": "Button disabled, text 'Current Plan'",
+              "downgrade": "Button disabled",
+              "upgrade": "Button enabled, text 'Upgrade Now'",
+              "free": "Button disabled, text 'Free Forever'"
+            }
+          },
+          "failCriteria": "Dialog does not open, plan cards missing, or button states incorrect for current tier",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-06",
+          "step": 6,
+          "action": "Click 'Upgrade Now' on Pro plan card in dialog",
+          "type": "integration",
+          "expected": {
+            "behavior": "Calls redirectToCheckout(priceId) with Pro plan Stripe price ID",
+            "uiDuringRequest": "Button shows ReloadIcon spinner with 'Processing...' text",
+            "onSuccess": "Browser redirects to Stripe Checkout",
+            "onFailure": {
+              "paymentUnavailable": "'Payment processing is temporarily unavailable. Please try again later.'",
+              "otherError": "Error message displayed in red alert box below button"
+            }
+          },
+          "failCriteria": "Checkout initiation fails silently, or error message not shown to user",
+          "severity": "blocker"
+        },
+        {
+          "id": "CP-010-07",
+          "step": 7,
+          "action": "Complete Stripe Checkout and return to dashboard",
+          "type": "integration",
+          "expected": {
+            "returnUrl": "/dashboard?success=true",
+            "postCheckout": {
+              "toastMessage": "'Payment successful! Your plan has been upgraded.'",
+              "tierPolling": "Polls refreshTier() up to 5 times every 2000ms (10s total) to wait for Stripe webhook",
+              "urlCleanup": "router.replace('/dashboard') removes ?success=true param"
+            },
+            "tierUpdate": "useTier() context reflects new tier after webhook processes"
+          },
+          "failCriteria": "Success toast not shown, tier not updated after polling, or URL still shows ?success=true",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-08",
+          "step": 8,
+          "action": "Verify FeatureGate component behavior for locked features",
+          "type": "frontend",
+          "expected": {
+            "whenLocked": {
+              "overlay": "Gray/dark overlay with backdrop-blur-sm, rounded-lg",
+              "content": ["RocketIcon in orange circle", "'{featureName} is a {tierName} Feature' heading", "'Upgrade to {tierName} to unlock...' description", "Nested UpgradeTier component with upgrade button"],
+              "children": "Rendered with opacity-30 and pointer-events-none behind overlay"
+            },
+            "whenUnlocked": "Children rendered normally without overlay"
+          },
+          "failCriteria": "FeatureGate shows locked overlay for users with sufficient tier, or unlocked content accessible through pointer events when locked",
+          "severity": "critical"
+        },
+        {
+          "id": "CP-010-09",
+          "step": 9,
+          "action": "Verify Settings page tier-gated sections (Voice & Team)",
+          "type": "frontend",
+          "expected": {
+            "voiceTTS": {
+              "requiredTier": "Pro (tier >= 1)",
+              "freeBehavior": "Entire Voice & TTS Card not rendered in DOM",
+              "proBehavior": "VoiceSettings component visible and functional"
+            },
+            "teamSettings": {
+              "requiredTier": "Studio (tier >= 2)",
+              "freeBehavior": "TeamSettings Card not rendered in DOM",
+              "proBehavior": "TeamSettings Card not rendered in DOM",
+              "studioBehavior": "TeamSettings component visible and functional"
+            }
+          },
+          "failCriteria": "Settings sections visible to users below required tier",
+          "severity": "major"
+        },
+        {
+          "id": "CP-010-10",
+          "step": 10,
+          "action": "Verify UpgradeBanner component in sidebar",
+          "type": "ui",
+          "expected": {
+            "forFreeUsers": {
+              "visible": true,
+              "text": "'Upgrade to Fundraising & Strategy'",
+              "subtext": "'Unlock all features and AI agents'",
+              "button": "'Upgrade Now' with RocketIcon",
+              "styling": "Orange gradient background with border"
+            },
+            "forProUsers": {
+              "visible": true,
+              "text": "'Upgrade to Venture Studio'"
+            },
+            "forStudioUsers": {
+              "visible": false,
+              "reason": "getUpgradeTier() returns null, component returns null"
+            }
+          },
+          "failCriteria": "Upgrade banner shown to Studio users, or banner not shown to Free/Pro users",
+          "severity": "major"
+        },
+        {
+          "id": "CP-010-11",
+          "step": 11,
+          "action": "Verify Manage Subscription in UpgradeTier dialog for paid users",
+          "type": "integration",
+          "expected": {
+            "condition": "Only shown when isSubscriptionActive is true",
+            "elements": ["'Manage Subscription' heading", "'Update payment method, view invoices, or cancel' description", "'Manage Billing' button"],
+            "behavior": "Calls redirectToPortal() to open Stripe Customer Portal",
+            "errorHandling": "Red error alert shown if portal redirect fails"
+          },
+          "failCriteria": "Manage Subscription section shown to free users, or portal redirect fails without error feedback",
+          "severity": "major"
+        }
+      ],
+      "successCriteria": "Free tier users see locked features with clear upgrade paths, can initiate Stripe checkout, receive tier update after payment, and all tier-gating logic correctly restricts/permits access based on subscription level",
+      "failurePoints": [
+        {
+          "id": "FP-010-01",
+          "checkpoint": "CP-010-06",
+          "description": "Stripe Checkout session creation fails",
+          "impact": "Users cannot upgrade their subscription, revenue blocked",
+          "rootCause": "STRIPE_SECRET_KEY missing, STRIPE_PRICE_ID invalid, or Stripe API down",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-010-02",
+          "checkpoint": "CP-010-07",
+          "description": "Stripe webhook does not update user tier in database",
+          "impact": "User paid but still sees Free tier features",
+          "rootCause": "Webhook endpoint not configured in Stripe dashboard, STRIPE_WEBHOOK_SECRET missing, or webhook handler fails to update profiles table",
+          "severity": "blocker"
+        },
+        {
+          "id": "FP-010-03",
+          "checkpoint": "CP-010-01",
+          "description": "TierProvider context returns incorrect tier",
+          "impact": "Features incorrectly locked or unlocked for user",
+          "rootCause": "Subscription check API returns stale data, context not refreshed after upgrade, or tier mapping logic error",
+          "severity": "critical"
+        },
+        {
+          "id": "FP-010-04",
+          "checkpoint": "CP-010-08",
+          "description": "FeatureGate overlay can be bypassed via browser DevTools",
+          "impact": "Users access Pro/Studio features without paying (client-side only gating)",
+          "rootCause": "Feature gating only implemented on frontend, API endpoints do not verify tier before serving data",
+          "severity": "critical"
+        }
+      ]
+    }
+  ]
+}

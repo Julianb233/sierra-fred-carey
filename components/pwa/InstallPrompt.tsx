@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useInstallPrompt } from "./useInstallPrompt";
 import { Button } from "@/components/ui/button";
 import { Cross2Icon } from "@radix-ui/react-icons";
@@ -8,12 +9,15 @@ import Link from "next/link";
 
 const DISMISS_KEY = "pwa-install-dismissed";
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+const AUTO_DISMISS_MS = 15_000; // Auto-dismiss after 15 seconds
 
 export function InstallPrompt() {
   const { canPrompt, isIOS, isStandalone, isInstalled, promptInstall } =
     useInstallPrompt();
   const [dismissed, setDismissed] = useState(true); // start true to prevent flash
   const [showPrompt, setShowPrompt] = useState(false);
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   // Check localStorage for dismiss state
   useEffect(() => {
@@ -36,13 +40,20 @@ export function InstallPrompt() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Auto-dismiss after 15 seconds of being visible
+  useEffect(() => {
+    if (!showPrompt || dismissed) return;
+    const timer = setTimeout(handleDismiss, AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [showPrompt, dismissed]);
+
   const handleDismiss = () => {
     setDismissed(true);
     localStorage.setItem(DISMISS_KEY, Date.now().toString());
   };
 
-  // Don't render if: standalone, installed, dismissed, not ready, or no platform support
-  if (isStandalone || isInstalled || dismissed || !showPrompt || (!canPrompt && !isIOS)) {
+  // Don't render if: dashboard, standalone, installed, dismissed, not ready, or no platform support
+  if (isDashboard || isStandalone || isInstalled || dismissed || !showPrompt || (!canPrompt && !isIOS)) {
     return null;
   }
 
