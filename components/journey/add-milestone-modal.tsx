@@ -29,7 +29,7 @@ interface AddMilestoneModalProps {
     description: string;
     category: string;
     targetDate?: string;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 const categories = [
@@ -52,26 +52,33 @@ export function AddMilestoneModal({
     targetDate: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.category) return;
 
-    onSubmit({
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      category: formData.category,
-      targetDate: formData.targetDate || undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        targetDate: formData.targetDate || undefined,
+      });
 
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      category: "",
-      targetDate: "",
-    });
+      // Reset form only on success
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        targetDate: "",
+      });
 
-    onClose();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -172,10 +179,10 @@ export function AddMilestoneModal({
             </Button>
             <Button
               type="submit"
-              disabled={!formData.title.trim() || !formData.category}
+              disabled={!formData.title.trim() || !formData.category || isSubmitting}
               className="bg-[#ff6a1a] hover:bg-[#ea580c]"
             >
-              Add Milestone
+              {isSubmitting ? "Adding..." : "Add Milestone"}
             </Button>
           </DialogFooter>
         </form>

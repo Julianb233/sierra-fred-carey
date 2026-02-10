@@ -20,6 +20,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface JourneyStats {
   ideaScore: number | null;
@@ -218,12 +219,14 @@ export default function JourneyDashboard() {
       const data = await res.json();
 
       if (data.success) {
-        // Add to UI
         setMilestones((prev) => [data.data, ...prev]);
+        toast.success("Milestone created");
+      } else {
+        toast.error("Failed to create milestone");
       }
     } catch (err) {
       console.error("Error creating milestone:", err);
-      // Could show a toast notification here
+      toast.error("Failed to create milestone");
     }
   };
 

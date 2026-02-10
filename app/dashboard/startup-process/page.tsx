@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Rocket } from "lucide-react";
 import { StartupProcessWizard } from "@/components/startup-process";
+import { toast } from "sonner";
 import type {
   StartupProcess,
   StepNumber,
@@ -237,6 +238,15 @@ export default function StartupProcessPage() {
       });
 
       setHasUnsavedChanges(true);
+
+      if (result.status === "pass") {
+        toast.success("Step validated successfully");
+      } else if (result.status === "blocked") {
+        toast.error(result.feedback || "Validation blocked");
+      } else {
+        toast.info(result.feedback || "Step needs improvement");
+      }
+
       return result;
     },
     [process, calculateProgress]
@@ -250,15 +260,10 @@ export default function StartupProcessPage() {
       // Save to localStorage
       localStorage.setItem("startup_process", JSON.stringify(process));
       setHasUnsavedChanges(false);
-
-      // In production, you would also save to the backend:
-      // await fetch('/api/startup-process', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(process),
-      // });
+      toast.success("Draft saved");
     } catch (err) {
       console.error("Error saving process:", err);
+      toast.error("Failed to save draft");
       throw err;
     }
   }, [process]);
