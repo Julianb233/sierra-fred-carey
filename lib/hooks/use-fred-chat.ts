@@ -287,13 +287,21 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
               break;
 
             case "models":
-              setState("applying_models");
+              // Only advance state forward (never regress past applying_models)
+              setState(prev => {
+                const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
+                return order.indexOf(prev) < order.indexOf("applying_models") ? "applying_models" : prev;
+              });
               break;
 
             case "synthesis":
               const synthesisData = data as FredSynthesis;
               setSynthesis(synthesisData);
-              setState("synthesizing");
+              // Only advance state forward (never regress past synthesizing)
+              setState(prev => {
+                const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
+                return order.indexOf(prev) < order.indexOf("synthesizing") ? "synthesizing" : prev;
+              });
               break;
 
             case "red_flag": {

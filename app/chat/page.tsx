@@ -66,7 +66,7 @@ export default function ChatPage() {
       >
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
-            <Link href="/">
+            <Link href="/dashboard">
               <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2 sm:px-3">
                 <ArrowLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">Back</span>
