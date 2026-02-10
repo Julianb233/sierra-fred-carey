@@ -14,7 +14,9 @@
     "validate-env": "tsx scripts/validate-env.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "worker:voice": "tsx workers/voice-agent/index.ts dev",
+    "worker:voice:build": "tsc -p workers/voice-agent/tsconfig.json"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.37",
@@ -25,6 +27,8 @@
     "@browserbasehq/stagehand": "^3.0.8",
     "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
+    "@livekit/agents": "^1.0.43",
+    "@livekit/agents-plugin-openai": "^1.0.43",
     "@livekit/components-react": "^2.9.17",
     "@livekit/components-styles": "^1.2.0",
     "@paper-design/shaders-react": "^0.0.68",

@@ -74,7 +74,7 @@ interface AgentSession {
 const activeSessions = new Map<string, AgentSession>();
 
 // LiveKit configuration
-const livekitHost = process.env.LIVEKIT_HOST || '';
+const livekitUrl = process.env.LIVEKIT_URL || '';
 const apiKey = process.env.LIVEKIT_API_KEY || '';
 const apiSecret = process.env.LIVEKIT_API_SECRET || '';
 
@@ -138,8 +138,9 @@ export async function spawnAgent(config: AgentConfig): Promise<AgentSession | nu
 
     activeSessions.set(config.roomName, session);
 
-    // In production, this would trigger a separate agent worker process
-    // For now, we return the token that can be used by a frontend/worker
+    // The @livekit/agents worker (npm run worker:voice) auto-detects
+    // new rooms and joins them. This function creates the room/token
+    // so the worker's dispatcher can pick it up.
     logger.log(`[VoiceAgent] Agent spawned for room: ${config.roomName}`);
 
     return session;
@@ -186,9 +187,9 @@ export async function removeAgent(roomName: string): Promise<boolean> {
     }
 
     // Use RoomServiceClient to remove participant
-    if (apiKey && apiSecret && livekitHost) {
+    if (apiKey && apiSecret && livekitUrl) {
       const client = new RoomServiceClient(
-        livekitHost.replace('wss://', 'https://'),
+        livekitUrl.replace('wss://', 'https://'),
         apiKey,
         apiSecret
       );
@@ -469,7 +470,7 @@ export function getAgentConnectionDetails(roomName: string): {
   }
 
   return {
-    serverUrl: livekitHost,
+    serverUrl: livekitUrl,
     token: session.token,
   };
 }

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "../..",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "paths": {
+      "@/*": ["../../*"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "../../lib/fred-brain.ts",
+    "../../lib/voice-agent.ts",
+    "../../lib/agents/fred-agent-voice.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
