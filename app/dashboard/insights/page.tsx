@@ -22,8 +22,11 @@ import {
   FileTextIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
-import { TrendCharts } from "@/components/insights/trend-charts";
-import { generateInsightsPDF } from "@/lib/utils/pdf-export";
+import dynamic from "next/dynamic";
+const TrendCharts = dynamic(
+  () => import("@/components/insights/trend-charts").then((mod) => mod.TrendCharts),
+  { ssr: false }
+);
 import type {
   ABTestResult,
   AIAnalytics,
@@ -133,7 +136,8 @@ export default function InsightsDashboardPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const { generateInsightsPDF } = await import("@/lib/utils/pdf-export");
     generateInsightsPDF(
       {
         analytics,

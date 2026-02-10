@@ -546,7 +546,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    // Handle auth errors (NextResponse thrown by requireAuth)
+    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
+      return error;
+    }
     console.error("[Positioning] Assessment error:", error);
     return NextResponse.json(
       {
@@ -592,7 +596,7 @@ export async function GET(request: NextRequest) {
       FROM positioning_assessments
       WHERE user_id = ${userId}
     `;
-    const total = parseInt(countResult[0].total);
+    const total = countResult?.[0]?.total ? parseInt(countResult[0].total) : 0;
 
     // Get assessments with pagination
     const assessments = await sql`

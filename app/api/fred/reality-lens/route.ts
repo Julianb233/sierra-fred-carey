@@ -290,6 +290,10 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    // Handle auth errors (NextResponse thrown by requireAuth)
+    if (error instanceof Response) {
+      return error as NextResponse;
+    }
     console.error("[Reality Lens API] GET Error:", error);
 
     return NextResponse.json(
