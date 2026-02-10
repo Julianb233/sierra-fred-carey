@@ -12,6 +12,7 @@ import { createDocument } from '@/lib/db/documents';
 import { processDocument } from '@/lib/documents/process-document';
 import { isValidPdf } from '@/lib/documents/pdf-processor';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
+import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import type { DocumentType } from '@/lib/documents/types';
 import { clientEnv, serverEnv } from '@/lib/env';
@@ -30,6 +31,9 @@ const ALLOWED_MIME_TYPES = ['application/pdf'];
 
 export async function POST(request: NextRequest) {
   try {
+    // Early auth gate - ensures 401 even if tier check throws
+    await requireAuth();
+
     // Check tier requirement (Pro or Studio tier required)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
     if (!tierCheck.user) {
@@ -142,6 +146,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('[DocumentUpload] Error:', error);
     return NextResponse.json(
       { error: 'Failed to upload document' },

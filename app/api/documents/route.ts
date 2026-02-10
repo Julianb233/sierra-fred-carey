@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { generateChatResponse } from "@/lib/ai/client";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
+import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 
@@ -66,6 +67,9 @@ const DOCUMENT_TITLES: Record<DocumentType, string> = {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Early auth gate - ensures 401 even if tier check throws
+    await requireAuth();
+
     // Pro tier required for Strategy Documents
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
     if (!tierCheck.user) {
@@ -124,6 +128,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Early auth gate - ensures 401 even if tier check throws
+    await requireAuth();
+
     // Pro tier required for Strategy Documents
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
     if (!tierCheck.user) {
@@ -191,6 +198,9 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("[Documents POST]", error);
     return NextResponse.json(
       { success: false, error: "Failed to create document" },

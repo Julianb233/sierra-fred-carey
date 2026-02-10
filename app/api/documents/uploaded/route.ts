@@ -8,11 +8,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocuments } from '@/lib/db/documents';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
+import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import type { DocumentType, DocumentStatus } from '@/lib/documents/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // Early auth gate - ensures 401 even if tier check throws
+    await requireAuth();
+
     // Check tier requirement (Pro or Studio)
     const tierCheck = await checkTierForRequest(request, UserTier.PRO);
     if (!tierCheck.user) {
@@ -60,6 +64,9 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('[UploadedDocuments] Error:', error);
     return NextResponse.json(
       { error: 'Failed to get documents' },
