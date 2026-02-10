@@ -35,30 +35,30 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Verify authorization via CRON_SECRET
+    // SECURITY: Auth check MUST come first to avoid leaking config state to unauthenticated callers
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret) {
-      logger.error('[Cron: Weekly Digest] CRON_SECRET not set');
-      return NextResponse.json(
-        { error: 'Cron not configured', code: 'CRON_NOT_CONFIGURED' },
-        { status: 503 },
-      );
-    }
-
-    const expectedToken = `Bearer ${cronSecret}`;
-    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader || "").digest();
-    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
-    if (!authHeader || !timingSafeEqual(hmac1, hmac2)) {
-      logger.warn('[Cron: Weekly Digest] Invalid or missing authorization');
+    if (!cronSecret || !authHeader) {
+      if (!cronSecret) {
+        logger.error('[Cron: Weekly Digest] CRON_SECRET not configured');
+      }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Check Resend is configured
+    const expectedToken = `Bearer ${cronSecret}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader).digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
+    if (!timingSafeEqual(hmac1, hmac2)) {
+      logger.warn('[Cron: Weekly Digest] Invalid authorization');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Check Resend is configured (safe to disclose after auth)
     if (!process.env.RESEND_API_KEY) {
-      logger.error('[Cron: Weekly Digest] RESEND_API_KEY not set');
+      logger.error('[Cron: Weekly Digest] Email service not configured');
       return NextResponse.json(
-        { error: 'Resend not configured', code: 'RESEND_NOT_CONFIGURED' },
+        { error: 'Email service not configured', code: 'EMAIL_NOT_CONFIGURED' },
         { status: 503 },
       );
     }

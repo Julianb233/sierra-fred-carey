@@ -23,40 +23,38 @@ export async function GET(request: NextRequest) {
 
   try {
     // Verify authorization via CRON_SECRET
+    // SECURITY: Auth check MUST come first to avoid leaking config state to unauthenticated callers
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret) {
-      console.error('[Cron: Weekly Check-in] CRON_SECRET environment variable is not set');
-      return NextResponse.json(
-        {
-          error: 'Cron not configured',
-          message: 'CRON_SECRET environment variable is not set.',
-          code: 'CRON_NOT_CONFIGURED',
-        },
-        { status: 503 }
-      );
-    }
-
-    const expectedToken = `Bearer ${cronSecret}`;
-    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader || "").digest();
-    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
-    if (!authHeader || !timingSafeEqual(hmac1, hmac2)) {
-      console.warn('[Cron: Weekly Check-in] Invalid or missing authorization');
+    if (!cronSecret || !authHeader) {
+      if (!cronSecret) {
+        console.error('[Cron: Weekly Check-in] CRON_SECRET not configured');
+      }
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Check if Twilio is configured
+    const expectedToken = `Bearer ${cronSecret}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader).digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expectedToken).digest();
+    if (!timingSafeEqual(hmac1, hmac2)) {
+      console.warn('[Cron: Weekly Check-in] Invalid authorization');
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Check if Twilio is configured (safe to disclose after auth)
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.error('[Cron: Weekly Check-in] Twilio credentials not configured');
       return NextResponse.json(
         {
-          error: 'Twilio not configured',
-          message: 'TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are required.',
-          code: 'TWILIO_NOT_CONFIGURED',
+          error: 'SMS service not configured',
+          code: 'SMS_NOT_CONFIGURED',
         },
         { status: 503 }
       );
