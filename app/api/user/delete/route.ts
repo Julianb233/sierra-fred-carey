@@ -20,6 +20,19 @@ export async function DELETE(_request: NextRequest) {
     // Delete user data in dependency order (children before parents).
     // Each deletion is wrapped in try/catch so missing tables don't crash the whole operation.
     const tables = [
+      // v3.0+ tables (children first)
+      { table: "fred_conversation_state", column: "user_id" },
+      { table: "fred_step_evidence", column: "user_id" },
+      { table: "push_subscriptions", column: "user_id" },
+      { table: "push_notification_logs", column: "user_id" },
+      { table: "email_sends", column: "user_id" },
+      { table: "shared_link_recipients", column: "user_id" },
+      { table: "shared_links", column: "user_id" },
+      { table: "team_members", column: "user_id" },
+      { table: "community_post_reactions", column: "user_id" },
+      { table: "community_post_replies", column: "author_id" },
+      { table: "community_posts", column: "author_id" },
+      { table: "community_members", column: "user_id" },
       // v2.0 tables (children first)
       { table: "red_flags", column: "user_id" },
       { table: "check_ins", column: "user_id" },
