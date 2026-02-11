@@ -114,7 +114,7 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - Custom AI model training — use existing providers with prompt engineering
 - White-label/multi-tenant — single brand (Sahara) only
 - Real Boardy API integration — keep mock until Boardy API is available
-- Founder community / peer matching — defer to v5.0+
+- Founder community / peer matching — moved to v4.0 (Phase 41)
 - Content library / courses — defer to v5.0+
 - Service marketplace — defer to v5.0+
 

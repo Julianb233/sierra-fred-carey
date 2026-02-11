@@ -45,6 +45,27 @@
 - [ ] **MODE-05**: Investor Readiness Score framework fully implemented -- AI scoring across 6 categories with stage benchmarks (currently DB schema only, no implementation)
 - [ ] **MODE-06**: Deck Request Protocol formalized as standalone flow -- provisional verdict first, then decide if deck review would change verdict (currently embedded in Investor Lens)
 
+### Dashboard Mentor Hub (HUB)
+
+- [ ] **HUB-01**: Dashboard has prominent, always-visible "Contact Fred" section — start chat or call in one click
+- [ ] **HUB-02**: Funding readiness progress wheel on dashboard — visual Red → Yellow → Green indicator powered by Investor Readiness Score
+- [ ] **HUB-03**: Progress wheel updates dynamically as founder completes upstream validation steps (feasibility, demand, economics)
+- [ ] **HUB-04**: Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in nav
+
+### Founder Communities (COMM)
+
+- [ ] **COMM-01**: Founders can create communities around topics, industries, or stages (self-started, not admin-curated)
+- [ ] **COMM-02**: Founders can browse and join communities from the dashboard
+- [ ] **COMM-03**: Community feeds show posts, questions, and updates from members
+- [ ] **COMM-04**: Communities are self-moderated by users with basic moderation tools
+
+### Multi-Channel FRED Access (CHANNEL)
+
+- [ ] **CHANNEL-01**: In-app chat accessible from any page (floating widget or persistent sidebar)
+- [ ] **CHANNEL-02**: Voice call to FRED from dashboard (leverages existing LiveKit infrastructure)
+- [ ] **CHANNEL-03**: SMS text to FRED with structured mentor responses (leverages existing Twilio infrastructure)
+- [ ] **CHANNEL-04**: All channels share conversation context — FRED knows what was discussed regardless of channel
+
 ## v2.0 Requirements (SHIPPED)
 
 <details>
@@ -180,11 +201,24 @@
 | MODE-05 | Phase 39 | Pending |
 | MODE-06 | Phase 39 | Pending |
 
+| HUB-01 | Phase 40 | Pending |
+| HUB-02 | Phase 40 | Pending |
+| HUB-03 | Phase 40 | Pending |
+| HUB-04 | Phase 40 | Pending |
+| COMM-01 | Phase 41 | Pending |
+| COMM-02 | Phase 41 | Pending |
+| COMM-03 | Phase 41 | Pending |
+| COMM-04 | Phase 41 | Pending |
+| CHANNEL-01 | Phase 42 | Pending |
+| CHANNEL-02 | Phase 42 | Pending |
+| CHANNEL-03 | Phase 42 | Pending |
+| CHANNEL-04 | Phase 42 | Pending |
+
 **Coverage:**
-- v4.0 requirements: 25 total
-- Mapped to phases: 25
+- v4.0 requirements: 37 total
+- Mapped to phases: 37
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-07 (v2.0)*
-*Updated: 2026-02-11 -- v4.0 requirements added, traceability updated with phase mappings*
+*Updated: 2026-02-11 -- v4.0 requirements added (37 total), phases 34-42 mapped*

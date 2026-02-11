@@ -5,7 +5,7 @@
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
-- [ ] **v4.0 FRED Mentor Experience** - Phases 34-39 (in progress)
+- [ ] **v4.0 FRED Mentor Experience** - Phases 34-42 (in progress)
 
 ## Phases
 
@@ -77,13 +77,15 @@ See MILESTONES.md for full details.
 
 **Milestone Goal:** Transform FRED from a responsive chatbot into a structured mentor that leads conversations, enforces decision sequencing through Reality Lens gating, and integrates existing frameworks as active conversation guides -- not passive tools. FRED controls the flow, not the user.
 
-**Phase Numbering:** Integer phases (34-39). Decimal phases (e.g., 35.1) reserved for urgent insertions.
+**Phase Numbering:** Integer phases (34-42). Decimal phases (e.g., 35.1) reserved for urgent insertions.
 
 **Parallelism:**
 - Wave 1 (foundation): Phase 34 -- system prompt overhaul, no dependencies
 - Wave 2 (parallel, both depend on Phase 34): Phase 35 (onboarding handoff) + Phase 36 (conversation state & structured flow)
 - Wave 3 (parallel, both depend on Phase 36): Phase 37 (Reality Lens gate & decision sequencing) + Phase 38 (framework & mode integration)
 - Wave 4 (depends on Phases 37 + 38): Phase 39 (missing frameworks & gated reviews)
+- Wave 5 (parallel, depends on Phase 39): Phase 40 (dashboard mentor hub) + Phase 41 (founder communities)
+- Wave 6 (depends on Phase 40): Phase 42 (multi-channel FRED access — call, text, message)
 
 - [ ] **Phase 34: System Prompt Overhaul** - Rebuild system prompt with mentor behaviors, dynamic context injection, and Fred's master GPT instructions
 - [ ] **Phase 35: Onboarding-to-FRED Handoff** - Seamless data flow from onboarding into FRED's first conversation with no repetition
@@ -91,6 +93,9 @@ See MILESTONES.md for full details.
 - [ ] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
 - [ ] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
 - [ ] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
+- [ ] **Phase 40: Dashboard Mentor Hub & Readiness Wheel** - Prominent "Contact Fred" placement + funding readiness progress wheel (Red → Yellow → Green)
+- [ ] **Phase 41: Founder Communities** - User-created communities, self-started, joinable from dashboard
+- [ ] **Phase 42: Multi-Channel FRED Access** - Call, text (SMS), and message FRED 24/7 from any screen
 
 ## Phase Details
 
@@ -161,6 +166,39 @@ See MILESTONES.md for full details.
   4. Per-slide investor objections (2-3 skeptical questions per slide with knockout answers) are generated as part of the gated Pitch Deck Review flow
 **Plans**: TBD
 
+### Phase 40: Dashboard Mentor Hub & Readiness Wheel
+**Goal**: The dashboard is the founder's home base for building their company — with FRED always one click away and a persistent visual indicator (Red → Yellow → Green) showing how close they are to funding readiness
+**Depends on**: Phase 39 (Investor Readiness Score must be fully implemented to power the readiness wheel)
+**Requirements**: HUB-01, HUB-02, HUB-03, HUB-04
+**Success Criteria** (what must be TRUE):
+  1. Dashboard has a prominent, always-visible "Contact Fred" section — founders can start a chat or call from the dashboard in one click
+  2. Funding readiness progress wheel displayed on dashboard — visual indicator (Red → Yellow → Green) powered by Investor Readiness Score, showing how far along the founder is toward being investor-ready
+  3. Progress wheel updates dynamically as the founder completes upstream validation steps (feasibility, demand, economics, etc.)
+  4. Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in a nav menu
+**Plans**: TBD
+
+### Phase 41: Founder Communities
+**Goal**: Founders can join and create communities within Sahara — self-started groups that provide peer support, accountability, and stickiness beyond the FRED mentor relationship
+**Depends on**: Phase 34 (basic mentor infrastructure needed, but communities are largely independent)
+**Requirements**: COMM-01, COMM-02, COMM-03, COMM-04
+**Success Criteria** (what must be TRUE):
+  1. Founders can create communities around topics, industries, or stages (e.g., "Pre-seed SaaS", "Hardware Founders", "Second-time Founders")
+  2. Founders can browse and join communities from the dashboard
+  3. Community feeds show posts, questions, and updates from members
+  4. Communities are self-started and self-moderated by users — not admin-curated
+**Plans**: TBD
+
+### Phase 42: Multi-Channel FRED Access
+**Goal**: Founders can reach FRED through any channel — in-app chat, voice call, or SMS text — 24/7 from any screen in the app
+**Depends on**: Phase 40 (dashboard hub provides the UI surface for multi-channel access)
+**Requirements**: CHANNEL-01, CHANNEL-02, CHANNEL-03, CHANNEL-04
+**Success Criteria** (what must be TRUE):
+  1. Founders can message FRED via in-app chat from any page (floating widget or persistent sidebar)
+  2. Founders can call FRED via voice (LiveKit integration already exists from v3.0) directly from the dashboard
+  3. Founders can text FRED via SMS and receive structured mentor responses (builds on existing Twilio infrastructure)
+  4. All channels share the same conversation context — FRED knows what was discussed regardless of channel used
+**Plans**: TBD
+
 ## Progress
 
 ### v4.0 Execution
@@ -170,6 +208,8 @@ See MILESTONES.md for full details.
 - Wave 2 (parallel): Phases 35, 36
 - Wave 3 (parallel): Phases 37, 38
 - Wave 4: Phase 39
+- Wave 5 (parallel): Phases 40, 41
+- Wave 6: Phase 42
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -179,3 +219,6 @@ See MILESTONES.md for full details.
 | 37. Reality Lens Gate & Decision Sequencing | v4.0 | 0/TBD | Not started | - |
 | 38. Framework & Mode Integration | v4.0 | 0/TBD | Not started | - |
 | 39. Missing Frameworks & Gated Reviews | v4.0 | 0/TBD | Not started | - |
+| 40. Dashboard Mentor Hub & Readiness Wheel | v4.0 | 0/TBD | Not started | - |
+| 41. Founder Communities | v4.0 | 0/TBD | Not started | - |
+| 42. Multi-Channel FRED Access | v4.0 | 0/TBD | Not started | - |
