@@ -27,6 +27,61 @@ export type EvidenceSource = "conversation" | "document" | "inferred" | "user_co
 
 export type ProcessStatus = "active" | "paused" | "completed" | "abandoned";
 
+// ============================================================================
+// Wave 3 Types: Reality Lens Gate + Diagnostic Mode
+// ============================================================================
+
+/** Reality Lens dimension names (matches REALITY_LENS_FACTORS in schemas/reality-lens.ts) */
+export type RealityLensDimension = "feasibility" | "economics" | "demand" | "distribution" | "timing";
+
+/** Validation status for a single RL dimension */
+export type RLGateStatus = "not_assessed" | "assumed" | "weak" | "validated";
+
+/** Per-dimension gate state */
+export interface RLDimensionGate {
+  status: RLGateStatus;
+  blockers: string[];
+  lastAssessedAt: string | null;
+}
+
+/** Full Reality Lens gate state across all 5 dimensions */
+export type RealityLensGate = Record<RealityLensDimension, RLDimensionGate>;
+
+/** Diagnostic mode (matches DiagnosticMode in lib/ai/diagnostic-engine.ts) */
+export type ActiveMode = "founder-os" | "positioning" | "investor-readiness";
+
+/** Framework introduction state for a single framework */
+export interface FrameworkIntroductionState {
+  introduced: boolean;
+  introducedAt: string | null;
+  trigger: string | null;
+}
+
+/** Signal history entry (capped at 20 in application layer) */
+export interface SignalHistoryEntry {
+  signal: string;
+  framework: "positioning" | "investor";
+  detectedAt: string;
+  context: string;
+}
+
+/** Mode context — signal history, introduction state, assessment tracking */
+export interface ModeContext {
+  activatedAt: string | null;
+  activatedBy: string | null;
+  introductionState: {
+    positioning: FrameworkIntroductionState;
+    investor: FrameworkIntroductionState;
+  };
+  signalHistory: SignalHistoryEntry[];
+  formalAssessments: { offered: boolean; accepted: boolean };
+}
+
+/** All 5 RL dimensions */
+export const REALITY_LENS_DIMENSIONS: RealityLensDimension[] = [
+  "feasibility", "economics", "demand", "distribution", "timing",
+];
+
 /** Silent diagnostic tags from early messages (Operating Bible 5.2) */
 export interface DiagnosticTags {
   positioningClarity?: "low" | "med" | "high";
@@ -54,6 +109,10 @@ export interface ConversationState {
   currentBlockers: string[];
   diagnosticTags: DiagnosticTags;
   founderSnapshot: FounderSnapshot;
+  // Wave 3: Reality Lens gate + diagnostic mode
+  realityLensGate: RealityLensGate;
+  activeMode: ActiveMode;
+  modeContext: ModeContext;
   lastTransitionAt: Date | null;
   lastTransitionFrom: string | null;
   lastTransitionTo: string | null;
@@ -667,8 +726,373 @@ export async function buildProgressContext(userId: string): Promise<string> {
 }
 
 // ============================================================================
+// Wave 3: Reality Lens Gate Operations
+// ============================================================================
+
+/**
+ * Update the validation status of a single Reality Lens dimension.
+ * FRED calls this during chat when it assesses a dimension inline.
+ */
+export async function updateRealityLensDimension(
+  userId: string,
+  dimension: RealityLensDimension,
+  status: RLGateStatus,
+  blockers?: string[]
+): Promise<void> {
+  if (!REALITY_LENS_DIMENSIONS.includes(dimension)) {
+    throw new Error(`Invalid RL dimension: ${dimension}`);
+  }
+
+  const supabase = await createServiceClient();
+  const now = new Date().toISOString();
+
+  // Build the dimension update object (snake_case for DB)
+  const dimensionUpdate = {
+    status,
+    blockers: blockers || [],
+    last_assessed_at: now,
+  };
+
+  // Use jsonb_set to update a single dimension without overwriting others
+  const { error } = await supabase.rpc("exec_sql", {
+    query: `
+      UPDATE fred_conversation_state
+      SET reality_lens_gate = jsonb_set(
+        reality_lens_gate,
+        $1::text[],
+        $2::jsonb
+      )
+      WHERE user_id = $3
+    `,
+    params: [
+      `{${dimension}}`,
+      JSON.stringify(dimensionUpdate),
+      userId,
+    ],
+  });
+
+  // Fallback: if RPC not available, do full read-modify-write
+  if (error) {
+    const state = await getConversationState(userId);
+    if (!state) return;
+
+    const gate = state.realityLensGate;
+    gate[dimension] = {
+      status,
+      blockers: blockers || [],
+      lastAssessedAt: now,
+    };
+
+    // Convert back to snake_case for DB
+    const dbGate: Record<string, unknown> = {};
+    for (const dim of REALITY_LENS_DIMENSIONS) {
+      dbGate[dim] = {
+        status: gate[dim].status,
+        blockers: gate[dim].blockers,
+        last_assessed_at: gate[dim].lastAssessedAt,
+      };
+    }
+
+    const { error: updateError } = await supabase
+      .from("fred_conversation_state")
+      .update({ reality_lens_gate: dbGate })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("[Conversation State] Failed to update RL dimension:", updateError);
+      throw updateError;
+    }
+  }
+}
+
+/**
+ * Get the Reality Lens gate state for a user.
+ * Returns null if no conversation state exists.
+ */
+export async function getRealityLensGate(userId: string): Promise<RealityLensGate | null> {
+  const state = await getConversationState(userId);
+  return state?.realityLensGate || null;
+}
+
+/**
+ * Check if all Reality Lens dimensions are validated.
+ * Phase 37 uses this as the gate before allowing downstream work.
+ */
+export function isRealityLensFullyValidated(gate: RealityLensGate): boolean {
+  return REALITY_LENS_DIMENSIONS.every((dim) => gate[dim].status === "validated");
+}
+
+/**
+ * Get dimensions that are blocking progress (not validated).
+ * Returns dimensions with their blockers for FRED to communicate to the founder.
+ */
+export function getBlockingDimensions(
+  gate: RealityLensGate
+): Array<{ dimension: RealityLensDimension; status: RLGateStatus; blockers: string[] }> {
+  return REALITY_LENS_DIMENSIONS
+    .filter((dim) => gate[dim].status !== "validated")
+    .map((dim) => ({
+      dimension: dim,
+      status: gate[dim].status,
+      blockers: gate[dim].blockers,
+    }));
+}
+
+// ============================================================================
+// Wave 3: Diagnostic Mode Operations
+// ============================================================================
+
+/** Max signal history entries to keep (architect directive: cap at 20) */
+const MAX_SIGNAL_HISTORY = 20;
+
+/**
+ * Update the active diagnostic mode.
+ * Called when the diagnostic engine detects a mode switch.
+ */
+export async function updateActiveMode(
+  userId: string,
+  mode: ActiveMode,
+  activatedBy?: string
+): Promise<void> {
+  const supabase = await createServiceClient();
+  const now = new Date().toISOString();
+
+  // Update active_mode and set activation metadata in mode_context
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const modeContext = state.modeContext;
+  modeContext.activatedAt = now;
+  modeContext.activatedBy = activatedBy || "signal_detected";
+
+  // Convert to snake_case for DB
+  const dbModeContext = modeContextToDb(modeContext);
+
+  const { error } = await supabase
+    .from("fred_conversation_state")
+    .update({
+      active_mode: mode,
+      mode_context: dbModeContext,
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("[Conversation State] Failed to update active mode:", error);
+    throw error;
+  }
+}
+
+/**
+ * Record a framework introduction event.
+ * Called when FRED introduces positioning or investor lens to the founder.
+ */
+export async function recordFrameworkIntroduction(
+  userId: string,
+  framework: "positioning" | "investor",
+  trigger: string
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const supabase = await createServiceClient();
+  const now = new Date().toISOString();
+
+  const modeContext = state.modeContext;
+  modeContext.introductionState[framework] = {
+    introduced: true,
+    introducedAt: now,
+    trigger,
+  };
+
+  const dbModeContext = modeContextToDb(modeContext);
+
+  const { error } = await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("[Conversation State] Failed to record framework introduction:", error);
+    throw error;
+  }
+}
+
+/**
+ * Append a signal detection to the signal history.
+ * Caps at MAX_SIGNAL_HISTORY entries (drops oldest).
+ */
+export async function appendSignalHistory(
+  userId: string,
+  signal: string,
+  framework: "positioning" | "investor",
+  context: string
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const supabase = await createServiceClient();
+  const now = new Date().toISOString();
+
+  const modeContext = state.modeContext;
+
+  // Append new signal
+  modeContext.signalHistory.push({
+    signal,
+    framework,
+    detectedAt: now,
+    context: context.slice(0, 200), // Cap context length
+  });
+
+  // Cap at MAX_SIGNAL_HISTORY (drop oldest)
+  if (modeContext.signalHistory.length > MAX_SIGNAL_HISTORY) {
+    modeContext.signalHistory = modeContext.signalHistory.slice(-MAX_SIGNAL_HISTORY);
+  }
+
+  const dbModeContext = modeContextToDb(modeContext);
+
+  const { error } = await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("[Conversation State] Failed to append signal history:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update formal assessment tracking.
+ */
+export async function updateFormalAssessments(
+  userId: string,
+  offered?: boolean,
+  accepted?: boolean
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const supabase = await createServiceClient();
+
+  const modeContext = state.modeContext;
+  if (offered !== undefined) modeContext.formalAssessments.offered = offered;
+  if (accepted !== undefined) modeContext.formalAssessments.accepted = accepted;
+
+  const dbModeContext = modeContextToDb(modeContext);
+
+  const { error } = await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("[Conversation State] Failed to update formal assessments:", error);
+    throw error;
+  }
+}
+
+/** Convert camelCase ModeContext to snake_case for DB storage */
+function modeContextToDb(ctx: ModeContext): Record<string, unknown> {
+  return {
+    activated_at: ctx.activatedAt,
+    activated_by: ctx.activatedBy,
+    introduction_state: {
+      positioning: {
+        introduced: ctx.introductionState.positioning.introduced,
+        introduced_at: ctx.introductionState.positioning.introducedAt,
+        trigger: ctx.introductionState.positioning.trigger,
+      },
+      investor: {
+        introduced: ctx.introductionState.investor.introduced,
+        introduced_at: ctx.introductionState.investor.introducedAt,
+        trigger: ctx.introductionState.investor.trigger,
+      },
+    },
+    signal_history: ctx.signalHistory.map((s) => ({
+      signal: s.signal,
+      framework: s.framework,
+      detected_at: s.detectedAt,
+      context: s.context,
+    })),
+    formal_assessments: ctx.formalAssessments,
+  };
+}
+
+// ============================================================================
 // Transform Functions (snake_case -> camelCase)
 // ============================================================================
+
+/** Default Reality Lens gate state (all dimensions not_assessed) */
+const DEFAULT_RL_GATE: RealityLensGate = {
+  feasibility: { status: "not_assessed", blockers: [], lastAssessedAt: null },
+  economics: { status: "not_assessed", blockers: [], lastAssessedAt: null },
+  demand: { status: "not_assessed", blockers: [], lastAssessedAt: null },
+  distribution: { status: "not_assessed", blockers: [], lastAssessedAt: null },
+  timing: { status: "not_assessed", blockers: [], lastAssessedAt: null },
+};
+
+/** Default mode context */
+const DEFAULT_MODE_CONTEXT: ModeContext = {
+  activatedAt: null,
+  activatedBy: null,
+  introductionState: {
+    positioning: { introduced: false, introducedAt: null, trigger: null },
+    investor: { introduced: false, introducedAt: null, trigger: null },
+  },
+  signalHistory: [],
+  formalAssessments: { offered: false, accepted: false },
+};
+
+/** Transform DB snake_case RL gate JSON to camelCase */
+function transformRLGate(raw: Record<string, unknown> | null): RealityLensGate {
+  if (!raw) return { ...DEFAULT_RL_GATE };
+  const gate = { ...DEFAULT_RL_GATE };
+  for (const dim of REALITY_LENS_DIMENSIONS) {
+    const entry = raw[dim] as Record<string, unknown> | undefined;
+    if (entry) {
+      gate[dim] = {
+        status: (entry.status as RLGateStatus) || "not_assessed",
+        blockers: (entry.blockers as string[]) || [],
+        lastAssessedAt: (entry.last_assessed_at as string) || null,
+      };
+    }
+  }
+  return gate;
+}
+
+/** Transform DB snake_case mode context JSON to camelCase */
+function transformModeContext(raw: Record<string, unknown> | null): ModeContext {
+  if (!raw) return { ...DEFAULT_MODE_CONTEXT };
+  const intro = raw.introduction_state as Record<string, Record<string, unknown>> | undefined;
+  const signals = raw.signal_history as Array<Record<string, string>> | undefined;
+  const assessments = raw.formal_assessments as Record<string, boolean> | undefined;
+  return {
+    activatedAt: (raw.activated_at as string) || null,
+    activatedBy: (raw.activated_by as string) || null,
+    introductionState: {
+      positioning: {
+        introduced: intro?.positioning?.introduced as boolean ?? false,
+        introducedAt: (intro?.positioning?.introduced_at as string) || null,
+        trigger: (intro?.positioning?.trigger as string) || null,
+      },
+      investor: {
+        introduced: intro?.investor?.introduced as boolean ?? false,
+        introducedAt: (intro?.investor?.introduced_at as string) || null,
+        trigger: (intro?.investor?.trigger as string) || null,
+      },
+    },
+    signalHistory: (signals || []).map((s) => ({
+      signal: s.signal || "",
+      framework: (s.framework as "positioning" | "investor") || "positioning",
+      detectedAt: s.detected_at || "",
+      context: s.context || "",
+    })),
+    formalAssessments: {
+      offered: assessments?.offered ?? false,
+      accepted: assessments?.accepted ?? false,
+    },
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase rows are untyped at this boundary
 function transformStateRow(row: any): ConversationState {
@@ -681,6 +1105,9 @@ function transformStateRow(row: any): ConversationState {
     currentBlockers: row.current_blockers || [],
     diagnosticTags: row.diagnostic_tags || {},
     founderSnapshot: row.founder_snapshot || {},
+    realityLensGate: transformRLGate(row.reality_lens_gate),
+    activeMode: row.active_mode || "founder-os",
+    modeContext: transformModeContext(row.mode_context),
     lastTransitionAt: row.last_transition_at ? new Date(row.last_transition_at) : null,
     lastTransitionFrom: row.last_transition_from,
     lastTransitionTo: row.last_transition_to,
