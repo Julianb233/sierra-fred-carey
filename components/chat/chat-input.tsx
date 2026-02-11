@@ -59,10 +59,11 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
+            aria-label="Message to Fred"
             className={cn(
               "flex-1 bg-transparent border-0 outline-none resize-none",
-              "text-sm text-foreground placeholder:text-muted-foreground/60",
-              "max-h-32 min-h-[40px] py-2 px-1",
+              "text-base text-foreground placeholder:text-muted-foreground/60",
+              "max-h-32 min-h-[44px] py-2 px-1",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           />
@@ -76,8 +77,9 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
               onClick={handleSend}
               disabled={!message.trim() || isLoading}
               size="icon"
+              aria-label="Send message"
               className={cn(
-                "h-10 w-10 rounded-xl",
+                "h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl",
                 "bg-[#ff6a1a] hover:bg-[#ea580c]",
                 "hover:shadow-lg hover:shadow-[#ff6a1a]/50",
                 "transition-all duration-300",
