@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 import NavBar from "@/components/navbar";
@@ -67,6 +68,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.className} antialiased`}>
+        <Script
+          src="https://link.msgsndr.com/js/external-tracking.js"
+          data-tracking-id="tk_42c4652bb7654480a513653a8c7f4e1f"
+          strategy="afterInteractive"
+        />
         <Providers>
           <AnalyticsProvider>
             <NavBar />
