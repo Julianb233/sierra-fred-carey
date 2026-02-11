@@ -95,8 +95,8 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
           </motion.div>
         </div>
 
-        {/* Typing hint */}
-        <div className="px-4 pb-2 text-xs text-muted-foreground/60">
+        {/* Typing hint — hidden on mobile where keyboard covers it */}
+        <div className="hidden sm:block px-4 pb-2 text-xs text-muted-foreground/60">
           Press Enter to send, Shift+Enter for new line
         </div>
       </div>
