@@ -25,20 +25,24 @@ export default function CommunitiesPage() {
   const [activeCategory, setActiveCategory] = useState<CommunityCategory | "all">("all");
   const [showMyOnly, setShowMyOnly] = useState(false);
   const [joiningSlug, setJoiningSlug] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchCommunities();
   }, []);
 
   async function fetchCommunities() {
+    setError(false);
     try {
       const res = await fetch("/api/communities");
       if (res.ok) {
         const json = await res.json();
         setCommunities(json.data ?? []);
+      } else {
+        setError(true);
       }
     } catch {
-      // silently fail
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -142,7 +146,22 @@ export default function CommunitiesPage() {
       </div>
 
       {/* Communities grid — exact spec breakpoints */}
-      {loading ? (
+      {error ? (
+        <div className="text-center py-16">
+          <div className="mx-auto h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+            <Users className="h-8 w-8 text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Failed to load communities
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+            Something went wrong. Please try again.
+          </p>
+          <Button variant="outline" className="min-h-[44px]" onClick={fetchCommunities}>
+            Retry
+          </Button>
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <CommunityCardSkeleton key={i} />

@@ -64,6 +64,7 @@ export default function CommunityMembersPage() {
 
   async function handleRemove(userId: string) {
     if (!community) return;
+    if (!window.confirm("Are you sure you want to remove this member?")) return;
     try {
       const res = await fetch(
         `/api/communities/${slug}/members?userId=${encodeURIComponent(userId)}`,

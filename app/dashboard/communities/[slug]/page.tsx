@@ -214,10 +214,13 @@ export default function CommunityDetailPage() {
   }
 
   async function handleRemovePost(postId: string) {
+    if (!window.confirm("Are you sure you want to remove this post? This cannot be undone.")) return;
     const res = await fetch(`/api/communities/${slug}/posts/${postId}`, { method: "DELETE" });
     if (res.ok) {
       setPosts((prev) => prev.filter((p) => p.id !== postId));
       toast.success("Post removed");
+    } else {
+      toast.error("Failed to remove post");
     }
   }
 
