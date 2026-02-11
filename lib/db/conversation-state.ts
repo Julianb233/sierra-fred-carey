@@ -600,21 +600,42 @@ export async function buildProgressContext(userId: string): Promise<string> {
   // Current position -- single line
   lines.push(`Process: ${state.processStatus}, current_step=${state.currentStep}`);
 
-  // Only list steps with activity (skip not_started to save tokens)
+  // Separate steps into categories for tiered detail output
   const activeSteps = STEP_ORDER.filter((step) => {
     const status = state.stepStatuses[step] || "not_started";
     return status !== "not_started" || step === state.currentStep;
   });
-
   const notStartedCount = STEP_ORDER.length - activeSteps.length;
 
-  for (const step of activeSteps) {
+  // Find the most recently validated step (last in STEP_ORDER with status=validated)
+  const lastValidatedStep = [...STEP_ORDER]
+    .reverse()
+    .find((s) => state.stepStatuses[s] === "validated");
+
+  // Steps that get full evidence: current step + most recently validated step
+  const detailSteps = new Set<string>();
+  detailSteps.add(state.currentStep);
+  if (lastValidatedStep) detailSteps.add(lastValidatedStep);
+
+  // Compact status-only line for older validated steps
+  const statusOnlySteps = activeSteps.filter(
+    (s) => !detailSteps.has(s)
+  );
+  if (statusOnlySteps.length > 0) {
+    const summary = statusOnlySteps
+      .map((s) => `${s}=${state.stepStatuses[s] || "not_started"}`)
+      .join(", ");
+    lines.push(`Prior steps: ${summary}`);
+  }
+
+  // Detailed output for current step and most recently validated step
+  for (const step of activeSteps.filter((s) => detailSteps.has(s))) {
     const status = state.stepStatuses[step] || "not_started";
     const stepEvidence = evidenceByStep.get(step) || [];
     const marker = step === state.currentStep ? " <-- CURRENT" : "";
     lines.push(`[${status.toUpperCase()}] ${step}${marker}`);
 
-    // Show evidence for active steps (cap at 2 outputs + 2 facts + all kill signals)
+    // Show evidence (cap at 2 outputs + 2 facts + all kill signals)
     const outputs = stepEvidence.filter((e) => e.evidenceType === "required_output");
     const facts = stepEvidence.filter((e) => e.evidenceType === "supporting_fact");
     const killSignals = stepEvidence.filter((e) => e.evidenceType === "kill_signal");
