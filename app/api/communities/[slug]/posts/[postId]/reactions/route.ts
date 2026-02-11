@@ -16,6 +16,9 @@ import {
   toggleReaction,
   getReactions,
 } from "@/lib/db/communities";
+import { checkRateLimitForUser } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // Validation
@@ -40,6 +43,13 @@ export async function POST(
 ) {
   try {
     const userId = await requireAuth();
+
+    // Rate limit reactions
+    const userTier = await getUserTier(userId);
+    const tierKey = userTier >= UserTier.STUDIO ? "studio" : userTier >= UserTier.PRO ? "pro" : "free";
+    const { response: rateLimitResponse } = await checkRateLimitForUser(request, userId, tierKey);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { slug, postId } = await params;
 
     const community = await getCommunityBySlug(slug);

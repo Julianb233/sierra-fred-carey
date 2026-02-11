@@ -802,6 +802,11 @@ export async function toggleReaction(
   });
 
   if (error) {
+    // Handle race condition: if another request already inserted this reaction,
+    // the UNIQUE constraint fires. Treat as a no-op (already reacted).
+    if (error.code === "23505") {
+      return { added: true };
+    }
     throw new Error(`Failed to toggle reaction: ${error.message}`);
   }
 

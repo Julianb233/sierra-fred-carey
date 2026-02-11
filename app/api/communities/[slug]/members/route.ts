@@ -16,6 +16,9 @@ import {
   joinCommunity,
   leaveCommunity,
 } from "@/lib/db/communities";
+import { checkRateLimitForUser } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // GET /api/communities/[slug]/members
@@ -44,12 +47,21 @@ export async function GET(
     );
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
+    // Membership check: only members can view the member list
+    const viewerMembership = await getMembership(community.id, userId);
+    if (!viewerMembership) {
+      return NextResponse.json(
+        { success: false, error: "You must be a member to view the member list" },
+        { status: 403 }
+      );
+    }
+
     const members = await getCommunityMembers(community.id, { limit, offset });
 
     return NextResponse.json({
       success: true,
       data: members,
-      count: members.length,
+      total: community.memberCount,
       limit,
       offset,
     });
@@ -69,11 +81,18 @@ export async function GET(
 // ============================================================================
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const userId = await requireAuth();
+
+    // Rate limit join requests
+    const userTier = await getUserTier(userId);
+    const tierKey = userTier >= UserTier.STUDIO ? "studio" : userTier >= UserTier.PRO ? "pro" : "free";
+    const { response: rateLimitResponse } = await checkRateLimitForUser(request, userId, tierKey);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { slug } = await params;
 
     const community = await getCommunityBySlug(slug);

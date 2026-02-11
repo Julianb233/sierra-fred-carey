@@ -16,6 +16,9 @@ import {
   getMembership,
 } from "@/lib/db/communities";
 import { sanitizeContent, generateSlug } from "@/lib/communities/sanitize";
+import { checkRateLimitForUser } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // Validation
@@ -37,6 +40,12 @@ const createSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    // Rate limit community creation (stricter: 5/min free, 20/min pro, 50/min studio)
+    const userTier = await getUserTier(userId);
+    const tierKey = userTier >= UserTier.STUDIO ? "studio" : userTier >= UserTier.PRO ? "pro" : "free";
+    const { response: rateLimitResponse } = await checkRateLimitForUser(request, userId, tierKey);
+    if (rateLimitResponse) return rateLimitResponse;
 
     let body: unknown;
     try {
@@ -113,7 +122,11 @@ export async function GET(request: NextRequest) {
     const userId = await requireAuth();
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || undefined;
+    const rawSearch = searchParams.get("search") || undefined;
+    // Escape SQL LIKE wildcards to prevent wildcard injection
+    const search = rawSearch
+      ? rawSearch.replace(/[%_\\]/g, (c) => `\\${c}`)
+      : undefined;
     const category = searchParams.get("category") || undefined;
     const limit = Math.min(
       parseInt(searchParams.get("limit") || "20", 10),
