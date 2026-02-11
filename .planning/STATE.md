@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v4.0 FRED Mentor Experience -- Phase 34 (System Prompt Overhaul)
+**Current focus:** v4.0 FRED Mentor Experience -- Phase 36 (Conversation State & Structured Flow)
 
 ## Current Position
 
-Phase: 34 of 39 (System Prompt Overhaul)
-Plan: -- (not yet planned)
-Status: Roadmap created, ready to plan Phase 34
-Last activity: 2026-02-11 -- v4.0 roadmap created (6 phases, 25 requirements mapped)
+Phase: 36 of 39 (Conversation State & Structured Flow)
+Plan: 01 of 2
+Status: Plan 36-01 complete, ready for 36-02
+Last activity: 2026-02-11 -- Completed 36-01-PLAN.md (Wire Conversation State into Chat Pipeline)
 
-Progress: [..............................] 0%
+Progress: [#.............................] ~3%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v4.0)
-- Average duration: --
-- Total execution time: --
+- Total plans completed: 1 (v4.0)
+- Average duration: ~3 min
+- Total execution time: ~3 min
 
 ## Accumulated Context
 
@@ -36,15 +36,23 @@ v4.0 milestone decisions:
 - Diagnostic mode switching is silent -- frameworks introduced by context, not user choice
 - 9-Step Startup Process is the default decision sequencing backbone
 
+Phase 36-01 decisions:
+
+- Step guidance block targets <300 tokens to preserve context window
+- All conversation state loading is non-blocking -- chat must not fail if state table is missing
+- Progress context loaded in parallel with profile, facts, and first-conversation check
+- Actor signatures use optional params for backward compatibility
+- Drift redirect is a separate function (buildDriftRedirectBlock) injected only on drift
+
 ### Key Architectural Gaps (from codebase analysis)
 
-- System prompt is STATIC -- same prompt every time, no dynamic context from onboarding or conversation state
+- ~~System prompt is STATIC -- same prompt every time, no dynamic context from onboarding or conversation state~~ RESOLVED: Phase 34 + 36-01
 - No concept of conversation "modes" -- no structured intake vs freeform
 - Topic detection is keyword-matching (validate-input.ts), not AI-powered mode-switching
 - Diagnostic engine (lib/ai/diagnostic-engine.ts) exists but is NOT wired into chat route
 - Existing frameworks (startup-process.ts, investor-lens.ts, positioning.ts) exist as code but are NOT integrated as active gates
 - Reality Lens exists as standalone assessment tool but NOT as a gate in conversations
-- No conversation state tracking for where founder is in the 9-step process
+- ~~No conversation state tracking for where founder is in the 9-step process~~ RESOLVED: Phase 36-01
 
 ### Blockers/Concerns
 
@@ -53,6 +61,6 @@ v4.0 milestone decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: v4.0 roadmap created, ready to plan Phase 34
+Last session: 2026-02-11 20:27 UTC
+Stopped at: Completed 36-01-PLAN.md
 Resume file: None
