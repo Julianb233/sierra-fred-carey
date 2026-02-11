@@ -1,0 +1,201 @@
+name: Auto-Debug Build Failures
+
+on:
+  # Trigger when any workflow fails
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
+
+  # Also trigger on failed deployments
+  deployment_status:
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Failed workflow run ID to debug'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  debug-failure:
+    # Only run on failures
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
+      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'failure') ||
+      github.event_name == 'workflow_dispatch'
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Get failed run details
+        id: get-logs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let runId;
+            
+            if (context.eventName === 'workflow_dispatch' && context.payload.inputs?.run_id) {
+              runId = parseInt(context.payload.inputs.run_id);
+            } else if (context.eventName === 'workflow_run') {
+              runId = context.payload.workflow_run.id;
+            } else {
+              // For deployment failures, find the most recent failed run
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                status: 'failure',
+                per_page: 1
+              });
+              if (runs.data.workflow_runs.length === 0) {
+                core.setOutput('has_failure', 'false');
+                return;
+              }
+              runId = runs.data.workflow_runs[0].id;
+            }
+            
+            core.setOutput('run_id', runId);
+            
+            // Get the failed jobs
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              filter: 'latest'
+            });
+            
+            const failedJobs = jobs.data.jobs.filter(j => j.conclusion === 'failure');
+            
+            if (failedJobs.length === 0) {
+              core.setOutput('has_failure', 'false');
+              return;
+            }
+            
+            // Get logs for each failed job
+            let allLogs = '';
+            for (const job of failedJobs) {
+              allLogs += `\n=== FAILED JOB: ${job.name} ===\n`;
+              
+              // Get failed steps
+              const failedSteps = job.steps?.filter(s => s.conclusion === 'failure') || [];
+              for (const step of failedSteps) {
+                allLogs += `Step "${step.name}" failed\n`;
+              }
+              
+              // Try to get logs
+              try {
+                const logData = await github.rest.actions.downloadJobLogsForWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  job_id: job.id
+                });
+                // Get last 200 lines (most relevant)
+                const lines = logData.data.split('\n');
+                const tail = lines.slice(-200).join('\n');
+                allLogs += tail + '\n';
+              } catch (e) {
+                allLogs += `(Could not fetch logs: ${e.message})\n`;
+              }
+            }
+            
+            // Truncate to 4000 chars for the issue comment
+            const truncated = allLogs.length > 4000 
+              ? '...(truncated)\n' + allLogs.slice(-4000) 
+              : allLogs;
+            
+            core.setOutput('has_failure', 'true');
+            core.setOutput('logs', truncated);
+            core.setOutput('run_url', `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`);
+            
+            // Check if this was triggered by a PR
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
+            
+            if (run.data.pull_requests && run.data.pull_requests.length > 0) {
+              core.setOutput('pr_number', run.data.pull_requests[0].number);
+            }
+
+      - name: Analyze failure and post fix suggestions
+        if: steps.get-logs.outputs.has_failure == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const logs = `${{ steps.get-logs.outputs.logs }}`;
+            const runUrl = `${{ steps.get-logs.outputs.run_url }}`;
+            const prNumber = `${{ steps.get-logs.outputs.pr_number }}`;
+            
+            // Pattern-based error analysis
+            const patterns = [
+              { regex: /Module not found.*'([^']+)'/g, fix: (m) => `Missing module: \`${m[1]}\`. Run \`npm install ${m[1]}\` or check the import path.` },
+              { regex: /Type error:.*Property '(\w+)' does not exist/g, fix: (m) => `TypeScript error: Property \`${m[1]}\` doesn't exist. Check the type definition or add it to the interface.` },
+              { regex: /SyntaxError: Unexpected token/g, fix: () => `Syntax error detected. Check recent changes for typos, missing brackets, or incorrect imports.` },
+              { regex: /ENOENT.*no such file.*'([^']+)'/g, fix: (m) => `File not found: \`${m[1]}\`. Check if the file was deleted, renamed, or not committed.` },
+              { regex: /Error: Command "npm run build" exited with (\d+)/g, fix: () => `Build command failed. Check the build logs above for the specific compilation error.` },
+              { regex: /ERR_MODULE_NOT_FOUND/g, fix: () => `ESM module resolution error. Check import paths — ensure file extensions are included for ESM imports.` },
+              { regex: /out of memory|heap|ENOMEM/gi, fix: () => `Out of memory error. Try increasing Node.js memory: \`NODE_OPTIONS=--max-old-space-size=4096\`` },
+              { regex: /ETIMEOUT|ECONNREFUSED|fetch failed/gi, fix: () => `Network error during build. Check if external services (APIs, packages) are accessible.` },
+              { regex: /error TS\d+:/g, fix: () => `TypeScript compilation error. Run \`npx tsc --noEmit\` locally to see all type errors.` },
+              { regex: /Cannot find module '([^']+)'/g, fix: (m) => `Cannot find module \`${m[1]}\`. Run \`npm install\` or check if the dependency is in \`package.json\`.` },
+              { regex: /Vercel.*Error/gi, fix: () => `Vercel deployment error. Check the Vercel dashboard for detailed build logs.` },
+            ];
+            
+            let analysis = '## 🔍 Auto-Debug Analysis\n\n';
+            let foundPatterns = false;
+            
+            for (const pattern of patterns) {
+              const matches = [...logs.matchAll(pattern.regex)];
+              if (matches.length > 0) {
+                foundPatterns = true;
+                for (const match of matches) {
+                  analysis += `- ${pattern.fix(match)}\n`;
+                }
+              }
+            }
+            
+            if (!foundPatterns) {
+              analysis += '- No common patterns detected. Review the build logs manually.\n';
+            }
+            
+            analysis += `\n### 📋 Quick Fix Checklist\n`;
+            analysis += `- [ ] Check the error messages in the [workflow logs](${runUrl})\n`;
+            analysis += `- [ ] Run the build locally: \`npm run build\`\n`;
+            analysis += `- [ ] Check for missing dependencies: \`npm install\`\n`;
+            analysis += `- [ ] Verify environment variables are set\n`;
+            
+            analysis += `\n<details><summary>📜 Last 100 lines of build log</summary>\n\n\`\`\`\n`;
+            analysis += logs.split('\n').slice(-100).join('\n');
+            analysis += `\n\`\`\`\n</details>\n`;
+            
+            analysis += `\n---\n*🤖 Auto-generated by build-debug action • [View full logs](${runUrl})*`;
+            
+            // Post to PR if available, otherwise create an issue
+            if (prNumber && prNumber !== 'undefined') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(prNumber),
+                body: analysis
+              });
+              console.log(`Posted analysis to PR #${prNumber}`);
+            } else {
+              // Post as an issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🔴 Build Failure Auto-Debug Report`,
+                body: analysis,
+                labels: ['bug', 'auto-debug']
+              });
+              console.log('Created auto-debug issue');
+            }
