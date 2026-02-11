@@ -175,6 +175,48 @@
       "priority": 2,
       "passes": true,
       "notes": "Fix 22 (commit 92fee80) + Fix 23 (commit d20faf6). Boardy Coming Soon removed, Reframing linked."
+    },
+    {
+      "id": "US-013",
+      "title": "Community reactions are consistent under concurrent usage",
+      "description": "As a community member, I want post reactions to work reliably even when multiple users react at the same time",
+      "acceptanceCriteria": [
+        "Reaction toggle uses atomic delete-first pattern (no TOCTOU race)",
+        "UNIQUE constraint on (post_id, user_id, reaction_type) prevents duplicate reactions",
+        "Optimistic UI updates immediately with rollback on error",
+        "Undefined API response does not corrupt local state"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Backend fix B1 (commit 7284049) + Frontend fix F01/F05 (commit d97ffaf). Race condition eliminated, optimistic UI added."
+    },
+    {
+      "id": "US-014",
+      "title": "Community search is safe from filter injection",
+      "description": "As a security-conscious developer, I want community search to sanitize input so that PostgREST filter syntax cannot be injected",
+      "acceptanceCriteria": [
+        "SQL LIKE wildcards (%, _, \\) are escaped in search input",
+        "PostgREST filter-syntax characters (commas, periods, parentheses, quotes) are stripped",
+        "Normal alphanumeric search still works correctly"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Backend fix B2 (commit 3f2ac69). PostgREST special characters sanitized."
+    },
+    {
+      "id": "US-015",
+      "title": "Community interactions provide clear user feedback",
+      "description": "As a community member, I want join/leave/post actions to show clear success or error feedback so that I know what happened",
+      "acceptanceCriteria": [
+        "Leave community shows confirmation dialog before deletion",
+        "Join/leave errors show toast notification instead of failing silently",
+        "Post creation only shows success toast when data is actually returned",
+        "Reply thread refreshes immediately after submitting a reply",
+        "Multiple concurrent join operations do not interfere with each other"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Frontend fixes F03, F04, F06, F08, F10 (commit d97ffaf). Confirmation dialogs, error toasts, reply refresh, Set-based loading state."
     }
   ]
 }

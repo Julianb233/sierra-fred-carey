@@ -28,6 +28,24 @@
 | 22 | Boardy incorrectly marked Coming Soon | app/features/page.tsx | Removed stale comingSoon: true flag | 92fee80 | |
 | 23 | Strategy Reframing page orphaned (no links) | app/dashboard/strategy/page.tsx | Added link button in Strategy Docs header | d20faf6 | |
 
+## Community Debug Investigation Fixes (by other agents)
+
+| # | Issue | File(s) | Fix | Commit |
+|---|-------|---------|-----|--------|
+| B1 | toggleReaction TOCTOU race condition | lib/db/communities.ts | Replaced check-then-act with atomic delete-first pattern | 7284049 |
+| B2 | PostgREST filter syntax injection in search | app/api/communities/route.ts | Strip PostgREST-special characters from search input | 3f2ac69 |
+| B3 | Missing UPDATE RLS policy on community_members | lib/db/migrations/053_community_member_update_policy.sql | Added scoped UPDATE policy (owner/moderator only, no escalation to owner) | 7f2e193 |
+| F01 | handleReact corruption + optimistic UI | app/dashboard/communities/[slug]/page.tsx | Optimistic toggle with rollback on error | d97ffaf |
+| F02 | fetchMembers stale closure | app/dashboard/communities/[slug]/page.tsx | Wrapped in useCallback with proper deps | d97ffaf |
+| F03 | Leave button missing confirmation | communities/[slug]/page.tsx, communities/page.tsx | Added window.confirm before DELETE | d97ffaf |
+| F04 | ReplyThread not refreshing after submit | components/communities/ReplyThread.tsx | Re-fetch replies after successful onReply | d97ffaf |
+| F05 | Reaction toggle 200-500ms delay | app/dashboard/communities/[slug]/page.tsx | Optimistic UI (merged with F01) | d97ffaf |
+| F06 | Post creation toast on falsy data | app/dashboard/communities/[slug]/page.tsx | Guard toast behind if(json.data) | d97ffaf |
+| F07 | Dead communityId prop on CreatePostForm | components/communities/CreatePostForm.tsx | Removed unused prop from interface and call sites | d97ffaf |
+| F08 | Browse page join/leave errors swallowed | app/dashboard/communities/page.tsx | Added toast.error on failure branches | d97ffaf |
+| F09 | postPage not reset on re-fetch | app/dashboard/communities/[slug]/page.tsx | Added setPostPage(0) alongside fetchPosts(0) | d97ffaf |
+| F10 | Single joiningSlug race condition | app/dashboard/communities/page.tsx | Replaced string state with Set<string> | d97ffaf |
+
 ## QA Verification Template
 
 For each fix from Code Fixer:
@@ -54,6 +72,6 @@ For each fix from Code Fixer:
 
 **Verification method:** All 20 fixes verified by reading the committed source code. No visual regression testing possible until deployment is restored.
 
-**Summary:** 20/20 fixes PASS. 2 remaining cosmetic items (O4, O5) are MINOR and decorative — no functional impact.
+**Summary:** 23 Code Fixer fixes + 13 community debug fixes (3 backend + 10 frontend) = 36 total fixes. 2 remaining cosmetic items (O4, O5) are MINOR and decorative -- no functional impact.
 
 *Updated: 2026-02-11*
