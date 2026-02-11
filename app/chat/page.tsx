@@ -119,7 +119,7 @@ export default function ChatPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="container mx-auto px-4 h-[calc(100vh-73px)]"
+        className="container mx-auto px-4 h-[calc(100dvh-57px)] sm:h-[calc(100dvh-73px)]"
       >
         <div className="h-full max-w-6xl mx-auto">
           <ChatInterface className="h-full" />
