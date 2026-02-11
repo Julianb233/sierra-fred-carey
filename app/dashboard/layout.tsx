@@ -25,6 +25,7 @@ import {
   CountdownTimerIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  ChatBubbleIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -80,6 +81,12 @@ const navItems: NavItem[] = [
     name: "Monitoring",
     href: "/dashboard/monitoring",
     icon: <ActivityLogIcon className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
+    name: "Communities",
+    href: "/dashboard/communities",
+    icon: <ChatBubbleIcon className="h-4 w-4" />,
     badge: "Free",
   },
   {
@@ -226,7 +233,9 @@ export default function DashboardLayout({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(item.href);
           const isLocked = item.tier !== undefined && user.tier < item.tier;
 
           return (
