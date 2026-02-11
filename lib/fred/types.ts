@@ -5,9 +5,27 @@
  * FRED = Fred's Rational Expert Decision-maker
  */
 
+import type { StartupStep, StepStatus } from "@/lib/ai/frameworks/startup-process";
+
 // ============================================================================
 // Core Context Types
 // ============================================================================
+
+/**
+ * Conversation state passed through the XState machine (Phase 36).
+ * Lightweight projection of fred_conversation_state for prompt injection
+ * and actor access.
+ */
+export interface ConversationStateContext {
+  currentStep: StartupStep;
+  stepStatuses: Record<StartupStep, StepStatus>;
+  processStatus: string;
+  currentBlockers: string[];
+  diagnosticTags: Record<string, string>;
+  founderSnapshot: Record<string, unknown>;
+  /** Pre-built progress context string for prompt injection */
+  progressContext: string;
+}
 
 /**
  * FRED State Machine Context
@@ -42,6 +60,8 @@ export interface FredContext {
   memoryContext: MemoryContext | null;
   /** Dynamic founder context string for prompt personalization (Phase 34) */
   founderContext: string | null;
+  /** Conversation state for structured flow (Phase 36) */
+  conversationState: ConversationStateContext | null;
 }
 
 /**
@@ -126,6 +146,10 @@ export interface ValidatedInput {
   urgency: "low" | "medium" | "high" | "critical";
   /** Burnout signals detected from message analysis */
   burnoutSignals?: BurnoutSignals;
+  /** Which startup step this message relates to (Phase 36) */
+  stepRelevance?: { targetStep: StartupStep; confidence: number } | null;
+  /** Whether the founder is drifting to a downstream step (Phase 36) */
+  driftDetected?: { isDrift: boolean; targetStep: StartupStep; currentStep: StartupStep } | null;
 }
 
 /**
