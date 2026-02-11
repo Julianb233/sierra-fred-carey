@@ -249,6 +249,11 @@ function StrategyContent() {
               </p>
             </div>
           </div>
+          <Link href="/dashboard/strategy/reframing">
+            <Button variant="outline" size="sm" className="border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10">
+              Strategy Reframing
+            </Button>
+          </Link>
         </div>
       </header>
 
