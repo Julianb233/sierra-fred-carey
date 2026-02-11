@@ -117,6 +117,14 @@ export async function POST(
       );
     }
 
+    // Block self-join for private communities (invite-only)
+    if (community.isPrivate) {
+      return NextResponse.json(
+        { success: false, error: "This is a private community. You need an invitation to join." },
+        { status: 403 }
+      );
+    }
+
     // Check if already a member
     const existing = await getMembership(community.id, userId);
     if (existing) {
