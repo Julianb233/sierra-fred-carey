@@ -75,6 +75,8 @@ export interface ModeContext {
   };
   signalHistory: SignalHistoryEntry[];
   formalAssessments: { offered: boolean; accepted: boolean };
+  /** Consecutive messages without framework signals (Phase 38 hysteresis) */
+  quietCount: number;
 }
 
 /** All 5 RL dimensions */
@@ -871,23 +873,35 @@ const MAX_SIGNAL_HISTORY = 20;
 
 /**
  * Update the active diagnostic mode.
- * Called when the diagnostic engine detects a mode switch.
+ * Accepts either a full ModeContext object (Phase 38 pattern — avoids extra DB read)
+ * or a simple activatedBy string (convenience pattern — reads and patches context).
+ * Caps signal_history at MAX_SIGNAL_HISTORY entries.
  */
 export async function updateActiveMode(
   userId: string,
   mode: ActiveMode,
-  activatedBy?: string
+  contextOrActivatedBy?: ModeContext | string
 ): Promise<void> {
   const supabase = await createServiceClient();
-  const now = new Date().toISOString();
 
-  // Update active_mode and set activation metadata in mode_context
-  const state = await getConversationState(userId);
-  if (!state) return;
+  let modeContext: ModeContext;
 
-  const modeContext = state.modeContext;
-  modeContext.activatedAt = now;
-  modeContext.activatedBy = activatedBy || "signal_detected";
+  if (contextOrActivatedBy && typeof contextOrActivatedBy === "object") {
+    // Phase 38 pattern: full ModeContext passed directly
+    modeContext = contextOrActivatedBy;
+  } else {
+    // Convenience pattern: read existing context and patch activation
+    const state = await getConversationState(userId);
+    if (!state) return;
+    modeContext = state.modeContext;
+    modeContext.activatedAt = new Date().toISOString();
+    modeContext.activatedBy = (contextOrActivatedBy as string) || "signal_detected";
+  }
+
+  // Cap signal_history at MAX_SIGNAL_HISTORY entries
+  if (modeContext.signalHistory.length > MAX_SIGNAL_HISTORY) {
+    modeContext.signalHistory = modeContext.signalHistory.slice(-MAX_SIGNAL_HISTORY);
+  }
 
   // Convert to snake_case for DB
   const dbModeContext = modeContextToDb(modeContext);
@@ -1015,6 +1029,33 @@ export async function updateFormalAssessments(
   }
 }
 
+/**
+ * Get the current active mode and mode context for a user.
+ * Focused getter matching Phase 38 plan's expected interface.
+ * Returns defaults if no conversation state exists or columns not populated.
+ */
+export async function getActiveMode(
+  userId: string
+): Promise<{ activeMode: ActiveMode; modeContext: ModeContext }> {
+  const state = await getConversationState(userId);
+  if (!state) {
+    return {
+      activeMode: "founder-os",
+      modeContext: { ...DEFAULT_MODE_CONTEXT },
+    };
+  }
+  return {
+    activeMode: state.activeMode,
+    modeContext: state.modeContext,
+  };
+}
+
+/**
+ * Mark a framework introduction as delivered.
+ * Alias for recordFrameworkIntroduction matching Phase 38 plan naming.
+ */
+export const markIntroductionDelivered = recordFrameworkIntroduction;
+
 /** Convert camelCase ModeContext to snake_case for DB storage */
 function modeContextToDb(ctx: ModeContext): Record<string, unknown> {
   return {
@@ -1039,6 +1080,7 @@ function modeContextToDb(ctx: ModeContext): Record<string, unknown> {
       context: s.context,
     })),
     formal_assessments: ctx.formalAssessments,
+    quiet_count: ctx.quietCount,
   };
 }
 
@@ -1065,6 +1107,7 @@ const DEFAULT_MODE_CONTEXT: ModeContext = {
   },
   signalHistory: [],
   formalAssessments: { offered: false, accepted: false },
+  quietCount: 0,
 };
 
 /** Transform DB snake_case RL gate JSON to camelCase */
@@ -1115,6 +1158,7 @@ function transformModeContext(raw: Record<string, unknown> | null): ModeContext 
       offered: assessments?.offered ?? false,
       accepted: assessments?.accepted ?? false,
     },
+    quietCount: (raw.quiet_count as number) ?? 0,
   };
 }
 
