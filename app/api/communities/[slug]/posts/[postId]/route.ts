@@ -175,7 +175,7 @@ export async function PATCH(
     if (updates.content)
       updates.content = sanitizeContent(updates.content, 5000);
 
-    const updated = await updatePost(postId, post.authorId, updates);
+    const updated = await updatePost(postId, updates);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
@@ -233,7 +233,7 @@ export async function DELETE(
       );
     }
 
-    await deletePost(postId, post.authorId);
+    await deletePost(postId);
 
     return NextResponse.json({
       success: true,

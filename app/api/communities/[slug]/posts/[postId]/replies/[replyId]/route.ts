@@ -214,7 +214,7 @@ export async function DELETE(
       );
     }
 
-    await deleteReply(replyId, reply.authorId);
+    await deleteReply(replyId);
 
     return NextResponse.json({
       success: true,

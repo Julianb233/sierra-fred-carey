@@ -716,7 +716,6 @@ export async function listPosts(
  */
 export async function updatePost(
   postId: string,
-  userId: string,
   updates: Partial<Pick<CommunityPost, "title" | "content" | "isPinned">>
 ): Promise<CommunityPost> {
   const supabase = createServiceClient();
@@ -744,8 +743,7 @@ export async function updatePost(
  * Delete a post. Caller should verify author or moderator/owner permission.
  */
 export async function deletePost(
-  postId: string,
-  userId: string
+  postId: string
 ): Promise<void> {
   const supabase = createServiceClient();
 
@@ -932,8 +930,7 @@ export async function updateReply(
  * reply_count on the post is decremented by the DB trigger.
  */
 export async function deleteReply(
-  replyId: string,
-  userId: string
+  replyId: string
 ): Promise<void> {
   const supabase = createServiceClient();
 
