@@ -61,6 +61,18 @@ export default async function AdminLayout({
             >
               Training
             </Link>
+            <Link
+              href="/admin/voice-agent"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Voice Agent
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Analytics
+            </Link>
           </div>
         </div>
       </nav>
