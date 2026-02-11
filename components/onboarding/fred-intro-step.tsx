@@ -212,13 +212,15 @@ export function FredIntroStep({ startupInfo, onNext, onBack }: FredIntroStepProp
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               disabled={isLoading}
+              aria-label="Message to Fred"
               className="flex-1"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               size="icon"
-              className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+              aria-label="Send message"
+              className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white min-h-[44px] min-w-[44px]"
             >
               <Send className="h-4 w-4" />
             </Button>
