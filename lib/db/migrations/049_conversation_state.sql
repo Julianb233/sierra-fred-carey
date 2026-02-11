@@ -74,8 +74,8 @@ CREATE INDEX IF NOT EXISTS idx_conv_state_user ON fred_conversation_state(user_i
 CREATE INDEX IF NOT EXISTS idx_conv_state_step ON fred_conversation_state(current_step);
 CREATE INDEX IF NOT EXISTS idx_conv_state_status ON fred_conversation_state(process_status);
 
--- Auto-update updated_at
-CREATE OR REPLACE FUNCTION update_conv_state_updated_at()
+-- Generic updated_at trigger function (reusable across tables)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = now();
@@ -86,7 +86,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_conv_state_updated_at
   BEFORE UPDATE ON fred_conversation_state
   FOR EACH ROW
-  EXECUTE FUNCTION update_conv_state_updated_at();
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- 2. fred_step_evidence
@@ -153,7 +153,7 @@ CREATE INDEX IF NOT EXISTS idx_step_evidence_active ON fred_step_evidence(user_i
 CREATE TRIGGER trg_step_evidence_updated_at
   BEFORE UPDATE ON fred_step_evidence
   FOR EACH ROW
-  EXECUTE FUNCTION update_conv_state_updated_at();
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- 3. Helper view: Step summary per user

@@ -638,7 +638,7 @@ export async function buildProgressContext(userId: string): Promise<string> {
 // Transform Functions (snake_case -> camelCase)
 // ============================================================================
 
-function transformStateRow(row: any): ConversationState {
+function transformStateRow(row: Record<string, unknown>): ConversationState {
   return {
     id: row.id,
     userId: row.user_id,
@@ -656,7 +656,7 @@ function transformStateRow(row: any): ConversationState {
   };
 }
 
-function transformEvidenceRow(row: any): StepEvidence {
+function transformEvidenceRow(row: Record<string, unknown>): StepEvidence {
   return {
     id: row.id,
     userId: row.user_id,

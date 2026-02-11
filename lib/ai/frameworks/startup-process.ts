@@ -16,7 +16,7 @@ export type StartupStep =
   | "pilot"
   | "scale-decision";
 
-export type StepStatus = "not_started" | "in_progress" | "validated" | "blocked";
+export type StepStatus = "not_started" | "in_progress" | "validated" | "blocked" | "skipped";
 
 export interface StepValidation {
   step: StartupStep;
