@@ -27,6 +27,10 @@
 | 21 | Admin nav missing Voice Agent and Analytics | app/admin/layout.tsx | Added 2 nav links for fully-built admin pages | bb55ef6 | |
 | 22 | Boardy incorrectly marked Coming Soon | app/features/page.tsx | Removed stale comingSoon: true flag | 92fee80 | |
 | 23 | Strategy Reframing page orphaned (no links) | app/dashboard/strategy/page.tsx | Added link button in Strategy Docs header | d20faf6 | |
+| 24 | Risk alerts error shows "Unable to load" instead of empty state | components/dashboard/red-flags-widget.tsx | Show friendly empty state on API error | c0d4396 | |
+| 25 | No "Forgot Password" on login page | app/login/page.tsx, app/forgot-password/page.tsx, app/reset-password/page.tsx | Added forgot-password link, password reset pages with Supabase flow | c0d4396 | |
+| 26 | Dashboard stat cards show raw "-" for locked features | app/dashboard/page.tsx | Show "0" with "Upgrade to Pro/Studio" link instead of "-" | c0d4396 | |
+| 27 | Features nav dropdown has no "View all" link | components/navbar.tsx | Added "View all features" link at bottom of dropdown | c0d4396 | |
 
 ## Community Debug Investigation Fixes (by other agents)
 
@@ -72,6 +76,6 @@ For each fix from Code Fixer:
 
 **Verification method:** All 20 fixes verified by reading the committed source code. No visual regression testing possible until deployment is restored.
 
-**Summary:** 23 Code Fixer fixes + 13 community debug fixes (3 backend + 10 frontend) = 36 total fixes. 2 remaining cosmetic items (O4, O5) are MINOR and decorative -- no functional impact.
+**Summary:** 27 Code Fixer fixes + 13 community debug fixes (3 backend + 10 frontend) = 40 total fixes. 2 remaining cosmetic items (O4, O5) are MINOR and decorative -- no functional impact.
 
 *Updated: 2026-02-11*

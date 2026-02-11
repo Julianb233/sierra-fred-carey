@@ -217,6 +217,35 @@
       "priority": 1,
       "passes": true,
       "notes": "Frontend fixes F03, F04, F06, F08, F10 (commit d97ffaf). Confirmation dialogs, error toasts, reply refresh, Set-based loading state."
+    },
+    {
+      "id": "US-016",
+      "title": "Users can reset their password via email",
+      "description": "As a founder who forgot their password, I want to reset it via email so that I can regain access to my account",
+      "acceptanceCriteria": [
+        "Login page shows 'Forgot password?' link below password field",
+        "/forgot-password page accepts email and sends Supabase reset link",
+        "/reset-password page lets user set new password after clicking email link",
+        "Success state shows confirmation and redirects to dashboard",
+        "Pages use branded Sahara styling consistent with login page"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 25 (commit c0d4396). Full password reset flow with forgot-password and reset-password pages."
+    },
+    {
+      "id": "US-017",
+      "title": "Dashboard shows clear upgrade prompts for locked features",
+      "description": "As a free-tier founder, I want locked dashboard stats to show upgrade prompts instead of confusing dashes so that I understand what I am missing",
+      "acceptanceCriteria": [
+        "Locked stat cards show '0' instead of raw '-'",
+        "Locked stat cards show 'Upgrade to Pro/Studio' link pointing to /pricing",
+        "Lock icon is still visible on locked cards",
+        "Risk alerts widget shows friendly empty state on API errors instead of error message"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fixes 24, 26 (commit c0d4396). Dashboard stat cards and red-flags widget improved."
     }
   ]
 }
