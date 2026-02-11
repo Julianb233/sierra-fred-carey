@@ -638,7 +638,8 @@ export async function buildProgressContext(userId: string): Promise<string> {
 // Transform Functions (snake_case -> camelCase)
 // ============================================================================
 
-function transformStateRow(row: Record<string, unknown>): ConversationState {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase rows are untyped at this boundary
+function transformStateRow(row: any): ConversationState {
   return {
     id: row.id,
     userId: row.user_id,
@@ -656,7 +657,8 @@ function transformStateRow(row: Record<string, unknown>): ConversationState {
   };
 }
 
-function transformEvidenceRow(row: Record<string, unknown>): StepEvidence {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase rows are untyped at this boundary
+function transformEvidenceRow(row: any): StepEvidence {
   return {
     id: row.id,
     userId: row.user_id,
