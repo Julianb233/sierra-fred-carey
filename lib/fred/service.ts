@@ -7,7 +7,7 @@
 
 import { createActor, waitFor } from "xstate";
 import { fredMachine } from "./machine";
-import type { FredContext, FredResponse, UserInput } from "./types";
+import type { FredContext, FredResponse, UserInput, ConversationStateContext } from "./types";
 import { FredObservability } from "./observability";
 
 export interface FredServiceOptions {
@@ -16,6 +16,8 @@ export interface FredServiceOptions {
   enableObservability?: boolean;
   /** Dynamic founder context string for prompt personalization (Phase 34) */
   founderContext?: string;
+  /** Conversation state for structured flow (Phase 36) */
+  conversationState?: ConversationStateContext | null;
   onStateChange?: (state: string, context: FredContext) => void;
   onError?: (error: Error) => void;
 }
@@ -57,6 +59,7 @@ export class FredService {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
+        conversationState: this.options.conversationState || null,
       },
     });
 
@@ -141,6 +144,7 @@ export class FredService {
           },
           retryCount: 0,
           founderContext: this.options.founderContext || null,
+          conversationState: this.options.conversationState || null,
         },
         duration,
       };
@@ -162,6 +166,7 @@ export class FredService {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
+        conversationState: this.options.conversationState || null,
       },
     });
 
@@ -238,6 +243,7 @@ export class FredService {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
+        conversationState: this.options.conversationState || null,
       },
     });
 

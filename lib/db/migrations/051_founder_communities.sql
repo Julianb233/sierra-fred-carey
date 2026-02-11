@@ -390,11 +390,18 @@ END $$;
 -- ---------- community_post_reactions ----------
 ALTER TABLE community_post_reactions ENABLE ROW LEVEL SECURITY;
 
--- Any authenticated user can read reactions
+-- Community members can read reactions on posts in their communities
 DO $$ BEGIN
-  CREATE POLICY "Authenticated users can read reactions"
+  CREATE POLICY "Community members can read reactions"
     ON community_post_reactions FOR SELECT
-    USING (auth.uid() IS NOT NULL);
+    USING (
+      EXISTS (
+        SELECT 1 FROM community_posts cp
+        JOIN community_members cm ON cm.community_id = cp.community_id
+        WHERE cp.id = community_post_reactions.post_id
+          AND cm.user_id = auth.uid()
+      )
+    );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -513,3 +520,35 @@ COMMENT ON TABLE community_post_reactions IS
 
 COMMENT ON TABLE community_post_replies IS
   'Threaded replies on posts. parent_reply_id enables nested threading.';
+
+-- ============================================================================
+-- 9. Additional constraints and indexes (production hardening)
+-- ============================================================================
+
+-- SCHEMA-05: Category CHECK constraint (4 meta-categories)
+DO $$ BEGIN
+  ALTER TABLE communities
+    ADD CONSTRAINT chk_community_category
+    CHECK (category IN ('general', 'industry', 'stage', 'topic'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- SCHEMA-W04: Content length constraint (max 10000 chars)
+DO $$ BEGIN
+  ALTER TABLE community_posts
+    ADD CONSTRAINT chk_post_content_length
+    CHECK (char_length(content) <= 10000);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- SCHEMA-W04: Reply content length constraint (max 5000 chars)
+DO $$ BEGIN
+  ALTER TABLE community_post_replies
+    ADD CONSTRAINT chk_reply_content_length
+    CHECK (char_length(content) <= 5000);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- SCHEMA-W05: Index for member_count sort in listCommunities
+CREATE INDEX IF NOT EXISTS idx_communities_member_count
+  ON communities(member_count DESC);

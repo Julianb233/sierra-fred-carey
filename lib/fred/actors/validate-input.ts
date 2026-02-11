@@ -19,7 +19,9 @@ import type {
   ClarificationRequest,
   CoachingTopic,
   BurnoutSignals,
+  ConversationStateContext,
 } from "../types";
+import { STEP_ORDER, type StartupStep } from "@/lib/ai/frameworks/startup-process";
 import { detectBurnoutSignals } from "./burnout-detector";
 
 /**
@@ -27,7 +29,8 @@ import { detectBurnoutSignals } from "./burnout-detector";
  */
 export async function validateInputActor(
   input: UserInput,
-  memoryContext: MemoryContext | null
+  memoryContext: MemoryContext | null,
+  conversationState?: ConversationStateContext | null
 ): Promise<ValidatedInput> {
   logger.log("[FRED] Validating input:", input.message.substring(0, 100));
 
@@ -86,6 +89,15 @@ export async function validateInputActor(
   // Detect burnout signals for founder wellbeing
   const burnoutSignals = detectBurnoutSignals(sanitizedMessage);
 
+  // Phase 36: Step-relevance and drift detection
+  let stepRelevance: { targetStep: StartupStep; confidence: number } | null = null;
+  let driftDetected: { isDrift: boolean; targetStep: StartupStep; currentStep: StartupStep } | null = null;
+
+  if (conversationState) {
+    stepRelevance = detectStepRelevance(sanitizedMessage, keywords, conversationState.currentStep);
+    driftDetected = detectDrift(stepRelevance, conversationState);
+  }
+
   return {
     originalMessage: input.message,
     intent: intentResult.intent,
@@ -97,6 +109,8 @@ export async function validateInputActor(
     sentiment,
     urgency,
     burnoutSignals,
+    stepRelevance,
+    driftDetected,
   };
 }
 
@@ -407,6 +421,83 @@ function extractKeywords(message: string): string[] {
  * Detect coaching topic from message content and extracted keywords.
  * Maps to COACHING_PROMPTS keys in prompts.ts.
  */
+// ============================================================================
+// Step-Relevance & Drift Detection (Phase 36)
+// ============================================================================
+
+/**
+ * Detect which startup step the user's message relates to.
+ * Uses exact phrases (multi-word, matched with includes) and single-keyword
+ * regex patterns (word-boundary to avoid false positives like "scale" matching "escalate").
+ */
+function detectStepRelevance(
+  message: string,
+  keywords: string[],
+  currentStep: StartupStep
+): { targetStep: StartupStep; confidence: number } | null {
+  const stepSignals: Record<StartupStep, Array<string | RegExp>> = {
+    problem: [/\bproblem\b/, "pain point", /\bissue\b/, /\bfrustrat\w*\b/, /\bbroken\b/, /\binefficient\b/, /\bstruggl\w*\b/],
+    buyer: [/\bcustomer\b/, /\bbuyer\b/, /\buser\b/, /\baudience\b/, "target market", "who buys", /\bicp\b/, /\bpersona\b/],
+    "founder-edge": [/\badvantage\b/, /\bedge\b/, /\bunfair\b/, /\bexperience\b/, /\bcredib\w*\b/, "why me", "founder-market"],
+    solution: [/\bsolution\b/, /\bproduct\b/, /\bbuild\b/, /\bfeature\b/, /\bmvp\b/, /\bprototype\b/],
+    validation: [/\bvalidat\w*\b/, /\btest\b/, /\bprov\w*\b/, "customer interview", "willing to pay", /\bdemand\b/],
+    gtm: ["go to market", /\bdistribution\b/, /\bchannel\b/, /\bsales\b/, "reach customers", /\bacquir\w*\b/, /\bmarketing\b/],
+    execution: [/\bexecut\w*\b/, /\bprioritiz\w*\b/, "this week", /\bcadence\b/, /\bsprint\b/, /\bownership\b/, /\bfocus\b/],
+    pilot: [/\bpilot\b/, /\bbeta\b/, /\btrial\b/, "early customers", "first users", /\blaunch\b/],
+    "scale-decision": [/\bscal\w*\b/, /\bfundrais\w*\b/, "double down", /\bpivot\b/, /\bgrowth\b/, /\bseries\b/],
+  };
+
+  let bestMatch: { targetStep: StartupStep; confidence: number } | null = null;
+  const lowerMessage = message.toLowerCase();
+
+  for (const [step, signals] of Object.entries(stepSignals) as [StartupStep, Array<string | RegExp>][]) {
+    const matchCount = signals.filter((s) => {
+      if (s instanceof RegExp) {
+        return s.test(lowerMessage) || keywords.some((k) => s.test(k));
+      }
+      return lowerMessage.includes(s) || keywords.some((k) => k.includes(s));
+    }).length;
+
+    if (matchCount > 0) {
+      const confidence = Math.min(0.5 + matchCount * 0.15, 0.95);
+      if (!bestMatch || confidence > bestMatch.confidence) {
+        bestMatch = { targetStep: step as StartupStep, confidence };
+      }
+    }
+  }
+
+  return bestMatch;
+}
+
+/**
+ * Detect if the founder is drifting to a downstream step before
+ * the current step is validated. Drift = asking about a step 2+ ahead
+ * while current step is not validated.
+ */
+function detectDrift(
+  stepRelevance: { targetStep: StartupStep; confidence: number } | null,
+  conversationState: ConversationStateContext
+): { isDrift: boolean; targetStep: StartupStep; currentStep: StartupStep } | null {
+  if (!stepRelevance || stepRelevance.confidence < 0.6) return null;
+
+  const currentIdx = STEP_ORDER.indexOf(conversationState.currentStep);
+  const targetIdx = STEP_ORDER.indexOf(stepRelevance.targetStep);
+
+  // Drift = asking about a step 2+ ahead AND current step is not validated
+  if (
+    targetIdx > currentIdx + 1 &&
+    conversationState.stepStatuses[conversationState.currentStep] !== "validated"
+  ) {
+    return {
+      isDrift: true,
+      targetStep: stepRelevance.targetStep,
+      currentStep: conversationState.currentStep,
+    };
+  }
+
+  return null;
+}
+
 function detectTopic(message: string, keywords: string[]): CoachingTopic | undefined {
   const topicKeywords: Record<CoachingTopic, string[]> = {
     fundraising: ["fundrais", "raise", "investor", "vc", "capital", "funding", "round", "valuation", "term sheet", "series"],

@@ -17,6 +17,7 @@ import type {
   DecisionResult,
   MemoryContext,
   FredConfig,
+  ConversationStateContext,
 } from "./types";
 
 // ============================================================================
@@ -38,7 +39,8 @@ import { logger } from "@/lib/logger";
 function createInitialContext(
   userId: string,
   sessionId: string,
-  founderContext?: string
+  founderContext?: string,
+  conversationState?: ConversationStateContext | null
 ): FredContext {
   return {
     sessionId,
@@ -55,6 +57,7 @@ function createInitialContext(
     completedAt: null,
     memoryContext: null,
     founderContext: founderContext || null,
+    conversationState: conversationState || null,
   };
 }
 
@@ -66,7 +69,7 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null },
   },
 
   actors: {
@@ -74,25 +77,25 @@ export const fredMachine = setup({
       async ({ input }) => loadMemoryActor(input.userId, input.sessionId)
     ),
 
-    validateInput: fromPromise<ValidatedInput, { input: UserInput; memoryContext: MemoryContext | null }>(
-      async ({ input }) => validateInputActor(input.input, input.memoryContext)
+    validateInput: fromPromise<ValidatedInput, { input: UserInput; memoryContext: MemoryContext | null; conversationState: ConversationStateContext | null }>(
+      async ({ input }) => validateInputActor(input.input, input.memoryContext, input.conversationState)
     ),
 
     applyMentalModels: fromPromise<MentalModelResult[], { validatedInput: ValidatedInput; memoryContext: MemoryContext | null }>(
       async ({ input }) => applyMentalModelsActor(input.validatedInput, input.memoryContext)
     ),
 
-    synthesize: fromPromise<SynthesisResult, { validatedInput: ValidatedInput; mentalModels: MentalModelResult[]; memoryContext: MemoryContext | null }>(
-      async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext)
+    synthesize: fromPromise<SynthesisResult, { validatedInput: ValidatedInput; mentalModels: MentalModelResult[]; memoryContext: MemoryContext | null; conversationState: ConversationStateContext | null }>(
+      async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext, input.conversationState)
     ),
 
-    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null }>(
-      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext)
+    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null }>(
+      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState)
     ),
 
-    execute: fromPromise<void, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string }>(
+    execute: fromPromise<void, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string; conversationState: ConversationStateContext | null }>(
       async ({ input }) => {
-        await executeActor(input.decision, input.validatedInput, input.userId, input.sessionId);
+        await executeActor(input.decision, input.validatedInput, input.userId, input.sessionId, input.conversationState);
       }
     ),
   },
@@ -299,7 +302,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState),
 
   states: {
     /**
@@ -374,6 +377,7 @@ export const fredMachine = setup({
         input: ({ context }) => ({
           input: context.input!,
           memoryContext: context.memoryContext,
+          conversationState: context.conversationState,
         }),
         onDone: {
           target: "validation",
@@ -486,6 +490,7 @@ export const fredMachine = setup({
           validatedInput: context.validatedInput!,
           mentalModels: context.mentalModels,
           memoryContext: context.memoryContext,
+          conversationState: context.conversationState,
         }),
         onDone: {
           target: "decide",
@@ -526,6 +531,7 @@ export const fredMachine = setup({
           synthesis: context.synthesis!,
           validatedInput: context.validatedInput!,
           founderContext: context.founderContext,
+          conversationState: context.conversationState,
         }),
         onDone: [
           {
@@ -594,6 +600,7 @@ export const fredMachine = setup({
           validatedInput: context.validatedInput!,
           userId: context.userId,
           sessionId: context.sessionId,
+          conversationState: context.conversationState,
         }),
         onDone: {
           target: "complete",

@@ -13,11 +13,13 @@ import type {
   ValidatedInput,
   DecisionResult,
   DecisionAction,
+  ConversationStateContext,
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
 import { FRED_BIO } from "@/lib/fred-brain";
 import { COACHING_PROMPTS } from "@/lib/ai/prompts";
+import { STARTUP_STEPS } from "@/lib/ai/frameworks/startup-process";
 
 /**
  * Decide what action to take based on synthesis
@@ -25,7 +27,8 @@ import { COACHING_PROMPTS } from "@/lib/ai/prompts";
 export async function decideActor(
   synthesis: SynthesisResult,
   validatedInput: ValidatedInput,
-  founderContext?: string | null
+  founderContext?: string | null,
+  conversationState?: ConversationStateContext | null
 ): Promise<DecisionResult> {
   logger.log(
     "[FRED] Deciding action | Confidence:",
@@ -44,8 +47,8 @@ export async function decideActor(
     validatedInput
   );
 
-  // Build the response content
-  const content = buildResponseContent(action, synthesis, validatedInput);
+  // Build the response content (Phase 36: includes Next 3 Actions + step questions)
+  const content = buildResponseContent(action, synthesis, validatedInput, conversationState || null);
 
   // Build reasoning for the decision
   const reasoning = buildDecisionReasoning(action, synthesis, validatedInput);
@@ -64,6 +67,8 @@ export async function decideActor(
       inputIntent: validatedInput.intent,
       inputUrgency: validatedInput.urgency,
       hasFounderContext: !!founderContext,
+      driftDetected: !!validatedInput.driftDetected?.isDrift,
+      currentStep: conversationState?.currentStep || null,
     },
   };
 }
@@ -270,26 +275,29 @@ function checkRequiresHumanApproval(
 function buildResponseContent(
   action: DecisionAction,
   synthesis: SynthesisResult,
-  input: ValidatedInput
+  input: ValidatedInput,
+  conversationState: ConversationStateContext | null
 ): string {
+  let content: string;
+
   switch (action) {
     case "auto_execute": {
-      let content = synthesis.recommendation;
+      content = synthesis.recommendation;
       if (input.topic && input.topic in COACHING_PROMPTS) {
         const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
         content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
       }
-      return content;
+      break;
     }
 
     case "recommend": {
       const nextStepsText = synthesis.nextSteps.slice(0, 2).join("\n- ");
-      let content = `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
+      content = `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
       if (input.topic && input.topic in COACHING_PROMPTS) {
         const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
         content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
       }
-      return content;
+      break;
     }
 
     case "escalate": {
@@ -301,15 +309,15 @@ function buildResponseContent(
         .slice(0, 2)
         .map((a) => `${a.description} (Score: ${a.score})`)
         .join("\n- ");
-      let escalateContent = `**Let me be straight with you -- this is a big one.**\n\n${synthesis.recommendation}\n\nIn my ${FRED_BIO.yearsExperience}+ years, I've seen decisions like this go sideways when founders rush. Here's what you need to weigh:\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives Worth Considering:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This is your call. I'm giving you the data -- you make the decision.*`;
+      content = `**Let me be straight with you -- this is a big one.**\n\n${synthesis.recommendation}\n\nIn my ${FRED_BIO.yearsExperience}+ years, I've seen decisions like this go sideways when founders rush. Here's what you need to weigh:\n\n**Key Risks:**\n- ${risksText}\n\n**Alternatives Worth Considering:**\n- ${alternativesText}\n\n**My Assessment:** Score ${synthesis.factors.composite}/100 | Confidence ${Math.round(synthesis.confidence * 100)}%\n\n*This is your call. I'm giving you the data -- you make the decision.*`;
       if (input.topic && input.topic in COACHING_PROMPTS) {
         const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
-        escalateContent += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
+        content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;
       }
-      return escalateContent;
+      break;
     }
 
-    case "clarify":
+    case "clarify": {
       const questions = synthesis.followUpQuestions.slice(0, 2);
       const clarifications = input.clarificationNeeded.filter((c) => c.required);
       const allQuestions = [
@@ -317,13 +325,64 @@ function buildResponseContent(
         ...questions,
       ].slice(0, 3);
       return `I want to give you a solid answer, but I need a few more details first:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+    }
 
     case "defer":
       return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
 
     default:
-      return synthesis.recommendation;
+      content = synthesis.recommendation;
+      break;
   }
+
+  // Phase 36: Inject step question for current step (CHAT-01 — FRED drives conversations)
+  // Note: clarify/defer cases return early above, so only substantive actions reach here
+  if (conversationState) {
+    content = injectStepQuestion(content, conversationState, input);
+  }
+
+  // Phase 36: Append Next 3 Actions to every substantive response (Operating Bible 3.3)
+  content = appendNextActions(content, synthesis);
+
+  return content;
+}
+
+/**
+ * Append "Next 3 Actions" to every substantive response.
+ * Operating Bible Section 3.3 Output Standard.
+ */
+function appendNextActions(content: string, synthesis: SynthesisResult): string {
+  if (!synthesis.nextSteps || synthesis.nextSteps.length === 0) return content;
+
+  const actions = synthesis.nextSteps.slice(0, 3);
+  return `${content}\n\n**Next 3 Actions:**\n${actions.map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
+}
+
+/**
+ * When the current step needs more information, inject a step-relevant
+ * follow-up question. Makes FRED "drive the conversation" (CHAT-01).
+ */
+function injectStepQuestion(
+  content: string,
+  conversationState: ConversationStateContext,
+  input: ValidatedInput
+): string {
+  const currentStep = conversationState.currentStep;
+  const status = conversationState.stepStatuses[currentStep];
+
+  // Only inject questions when step is in_progress
+  if (status !== "in_progress") return content;
+
+  // Don't inject if the founder is already answering a step question
+  if (input.stepRelevance?.targetStep === currentStep && input.stepRelevance.confidence > 0.7) {
+    return content;
+  }
+
+  const step = STARTUP_STEPS[currentStep];
+  if (!step || !step.questions.length) return content;
+
+  const question = step.questions[0];
+  return `${content}\n\n---\n\nTo keep us moving forward on **${step.name}**: ${question}`;
 }
 
 /**

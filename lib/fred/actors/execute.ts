@@ -5,7 +5,7 @@
  * Handles auto-execute, recommend, escalate, and clarify actions.
  */
 
-import type { DecisionResult, ValidatedInput, FredResponse } from "../types";
+import type { DecisionResult, ValidatedInput, FredResponse, ConversationStateContext } from "../types";
 import { logger } from "@/lib/logger";
 
 /**
@@ -15,7 +15,8 @@ export async function executeActor(
   decision: DecisionResult,
   validatedInput: ValidatedInput,
   userId: string,
-  sessionId: string
+  sessionId: string,
+  conversationState?: ConversationStateContext | null
 ): Promise<FredResponse> {
   logger.log(
     "[FRED] Executing action:",
@@ -37,6 +38,10 @@ export async function executeActor(
     procedureUsed: decision.procedureUsed,
     factorScores: decision.metadata?.factorScores,
   };
+
+  // Phase 36: Post-response conversation state updates (fire-and-forget)
+  updateConversationState(userId, validatedInput, decision, conversationState || null)
+    .catch((err) => console.warn("[FRED Execute] State update failed:", err));
 
   return response;
 }
@@ -321,4 +326,107 @@ function generateFeedbackAcknowledgment(input: ValidatedInput): string {
   }
 
   return "Got it, thanks for the feedback. What else can I help with?";
+}
+
+// ============================================================================
+// Phase 36: Post-Response Conversation State Updates
+// ============================================================================
+
+/**
+ * Post-response conversation state updates.
+ * Stores evidence, updates diagnostic tags, and updates founder snapshot.
+ * Non-blocking — failures are logged but never thrown.
+ */
+async function updateConversationState(
+  userId: string,
+  validatedInput: ValidatedInput,
+  decision: DecisionResult,
+  conversationState: ConversationStateContext | null
+): Promise<void> {
+  if (!conversationState) return;
+
+  try {
+    const {
+      storeStepEvidence,
+      updateDiagnosticTags,
+      updateFounderSnapshot,
+    } = await import("@/lib/db/conversation-state");
+
+    // 1. Store evidence from user statements about the current step
+    if (
+      validatedInput.stepRelevance?.targetStep === conversationState.currentStep &&
+      validatedInput.stepRelevance.confidence > 0.6
+    ) {
+      await storeStepEvidence(
+        userId,
+        conversationState.currentStep,
+        "user_statement",
+        validatedInput.originalMessage.slice(0, 500),
+        { source: "conversation", confidence: validatedInput.stepRelevance.confidence }
+      );
+    }
+
+    // 2. Update diagnostic tags based on conversation signals
+    const tagUpdates = extractDiagnosticSignals(validatedInput);
+    if (Object.keys(tagUpdates).length > 0) {
+      await updateDiagnosticTags(userId, tagUpdates);
+    }
+
+    // 3. Update founder snapshot from entities
+    const snapshotUpdates = extractSnapshotUpdates(validatedInput);
+    if (Object.keys(snapshotUpdates).length > 0) {
+      await updateFounderSnapshot(userId, snapshotUpdates);
+    }
+  } catch (error) {
+    console.warn("[FRED Execute] Failed to update conversation state:", error);
+  }
+}
+
+/**
+ * Extract diagnostic tags from the validated input.
+ * Operating Bible Section 5.2: Silent diagnosis during early messages.
+ */
+function extractDiagnosticSignals(input: ValidatedInput): Record<string, string> {
+  const tags: Record<string, string> = {};
+  const msg = input.originalMessage.toLowerCase();
+
+  // Positioning clarity signals
+  if (/everyone|anybody|all\s+business/i.test(msg)) {
+    tags.positioningClarity = "low";
+  } else if (input.stepRelevance?.targetStep === "buyer" && input.stepRelevance.confidence > 0.7) {
+    tags.positioningClarity = "med";
+  }
+
+  // Investor readiness signals
+  if (/fundrais|investor|vc|valuation|series\s+[a-c]|term\s+sheet/i.test(msg)) {
+    tags.investorReadinessSignal = "med";
+  }
+
+  // Stage detection
+  if (/\bidea\b|concept|thinking about/i.test(msg)) {
+    tags.stage = "idea";
+  } else if (/\bmvp\b|prototype|building/i.test(msg)) {
+    tags.stage = "pre-seed";
+  } else if (/revenue|customers|paying/i.test(msg)) {
+    tags.stage = "seed";
+  } else if (/series|scale|expand|growing/i.test(msg)) {
+    tags.stage = "growth";
+  }
+
+  return tags;
+}
+
+/**
+ * Extract founder snapshot updates from entities.
+ */
+function extractSnapshotUpdates(input: ValidatedInput): Record<string, unknown> {
+  const updates: Record<string, unknown> = {};
+
+  // Extract traction from money entities
+  const moneyEntities = input.entities.filter((e) => e.type === "money");
+  if (moneyEntities.length > 0) {
+    updates.traction = moneyEntities.map((e) => e.value).join(", ");
+  }
+
+  return updates;
 }

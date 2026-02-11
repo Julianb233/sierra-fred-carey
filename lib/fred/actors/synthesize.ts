@@ -16,6 +16,7 @@ import type {
   Alternative,
   Risk,
   RedFlag,
+  ConversationStateContext,
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { detectRedFlags } from "../risks/detection-engine";
@@ -32,7 +33,8 @@ import {
 export async function synthesizeActor(
   validatedInput: ValidatedInput,
   mentalModels: MentalModelResult[],
-  memoryContext: MemoryContext | null
+  memoryContext: MemoryContext | null,
+  conversationState?: ConversationStateContext | null
 ): Promise<SynthesisResult> {
   logger.log(
     "[FRED] Synthesizing from",
@@ -67,8 +69,9 @@ export async function synthesizeActor(
   };
   const redFlags = detectRedFlags(redFlagSynthesis, "");
 
-  // Build reasoning chain
-  const reasoning = buildReasoning(validatedInput, mentalModels, factors);
+  // Build reasoning chain (Phase 36: includes step context)
+  const stepContext = buildStepContext(conversationState || null);
+  const reasoning = buildReasoning(validatedInput, mentalModels, factors) + stepContext;
 
   // Calculate confidence
   const confidence = calculateConfidence(mentalModels, validatedInput);
@@ -538,4 +541,27 @@ function generateFollowUpQuestions(
  */
 function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * Build step-aware context for synthesis.
+ * Ensures FRED's recommendation considers what's been validated.
+ */
+function buildStepContext(conversationState: ConversationStateContext | null): string {
+  if (!conversationState) return "";
+
+  const current = conversationState.currentStep;
+  const validated = Object.entries(conversationState.stepStatuses)
+    .filter(([, s]) => s === "validated")
+    .map(([k]) => k);
+  const blockers = conversationState.currentBlockers;
+
+  let ctx = ` | Process position: Step "${current}"`;
+  if (validated.length > 0) {
+    ctx += ` | Validated: ${validated.join(", ")}`;
+  }
+  if (blockers.length > 0) {
+    ctx += ` | Blockers: ${blockers.join("; ")}`;
+  }
+  return ctx;
 }
