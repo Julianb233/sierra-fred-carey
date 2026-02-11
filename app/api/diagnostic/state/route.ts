@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
+import { z } from "zod";
 
 /**
  * Diagnostic State API
@@ -124,11 +125,40 @@ export async function GET() {
  * NOTE: This endpoint updates internal diagnostic state.
  *       Users should not call this directly - it's updated by the system.
  */
+const clarityLevel = z.enum(["unknown", "low", "medium", "high"]);
+
+const signalSchema = z.object({
+  signal: z.string().max(500),
+  detected_at: z.string(),
+  context: z.string().max(1000),
+});
+
+const putSchema = z.object({
+  positioningClarity: clarityLevel.optional(),
+  investorReadiness: clarityLevel.optional(),
+  positioningFrameworkIntroduced: z.boolean().optional(),
+  positioningFrameworkTrigger: z.string().max(500).nullable().optional(),
+  investorLensIntroduced: z.boolean().optional(),
+  investorLensTrigger: z.string().max(500).nullable().optional(),
+  positioningSignals: z.array(signalSchema).max(50).optional(),
+  investorSignals: z.array(signalSchema).max(50).optional(),
+  formalAssessmentsOffered: z.boolean().optional(),
+  formalAssessmentsAccepted: z.boolean().optional(),
+}).strict();
+
 export async function PUT(request: NextRequest) {
   try {
     const userId = await requireAuth();
     const supabase = await createClient();
     const body = await request.json();
+
+    const parsed = putSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const {
       positioningClarity,
@@ -141,7 +171,7 @@ export async function PUT(request: NextRequest) {
       investorSignals,
       formalAssessmentsOffered,
       formalAssessmentsAccepted,
-    } = body;
+    } = parsed.data;
 
     // Build update data object with only defined fields
     const updateData: Record<string, any> = {
