@@ -479,6 +479,36 @@ export async function updateFounderSnapshot(
   return transformStateRow(data);
 }
 
+/**
+ * Populate founder_snapshot from the profiles table.
+ * Called during onboarding handoff (Phase 35) to seed conversation state
+ * with data collected during onboarding.
+ */
+export async function syncSnapshotFromProfile(userId: string): Promise<ConversationState> {
+  const supabase = createServiceClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("stage, product_status, traction, runway, primary_constraint, ninety_day_goal, revenue_range, team_size, funding_history, industry")
+    .eq("id", userId)
+    .single();
+
+  if (profileError) {
+    console.error("[ConvState] Error reading profile for snapshot sync:", profileError);
+    throw profileError;
+  }
+
+  const snapshot: Partial<FounderSnapshot> = {};
+  if (profile.stage) snapshot.stage = profile.stage;
+  if (profile.product_status) snapshot.productStatus = profile.product_status;
+  if (profile.traction) snapshot.traction = profile.traction;
+  if (profile.runway && Object.keys(profile.runway).length > 0) snapshot.runway = profile.runway;
+  if (profile.primary_constraint) snapshot.primaryConstraint = profile.primary_constraint;
+  if (profile.ninety_day_goal) snapshot.ninetyDayGoal = profile.ninety_day_goal;
+
+  return updateFounderSnapshot(userId, snapshot);
+}
+
 // ============================================================================
 // Composite Queries
 // ============================================================================
