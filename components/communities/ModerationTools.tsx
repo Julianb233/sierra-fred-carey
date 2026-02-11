@@ -12,7 +12,7 @@ interface ModerationToolsProps {
 }
 
 export function ModerationTools({ member, onPromote, onDemote, onRemove }: ModerationToolsProps) {
-  if (member.role === "creator") return null;
+  if (member.role === "owner") return null;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -21,7 +21,7 @@ export function ModerationTools({ member, onPromote, onDemote, onRemove }: Moder
           variant="outline"
           size="sm"
           className="min-h-[44px] text-xs"
-          onClick={() => onPromote?.(member.user_id)}
+          onClick={() => onPromote?.(member.userId)}
         >
           Promote to Mod
         </Button>
@@ -31,7 +31,7 @@ export function ModerationTools({ member, onPromote, onDemote, onRemove }: Moder
           variant="outline"
           size="sm"
           className="min-h-[44px] text-xs"
-          onClick={() => onDemote?.(member.user_id)}
+          onClick={() => onDemote?.(member.userId)}
         >
           Demote
         </Button>
@@ -40,7 +40,7 @@ export function ModerationTools({ member, onPromote, onDemote, onRemove }: Moder
         variant="ghost"
         size="sm"
         className="min-h-[44px] text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-        onClick={() => onRemove?.(member.user_id)}
+        onClick={() => onRemove?.(member.userId)}
       >
         Remove
       </Button>
@@ -49,7 +49,7 @@ export function ModerationTools({ member, onPromote, onDemote, onRemove }: Moder
 }
 
 const roleBadgeStyles: Record<MemberRole, string> = {
-  creator: "bg-[#ff6a1a]/10 text-[#ff6a1a] border-[#ff6a1a]/20",
+  owner: "bg-[#ff6a1a]/10 text-[#ff6a1a] border-[#ff6a1a]/20",
   moderator: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
   member: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 };
