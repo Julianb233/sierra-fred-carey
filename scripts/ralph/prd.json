@@ -246,6 +246,35 @@
       "priority": 1,
       "passes": true,
       "notes": "Fixes 24, 26 (commit c0d4396). Dashboard stat cards and red-flags widget improved."
+    },
+    {
+      "id": "US-018",
+      "title": "Chat with FRED does not crash on streaming response",
+      "description": "As a founder, I want the chat page to remain stable while FRED processes my message so that I do not lose my session",
+      "acceptanceCriteria": [
+        "Server-side SSE stream handles client disconnection without throwing uncaught exceptions",
+        "Client recovers gracefully when stream terminates without a done event",
+        "Error message is shown instead of page going to about:blank",
+        "User session is preserved across chat errors",
+        "React state updates are guarded against unmounted component writes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 28 (commit 9b85e61). CRITICAL: Safe SSE stream with closed flag, cancel callback, receivedDone tracking, mountedRef guards."
+    },
+    {
+      "id": "US-019",
+      "title": "Startup process stepper shows readable step names",
+      "description": "As a founder, I want the startup process stepper to show full step names so that I can understand each step at a glance",
+      "acceptanceCriteria": [
+        "Step labels show full title text instead of first 2 words",
+        "Labels truncate with CSS ellipsis when too long",
+        "Hovering shows full title via tooltip",
+        "Labels are hidden on mobile to avoid crowding"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 29 (commit de9c89e). Widened max-w, removed JS truncation, added CSS truncate and title attribute."
     }
   ]
 }
