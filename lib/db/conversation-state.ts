@@ -7,6 +7,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { sanitizeUserInput } from "@/lib/ai/guards/prompt-guard";
 import type { StartupStep, StepStatus } from "@/lib/ai/frameworks/startup-process";
 import { STEP_ORDER, createInitialState } from "@/lib/ai/frameworks/startup-process";
 
@@ -548,6 +549,11 @@ export async function getStepProgress(userId: string): Promise<StepProgress | nu
 /**
  * Build a context string summarizing the founder's progress for FRED's system prompt.
  * This is the key output consumed by the chat route.
+ *
+ * Optimized for token efficiency (<300 tokens target):
+ * - Only lists steps with activity (in_progress, validated, blocked, skipped)
+ * - Omits not_started steps (redundant -- FRED knows the 9-step order)
+ * - Caps evidence per step to keep output concise
  */
 export async function buildProgressContext(userId: string): Promise<string> {
   const [state, evidence] = await Promise.all([
@@ -564,71 +570,76 @@ export async function buildProgressContext(userId: string): Promise<string> {
 
   const lines: string[] = [];
 
-  // Founder Snapshot (if populated)
+  // Founder Snapshot -- compact single-line format
   const snap = state.founderSnapshot;
   if (Object.keys(snap).length > 0) {
-    lines.push("Founder Snapshot:");
-    if (snap.stage) lines.push(`  Stage: ${snap.stage}`);
-    if (snap.productStatus) lines.push(`  Product Status: ${snap.productStatus}`);
-    if (snap.traction) lines.push(`  Traction: ${snap.traction}`);
+    const parts: string[] = [];
+    if (snap.stage) parts.push(`stage=${snap.stage}`);
+    if (snap.productStatus) parts.push(`product=${snap.productStatus}`);
+    if (snap.traction) parts.push(`traction=${snap.traction}`);
     if (snap.runway) {
-      const parts = [snap.runway.time, snap.runway.money, snap.runway.energy].filter(Boolean);
-      if (parts.length > 0) lines.push(`  Runway: ${parts.join(", ")}`);
+      const r = [snap.runway.time, snap.runway.money, snap.runway.energy].filter(Boolean);
+      if (r.length > 0) parts.push(`runway=${r.join("/")}`);
     }
-    if (snap.primaryConstraint) lines.push(`  Primary Constraint: ${snap.primaryConstraint}`);
-    if (snap.ninetyDayGoal) lines.push(`  90-Day Goal: ${snap.ninetyDayGoal}`);
-    lines.push("");
+    if (snap.primaryConstraint) parts.push(`constraint=${snap.primaryConstraint}`);
+    if (snap.ninetyDayGoal) parts.push(`90d-goal=${snap.ninetyDayGoal}`);
+    if (parts.length > 0) lines.push(`Founder: ${parts.join(", ")}`);
   }
 
-  // Diagnostic Tags (if populated)
+  // Diagnostic Tags -- compact single line
   const diag = state.diagnosticTags;
   if (Object.keys(diag).length > 0) {
-    lines.push("Diagnostic Tags:");
-    if (diag.positioningClarity) lines.push(`  Positioning Clarity: ${diag.positioningClarity}`);
-    if (diag.investorReadinessSignal) lines.push(`  Investor Readiness Signal: ${diag.investorReadinessSignal}`);
-    if (diag.stage) lines.push(`  Stage: ${diag.stage}`);
-    if (diag.primaryConstraint) lines.push(`  Primary Constraint: ${diag.primaryConstraint}`);
-    lines.push("");
+    const parts: string[] = [];
+    if (diag.positioningClarity) parts.push(`positioning=${diag.positioningClarity}`);
+    if (diag.investorReadinessSignal) parts.push(`investor-signal=${diag.investorReadinessSignal}`);
+    if (diag.stage) parts.push(`stage=${diag.stage}`);
+    if (diag.primaryConstraint) parts.push(`constraint=${diag.primaryConstraint}`);
+    if (parts.length > 0) lines.push(`Diagnosis: ${parts.join(", ")}`);
   }
 
-  // Step Progress
-  lines.push(`Current Step: ${state.currentStep}`);
-  lines.push(`Process Status: ${state.processStatus}`);
-  lines.push("");
+  // Current position -- single line
+  lines.push(`Process: ${state.processStatus}, current_step=${state.currentStep}`);
 
-  for (const step of STEP_ORDER) {
+  // Only list steps with activity (skip not_started to save tokens)
+  const activeSteps = STEP_ORDER.filter((step) => {
+    const status = state.stepStatuses[step] || "not_started";
+    return status !== "not_started" || step === state.currentStep;
+  });
+
+  const notStartedCount = STEP_ORDER.length - activeSteps.length;
+
+  for (const step of activeSteps) {
     const status = state.stepStatuses[step] || "not_started";
     const stepEvidence = evidenceByStep.get(step) || [];
     const marker = step === state.currentStep ? " <-- CURRENT" : "";
     lines.push(`[${status.toUpperCase()}] ${step}${marker}`);
 
-    // Show required outputs and key facts for validated/in_progress steps
-    if (status !== "not_started") {
-      const outputs = stepEvidence.filter((e) => e.evidenceType === "required_output");
-      const facts = stepEvidence.filter((e) => e.evidenceType === "supporting_fact");
-      const killSignals = stepEvidence.filter((e) => e.evidenceType === "kill_signal");
+    // Show evidence for active steps (cap at 2 outputs + 2 facts + all kill signals)
+    const outputs = stepEvidence.filter((e) => e.evidenceType === "required_output");
+    const facts = stepEvidence.filter((e) => e.evidenceType === "supporting_fact");
+    const killSignals = stepEvidence.filter((e) => e.evidenceType === "kill_signal");
 
-      for (const o of outputs) {
-        lines.push(`  Output: ${o.content}`);
-      }
-      for (const f of facts.slice(0, 3)) {
-        lines.push(`  Fact: ${f.content}`);
-      }
-      if (facts.length > 3) {
-        lines.push(`  ... and ${facts.length - 3} more facts`);
-      }
-      for (const k of killSignals) {
-        lines.push(`  WARNING: ${k.content}`);
-      }
+    for (const o of outputs.slice(0, 2)) {
+      lines.push(`  Output: ${sanitizeUserInput(o.content, 200)}`);
+    }
+    for (const f of facts.slice(0, 2)) {
+      lines.push(`  Fact: ${sanitizeUserInput(f.content, 200)}`);
+    }
+    const remaining = Math.max(0, outputs.length - 2) + Math.max(0, facts.length - 2);
+    if (remaining > 0) {
+      lines.push(`  +${remaining} more`);
+    }
+    for (const k of killSignals) {
+      lines.push(`  WARNING: ${sanitizeUserInput(k.content, 200)}`);
     }
   }
 
+  if (notStartedCount > 0) {
+    lines.push(`(${notStartedCount} steps not yet started)`);
+  }
+
   if (state.currentBlockers.length > 0) {
-    lines.push("");
-    lines.push("Current Blockers:");
-    for (const b of state.currentBlockers) {
-      lines.push(`  - ${b}`);
-    }
+    lines.push(`Blockers: ${state.currentBlockers.map((b) => sanitizeUserInput(String(b), 200)).join("; ")}`);
   }
 
   return lines.join("\n");
