@@ -24,7 +24,8 @@ import { COACHING_PROMPTS } from "@/lib/ai/prompts";
  */
 export async function decideActor(
   synthesis: SynthesisResult,
-  validatedInput: ValidatedInput
+  validatedInput: ValidatedInput,
+  founderContext?: string | null
 ): Promise<DecisionResult> {
   logger.log(
     "[FRED] Deciding action | Confidence:",
@@ -62,6 +63,7 @@ export async function decideActor(
       risksCount: synthesis.risks.length,
       inputIntent: validatedInput.intent,
       inputUrgency: validatedInput.urgency,
+      hasFounderContext: !!founderContext,
     },
   };
 }

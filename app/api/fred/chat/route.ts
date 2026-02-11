@@ -30,6 +30,7 @@ import { withLogging } from "@/lib/api/with-logging";
 import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { buildFounderContext } from "@/lib/fred/context-builder";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -250,11 +251,15 @@ async function handlePost(req: NextRequest) {
     // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
+    // Phase 34: Load dynamic founder context for personalized mentoring
+    const founderContext = await buildFounderContext(userId, hasPersistentMemory);
+
     // Create FRED service
     const fredService = createFredService({
       userId,
       sessionId: effectiveSessionId,
       enableObservability: true,
+      founderContext,
     });
 
     // Non-streaming response

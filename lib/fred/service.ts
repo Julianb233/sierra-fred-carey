@@ -14,6 +14,8 @@ export interface FredServiceOptions {
   userId: string;
   sessionId: string;
   enableObservability?: boolean;
+  /** Dynamic founder context string for prompt personalization (Phase 34) */
+  founderContext?: string;
   onStateChange?: (state: string, context: FredContext) => void;
   onError?: (error: Error) => void;
 }
@@ -54,6 +56,7 @@ export class FredService {
       input: {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
+        founderContext: this.options.founderContext,
       },
     });
 
@@ -137,6 +140,7 @@ export class FredService {
             retryable: false,
           },
           retryCount: 0,
+          founderContext: this.options.founderContext || null,
         },
         duration,
       };
@@ -157,6 +161,7 @@ export class FredService {
       input: {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
+        founderContext: this.options.founderContext,
       },
     });
 
@@ -232,6 +237,7 @@ export class FredService {
       input: {
         userId: this.options.userId,
         sessionId: this.options.sessionId,
+        founderContext: this.options.founderContext,
       },
     });
 

@@ -40,6 +40,8 @@ export interface FredContext {
   completedAt: Date | null;
   /** Memory context loaded for this session */
   memoryContext: MemoryContext | null;
+  /** Dynamic founder context string for prompt personalization (Phase 34) */
+  founderContext: string | null;
 }
 
 /**

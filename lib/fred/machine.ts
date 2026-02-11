@@ -37,7 +37,8 @@ import { logger } from "@/lib/logger";
 
 function createInitialContext(
   userId: string,
-  sessionId: string
+  sessionId: string,
+  founderContext?: string
 ): FredContext {
   return {
     sessionId,
@@ -53,6 +54,7 @@ function createInitialContext(
     startedAt: null,
     completedAt: null,
     memoryContext: null,
+    founderContext: founderContext || null,
   };
 }
 
@@ -64,7 +66,7 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig> },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string },
   },
 
   actors: {
@@ -84,8 +86,8 @@ export const fredMachine = setup({
       async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext)
     ),
 
-    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput }>(
-      async ({ input }) => decideActor(input.synthesis, input.validatedInput)
+    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null }>(
+      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext)
     ),
 
     execute: fromPromise<void, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string }>(
@@ -297,7 +299,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext),
 
   states: {
     /**
@@ -523,6 +525,7 @@ export const fredMachine = setup({
         input: ({ context }) => ({
           synthesis: context.synthesis!,
           validatedInput: context.validatedInput!,
+          founderContext: context.founderContext,
         }),
         onDone: [
           {

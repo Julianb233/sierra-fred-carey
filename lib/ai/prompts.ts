@@ -16,17 +16,17 @@ const ROLES_LIST = FRED_IDENTITY.roles.join(", ");
 const EXIT_HIGHLIGHTS = FRED_COMPANIES.exits
   .slice(0, 4)
   .map((c) => {
-    const parts = [c.name, c.role];
-    if ("exit" in c && c.exit) parts.push(c.exit as string);
-    if ("value" in c && c.value) parts.push(c.value as string);
+    const parts: string[] = [c.name, c.role];
+    if ("exit" in c) parts.push((c as { exit: string }).exit);
+    if ("value" in c) parts.push((c as { value: string }).value);
     return `- **${parts[0]}** (${parts.slice(1).join(". ")})`;
   })
   .join("\n");
 
 const PHILOSOPHY_BLOCK = FRED_PHILOSOPHY.corePrinciples
   .map((p) => {
-    const quote = p.quote ? `\n  "${p.quote}"` : "";
-    const points = p.teachings.map((t) => `  - ${t}`).join("\n");
+    const quote = "quote" in p ? `\n  "${(p as { quote: string }).quote}"` : "";
+    const points = p.teachings.map((t: string) => `  - ${t}`).join("\n");
     return `### ${p.name}${quote}\n${points}`;
   })
   .join("\n\n");
