@@ -838,6 +838,30 @@ export function getBlockingDimensions(
     }));
 }
 
+/**
+ * Check gate status — combined interface matching Phase 37 plan's `checkGateStatus`.
+ * Returns { gateOpen, weakDimensions, unassessedDimensions }.
+ */
+export function checkGateStatus(gate: RealityLensGate): {
+  gateOpen: boolean;
+  weakDimensions: RealityLensDimension[];
+  unassessedDimensions: RealityLensDimension[];
+} {
+  const weakDimensions: RealityLensDimension[] = [];
+  const unassessedDimensions: RealityLensDimension[] = [];
+
+  for (const dim of REALITY_LENS_DIMENSIONS) {
+    if (gate[dim].status === "weak") weakDimensions.push(dim);
+    if (gate[dim].status === "not_assessed") unassessedDimensions.push(dim);
+  }
+
+  return {
+    gateOpen: weakDimensions.length === 0 && unassessedDimensions.length === 0,
+    weakDimensions,
+    unassessedDimensions,
+  };
+}
+
 // ============================================================================
 // Wave 3: Diagnostic Mode Operations
 // ============================================================================
