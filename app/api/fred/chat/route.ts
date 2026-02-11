@@ -31,6 +31,10 @@ import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { buildFounderContext } from "@/lib/fred/context-builder";
+import { getOrCreateConversationState } from "@/lib/db/conversation-state";
+import type { ConversationState } from "@/lib/db/conversation-state";
+import { buildStepGuidanceBlock, buildDriftRedirectBlock } from "@/lib/ai/prompts";
+import type { ConversationStateContext } from "@/lib/fred/types";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -254,12 +258,45 @@ async function handlePost(req: NextRequest) {
     // Phase 34: Load dynamic founder context for personalized mentoring
     const founderContext = await buildFounderContext(userId, hasPersistentMemory);
 
+    // Phase 36: Load conversation state for structured flow
+    let conversationState: ConversationState | null = null;
+    let stepGuidanceBlock = "";
+    try {
+      conversationState = await getOrCreateConversationState(userId);
+      stepGuidanceBlock = buildStepGuidanceBlock(
+        conversationState.currentStep,
+        conversationState.stepStatuses,
+        conversationState.currentBlockers
+      );
+    } catch (error) {
+      console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
+    }
+
+    // Phase 36: Build conversation state context for the machine
+    const stateContext: ConversationStateContext | null = conversationState
+      ? {
+          currentStep: conversationState.currentStep,
+          stepStatuses: conversationState.stepStatuses,
+          processStatus: conversationState.processStatus,
+          currentBlockers: conversationState.currentBlockers,
+          diagnosticTags: conversationState.diagnosticTags as Record<string, string>,
+          founderSnapshot: conversationState.founderSnapshot as Record<string, unknown>,
+          progressContext: stepGuidanceBlock,
+        }
+      : null;
+
+    // Append step guidance to founder context for system prompt injection
+    const fullContext = stepGuidanceBlock
+      ? (founderContext ? founderContext + "\n\n" + stepGuidanceBlock : stepGuidanceBlock)
+      : founderContext;
+
     // Create FRED service
     const fredService = createFredService({
       userId,
       sessionId: effectiveSessionId,
       enableObservability: true,
-      founderContext,
+      founderContext: fullContext,
+      conversationState: stateContext,
     });
 
     // Non-streaming response
