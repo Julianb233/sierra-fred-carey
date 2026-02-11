@@ -65,6 +65,9 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       {/* Messages container */}
       <div
         ref={messagesContainerRef}
+        role="log"
+        aria-live="polite"
+        aria-label="Conversation with Fred"
         className="flex-1 overflow-y-auto px-4 py-6 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
       >
         <AnimatePresence mode="popLayout">
@@ -89,7 +92,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       )}
 
       {/* Input area */}
-      <div className="sticky bottom-0 p-4 backdrop-blur-xl bg-background/80 border-t border-white/10">
+      <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl bg-background/80 border-t border-white/10">
         <div className="max-w-4xl mx-auto">
           <ChatInput onSend={handleSendMessage} isLoading={isProcessing} />
         </div>
