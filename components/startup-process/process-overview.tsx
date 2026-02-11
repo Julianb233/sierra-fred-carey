@@ -41,6 +41,16 @@ const statusConfig: Record<
     color: "text-amber-500",
     bgColor: "bg-amber-100 dark:bg-amber-900",
   },
+  skipped: {
+    icon: Clock,
+    color: "text-gray-400",
+    bgColor: "bg-gray-100 dark:bg-gray-800",
+  },
+  assumed: {
+    icon: CheckCircle,
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-50 dark:bg-emerald-900",
+  },
 };
 
 export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) {
