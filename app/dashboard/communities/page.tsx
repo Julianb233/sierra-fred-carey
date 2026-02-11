@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CommunityCard } from "@/components/communities/CommunityCard";
-import { PlusIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Users } from "lucide-react";
+import { CommunityCardSkeleton } from "@/components/communities/CommunitySkeleton";
+import { CreateCommunityDialog } from "@/components/communities/CreateCommunityDialog";
+import { Search, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Community, CommunityCategory } from "@/lib/communities/types";
 
 const CATEGORIES: { value: CommunityCategory | "all"; label: string }[] = [
@@ -23,6 +23,7 @@ export default function CommunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<CommunityCategory | "all">("all");
+  const [showMyOnly, setShowMyOnly] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,62 +83,69 @@ export default function CommunitiesPage() {
   // Filter communities
   const filtered = communities.filter((c) => {
     const matchesSearch =
-      !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.description.toLowerCase().includes(search.toLowerCase());
+      !search ||
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeCategory === "all" || c.category === activeCategory;
-    return matchesSearch && matchesCategory;
+    const matchesMy = !showMyOnly || c.is_member;
+    return matchesSearch && matchesCategory && matchesMy;
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
             Communities
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Connect with fellow founders
           </p>
         </div>
-        <Button variant="orange" asChild className="min-h-[44px]">
-          <Link href="/dashboard/communities/create">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Create Community
-          </Link>
-        </Button>
+        <CreateCommunityDialog onCreated={fetchCommunities} />
       </div>
 
       {/* Search */}
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
           placeholder="Search communities..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 text-base h-11"
+          className="pl-9 text-base min-h-[44px]"
         />
       </div>
 
-      {/* Category tabs — horizontal scroll on mobile */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+      {/* Category pills + My Communities toggle — horizontal scroll on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
         {CATEGORIES.map((cat) => (
           <Button
             key={cat.value}
-            variant={activeCategory === cat.value ? "orange" : "outline"}
+            variant={activeCategory === cat.value && !showMyOnly ? "orange" : "outline"}
             size="sm"
             className="min-h-[44px] whitespace-nowrap shrink-0 text-sm"
-            onClick={() => setActiveCategory(cat.value)}
+            onClick={() => { setActiveCategory(cat.value); setShowMyOnly(false); }}
           >
             {cat.label}
           </Button>
         ))}
+        <div className="w-px bg-gray-200 dark:bg-gray-700 shrink-0 self-stretch" />
+        <Button
+          variant={showMyOnly ? "orange" : "outline"}
+          size="sm"
+          className="min-h-[44px] whitespace-nowrap shrink-0 text-sm"
+          onClick={() => setShowMyOnly(!showMyOnly)}
+        >
+          My Communities
+        </Button>
       </div>
 
-      {/* Communities grid */}
+      {/* Communities grid — exact spec breakpoints */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+            <CommunityCardSkeleton key={i} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -146,24 +154,26 @@ export default function CommunitiesPage() {
             <Users className="h-8 w-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {search || activeCategory !== "all" ? "No communities found" : "No communities yet"}
+            {search || activeCategory !== "all" || showMyOnly
+              ? "No communities found"
+              : "No communities yet"}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-            {search || activeCategory !== "all"
+            {search || activeCategory !== "all" || showMyOnly
               ? "Try adjusting your search or filters."
               : "Be the first to create a community for founders."}
           </p>
-          {!search && activeCategory === "all" && (
-            <Button variant="orange" asChild className="min-h-[44px]">
-              <Link href="/dashboard/communities/create">
-                <PlusIcon className="h-4 w-4 mr-2" />
+          {!search && activeCategory === "all" && !showMyOnly && (
+            <CreateCommunityDialog onCreated={fetchCommunities}>
+              <Button variant="orange" className="min-h-[44px]">
+                <Plus className="h-4 w-4 mr-2" />
                 Create Community
-              </Link>
-            </Button>
+              </Button>
+            </CreateCommunityDialog>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-6">
           {filtered.map((community) => (
             <CommunityCard
               key={community.id}

@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ModerationTools, RoleBadge } from "@/components/communities/ModerationTools";
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { MemberRowSkeleton } from "@/components/communities/CommunitySkeleton";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import type { Community, CommunityMember } from "@/lib/communities/types";
 
@@ -108,11 +108,13 @@ export default function CommunityMembersPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-in fade-in duration-500 max-w-[720px] mx-auto">
-        <Skeleton className="h-8 w-48" />
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-lg" />
-        ))}
+      <div className="space-y-4 animate-in fade-in duration-500 w-full md:max-w-2xl md:mx-auto">
+        <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <MemberRowSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -120,11 +122,11 @@ export default function CommunityMembersPage() {
   if (!community) return null;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-[720px] mx-auto">
+    <div className="space-y-6 animate-in fade-in duration-500 w-full md:max-w-2xl md:mx-auto">
       {/* Back */}
       <Button variant="ghost" asChild className="min-h-[44px] -ml-3">
         <Link href={`/dashboard/communities/${slug}`}>
-          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Back to {community.name}
         </Link>
       </Button>

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PostCard } from "./PostCard";
+import { PostCardSkeleton } from "./CommunitySkeleton";
 import type { CommunityPost } from "@/lib/communities/types";
 
 interface CommunityFeedProps {
@@ -33,7 +33,7 @@ export function CommunityFeed({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-48 w-full rounded-xl" />
+          <PostCardSkeleton key={i} />
         ))}
       </div>
     );

@@ -139,7 +139,6 @@ export const DASHBOARD_NAV = [
   { id: "history", label: "Decision History", icon: "CountdownTimer", href: "/dashboard/history", tier: UserTier.FREE },
   { id: "insights", label: "AI Insights", icon: "BarChart", href: "/dashboard/insights", tier: UserTier.FREE },
   { id: "monitoring", label: "Monitoring", icon: "ActivityLog", href: "/dashboard/monitoring", tier: UserTier.FREE },
-  { id: "communities", label: "Communities", icon: "ChatBubble", href: "/dashboard/communities", tier: UserTier.FREE },
   { id: "positioning", label: "Positioning", icon: "Target", href: "/dashboard/positioning", tier: UserTier.PRO },
   { id: "investor-lens", label: "Investor Lens", icon: "EyeOpen", href: "/dashboard/investor-lens", tier: UserTier.PRO },
   { id: "investor-readiness", label: "Investor Readiness", icon: "Person", href: "/dashboard/investor-readiness", tier: UserTier.PRO },
@@ -148,6 +147,7 @@ export const DASHBOARD_NAV = [
   { id: "sms-checkins", label: "Weekly Check-ins", icon: "CheckCircled", href: "/dashboard/sms", tier: UserTier.STUDIO },
   { id: "agents", label: "Virtual Team", icon: "Rocket", href: "/dashboard/agents", tier: UserTier.STUDIO },
   { id: "boardy", label: "Boardy Integration", icon: "LockClosed", href: "/dashboard/boardy", tier: UserTier.STUDIO },
+  { id: "communities", label: "Communities", icon: "Users", href: "/dashboard/communities", tier: UserTier.FREE },
   { id: "settings", label: "Settings", icon: "Gear", href: "/dashboard/settings" },
 ] as const;
 

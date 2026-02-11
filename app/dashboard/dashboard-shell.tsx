@@ -23,9 +23,8 @@ import {
   TargetIcon,
   EyeOpenIcon,
   CountdownTimerIcon,
-  ChatBubbleIcon,
 } from "@radix-ui/react-icons";
-import { Bell } from "lucide-react";
+import { Bell, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
@@ -74,12 +73,6 @@ const navItems: NavItem[] = [
     name: "Monitoring",
     href: "/dashboard/monitoring",
     icon: <ActivityLogIcon className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Communities",
-    href: "/dashboard/communities",
-    icon: <ChatBubbleIcon className="h-4 w-4" />,
     badge: "Free",
   },
   {
@@ -137,6 +130,11 @@ const navItems: NavItem[] = [
     icon: <LockClosedIcon className="h-4 w-4" />,
     tier: 2,
     badge: "Studio",
+  },
+  {
+    name: "Communities",
+    href: "/dashboard/communities",
+    icon: <Users className="h-4 w-4" />,
   },
   {
     name: "Notifications",
