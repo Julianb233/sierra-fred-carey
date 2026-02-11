@@ -141,3 +141,36 @@ export function wrapUserInput(input: string): string {
   const sanitized = sanitizeUserInput(input);
   return `<user_message>\n${sanitized}\n</user_message>`;
 }
+
+/**
+ * Sanitize a dynamically-assembled context block before injecting it into the
+ * system prompt.  This is used for context blocks built from user-controlled
+ * data (enrichment data, semantic memory values, evidence content) that flow
+ * through `buildFounderContext` or `buildProgressContext`.
+ *
+ * Applies the same sanitization as `sanitizeUserInput` but with a higher
+ * length limit appropriate for structured context blocks, and additionally
+ * strips XML-style tags that could be confused with prompt boundaries.
+ */
+export function sanitizeContextString(contextBlock: string, maxLength = 20000): string {
+  let sanitized = contextBlock;
+
+  // Remove dangerous template strings
+  for (const dangerous of DANGEROUS_STRINGS) {
+    sanitized = sanitized.split(dangerous).join("");
+  }
+
+  // Strip XML-style tags that could be confused with system/instruction boundaries
+  sanitized = sanitized.replace(/<\/?(?:system|instruction|prompt|admin|command|override|user_message)>/gi, "");
+
+  // Normalize excessive whitespace (but keep paragraph structure)
+  sanitized = sanitized.replace(/[ \t]{10,}/g, " ");
+  sanitized = sanitized.replace(/\n{5,}/g, "\n\n\n");
+
+  // Truncate to max length
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength);
+  }
+
+  return sanitized.trim();
+}

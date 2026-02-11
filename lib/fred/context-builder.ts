@@ -12,6 +12,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { sanitizeUserInput } from "@/lib/ai/guards/prompt-guard";
 import type { SemanticMemory } from "@/lib/db/fred-memory";
 
 // ============================================================================
@@ -104,13 +105,22 @@ async function loadSemanticFacts(
 }
 
 // ============================================================================
+// Sanitization Helper
+// ============================================================================
+
+/** Sanitize a user-controlled string value before including it in the context block. */
+function sanitize(value: string, maxLength = 500): string {
+  return sanitizeUserInput(value, maxLength);
+}
+
+// ============================================================================
 // Fact Value Extractor
 // ============================================================================
 
 /**
  * Extract a string value from a semantic memory fact's value object.
  * Facts store values as Record<string, unknown>, so we need to pull
- * the meaningful content out.
+ * the meaningful content out. All extracted values are sanitized.
  */
 function extractFactValue(
   facts: Array<{ category: string; key: string; value: Record<string, unknown> }>,
@@ -120,11 +130,11 @@ function extractFactValue(
   const fact = facts.find((f) => f.category === category && f.key === key);
   if (!fact) return null;
   // Try common patterns: { value: "..." }, { text: "..." }, or the whole object
-  if (typeof fact.value === "string") return fact.value;
-  if (typeof fact.value.value === "string") return fact.value.value;
-  if (typeof fact.value.text === "string") return fact.value.text;
+  if (typeof fact.value === "string") return sanitize(fact.value);
+  if (typeof fact.value.value === "string") return sanitize(fact.value.value);
+  if (typeof fact.value.text === "string") return sanitize(fact.value.text);
   const str = JSON.stringify(fact.value);
-  return str.length <= 200 ? str : null;
+  return str.length <= 200 ? sanitize(str) : null;
 }
 
 // ============================================================================
@@ -237,23 +247,23 @@ function buildContextBlock(data: FounderContextData): string {
     const enrichmentParts: string[] = [];
 
     if (ed.revenueHint && !traction && !profile.revenueRange) {
-      enrichmentParts.push(`Revenue mentioned: ${ed.revenueHint}`);
+      enrichmentParts.push(`Revenue mentioned: ${sanitize(String(ed.revenueHint))}`);
     }
     if (ed.teamSizeHint && !profile.teamSize) {
-      enrichmentParts.push(`Team size mentioned: ${ed.teamSizeHint}`);
+      enrichmentParts.push(`Team size mentioned: ${sanitize(String(ed.teamSizeHint))}`);
     }
     if (ed.fundingHint && !profile.fundingHistory) {
-      enrichmentParts.push(`Funding status: ${ed.fundingHint}`);
+      enrichmentParts.push(`Funding status: ${sanitize(String(ed.fundingHint))}`);
     }
     if (Array.isArray(ed.competitorsMentioned) && ed.competitorsMentioned.length > 0) {
-      enrichmentParts.push(`Competitors mentioned: ${ed.competitorsMentioned.join(", ")}`);
+      enrichmentParts.push(`Competitors mentioned: ${ed.competitorsMentioned.map((c: unknown) => sanitize(String(c))).join(", ")}`);
     }
     if (ed.metricsShared && typeof ed.metricsShared === "object") {
       const metrics = ed.metricsShared as Record<string, string>;
       const metricEntries = Object.entries(metrics);
       if (metricEntries.length > 0) {
         enrichmentParts.push(
-          `Metrics shared: ${metricEntries.map(([k, v]) => `${k}: ${v}`).join(", ")}`
+          `Metrics shared: ${metricEntries.map(([k, v]) => `${sanitize(k)}: ${sanitize(String(v))}`).join(", ")}`
         );
       }
     }
@@ -291,13 +301,13 @@ function buildContextBlock(data: FounderContextData): string {
       const categoryLabel = category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       lines.push(`  *${categoryLabel}:*`);
       for (const item of items.slice(0, 5)) {
-        const valueStr =
+        const rawValue =
           typeof item.value === "string"
             ? item.value
             : typeof item.value.value === "string"
               ? item.value.value
               : JSON.stringify(item.value).slice(0, 200);
-        lines.push(`  - ${item.key}: ${valueStr}`);
+        lines.push(`  - ${sanitize(item.key)}: ${sanitize(rawValue)}`);
       }
     }
     lines.push("");

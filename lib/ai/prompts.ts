@@ -338,9 +338,10 @@ Remember: Encourage without flattery. Tough love with genuine care. Be present, 
 
 /**
  * Build a complete prompt with topic-specific overlay.
+ * Uses buildSystemPrompt to replace the {{FOUNDER_CONTEXT}} placeholder.
  */
 export function getPromptForTopic(topic: keyof typeof COACHING_PROMPTS): string {
-  return `${FRED_CAREY_SYSTEM_PROMPT}\n\n${COACHING_PROMPTS[topic]}`;
+  return `${buildSystemPrompt("")}\n\n${COACHING_PROMPTS[topic]}`;
 }
 
 /**
