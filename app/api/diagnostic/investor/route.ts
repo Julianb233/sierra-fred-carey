@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOptionalUserId } from "@/lib/auth";
 import { generateTrackedResponse, ChatMessage } from "@/lib/ai/client";
-import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { buildSystemPrompt } from "@/lib/ai/prompts";
 import {
   checkRateLimit,
   createRateLimitResponse,
@@ -128,7 +128,7 @@ Provide your IC-style evaluation in the specified JSON format.`,
 
     const trackedResult = await generateTrackedResponse(
       messages,
-      `${FRED_CAREY_SYSTEM_PROMPT}\n\n${INVESTOR_ASSESSMENT_PROMPT}`,
+      `${buildSystemPrompt("")}\n\n${INVESTOR_ASSESSMENT_PROMPT}`,
       {
         userId: userId || undefined,
         analyzer: "investor-assessment",

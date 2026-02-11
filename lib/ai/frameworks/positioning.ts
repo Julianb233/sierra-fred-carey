@@ -229,8 +229,7 @@ export function detectPositioningSignals(
       lowerContext.includes("not sure who") ||
       lowerContext.includes("still figuring out") ||
       lowerContext.includes("anyone who") ||
-      !lowerContext.includes("customer") ||
-      !lowerContext.includes("buyer"),
+      (!lowerContext.includes("customer") && !lowerContext.includes("buyer")),
     everyoneAsTarget:
       lowerContext.includes("everyone") ||
       lowerContext.includes("all businesses") ||

@@ -4,7 +4,7 @@ import {
   runDiagnosticAnalysis,
   type ConversationContext,
 } from "@/lib/ai/diagnostic-engine";
-import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { buildSystemPrompt } from "@/lib/ai/prompts";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       userProfile: userProfile || undefined,
     };
 
-    const analysis = runDiagnosticAnalysis(FRED_CAREY_SYSTEM_PROMPT, context);
+    const analysis = runDiagnosticAnalysis(buildSystemPrompt(""), context);
 
     return NextResponse.json({
       state: {
