@@ -70,20 +70,37 @@ const chatRequestSchema = z.object({
 function createSSEStream() {
   const encoder = new TextEncoder();
   let controller: ReadableStreamDefaultController<Uint8Array>;
+  let closed = false;
 
   const stream = new ReadableStream<Uint8Array>({
     start(c) {
       controller = c;
     },
+    cancel() {
+      // Client disconnected — mark as closed so send/close don't throw
+      closed = true;
+    },
   });
 
   const send = (event: string, data: unknown) => {
-    const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-    controller.enqueue(encoder.encode(message));
+    if (closed) return;
+    try {
+      const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+      controller.enqueue(encoder.encode(message));
+    } catch {
+      // Stream already closed or errored (client disconnected) — ignore
+      closed = true;
+    }
   };
 
   const close = () => {
-    controller.close();
+    if (closed) return;
+    closed = true;
+    try {
+      controller.close();
+    } catch {
+      // Already closed — ignore
+    }
   };
 
   return { stream, send, close };

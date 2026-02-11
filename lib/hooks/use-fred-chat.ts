@@ -245,150 +245,192 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
       const decoder = new TextDecoder();
       let buffer = "";
+      let receivedDone = false;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
 
-        for (const line of lines) {
-          if (!line.startsWith("event:")) continue;
+          for (const line of lines) {
+            if (!line.startsWith("event:")) continue;
 
-          const eventMatch = line.match(/^event: (\w+)/);
-          const dataMatch = line.match(/data: (.+)/);
+            const eventMatch = line.match(/^event: (\w+)/);
+            const dataMatch = line.match(/data: (.+)/);
 
-          if (!eventMatch || !dataMatch) continue;
+            if (!eventMatch || !dataMatch) continue;
 
-          const eventType = eventMatch[1];
-          let data: unknown;
-          try {
-            data = JSON.parse(dataMatch[1]);
-          } catch {
-            continue;
-          }
-
-          // Handle different event types
-          switch (eventType) {
-            case "connected":
-              setState("analyzing");
-              break;
-
-            case "state":
-              const stateData = data as { state: string; isComplete: boolean };
-              setState(mapState(stateData.state));
-              break;
-
-            case "analysis":
-              const analysisData = data as FredAnalysis;
-              setAnalysis(analysisData);
-              break;
-
-            case "models":
-              // Only advance state forward (never regress past applying_models)
-              setState(prev => {
-                const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
-                return order.indexOf(prev) < order.indexOf("applying_models") ? "applying_models" : prev;
-              });
-              break;
-
-            case "synthesis":
-              const synthesisData = data as FredSynthesis;
-              setSynthesis(synthesisData);
-              // Only advance state forward (never regress past synthesizing)
-              setState(prev => {
-                const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
-                return order.indexOf(prev) < order.indexOf("synthesizing") ? "synthesizing" : prev;
-              });
-              break;
-
-            case "red_flag": {
-              const rfData = data as { type: string; flags: RedFlag[] };
-              if (rfData.flags && rfData.flags.length > 0) {
-                setRedFlags(prev => [...prev, ...rfData.flags]);
-              }
-              break;
+            const eventType = eventMatch[1];
+            let data: unknown;
+            try {
+              data = JSON.parse(dataMatch[1]);
+            } catch {
+              continue;
             }
 
-            case "wellbeing": {
-              const wellbeingData = data as { signals: BurnoutSignals };
-              if (wellbeingData.signals?.detected) {
-                setWellbeingAlert(wellbeingData.signals);
+            // Handle different event types
+            switch (eventType) {
+              case "connected":
+                if (mountedRef.current) setState("analyzing");
+                break;
+
+              case "state": {
+                const stateData = data as { state: string; isComplete: boolean };
+                if (mountedRef.current) setState(mapState(stateData.state));
+                break;
               }
-              break;
+
+              case "analysis": {
+                const analysisData = data as FredAnalysis;
+                if (mountedRef.current) setAnalysis(analysisData);
+                break;
+              }
+
+              case "models":
+                // Only advance state forward (never regress past applying_models)
+                if (mountedRef.current) {
+                  setState(prev => {
+                    const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
+                    return order.indexOf(prev) < order.indexOf("applying_models") ? "applying_models" : prev;
+                  });
+                }
+                break;
+
+              case "synthesis": {
+                const synthesisData = data as FredSynthesis;
+                if (mountedRef.current) {
+                  setSynthesis(synthesisData);
+                  // Only advance state forward (never regress past synthesizing)
+                  setState(prev => {
+                    const order: FredState[] = ["idle", "connecting", "analyzing", "applying_models", "synthesizing", "deciding", "complete"];
+                    return order.indexOf(prev) < order.indexOf("synthesizing") ? "synthesizing" : prev;
+                  });
+                }
+                break;
+              }
+
+              case "red_flag": {
+                const rfData = data as { type: string; flags: RedFlag[] };
+                if (mountedRef.current && rfData.flags && rfData.flags.length > 0) {
+                  setRedFlags(prev => [...prev, ...rfData.flags]);
+                }
+                break;
+              }
+
+              case "wellbeing": {
+                const wellbeingData = data as { signals: BurnoutSignals };
+                if (mountedRef.current && wellbeingData.signals?.detected) {
+                  setWellbeingAlert(wellbeingData.signals);
+                }
+                break;
+              }
+
+              case "response": {
+                const responseData = data as {
+                  content: string;
+                  action?: string;
+                  confidence?: number;
+                  requiresApproval?: boolean;
+                  reasoning?: string;
+                };
+
+                // Map confidence number to level
+                let confidence: "high" | "medium" | "low" = "medium";
+                if (responseData.confidence !== undefined) {
+                  if (responseData.confidence >= 0.8) confidence = "high";
+                  else if (responseData.confidence >= 0.5) confidence = "medium";
+                  else confidence = "low";
+                }
+
+                const assistantMessage: FredMessage = {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: responseData.content,
+                  timestamp: new Date(),
+                  confidence,
+                  action: responseData.action,
+                  requiresApproval: responseData.requiresApproval,
+                  reasoning: responseData.reasoning,
+                };
+
+                if (mountedRef.current) setMessages(prev => [...prev, assistantMessage]);
+                break;
+              }
+
+              case "done":
+                receivedDone = true;
+                if (mountedRef.current) {
+                  setState("complete");
+                  // Reset to idle after a brief moment (cleanup-safe)
+                  if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+                  idleTimerRef.current = setTimeout(() => {
+                    if (mountedRef.current) setState("idle");
+                  }, 500);
+                }
+                break;
+
+              case "error": {
+                const errorData = data as { message: string };
+                if (mountedRef.current) {
+                  setError(errorData.message);
+                  setState("error");
+                }
+                break;
+              }
             }
-
-            case "response":
-              const responseData = data as {
-                content: string;
-                action?: string;
-                confidence?: number;
-                requiresApproval?: boolean;
-                reasoning?: string;
-              };
-
-              // Map confidence number to level
-              let confidence: "high" | "medium" | "low" = "medium";
-              if (responseData.confidence !== undefined) {
-                if (responseData.confidence >= 0.8) confidence = "high";
-                else if (responseData.confidence >= 0.5) confidence = "medium";
-                else confidence = "low";
-              }
-
-              const assistantMessage: FredMessage = {
-                id: crypto.randomUUID(),
-                role: "assistant",
-                content: responseData.content,
-                timestamp: new Date(),
-                confidence,
-                action: responseData.action,
-                requiresApproval: responseData.requiresApproval,
-                reasoning: responseData.reasoning,
-              };
-
-              setMessages(prev => [...prev, assistantMessage]);
-              break;
-
-            case "done":
-              setState("complete");
-              // Reset to idle after a brief moment (cleanup-safe)
-              if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-              idleTimerRef.current = setTimeout(() => {
-                if (mountedRef.current) setState("idle");
-              }, 500);
-              break;
-
-            case "error":
-              const errorData = data as { message: string };
-              setError(errorData.message);
-              setState("error");
-              break;
           }
         }
+      } finally {
+        // Release the reader lock so the browser can clean up the connection
+        try {
+          reader.releaseLock();
+        } catch {
+          // Already released — ignore
+        }
+      }
+
+      // If the stream ended without a "done" event, the server likely crashed mid-response.
+      // Show a graceful error instead of leaving the UI stuck in a processing state.
+      if (!receivedDone && mountedRef.current) {
+        setError("Connection to FRED was interrupted. Please try again.");
+        setState("error");
+
+        const errorResponseMessage: FredMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "Sorry, I lost my train of thought there. Could you send that again?",
+          timestamp: new Date(),
+          confidence: "low",
+        };
+        setMessages(prev => [...prev, errorResponseMessage]);
       }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         // User cancelled - don't show error
-        setState("idle");
+        if (mountedRef.current) setState("idle");
         return;
       }
 
       console.error("[useFredChat] Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to get response";
-      setError(errorMessage);
-      setState("error");
+      if (mountedRef.current) {
+        setError(errorMessage);
+        setState("error");
 
-      // Add error message as assistant response
-      const errorResponseMessage: FredMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "I'm having trouble processing your message right now. Please try again.",
-        timestamp: new Date(),
-        confidence: "low",
-      };
-      setMessages(prev => [...prev, errorResponseMessage]);
+        // Add error message as assistant response
+        const errorResponseMessage: FredMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "I'm having trouble processing your message right now. Please try again.",
+          timestamp: new Date(),
+          confidence: "low",
+        };
+        setMessages(prev => [...prev, errorResponseMessage]);
+      }
     } finally {
       abortControllerRef.current = null;
     }
