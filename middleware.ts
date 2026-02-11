@@ -42,8 +42,9 @@ export async function middleware(request: NextRequest) {
       return redirectResponse;
     }
 
-    // Propagate correlation ID on every response
+    // Propagate correlation ID and pathname on every response
     response.headers.set("X-Request-ID", requestId);
+    response.headers.set("x-pathname", pathname);
     return response;
   } catch (err) {
     console.error("[middleware] Auth check failed:", err);

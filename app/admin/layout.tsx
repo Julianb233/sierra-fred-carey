@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { LogoutButton } from "./components/LogoutButton";
 import { isAdminSession } from "@/lib/auth/admin";
@@ -11,7 +12,22 @@ export default async function AdminLayout({
   const admin = await isAdminSession();
 
   if (!admin) {
-    redirect("/admin/login");
+    // Check if we're already on the login page to avoid infinite redirect loop.
+    // The middleware sets x-pathname on every request for server components to read.
+    const headersList = await headers();
+    const pathname = headersList.get("x-pathname") || "";
+    const isLoginPage = pathname === "/admin/login";
+
+    if (!isLoginPage) {
+      redirect("/admin/login");
+    }
+
+    // On the login page — render children without the admin nav chrome
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {children}
+      </div>
+    );
   }
 
   return (
