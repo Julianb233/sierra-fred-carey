@@ -26,6 +26,24 @@ export type EvidenceSource = "conversation" | "document" | "inferred" | "user_co
 
 export type ProcessStatus = "active" | "paused" | "completed" | "abandoned";
 
+/** Silent diagnostic tags from early messages (Operating Bible 5.2) */
+export interface DiagnosticTags {
+  positioningClarity?: "low" | "med" | "high";
+  investorReadinessSignal?: "low" | "med" | "high";
+  stage?: "idea" | "pre-seed" | "seed" | "growth";
+  primaryConstraint?: "demand" | "distribution" | "product_depth" | "execution" | "team" | "focus";
+}
+
+/** Founder context snapshot (Operating Bible Section 12) */
+export interface FounderSnapshot {
+  stage?: string;
+  productStatus?: string;
+  traction?: string;
+  runway?: { time?: string; money?: string; energy?: string };
+  primaryConstraint?: string;
+  ninetyDayGoal?: string;
+}
+
 export interface ConversationState {
   id: string;
   userId: string;
@@ -33,6 +51,8 @@ export interface ConversationState {
   stepStatuses: Record<StartupStep, StepStatus>;
   processStatus: ProcessStatus;
   currentBlockers: string[];
+  diagnosticTags: DiagnosticTags;
+  founderSnapshot: FounderSnapshot;
   lastTransitionAt: Date | null;
   lastTransitionFrom: string | null;
   lastTransitionTo: string | null;
@@ -402,6 +422,64 @@ export async function deactivateEvidence(evidenceId: string): Promise<void> {
 }
 
 // ============================================================================
+// Diagnostic Tags & Founder Snapshot (Operating Bible 5.2 & 12)
+// ============================================================================
+
+/**
+ * Update silent diagnostic tags. Merges with existing tags.
+ * Called during early messages when FRED silently assesses the founder.
+ */
+export async function updateDiagnosticTags(
+  userId: string,
+  tags: Partial<DiagnosticTags>
+): Promise<ConversationState> {
+  const state = await getOrCreateConversationState(userId);
+  const merged = { ...state.diagnosticTags, ...tags };
+
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("fred_conversation_state")
+    .update({ diagnostic_tags: merged })
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[ConvState] Error updating diagnostic tags:", error);
+    throw error;
+  }
+
+  return transformStateRow(data);
+}
+
+/**
+ * Update founder snapshot. Merges with existing snapshot.
+ * Called after check-ins and major revelations.
+ */
+export async function updateFounderSnapshot(
+  userId: string,
+  snapshot: Partial<FounderSnapshot>
+): Promise<ConversationState> {
+  const state = await getOrCreateConversationState(userId);
+  const merged = { ...state.founderSnapshot, ...snapshot };
+
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("fred_conversation_state")
+    .update({ founder_snapshot: merged })
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[ConvState] Error updating founder snapshot:", error);
+    throw error;
+  }
+
+  return transformStateRow(data);
+}
+
+// ============================================================================
 // Composite Queries
 // ============================================================================
 
@@ -455,6 +533,35 @@ export async function buildProgressContext(userId: string): Promise<string> {
   }
 
   const lines: string[] = [];
+
+  // Founder Snapshot (if populated)
+  const snap = state.founderSnapshot;
+  if (Object.keys(snap).length > 0) {
+    lines.push("Founder Snapshot:");
+    if (snap.stage) lines.push(`  Stage: ${snap.stage}`);
+    if (snap.productStatus) lines.push(`  Product Status: ${snap.productStatus}`);
+    if (snap.traction) lines.push(`  Traction: ${snap.traction}`);
+    if (snap.runway) {
+      const parts = [snap.runway.time, snap.runway.money, snap.runway.energy].filter(Boolean);
+      if (parts.length > 0) lines.push(`  Runway: ${parts.join(", ")}`);
+    }
+    if (snap.primaryConstraint) lines.push(`  Primary Constraint: ${snap.primaryConstraint}`);
+    if (snap.ninetyDayGoal) lines.push(`  90-Day Goal: ${snap.ninetyDayGoal}`);
+    lines.push("");
+  }
+
+  // Diagnostic Tags (if populated)
+  const diag = state.diagnosticTags;
+  if (Object.keys(diag).length > 0) {
+    lines.push("Diagnostic Tags:");
+    if (diag.positioningClarity) lines.push(`  Positioning Clarity: ${diag.positioningClarity}`);
+    if (diag.investorReadinessSignal) lines.push(`  Investor Readiness Signal: ${diag.investorReadinessSignal}`);
+    if (diag.stage) lines.push(`  Stage: ${diag.stage}`);
+    if (diag.primaryConstraint) lines.push(`  Primary Constraint: ${diag.primaryConstraint}`);
+    lines.push("");
+  }
+
+  // Step Progress
   lines.push(`Current Step: ${state.currentStep}`);
   lines.push(`Process Status: ${state.processStatus}`);
   lines.push("");
@@ -509,6 +616,8 @@ function transformStateRow(row: any): ConversationState {
     stepStatuses: row.step_statuses,
     processStatus: row.process_status,
     currentBlockers: row.current_blockers || [],
+    diagnosticTags: row.diagnostic_tags || {},
+    founderSnapshot: row.founder_snapshot || {},
     lastTransitionAt: row.last_transition_at ? new Date(row.last_transition_at) : null,
     lastTransitionFrom: row.last_transition_from,
     lastTransitionTo: row.last_transition_to,

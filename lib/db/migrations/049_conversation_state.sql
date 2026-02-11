@@ -48,6 +48,14 @@ CREATE TABLE IF NOT EXISTS fred_conversation_state (
   -- Blockers on the current step (FRED sets these when it detects issues)
   current_blockers JSONB NOT NULL DEFAULT '[]'::jsonb,
 
+  -- Silent diagnostic tags (Section 5.2 of Operating Bible)
+  -- Set during early messages: positioning_clarity, investor_readiness_signal, stage, primary_constraint
+  diagnostic_tags JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+  -- Founder snapshot (Section 12 of Operating Bible)
+  -- Canonical fields: stage, product_status, traction, runway, primary_constraint, ninety_day_goal
+  founder_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+
   -- Last step transition metadata
   last_transition_at TIMESTAMPTZ,
   last_transition_from TEXT,
@@ -273,6 +281,12 @@ COMMENT ON COLUMN fred_conversation_state.step_statuses IS
 
 COMMENT ON COLUMN fred_conversation_state.current_blockers IS
   'Array of blocker strings on the current step. FRED populates these when it detects do-not-advance conditions.';
+
+COMMENT ON COLUMN fred_conversation_state.diagnostic_tags IS
+  'Silent diagnosis tags from early messages (Operating Bible 5.2): positioning_clarity (low/med/high), investor_readiness_signal (low/med/high), stage (idea/pre-seed/seed/growth), primary_constraint (demand/distribution/product_depth/execution/team/focus).';
+
+COMMENT ON COLUMN fred_conversation_state.founder_snapshot IS
+  'Founder context snapshot (Operating Bible 12): stage, product_status, traction, runway {time, money, energy}, primary_constraint, ninety_day_goal. Updated after check-ins and major changes.';
 
 COMMENT ON COLUMN fred_step_evidence.evidence_type IS
   'Type of evidence: required_output (deliverable), supporting_fact, kill_signal (red flag), blocker, user_statement, validation_result.';
