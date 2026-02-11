@@ -9,11 +9,10 @@ import { PlusIcon, Cross2Icon } from "@radix-ui/react-icons";
 import type { PostType } from "@/lib/communities/types";
 
 interface CreatePostFormProps {
-  communityId: string;
   onSubmit: (data: { title: string; content: string; postType: PostType }) => Promise<void>;
 }
 
-export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
+export function CreatePostForm({ onSubmit }: CreatePostFormProps) {
   const [expanded, setExpanded] = useState(false);
   const [postType, setPostType] = useState<PostType>("post");
   const [title, setTitle] = useState("");

@@ -81,18 +81,7 @@ export default function CommunityDetailPage() {
     [community, slug]
   );
 
-  useEffect(() => {
-    if (community) {
-      if (isMember) {
-        fetchPosts(0);
-      } else {
-        setPostsLoading(false);
-      }
-      fetchMembers();
-    }
-  }, [community, isMember, fetchPosts]);
-
-  async function fetchMembers() {
+  const fetchMembers = useCallback(async () => {
     if (!community) return;
     try {
       const res = await fetch(`/api/communities/${slug}/members?limit=10`);
@@ -103,7 +92,19 @@ export default function CommunityDetailPage() {
     } catch {
       // silently fail
     }
-  }
+  }, [community, slug]);
+
+  useEffect(() => {
+    if (community) {
+      if (isMember) {
+        fetchPosts(0);
+        setPostPage(0);
+      } else {
+        setPostsLoading(false);
+      }
+      fetchMembers();
+    }
+  }, [community, isMember, fetchPosts, fetchMembers]);
 
   async function handleJoin() {
     if (!community) return;
@@ -124,6 +125,7 @@ export default function CommunityDetailPage() {
 
   async function handleLeave() {
     if (!community) return;
+    if (!window.confirm("Leave this community?")) return;
     try {
       const res = await fetch(`/api/communities/${slug}/members`, { method: "DELETE" });
       if (res.ok) {
@@ -152,31 +154,86 @@ export default function CommunityDetailPage() {
       const json = await res.json();
       if (json.data) {
         setPosts((prev) => [json.data, ...prev]);
+        toast.success("Post created!");
+      } else {
+        toast.error("Failed to create post");
       }
-      toast.success("Post created!");
     } else {
       toast.error("Failed to create post");
     }
   }
 
   async function handleReact(postId: string) {
-    const res = await fetch(`/api/communities/${slug}/posts/${postId}/reactions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reactionType: "like" }),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      const added = json.data?.added;
+    // Optimistic update: toggle immediately before the API call
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    const wasReacted = post.userHasReacted;
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              userHasReacted: !wasReacted,
+              reactionCount: wasReacted
+                ? Math.max(0, p.reactionCount - 1)
+                : p.reactionCount + 1,
+            }
+          : p
+      )
+    );
+    try {
+      const res = await fetch(`/api/communities/${slug}/posts/${postId}/reactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reactionType: "like" }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const added = json.data?.added;
+        if (added === undefined) return; // Guard: malformed response, keep optimistic state
+        // Reconcile with server truth if it disagrees with optimistic state
+        if (added === wasReacted) {
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === postId
+                ? {
+                    ...p,
+                    userHasReacted: added,
+                    reactionCount: added
+                      ? p.reactionCount + 1
+                      : Math.max(0, p.reactionCount - 1),
+                  }
+                : p
+            )
+          );
+        }
+      } else {
+        // API error: rollback optimistic update
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  userHasReacted: wasReacted,
+                  reactionCount: wasReacted
+                    ? p.reactionCount + 1
+                    : Math.max(0, p.reactionCount - 1),
+                }
+              : p
+          )
+        );
+      }
+    } catch {
+      // Network error: rollback optimistic update
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
             ? {
                 ...p,
-                userHasReacted: added,
-                reactionCount: added
+                userHasReacted: wasReacted,
+                reactionCount: wasReacted
                   ? p.reactionCount + 1
-                  : p.reactionCount - 1,
+                  : Math.max(0, p.reactionCount - 1),
               }
             : p
         )
@@ -334,10 +391,10 @@ export default function CommunityDetailPage() {
             <div className="w-full md:max-w-2xl md:mx-auto lg:max-w-3xl space-y-4">
               {/* Create post — collapsible on mobile, always visible on desktop */}
               <div className="lg:hidden">
-                <CreatePostForm communityId={community.id} onSubmit={handleCreatePost} />
+                <CreatePostForm onSubmit={handleCreatePost} />
               </div>
               <div className="hidden lg:block">
-                <CreatePostFormDesktop communityId={community.id} onSubmit={handleCreatePost} />
+                <CreatePostFormDesktop onSubmit={handleCreatePost} />
               </div>
 
               <CommunityFeed

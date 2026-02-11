@@ -8,6 +8,7 @@ import { CommunityCardSkeleton } from "@/components/communities/CommunitySkeleto
 import { CreateCommunityDialog } from "@/components/communities/CreateCommunityDialog";
 import { Search, Users } from "lucide-react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { Community, CommunityCategory } from "@/lib/communities/types";
 
 const CATEGORIES: { value: CommunityCategory | "all"; label: string }[] = [
@@ -24,7 +25,7 @@ export default function CommunitiesPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<CommunityCategory | "all">("all");
   const [showMyOnly, setShowMyOnly] = useState(false);
-  const [joiningSlug, setJoiningSlug] = useState<string | null>(null);
+  const [joiningSlugs, setJoiningSlugs] = useState<Set<string>>(new Set());
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function CommunitiesPage() {
   }
 
   async function handleJoin(communitySlug: string) {
-    setJoiningSlug(communitySlug);
+    setJoiningSlugs((prev) => new Set(prev).add(communitySlug));
     try {
       const res = await fetch(`/api/communities/${communitySlug}/members`, { method: "POST" });
       if (res.ok) {
@@ -60,14 +61,23 @@ export default function CommunitiesPage() {
               : c
           )
         );
+      } else {
+        toast.error("Failed to join community");
       }
+    } catch {
+      toast.error("Failed to join community");
     } finally {
-      setJoiningSlug(null);
+      setJoiningSlugs((prev) => {
+        const next = new Set(prev);
+        next.delete(communitySlug);
+        return next;
+      });
     }
   }
 
   async function handleLeave(communitySlug: string) {
-    setJoiningSlug(communitySlug);
+    if (!window.confirm("Leave this community?")) return;
+    setJoiningSlugs((prev) => new Set(prev).add(communitySlug));
     try {
       const res = await fetch(`/api/communities/${communitySlug}/members`, { method: "DELETE" });
       if (res.ok) {
@@ -78,9 +88,17 @@ export default function CommunitiesPage() {
               : c
           )
         );
+      } else {
+        toast.error("Failed to leave community");
       }
+    } catch {
+      toast.error("Failed to leave community");
     } finally {
-      setJoiningSlug(null);
+      setJoiningSlugs((prev) => {
+        const next = new Set(prev);
+        next.delete(communitySlug);
+        return next;
+      });
     }
   }
 
@@ -199,7 +217,7 @@ export default function CommunitiesPage() {
               community={community}
               onJoin={handleJoin}
               onLeave={handleLeave}
-              isJoining={joiningSlug === community.slug}
+              isJoining={joiningSlugs.has(community.slug)}
             />
           ))}
         </div>

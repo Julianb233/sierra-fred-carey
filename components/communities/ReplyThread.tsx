@@ -19,22 +19,23 @@ export function ReplyThread({ postId, communitySlug, onReply }: ReplyThreadProps
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    async function fetchReplies() {
-      try {
-        const res = await fetch(
-          `/api/communities/${communitySlug}/posts/${postId}/replies`
-        );
-        if (res.ok) {
-          const json = await res.json();
-          setReplies(json.data ?? []);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
+  async function fetchReplies() {
+    try {
+      const res = await fetch(
+        `/api/communities/${communitySlug}/posts/${postId}/replies`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setReplies(json.data ?? []);
       }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchReplies();
   }, [postId, communitySlug]);
 
@@ -44,6 +45,7 @@ export function ReplyThread({ postId, communitySlug, onReply }: ReplyThreadProps
     try {
       await onReply(postId, replyText.trim());
       setReplyText("");
+      await fetchReplies();
     } finally {
       setSubmitting(false);
     }
