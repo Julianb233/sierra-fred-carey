@@ -133,6 +133,9 @@ function mapReaction(row: Record<string, unknown>): PostReaction {
 /**
  * Create a new community. The creator is automatically added as a member
  * with role 'creator' and member_count starts at 1.
+ *
+ * Accepts `iconUrl` or `avatarUrl` for the community image,
+ * and `isActive` or `isPublic` for visibility (all map to the same DB column).
  */
 export async function createCommunity(params: {
   name: string;
@@ -141,6 +144,8 @@ export async function createCommunity(params: {
   category?: string;
   creatorId: string;
   iconUrl?: string;
+  avatarUrl?: string;
+  isPublic?: boolean;
 }): Promise<Community> {
   const supabase = createServiceClient();
 
@@ -152,7 +157,7 @@ export async function createCommunity(params: {
       description: params.description ?? null,
       category: params.category ?? null,
       creator_id: params.creatorId,
-      icon_url: params.iconUrl ?? null,
+      icon_url: params.iconUrl ?? params.avatarUrl ?? null,
       member_count: 1,
     })
     .select()
@@ -282,7 +287,9 @@ export async function updateCommunity(
     description: string;
     category: string;
     iconUrl: string;
+    avatarUrl: string;
     isActive: boolean;
+    isPublic: boolean;
   }>
 ): Promise<Community> {
   const supabase = createServiceClient();
@@ -293,7 +300,9 @@ export async function updateCommunity(
     dbUpdates.description = updates.description;
   if (updates.category !== undefined) dbUpdates.category = updates.category;
   if (updates.iconUrl !== undefined) dbUpdates.icon_url = updates.iconUrl;
+  if (updates.avatarUrl !== undefined) dbUpdates.icon_url = updates.avatarUrl;
   if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+  if (updates.isPublic !== undefined) dbUpdates.is_active = updates.isPublic;
 
   const { data, error } = await supabase
     .from("communities")
@@ -727,9 +736,10 @@ export async function toggleReaction(params: {
   postId: string;
   userId: string;
   reactionType?: string;
+  emoji?: string;
 }): Promise<{ added: boolean; reaction: PostReaction | null }> {
   const supabase = createServiceClient();
-  const reactionType = params.reactionType ?? "like";
+  const reactionType = params.reactionType ?? params.emoji ?? "like";
 
   // Check for existing reaction (composite PK: post_id + user_id)
   const { data: existing } = await supabase
@@ -792,3 +802,48 @@ export async function getReactions(postId: string): Promise<PostReaction[]> {
 
   return (data || []).map(mapReaction);
 }
+
+// ---------------------------------------------------------------------------
+// Compatibility aliases (used by API routes)
+// ---------------------------------------------------------------------------
+
+/** Alias for joinCommunity with object params (used by join route). */
+export async function addMember(params: {
+  communityId: string;
+  userId: string;
+  role?: CommunityRole;
+}): Promise<CommunityMember> {
+  if (params.role && params.role !== "member") {
+    // For non-member roles (e.g., creator during community creation),
+    // insert directly without incrementing member_count
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("community_members")
+      .insert({
+        community_id: params.communityId,
+        user_id: params.userId,
+        role: params.role,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to add member: ${error.message}`);
+    }
+
+    return mapMember(data);
+  }
+  return joinCommunity(params.communityId, params.userId);
+}
+
+/** Alias for leaveCommunity (used by leave route). */
+export const removeMember = leaveCommunity;
+
+/** Alias for getCommunityMembers (used by members route). */
+export const listMembers = getCommunityMembers;
+
+/** Alias for getPosts (used by posts route). */
+export const listPosts = getPosts;
+
+/** Alias for getReplies (used by replies route). */
+export const listReplies = getReplies;
