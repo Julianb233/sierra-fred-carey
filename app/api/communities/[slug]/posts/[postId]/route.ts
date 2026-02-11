@@ -19,7 +19,7 @@ import {
   getReplies,
   getReactions,
 } from "@/lib/db/communities";
-import { sanitizeContent } from "@/lib/communities/sanitize";
+import { sanitizeContent, checkCommunitiesEnabled } from "@/lib/communities/sanitize";
 
 // ============================================================================
 // Validation
@@ -39,6 +39,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string; postId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId } = await params;
@@ -99,6 +102,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; postId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId } = await params;
@@ -191,6 +197,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string; postId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId } = await params;

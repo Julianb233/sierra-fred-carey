@@ -16,7 +16,7 @@ import {
   createReply,
   getReplies,
 } from "@/lib/db/communities";
-import { sanitizeContent } from "@/lib/communities/sanitize";
+import { sanitizeContent, checkCommunitiesEnabled } from "@/lib/communities/sanitize";
 import { checkRateLimitForUser } from "@/lib/api/rate-limit";
 import { getUserTier } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
@@ -37,6 +37,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; postId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId } = await params;
@@ -101,6 +104,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; postId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
 

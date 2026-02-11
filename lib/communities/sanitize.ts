@@ -1,9 +1,28 @@
 /**
- * Content sanitization for community user-generated content.
+ * Content sanitization and utilities for community user-generated content.
  * Phase 41: Founder Communities
  *
  * Strips HTML tags to prevent XSS in posts, replies, and community descriptions.
  */
+
+import { NextResponse } from "next/server";
+
+/**
+ * Feature flag for communities. Set COMMUNITIES_ENABLED=false in env to disable.
+ * Returns a 503 NextResponse if disabled, or null if enabled.
+ */
+export function checkCommunitiesEnabled(): NextResponse | null {
+  if (process.env.COMMUNITIES_ENABLED === "false") {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Communities feature is temporarily unavailable",
+      },
+      { status: 503 }
+    );
+  }
+  return null;
+}
 
 /**
  * Strip all HTML tags from user input. Preserves text content.

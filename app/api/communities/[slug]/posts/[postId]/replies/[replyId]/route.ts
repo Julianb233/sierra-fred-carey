@@ -16,7 +16,7 @@ import {
   deleteReply,
 } from "@/lib/db/communities";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sanitizeContent } from "@/lib/communities/sanitize";
+import { sanitizeContent, checkCommunitiesEnabled } from "@/lib/communities/sanitize";
 
 // ============================================================================
 // Validation
@@ -62,6 +62,9 @@ export async function PATCH(
     params,
   }: { params: Promise<{ slug: string; postId: string; replyId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId, replyId } = await params;
@@ -167,6 +170,9 @@ export async function DELETE(
     params,
   }: { params: Promise<{ slug: string; postId: string; replyId: string }> }
 ) {
+  const disabled = checkCommunitiesEnabled();
+  if (disabled) return disabled;
+
   try {
     const userId = await requireAuth();
     const { slug, postId, replyId } = await params;
