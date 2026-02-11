@@ -7,6 +7,12 @@ import {
   SAHARA_MESSAGING,
 } from "@/lib/fred-brain";
 import { STARTUP_STEPS, type StartupStep } from "@/lib/ai/frameworks/startup-process";
+import type { RealityLensFactor } from "@/lib/fred/schemas/reality-lens";
+import { FACTOR_DESCRIPTIONS } from "@/lib/fred/schemas/reality-lens";
+import type { RealityLensGate } from "@/lib/db/conversation-state";
+import type { DiagnosticMode } from "@/lib/ai/diagnostic-engine";
+import { generatePositioningPrompt } from "@/lib/ai/frameworks/positioning";
+import { generateInvestorLensPrompt } from "@/lib/ai/frameworks/investor-lens";
 
 // ============================================================================
 // Dynamic identity fragments built from fred-brain.ts (single source of truth)
@@ -490,4 +496,167 @@ Your response MUST:
 4. Be warm but firm -- do not let the founder skip ahead
 
 Do NOT ignore their question entirely. Briefly note it, then redirect.`;
+}
+
+// ============================================================================
+// Reality Lens Gate Blocks (Phase 37)
+// ============================================================================
+
+/** Redirect counter threshold before compromise mode activates */
+const COMPROMISE_THRESHOLD = 2;
+
+/**
+ * Build a prompt block that enforces the Reality Lens gate.
+ * Injected when the founder requests downstream work but upstream truth
+ * is not established.
+ *
+ * Escalation path:
+ * - Redirect 1-2: Acknowledge request, explain gaps, redirect to upstream work
+ * - Redirect 3+: COMPROMISE MODE -- help with the downstream work but be
+ *   transparent about weaknesses.
+ *
+ * Operating Bible Section 2.2 and 2.3.
+ */
+export function buildRealityLensGateBlock(
+  downstreamRequest: string,
+  weakDimensions: RealityLensFactor[],
+  unassessedDimensions: RealityLensFactor[],
+  redirectCount: number = 0
+): string {
+  const lines: string[] = [];
+  const requestLabel = downstreamRequest.replace(/_/g, " ");
+
+  // COMPROMISE MODE: After COMPROMISE_THRESHOLD redirects, help with caveats
+  if (redirectCount >= COMPROMISE_THRESHOLD) {
+    lines.push("## REALITY LENS GATE — COMPROMISE MODE (Active This Turn)");
+    lines.push("");
+    lines.push(`The founder has asked about **${requestLabel}** ${redirectCount + 1} times.`);
+    lines.push("You have redirected them before. They are persistent. Switch to **compromise mode**.");
+    lines.push("");
+    lines.push("**Your response MUST:**");
+    lines.push(`1. Acknowledge their persistence: "I hear you — you want to work on ${requestLabel.toLowerCase()}. Let's do it."`);
+    lines.push("2. Help them with the downstream work they requested");
+    lines.push("3. BUT be transparent about the gaps as you go. Weave the weaknesses INTO the work:");
+
+    const allGaps = [...weakDimensions, ...unassessedDimensions];
+    for (const dim of allGaps) {
+      lines.push(`   - **${dim.charAt(0).toUpperCase() + dim.slice(1)}**: Flag this gap where it matters in the output. E.g., if building a deck with unvalidated demand, note: "This slide claims market demand — you'll need evidence here before presenting."`);
+    }
+
+    lines.push("4. End with: what would make this work STRONGER (the upstream truth they're missing)");
+    lines.push("");
+    lines.push("The goal is to be USEFUL while honest. A deck that's transparent about gaps is better than no deck and a frustrated founder.");
+
+    return lines.join("\n");
+  }
+
+  // STANDARD REDIRECT MODE (redirects 1-2)
+  lines.push("## REALITY LENS GATE (Active This Turn)");
+  lines.push("");
+  lines.push(`The founder is asking about **${requestLabel}**.`);
+  lines.push("This is downstream work. The relevant upstream dimensions are not yet established.");
+  lines.push("");
+
+  if (weakDimensions.length > 0) {
+    lines.push("**Weak dimensions (need strengthening):**");
+    for (const dim of weakDimensions) {
+      lines.push(`- **${dim.charAt(0).toUpperCase() + dim.slice(1)}**: ${FACTOR_DESCRIPTIONS[dim]}`);
+    }
+    lines.push("");
+  }
+
+  if (unassessedDimensions.length > 0) {
+    lines.push("**Unassessed dimensions (no data yet):**");
+    for (const dim of unassessedDimensions) {
+      lines.push(`- **${dim.charAt(0).toUpperCase() + dim.slice(1)}**: ${FACTOR_DESCRIPTIONS[dim]}`);
+    }
+    lines.push("");
+  }
+
+  lines.push("**Your response MUST:**");
+  lines.push("1. Acknowledge what they asked about — do not dismiss it");
+  lines.push("2. Explain plainly which upstream dimensions are weak or unassessed");
+  lines.push("3. Ask a specific question to address the most critical gap");
+  lines.push("4. Be direct but warm — this is a conversation, not a wall");
+  lines.push("");
+  lines.push("Do NOT proceed with downstream work yet. But if the founder pushes back again, you will shift to helping them while being transparent about the gaps.");
+
+  return lines.join("\n");
+}
+
+/**
+ * Build a compact summary of Reality Lens gate status for the system prompt.
+ * Always injected so FRED knows the current state of upstream validation.
+ */
+export function buildRealityLensStatusBlock(gate: RealityLensGate): string {
+  const entries = Object.entries(gate)
+    .map(([dim, state]) => {
+      let label = `${dim}=${state.status}`;
+      if (state.status === "weak" && state.blockers && state.blockers.length > 0) {
+        label += `(blocked)`;
+      }
+      return label;
+    })
+    .join(", ");
+
+  return `Reality Lens: ${entries}`;
+}
+
+// ============================================================================
+// Framework Mode Injection Blocks (Phase 38)
+// ============================================================================
+
+/**
+ * Build the framework injection block for the system prompt.
+ * Returns the full framework document for the active mode.
+ *
+ * In founder-os mode, the 9-Step Process is the default backbone
+ * (step guidance from Phase 36 already handles this, so we return
+ * a minimal reinforcement block rather than the full process prompt).
+ *
+ * In positioning/investor mode, the specialized framework is injected
+ * as an ACTIVE FRAMEWORK section.
+ */
+export function buildFrameworkInjectionBlock(
+  activeMode: DiagnosticMode
+): string {
+  switch (activeMode) {
+    case "positioning":
+      return `\n\n## ACTIVE FRAMEWORK: Positioning Readiness\n\n${generatePositioningPrompt()}`;
+
+    case "investor-readiness":
+      return `\n\n## ACTIVE FRAMEWORK: Investor Lens\n\n${generateInvestorLensPrompt()}`;
+
+    case "founder-os":
+    default:
+      // In founder-os mode, the step guidance block (Phase 36) already
+      // provides process context. Add a minimal reinforcement.
+      return `\n\n## ACTIVE MODE: Founder Decision OS\n\nYou are in the default mentoring mode. Use the 9-Step Startup Process as your backbone. Focus on the founder's current step. Do not introduce specialized frameworks unless signals warrant it.`;
+  }
+}
+
+/**
+ * Build a one-time introduction block when entering a new framework mode.
+ * This tells FRED to deliver the introduction language in its response.
+ *
+ * The introduction is PROMPT-DRIVEN: we instruct the LLM to include it,
+ * rather than hardcoding it in the response.
+ */
+export function buildModeTransitionBlock(
+  framework: "positioning" | "investor",
+  direction: "enter" | "exit"
+): string {
+  if (direction === "exit") {
+    return `\n\n## MODE TRANSITION\n\nYou have returned to the default Founder Decision OS mode. Resume guiding the founder through their current step in the 9-Step Process. Do not reference the previous framework unless the founder brings it up.`;
+  }
+
+  if (framework === "positioning") {
+    return `\n\n## MODE TRANSITION: Entering Positioning Mode\n\nYou have detected positioning signals. Before applying the Positioning Readiness Framework, introduce it naturally:\n\n"Before we talk about scaling or investors, we need to get clear on how this is positioned. Right now, it's hard to tell who this is for and why they'd choose it."\n\nUse this language verbatim or adapt it naturally to the conversation flow. Do NOT frame this as marketing or branding. After introducing, begin applying the framework's diagnostic questions.`;
+  }
+
+  if (framework === "investor") {
+    return `\n\n## MODE TRANSITION: Entering Investor Mode\n\nYou have detected investor/fundraising signals. Before applying the Investor Lens, introduce it naturally:\n\n"We can evaluate this the way investors actually will. That includes a clear verdict — yes, no, or not yet — and why."\n\nUse this language verbatim or adapt it naturally. Remember: Do NOT encourage fundraising by default. Verdict first, then pass reasons, then fixes. Never optimize narrative over fundamentals.`;
+  }
+
+  return "";
 }

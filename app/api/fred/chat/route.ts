@@ -31,9 +31,10 @@ import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { buildFounderContext } from "@/lib/fred/context-builder";
-import { getOrCreateConversationState } from "@/lib/db/conversation-state";
-import type { ConversationState } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildDriftRedirectBlock } from "@/lib/ai/prompts";
+import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
+import type { ConversationState, ModeContext } from "@/lib/db/conversation-state";
+import { buildStepGuidanceBlock, buildDriftRedirectBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock } from "@/lib/ai/prompts";
+import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 
 /** Map numeric UserTier enum to rate-limit tier key */
@@ -185,6 +186,35 @@ function fireEnrichment(
 }
 
 // ============================================================================
+// Phase 37: Quick Downstream Request Detection (pre-machine, regex-only)
+// ============================================================================
+
+/** Request verbs indicating founder wants ACTION, not information */
+const QUICK_REQUEST_VERBS = /\b(help|build|create|make|write|review|prepare|start|plan|need|want|should\s*i|how\s*(do\s*i|to|can\s*i)|ready\s*to|let'?s|work\s*on|get\s*(started|ready))\b/;
+
+/**
+ * Quick downstream request detection for pre-machine prompt assembly.
+ * Requires BOTH a domain keyword AND a request verb.
+ * "What is a pitch deck?" -> no match (no request verb)
+ * "Help me build a pitch deck" -> match (has "help" + "build" + "pitch deck")
+ */
+function detectDownstreamRequestQuick(message: string): string | null {
+  const lowerMessage = message.toLowerCase();
+
+  // Gate 1: Must have a request/action verb
+  if (!QUICK_REQUEST_VERBS.test(lowerMessage)) return null;
+
+  // Gate 2: Match domain keyword
+  if (/\b(pitch\s*deck|investor\s*deck|deck\s*review)\b/.test(lowerMessage)) return "pitch_deck";
+  if (/\b(fundrais\w*|raise.*capital|valuation|term\s*sheet)\b/.test(lowerMessage)) return "fundraising";
+  if (/\b(hir\w+|recruit\w*|first\s*hire)\b/.test(lowerMessage)) return "hiring";
+  if (/\b(patent|ip\s*protect\w*)\b/.test(lowerMessage)) return "patents";
+  if (/\b(scal\w+|series\s*[a-c])\b/.test(lowerMessage)) return "scaling";
+  if (/\b(marketing\s*campaign|ad\s*spend|paid\s*ads)\b/.test(lowerMessage)) return "marketing_campaign";
+  return null;
+}
+
+// ============================================================================
 // Route Handler
 // ============================================================================
 
@@ -272,7 +302,103 @@ async function handlePost(req: NextRequest) {
       console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
     }
 
-    // Phase 36: Build conversation state context for the machine
+    // Phase 37: Load Reality Lens gate status and check against downstream request
+    let rlGateBlock = "";
+    let rlStatusBlock = "";
+    try {
+      const rlGate = await getRealityLensGate(userId);
+      if (rlGate) {
+        rlStatusBlock = buildRealityLensStatusBlock(rlGate);
+
+        // Check if downstream request detected AND gate is not open
+        const downstreamRequest = detectDownstreamRequestQuick(message);
+        if (downstreamRequest) {
+          // Pass the specific request so only RELEVANT dimensions are checked
+          const gateStatus = checkGateStatus(rlGate, downstreamRequest);
+          if (!gateStatus.gateOpen) {
+            // Load redirect count for compromise mode escalation
+            const redirectCount = await getGateRedirectCount(userId, downstreamRequest);
+
+            rlGateBlock = buildRealityLensGateBlock(
+              downstreamRequest,
+              gateStatus.weakDimensions,
+              gateStatus.unassessedDimensions,
+              redirectCount
+            );
+
+            // Fire-and-forget: increment redirect counter
+            incrementGateRedirect(userId, downstreamRequest).catch(err =>
+              console.warn("[FRED Chat] Failed to increment gate redirect:", err)
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("[FRED Chat] Failed to load Reality Lens gate (non-blocking):", error);
+    }
+
+    // Phase 38: Load persisted diagnostic mode and run mode transition
+    let activeMode: DiagnosticMode = "founder-os";
+    let frameworkBlock = "";
+    let modeTransitionBlock = "";
+    let modeTransitioned = false;
+
+    try {
+      const persisted = await getActiveMode(userId);
+      activeMode = persisted.activeMode;
+      const modeContext = persisted.modeContext;
+
+      // Run mode transition analysis on current message
+      const hasUploadedDeck = false; // TODO: detect from attachments when file upload is wired
+      const transition = determineModeTransition(
+        message,
+        activeMode,
+        modeContext,
+        hasUploadedDeck
+      );
+
+      // Update mode if transitioned
+      if (transition.transitioned) {
+        activeMode = transition.newMode;
+        modeTransitioned = true;
+      }
+
+      // Build framework injection for system prompt
+      frameworkBlock = buildFrameworkInjectionBlock(activeMode);
+
+      // Build introduction block if entering a new mode
+      if (transition.needsIntroduction && transition.framework) {
+        modeTransitionBlock = buildModeTransitionBlock(
+          transition.framework,
+          "enter"
+        );
+      } else if (transition.transitioned && transition.direction === "exit" && transition.framework) {
+        modeTransitionBlock = buildModeTransitionBlock(
+          transition.framework,
+          "exit"
+        );
+      }
+
+      // Fire-and-forget: persist mode changes and signal history
+      updateActiveMode(userId, activeMode, transition.updatedModeContext).catch(err =>
+        console.warn("[FRED Chat] Failed to persist mode (non-blocking):", err)
+      );
+
+      // Fire-and-forget: mark introduction delivered if needed
+      if (transition.needsIntroduction && transition.framework) {
+        markIntroductionDelivered(
+          userId,
+          transition.framework,
+          transition.detectedSignals.join(",")
+        ).catch(err =>
+          console.warn("[FRED Chat] Failed to mark introduction (non-blocking):", err)
+        );
+      }
+    } catch (error) {
+      console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
+    }
+
+    // Phase 36+38: Build conversation state context for the machine
     const stateContext: ConversationStateContext | null = conversationState
       ? {
           currentStep: conversationState.currentStep,
@@ -282,13 +408,21 @@ async function handlePost(req: NextRequest) {
           diagnosticTags: conversationState.diagnosticTags as Record<string, string>,
           founderSnapshot: conversationState.founderSnapshot as Record<string, unknown>,
           progressContext: stepGuidanceBlock,
+          activeMode,
+          modeTransitioned,
         }
       : null;
 
-    // Append step guidance to founder context for system prompt injection
-    const fullContext = stepGuidanceBlock
-      ? (founderContext ? founderContext + "\n\n" + stepGuidanceBlock : stepGuidanceBlock)
-      : founderContext;
+    // Assemble full system prompt context
+    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition
+    const fullContext = [
+      founderContext,
+      stepGuidanceBlock,
+      rlStatusBlock,
+      rlGateBlock,
+      frameworkBlock,
+      modeTransitionBlock,
+    ].filter(Boolean).join("\n\n");
 
     // Create FRED service
     const fredService = createFredService({

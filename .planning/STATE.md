@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v4.0 FRED Mentor Experience -- Phase 36 (Conversation State & Structured Flow)
+**Current focus:** v4.0 FRED Mentor Experience -- Phase 39 (Missing Frameworks & Gated Reviews)
 
 ## Current Position
 
-Phase: 36 of 39 (Conversation State & Structured Flow)
-Plan: 01 of 2
-Status: Plan 36-01 complete, ready for 36-02
-Last activity: 2026-02-11 -- Completed 36-01-PLAN.md (Wire Conversation State into Chat Pipeline)
+Phase: 38 of 46 (Framework & Mode Integration) -- COMPLETE
+Next: Phase 39 (Missing Frameworks & Gated Reviews)
+Status: Phases 34-38 complete, Phase 41 complete. Ready for Phase 39.
+Last activity: 2026-02-11 -- Completed Phases 34-38 + 41 via agent team execution
 
-Progress: [#.............................] ~3%
+Progress: [########......................] ~28% (6 of 13 v4.0 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v4.0)
-- Average duration: ~3 min
-- Total execution time: ~3 min
+- Total plans completed: 10 (v4.0)
+- Phases completed: 34 (2 plans), 35 (1 plan), 36 (2 plans), 37 (1 plan), 38 (1 plan), 41 (2 plans)
+- Tests written: 60 (41 prompts.test.ts + 19 context-builder.test.ts)
 
 ## Accumulated Context
 
@@ -47,11 +47,11 @@ Phase 36-01 decisions:
 ### Key Architectural Gaps (from codebase analysis)
 
 - ~~System prompt is STATIC -- same prompt every time, no dynamic context from onboarding or conversation state~~ RESOLVED: Phase 34 + 36-01
-- No concept of conversation "modes" -- no structured intake vs freeform
-- Topic detection is keyword-matching (validate-input.ts), not AI-powered mode-switching
-- Diagnostic engine (lib/ai/diagnostic-engine.ts) exists but is NOT wired into chat route
-- Existing frameworks (startup-process.ts, investor-lens.ts, positioning.ts) exist as code but are NOT integrated as active gates
-- Reality Lens exists as standalone assessment tool but NOT as a gate in conversations
+- ~~No concept of conversation "modes" -- no structured intake vs freeform~~ RESOLVED: Phase 38
+- ~~Topic detection is keyword-matching (validate-input.ts), not AI-powered mode-switching~~ RESOLVED: Phase 38 (diagnostic engine with hysteresis)
+- ~~Diagnostic engine (lib/ai/diagnostic-engine.ts) exists but is NOT wired into chat route~~ RESOLVED: Phase 38
+- ~~Existing frameworks (startup-process.ts, investor-lens.ts, positioning.ts) exist as code but are NOT integrated as active gates~~ RESOLVED: Phases 37 + 38
+- ~~Reality Lens exists as standalone assessment tool but NOT as a gate in conversations~~ RESOLVED: Phase 37
 - ~~No conversation state tracking for where founder is in the 9-step process~~ RESOLVED: Phase 36-01
 
 ### Blockers/Concerns
@@ -78,5 +78,33 @@ Ralph PRD: scripts/ralph/prd.json (10 user stories, all passing)
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Full stack audit complete, 19 fix commits, build passes
+Stopped at: Phases 34-38 + 41 complete, 677 tests passing, ready for Phase 39
 Resume file: None
+
+### Phase Execution Log (2026-02-11)
+
+**Task 1 — Fix Phase 36 drift redirect (BLOCKING)**
+- Wired `buildDriftRedirectBlock` into `decide.ts` actor (was dead code in route.ts)
+- Drift redirect now prepends to substantive responses when founder skips ahead
+- Moved import from route.ts to decide.ts where it belongs
+
+**Task 2 — Phase 34-03: Prompt regression tests + context builder tests**
+- Created `lib/ai/__tests__/prompts.test.ts` (41 tests)
+- Created `lib/fred/__tests__/context-builder.test.ts` (19 tests)
+- Covers Operating Bible compliance, regression triggers, entry flow, all builder functions
+
+**Task 3 — Phase 37-01: Reality Lens Gate & Decision Sequencing**
+- Added `DownstreamRequest` type and detection in validate-input.ts (two-gate: keyword + request verb)
+- Added `DOWNSTREAM_REQUIRED_DIMENSIONS` mapping in conversation-state.ts
+- Added `checkGateStatus` with per-request dimension filtering
+- Added `buildRealityLensGateBlock` with compromise mode (after 2 redirects)
+- Added `updateRealityLensDimensions` with promotion/demotion in execute.ts
+- Wired gate into chat route with redirect counter
+
+**Task 4 — Phase 38-01: Framework & Mode Integration**
+- Added `determineModeTransition` in diagnostic-engine.ts with hysteresis (3+ quiet messages to exit)
+- Added positioning and investor signal detection in validate-input.ts
+- Added `buildFrameworkInjectionBlock` and `buildModeTransitionBlock` in prompts.ts
+- Extended ConversationStateContext with `activeMode` and `modeTransitioned`
+- Added DAL functions: `getActiveMode`, `updateActiveMode`, `markIntroductionDelivered`
+- Wired diagnostic engine into chat route for silent mode switching

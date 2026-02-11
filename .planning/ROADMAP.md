@@ -89,14 +89,14 @@ See MILESTONES.md for full details.
 - Wave 7 (parallel): Phase 44 (document repository) + Phase 45 (chat UI redesign)
 - Wave 8: Phase 46 (mobile app layout)
 
-- [ ] **Phase 34: System Prompt Overhaul** - Rebuild system prompt with mentor behaviors, dynamic context injection, and Fred's master GPT instructions
-- [ ] **Phase 35: Onboarding-to-FRED Handoff** - Seamless data flow from onboarding into FRED's first conversation with no repetition
-- [ ] **Phase 36: Conversation State & Structured Flow** - FRED leads conversations with state tracking, structured intake, and gentle redirects
-- [ ] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
-- [ ] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
+- [x] **Phase 34: System Prompt Overhaul** - Rebuild system prompt with mentor behaviors, dynamic context injection, and Fred's master GPT instructions
+- [x] **Phase 35: Onboarding-to-FRED Handoff** - Seamless data flow from onboarding into FRED's first conversation with no repetition
+- [x] **Phase 36: Conversation State & Structured Flow** - FRED leads conversations with state tracking, structured intake, and gentle redirects
+- [x] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
+- [x] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
 - [ ] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
 - [ ] **Phase 40: Dashboard Redesign — Founder Command Center** - Nav restructure, Home with Snapshot Card + Decision Box + Funding Gauge + Weekly Momentum, dynamic display rules
-- [ ] **Phase 41: Founder Communities** - User-created communities with Circles, Topic Rooms, Events, and Graduates sections
+- [x] **Phase 41: Founder Communities** - User-created communities with Circles, Topic Rooms, Events, and Graduates sections
 - [ ] **Phase 42: Multi-Channel FRED Access** - Call (scheduled + on-demand), text (SMS), and message FRED 24/7 from any screen
 - [ ] **Phase 43: Next Steps Hub & Readiness Tab** - Next Steps (Critical/Important/Optional) + combined Investor Readiness + Positioning Readiness view
 - [ ] **Phase 44: Document Repository** - Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred" action
@@ -266,14 +266,14 @@ See MILESTONES.md for full details.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 34. System Prompt Overhaul | v4.0 | 0/TBD | Not started | - |
-| 35. Onboarding-to-FRED Handoff | v4.0 | 0/TBD | Not started | - |
-| 36. Conversation State & Structured Flow | v4.0 | 0/TBD | Not started | - |
-| 37. Reality Lens Gate & Decision Sequencing | v4.0 | 0/TBD | Not started | - |
-| 38. Framework & Mode Integration | v4.0 | 0/TBD | Not started | - |
+| 34. System Prompt Overhaul | v4.0 | 3/3 | Complete | 2026-02-11 |
+| 35. Onboarding-to-FRED Handoff | v4.0 | 1/1 | Complete | 2026-02-11 |
+| 36. Conversation State & Structured Flow | v4.0 | 2/2 | Complete | 2026-02-11 |
+| 37. Reality Lens Gate & Decision Sequencing | v4.0 | 1/1 | Complete | 2026-02-11 |
+| 38. Framework & Mode Integration | v4.0 | 1/1 | Complete | 2026-02-11 |
 | 39. Missing Frameworks & Gated Reviews | v4.0 | 0/TBD | Not started | - |
 | 40. Dashboard Redesign — Founder Command Center | v4.0 | 0/TBD | Not started | - |
-| 41. Founder Communities | v4.0 | 0/TBD | Not started | - |
+| 41. Founder Communities | v4.0 | 2/2 | Complete | 2026-02-11 |
 | 42. Multi-Channel FRED Access | v4.0 | 0/TBD | Not started | - |
 | 43. Next Steps Hub & Readiness Tab | v4.0 | 0/TBD | Not started | - |
 | 44. Document Repository | v4.0 | 0/TBD | Not started | - |

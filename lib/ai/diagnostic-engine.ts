@@ -280,3 +280,139 @@ export function runDiagnosticAnalysis(
     introduction,
   };
 }
+
+// ============================================================================
+// Phase 38: Persisted Mode Transition Support
+// ============================================================================
+
+import type { ModeContext } from "@/lib/db/conversation-state";
+
+/** How many consecutive messages without signals before exiting a mode */
+const MODE_EXIT_THRESHOLD = 3;
+
+export interface ModeTransitionResult {
+  /** The mode FRED should be in after this message */
+  newMode: DiagnosticMode;
+  /** Whether a transition occurred */
+  transitioned: boolean;
+  /** Direction of transition */
+  direction: "enter" | "exit" | "none";
+  /** Which framework was entered or exited */
+  framework: "positioning" | "investor" | null;
+  /** Whether the introduction needs to be delivered */
+  needsIntroduction: boolean;
+  /** Signals detected in this message */
+  detectedSignals: string[];
+  /** Updated mode context (caller persists this) */
+  updatedModeContext: ModeContext;
+}
+
+/**
+ * Determine mode transition based on current message + persisted state.
+ *
+ * Rules:
+ * 1. Investor signals override everything (investor > positioning > founder-os)
+ * 2. Entering a mode requires at least 1 strong signal
+ * 3. Exiting a mode requires MODE_EXIT_THRESHOLD consecutive quiet messages
+ * 4. Introduction is needed only if the framework hasn't been introduced yet
+ */
+export function determineModeTransition(
+  currentMessage: string,
+  currentMode: DiagnosticMode,
+  modeContext: ModeContext,
+  hasUploadedDeck: boolean = false
+): ModeTransitionResult {
+  // Detect signals in current message only (not all history)
+  const posSignals = detectPositioningSignals(currentMessage);
+  const invSignals = detectInvestorSignals(currentMessage, hasUploadedDeck);
+
+  const hasPositioningSignals = needsPositioningFramework(posSignals);
+  const hasInvestorSignals = needsInvestorLens(invSignals);
+
+  // Build signal list for history
+  const detectedSignals: string[] = [];
+  if (posSignals.icpVagueOrUndefined) detectedSignals.push("icp_vague");
+  if (posSignals.everyoneAsTarget) detectedSignals.push("everyone_target");
+  if (posSignals.genericMessaging) detectedSignals.push("generic_messaging");
+  if (posSignals.highEffortLowTraction) detectedSignals.push("high_effort_low_traction");
+  if (invSignals.mentionsFundraising) detectedSignals.push("mentions_fundraising");
+  if (invSignals.mentionsValuation) detectedSignals.push("mentions_valuation");
+  if (invSignals.mentionsDeck) detectedSignals.push("mentions_deck");
+  if (invSignals.asksAboutReadiness) detectedSignals.push("asks_readiness");
+  if (invSignals.uploadedDeck) detectedSignals.push("uploaded_deck");
+
+  // Clone mode context for mutation
+  const updatedContext: ModeContext = JSON.parse(JSON.stringify(modeContext));
+
+  // Add to signal history
+  if (detectedSignals.length > 0) {
+    const framework = hasInvestorSignals ? "investor" : "positioning";
+    updatedContext.signalHistory.push({
+      signal: detectedSignals.join(","),
+      framework,
+      detectedAt: new Date().toISOString(),
+      context: currentMessage.substring(0, 100),
+    });
+    updatedContext.quietCount = 0;
+  } else {
+    updatedContext.quietCount = (updatedContext.quietCount || 0) + 1;
+  }
+
+  // --- Mode transition logic ---
+
+  let newMode: DiagnosticMode = currentMode;
+  let transitioned = false;
+  let direction: "enter" | "exit" | "none" = "none";
+  let framework: "positioning" | "investor" | null = null;
+
+  // Case 1: Investor signals detected — enter investor mode (highest priority)
+  if (hasInvestorSignals && currentMode !== "investor-readiness") {
+    newMode = "investor-readiness";
+    transitioned = true;
+    direction = "enter";
+    framework = "investor";
+    updatedContext.activatedAt = new Date().toISOString();
+    updatedContext.activatedBy = "signal_detected";
+  }
+  // Case 2: Positioning signals detected — enter positioning mode (only if not in investor)
+  else if (hasPositioningSignals && currentMode === "founder-os") {
+    newMode = "positioning";
+    transitioned = true;
+    direction = "enter";
+    framework = "positioning";
+    updatedContext.activatedAt = new Date().toISOString();
+    updatedContext.activatedBy = "signal_detected";
+  }
+  // Case 3: No signals for a while — consider exiting to founder-os
+  else if (
+    currentMode !== "founder-os" &&
+    !hasInvestorSignals &&
+    !hasPositioningSignals &&
+    updatedContext.quietCount >= MODE_EXIT_THRESHOLD
+  ) {
+    newMode = "founder-os";
+    transitioned = true;
+    direction = "exit";
+    framework = currentMode === "investor-readiness" ? "investor" : "positioning";
+    updatedContext.activatedAt = null;
+    updatedContext.activatedBy = null;
+    updatedContext.quietCount = 0;
+  }
+
+  // Determine if introduction is needed
+  let needsIntroduction = false;
+  if (transitioned && direction === "enter" && framework) {
+    const introState = updatedContext.introductionState[framework];
+    needsIntroduction = !introState.introduced;
+  }
+
+  return {
+    newMode,
+    transitioned,
+    direction,
+    framework,
+    needsIntroduction,
+    detectedSignals,
+    updatedModeContext: updatedContext,
+  };
+}

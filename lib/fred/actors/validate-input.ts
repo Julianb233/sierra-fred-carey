@@ -20,9 +20,18 @@ import type {
   CoachingTopic,
   BurnoutSignals,
   ConversationStateContext,
+  DownstreamRequest,
 } from "../types";
 import { STEP_ORDER, type StartupStep } from "@/lib/ai/frameworks/startup-process";
 import { detectBurnoutSignals } from "./burnout-detector";
+import {
+  detectPositioningSignals,
+  needsPositioningFramework,
+} from "@/lib/ai/frameworks/positioning";
+import {
+  detectInvestorSignals,
+  needsInvestorLens,
+} from "@/lib/ai/frameworks/investor-lens";
 
 /**
  * Validate and parse user input
@@ -98,6 +107,19 @@ export async function validateInputActor(
     driftDetected = detectDrift(stepRelevance, conversationState);
   }
 
+  // Phase 37: Detect downstream request for Reality Lens gate
+  const downstreamRequest = detectDownstreamRequest(
+    sanitizedMessage,
+    keywords,
+    intentResult.intent
+  );
+
+  // Phase 38: Detect framework signals for mode switching
+  const posSignals = detectPositioningSignals(sanitizedMessage);
+  const invSignals = detectInvestorSignals(sanitizedMessage, !!input.attachments?.some(
+    a => a.mimeType === "application/pdf" || a.name.toLowerCase().includes("deck")
+  ));
+
   return {
     originalMessage: input.message,
     intent: intentResult.intent,
@@ -111,6 +133,15 @@ export async function validateInputActor(
     burnoutSignals,
     stepRelevance,
     driftDetected,
+    downstreamRequest,
+    positioningSignals: {
+      ...posSignals,
+      hasSignals: needsPositioningFramework(posSignals),
+    },
+    investorSignals: {
+      ...invSignals,
+      hasSignals: needsInvestorLens(invSignals),
+    },
   };
 }
 
@@ -493,6 +524,88 @@ function detectDrift(
       targetStep: stepRelevance.targetStep,
       currentStep: conversationState.currentStep,
     };
+  }
+
+  return null;
+}
+
+// ============================================================================
+// Phase 37: Downstream Request Detection (Reality Lens Gate)
+// ============================================================================
+
+/** Verbs that indicate the founder is REQUESTING action, not just asking about a topic */
+const REQUEST_VERBS = /\b(help|build|create|make|write|review|prepare|start|plan|need|want|should\s*i|how\s*(do\s*i|to|can\s*i)|ready\s*to|let'?s|work\s*on|get\s*(started|ready))\b/;
+
+/**
+ * Detect if the founder is requesting downstream work that requires
+ * upstream Reality Lens validation.
+ * Operating Bible Section 2.3: Never optimize downstream artifacts before
+ * upstream truth is established.
+ *
+ * Two-gate detection:
+ * 1. Domain keyword match (is the message about a downstream topic?)
+ * 2. Intent check: either detected intent is "decision_request" OR a request
+ *    verb is present near the keyword. This prevents false positives like
+ *    "What is a pitch deck?" or "I used to work in patent law."
+ */
+function detectDownstreamRequest(
+  message: string,
+  keywords: string[],
+  intent: InputIntent
+): DownstreamRequest {
+  const lowerMessage = message.toLowerCase();
+
+  const patterns: Array<{ request: DownstreamRequest; signals: RegExp[] }> = [
+    {
+      request: "pitch_deck",
+      signals: [/\b(pitch\s*deck|slide\s*deck|investor\s*deck|presentation)\b/, /\b(deck\s*review|review\s*my\s*deck)\b/],
+    },
+    {
+      request: "fundraising",
+      signals: [/\b(fundrais\w*|raise\s*(money|capital|a\s*round)|valuation|term\s*sheet|investor\s*(outreach|meeting))\b/],
+    },
+    {
+      request: "hiring",
+      signals: [/\b(hir\w+|recruit\w*|team\s*build\w*|first\s*hire|co-?founder)\b/],
+    },
+    {
+      request: "patents",
+      signals: [/\b(patent|intellectual\s*property|trademark|copyright|ip\s*protect\w*)\b/],
+    },
+    {
+      request: "scaling",
+      signals: [/\b(scal\w+|expand\w*|grow\s*the\s*(team|company|business)|series\s*[a-c]|international)\b/],
+    },
+    {
+      request: "marketing_campaign",
+      signals: [/\b(marketing\s*campaign|ad\s*spend|paid\s*ads|brand\s*strategy|pr\s*campaign)\b/],
+    },
+  ];
+
+  for (const { request, signals } of patterns) {
+    for (const signal of signals) {
+      if (signal.test(lowerMessage)) {
+        // Gate 2: Check intent — must be actionable, not just informational
+        const hasRequestVerb = REQUEST_VERBS.test(lowerMessage);
+        const isDecisionRequest = intent === "decision_request";
+        const isQuestion = intent === "question";
+
+        // Allow through if: decision request OR request verb present
+        if (isDecisionRequest || hasRequestVerb) {
+          return request;
+        }
+
+        // Pure question without action verb — informational, skip gate
+        if (isQuestion && !hasRequestVerb) {
+          return null;
+        }
+
+        // For other intents (information, feedback, etc.), require request verb
+        if (hasRequestVerb) {
+          return request;
+        }
+      }
+    }
   }
 
   return null;

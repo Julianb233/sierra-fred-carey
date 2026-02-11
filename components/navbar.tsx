@@ -239,6 +239,12 @@ function NavBar() {
                     </Link>
                   </DropdownMenuItem>
                 ))}
+                <Separator className="my-2 bg-gray-200 dark:bg-gray-800" />
+                <DropdownMenuItem asChild>
+                  <Link href="/features" className="cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 p-3 focus:bg-gray-100 dark:focus:bg-gray-800 flex items-center justify-center text-sm font-medium text-[#ff6a1a]">
+                    View all features
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 

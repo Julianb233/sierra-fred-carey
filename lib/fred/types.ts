@@ -25,6 +25,10 @@ export interface ConversationStateContext {
   founderSnapshot: Record<string, unknown>;
   /** Pre-built progress context string for prompt injection */
   progressContext: string;
+  /** Phase 38: Active diagnostic mode */
+  activeMode: "founder-os" | "positioning" | "investor-readiness";
+  /** Phase 38: Whether a mode transition occurred on this message */
+  modeTransitioned: boolean;
 }
 
 /**
@@ -150,7 +154,39 @@ export interface ValidatedInput {
   stepRelevance?: { targetStep: StartupStep; confidence: number } | null;
   /** Whether the founder is drifting to a downstream step (Phase 36) */
   driftDetected?: { isDrift: boolean; targetStep: StartupStep; currentStep: StartupStep } | null;
+  /** Downstream request detected for Reality Lens gate (Phase 37) */
+  downstreamRequest?: DownstreamRequest;
+  /** Phase 38: Positioning signal detection results */
+  positioningSignals?: {
+    icpVagueOrUndefined: boolean;
+    everyoneAsTarget: boolean;
+    genericMessaging: boolean;
+    highEffortLowTraction: boolean;
+    hasSignals: boolean;
+  };
+  /** Phase 38: Investor signal detection results */
+  investorSignals?: {
+    mentionsFundraising: boolean;
+    mentionsValuation: boolean;
+    mentionsDeck: boolean;
+    asksAboutReadiness: boolean;
+    uploadedDeck: boolean;
+    hasSignals: boolean;
+  };
 }
+
+/**
+ * Downstream work request types that require upstream Reality Lens validation.
+ * Phase 37: Operating Bible Section 2.3 — Decision Sequencing Rule.
+ */
+export type DownstreamRequest =
+  | "pitch_deck"
+  | "fundraising"
+  | "hiring"
+  | "patents"
+  | "scaling"
+  | "marketing_campaign"
+  | null;
 
 /**
  * Coaching topic detected from user message.

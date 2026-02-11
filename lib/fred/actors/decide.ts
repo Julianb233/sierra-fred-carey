@@ -18,7 +18,7 @@ import type {
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
 import { FRED_BIO } from "@/lib/fred-brain";
-import { COACHING_PROMPTS } from "@/lib/ai/prompts";
+import { COACHING_PROMPTS, buildDriftRedirectBlock } from "@/lib/ai/prompts";
 import { STARTUP_STEPS } from "@/lib/ai/frameworks/startup-process";
 
 /**
@@ -335,9 +335,18 @@ function buildResponseContent(
       break;
   }
 
-  // Phase 36: Inject step question for current step (CHAT-01 — FRED drives conversations)
+  // Phase 36: Drift redirect — when founder skips ahead, prepend redirect instruction
   // Note: clarify/defer cases return early above, so only substantive actions reach here
-  if (conversationState) {
+  if (conversationState && input.driftDetected?.isDrift) {
+    const redirectBlock = buildDriftRedirectBlock(
+      input.driftDetected.currentStep,
+      input.driftDetected.targetStep
+    );
+    content = `${redirectBlock}\n\n---\n\n${content}`;
+  }
+
+  // Phase 36: Inject step question for current step (CHAT-01 — FRED drives conversations)
+  if (conversationState && !input.driftDetected?.isDrift) {
     content = injectStepQuestion(content, conversationState, input);
   }
 

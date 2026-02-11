@@ -152,10 +152,19 @@ function LoginContent() {
               </div>
             </div>
 
+            <div className="flex justify-end mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-[#ff6a1a] transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <Button
               type="submit"
               disabled={loading}
-              className="w-full mt-6 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
+              className="w-full mt-4 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
               size="lg"
             >
               {loading ? (

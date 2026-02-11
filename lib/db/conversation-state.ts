@@ -841,20 +841,44 @@ export function getBlockingDimensions(
 }
 
 /**
- * Check gate status — combined interface matching Phase 37 plan's `checkGateStatus`.
+ * Map downstream requests to the RL dimensions they REQUIRE.
+ * Not all downstream work requires all 5 dimensions.
+ * Phase 37: Operating Bible Section 2.3 — Decision Sequencing Rule.
+ */
+export const DOWNSTREAM_REQUIRED_DIMENSIONS: Record<string, RealityLensDimension[]> = {
+  pitch_deck:         ["feasibility", "economics", "demand", "distribution", "timing"],
+  fundraising:        ["feasibility", "economics", "demand", "distribution", "timing"],
+  hiring:             ["feasibility", "demand"],
+  patents:            ["feasibility", "demand"],
+  scaling:            ["demand", "economics", "distribution"],
+  marketing_campaign: ["demand", "distribution"],
+};
+
+/**
+ * Check gate status for a specific downstream request.
+ * Only gates on dimensions RELEVANT to the request type.
  * Returns { gateOpen, weakDimensions, unassessedDimensions }.
  */
-export function checkGateStatus(gate: RealityLensGate): {
+export function checkGateStatus(
+  gate: RealityLensGate,
+  downstreamRequest?: string | null
+): {
   gateOpen: boolean;
   weakDimensions: RealityLensDimension[];
   unassessedDimensions: RealityLensDimension[];
 } {
+  // Determine which dimensions to check
+  const relevantDimensions: RealityLensDimension[] = downstreamRequest
+    ? (DOWNSTREAM_REQUIRED_DIMENSIONS[downstreamRequest] || REALITY_LENS_DIMENSIONS)
+    : REALITY_LENS_DIMENSIONS;
+
   const weakDimensions: RealityLensDimension[] = [];
   const unassessedDimensions: RealityLensDimension[] = [];
 
-  for (const dim of REALITY_LENS_DIMENSIONS) {
-    if (gate[dim].status === "weak") weakDimensions.push(dim);
-    if (gate[dim].status === "not_assessed") unassessedDimensions.push(dim);
+  for (const dim of relevantDimensions) {
+    const state = gate[dim];
+    if (state.status === "weak") weakDimensions.push(dim);
+    if (state.status === "not_assessed") unassessedDimensions.push(dim);
   }
 
   return {
@@ -862,6 +886,74 @@ export function checkGateStatus(gate: RealityLensGate): {
     weakDimensions,
     unassessedDimensions,
   };
+}
+
+/**
+ * Get the redirect count for a specific downstream request.
+ * Stored in mode_context.gate_redirect_counts (JSONB).
+ * Phase 37: Compromise mode after 2 redirects.
+ */
+export async function getGateRedirectCount(
+  userId: string,
+  downstreamRequest: string
+): Promise<number> {
+  const { modeContext } = await getActiveMode(userId);
+  const counts = (modeContext as ModeContext & { gateRedirectCounts?: Record<string, number> }).gateRedirectCounts;
+  return counts?.[downstreamRequest] ?? 0;
+}
+
+/**
+ * Increment the redirect count for a downstream request.
+ * Fire-and-forget.
+ */
+export async function incrementGateRedirect(
+  userId: string,
+  downstreamRequest: string
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const modeContext = state.modeContext;
+  const extCtx = modeContext as ModeContext & { gateRedirectCounts?: Record<string, number> };
+  const counts = extCtx.gateRedirectCounts ?? {};
+  counts[downstreamRequest] = (counts[downstreamRequest] ?? 0) + 1;
+  extCtx.gateRedirectCounts = counts;
+
+  const supabase = createServiceClient();
+  const dbModeContext = modeContextToDb(modeContext);
+  // Include gate_redirect_counts in DB payload
+  (dbModeContext as Record<string, unknown>).gate_redirect_counts = counts;
+
+  await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
+}
+
+/**
+ * Reset the redirect count for a downstream request (called when gate opens).
+ */
+export async function resetGateRedirect(
+  userId: string,
+  downstreamRequest: string
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const modeContext = state.modeContext;
+  const extCtx = modeContext as ModeContext & { gateRedirectCounts?: Record<string, number> };
+  const counts = extCtx.gateRedirectCounts ?? {};
+  delete counts[downstreamRequest];
+  extCtx.gateRedirectCounts = counts;
+
+  const supabase = createServiceClient();
+  const dbModeContext = modeContextToDb(modeContext);
+  (dbModeContext as Record<string, unknown>).gate_redirect_counts = counts;
+
+  await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
 }
 
 // ============================================================================
@@ -1133,7 +1225,7 @@ function transformModeContext(raw: Record<string, unknown> | null): ModeContext 
   const intro = raw.introduction_state as Record<string, Record<string, unknown>> | undefined;
   const signals = raw.signal_history as Array<Record<string, string>> | undefined;
   const assessments = raw.formal_assessments as Record<string, boolean> | undefined;
-  return {
+  const result: ModeContext = {
     activatedAt: (raw.activated_at as string) || null,
     activatedBy: (raw.activated_by as string) || null,
     introductionState: {
@@ -1160,6 +1252,12 @@ function transformModeContext(raw: Record<string, unknown> | null): ModeContext 
     },
     quietCount: (raw.quiet_count as number) ?? 0,
   };
+  // Phase 37: Restore gate redirect counts
+  const counts = raw.gate_redirect_counts as Record<string, number> | undefined;
+  if (counts) {
+    (result as ModeContext & { gateRedirectCounts?: Record<string, number> }).gateRedirectCounts = counts;
+  }
+  return result;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase rows are untyped at this boundary

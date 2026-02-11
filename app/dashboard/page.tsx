@@ -151,21 +151,21 @@ function DashboardContent() {
     },
     {
       label: "Pitch Decks Reviewed",
-      value: user.tier >= 1 ? String(dashboardStats?.pitchDecksReviewed ?? 0) : "-",
+      value: user.tier >= 1 ? String(dashboardStats?.pitchDecksReviewed ?? 0) : "0",
       icon: <FileTextIcon className="h-5 w-5" />,
       color: "text-amber-500",
       locked: user.tier < 1,
     },
     {
       label: "Check-ins Completed",
-      value: user.tier >= 1 ? String(dashboardStats?.checkInsCompleted ?? 0) : "-",
+      value: user.tier >= 1 ? String(dashboardStats?.checkInsCompleted ?? 0) : "0",
       icon: <CheckCircledIcon className="h-5 w-5" />,
       color: "text-green-500",
       locked: user.tier < 1,
     },
     {
       label: "Active Agents",
-      value: user.tier >= 2 ? String(dashboardStats?.activeAgents ?? 0) : "-",
+      value: user.tier >= 2 ? String(dashboardStats?.activeAgents ?? 0) : "0",
       icon: <RocketIcon className="h-5 w-5" />,
       color: "text-purple-500",
       locked: user.tier < 2,
@@ -248,9 +248,10 @@ function DashboardContent() {
             </div>
             {stat.locked && (
               <div className="mt-3 relative z-10">
-                <Badge variant="outline" className="text-xs bg-gray-100/50 dark:bg-gray-800/50">
-                  {stat.locked && user.tier === 0 ? "Pro" : "Studio"}
-                </Badge>
+                <Link href="/pricing" className="inline-flex items-center gap-1 text-xs font-medium text-[#ff6a1a] hover:text-[#ea580c] transition-colors">
+                  <LockClosedIcon className="h-3 w-3" />
+                  Upgrade to {user.tier === 0 ? "Pro" : "Studio"}
+                </Link>
               </div>
             )}
           </Card>

@@ -377,6 +377,9 @@ async function updateConversationState(
     if (Object.keys(snapshotUpdates).length > 0) {
       await updateFounderSnapshot(userId, snapshotUpdates);
     }
+
+    // 4. Update Reality Lens dimensions from conversation signals (Phase 37)
+    await updateRealityLensDimensions(userId, validatedInput);
   } catch (error) {
     console.warn("[FRED Execute] Failed to update conversation state:", error);
   }
@@ -429,4 +432,107 @@ function extractSnapshotUpdates(input: ValidatedInput): Record<string, unknown> 
   }
 
   return updates;
+}
+
+// ============================================================================
+// Phase 37: Reality Lens Dimension Updates (Post-Response)
+// ============================================================================
+
+/**
+ * Extract Reality Lens dimension signals from the conversation.
+ * Updates dimension status based on what the founder has shared.
+ * Supports both PROMOTION (evidence strengthens dimension) and
+ * DEMOTION (contradicting evidence weakens dimension).
+ * Fire-and-forget.
+ */
+async function updateRealityLensDimensions(
+  userId: string,
+  validatedInput: ValidatedInput
+): Promise<void> {
+  const {
+    updateRealityLensDimension,
+    getRealityLensGate,
+  } = await import("@/lib/db/conversation-state");
+
+  const msg = validatedInput.originalMessage.toLowerCase();
+  const entities = validatedInput.entities;
+
+  // Load current gate state for demotion checks
+  const currentGate = await getRealityLensGate(userId);
+  if (!currentGate) return;
+
+  // --- Promotion signals (evidence strengthens dimension) ---
+
+  // Demand signals
+  if (/\b(customer\w*|user\w*|buyer\w*)\b.*\b(interview|talk|spoke|feedback)\b/.test(msg) ||
+      /\b(waitlist|pre-?order|loi|letter\s*of\s*intent)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "demand", "assumed");
+  }
+  if (/\b(paying|revenue|mrr|arr)\b/.test(msg) && entities.some(e => e.type === "money")) {
+    await updateRealityLensDimension(userId, "demand", "validated");
+  }
+
+  // Economics signals
+  if (/\b(unit\s*economics|margin|cac|ltv|cost\s*per)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "economics", "assumed");
+  }
+  if (/\b(profitable|positive\s*margin|ltv.*cac|cac.*ltv)\b/.test(msg) && entities.some(e => e.type === "money")) {
+    await updateRealityLensDimension(userId, "economics", "validated");
+  }
+
+  // Feasibility signals
+  if (/\b(built|launched|prototype|mvp|working\s*product|live)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "feasibility", "validated");
+  }
+  if (/\b(building|developing|coding|designing)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "feasibility", "assumed");
+  }
+
+  // Distribution signals
+  if (/\b(channel|distribution|go.?to.?market|sales\s*process|acquisition)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "distribution", "assumed");
+  }
+
+  // Timing signals
+  if (/\b(market\s*(shift|trend|growing)|regulation|technology.*ready|competitor.*just)\b/.test(msg)) {
+    await updateRealityLensDimension(userId, "timing", "assumed");
+  }
+
+  // --- Demotion signals (contradicting evidence weakens dimension) ---
+
+  // Demand demotion: pivot, lost customers, no customers
+  if (/\b(pivot\w*|no\s*(customers?|users?|buyers?)|lost\s*(all|most|our)\s*(customers?|users?)|churn\w*\s*(all|most|100))\b/.test(msg)) {
+    const current = currentGate.demand?.status;
+    if (current === "validated" || current === "assumed") {
+      await updateRealityLensDimension(userId, "demand", "weak",
+        ["Founder indicated loss of customers or pivot — demand needs revalidation"]);
+    }
+  }
+
+  // Feasibility demotion: technical failure, can't build it
+  if (/\b(can'?t\s*build|technically\s*(impossible|infeasible)|failed\s*to\s*(build|launch|ship)|scrapped\s*(the\s*)?(product|mvp|prototype))\b/.test(msg)) {
+    const current = currentGate.feasibility?.status;
+    if (current === "validated" || current === "assumed") {
+      await updateRealityLensDimension(userId, "feasibility", "weak",
+        ["Founder indicated technical difficulty or product failure — feasibility needs reassessment"]);
+    }
+  }
+
+  // Economics demotion: burning cash, negative margins
+  if (/\b(burn\w*\s*(rate|cash|through)|negative\s*margin|losing\s*money\s*on\s*every|unsustainable\s*(economics|cost))\b/.test(msg)) {
+    const current = currentGate.economics?.status;
+    if (current === "validated" || current === "assumed") {
+      await updateRealityLensDimension(userId, "economics", "weak",
+        ["Founder indicated unsustainable economics — needs reassessment"]);
+    }
+  }
+
+  // Distribution demotion: channel died, lost partnership
+  if (/\b(channel\s*(died|stopped|no\s*longer)|lost\s*(our|the)\s*(partner|distribution|channel)|can'?t\s*reach\s*(customers?|buyers?))\b/.test(msg)) {
+    const current = currentGate.distribution?.status;
+    if (current === "validated" || current === "assumed") {
+      await updateRealityLensDimension(userId, "distribution", "weak",
+        ["Founder indicated distribution channel loss — needs new path"]);
+    }
+  }
 }
