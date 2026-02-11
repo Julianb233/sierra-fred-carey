@@ -6,6 +6,7 @@ import {
   FRED_COMMUNICATION_STYLE,
   SAHARA_MESSAGING,
 } from "@/lib/fred-brain";
+import { STARTUP_STEPS, type StartupStep } from "@/lib/ai/frameworks/startup-process";
 
 // ============================================================================
 // Dynamic identity fragments built from fred-brain.ts (single source of truth)
@@ -395,4 +396,98 @@ export function getFredGreeting(startupContext?: {
   }
 
   return base;
+}
+
+// ============================================================================
+// Step Guidance Block (Phase 36)
+// ============================================================================
+
+/**
+ * Build a step-specific guidance block for the system prompt.
+ * Tells FRED what to focus on at the founder's current step in the
+ * 9-Step Startup Process, including priority questions, required output,
+ * do-not-advance conditions, and active blockers.
+ *
+ * Target: <300 tokens to avoid eating the context window.
+ */
+export function buildStepGuidanceBlock(
+  currentStep: StartupStep,
+  stepStatuses: Record<StartupStep, string>,
+  blockers: string[]
+): string {
+  const step = STARTUP_STEPS[currentStep];
+  if (!step) return "";
+
+  const lines: string[] = [];
+  lines.push("## CURRENT PROCESS POSITION");
+  lines.push("");
+  lines.push(`You are guiding this founder through **Step ${step.stepNumber}: ${step.name}**`);
+  lines.push("");
+  lines.push(`**Objective:** ${step.objective}`);
+  lines.push("");
+
+  // Key questions to ask
+  lines.push("**Your priority questions for this step:**");
+  for (const q of step.questions) {
+    lines.push(`- ${q}`);
+  }
+  lines.push("");
+
+  // What the founder needs to produce
+  lines.push(`**Required output before advancing:** ${step.requiredOutput}`);
+  lines.push("");
+
+  // Do not advance conditions
+  lines.push("**Do NOT advance to the next step if:**");
+  for (const d of step.doNotAdvanceIf) {
+    lines.push(`- ${d}`);
+  }
+
+  // Current blockers
+  if (blockers.length > 0) {
+    lines.push("");
+    lines.push("**Active blockers on this step:**");
+    for (const b of blockers) {
+      lines.push(`- ${b}`);
+    }
+    lines.push("Address these before moving forward.");
+  }
+
+  // Validated steps summary
+  const validatedSteps = Object.entries(stepStatuses)
+    .filter(([, status]) => status === "validated")
+    .map(([s]) => s);
+  if (validatedSteps.length > 0) {
+    lines.push("");
+    lines.push(`**Steps already validated:** ${validatedSteps.join(", ")}`);
+    lines.push("Do not re-ask questions that have been answered in validated steps.");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Build a prompt block instructing FRED to redirect the founder back
+ * to the current step. Injected into the system prompt when drift is
+ * detected. The LLM generates the actual redirect language -- we provide
+ * the instruction and context.
+ */
+export function buildDriftRedirectBlock(
+  currentStep: StartupStep,
+  targetStep: StartupStep
+): string {
+  const currentStepName = STARTUP_STEPS[currentStep]?.name || currentStep;
+  const targetStepName = STARTUP_STEPS[targetStep]?.name || targetStep;
+
+  return `## REDIRECT INSTRUCTION (Active This Turn)
+
+The founder is asking about "${targetStepName}" but has not yet validated "${currentStepName}".
+
+Your response MUST:
+1. Acknowledge what they asked about ("I hear you on ${targetStepName.toLowerCase()}...")
+2. Explain why you need to finish the current step first -- downstream work built on unvalidated assumptions fails
+3. Redirect to a specific question or action for "${currentStepName}"
+4. Be warm but firm -- do not let the founder skip ahead
+
+Do NOT ignore their question entirely. Briefly note it, then redirect.`;
 }
