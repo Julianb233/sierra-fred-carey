@@ -99,6 +99,12 @@ export interface SlideClassification {
 // Analysis Types
 // ============================================================================
 
+export interface SlideObjection {
+  question: string;
+  knockoutAnswer: string;
+  severity: "high" | "medium" | "low";
+}
+
 export interface SlideAnalysis {
   pageNumber: number;
   type: SlideType;
@@ -107,6 +113,7 @@ export interface SlideAnalysis {
   feedback: string;
   strengths: string[];
   suggestions: string[];
+  objections: SlideObjection[];
 }
 
 // ============================================================================

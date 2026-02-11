@@ -74,7 +74,13 @@ export interface ModeContext {
     investor: FrameworkIntroductionState;
   };
   signalHistory: SignalHistoryEntry[];
-  formalAssessments: { offered: boolean; accepted: boolean };
+  formalAssessments: {
+    offered: boolean;
+    accepted: boolean;
+    verdictIssued: boolean;
+    verdictValue: "yes" | "no" | "not-yet" | null;
+    deckRequested: boolean;
+  };
   /** Consecutive messages without framework signals (Phase 38 hysteresis) */
   quietCount: number;
 }
@@ -1096,8 +1102,7 @@ export async function appendSignalHistory(
  */
 export async function updateFormalAssessments(
   userId: string,
-  offered?: boolean,
-  accepted?: boolean
+  updates: Partial<ModeContext["formalAssessments"]>
 ): Promise<void> {
   const state = await getConversationState(userId);
   if (!state) return;
@@ -1105,8 +1110,11 @@ export async function updateFormalAssessments(
   const supabase = await createServiceClient();
 
   const modeContext = state.modeContext;
-  if (offered !== undefined) modeContext.formalAssessments.offered = offered;
-  if (accepted !== undefined) modeContext.formalAssessments.accepted = accepted;
+  if (updates.offered !== undefined) modeContext.formalAssessments.offered = updates.offered;
+  if (updates.accepted !== undefined) modeContext.formalAssessments.accepted = updates.accepted;
+  if (updates.verdictIssued !== undefined) modeContext.formalAssessments.verdictIssued = updates.verdictIssued;
+  if (updates.verdictValue !== undefined) modeContext.formalAssessments.verdictValue = updates.verdictValue;
+  if (updates.deckRequested !== undefined) modeContext.formalAssessments.deckRequested = updates.deckRequested;
 
   const dbModeContext = modeContextToDb(modeContext);
 
@@ -1198,7 +1206,7 @@ const DEFAULT_MODE_CONTEXT: ModeContext = {
     investor: { introduced: false, introducedAt: null, trigger: null },
   },
   signalHistory: [],
-  formalAssessments: { offered: false, accepted: false },
+  formalAssessments: { offered: false, accepted: false, verdictIssued: false, verdictValue: null, deckRequested: false },
   quietCount: 0,
 };
 
@@ -1249,6 +1257,9 @@ function transformModeContext(raw: Record<string, unknown> | null): ModeContext 
     formalAssessments: {
       offered: assessments?.offered ?? false,
       accepted: assessments?.accepted ?? false,
+      verdictIssued: (assessments as Record<string, unknown>)?.verdictIssued as boolean ?? false,
+      verdictValue: ((assessments as Record<string, unknown>)?.verdictValue as "yes" | "no" | "not-yet" | null) ?? null,
+      deckRequested: (assessments as Record<string, unknown>)?.deckRequested as boolean ?? false,
     },
     quietCount: (raw.quiet_count as number) ?? 0,
   };

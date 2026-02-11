@@ -380,6 +380,16 @@ async function updateConversationState(
 
     // 4. Update Reality Lens dimensions from conversation signals (Phase 37)
     await updateRealityLensDimensions(userId, validatedInput);
+
+    // 5. Phase 39: Fire-and-forget IRS scoring when in investor-readiness mode
+    triggerIRSScoring(userId, conversationState, validatedInput.originalMessage)
+      .catch((err) => console.warn("[FRED Execute] IRS scoring trigger failed:", err));
+
+    // 6. Phase 39: Detect and persist verdict from FRED's response
+    if (decision.content && conversationState.activeMode === "investor-readiness") {
+      extractAndPersistVerdict(userId, decision.content)
+        .catch((err) => console.warn("[FRED Execute] Verdict extraction failed:", err));
+    }
   } catch (error) {
     console.warn("[FRED Execute] Failed to update conversation state:", error);
   }
@@ -535,4 +545,99 @@ async function updateRealityLensDimensions(
         ["Founder indicated distribution channel loss — needs new path"]);
     }
   }
+}
+
+// ============================================================================
+// Phase 39: IRS Scoring Trigger (fire-and-forget)
+// ============================================================================
+
+/** 24 hours in milliseconds */
+const IRS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Trigger IRS scoring when conditions are met:
+ * 1. Active mode is investor-readiness
+ * 2. Signal history has 3+ investor signals
+ * 3. No IRS score in last 24h
+ */
+async function triggerIRSScoring(
+  userId: string,
+  conversationState: ConversationStateContext,
+  lastMessage: string
+): Promise<void> {
+  if (conversationState.activeMode !== "investor-readiness") return;
+
+  // Check 3+ investor signals in mode context
+  const { getActiveMode: getMode } = await import("@/lib/db/conversation-state");
+  const { modeContext } = await getMode(userId);
+  const investorSignals = modeContext.signalHistory.filter(
+    (s) => s.framework === "investor"
+  );
+  if (investorSignals.length < 3) return;
+
+  // Check IRS cooldown (no score in last 24h)
+  const { createServiceClient } = await import("@/lib/supabase/server");
+  const { getLatestIRS } = await import("@/lib/fred/irs/db");
+  const supabase = createServiceClient();
+  const latestIRS = await getLatestIRS(supabase, userId);
+
+  if (latestIRS?.createdAt) {
+    const elapsed = Date.now() - latestIRS.createdAt.getTime();
+    if (elapsed < IRS_COOLDOWN_MS) return;
+  }
+
+  // All conditions met — calculate and persist
+  const { calculateIRSFromConversation } = await import("@/lib/fred/irs/engine");
+  const { saveIRSResult } = await import("@/lib/fred/irs/db");
+
+  const result = await calculateIRSFromConversation(
+    conversationState.founderSnapshot || {},
+    conversationState.diagnosticTags || {},
+    lastMessage
+  );
+
+  await saveIRSResult(supabase, userId, result);
+  console.log(`[FRED Execute] IRS score calculated: ${result.overall} for user ${userId}`);
+}
+
+// ============================================================================
+// Phase 39: Verdict Extraction (fire-and-forget)
+// ============================================================================
+
+/** Regex patterns for detecting FRED's investor verdict in response text */
+const VERDICT_PATTERNS = [
+  /\b(?:my\s+)?verdict\s*(?:is|:)\s*\**\s*(yes|no|not[ -]yet)\b/i,
+  /\bIC\s+verdict\s*(?:is|:)\s*\**\s*(yes|no|not[ -]yet)\b/i,
+  /\bverdict\s*(?:—|–|-|:)\s*\**\s*(yes|no|not[ -]yet)\b/i,
+];
+
+/**
+ * Detect when FRED's response contains an investor verdict and persist it.
+ */
+async function extractAndPersistVerdict(
+  userId: string,
+  responseContent: string
+): Promise<void> {
+  let verdictValue: "yes" | "no" | "not-yet" | null = null;
+
+  for (const pattern of VERDICT_PATTERNS) {
+    const match = responseContent.match(pattern);
+    if (match) {
+      const raw = match[1].toLowerCase().replace(/\s+/g, "-");
+      if (raw === "yes" || raw === "no" || raw === "not-yet") {
+        verdictValue = raw;
+        break;
+      }
+    }
+  }
+
+  if (!verdictValue) return;
+
+  const { updateFormalAssessments } = await import("@/lib/db/conversation-state");
+  await updateFormalAssessments(userId, {
+    verdictIssued: true,
+    verdictValue,
+  });
+
+  console.log(`[FRED Execute] Verdict detected: ${verdictValue} for user ${userId}`);
 }

@@ -352,3 +352,75 @@ function normalizeStage(stage: string): StartupStage {
   if (lower.includes('series a') || lower.includes('series-a')) return 'series-a';
   return 'seed'; // default
 }
+
+// ============================================================================
+// Phase 39: Conversation-to-IRS Adapter
+// ============================================================================
+
+/**
+ * Build an IRSInput from conversation state and calculate the IRS score.
+ * Maps founderSnapshot + diagnosticTags (already in conversation state)
+ * to the structured IRSInput, filling gaps from a conversation excerpt.
+ */
+export async function calculateIRSFromConversation(
+  founderSnapshot: Record<string, unknown>,
+  diagnosticTags: Record<string, string>,
+  conversationExcerpt: string
+): Promise<IRSResult> {
+  const stage = (founderSnapshot.stage as string) || diagnosticTags.stage || "seed";
+  const industry = (founderSnapshot.industry as string) || "";
+
+  const input: IRSInput = {
+    startupInfo: {
+      name: (founderSnapshot.startupName as string) || undefined,
+      stage: normalizeStage(stage),
+      industry: industry || undefined,
+      description: (founderSnapshot.productDescription as string) || undefined,
+    },
+    tractionInfo: {
+      revenue: parseNumericHint(founderSnapshot.traction as string | undefined),
+      mrr: parseNumericHint(diagnosticTags.mrr),
+      users: parseNumericHint(diagnosticTags.users),
+      growthRate: diagnosticTags.growthRate || undefined,
+      retention: diagnosticTags.retention || undefined,
+    },
+    financialInfo: {
+      burnRate: parseNumericHint(diagnosticTags.burnRate),
+      runway: (founderSnapshot.runway as { time?: string })?.time || diagnosticTags.runway || undefined,
+      funding: diagnosticTags.fundingHistory || undefined,
+      seeking: diagnosticTags.seeking || undefined,
+    },
+    teamInfo: {
+      teamSize: parseNumericHint(diagnosticTags.teamSize),
+    },
+    productInfo: {
+      status: mapProductStatus(founderSnapshot.productStatus as string | undefined),
+      description: conversationExcerpt.slice(0, 2000) || undefined,
+    },
+  };
+
+  return calculateIRS(input);
+}
+
+/** Parse a string that might contain a number (e.g., "$50k", "10000", "5") */
+function parseNumericHint(value: string | undefined | null): number | undefined {
+  if (!value) return undefined;
+  const cleaned = value.replace(/[$,kK]/g, (match) => {
+    if (match === 'k' || match === 'K') return '000';
+    return '';
+  });
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? undefined : num;
+}
+
+/** Map product status string to ProductInfo status */
+function mapProductStatus(status: string | undefined): 'idea' | 'prototype' | 'mvp' | 'launched' | 'scaling' | undefined {
+  if (!status) return undefined;
+  const lower = status.toLowerCase();
+  if (lower.includes('idea') || lower.includes('concept')) return 'idea';
+  if (lower.includes('proto')) return 'prototype';
+  if (lower.includes('mvp') || lower.includes('beta')) return 'mvp';
+  if (lower.includes('launch') || lower.includes('live') || lower.includes('market')) return 'launched';
+  if (lower.includes('scal') || lower.includes('grow')) return 'scaling';
+  return undefined;
+}

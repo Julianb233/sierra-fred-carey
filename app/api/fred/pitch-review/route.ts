@@ -17,6 +17,7 @@ import {
   getPitchReviews,
   getPitchReviewByDocument,
 } from '@/lib/fred/pitch';
+import { getRealityLensGate, checkGateStatus } from '@/lib/db/conversation-state';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,32 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = tierCheck.user.id;
+
+    // Phase 39: Reality Lens gate — block pitch review if upstream dimensions are unvalidated
+    try {
+      const rlGate = await getRealityLensGate(userId);
+      if (rlGate) {
+        const gateStatus = checkGateStatus(rlGate, "pitch_deck");
+        if (!gateStatus.gateOpen) {
+          const blockingDimensions = [...gateStatus.weakDimensions, ...gateStatus.unassessedDimensions];
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Pitch deck review is not available until upstream assumptions are validated.',
+              code: 'RL_GATE_BLOCKED',
+              blockingDimensions,
+              guidance: 'Chat with FRED to work through your ' +
+                blockingDimensions.join(', ') +
+                ' assumptions before requesting a deck review. This ensures the review is grounded in reality, not wishful thinking.',
+            },
+            { status: 403 }
+          );
+        }
+      }
+    } catch (error) {
+      // RL gate check is non-blocking — if it fails, allow the review to proceed
+      console.warn('[PitchReview API] RL gate check failed (non-blocking):', error);
+    }
 
     // Parse request body
     const body = await request.json();

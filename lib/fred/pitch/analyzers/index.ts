@@ -13,7 +13,7 @@ import {
   FRED_IDENTITY,
   FRED_COMMUNICATION_STYLE,
 } from "@/lib/fred-brain";
-import type { SlideType, SlideAnalysis } from '../types';
+import type { SlideType, SlideAnalysis, SlideObjection } from '../types';
 import { SLIDE_LABELS, SLIDE_DESCRIPTIONS } from '../types';
 
 // ============================================================================
@@ -105,11 +105,18 @@ const SLIDE_CRITERIA: Record<SlideType, string[]> = {
 // Zod Schema
 // ============================================================================
 
+const SlideObjectionSchema = z.object({
+  question: z.string(),
+  knockoutAnswer: z.string(),
+  severity: z.enum(["high", "medium", "low"]),
+});
+
 const SlideAnalysisSchema = z.object({
   score: z.number().min(0).max(100),
   feedback: z.string(),
   strengths: z.array(z.string()),
   suggestions: z.array(z.string()),
+  objections: z.array(SlideObjectionSchema),
 });
 
 // ============================================================================
@@ -148,7 +155,9 @@ Scoring guidelines:
 - 86-100: Exceptional, investor-ready
 
 Be specific in your feedback. Generic advice is useless.
-Limit strengths to 2-3 items. Limit suggestions to 2-3 items.`,
+Limit strengths to 2-3 items. Limit suggestions to 2-3 items.
+
+Generate 2-3 skeptical investor questions a VC partner would ask about this slide, with the best possible knockout answer and severity level (high = deal-breaker if unanswered, medium = concerns but manageable, low = minor flag).`,
     prompt: `Analyze this "${label}" slide (page ${pageNumber}):
 
 ${content}`,
@@ -163,5 +172,6 @@ ${content}`,
     feedback: result.feedback,
     strengths: result.strengths.slice(0, 3),
     suggestions: result.suggestions.slice(0, 3),
+    objections: (result.objections || []).slice(0, 3) as SlideObjection[],
   };
 }

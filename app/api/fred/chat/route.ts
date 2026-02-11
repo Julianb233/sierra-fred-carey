@@ -33,7 +33,7 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { buildFounderContext } from "@/lib/fred/context-builder";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState, ModeContext } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildDriftRedirectBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock } from "@/lib/ai/prompts";
+import { buildStepGuidanceBlock, buildDriftRedirectBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 
@@ -415,6 +415,51 @@ async function handlePost(req: NextRequest) {
       console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
     }
 
+    // Phase 39: Load IRS + build deck protocol and review blocks
+    let irsBlock = "";
+    let deckProtocolBlock = "";
+    let deckReviewReadyBlock = "";
+
+    if (activeMode === "investor-readiness") {
+      try {
+        const { getLatestIRS } = await import("@/lib/fred/irs/db");
+        const supabaseService = createServiceClient();
+        const latestIRS = await getLatestIRS(supabaseService, userId);
+
+        const founderStage = conversationState?.founderSnapshot?.stage
+          || conversationState?.diagnosticTags?.stage
+          || "seed";
+
+        irsBlock = buildIRSPromptBlock(latestIRS, founderStage);
+
+        // Deck Protocol block
+        const persisted = await getActiveMode(userId);
+        const formalAssessments = persisted.modeContext.formalAssessments;
+        const hasUploadedDeck = false; // TODO: detect from attachments
+        deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, hasUploadedDeck, founderStage);
+
+        // Deck Review Ready block (only when RL gate is open for pitch_deck and verdict issued)
+        let rlGateOpenForDeck = false;
+        try {
+          const rlGate = await getRealityLensGate(userId);
+          if (rlGate) {
+            const deckGateStatus = checkGateStatus(rlGate, "pitch_deck");
+            rlGateOpenForDeck = deckGateStatus.gateOpen;
+          }
+        } catch {
+          // non-blocking
+        }
+
+        deckReviewReadyBlock = buildDeckReviewReadyBlock(
+          rlGateOpenForDeck,
+          formalAssessments.verdictIssued,
+          hasUploadedDeck
+        );
+      } catch (error) {
+        console.warn("[FRED Chat] Failed to load IRS/deck blocks (non-blocking):", error);
+      }
+    }
+
     // Phase 36+38: Build conversation state context for the machine
     const stateContext: ConversationStateContext | null = conversationState
       ? {
@@ -431,7 +476,7 @@ async function handlePost(req: NextRequest) {
       : null;
 
     // Assemble full system prompt context
-    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition
+    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview
     const fullContext = [
       founderContext,
       stepGuidanceBlock,
@@ -439,6 +484,9 @@ async function handlePost(req: NextRequest) {
       rlGateBlock,
       frameworkBlock,
       modeTransitionBlock,
+      irsBlock,
+      deckProtocolBlock,
+      deckReviewReadyBlock,
     ].filter(Boolean).join("\n\n");
 
     // Create FRED service

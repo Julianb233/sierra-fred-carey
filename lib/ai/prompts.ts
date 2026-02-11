@@ -9,10 +9,13 @@ import {
 import { STARTUP_STEPS, type StartupStep } from "@/lib/ai/frameworks/startup-process";
 import type { RealityLensFactor } from "@/lib/fred/schemas/reality-lens";
 import { FACTOR_DESCRIPTIONS } from "@/lib/fred/schemas/reality-lens";
-import type { RealityLensGate } from "@/lib/db/conversation-state";
+import type { RealityLensGate, ModeContext } from "@/lib/db/conversation-state";
 import type { DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import { generatePositioningPrompt } from "@/lib/ai/frameworks/positioning";
-import { generateInvestorLensPrompt } from "@/lib/ai/frameworks/investor-lens";
+import { generateInvestorLensPrompt, shouldRequestDeck, type InvestorStage, type InvestorVerdict } from "@/lib/ai/frameworks/investor-lens";
+import type { IRSResult } from "@/lib/fred/irs/types";
+import { CATEGORY_LABELS, STAGE_BENCHMARKS, IRS_CATEGORIES, type StartupStage } from "@/lib/fred/irs/types";
+import { getReadinessLevel, compareToStage } from "@/lib/fred/irs/engine";
 
 // ============================================================================
 // Dynamic identity fragments built from fred-brain.ts (single source of truth)
@@ -659,4 +662,175 @@ export function buildModeTransitionBlock(
   }
 
   return "";
+}
+
+// ============================================================================
+// Phase 39: IRS, Deck Protocol, and Deck Review Prompt Blocks
+// ============================================================================
+
+/** How many days an IRS score remains relevant in prompts */
+const IRS_FRESHNESS_DAYS = 7;
+
+/**
+ * Build a prompt block summarizing the founder's IRS score.
+ *
+ * - When a recent IRS exists (< 7 days), injects score summary with stage benchmarks.
+ * - When missing, instructs FRED to assess readiness using the 6 IRS categories
+ *   when sufficient data is available.
+ */
+export function buildIRSPromptBlock(
+  latestIRS: IRSResult | null,
+  founderStage: string
+): string {
+  if (!latestIRS || !latestIRS.createdAt) {
+    return `## INVESTOR READINESS SCORE
+
+No IRS has been calculated yet for this founder. When you have gathered sufficient data about their team, market, product, traction, financials, and pitch readiness, you can assess their investor readiness across these 6 categories. Do NOT mention the score system to the founder unless they ask about investor readiness.`;
+  }
+
+  // Check freshness
+  const ageMs = Date.now() - latestIRS.createdAt.getTime();
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  if (ageDays > IRS_FRESHNESS_DAYS) {
+    return `## INVESTOR READINESS SCORE
+
+The founder's last IRS was calculated ${Math.round(ageDays)} days ago (score: ${latestIRS.overall}/100). It may be outdated. Use it as a reference point but rely on current conversation data for guidance.`;
+  }
+
+  const readiness = getReadinessLevel(latestIRS.overall);
+  const stageKey = founderStage || "seed";
+  const lines: string[] = [];
+  lines.push("## INVESTOR READINESS SCORE");
+  lines.push("");
+  lines.push(`**Overall: ${latestIRS.overall}/100 — ${readiness.label}**`);
+  lines.push(readiness.description);
+  lines.push("");
+  lines.push("**Category Breakdown (vs. stage benchmark):**");
+
+  for (const cat of IRS_CATEGORIES) {
+    const catScore = latestIRS.categories[cat];
+    if (!catScore) continue;
+    const comparison = compareToStage(catScore.score, cat, stageKey);
+    const arrow = comparison.status === "above" ? "+" : comparison.status === "below" ? "" : "=";
+    lines.push(`- ${CATEGORY_LABELS[cat]}: ${catScore.score}/100 (${arrow}${comparison.diff} vs ${stageKey} benchmark)`);
+  }
+
+  if (latestIRS.strengths.length > 0) {
+    lines.push("");
+    lines.push(`**Top strengths:** ${latestIRS.strengths.slice(0, 3).join("; ")}`);
+  }
+  if (latestIRS.weaknesses.length > 0) {
+    lines.push(`**Key gaps:** ${latestIRS.weaknesses.slice(0, 3).join("; ")}`);
+  }
+
+  lines.push("");
+  lines.push("Use this data to inform your guidance. Reference scores naturally when relevant — do not dump the full scorecard unprompted.");
+
+  return lines.join("\n");
+}
+
+/**
+ * Build a prompt block encoding Deck Request Protocol rules.
+ *
+ * Conditions:
+ * - No verdict yet → "Issue provisional verdict BEFORE mentioning decks"
+ * - Verdict issued, shouldRequestDeck() says yes → include request language
+ * - Verdict issued, shouldn't request → "Do NOT request a deck"
+ * - Deck already uploaded → "Proceed to review"
+ */
+export function buildDeckProtocolBlock(
+  formalAssessments: ModeContext["formalAssessments"],
+  hasUploadedDeck: boolean,
+  founderStage: string
+): string {
+  const lines: string[] = [];
+  lines.push("## DECK REQUEST PROTOCOL");
+  lines.push("");
+
+  // Deck already uploaded — skip request logic
+  if (hasUploadedDeck) {
+    lines.push("The founder has already uploaded a pitch deck. Proceed to review. Do NOT ask for another deck.");
+    return lines.join("\n");
+  }
+
+  // No verdict issued yet
+  if (!formalAssessments.verdictIssued) {
+    lines.push("**You have NOT yet issued an investor verdict for this founder.**");
+    lines.push("");
+    lines.push("You MUST issue a provisional verdict (Yes / No / Not yet) BEFORE mentioning pitch decks or requesting materials.");
+    lines.push("A deck is a tool for conviction, not a prerequisite for thinking. Assess readiness from the conversation first.");
+    return lines.join("\n");
+  }
+
+  // Verdict issued — check shouldRequestDeck logic
+  const stage = normalizeInvestorStage(founderStage);
+  const verdict = formalAssessments.verdictValue;
+  if (!verdict) {
+    lines.push("Verdict was issued but value is unclear. Focus on clarifying the verdict before requesting materials.");
+    return lines.join("\n");
+  }
+
+  const deckDecision = shouldRequestDeck(
+    { mentionsFundraising: true, mentionsValuation: false, mentionsDeck: false, asksAboutReadiness: false, uploadedDeck: false },
+    stage,
+    verdict
+  );
+
+  if (deckDecision.shouldRequest) {
+    const materialType = deckDecision.requestType === "summary" ? "1-2 page summary" : "pitch deck";
+    lines.push(`**Verdict issued: ${verdict.toUpperCase()}. A ${materialType} would be valuable.**`);
+    lines.push("");
+    lines.push(`${deckDecision.reason}`);
+    lines.push("");
+    lines.push(`If the founder hasn't shared a ${materialType}, you may request one naturally — but only after discussing the verdict and its reasoning.`);
+    if (!formalAssessments.deckRequested) {
+      lines.push("You have not yet requested materials from this founder.");
+    }
+  } else {
+    lines.push(`**Verdict issued: ${verdict.toUpperCase()}. Do NOT request a deck at this time.**`);
+    lines.push("");
+    lines.push("Focus on strengthening fundamentals before introducing deck-level work.");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Build a prompt block for when deck review is available and ready.
+ * Injected when:
+ * - activeMode === "investor-readiness"
+ * - RL gate is open for pitch_deck
+ * - Verdict has been issued
+ */
+export function buildDeckReviewReadyBlock(
+  rlGateOpenForDeck: boolean,
+  verdictIssued: boolean,
+  hasUploadedDeck: boolean
+): string {
+  if (!rlGateOpenForDeck || !verdictIssued) return "";
+
+  const lines: string[] = [];
+  lines.push("## DECK REVIEW AVAILABLE");
+  lines.push("");
+
+  if (hasUploadedDeck) {
+    lines.push("The founder has uploaded a pitch deck and all Reality Lens dimensions are validated.");
+    lines.push("The 11-dimension deck review with per-slide investor objections is available.");
+    lines.push("Guide the founder to initiate the review when ready — it will score each slide, identify gaps, and generate the skeptical investor questions they need to prepare for.");
+  } else {
+    lines.push("All Reality Lens dimensions are validated and a verdict has been issued.");
+    lines.push("The 11-dimension deck review with per-slide investor objections is available when the founder uploads a PDF deck.");
+    lines.push("If the conversation naturally leads to deck preparation, let the founder know they can upload their deck for a comprehensive IC-perspective review.");
+    lines.push("Do NOT push for a deck upload — mention it only when contextually appropriate.");
+  }
+
+  return lines.join("\n");
+}
+
+/** Normalize founder stage string to InvestorStage */
+function normalizeInvestorStage(stage: string): InvestorStage {
+  const lower = (stage || "").toLowerCase();
+  if (lower.includes("pre-seed") || lower.includes("preseed") || lower.includes("idea")) return "pre-seed";
+  if (lower.includes("series") || lower.includes("growth")) return "series-a";
+  return "seed";
 }
