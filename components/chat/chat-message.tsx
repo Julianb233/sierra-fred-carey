@@ -57,7 +57,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
 
       {/* Message bubble */}
       <div className={cn(
-        "flex flex-col max-w-[75%]",
+        "flex flex-col max-w-[85%] sm:max-w-[75%]",
         isUser ? "items-end" : "items-start"
       )}>
         <motion.div
