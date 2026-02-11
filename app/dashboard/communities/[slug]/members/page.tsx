@@ -19,7 +19,7 @@ export default function CommunityMembersPage() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -31,12 +31,13 @@ export default function CommunityMembersPage() {
           return;
         }
         const communityJson = await communityRes.json();
-        setCommunity(communityJson.data);
-        setCurrentUserId(communityJson.currentUserId ?? null);
+        // Response shape: { data: { community, membership, recentPosts } }
+        setCommunity(communityJson.data.community);
+        setIsOwner(communityJson.data.membership?.role === "owner");
 
         // Fetch members
         const membersRes = await fetch(
-          `/api/communities/${communityJson.data.id}/members`
+          `/api/communities/${slug}/members`
         );
         if (membersRes.ok) {
           const membersJson = await membersRes.json();
@@ -51,55 +52,29 @@ export default function CommunityMembersPage() {
     fetchData();
   }, [slug, router]);
 
-  const isCreator = community?.creator_id === currentUserId;
-
-  async function handlePromote(userId: string) {
-    if (!community) return;
-    try {
-      const res = await fetch(`/api/communities/${community.id}/members/${userId}/role`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "moderator" }),
-      });
-      if (res.ok) {
-        setMembers((prev) =>
-          prev.map((m) => (m.user_id === userId ? { ...m, role: "moderator" } : m))
-        );
-        toast.success("Member promoted to moderator");
-      }
-    } catch {
-      toast.error("Failed to promote member");
-    }
+  async function handlePromote(_userId: string) {
+    // No role change endpoint exists yet in the API
+    toast.error("Role management is not yet available");
   }
 
-  async function handleDemote(userId: string) {
-    if (!community) return;
-    try {
-      const res = await fetch(`/api/communities/${community.id}/members/${userId}/role`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "member" }),
-      });
-      if (res.ok) {
-        setMembers((prev) =>
-          prev.map((m) => (m.user_id === userId ? { ...m, role: "member" } : m))
-        );
-        toast.success("Member demoted");
-      }
-    } catch {
-      toast.error("Failed to demote member");
-    }
+  async function handleDemote(_userId: string) {
+    // No role change endpoint exists yet in the API
+    toast.error("Role management is not yet available");
   }
 
   async function handleRemove(userId: string) {
     if (!community) return;
     try {
-      const res = await fetch(`/api/communities/${community.id}/members/${userId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/communities/${slug}/members?userId=${encodeURIComponent(userId)}`,
+        { method: "DELETE" }
+      );
       if (res.ok) {
-        setMembers((prev) => prev.filter((m) => m.user_id !== userId));
+        setMembers((prev) => prev.filter((m) => m.userId !== userId));
         toast.success("Member removed");
+      } else {
+        const json = await res.json();
+        toast.error(json.error || "Failed to remove member");
       }
     } catch {
       toast.error("Failed to remove member");
@@ -136,7 +111,7 @@ export default function CommunityMembersPage() {
           Members
         </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {community.member_count} {community.member_count === 1 ? "member" : "members"} in {community.name}
+          {community.memberCount} {community.memberCount === 1 ? "member" : "members"} in {community.name}
         </p>
       </div>
 
@@ -150,7 +125,7 @@ export default function CommunityMembersPage() {
 
           return (
             <div
-              key={member.user_id}
+              key={member.userId}
               className="flex items-center gap-3 p-4 rounded-xl bg-white/50 dark:bg-black/20 border border-orange-100/20 dark:border-white/5 hover:shadow-md transition-all"
             >
               <Avatar className="h-11 w-11 border border-gray-200 dark:border-gray-700 shrink-0">
@@ -165,7 +140,7 @@ export default function CommunityMembersPage() {
                 <RoleBadge role={member.role} />
 
                 {/* Moderation tools — only for creator */}
-                {isCreator && (
+                {isOwner && (
                   <div className="mt-2">
                     <ModerationTools
                       member={member}

@@ -24,7 +24,7 @@ export default function CommunitiesPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<CommunityCategory | "all">("all");
   const [showMyOnly, setShowMyOnly] = useState(false);
-  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [joiningSlug, setJoiningSlug] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCommunities();
@@ -44,39 +44,39 @@ export default function CommunitiesPage() {
     }
   }
 
-  async function handleJoin(communityId: string) {
-    setJoiningId(communityId);
+  async function handleJoin(communitySlug: string) {
+    setJoiningSlug(communitySlug);
     try {
-      const res = await fetch(`/api/communities/${communityId}/join`, { method: "POST" });
+      const res = await fetch(`/api/communities/${communitySlug}/members`, { method: "POST" });
       if (res.ok) {
         setCommunities((prev) =>
           prev.map((c) =>
-            c.id === communityId
-              ? { ...c, is_member: true, member_count: c.member_count + 1 }
+            c.slug === communitySlug
+              ? { ...c, isMember: true, memberCount: c.memberCount + 1 }
               : c
           )
         );
       }
     } finally {
-      setJoiningId(null);
+      setJoiningSlug(null);
     }
   }
 
-  async function handleLeave(communityId: string) {
-    setJoiningId(communityId);
+  async function handleLeave(communitySlug: string) {
+    setJoiningSlug(communitySlug);
     try {
-      const res = await fetch(`/api/communities/${communityId}/leave`, { method: "POST" });
+      const res = await fetch(`/api/communities/${communitySlug}/members`, { method: "DELETE" });
       if (res.ok) {
         setCommunities((prev) =>
           prev.map((c) =>
-            c.id === communityId
-              ? { ...c, is_member: false, member_count: Math.max(0, c.member_count - 1) }
+            c.slug === communitySlug
+              ? { ...c, isMember: false, memberCount: Math.max(0, c.memberCount - 1) }
               : c
           )
         );
       }
     } finally {
-      setJoiningId(null);
+      setJoiningSlug(null);
     }
   }
 
@@ -87,7 +87,7 @@ export default function CommunitiesPage() {
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeCategory === "all" || c.category === activeCategory;
-    const matchesMy = !showMyOnly || c.is_member;
+    const matchesMy = !showMyOnly || c.isMember;
     return matchesSearch && matchesCategory && matchesMy;
   });
 
@@ -180,7 +180,7 @@ export default function CommunitiesPage() {
               community={community}
               onJoin={handleJoin}
               onLeave={handleLeave}
-              isJoining={joiningId === community.id}
+              isJoining={joiningSlug === community.slug}
             />
           ))}
         </div>

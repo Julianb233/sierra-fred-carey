@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./CommunitySkeleton";
@@ -8,11 +7,12 @@ import type { CommunityPost } from "@/lib/communities/types";
 
 interface CommunityFeedProps {
   posts: CommunityPost[];
+  communitySlug: string;
   loading: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
   onReact?: (postId: string) => void;
-  onReply?: (postId: string, content: string) => void;
+  onReply?: (postId: string, content: string) => Promise<void> | void;
   isCreator?: boolean;
   onPin?: (postId: string) => void;
   onRemove?: (postId: string) => void;
@@ -20,6 +20,7 @@ interface CommunityFeedProps {
 
 export function CommunityFeed({
   posts,
+  communitySlug,
   loading,
   hasMore,
   onLoadMore,
@@ -55,6 +56,7 @@ export function CommunityFeed({
         <PostCard
           key={post.id}
           post={post}
+          communitySlug={communitySlug}
           onReact={onReact}
           onReply={onReply}
           isCreator={isCreator}

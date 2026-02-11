@@ -9,10 +9,11 @@ import type { PostReply } from "@/lib/communities/types";
 
 interface ReplyThreadProps {
   postId: string;
-  onReply?: (postId: string, content: string) => void;
+  communitySlug: string;
+  onReply?: (postId: string, content: string) => Promise<void> | void;
 }
 
-export function ReplyThread({ postId, onReply }: ReplyThreadProps) {
+export function ReplyThread({ postId, communitySlug, onReply }: ReplyThreadProps) {
   const [replies, setReplies] = useState<PostReply[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
@@ -21,7 +22,9 @@ export function ReplyThread({ postId, onReply }: ReplyThreadProps) {
   useEffect(() => {
     async function fetchReplies() {
       try {
-        const res = await fetch(`/api/communities/posts/${postId}/replies`);
+        const res = await fetch(
+          `/api/communities/${communitySlug}/posts/${postId}/replies`
+        );
         if (res.ok) {
           const json = await res.json();
           setReplies(json.data ?? []);
@@ -33,13 +36,13 @@ export function ReplyThread({ postId, onReply }: ReplyThreadProps) {
       }
     }
     fetchReplies();
-  }, [postId]);
+  }, [postId, communitySlug]);
 
   const handleSubmitReply = async () => {
     if (!replyText.trim() || !onReply) return;
     setSubmitting(true);
     try {
-      onReply(postId, replyText.trim());
+      await onReply(postId, replyText.trim());
       setReplyText("");
     } finally {
       setSubmitting(false);
@@ -58,7 +61,7 @@ export function ReplyThread({ postId, onReply }: ReplyThreadProps) {
   return (
     <div className="mt-4 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
       {replies.map((reply) => {
-        const initials = (reply.author_name || "?")
+        const initials = (reply.authorName || "?")
           .split(" ")
           .map((n) => n[0])
           .join("");
@@ -73,10 +76,10 @@ export function ReplyThread({ postId, onReply }: ReplyThreadProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {reply.author_name}
+                  {reply.authorName}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {new Date(reply.created_at).toLocaleDateString()}
+                  {new Date(reply.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">

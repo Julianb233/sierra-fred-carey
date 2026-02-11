@@ -25,13 +25,14 @@ export default function CommunityDetailPage() {
   const slug = params.slug as string;
 
   const [community, setCommunity] = useState<Community | null>(null);
+  const [isMember, setIsMember] = useState(false);
+  const [memberRole, setMemberRole] = useState<string | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(true);
   const [hasMorePosts, setHasMorePosts] = useState(false);
   const [postPage, setPostPage] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch community details
   useEffect(() => {
@@ -43,8 +44,10 @@ export default function CommunityDetailPage() {
           return;
         }
         const json = await res.json();
-        setCommunity(json.data);
-        setCurrentUserId(json.currentUserId ?? null);
+        // Response shape: { data: { community, membership, recentPosts } }
+        setCommunity(json.data.community);
+        setIsMember(json.data.membership !== null);
+        setMemberRole(json.data.membership?.role ?? null);
       } catch {
         router.push("/dashboard/communities");
       } finally {
@@ -61,7 +64,7 @@ export default function CommunityDetailPage() {
       setPostsLoading(true);
       try {
         const res = await fetch(
-          `/api/communities/${community.id}/posts?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`
+          `/api/communities/${slug}/posts?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`
         );
         if (res.ok) {
           const json = await res.json();
@@ -75,24 +78,24 @@ export default function CommunityDetailPage() {
         setPostsLoading(false);
       }
     },
-    [community]
+    [community, slug]
   );
 
   useEffect(() => {
     if (community) {
-      if (community.is_member) {
+      if (isMember) {
         fetchPosts(0);
       } else {
         setPostsLoading(false);
       }
       fetchMembers();
     }
-  }, [community, fetchPosts]);
+  }, [community, isMember, fetchPosts]);
 
   async function fetchMembers() {
     if (!community) return;
     try {
-      const res = await fetch(`/api/communities/${community.id}/members?limit=10`);
+      const res = await fetch(`/api/communities/${slug}/members?limit=10`);
       if (res.ok) {
         const json = await res.json();
         setMembers(json.data ?? []);
@@ -105,10 +108,12 @@ export default function CommunityDetailPage() {
   async function handleJoin() {
     if (!community) return;
     try {
-      const res = await fetch(`/api/communities/${community.id}/join`, { method: "POST" });
+      const res = await fetch(`/api/communities/${slug}/members`, { method: "POST" });
       if (res.ok) {
+        setIsMember(true);
+        setMemberRole("member");
         setCommunity((prev) =>
-          prev ? { ...prev, is_member: true, member_count: prev.member_count + 1 } : prev
+          prev ? { ...prev, memberCount: prev.memberCount + 1 } : prev
         );
         toast.success("Joined community!");
       }
@@ -120,11 +125,13 @@ export default function CommunityDetailPage() {
   async function handleLeave() {
     if (!community) return;
     try {
-      const res = await fetch(`/api/communities/${community.id}/leave`, { method: "POST" });
+      const res = await fetch(`/api/communities/${slug}/members`, { method: "DELETE" });
       if (res.ok) {
+        setIsMember(false);
+        setMemberRole(null);
         setCommunity((prev) =>
           prev
-            ? { ...prev, is_member: false, member_count: Math.max(0, prev.member_count - 1) }
+            ? { ...prev, memberCount: Math.max(0, prev.memberCount - 1) }
             : prev
         );
         toast.success("Left community");
@@ -134,9 +141,9 @@ export default function CommunityDetailPage() {
     }
   }
 
-  async function handleCreatePost(data: { title: string; content: string; type: PostType }) {
+  async function handleCreatePost(data: { title: string; content: string; postType: PostType }) {
     if (!community) return;
-    const res = await fetch(`/api/communities/${community.id}/posts`, {
+    const res = await fetch(`/api/communities/${slug}/posts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -153,17 +160,23 @@ export default function CommunityDetailPage() {
   }
 
   async function handleReact(postId: string) {
-    const res = await fetch(`/api/communities/posts/${postId}/react`, { method: "POST" });
+    const res = await fetch(`/api/communities/${slug}/posts/${postId}/reactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reactionType: "like" }),
+    });
     if (res.ok) {
+      const json = await res.json();
+      const added = json.data?.added;
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
             ? {
                 ...p,
-                user_has_reacted: !p.user_has_reacted,
-                reaction_count: p.user_has_reacted
-                  ? p.reaction_count - 1
-                  : p.reaction_count + 1,
+                userHasReacted: added,
+                reactionCount: added
+                  ? p.reactionCount + 1
+                  : p.reactionCount - 1,
               }
             : p
         )
@@ -172,37 +185,43 @@ export default function CommunityDetailPage() {
   }
 
   async function handleReply(postId: string, content: string) {
-    const res = await fetch(`/api/communities/posts/${postId}/replies`, {
+    const res = await fetch(`/api/communities/${slug}/posts/${postId}/replies`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
     });
     if (res.ok) {
       setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, reply_count: p.reply_count + 1 } : p))
+        prev.map((p) => (p.id === postId ? { ...p, replyCount: p.replyCount + 1 } : p))
       );
     }
   }
 
   async function handlePin(postId: string) {
     if (!community) return;
-    const res = await fetch(`/api/communities/posts/${postId}/pin`, { method: "POST" });
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    const res = await fetch(`/api/communities/${slug}/posts/${postId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPinned: !post.isPinned }),
+    });
     if (res.ok) {
       setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, is_pinned: !p.is_pinned } : p))
+        prev.map((p) => (p.id === postId ? { ...p, isPinned: !p.isPinned } : p))
       );
     }
   }
 
   async function handleRemovePost(postId: string) {
-    const res = await fetch(`/api/communities/posts/${postId}`, { method: "DELETE" });
+    const res = await fetch(`/api/communities/${slug}/posts/${postId}`, { method: "DELETE" });
     if (res.ok) {
       setPosts((prev) => prev.filter((p) => p.id !== postId));
       toast.success("Post removed");
     }
   }
 
-  const isCreator = community?.creator_id === currentUserId;
+  const isOwnerOrMod = memberRole === "owner" || memberRole === "moderator";
 
   if (loading) {
     return (
@@ -240,8 +259,8 @@ export default function CommunityDetailPage() {
       {/* Community header */}
       <div className="flex flex-col md:flex-row md:items-start gap-4">
         <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex items-center justify-center text-white shrink-0">
-          {community.icon_url ? (
-            <img src={community.icon_url} alt="" className="h-8 w-8 rounded object-cover" />
+          {community.coverImageUrl ? (
+            <img src={community.coverImageUrl} alt="" className="h-8 w-8 rounded object-cover" />
           ) : (
             <Users className="h-7 w-7" />
           )}
@@ -256,7 +275,7 @@ export default function CommunityDetailPage() {
           <div className="flex items-center gap-3 mt-2">
             <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
               <PersonIcon className="h-3.5 w-3.5" />
-              <span>{community.member_count} members</span>
+              <span>{community.memberCount} members</span>
             </div>
             <Badge className="text-xs capitalize bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
               {community.category}
@@ -264,7 +283,7 @@ export default function CommunityDetailPage() {
           </div>
         </div>
         <div className="shrink-0">
-          {community.is_member ? (
+          {isMember ? (
             <Button variant="outline" className="min-h-[44px]" onClick={handleLeave}>
               Leave
             </Button>
@@ -277,7 +296,7 @@ export default function CommunityDetailPage() {
       </div>
 
       {/* Non-member gating */}
-      {!community.is_member ? (
+      {!isMember ? (
         <Card className="border-orange-100/20 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
           <div className="p-8 md:p-12 text-center">
             <div className="mx-auto h-16 w-16 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center mb-4">
@@ -320,6 +339,7 @@ export default function CommunityDetailPage() {
 
               <CommunityFeed
                 posts={posts}
+                communitySlug={slug}
                 loading={postsLoading}
                 hasMore={hasMorePosts}
                 onLoadMore={() => {
@@ -329,7 +349,7 @@ export default function CommunityDetailPage() {
                 }}
                 onReact={handleReact}
                 onReply={handleReply}
-                isCreator={isCreator}
+                isCreator={isOwnerOrMod}
                 onPin={handlePin}
                 onRemove={handleRemovePost}
               />
@@ -352,7 +372,7 @@ export default function CommunityDetailPage() {
 
                     return (
                       <div
-                        key={member.user_id}
+                        key={member.userId}
                         className="flex items-center gap-3 p-3 min-h-[56px] rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                       >
                         <Avatar className="h-10 w-10 border border-gray-200 dark:border-gray-700">
@@ -367,8 +387,9 @@ export default function CommunityDetailPage() {
                           <Badge
                             variant="outline"
                             className={`text-xs mt-0.5 ${
-                              member.role === "creator"
+                              member.role === "owner"
                                 ? "border-[#ff6a1a]/20 text-[#ff6a1a]"
+
                                 : member.role === "moderator"
                                 ? "border-blue-200 text-blue-600 dark:text-blue-400"
                                 : ""

@@ -17,8 +17,8 @@ const categoryColors: Record<CommunityCategory, string> = {
 
 interface CommunityCardProps {
   community: Community;
-  onJoin?: (communityId: string) => void;
-  onLeave?: (communityId: string) => void;
+  onJoin?: (communitySlug: string) => void;
+  onLeave?: (communitySlug: string) => void;
   isJoining?: boolean;
 }
 
@@ -29,9 +29,9 @@ export function CommunityCard({ community, onJoin, onLeave, isJoining }: Communi
         {/* Icon + Title */}
         <div className="flex items-start gap-3 mb-3">
           <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex items-center justify-center text-white shrink-0">
-            {community.icon_url ? (
+            {community.coverImageUrl ? (
               <img
-                src={community.icon_url}
+                src={community.coverImageUrl}
                 alt=""
                 className="h-6 w-6 rounded object-cover"
               />
@@ -61,15 +61,15 @@ export function CommunityCard({ community, onJoin, onLeave, isJoining }: Communi
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <PersonIcon className="h-3.5 w-3.5" />
-            <span>{community.member_count} {community.member_count === 1 ? "member" : "members"}</span>
+            <span>{community.memberCount} {community.memberCount === 1 ? "member" : "members"}</span>
           </div>
 
-          {community.is_member ? (
+          {community.isMember ? (
             <Button
               variant="outline"
               size="sm"
               className="min-h-[44px] min-w-[44px] text-sm"
-              onClick={() => onLeave?.(community.id)}
+              onClick={() => onLeave?.(community.slug)}
               disabled={isJoining}
             >
               Joined
@@ -79,7 +79,7 @@ export function CommunityCard({ community, onJoin, onLeave, isJoining }: Communi
               variant="orange"
               size="sm"
               className="min-h-[44px] min-w-[44px] text-sm"
-              onClick={() => onJoin?.(community.id)}
+              onClick={() => onJoin?.(community.slug)}
               disabled={isJoining}
             >
               Join

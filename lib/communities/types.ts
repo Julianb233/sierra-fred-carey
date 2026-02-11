@@ -1,5 +1,8 @@
 /**
  * Community feature types — Phase 41
+ *
+ * Field names use camelCase to match the API response shapes
+ * from the backend (Drizzle ORM returns camelCase by default).
  */
 
 export type CommunityCategory = "general" | "industry" | "stage" | "topic";
@@ -10,47 +13,51 @@ export interface Community {
   name: string;
   description: string;
   category: CommunityCategory;
-  icon_url: string | null;
-  creator_id: string;
-  member_count: number;
-  created_at: string;
-  is_member?: boolean;
+  coverImageUrl: string | null;
+  creatorId: string;
+  memberCount: number;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // Added by browse endpoint
+  isMember?: boolean;
+  memberRole?: string | null;
 }
 
-export type PostType = "post" | "question";
+export type PostType = "post" | "question" | "update";
 
 export interface CommunityPost {
   id: string;
-  community_id: string;
-  author_id: string;
-  author_name: string;
-  author_avatar_url: string | null;
-  type: PostType;
+  communityId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  postType: PostType;
   title: string;
   content: string;
-  is_pinned: boolean;
-  reply_count: number;
-  reaction_count: number;
-  user_has_reacted?: boolean;
-  created_at: string;
+  isPinned: boolean;
+  replyCount: number;
+  reactionCount: number;
+  userHasReacted?: boolean;
+  createdAt: string;
 }
 
 export interface PostReply {
   id: string;
-  post_id: string;
-  author_id: string;
-  author_name: string;
-  author_avatar_url: string | null;
+  postId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarUrl: string | null;
   content: string;
-  created_at: string;
+  createdAt: string;
 }
 
-export type MemberRole = "creator" | "moderator" | "member";
+export type MemberRole = "owner" | "moderator" | "member";
 
 export interface CommunityMember {
-  user_id: string;
+  userId: string;
   name: string;
-  avatar_url: string | null;
+  avatarUrl: string | null;
   role: MemberRole;
-  joined_at: string;
+  joinedAt: string;
 }

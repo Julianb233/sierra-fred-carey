@@ -10,12 +10,12 @@ import type { PostType } from "@/lib/communities/types";
 
 interface CreatePostFormProps {
   communityId: string;
-  onSubmit: (data: { title: string; content: string; type: PostType }) => Promise<void>;
+  onSubmit: (data: { title: string; content: string; postType: PostType }) => Promise<void>;
 }
 
 export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
   const [expanded, setExpanded] = useState(false);
-  const [type, setType] = useState<PostType>("post");
+  const [postType, setPostType] = useState<PostType>("post");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -26,10 +26,10 @@ export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
 
     setSubmitting(true);
     try {
-      await onSubmit({ title: title.trim(), content: content.trim(), type });
+      await onSubmit({ title: title.trim(), content: content.trim(), postType });
       setTitle("");
       setContent("");
-      setType("post");
+      setPostType("post");
       setExpanded(false);
     } finally {
       setSubmitting(false);
@@ -60,7 +60,7 @@ export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
       <form onSubmit={handleSubmit} className="p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900 dark:text-white text-base">
-            Create a {type === "question" ? "Question" : "Post"}
+            Create a {postType === "question" ? "Question" : "Post"}
           </h3>
           <Button
             type="button"
@@ -77,19 +77,19 @@ export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
         <div className="flex gap-2 mb-4">
           <Button
             type="button"
-            variant={type === "post" ? "orange" : "outline"}
+            variant={postType === "post" ? "orange" : "outline"}
             size="sm"
             className="min-h-[44px] text-sm"
-            onClick={() => setType("post")}
+            onClick={() => setPostType("post")}
           >
             Post
           </Button>
           <Button
             type="button"
-            variant={type === "question" ? "orange" : "outline"}
+            variant={postType === "question" ? "orange" : "outline"}
             size="sm"
             className="min-h-[44px] text-sm"
-            onClick={() => setType("question")}
+            onClick={() => setPostType("question")}
           >
             Question
           </Button>
@@ -97,13 +97,13 @@ export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
 
         <div className="space-y-3">
           <Input
-            placeholder={type === "question" ? "What's your question?" : "Title (optional)"}
+            placeholder={postType === "question" ? "What's your question?" : "Title (optional)"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="text-base"
           />
           <Textarea
-            placeholder={type === "question" ? "Add more details..." : "What's on your mind?"}
+            placeholder={postType === "question" ? "Add more details..." : "What's on your mind?"}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
@@ -127,7 +127,7 @@ export function CreatePostForm({ communityId, onSubmit }: CreatePostFormProps) {
 
 /** Desktop always-visible version */
 export function CreatePostFormDesktop(props: CreatePostFormProps) {
-  const [type, setType] = useState<PostType>("post");
+  const [postType, setPostType] = useState<PostType>("post");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -138,10 +138,10 @@ export function CreatePostFormDesktop(props: CreatePostFormProps) {
 
     setSubmitting(true);
     try {
-      await props.onSubmit({ title: title.trim(), content: content.trim(), type });
+      await props.onSubmit({ title: title.trim(), content: content.trim(), postType });
       setTitle("");
       setContent("");
-      setType("post");
+      setPostType("post");
     } finally {
       setSubmitting(false);
     }
@@ -151,25 +151,25 @@ export function CreatePostFormDesktop(props: CreatePostFormProps) {
     <Card className="border-orange-100/20 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
       <form onSubmit={handleSubmit} className="p-5">
         <h3 className="font-semibold text-gray-900 dark:text-white text-base mb-4">
-          Create a {type === "question" ? "Question" : "Post"}
+          Create a {postType === "question" ? "Question" : "Post"}
         </h3>
 
         <div className="flex gap-2 mb-4">
           <Button
             type="button"
-            variant={type === "post" ? "orange" : "outline"}
+            variant={postType === "post" ? "orange" : "outline"}
             size="sm"
             className="min-h-[44px] text-sm"
-            onClick={() => setType("post")}
+            onClick={() => setPostType("post")}
           >
             Post
           </Button>
           <Button
             type="button"
-            variant={type === "question" ? "orange" : "outline"}
+            variant={postType === "question" ? "orange" : "outline"}
             size="sm"
             className="min-h-[44px] text-sm"
-            onClick={() => setType("question")}
+            onClick={() => setPostType("question")}
           >
             Question
           </Button>
@@ -177,13 +177,13 @@ export function CreatePostFormDesktop(props: CreatePostFormProps) {
 
         <div className="space-y-3">
           <Input
-            placeholder={type === "question" ? "What's your question?" : "Title (optional)"}
+            placeholder={postType === "question" ? "What's your question?" : "Title (optional)"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="text-base"
           />
           <Textarea
-            placeholder={type === "question" ? "Add more details..." : "What's on your mind?"}
+            placeholder={postType === "question" ? "Add more details..." : "What's on your mind?"}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}

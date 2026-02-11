@@ -12,28 +12,29 @@ import { ReplyThread } from "./ReplyThread";
 
 interface PostCardProps {
   post: CommunityPost;
+  communitySlug: string;
   onReact?: (postId: string) => void;
-  onReply?: (postId: string, content: string) => void;
+  onReply?: (postId: string, content: string) => Promise<void> | void;
   isCreator?: boolean;
   onPin?: (postId: string) => void;
   onRemove?: (postId: string) => void;
 }
 
-export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }: PostCardProps) {
+export function PostCard({ post, communitySlug, onReact, onReply, isCreator, onPin, onRemove }: PostCardProps) {
   const [showReplies, setShowReplies] = useState(false);
 
-  const initials = (post.author_name || "?")
+  const initials = (post.authorName || "?")
     .split(" ")
     .map((n) => n[0])
     .join("");
 
-  const timeAgo = getTimeAgo(post.created_at);
+  const timeAgo = getTimeAgo(post.createdAt);
 
   return (
     <Card className="border-orange-100/20 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm overflow-hidden">
       <div className="p-4 sm:p-5">
         {/* Pinned indicator */}
-        {post.is_pinned && (
+        {post.isPinned && (
           <div className="flex items-center gap-1.5 text-xs text-[#ff6a1a] mb-2">
             <DrawingPinIcon className="h-3 w-3" />
             <span className="font-medium">Pinned</span>
@@ -49,11 +50,11 @@ export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }:
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {post.author_name}
+              {post.authorName}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">{timeAgo}</p>
           </div>
-          {post.type === "question" && (
+          {post.postType === "question" && (
             <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs">
               <MessageCircleQuestion className="h-3 w-3 mr-1" />
               Question
@@ -79,14 +80,14 @@ export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }:
             variant="ghost"
             size="sm"
             className={`min-h-[44px] min-w-[44px] gap-1.5 text-sm ${
-              post.user_has_reacted
+              post.userHasReacted
                 ? "text-[#ff6a1a]"
                 : "text-gray-500 dark:text-gray-400"
             }`}
             onClick={() => onReact?.(post.id)}
           >
             <HeartIcon className="h-4 w-4" />
-            {post.reaction_count > 0 && <span>{post.reaction_count}</span>}
+            {post.reactionCount > 0 && <span>{post.reactionCount}</span>}
           </Button>
 
           <Button
@@ -96,7 +97,7 @@ export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }:
             onClick={() => setShowReplies(!showReplies)}
           >
             <ChatBubbleIcon className="h-4 w-4" />
-            {post.reply_count > 0 && <span>{post.reply_count}</span>}
+            {post.replyCount > 0 && <span>{post.replyCount}</span>}
           </Button>
 
           {/* Creator moderation */}
@@ -108,7 +109,7 @@ export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }:
                 className="min-h-[44px] text-xs text-gray-500 hover:text-[#ff6a1a]"
                 onClick={() => onPin?.(post.id)}
               >
-                {post.is_pinned ? "Unpin" : "Pin"}
+                {post.isPinned ? "Unpin" : "Pin"}
               </Button>
               <Button
                 variant="ghost"
@@ -124,7 +125,11 @@ export function PostCard({ post, onReact, onReply, isCreator, onPin, onRemove }:
 
         {/* Reply thread */}
         {showReplies && (
-          <ReplyThread postId={post.id} onReply={onReply} />
+          <ReplyThread
+            postId={post.id}
+            communitySlug={communitySlug}
+            onReply={onReply}
+          />
         )}
       </div>
     </Card>
