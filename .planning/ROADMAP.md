@@ -5,7 +5,7 @@
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
-- [ ] **v4.0 FRED Mentor Experience** - Phases 34-42 (in progress)
+- [ ] **v4.0 FRED Mentor Experience** - Phases 34-46 (in progress)
 
 ## Phases
 
@@ -77,15 +77,17 @@ See MILESTONES.md for full details.
 
 **Milestone Goal:** Transform FRED from a responsive chatbot into a structured mentor that leads conversations, enforces decision sequencing through Reality Lens gating, and integrates existing frameworks as active conversation guides -- not passive tools. FRED controls the flow, not the user.
 
-**Phase Numbering:** Integer phases (34-42). Decimal phases (e.g., 35.1) reserved for urgent insertions.
+**Phase Numbering:** Integer phases (34-46). Decimal phases (e.g., 35.1) reserved for urgent insertions.
 
 **Parallelism:**
 - Wave 1 (foundation): Phase 34 -- system prompt overhaul, no dependencies
 - Wave 2 (parallel, both depend on Phase 34): Phase 35 (onboarding handoff) + Phase 36 (conversation state & structured flow)
 - Wave 3 (parallel, both depend on Phase 36): Phase 37 (Reality Lens gate & decision sequencing) + Phase 38 (framework & mode integration)
 - Wave 4 (depends on Phases 37 + 38): Phase 39 (missing frameworks & gated reviews)
-- Wave 5 (parallel, depends on Phase 39): Phase 40 (dashboard mentor hub) + Phase 41 (founder communities)
-- Wave 6 (depends on Phase 40): Phase 42 (multi-channel FRED access — call, text, message)
+- Wave 5 (parallel, depends on Phase 39): Phase 40 (dashboard redesign) + Phase 41 (founder communities)
+- Wave 6 (parallel, depends on Phase 40): Phase 42 (multi-channel FRED access) + Phase 43 (Next Steps Hub + Readiness Tab)
+- Wave 7 (parallel): Phase 44 (document repository) + Phase 45 (chat UI redesign)
+- Wave 8: Phase 46 (mobile app layout)
 
 - [ ] **Phase 34: System Prompt Overhaul** - Rebuild system prompt with mentor behaviors, dynamic context injection, and Fred's master GPT instructions
 - [ ] **Phase 35: Onboarding-to-FRED Handoff** - Seamless data flow from onboarding into FRED's first conversation with no repetition
@@ -93,9 +95,13 @@ See MILESTONES.md for full details.
 - [ ] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
 - [ ] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
 - [ ] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
-- [ ] **Phase 40: Dashboard Mentor Hub & Readiness Wheel** - Prominent "Contact Fred" placement + funding readiness progress wheel (Red → Yellow → Green)
-- [ ] **Phase 41: Founder Communities** - User-created communities, self-started, joinable from dashboard
-- [ ] **Phase 42: Multi-Channel FRED Access** - Call, text (SMS), and message FRED 24/7 from any screen
+- [ ] **Phase 40: Dashboard Redesign — Founder Command Center** - Nav restructure, Home with Snapshot Card + Decision Box + Funding Gauge + Weekly Momentum, dynamic display rules
+- [ ] **Phase 41: Founder Communities** - User-created communities with Circles, Topic Rooms, Events, and Graduates sections
+- [ ] **Phase 42: Multi-Channel FRED Access** - Call (scheduled + on-demand), text (SMS), and message FRED 24/7 from any screen
+- [ ] **Phase 43: Next Steps Hub & Readiness Tab** - Next Steps (Critical/Important/Optional) + combined Investor Readiness + Positioning Readiness view
+- [ ] **Phase 44: Document Repository** - Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred" action
+- [ ] **Phase 45: Chat UI Redesign** - Full-screen chat with active mode bar, side panel toggle (Snapshot, Next Steps, Documents)
+- [ ] **Phase 46: Mobile App Layout** - Mobile-specific nav, Today's Focus, simplified gauges, voice input, Call Fred
 
 ## Phase Details
 
@@ -166,15 +172,16 @@ See MILESTONES.md for full details.
   4. Per-slide investor objections (2-3 skeptical questions per slide with knockout answers) are generated as part of the gated Pitch Deck Review flow
 **Plans**: TBD
 
-### Phase 40: Dashboard Mentor Hub & Readiness Wheel
-**Goal**: The dashboard is the founder's home base for building their company — with FRED always one click away and a persistent visual indicator (Red → Yellow → Green) showing how close they are to funding readiness
-**Depends on**: Phase 39 (Investor Readiness Score must be fully implemented to power the readiness wheel)
-**Requirements**: HUB-01, HUB-02, HUB-03, HUB-04
+### Phase 40: Dashboard Redesign — Founder Command Center
+**Goal**: Complete dashboard restructure — new left sidebar nav, Founder Command Center as home page with Snapshot Card, "Right Now" Decision Box, Funding Readiness Gauge, Weekly Momentum widget, and dynamic display rules that adapt to founder stage and state
+**Depends on**: Phase 39 (Investor Readiness Score for gauge), Phase 35 (Founder Snapshot data)
+**Requirements**: DASH-01, DASH-02, DASH-03, DASH-04, HUB-01, HUB-02, HUB-03, HUB-04
 **Success Criteria** (what must be TRUE):
-  1. Dashboard has a prominent, always-visible "Contact Fred" section — founders can start a chat or call from the dashboard in one click
-  2. Funding readiness progress wheel displayed on dashboard — visual indicator (Red → Yellow → Green) powered by Investor Readiness Score, showing how far along the founder is toward being investor-ready
-  3. Progress wheel updates dynamically as the founder completes upstream validation steps (feasibility, demand, economics, etc.)
-  4. Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in a nav menu
+  1. Left sidebar nav restructured: Home, Chat with Fred, Next Steps, Readiness, Documents, Community, Profile
+  2. Home page = Founder Command Center with: Snapshot Card (stage, constraint, 90-day goal, runway), "Right Now" Decision Box (most important decision + "Work on this with Fred" button), Funding Readiness Gauge (Red=Build / Yellow=Prove / Green=Raise), Weekly Momentum (last check-in summary, streak, Start Check-In button)
+  3. Funding Readiness Gauge powered by IRS — never gamified, always tied to specific actions, shows top 2 blockers
+  4. Dynamic display rules: hide gauge for early stage (show Positioning first), blur gauge if no intake completed, show Primary Constraint for growth stage, surface stabilization if high stress detected
+  5. Dashboard answers: "What should I work on right now?"
 **Plans**: TBD
 
 ### Phase 41: Founder Communities
@@ -189,14 +196,60 @@ See MILESTONES.md for full details.
 **Plans**: TBD
 
 ### Phase 42: Multi-Channel FRED Access
-**Goal**: Founders can reach FRED through any channel — in-app chat, voice call, or SMS text — 24/7 from any screen in the app
+**Goal**: Founders can reach FRED through any channel — in-app chat, voice call (scheduled + on-demand), or SMS text — 24/7 from any screen in the app
 **Depends on**: Phase 40 (dashboard hub provides the UI surface for multi-channel access)
-**Requirements**: CHANNEL-01, CHANNEL-02, CHANNEL-03, CHANNEL-04
+**Requirements**: CHANNEL-01, CHANNEL-02, CHANNEL-03, CHANNEL-04, CHANNEL-05, CHANNEL-06
 **Success Criteria** (what must be TRUE):
   1. Founders can message FRED via in-app chat from any page (floating widget or persistent sidebar)
-  2. Founders can call FRED via voice (LiveKit integration already exists from v3.0) directly from the dashboard
+  2. Founders can call FRED via voice (LiveKit) — both scheduled calls (15-30 min) and on-demand decision calls (5-10 min)
   3. Founders can text FRED via SMS and receive structured mentor responses (builds on existing Twilio infrastructure)
   4. All channels share the same conversation context — FRED knows what was discussed regardless of channel used
+  5. Post-call deliverables generated: transcript, summary, decisions made, Next 3 Actions
+  6. Call Fred option visible as premium feature on dashboard and mobile
+**Plans**: TBD
+
+### Phase 43: Next Steps Hub & Readiness Tab
+**Goal**: Founders have a dedicated execution surface showing prioritized next steps from FRED conversations, plus a unified readiness view combining Investor Readiness Score and Positioning Readiness grade
+**Depends on**: Phase 40 (nav structure), Phase 39 (IRS and Positioning frameworks fully implemented)
+**Requirements**: DASH-05, DASH-06, DASH-07, DASH-08, DASH-09
+**Success Criteria** (what must be TRUE):
+  1. Next Steps Hub page shows three priority tiers: Critical, Important, Optional
+  2. Each next step shows description, why it matters, linked conversation, and mark-complete action
+  3. Next steps are generated from FRED conversations (extracted from "Next 3 Actions" outputs)
+  4. Readiness Tab shows Investor Readiness (score, zone, breakdown, historical trend, reassess button)
+  5. Readiness Tab shows Positioning Readiness (grade A-F, narrative tightness 1-10, key gaps)
+**Plans**: TBD
+
+### Phase 44: Document Repository
+**Goal**: Founders have organized access to all their documents — pitch decks, strategy docs, reports, and uploaded files — with the ability to review any document with FRED
+**Depends on**: Phase 40 (nav structure)
+**Requirements**: DASH-10, DASH-11, DASH-12
+**Success Criteria** (what must be TRUE):
+  1. Document repository page with folders: Decks, Strategy Docs, Reports, Uploaded Files
+  2. View action opens document inline or in new tab
+  3. "Review with Fred" action opens the document in chat context so FRED can analyze it
+**Plans**: TBD
+
+### Phase 45: Chat UI Redesign
+**Goal**: FRED chat is a full-screen conversational interface with active mode indicator and contextual side panel showing founder snapshot, recent next steps, and uploaded documents
+**Depends on**: Phase 36 (conversation state), Phase 38 (mode integration), Phase 43 (next steps)
+**Requirements**: DASH-13, DASH-14, DASH-15
+**Success Criteria** (what must be TRUE):
+  1. Chat is full-screen with clean conversational layout
+  2. Top bar shows active mode (Neutral, Positioning, Investor, Strategy) based on diagnostic engine state
+  3. Toggleable side panel shows Founder Snapshot, Recent Next Steps, and Uploaded Documents
+**Plans**: TBD
+
+### Phase 46: Mobile App Layout
+**Goal**: Sahara mobile experience is optimized for daily momentum — quick check-ins, fast decisions, emotional support, and simplified progress tracking
+**Depends on**: Phases 40-45 (all dashboard features built for desktop first)
+**Requirements**: MOBILE-01, MOBILE-02, MOBILE-03, MOBILE-04, MOBILE-05
+**Success Criteria** (what must be TRUE):
+  1. Mobile bottom nav: Home, Chat, Next, Progress, Profile
+  2. Mobile Home shows Today's Focus, active next steps, Start Check-In button, simplified funding gauge
+  3. Mobile Chat supports text, voice input, and Call Fred (premium)
+  4. Progress tab shows funding readiness bar, positioning grade, momentum streak, last check-in summary
+  5. All dynamic display rules apply on mobile (hide gauge for early stage, blur without intake, etc.)
 **Plans**: TBD
 
 ## Progress
@@ -219,6 +272,10 @@ See MILESTONES.md for full details.
 | 37. Reality Lens Gate & Decision Sequencing | v4.0 | 0/TBD | Not started | - |
 | 38. Framework & Mode Integration | v4.0 | 0/TBD | Not started | - |
 | 39. Missing Frameworks & Gated Reviews | v4.0 | 0/TBD | Not started | - |
-| 40. Dashboard Mentor Hub & Readiness Wheel | v4.0 | 0/TBD | Not started | - |
+| 40. Dashboard Redesign — Founder Command Center | v4.0 | 0/TBD | Not started | - |
 | 41. Founder Communities | v4.0 | 0/TBD | Not started | - |
 | 42. Multi-Channel FRED Access | v4.0 | 0/TBD | Not started | - |
+| 43. Next Steps Hub & Readiness Tab | v4.0 | 0/TBD | Not started | - |
+| 44. Document Repository | v4.0 | 0/TBD | Not started | - |
+| 45. Chat UI Redesign | v4.0 | 0/TBD | Not started | - |
+| 46. Mobile App Layout | v4.0 | 0/TBD | Not started | - |
