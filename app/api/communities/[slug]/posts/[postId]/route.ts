@@ -123,7 +123,7 @@ export async function PATCH(
     const membership = await getMembership(community.id, userId);
     const isAuthor = post.authorId === userId;
     const isModerator =
-      membership && ["creator", "moderator"].includes(membership.role);
+      membership && ["owner", "moderator"].includes(membership.role);
 
     if (!isAuthor && !isModerator) {
       return NextResponse.json(
@@ -215,7 +215,7 @@ export async function DELETE(
     const membership = await getMembership(community.id, userId);
     const isAuthor = post.authorId === userId;
     const isModerator =
-      membership && ["creator", "moderator"].includes(membership.role);
+      membership && ["owner", "moderator"].includes(membership.role);
 
     if (!isAuthor && !isModerator) {
       return NextResponse.json(

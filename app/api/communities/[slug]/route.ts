@@ -27,8 +27,8 @@ const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().max(500).optional(),
   category: z.enum(VALID_CATEGORIES).optional(),
-  iconUrl: z.string().url().optional(),
-  isActive: z.boolean().optional(),
+  coverImageUrl: z.string().url().optional(),
+  isArchived: z.boolean().optional(),
 });
 
 // ============================================================================
@@ -147,7 +147,7 @@ export async function PATCH(
     if (updates.description)
       updates.description = sanitizeContent(updates.description, 500);
 
-    const updated = await updateCommunity(community.id, updates);
+    const updated = await updateCommunity(community.id, userId, updates);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

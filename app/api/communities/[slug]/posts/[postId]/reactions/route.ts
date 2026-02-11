@@ -86,15 +86,15 @@ export async function POST(
       );
     }
 
-    const { added, reaction } = await toggleReaction({
+    const { added } = await toggleReaction(
       postId,
       userId,
-      reactionType: parsed.data.reactionType,
-    });
+      parsed.data.reactionType
+    );
 
     return NextResponse.json({
       success: true,
-      data: { added, reaction },
+      data: { added },
       message: added ? "Reaction added" : "Reaction removed",
     });
   } catch (error) {

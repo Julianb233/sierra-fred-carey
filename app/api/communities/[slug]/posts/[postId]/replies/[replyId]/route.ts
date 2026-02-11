@@ -199,7 +199,7 @@ export async function DELETE(
     const membership = await getMembership(community.id, userId);
     const isAuthor = reply.authorId === userId;
     const isModerator =
-      membership && ["creator", "moderator"].includes(membership.role);
+      membership && ["owner", "moderator"].includes(membership.role);
 
     if (!isAuthor && !isModerator) {
       return NextResponse.json(

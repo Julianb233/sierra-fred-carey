@@ -84,7 +84,7 @@ export async function POST(
       );
     }
 
-    if (!community.isActive) {
+    if (community.isArchived) {
       return NextResponse.json(
         { success: false, error: "This community is no longer active" },
         { status: 400 }
@@ -150,7 +150,7 @@ export async function DELETE(
       const requesterMembership = await getMembership(community.id, userId);
       if (
         !requesterMembership ||
-        !["creator", "moderator"].includes(requesterMembership.role)
+        !["owner", "moderator"].includes(requesterMembership.role)
       ) {
         return NextResponse.json(
           { success: false, error: "Only owner or moderators can remove members" },
@@ -160,7 +160,7 @@ export async function DELETE(
 
       // Cannot remove the creator
       const targetMembership = await getMembership(community.id, targetUserId);
-      if (targetMembership?.role === "creator") {
+      if (targetMembership?.role === "owner") {
         return NextResponse.json(
           { success: false, error: "Cannot remove the community owner" },
           { status: 400 }
@@ -177,7 +177,7 @@ export async function DELETE(
       );
     }
 
-    if (targetUserId === userId && membership.role === "creator") {
+    if (targetUserId === userId && membership.role === "owner") {
       return NextResponse.json(
         {
           success: false,

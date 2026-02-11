@@ -27,7 +27,7 @@ const createSchema = z.object({
   name: z.string().min(2).max(100),
   description: z.string().max(500).default(""),
   category: z.enum(VALID_CATEGORIES).default("general"),
-  iconUrl: z.string().url().optional(),
+  coverImageUrl: z.string().url().optional(),
 });
 
 // ============================================================================
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description, category, iconUrl } = parsed.data;
+    const { name, description, category, coverImageUrl } = parsed.data;
 
     // Sanitize user content
     const sanitizedName = sanitizeContent(name, 100);
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
     }
 
     const community = await createCommunity({
+      userId,
       name: sanitizedName,
       slug,
       description: sanitizedDescription,
       category,
-      creatorId: userId,
-      iconUrl,
+      coverImageUrl,
     });
 
     return NextResponse.json(
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { communities, total } = await listCommunities({
+    const communities = await listCommunities({
       search,
       category,
       limit,
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: communitiesWithMembership,
-      total,
+      total: communities.length,
       limit,
       offset,
     });

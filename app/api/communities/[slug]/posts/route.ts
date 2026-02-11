@@ -140,8 +140,8 @@ export async function POST(
     const post = await createPost({
       communityId: community.id,
       authorId: userId,
-      type: postType as PostType,
-      title: title ? sanitizeContent(title, 200) : undefined,
+      postType: postType as PostType,
+      title: title ? sanitizeContent(title, 200) : "",
       content: sanitizeContent(content, 5000),
     });
 
