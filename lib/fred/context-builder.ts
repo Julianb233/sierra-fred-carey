@@ -28,11 +28,13 @@ export interface FounderProfile {
   fundingHistory: string | null;
   challenges: string[];
   enrichmentData: Record<string, unknown> | null;
+  onboardingCompleted: boolean;
 }
 
 export interface FounderContextData {
   profile: FounderProfile;
   facts: Array<{ category: string; key: string; value: Record<string, unknown> }>;
+  isFirstConversation: boolean;
 }
 
 // ============================================================================
@@ -48,7 +50,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("name, stage, industry, revenue_range, team_size, funding_history, challenges, enrichment_data")
+    .select("name, stage, industry, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
     .eq("id", userId)
     .single();
 
@@ -62,6 +64,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
       fundingHistory: null,
       challenges: [],
       enrichmentData: null,
+      onboardingCompleted: false,
     };
   }
 
@@ -74,6 +77,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
     fundingHistory: data.funding_history ?? null,
     challenges: Array.isArray(data.challenges) ? data.challenges : [],
     enrichmentData: (data.enrichment_data as Record<string, unknown>) ?? null,
+    onboardingCompleted: !!data.onboarding_completed,
   };
 }
 
@@ -101,6 +105,30 @@ async function loadSemanticFacts(
     }));
   } catch {
     return [];
+  }
+}
+
+// ============================================================================
+// First Conversation Detection
+// ============================================================================
+
+/**
+ * Check if this is the user's first conversation with FRED.
+ * Uses the conversation state table — if no row exists, this is a first chat.
+ */
+async function checkIsFirstConversation(userId: string): Promise<boolean> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("fred_conversation_state")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+    // PGRST116 = no rows returned
+    if (error?.code === "PGRST116" || !data) return true;
+    return false;
+  } catch {
+    return true; // Default to first conversation if check fails
   }
 }
 
@@ -148,7 +176,7 @@ function extractFactValue(
  */
 function buildContextBlock(data: FounderContextData): string {
   const lines: string[] = [];
-  const { profile, facts } = data;
+  const { profile, facts, isFirstConversation } = data;
 
   // Check if we have any data at all
   const hasProfileData =
@@ -160,7 +188,8 @@ function buildContextBlock(data: FounderContextData): string {
     profile.fundingHistory ||
     profile.challenges.length > 0;
 
-  if (!hasProfileData && facts.length === 0) {
+  // Even with no profile data, if this is the first conversation we need handoff instructions
+  if (!hasProfileData && facts.length === 0 && !isFirstConversation) {
     return "";
   }
 
@@ -313,8 +342,30 @@ function buildContextBlock(data: FounderContextData): string {
     lines.push("");
   }
 
-  // ---- Instructions for FRED ----
-  lines.push("Use this snapshot to personalize your mentoring. Skip intake questions you already have answers to. Reference what you know naturally. If key snapshot fields are missing (product status, traction, runway, primary constraint, 90-day goal), infer from conversation and state your assumptions.");
+  // ---- Handoff Instructions for FRED ----
+  if (isFirstConversation && profile.onboardingCompleted && hasProfileData) {
+    // Completed onboarding -> FRED should reference what's known and go deeper
+    lines.push("## HANDOFF: FIRST CONVERSATION AFTER ONBOARDING");
+    lines.push("");
+    lines.push("This founder just completed onboarding and collected the data above. This is your first real conversation.");
+    lines.push("- Reference what you already know naturally: \"You mentioned you're at [stage] working in [industry]...\"");
+    lines.push("- Do NOT re-ask for stage, industry, challenge, team size, revenue, or funding -- you already have this.");
+    lines.push("- Go deeper: ask about the specifics that onboarding didn't capture (product status, traction metrics, runway, 90-day goal, who their buyer is).");
+    lines.push("- Apply the Universal Entry Flow with context: since you know their challenge, start there. Ask what they've tried, what's working, what's stuck.");
+    lines.push("- Begin building the full Founder Snapshot by filling in the missing fields through natural conversation.");
+  } else if (isFirstConversation && !hasProfileData) {
+    // Skipped onboarding or no data -> FRED should run the Founder Intake Protocol
+    lines.push("## HANDOFF: FIRST CONVERSATION (NO ONBOARDING DATA)");
+    lines.push("");
+    lines.push("This founder has no onboarding data. They either skipped onboarding or are a new user.");
+    lines.push("- Run the Universal Entry Flow: \"What are you building?\", \"Who is it for?\", \"What are you trying to accomplish right now?\"");
+    lines.push("- Gather the Founder Snapshot fields naturally through conversation: stage, product status, traction, runway, primary constraint, 90-day goal.");
+    lines.push("- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.");
+    lines.push("- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.");
+  } else {
+    // Returning user with context
+    lines.push("Use this snapshot to personalize your mentoring. Skip intake questions you already have answers to. Reference what you know naturally. If key snapshot fields are missing (product status, traction, runway, primary constraint, 90-day goal), infer from conversation and state your assumptions.");
+  }
 
   return lines.join("\n");
 }
@@ -326,6 +377,11 @@ function buildContextBlock(data: FounderContextData): string {
 /**
  * Load founder data and build the Founder Snapshot context string for prompt injection.
  *
+ * Phase 35: Also detects first-conversation state for onboarding handoff.
+ * When this is the first conversation after onboarding, the context block
+ * includes handoff instructions so FRED references known data and goes deeper.
+ * When onboarding was skipped, instructions tell FRED to run the intake protocol.
+ *
  * @param userId - Authenticated user ID
  * @param hasPersistentMemory - Whether this tier has persistent memory (Pro+)
  * @returns Context string to inject into the system prompt, or empty string
@@ -335,14 +391,37 @@ export async function buildFounderContext(
   hasPersistentMemory: boolean
 ): Promise<string> {
   try {
-    const [profile, facts] = await Promise.all([
+    const [profile, facts, isFirstConversation] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
+      checkIsFirstConversation(userId),
     ]);
 
-    return buildContextBlock({ profile, facts });
+    // Phase 35: On first conversation, seed the conversation state founder_snapshot
+    // from the profile data collected during onboarding (fire-and-forget)
+    if (isFirstConversation && profile.onboardingCompleted) {
+      seedFounderSnapshot(userId);
+    }
+
+    return buildContextBlock({ profile, facts, isFirstConversation });
   } catch (error) {
     console.warn("[FRED Context] Failed to build founder context (non-blocking):", error);
     return "";
   }
+}
+
+/**
+ * Seed the conversation state founder_snapshot from the profile table.
+ * Called on first conversation after onboarding completes.
+ * Fire-and-forget — errors are logged but never thrown.
+ */
+function seedFounderSnapshot(userId: string): void {
+  (async () => {
+    try {
+      const { syncSnapshotFromProfile } = await import("@/lib/db/conversation-state");
+      await syncSnapshotFromProfile(userId);
+    } catch (error) {
+      console.warn("[FRED Context] Failed to seed founder snapshot (non-blocking):", error);
+    }
+  })();
 }
