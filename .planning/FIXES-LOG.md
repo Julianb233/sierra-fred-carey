@@ -33,6 +33,8 @@
 | 27 | Features nav dropdown has no "View all" link | components/navbar.tsx | Added "View all features" link at bottom of dropdown | c0d4396 | |
 | 28 | CRITICAL: Chat page crashes during FRED AI response (about:blank) | app/api/fred/chat/route.ts, lib/hooks/use-fred-chat.ts | Server: safe SSE stream with closed flag, try/catch on enqueue/close, cancel() callback. Client: receivedDone tracking, mountedRef guards, reader.releaseLock(), graceful error on stream termination | 9b85e61 | |
 | 29 | Startup process stepper truncates step names to first 2 words | components/startup-process/process-overview.tsx | Show full title with CSS truncate, widen max-w to 80px, add title tooltip | de9c89e | |
+| 30 | /dashboard/ai-insights returns 404 | app/dashboard/ai-insights/page.tsx | Added redirect page from /dashboard/ai-insights to /dashboard/insights | 5d9bdff | |
+| 31 | /admin silently redirects non-admin users (infinite redirect loop) | app/admin/layout.tsx, middleware.ts | Middleware sets x-pathname header; admin layout detects /admin/login and renders login without nav instead of redirecting again | a6d1999 | |
 
 ## Community Debug Investigation Fixes (by other agents)
 
@@ -78,7 +80,7 @@ For each fix from Code Fixer:
 
 **Verification method:** All 20 fixes verified by reading the committed source code. No visual regression testing possible until deployment is restored.
 
-**Summary:** 29 Code Fixer fixes + 13 community debug fixes (3 backend + 10 frontend) = 42 total fixes. 2 remaining cosmetic items (O4, O5) are MINOR and decorative -- no functional impact.
+**Summary:** 31 Code Fixer fixes + 13 community debug fixes (3 backend + 10 frontend) = 44 total fixes. 2 remaining cosmetic items (O4, O5) are MINOR and decorative -- no functional impact.
 
 **Milestone modal backdrop (reported minor issue):** Investigated add-milestone-modal.tsx -- it uses the standard Radix Dialog component which includes DialogOverlay with bg-black/50. The overlay is correctly rendered in the component chain (dialog.tsx line 59). Not reproducible from code -- overlay is present.
 

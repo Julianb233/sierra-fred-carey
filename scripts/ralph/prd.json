@@ -275,6 +275,32 @@
       "priority": 2,
       "passes": true,
       "notes": "Fix 29 (commit de9c89e). Widened max-w, removed JS truncation, added CSS truncate and title attribute."
+    },
+    {
+      "id": "US-020",
+      "title": "All sidebar nav links resolve to valid pages",
+      "description": "As a founder, I want every link in the dashboard sidebar to lead to a working page so that I never hit a 404",
+      "acceptanceCriteria": [
+        "/dashboard/ai-insights redirects to /dashboard/insights",
+        "No 404 errors from sidebar navigation links",
+        "Redirect is server-side (no flash of 404 content)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 30 (commit 5d9bdff). Added redirect page for /dashboard/ai-insights -> /dashboard/insights."
+    },
+    {
+      "id": "US-021",
+      "title": "Non-admin users see login page when accessing /admin",
+      "description": "As a non-admin user, I want to see a clear admin login page instead of being silently redirected when I visit /admin",
+      "acceptanceCriteria": [
+        "/admin redirects to /admin/login without infinite loop",
+        "/admin/login renders the login form without the admin nav chrome",
+        "No silent redirect to unrelated pages like /features"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 31 (commit a6d1999). Admin layout detects /admin/login via x-pathname header and renders login page without nav instead of redirect loop."
     }
   ]
 }
