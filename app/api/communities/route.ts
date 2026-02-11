@@ -1,6 +1,6 @@
 /**
  * Communities API Routes
- * Phase 41: Founder Communities
+ * Phase 41: Founder Communities (Step 6)
  *
  * POST /api/communities - Create a new community
  * GET  /api/communities - List/browse communities with search, category filter, pagination
@@ -9,31 +9,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
-import { createCommunity, listCommunities } from "@/lib/db/communities";
+import {
+  createCommunity,
+  listCommunities,
+  getCommunityBySlug,
+  getMembership,
+} from "@/lib/db/communities";
 import { sanitizeContent, generateSlug } from "@/lib/communities/sanitize";
 
 // ============================================================================
 // Validation
 // ============================================================================
 
-const VALID_CATEGORIES = [
-  "saas",
-  "fintech",
-  "healthtech",
-  "edtech",
-  "marketplace",
-  "ai-ml",
-  "ecommerce",
-  "social",
-  "developer-tools",
-  "climate",
-  "general",
-] as const;
+const VALID_CATEGORIES = ["industry", "stage", "topic", "general"] as const;
 
 const createSchema = z.object({
-  name: z.string().min(3).max(100),
-  description: z.string().min(10).max(2000),
-  category: z.enum(VALID_CATEGORIES),
+  name: z.string().min(2).max(100),
+  description: z.string().max(500).default(""),
+  category: z.enum(VALID_CATEGORIES).default("general"),
   iconUrl: z.string().url().optional(),
 });
 
@@ -71,8 +64,21 @@ export async function POST(request: NextRequest) {
 
     // Sanitize user content
     const sanitizedName = sanitizeContent(name, 100);
-    const sanitizedDescription = sanitizeContent(description, 2000);
-    const slug = generateSlug(sanitizedName) + "-" + Date.now().toString(36);
+    const sanitizedDescription = sanitizeContent(description, 500);
+
+    // Generate unique slug with dedup (-2, -3, etc.)
+    let slug = generateSlug(sanitizedName);
+    let attempt = 0;
+    while (
+      await getCommunityBySlug(
+        attempt === 0 ? slug : `${slug}-${attempt + 1}`
+      )
+    ) {
+      attempt++;
+    }
+    if (attempt > 0) {
+      slug = `${slug}-${attempt + 1}`;
+    }
 
     const community = await createCommunity({
       name: sanitizedName,
@@ -84,7 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, community },
+      { success: true, data: community },
       { status: 201 }
     );
   } catch (error) {
@@ -136,9 +142,21 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
+    // Add isMember flag for current user
+    const communitiesWithMembership = await Promise.all(
+      communities.map(async (c) => {
+        const membership = await getMembership(c.id, userId);
+        return {
+          ...c,
+          isMember: !!membership,
+          memberRole: membership?.role || null,
+        };
+      })
+    );
+
     return NextResponse.json({
       success: true,
-      communities,
+      data: communitiesWithMembership,
       total,
       limit,
       offset,
