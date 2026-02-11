@@ -84,7 +84,6 @@ export default function FeaturesPage() {
         {
           name: "Boardy Integration",
           description: "Investor matching and warm-intro workflows to the right funds.",
-          comingSoon: true,
         },
         {
           name: "Investor Targeting Guidance",
