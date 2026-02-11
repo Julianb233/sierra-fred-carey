@@ -1077,3 +1077,66 @@ Detailed ESLint output:
 
 *Browser-Based Visual Verification completed: 2026-02-11*
 *Reviewer: QA Verifier (adaptive-nibbling-eagle team)*
+
+---
+
+## Additional Fix Verification (Round 2)
+
+**Date:** 2026-02-11
+**Reviewer:** QA Verifier Agent
+**Method:** Source code review of commits after c0d4396
+
+### Fix 24: Risk Alerts Widget Empty State
+
+**File:** `components/dashboard/red-flags-widget.tsx`
+**Status:** **PASS**
+
+The error state (lines 122-141) now renders a green checkmark SVG with "No active risk flags detected" text instead of the raw "Unable to load risk alerts" error message. Both the error state and the empty state (lines 144-162) display the same friendly message, so users never see error text regardless of whether the API fails or returns no flags.
+
+### Fix 25: Forgot Password Flow
+
+**Files:** `app/forgot-password/page.tsx`, `app/reset-password/page.tsx`
+**Status:** **PASS**
+
+Complete flow verified:
+1. `/forgot-password` -- Email input form, calls `supabase.auth.resetPasswordForEmail` with redirect to `/reset-password`
+2. Success state shows green CheckCircle2 icon with "Check your email for a reset link"
+3. `/reset-password` -- Listens for `PASSWORD_RECOVERY` auth event, shows new password + confirm password form
+4. Validates 8+ chars and password match, calls `supabase.auth.updateUser`
+5. Success state auto-redirects to `/dashboard` after 3s
+6. Expired link handling with "Request a new one" link back to `/forgot-password`
+7. Error states have `role="alert"` for accessibility
+
+### Fix 26: Dashboard Stat Cards Show "0" Instead of "-"
+
+**File:** `app/dashboard/page.tsx` (lines 144-258)
+**Status:** **PASS**
+
+- Locked stat cards show `"0"` instead of raw `"-"` (lines 154, 161, 168 use `? String(dashboardStats?.xxx ?? 0) : "0"`)
+- Each locked card shows "Upgrade to Pro" (tier 0 users) or "Upgrade to Studio" (tier 1 users) with lock icon
+- Upgrade link points to `/pricing` page
+- Lock icon (LockClosedIcon) displayed in top-right corner of locked cards
+
+### Fix 27: Features Nav Dropdown "View All Features" Link
+
+**File:** `components/navbar.tsx` (lines 242-247)
+**Status:** **PASS**
+
+- "View all features" link appears at bottom of Features dropdown after a separator
+- Links to `/features` page
+- Styled as orange text (`text-[#ff6a1a]`), centered in dropdown
+- Also visually confirmed in browser screenshot from earlier testing
+
+### Round 2 Summary
+
+| Fix | Description | Status |
+|-----|-------------|--------|
+| #24 | Risk alerts friendly empty state | **PASS** |
+| #25 | Forgot password flow | **PASS** |
+| #26 | Dashboard stat cards "0" + upgrade link | **PASS** |
+| #27 | Features nav "View all features" link | **PASS** |
+
+---
+
+*Round 2 Verification completed: 2026-02-11*
+*Reviewer: QA Verifier (adaptive-nibbling-eagle team)*

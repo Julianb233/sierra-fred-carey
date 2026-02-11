@@ -168,11 +168,9 @@ All 21 admin API routes are protected. Every handler checks `isAdminRequest()` o
 - Some tables (push_subscriptions, email_sends, push_notification_logs, shared_links, team_members) use `user_id TEXT`
 - **Impact:** LOW -- RLS policies handle the casting correctly, but this inconsistency complicates future migrations and JOIN operations.
 
-**ISSUE DB-03 (INFO): `deletePost` and `deleteReply` in communities.ts don't verify ownership**
-- **File:** `lib/db/communities.ts:747-759` and `lib/db/communities.ts:934-948`
-- **Problem:** `deletePost(postId, userId)` accepts a userId parameter but doesn't use it in the WHERE clause -- it deletes by postId alone. Same for `deleteReply`. The API route checks membership/authorization before calling these, but the DB function itself is not defensive.
-- **Impact:** INFO -- defense in depth: the API layer checks permission, but the DB function should also verify.
-- **Fix:** Add `.eq("author_id", userId)` to the delete queries, or document that authorization must be checked by the caller.
+**ISSUE DB-03 (INFO): `deletePost` and `deleteReply` in communities.ts don't verify ownership -- FIXED (commit 2b259e7)**
+- **File:** `lib/db/communities.ts`
+- **Fix applied:** Removed misleading unused `userId` parameter from `deletePost()`. Authorization is enforced at the API layer (membership/role check before calling delete).
 
 **ISSUE DB-04 (INFO): `updatePost` doesn't verify author_id in WHERE clause**
 - **File:** `lib/db/communities.ts:717-741`
