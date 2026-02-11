@@ -1,0 +1,180 @@
+{
+  "project": "Sahara",
+  "branchName": "ralph/full-stack-audit-fixes",
+  "description": "Full stack audit fixes and feature validation",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Dashboard sidebar shows all available pages",
+      "description": "As a founder, I want all dashboard features visible in the sidebar navigation so that I can discover and access every tool available to me",
+      "acceptanceCriteria": [
+        "Sidebar includes Wellbeing, Inbox, and Notifications for Free tier",
+        "Sidebar includes Investor Targeting and Founder Snapshot for Pro tier",
+        "Sidebar includes Video Coaching, FRED Memory, Sharing, and Invitations for Studio tier",
+        "Locked items show upgrade badge and lock icon",
+        "Active item is highlighted with brand orange"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 1: Added 9 missing nav items to dashboard layout. Commit 3a39b3b."
+    },
+    {
+      "id": "US-002",
+      "title": "Community posts are only visible to members",
+      "description": "As a community member, I want my posts to be visible only to other members so that private discussions remain private",
+      "acceptanceCriteria": [
+        "GET /api/communities/[slug] returns empty recentPosts for non-members",
+        "GET /api/communities/[slug]/posts returns 403 for non-members",
+        "Private community join returns 403 for non-invited users",
+        "Community detail metadata (name, description) is still visible"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 3 (commit d084c5e) + Fix 8 (commit 9edc0e9). Posts gated behind membership, private join blocked."
+    },
+    {
+      "id": "US-003",
+      "title": "Contact form is rate limited",
+      "description": "As a site operator, I want the contact form to be rate limited so that spammers cannot flood the database",
+      "acceptanceCriteria": [
+        "Contact form allows 5 submissions per hour per IP",
+        "Exceeding the limit returns 429 with retry-after header",
+        "Rate limit uses Upstash Redis in production, in-memory fallback for dev"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 2: Added checkRateLimit to /api/contact. Commit 9a0e6b5."
+    },
+    {
+      "id": "US-004",
+      "title": "Protected routes redirect unauthenticated users to login",
+      "description": "As a product owner, I want all user-facing routes to require authentication so that unauthenticated users are redirected to login instead of seeing empty states",
+      "acceptanceCriteria": [
+        "/dashboard, /agents, /documents, /settings, /profile, /chat are protected",
+        "/check-ins, /video, /onboarding, /interactive are protected",
+        "Unauthenticated users are redirected to /login with redirect param",
+        "API routes continue to use requireAuth() server-side"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 6: Added 4 missing routes to DEFAULT_PROTECTED_ROUTES. Commit e6d046f."
+    },
+    {
+      "id": "US-005",
+      "title": "Diagnostic state API validates input",
+      "description": "As a security-conscious developer, I want the diagnostic state PUT endpoint to validate all input so that malicious payloads are rejected",
+      "acceptanceCriteria": [
+        "positioningClarity and investorReadiness only accept unknown|low|medium|high",
+        "Signal arrays are validated with max 50 items per array",
+        "String fields are capped at 500-1000 chars",
+        "Unknown properties are rejected via strict mode",
+        "Invalid input returns 400 with field-level error details"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 7: Added Zod schema validation. Commit ddfdaa0."
+    },
+    {
+      "id": "US-006",
+      "title": "Account deletion removes all user data",
+      "description": "As a founder, I want account deletion to remove ALL my data so that nothing is left behind after I delete my account",
+      "acceptanceCriteria": [
+        "Deletes from all v1.0 tables (agent_tasks, fred_memory, sms, boardy, documents)",
+        "Deletes from all v2.0 tables (red_flags, check_ins, investor_scores, etc.)",
+        "Deletes from v3.0+ tables (conversation state, push subs, email sends, shared links, team members, community data)",
+        "Cancels active Stripe subscription before deletion",
+        "Deletes auth user via Supabase admin API"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix 11: Added 12 missing tables to deletion cascade. Commit 15c49f6."
+    },
+    {
+      "id": "US-007",
+      "title": "Chat interface works well on mobile devices",
+      "description": "As a mobile founder, I want the chat interface to be usable on my phone so that I can talk to FRED on the go",
+      "acceptanceCriteria": [
+        "Chat input has 16px font-size (no iOS zoom on focus)",
+        "Chat input has safe-area padding for iPhone home bar",
+        "Send button meets 44px minimum touch target",
+        "Message bubbles use 85% width on mobile, 75% on desktop",
+        "Messages container has aria-live for screen readers"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fixes 5, 10, 12, 17. Multiple commits improving mobile chat UX."
+    },
+    {
+      "id": "US-008",
+      "title": "Onboarding pages have error recovery",
+      "description": "As a new founder, I want to recover from errors during onboarding so that I don't lose my signup progress",
+      "acceptanceCriteria": [
+        "Both /onboarding and /get-started have error.tsx boundaries",
+        "Error page shows branded design with Sahara styling",
+        "Try Again button resets the error state",
+        "Navigation links let users go to dashboard or login",
+        "Error is logged to console for debugging"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 16: Created error.tsx for both routes. Commit 36ec67b."
+    },
+    {
+      "id": "US-009",
+      "title": "Community data layer has honest function signatures",
+      "description": "As a developer, I want the community data access functions to have accurate signatures so that unused parameters don't create a false sense of security",
+      "acceptanceCriteria": [
+        "deletePost() accepts only postId (caller verifies authorization)",
+        "deleteReply() accepts only replyId (caller verifies authorization)",
+        "updatePost() accepts postId and updates (caller verifies authorization)",
+        "API route handlers continue to check isAuthor || isModerator before calling",
+        "All callers updated to match new signatures"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 12: Removed misleading userId params from 3 functions. Commit 2b259e7."
+    },
+    {
+      "id": "US-010",
+      "title": "Chat accessibility meets basic WCAG standards",
+      "description": "As a visually impaired founder, I want the chat to work with screen readers so that I can communicate with FRED",
+      "acceptanceCriteria": [
+        "Messages container has role=log and aria-live=polite",
+        "Chat input textarea has aria-label",
+        "Send button has aria-label",
+        "Typing indicator uses brand-consistent visual design",
+        "Error messages use role=alert for announcements"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fixes 5, 10, 13, 14. ARIA attributes added across chat and auth pages."
+    },
+    {
+      "id": "US-011",
+      "title": "Admin panel shows all admin tools in navigation",
+      "description": "As an admin, I want all admin pages visible in the admin nav bar so that I can access Voice Agent config and Analytics without knowing URLs",
+      "acceptanceCriteria": [
+        "Admin nav includes Voice Agent link",
+        "Admin nav includes Analytics link",
+        "Both pages load correctly when clicked",
+        "Existing admin nav items (Dashboard, Prompts, Config, A/B Tests, Training) still work"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 21: Added 2 missing admin nav links. Commit bb55ef6."
+    },
+    {
+      "id": "US-012",
+      "title": "Features page accurately reflects shipped status",
+      "description": "As a prospective customer, I want the features page to show accurate availability so that I know what I get when I subscribe",
+      "acceptanceCriteria": [
+        "Boardy Integration is not marked Coming Soon (it is fully built)",
+        "All listed features match their actual implementation status",
+        "Strategy Reframing is discoverable from the Strategy Docs page"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix 22 (commit 92fee80) + Fix 23 (commit d20faf6). Boardy Coming Soon removed, Reframing linked."
+    }
+  ]
+}
