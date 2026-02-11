@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS fred_conversation_state (
     )),
 
   -- Per-step status as JSONB: { "problem": "validated", "buyer": "in_progress", ... }
-  -- Each key maps to: not_started | in_progress | validated | blocked | skipped
+  -- Each key maps to: not_started | in_progress | validated | blocked | skipped | assumed
   step_statuses JSONB NOT NULL DEFAULT '{
     "problem": "in_progress",
     "buyer": "not_started",
@@ -277,7 +277,7 @@ COMMENT ON VIEW fred_step_progress IS
   'Summary view joining conversation state with evidence counts per step for quick progress snapshots.';
 
 COMMENT ON COLUMN fred_conversation_state.step_statuses IS
-  'JSONB map of step_key -> status. Valid statuses: not_started, in_progress, validated, blocked, skipped.';
+  'JSONB map of step_key -> status. Valid statuses: not_started, in_progress, validated, blocked, skipped, assumed.';
 
 COMMENT ON COLUMN fred_conversation_state.current_blockers IS
   'Array of blocker strings on the current step. FRED populates these when it detects do-not-advance conditions.';

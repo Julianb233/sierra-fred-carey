@@ -199,16 +199,16 @@ function buildContextBlock(data: FounderContextData): string {
   // ---- Core Snapshot Fields (Operating Bible Section 12) ----
 
   if (profile.name) {
-    lines.push(`**Founder:** ${profile.name}`);
+    lines.push(`**Founder:** ${sanitize(profile.name)}`);
   }
 
   if (profile.stage) {
     const stageLabel = profile.stage.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    lines.push(`**Stage:** ${stageLabel}`);
+    lines.push(`**Stage:** ${sanitize(stageLabel)}`);
   }
 
   if (profile.industry) {
-    lines.push(`**Industry:** ${profile.industry}`);
+    lines.push(`**Industry:** ${sanitize(profile.industry)}`);
   }
 
   // Product status — from semantic memory
@@ -224,7 +224,7 @@ function buildContextBlock(data: FounderContextData): string {
   if (traction) {
     lines.push(`**Traction:** ${traction}`);
   } else if (profile.revenueRange) {
-    lines.push(`**Revenue:** ${profile.revenueRange}`);
+    lines.push(`**Revenue:** ${sanitize(profile.revenueRange)}`);
   }
 
   if (profile.teamSize) {
@@ -232,7 +232,7 @@ function buildContextBlock(data: FounderContextData): string {
   }
 
   if (profile.fundingHistory) {
-    lines.push(`**Funding:** ${profile.fundingHistory}`);
+    lines.push(`**Funding:** ${sanitize(profile.fundingHistory)}`);
   }
 
   // Runway — from semantic memory
@@ -262,10 +262,10 @@ function buildContextBlock(data: FounderContextData): string {
   if (profile.challenges.length > 0) {
     lines.push("**Current Challenges:**");
     for (const challenge of profile.challenges) {
-      const label = typeof challenge === "string"
+      const raw = typeof challenge === "string"
         ? challenge.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
         : String(challenge);
-      lines.push(`- ${label}`);
+      lines.push(`- ${sanitize(raw)}`);
     }
     lines.push("");
   }
@@ -391,10 +391,11 @@ export async function buildFounderContext(
   hasPersistentMemory: boolean
 ): Promise<string> {
   try {
-    const [profile, facts, isFirstConversation] = await Promise.all([
+    const [profile, facts, isFirstConversation, progressContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       checkIsFirstConversation(userId),
+      loadProgressContext(userId),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -403,10 +404,35 @@ export async function buildFounderContext(
       seedFounderSnapshot(userId);
     }
 
-    return buildContextBlock({ profile, facts, isFirstConversation });
+    let context = buildContextBlock({ profile, facts, isFirstConversation });
+
+    // Phase 36: Append step progress if available
+    if (progressContext) {
+      context += "\n\n" + progressContext;
+    }
+
+    return context;
   } catch (error) {
     console.warn("[FRED Context] Failed to build founder context (non-blocking):", error);
     return "";
+  }
+}
+
+// ============================================================================
+// Progress Context Loader
+// ============================================================================
+
+/**
+ * Load the step progress context string from the conversation state DAL.
+ * Returns null if no state exists or loading fails — never blocks the pipeline.
+ */
+async function loadProgressContext(userId: string): Promise<string | null> {
+  try {
+    const { buildProgressContext } = await import("@/lib/db/conversation-state");
+    const context = await buildProgressContext(userId);
+    return context || null;
+  } catch {
+    return null;
   }
 }
 

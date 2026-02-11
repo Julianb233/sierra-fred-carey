@@ -2,7 +2,7 @@
  * Types for the 9-Step Startup Process feature
  */
 
-export type StepStatus = 'not_started' | 'in_progress' | 'validated' | 'blocked';
+export type StepStatus = 'not_started' | 'in_progress' | 'validated' | 'blocked' | 'skipped' | 'assumed';
 
 export type StepNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
