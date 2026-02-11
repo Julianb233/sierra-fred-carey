@@ -236,15 +236,16 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-medium text-center max-w-[60px] leading-tight hidden sm:block",
+                        "text-xs font-medium text-center max-w-[80px] leading-tight hidden sm:block truncate",
                         step.stepNumber === process.currentStep
                           ? "text-[#ff6a1a]"
                           : step.status === "validated"
                           ? "text-green-600"
                           : "text-muted-foreground"
                       )}
+                      title={STEP_TITLES[step.stepNumber]}
                     >
-                      {STEP_TITLES[step.stepNumber].split(" ").slice(0, 2).join(" ")}
+                      {STEP_TITLES[step.stepNumber]}
                     </span>
                   </button>
                 );
