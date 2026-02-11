@@ -321,7 +321,7 @@ export default function DashboardLayout({
                 }
               }}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
+                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
                 isActive
                   ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
                   : isLocked
