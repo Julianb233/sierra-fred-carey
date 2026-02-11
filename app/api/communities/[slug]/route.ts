@@ -64,8 +64,10 @@ export async function GET(
     // Get membership info for current user
     const membership = await getMembership(community.id, userId);
 
-    // Get recent posts preview (first 5)
-    const { posts: recentPosts } = await getPosts(community.id, { limit: 5 });
+    // Only fetch posts if user is a member (prevents leaking posts to non-members)
+    const recentPosts = membership
+      ? (await getPosts(community.id, { limit: 5 })).posts
+      : [];
 
     return NextResponse.json({
       success: true,
