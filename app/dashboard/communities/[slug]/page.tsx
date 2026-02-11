@@ -1,0 +1,371 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CommunityFeed } from "@/components/communities/CommunityFeed";
+import { CreatePostForm, CreatePostFormDesktop } from "@/components/communities/CreatePostForm";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeftIcon, PersonIcon } from "@radix-ui/react-icons";
+import { Users } from "lucide-react";
+import { toast } from "sonner";
+import type { Community, CommunityPost, CommunityMember, PostType } from "@/lib/communities/types";
+
+const PAGE_SIZE = 20;
+
+export default function CommunityDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const slug = params.slug as string;
+
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [members, setMembers] = useState<CommunityMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [postPage, setPostPage] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Fetch community details
+  useEffect(() => {
+    async function fetchCommunity() {
+      try {
+        const res = await fetch(`/api/communities/${slug}`);
+        if (!res.ok) {
+          router.push("/dashboard/communities");
+          return;
+        }
+        const json = await res.json();
+        setCommunity(json.data);
+        setCurrentUserId(json.currentUserId ?? null);
+      } catch {
+        router.push("/dashboard/communities");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCommunity();
+  }, [slug, router]);
+
+  // Fetch posts
+  const fetchPosts = useCallback(
+    async (page: number) => {
+      if (!community) return;
+      setPostsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/communities/${community.id}/posts?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`
+        );
+        if (res.ok) {
+          const json = await res.json();
+          const newPosts: CommunityPost[] = json.data ?? [];
+          setPosts((prev) => (page === 0 ? newPosts : [...prev, ...newPosts]));
+          setHasMorePosts(newPosts.length === PAGE_SIZE);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setPostsLoading(false);
+      }
+    },
+    [community]
+  );
+
+  useEffect(() => {
+    if (community) {
+      fetchPosts(0);
+      // Fetch first page of members for the Members tab preview
+      fetchMembers();
+    }
+  }, [community, fetchPosts]);
+
+  async function fetchMembers() {
+    if (!community) return;
+    try {
+      const res = await fetch(`/api/communities/${community.id}/members?limit=10`);
+      if (res.ok) {
+        const json = await res.json();
+        setMembers(json.data ?? []);
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
+  async function handleJoin() {
+    if (!community) return;
+    try {
+      const res = await fetch(`/api/communities/${community.id}/join`, { method: "POST" });
+      if (res.ok) {
+        setCommunity((prev) =>
+          prev ? { ...prev, is_member: true, member_count: prev.member_count + 1 } : prev
+        );
+        toast.success("Joined community!");
+      }
+    } catch {
+      toast.error("Failed to join");
+    }
+  }
+
+  async function handleLeave() {
+    if (!community) return;
+    try {
+      const res = await fetch(`/api/communities/${community.id}/leave`, { method: "POST" });
+      if (res.ok) {
+        setCommunity((prev) =>
+          prev
+            ? { ...prev, is_member: false, member_count: Math.max(0, prev.member_count - 1) }
+            : prev
+        );
+        toast.success("Left community");
+      }
+    } catch {
+      toast.error("Failed to leave");
+    }
+  }
+
+  async function handleCreatePost(data: { title: string; content: string; type: PostType }) {
+    if (!community) return;
+    const res = await fetch(`/api/communities/${community.id}/posts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) {
+        setPosts((prev) => [json.data, ...prev]);
+      }
+      toast.success("Post created!");
+    } else {
+      toast.error("Failed to create post");
+    }
+  }
+
+  async function handleReact(postId: string) {
+    const res = await fetch(`/api/communities/posts/${postId}/react`, { method: "POST" });
+    if (res.ok) {
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                user_has_reacted: !p.user_has_reacted,
+                reaction_count: p.user_has_reacted
+                  ? p.reaction_count - 1
+                  : p.reaction_count + 1,
+              }
+            : p
+        )
+      );
+    }
+  }
+
+  async function handleReply(postId: string, content: string) {
+    const res = await fetch(`/api/communities/posts/${postId}/replies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    if (res.ok) {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, reply_count: p.reply_count + 1 } : p))
+      );
+    }
+  }
+
+  async function handlePin(postId: string) {
+    if (!community) return;
+    const res = await fetch(`/api/communities/posts/${postId}/pin`, { method: "POST" });
+    if (res.ok) {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, is_pinned: !p.is_pinned } : p))
+      );
+    }
+  }
+
+  async function handleRemovePost(postId: string) {
+    const res = await fetch(`/api/communities/posts/${postId}`, { method: "DELETE" });
+    if (res.ok) {
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      toast.success("Post removed");
+    }
+  }
+
+  const isCreator = community?.creator_id === currentUserId;
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!community) return null;
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Back */}
+      <Button variant="ghost" asChild className="min-h-[44px] -ml-3">
+        <Link href="/dashboard/communities">
+          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          Communities
+        </Link>
+      </Button>
+
+      {/* Community header */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex items-center justify-center text-white shrink-0">
+          {community.icon_url ? (
+            <img src={community.icon_url} alt="" className="h-8 w-8 rounded object-cover" />
+          ) : (
+            <Users className="h-7 w-7" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            {community.name}
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {community.description}
+          </p>
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+              <PersonIcon className="h-3.5 w-3.5" />
+              <span>{community.member_count} members</span>
+            </div>
+          </div>
+        </div>
+        <div className="shrink-0">
+          {community.is_member ? (
+            <Button
+              variant="outline"
+              className="min-h-[44px]"
+              onClick={handleLeave}
+            >
+              Leave
+            </Button>
+          ) : (
+            <Button
+              variant="orange"
+              className="min-h-[44px]"
+              onClick={handleJoin}
+            >
+              Join Community
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs — horizontal scroll on mobile */}
+      <Tabs defaultValue="posts" className="w-full">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-auto min-w-fit">
+            <TabsTrigger value="posts" className="min-h-[44px] min-w-[80px]">
+              Posts
+            </TabsTrigger>
+            <TabsTrigger value="members" className="min-h-[44px] min-w-[80px]">
+              Members
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="posts">
+          <div className="max-w-[720px] mx-auto space-y-4">
+            {/* Create post — collapsible on mobile, always visible on desktop */}
+            {community.is_member && (
+              <>
+                <div className="lg:hidden">
+                  <CreatePostForm communityId={community.id} onSubmit={handleCreatePost} />
+                </div>
+                <div className="hidden lg:block">
+                  <CreatePostFormDesktop communityId={community.id} onSubmit={handleCreatePost} />
+                </div>
+              </>
+            )}
+
+            <CommunityFeed
+              posts={posts}
+              loading={postsLoading}
+              hasMore={hasMorePosts}
+              onLoadMore={() => {
+                const nextPage = postPage + 1;
+                setPostPage(nextPage);
+                fetchPosts(nextPage);
+              }}
+              onReact={handleReact}
+              onReply={handleReply}
+              isCreator={isCreator}
+              onPin={handlePin}
+              onRemove={handleRemovePost}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="members">
+          <div className="max-w-[720px] mx-auto">
+            {members.length === 0 ? (
+              <p className="text-center py-12 text-sm text-gray-500 dark:text-gray-400">
+                No members to show.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {members.map((member) => {
+                  const initials = (member.name || "?")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("");
+
+                  return (
+                    <div
+                      key={member.user_id}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                    >
+                      <Avatar className="h-10 w-10 border border-gray-200 dark:border-gray-700">
+                        <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white text-sm font-bold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {member.name}
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs mt-0.5 ${
+                            member.role === "creator"
+                              ? "border-[#ff6a1a]/20 text-[#ff6a1a]"
+                              : member.role === "moderator"
+                              ? "border-blue-200 text-blue-600 dark:text-blue-400"
+                              : ""
+                          }`}
+                        >
+                          {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="text-center pt-4">
+                  <Button variant="outline" asChild className="min-h-[44px]">
+                    <Link href={`/dashboard/communities/${slug}/members`}>
+                      View All Members
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
