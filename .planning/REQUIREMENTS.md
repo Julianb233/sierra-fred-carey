@@ -1,191 +1,190 @@
-# Requirements: Sahara v2.0
+# Requirements: Sahara
 
-**Defined:** 2026-02-07
-**Core Value:** Every feature promised on the website has real logic, all AI speaks in Fred's voice, and the app is production-ready and installable on mobile.
+**Defined:** 2026-02-07 (v2.0), updated 2026-02-11 (v4.0)
+**Core Value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
 
-## v2.0 Requirements
+## v4.0 Requirements
+
+### System Prompt Overhaul (PROMPT)
+
+- [ ] **PROMPT-01**: System prompt rebuilt from Fred Cary's master GPT instructions -- reframe-before-prescribe, critical-thinking default, mentor tone, decision architecture
+- [ ] **PROMPT-02**: Mentor tone enforced -- encourage effort and discipline, not ego; no default praise or flattery ("great idea!", "brilliant!", "love it!")
+- [ ] **PROMPT-03**: Founder Intake Protocol embedded -- automatically establish founder snapshot (stage, product status, revenue, runway, constraint, 90-day goal) when data is missing
+- [ ] **PROMPT-04**: Output standard -- every substantive response ends with Next 3 Actions (specific, actionable, time-bound)
+- [ ] **PROMPT-05**: Weekly Check-In Protocol -- structured framework (what moved, what's stuck, energy drains, next decision, priority)
+
+### Onboarding-to-FRED Handoff (ONBOARD)
+
+- [ ] **ONBOARD-01**: Onboarding captures full founder basics (stage, industry, challenge, revenue range, team size, funding history)
+- [ ] **ONBOARD-02**: FRED's first conversation picks up seamlessly -- references what onboarding collected, goes deeper, never re-asks
+- [ ] **ONBOARD-03**: No repetition -- FRED does not re-ask what the signup form already captured; detects missing data and fills gaps conversationally
+- [ ] **ONBOARD-04**: Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake data
+
+### Structured Mentor Flow (CHAT)
+
+- [ ] **CHAT-01**: FRED leads conversations -- asks specific questions, guides to next step, controls the flow (not freeform)
+- [ ] **CHAT-02**: Reframe-before-prescribe behavior -- FRED identifies the real underlying goal before answering the literal question
+- [ ] **CHAT-03**: Critical-thinking default -- every substantive response surfaces assumptions, bottlenecks, tests, or decision criteria
+- [ ] **CHAT-04**: Gentle redirect when founders drift off track -- acknowledge what they said, then steer back to structured path
+- [ ] **CHAT-05**: Conversation state tracking -- FRED knows where the founder is in the process and what's been established vs what still needs validation
+
+### Reality Lens Gate (GATE)
+
+- [ ] **GATE-01**: Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
+- [ ] **GATE-02**: If foundation is weak, FRED says so plainly and redirects -- no sugarcoating, no letting founders skip ahead
+- [ ] **GATE-03**: Decision sequencing enforced -- no decks, patents, hiring, fundraising, scaling until upstream truth established
+- [ ] **GATE-04**: Pitch Deck Review gated -- 11-dimension scorecard (0-10 per dimension) only after Reality Lens passes
+- [ ] **GATE-05**: Per-slide investor objections -- 2-3 skeptical questions per slide with knockout answers, generated as part of gated review
+
+### Framework & Mode Integration (MODE)
+
+- [ ] **MODE-01**: Diagnostic engine (lib/ai/diagnostic-engine.ts) wired into chat route -- silently detects context, introduces frameworks at right moment
+- [ ] **MODE-02**: Investor Mode activates when fundraising signals detected -- applies Investor Lens (IC Verdict, pass reasons, de-risking actions), not user-chosen
+- [ ] **MODE-03**: Positioning Mode activates when messaging/differentiation signals detected -- applies Positioning Framework (grade A-F, narrative tightness 1-10, gaps)
+- [ ] **MODE-04**: 9-Step Startup Process (Idea to Traction) used as default decision sequencing backbone for early-stage founders
+- [ ] **MODE-05**: Investor Readiness Score framework fully implemented -- AI scoring across 6 categories with stage benchmarks (currently DB schema only, no implementation)
+- [ ] **MODE-06**: Deck Request Protocol formalized as standalone flow -- provisional verdict first, then decide if deck review would change verdict (currently embedded in Investor Lens)
+
+## v2.0 Requirements (SHIPPED)
+
+<details>
+<summary>v2.0 Requirements -- all shipped 2026-02-07</summary>
 
 ### Fred Voice Unification (VOICE)
 
-- [ ] **VOICE-01**: All AI interaction points import and use FRED_CAREY_SYSTEM_PROMPT or compose from fred-brain.ts exports
-- [ ] **VOICE-02**: Reality Lens engine uses Fred Cary persona (not generic "FRED" acronym)
-- [ ] **VOICE-03**: Investor Readiness Score engine uses Fred Cary persona (not generic "VC analyst")
-- [ ] **VOICE-04**: Strategy document generator imports fred-brain.ts (fix "40+ years" to "50+ years")
-- [ ] **VOICE-05**: Pitch deck analyzer imports fred-brain.ts (fix "30+ years" to "50+ years")
-- [ ] **VOICE-06**: All 4 Founder Ops Agent tool prompts use Fred's voice
-- [ ] **VOICE-07**: All 4 Fundraising Agent tool prompts use Fred's voice
-- [ ] **VOICE-08**: All 4 Growth Agent tool prompts use Fred's voice
-- [ ] **VOICE-09**: SMS check-in templates rewritten in Fred's voice (motivational, direct, personal)
-- [ ] **VOICE-10**: Voice agent cleaned up (remove "A Startup Biz", use Fred Cary persona)
-- [ ] **VOICE-11**: FRED_MEDIA and FRED_TESTIMONIALS exports activated and used in relevant prompts
-- [ ] **VOICE-12**: Helper functions (getRandomQuote, getExperienceStatement, getCredibilityStatement) wired into chat greetings and SMS
-- [ ] **VOICE-13**: COACHING_PROMPTS and getPromptForTopic used by chat API for topic-specific conversations
-- [ ] **VOICE-14**: getFredGreeting used in onboarding flow
+- [x] **VOICE-01**: All AI interaction points import and use FRED_CAREY_SYSTEM_PROMPT or compose from fred-brain.ts exports
+- [x] **VOICE-02**: Reality Lens engine uses Fred Cary persona (not generic "FRED" acronym)
+- [x] **VOICE-03**: Investor Readiness Score engine uses Fred Cary persona (not generic "VC analyst")
+- [x] **VOICE-04**: Strategy document generator imports fred-brain.ts (fix "40+ years" to "50+ years")
+- [x] **VOICE-05**: Pitch deck analyzer imports fred-brain.ts (fix "30+ years" to "50+ years")
+- [x] **VOICE-06**: All 4 Founder Ops Agent tool prompts use Fred's voice
+- [x] **VOICE-07**: All 4 Fundraising Agent tool prompts use Fred's voice
+- [x] **VOICE-08**: All 4 Growth Agent tool prompts use Fred's voice
+- [x] **VOICE-09**: SMS check-in templates rewritten in Fred's voice (motivational, direct, personal)
+- [x] **VOICE-10**: Voice agent cleaned up (remove "A Startup Biz", use Fred Cary persona)
+- [x] **VOICE-11**: FRED_MEDIA and FRED_TESTIMONIALS exports activated and used in relevant prompts
+- [x] **VOICE-12**: Helper functions (getRandomQuote, getExperienceStatement, getCredibilityStatement) wired into chat greetings and SMS
+- [x] **VOICE-13**: COACHING_PROMPTS and getPromptForTopic used by chat API for topic-specific conversations
+- [x] **VOICE-14**: getFredGreeting used in onboarding flow
 
 ### Missing Features -- Free Tier (FREE)
 
-- [ ] **FREE-01**: Red Flag Detection engine identifies risks during FRED chat conversations
-- [ ] **FREE-02**: Red Flag Detection renders inline visual indicators in chat UI (warning badges, highlighted text)
-- [ ] **FREE-03**: Red Flag Detection dashboard widget shows persistent list of current red flags with severity
-- [ ] **FREE-04**: Founder Wellbeing: FRED detects burnout/stress signals in conversation and proactively offers support
-- [ ] **FREE-05**: Founder Wellbeing: dedicated check-in page where founders assess their mental state
-- [ ] **FREE-06**: Founder Wellbeing: mindset coaching mode using Fred's 6 philosophy principles
-- [ ] **FREE-07**: Founder Intake Snapshot: enriched onboarding questionnaire captures industry, revenue, team size, funding history
-- [ ] **FREE-08**: Founder Intake Snapshot: FRED auto-generates and enriches founder profile from conversations over time
-- [ ] **FREE-09**: Founder Intake Snapshot: viewable snapshot document on dashboard showing current founder profile
-- [ ] **FREE-10**: Strategy & Execution Reframing: dedicated UI feature (not just general chat) that applies Fred's 9-step framework
+- [x] **FREE-01**: Red Flag Detection engine identifies risks during FRED chat conversations
+- [x] **FREE-02**: Red Flag Detection renders inline visual indicators in chat UI (warning badges, highlighted text)
+- [x] **FREE-03**: Red Flag Detection dashboard widget shows persistent list of current red flags with severity
+- [x] **FREE-04**: Founder Wellbeing: FRED detects burnout/stress signals in conversation and proactively offers support
+- [x] **FREE-05**: Founder Wellbeing: dedicated check-in page where founders assess their mental state
+- [x] **FREE-06**: Founder Wellbeing: mindset coaching mode using Fred's 6 philosophy principles
+- [x] **FREE-07**: Founder Intake Snapshot: enriched onboarding questionnaire captures industry, revenue, team size, funding history
+- [x] **FREE-08**: Founder Intake Snapshot: FRED auto-generates and enriches founder profile from conversations over time
+- [x] **FREE-09**: Founder Intake Snapshot: viewable snapshot document on dashboard showing current founder profile
+- [x] **FREE-10**: Strategy & Execution Reframing: dedicated UI feature (not just general chat) that applies Fred's 9-step framework
 
 ### Missing Features -- Studio Tier (STUDIO)
 
-- [ ] **STUDIO-01**: Inbox Ops Agent: in-app message hub page aggregating notifications from all agents
-- [ ] **STUDIO-02**: Inbox Ops Agent: displays agent task completions, recommendations, and action items
-- [ ] **STUDIO-03**: Inbox Ops Agent: priority surfacing and categorization of messages
-- [ ] **STUDIO-04**: Inbox Ops Agent: agent prompts use Fred Cary's voice (consistent with other agents)
-- [ ] **STUDIO-05**: Investor Targeting: admin can upload partner investor lists via CSV
-- [ ] **STUDIO-06**: Investor Targeting: founders can upload their own investor contact lists
-- [ ] **STUDIO-07**: Investor Targeting: AI matches founders to relevant investors based on stage, sector, check size
-- [ ] **STUDIO-08**: Outreach Sequencing: AI generates personalized outreach email sequences per investor
-- [ ] **STUDIO-09**: Outreach Sequencing: follow-up templates and timing recommendations
-- [ ] **STUDIO-10**: Pipeline Tracking: CRM-lite view of investor conversations (contacted, meeting, passed, committed)
-- [ ] **STUDIO-11**: Priority Compute: Studio tier uses higher-quality AI models or gets queue priority
-- [ ] **STUDIO-12**: Deeper Memory: Studio tier loads more episodic context and has longer memory retention
-- [ ] **STUDIO-13**: Persistent Memory tier gating: memory features restricted to Pro+ (not available to Free)
+- [x] **STUDIO-01**: Inbox Ops Agent: in-app message hub page aggregating notifications from all agents
+- [x] **STUDIO-02**: Inbox Ops Agent: displays agent task completions, recommendations, and action items
+- [x] **STUDIO-03**: Inbox Ops Agent: priority surfacing and categorization of messages
+- [x] **STUDIO-04**: Inbox Ops Agent: agent prompts use Fred Cary's voice (consistent with other agents)
+- [x] **STUDIO-05**: Investor Targeting: admin can upload partner investor lists via CSV
+- [x] **STUDIO-06**: Investor Targeting: founders can upload their own investor contact lists
+- [x] **STUDIO-07**: Investor Targeting: AI matches founders to relevant investors based on stage, sector, check size
+- [x] **STUDIO-08**: Outreach Sequencing: AI generates personalized outreach email sequences per investor
+- [x] **STUDIO-09**: Outreach Sequencing: follow-up templates and timing recommendations
+- [x] **STUDIO-10**: Pipeline Tracking: CRM-lite view of investor conversations (contacted, meeting, passed, committed)
+- [x] **STUDIO-11**: Priority Compute: Studio tier uses higher-quality AI models or gets queue priority
+- [x] **STUDIO-12**: Deeper Memory: Studio tier loads more episodic context and has longer memory retention
+- [x] **STUDIO-13**: Persistent Memory tier gating: memory features restricted to Pro+ (not available to Free)
 
 ### Production Readiness (PROD)
 
-- [ ] **PROD-01**: Root middleware.ts for edge-level auth protection on dashboard, settings, agents, chat routes
-- [ ] **PROD-02**: robots.txt created in /public/ with correct directives
-- [ ] **PROD-03**: Dynamic sitemap generation via app/sitemap.ts covering all public pages
-- [ ] **PROD-04**: Image optimization audit -- convert img tags to next/image across codebase
-- [ ] **PROD-05**: Redis/Upstash rate limiting replacing in-memory store for multi-instance scaling
-- [ ] **PROD-06**: CORS configuration applied to all API routes
-- [ ] **PROD-07**: Startup validation script checking all required env vars are present
+- [x] **PROD-01**: Root middleware.ts for edge-level auth protection on dashboard, settings, agents, chat routes
+- [x] **PROD-02**: robots.txt created in /public/ with correct directives
+- [x] **PROD-03**: Dynamic sitemap generation via app/sitemap.ts covering all public pages
+- [x] **PROD-04**: Image optimization audit -- convert img tags to next/image across codebase
+- [x] **PROD-05**: Redis/Upstash rate limiting replacing in-memory store for multi-instance scaling
+- [x] **PROD-06**: CORS configuration applied to all API routes
+- [x] **PROD-07**: Startup validation script checking all required env vars are present
 
 ### PWA & Mobile (PWA)
 
-- [ ] **PWA-01**: Dedicated offline fallback page with Sahara branding and retry functionality
-- [ ] **PWA-02**: Custom "Add to Home Screen" install prompt component (detects installability, shows on first visit)
-- [ ] **PWA-03**: PWA install instructions page with step-by-step guides for iOS Safari and Android Chrome
-- [ ] **PWA-04**: Smooth install experience -- guided flow from prompt to installed app
-- [ ] **PWA-05**: Pricing comparison table mobile layout fix (card-based alternative below 768px)
-- [ ] **PWA-06**: Fixed-width component audit and fix across 17 identified files
-- [ ] **PWA-07**: Touch target audit -- all interactive elements meet 44px minimum
-- [ ] **PWA-08**: All dashboard pages verified on 375px viewport (iPhone 12/13/14)
+- [x] **PWA-01**: Dedicated offline fallback page with Sahara branding and retry functionality
+- [x] **PWA-02**: Custom "Add to Home Screen" install prompt component (detects installability, shows on first visit)
+- [x] **PWA-03**: PWA install instructions page with step-by-step guides for iOS Safari and Android Chrome
+- [x] **PWA-04**: Smooth install experience -- guided flow from prompt to installed app
+- [x] **PWA-05**: Pricing comparison table mobile layout fix (card-based alternative below 768px)
+- [x] **PWA-06**: Fixed-width component audit and fix across 17 identified files
+- [x] **PWA-07**: Touch target audit -- all interactive elements meet 44px minimum
+- [x] **PWA-08**: All dashboard pages verified on 375px viewport (iPhone 12/13/14)
 
 ### Admin Training Docs (ADMIN)
 
-- [ ] **ADMIN-01**: Admin-only route (/dashboard/admin/training) with role-based access control
-- [ ] **ADMIN-02**: Fred's Communication Style guide page (voice, tone, do/don't rules from fred-brain.ts)
-- [ ] **ADMIN-03**: Framework Reference page (9-Step Startup Process, Positioning, Investor Lens, Reality Lens)
-- [ ] **ADMIN-04**: Agent Behavior guide (how each agent should respond, with examples)
-- [ ] **ADMIN-05**: FRED Identity & Background page (bio, companies, philosophy, media presence)
+- [x] **ADMIN-01**: Admin-only route (/dashboard/admin/training) with role-based access control
+- [x] **ADMIN-02**: Fred's Communication Style guide page (voice, tone, do/don't rules from fred-brain.ts)
+- [x] **ADMIN-03**: Framework Reference page (9-Step Startup Process, Positioning, Investor Lens, Reality Lens)
+- [x] **ADMIN-04**: Agent Behavior guide (how each agent should respond, with examples)
+- [x] **ADMIN-05**: FRED Identity & Background page (bio, companies, philosophy, media presence)
 
 ### Data Consistency (DATA)
 
-- [ ] **DATA-01**: Capital raised standardized to one correct number across all pages (homepage, about, footer)
-- [ ] **DATA-02**: Years of experience fixed to "50+" in all AI prompts and marketing copy
-- [ ] **DATA-03**: SMS Check-ins tier placement resolved -- single consistent tier across pricing, constants, and nav
-- [ ] **DATA-04**: Studio features "Coming Soon" labels synchronized with actual feature availability
-- [ ] **DATA-05**: Interactive page stats reconciled with homepage stats (or clearly differentiated)
-- [ ] **DATA-06**: About page timeline corrected to match Fred's actual history from fred-brain.ts
+- [x] **DATA-01**: Capital raised standardized to one correct number across all pages (homepage, about, footer)
+- [x] **DATA-02**: Years of experience fixed to "50+" in all AI prompts and marketing copy
+- [x] **DATA-03**: SMS Check-ins tier placement resolved -- single consistent tier across pricing, constants, and nav
+- [x] **DATA-04**: Studio features "Coming Soon" labels synchronized with actual feature availability
+- [x] **DATA-05**: Interactive page stats reconciled with homepage stats (or clearly differentiated)
+- [x] **DATA-06**: About page timeline corrected to match Fred's actual history from fred-brain.ts
 
-## Future Requirements (v2.1+)
-
-### Notifications
-- **NOTIF-01**: Web Push notifications for agent task completions
-- **NOTIF-02**: Push notification permission request during onboarding
-- **NOTIF-03**: Notification preferences in settings
-
-### Integrations
-- **INTEG-01**: Real Boardy API integration (replace mock client when API available)
-- **INTEG-02**: Calendar integration for meeting scheduling (Founder Ops Agent)
-- **INTEG-03**: Email integration for Inbox Agent (Gmail/Outlook OAuth)
+</details>
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Native mobile app | PWA-first strategy for v2.0; native deferred to v3.0 |
-| Real-time video coaching | LiveKit infra exists but not in v2 scope |
-| Custom AI model training | Use existing providers with improved prompts |
+| Native mobile app | PWA-first strategy working; defer to v5.0+ |
+| Custom AI model training | Use existing providers with prompt engineering |
 | White-label/multi-tenant | Single brand (Sahara) only |
-| Real Boardy API | Keep mock until external API confirmed available |
-| Web Push notifications | Defer to v2.1 after PWA foundation is solid |
-| Email OAuth for Inbox Agent | In-app message hub first; real email integration in v2.1 |
+| Real Boardy API integration | Keep mock until Boardy API is available |
+| Founder community / peer matching | Defer to v5.0+ |
+| Content library / courses | Defer to v5.0+ |
+| Service marketplace | Defer to v5.0+ |
 
 ## Traceability
 
+### v4.0 FRED Mentor Experience
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VOICE-01 | Phase 13 | Pending |
-| VOICE-02 | Phase 13 | Pending |
-| VOICE-03 | Phase 13 | Pending |
-| VOICE-04 | Phase 13 | Pending |
-| VOICE-05 | Phase 13 | Pending |
-| VOICE-06 | Phase 14 | Pending |
-| VOICE-07 | Phase 14 | Pending |
-| VOICE-08 | Phase 14 | Pending |
-| VOICE-09 | Phase 14 | Pending |
-| VOICE-10 | Phase 14 | Pending |
-| VOICE-11 | Phase 15 | Pending |
-| VOICE-12 | Phase 15 | Pending |
-| VOICE-13 | Phase 15 | Pending |
-| VOICE-14 | Phase 15 | Pending |
-| FREE-01 | Phase 16 | Pending |
-| FREE-02 | Phase 16 | Pending |
-| FREE-03 | Phase 16 | Pending |
-| FREE-04 | Phase 17 | Pending |
-| FREE-05 | Phase 17 | Pending |
-| FREE-06 | Phase 17 | Pending |
-| FREE-07 | Phase 18 | Pending |
-| FREE-08 | Phase 18 | Pending |
-| FREE-09 | Phase 18 | Pending |
-| FREE-10 | Phase 18 | Pending |
-| STUDIO-01 | Phase 19 | Pending |
-| STUDIO-02 | Phase 19 | Pending |
-| STUDIO-03 | Phase 19 | Pending |
-| STUDIO-04 | Phase 19 | Pending |
-| STUDIO-05 | Phase 20 | Pending |
-| STUDIO-06 | Phase 20 | Pending |
-| STUDIO-07 | Phase 20 | Pending |
-| STUDIO-08 | Phase 20 | Pending |
-| STUDIO-09 | Phase 20 | Pending |
-| STUDIO-10 | Phase 20 | Pending |
-| STUDIO-11 | Phase 21 | Pending |
-| STUDIO-12 | Phase 21 | Pending |
-| STUDIO-13 | Phase 21 | Pending |
-| PROD-01 | Phase 12 | Pending |
-| PROD-02 | Phase 12 | Pending |
-| PROD-03 | Phase 12 | Pending |
-| PROD-04 | Phase 12 | Pending |
-| PROD-05 | Phase 12 | Pending |
-| PROD-06 | Phase 12 | Pending |
-| PROD-07 | Phase 12 | Pending |
-| PWA-01 | Phase 22 | Pending |
-| PWA-02 | Phase 22 | Pending |
-| PWA-03 | Phase 22 | Pending |
-| PWA-04 | Phase 22 | Pending |
-| PWA-05 | Phase 22 | Pending |
-| PWA-06 | Phase 22 | Pending |
-| PWA-07 | Phase 22 | Pending |
-| PWA-08 | Phase 22 | Pending |
-| ADMIN-01 | Phase 23 | Pending |
-| ADMIN-02 | Phase 23 | Pending |
-| ADMIN-03 | Phase 23 | Pending |
-| ADMIN-04 | Phase 23 | Pending |
-| ADMIN-05 | Phase 23 | Pending |
-| DATA-01 | Phase 12 | Pending |
-| DATA-02 | Phase 12 | Pending |
-| DATA-03 | Phase 12 | Pending |
-| DATA-04 | Phase 12 | Pending |
-| DATA-05 | Phase 12 | Pending |
-| DATA-06 | Phase 12 | Pending |
+| PROMPT-01 | Phase 34 | Pending |
+| PROMPT-02 | Phase 34 | Pending |
+| PROMPT-03 | Phase 34 | Pending |
+| PROMPT-04 | Phase 34 | Pending |
+| PROMPT-05 | Phase 34 | Pending |
+| ONBOARD-01 | Phase 35 | Pending |
+| ONBOARD-02 | Phase 35 | Pending |
+| ONBOARD-03 | Phase 35 | Pending |
+| ONBOARD-04 | Phase 35 | Pending |
+| CHAT-01 | Phase 36 | Pending |
+| CHAT-02 | Phase 36 | Pending |
+| CHAT-03 | Phase 36 | Pending |
+| CHAT-04 | Phase 36 | Pending |
+| CHAT-05 | Phase 36 | Pending |
+| GATE-01 | Phase 37 | Pending |
+| GATE-02 | Phase 37 | Pending |
+| GATE-03 | Phase 37 | Pending |
+| GATE-04 | Phase 39 | Pending |
+| GATE-05 | Phase 39 | Pending |
+| MODE-01 | Phase 38 | Pending |
+| MODE-02 | Phase 38 | Pending |
+| MODE-03 | Phase 38 | Pending |
+| MODE-04 | Phase 38 | Pending |
+| MODE-05 | Phase 39 | Pending |
+| MODE-06 | Phase 39 | Pending |
 
 **Coverage:**
-- v2.0 requirements: 63 total
-- Mapped to phases: 63
+- v4.0 requirements: 25 total
+- Mapped to phases: 25
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 -- traceability updated with phase mappings*
+*Requirements defined: 2026-02-07 (v2.0)*
+*Updated: 2026-02-11 -- v4.0 requirements added, traceability updated with phase mappings*

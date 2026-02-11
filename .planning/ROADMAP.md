@@ -5,6 +5,7 @@
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
+- [ ] **v4.0 FRED Mentor Experience** - Phases 34-39 (in progress)
 
 ## Phases
 
@@ -30,291 +31,151 @@ See MILESTONES.md for full details.
 
 </details>
 
-### v2.0 Production & Voice Parity
+<details>
+<summary>v2.0 Production & Voice Parity (Phases 12-23) - SHIPPED 2026-02-07</summary>
 
-**Milestone Goal:** Close all gaps between what the website promises and what is actually built, unify Fred Cary's voice across all 21 AI interaction points, achieve production readiness, and deliver a polished PWA experience for mobile users.
+Closed all gaps between what the website promises and what is actually built. Unified Fred Cary's voice across all 21 AI interaction points. Achieved production readiness and PWA mobile experience.
 
-**Phase Numbering:** Integer phases (12-23). Decimal phases (e.g., 14.1) reserved for urgent insertions.
+- [x] Phase 12: Data Fixes & Production Hardening (2 plans)
+- [x] Phase 13: Voice -- Core AI Engines (1 plan)
+- [x] Phase 14: Voice -- Agents & Channels (2 plans)
+- [x] Phase 15: Voice -- Helpers & Activation (1 plan)
+- [x] Phase 16: Red Flag Detection (1 plan)
+- [x] Phase 17: Founder Wellbeing (1 plan)
+- [x] Phase 18: Intake Snapshot & Strategy Reframing (2 plans)
+- [x] Phase 19: Inbox Ops Agent (1 plan)
+- [x] Phase 20: Investor Targeting, Outreach & Pipeline (2 plans)
+- [x] Phase 21: Memory & Compute Tiers (1 plan)
+- [x] Phase 22: PWA & Mobile Polish (2 plans)
+- [x] Phase 23: Admin Training Docs (1 plan)
+
+See MILESTONES.md for full details.
+
+</details>
+
+<details>
+<summary>v3.0 Scale, Activate & Engage (Phases 24-33) - SHIPPED 2026-02-08</summary>
+
+Made Sahara production-confident with observability, testing, security hardening, analytics, email engagement, and activated dormant integrations.
+
+- [x] Phase 24: Feature Activation & Quick Fixes (2 plans)
+- [x] Phase 25: Production Observability (2 plans)
+- [x] Phase 26: E2E Testing & Coverage (2 plans)
+- [x] Phase 27: RLS Security Hardening (2 plans)
+- [x] Phase 28: Web Push Notifications (2 plans)
+- [x] Phase 29: Video Coaching Sessions (2 plans)
+- [x] Phase 30: Product Analytics & Growth (2 plans)
+- [x] Phase 31: Email Engagement (2 plans)
+- [x] Phase 32: FRED Intelligence Upgrade (2 plans)
+- [x] Phase 33: Collaboration & Sharing (2 plans)
+
+See MILESTONES.md for full details.
+
+</details>
+
+### v4.0 FRED Mentor Experience
+
+**Milestone Goal:** Transform FRED from a responsive chatbot into a structured mentor that leads conversations, enforces decision sequencing through Reality Lens gating, and integrates existing frameworks as active conversation guides -- not passive tools. FRED controls the flow, not the user.
+
+**Phase Numbering:** Integer phases (34-39). Decimal phases (e.g., 35.1) reserved for urgent insertions.
 
 **Parallelism:**
-- Wave 1 (no interdependencies): Phases 12, 13, 14, 15, 22 -- all can run in parallel
-- Wave 2 (soft dependency on Phase 13 for voice foundation): Phases 16, 17, 18, 19, 20, 21 -- all can run in parallel
-- Wave 3 (depends on voice completion): Phase 23 -- after Phases 13, 14, 15
+- Wave 1 (foundation): Phase 34 -- system prompt overhaul, no dependencies
+- Wave 2 (parallel, both depend on Phase 34): Phase 35 (onboarding handoff) + Phase 36 (conversation state & structured flow)
+- Wave 3 (parallel, both depend on Phase 36): Phase 37 (Reality Lens gate & decision sequencing) + Phase 38 (framework & mode integration)
+- Wave 4 (depends on Phases 37 + 38): Phase 39 (missing frameworks & gated reviews)
 
-- [x] **Phase 12: Data Fixes & Production Hardening** - Fix data inconsistencies and harden production infrastructure
-- [x] **Phase 13: Voice -- Core AI Engines** - Main AI prompts speak as Fred Cary
-- [x] **Phase 14: Voice -- Agents & Channels** - Agent tools, SMS, and voice agent use Fred's voice
-- [x] **Phase 15: Voice -- Helpers & Activation** - Wire up unused fred-brain.ts exports and coaching prompts
-- [x] **Phase 16: Red Flag Detection** - Inline chat warnings and dashboard widget for risk identification
-- [x] **Phase 17: Founder Wellbeing** - Burnout detection, check-in page, and mindset coaching
-- [x] **Phase 18: Intake Snapshot & Strategy Reframing** - Enriched founder profiles and dedicated strategy UI
-- [x] **Phase 19: Inbox Ops Agent** - In-app message hub aggregating agent outputs and notifications
-- [x] **Phase 20: Investor Targeting, Outreach & Pipeline** - CSV uploads, AI matching, outreach sequences, CRM-lite tracker
-- [x] **Phase 21: Memory & Compute Tiers** - Tier-differentiated AI models, memory depth, and memory gating
-- [x] **Phase 22: PWA & Mobile Polish** - Offline fallback, install flow, responsive fixes, touch targets
-- [x] **Phase 23: Admin Training Docs** - Admin-only documentation section with voice rules and framework guides
+- [ ] **Phase 34: System Prompt Overhaul** - Rebuild system prompt with mentor behaviors, dynamic context injection, and Fred's master GPT instructions
+- [ ] **Phase 35: Onboarding-to-FRED Handoff** - Seamless data flow from onboarding into FRED's first conversation with no repetition
+- [ ] **Phase 36: Conversation State & Structured Flow** - FRED leads conversations with state tracking, structured intake, and gentle redirects
+- [ ] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
+- [ ] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
+- [ ] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
 
 ## Phase Details
 
-### Phase 12: Data Fixes & Production Hardening
-**Goal**: The app displays consistent, correct data everywhere and the production infrastructure handles real-world traffic securely
-**Depends on**: Nothing (no v2.0 dependencies; builds on v1.0 foundation)
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, PROD-01, PROD-02, PROD-03, PROD-04, PROD-05, PROD-06, PROD-07
+### Phase 34: System Prompt Overhaul
+**Goal**: FRED speaks and thinks like a structured mentor -- reframing before prescribing, surfacing critical-thinking by default, using mentor tone without flattery, and ending every substantive response with Next 3 Actions
+**Depends on**: Nothing (foundation for all v4.0 work)
+**Requirements**: PROMPT-01, PROMPT-02, PROMPT-03, PROMPT-04, PROMPT-05
 **Success Criteria** (what must be TRUE):
-  1. Capital raised, years of experience, and SMS tier placement show one consistent value across every page and prompt
-  2. Studio features display correct availability labels matching what is actually built
-  3. All dashboard/settings/agents/chat routes are protected by edge middleware requiring authentication
-  4. robots.txt, sitemap.ts, and CORS headers are present and correct for production deployment
-  5. Rate limiting uses Redis/Upstash (not in-memory) and startup validation script confirms all required env vars
-**Plans**: 2 plans
+  1. FRED reframes the founder's question to identify the real underlying goal before answering the literal question asked
+  2. Every FRED response surfaces at least one of: assumptions being made, bottlenecks to address, tests to run, or decision criteria to consider
+  3. FRED never opens with default praise ("great idea!", "brilliant!", "love it!") -- instead encourages effort, discipline, and clear thinking
+  4. Every substantive FRED response ends with a "Next 3 Actions" block containing specific, actionable next steps
+  5. The system prompt dynamically incorporates founder context (stage, product status, revenue, constraints) rather than being static for every conversation
+**Plans**: TBD
 
-Plans:
-- [x] 12-01-PLAN.md -- Data consistency fixes (MARKETING_STATS constant, capital raised, years of experience, SMS tier, Coming Soon labels, about page rewrite)
-- [x] 12-02-PLAN.md -- Production infrastructure hardening (root middleware, robots.ts, sitemap.ts, CORS utility, Upstash rate limiting, env validation)
-
-### Phase 13: Voice -- Core AI Engines
-**Goal**: The five core AI features (chat, Reality Lens, Investor Readiness, Strategy Docs, Pitch Deck) all speak unmistakably as Fred Cary
-**Depends on**: Nothing (parallel with Phase 12)
-**Requirements**: VOICE-01, VOICE-02, VOICE-03, VOICE-04, VOICE-05
+### Phase 35: Onboarding-to-FRED Handoff
+**Goal**: When a founder finishes onboarding and opens their first FRED conversation, FRED already knows what onboarding captured and picks up where it left off -- no repeated questions, seamless continuity
+**Depends on**: Phase 34 (new system prompt must accept dynamic founder context)
+**Requirements**: ONBOARD-01, ONBOARD-02, ONBOARD-03, ONBOARD-04
 **Success Criteria** (what must be TRUE):
-  1. FRED Chat responses reference Fred's personal experience and use his communication style (direct, mentor-like)
-  2. Reality Lens analysis reads as Fred Cary giving his honest take, not a generic assessment tool
-  3. Investor Readiness reports use Fred's investor perspective and credentials, not a generic "VC analyst"
-  4. Strategy documents and Pitch Deck reviews cite "50+ years" and import personality from fred-brain.ts
-**Plans**: 1 plan
+  1. Onboarding captures the full founder snapshot: stage, industry, challenge, revenue range, team size, funding history
+  2. FRED's first message after onboarding references what was already shared ("You mentioned you're at seed stage working on X...") and asks a deeper follow-up -- never re-asks stage or industry
+  3. If a founder skips onboarding, FRED detects the missing data and runs the Founder Intake Protocol to gather it conversationally
+  4. The combined onboarding + FRED intake data populates the Founder Snapshot visible on the dashboard
+**Plans**: TBD
 
-Plans:
-- [x] 13-01-PLAN.md -- Core AI engine voice unification (shared voice.ts utility, Reality Lens + IRS persona swap, Strategy + Pitch fred-brain imports, Chat template voice injection)
-
-### Phase 14: Voice -- Agents & Channels
-**Goal**: All three virtual agents (12 tool prompts), SMS check-ins, and the voice agent speak as Fred Cary
-**Depends on**: Nothing (parallel with Phases 12, 13)
-**Requirements**: VOICE-06, VOICE-07, VOICE-08, VOICE-09, VOICE-10
+### Phase 36: Conversation State & Structured Flow
+**Goal**: FRED leads every conversation like a structured mentor session -- asking specific questions, guiding to next steps, tracking where the founder is in the process, and gently redirecting when they drift off track
+**Depends on**: Phase 34 (mentor behaviors must be in the system prompt)
+**Requirements**: CHAT-01, CHAT-02, CHAT-03, CHAT-04, CHAT-05
 **Success Criteria** (what must be TRUE):
-  1. Founder Ops Agent tool responses (4 tools) sound like Fred mentoring, not a generic business consultant
-  2. Fundraising Agent tool responses (4 tools) reflect Fred's fundraising experience and direct style
-  3. Growth Agent tool responses (4 tools) use Fred's growth philosophy and real examples
-  4. SMS check-in messages are motivational and personal in Fred's voice, not corporate templates
-  5. Voice agent identifies as Fred Cary with no reference to "A Startup Biz" persona
-**Plans**: 2 plans
+  1. FRED drives the conversation by asking specific questions and guiding to next steps rather than passively waiting for input -- the founder answers, FRED leads
+  2. FRED applies reframe-before-prescribe in every response: identifies the real underlying goal before answering the literal question
+  3. FRED surfaces critical-thinking elements (assumptions, bottlenecks, tests, decision criteria) in every substantive response
+  4. When a founder goes off track, FRED acknowledges what they said and steers back: "I hear you -- but before we go there, let's finish establishing X"
+  5. FRED tracks conversation state -- knows what has been established (problem, buyer, economics) and what still needs validation -- and uses this to determine next questions
+**Plans**: TBD
 
-Plans:
-- [x] 14-01-PLAN.md -- Agent tool prompt voice rewrite (shared FRED_AGENT_VOICE module, 3 agent prompts, 11 tool system params)
-- [x] 14-02-PLAN.md -- SMS and voice agent voice rewrite (SMS templates, voice agent identity, admin API defaults, DB migration)
-
-### Phase 15: Voice -- Helpers & Activation
-**Goal**: All fred-brain.ts exports are actively used -- quotes appear in greetings, coaching prompts drive topic conversations, and media/testimonials enrich relevant interactions
-**Depends on**: Nothing (parallel with Phases 12-14)
-**Requirements**: VOICE-11, VOICE-12, VOICE-13, VOICE-14
+### Phase 37: Reality Lens Gate & Decision Sequencing
+**Goal**: Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) is a mandatory gate before any tactical advice, and FRED enforces decision sequencing so founders cannot skip upstream validation to work on downstream artifacts
+**Depends on**: Phase 36 (conversation state tracking needed to enforce gates and track what has been validated)
+**Requirements**: GATE-01, GATE-02, GATE-03
 **Success Criteria** (what must be TRUE):
-  1. FRED_MEDIA and FRED_TESTIMONIALS are imported and used in prompts where Fred's credibility is relevant
-  2. Chat greetings and SMS use getRandomQuote, getExperienceStatement, or getCredibilityStatement dynamically
-  3. Chat API routes topic-specific conversations through COACHING_PROMPTS and getPromptForTopic
-  4. Onboarding flow uses getFredGreeting for personalized welcome
-**Plans**: 1 plan
+  1. When a founder asks about downstream work (pitch decks, patents, hiring plans, fundraising strategy, scaling), FRED checks whether upstream truth (feasibility, demand, economics, distribution) has been established -- if not, FRED redirects to validation first
+  2. FRED runs Reality Lens assessment inline during conversation when the founder's idea foundation needs pressure-testing -- this is not a separate tool but part of the natural flow
+  3. When Reality Lens reveals a weak foundation, FRED says so plainly and redirects: "Before we work on your deck, we need to address that you don't have a clear buyer yet" -- no sugarcoating, no letting the founder skip ahead
+**Plans**: TBD
 
-Plans:
-- [x] 15-01-PLAN.md -- Activate all 8 unused fred-brain.ts/prompts.ts exports (credibility in IRS/strategy prompts, dynamic chat greeting, SMS quotes, topic detection + COACHING_PROMPTS routing, onboarding getFredGreeting)
-
-### Phase 16: Red Flag Detection
-**Goal**: FRED identifies risks during conversations and surfaces them persistently so founders can track and address them
-**Depends on**: Phase 13 (FRED chat should have Fred's voice before adding detection layer)
-**Requirements**: FREE-01, FREE-02, FREE-03
+### Phase 38: Framework & Mode Integration
+**Goal**: The diagnostic engine silently detects context and introduces the right framework at the right moment -- Investor Mode when fundraising signals appear, Positioning Mode when messaging signals appear, and the 9-Step Startup Process as the default decision sequencing backbone
+**Depends on**: Phase 36 (conversation state tracking needed for mode switching and framework context)
+**Requirements**: MODE-01, MODE-02, MODE-03, MODE-04
 **Success Criteria** (what must be TRUE):
-  1. During a FRED chat conversation, the system detects and flags business risks (market, financial, team, etc.)
-  2. Flagged risks appear as inline visual indicators in the chat UI (warning badges or highlighted text)
-  3. Dashboard widget shows a persistent list of all current red flags with severity levels
-**Plans**: 1 plan
+  1. The diagnostic engine (lib/ai/diagnostic-engine.ts) is wired into the chat route and analyzes every conversation for positioning and investor signals -- mode detection happens silently, not chosen by the user
+  2. When fundraising signals are detected (mentions fundraising, valuation, deck), FRED transitions into Investor Mode and applies the Investor Lens framework -- including IC Verdict (Yes/No/Not Yet), pass reasons, and de-risking actions
+  3. When positioning signals are detected (vague ICP, "everyone" target, generic messaging), FRED transitions into Positioning Mode and applies the Positioning Readiness Framework -- including grade (A-F), narrative tightness (1-10), and gaps
+  4. The 9-Step Startup Process (Idea to Traction) is used as the default conversation backbone for early-stage founders -- FRED knows which step the founder is on and does not let them skip ahead
+**Plans**: TBD
 
-Plans:
-- [x] 16-01-PLAN.md -- Red Flag Detection engine, DB, API, chat integration, and dashboard widget
-
-### Phase 17: Founder Wellbeing
-**Goal**: FRED proactively supports founder mental health through detection, check-ins, and coaching grounded in Fred's philosophy
-**Depends on**: Phase 13 (FRED chat should have Fred's voice before adding wellbeing detection)
-**Requirements**: FREE-04, FREE-05, FREE-06
+### Phase 39: Missing Frameworks & Gated Reviews
+**Goal**: Investor Readiness Score is fully implemented (not just DB schema), Deck Request Protocol is formalized as a standalone flow, and Pitch Deck Review is gated behind upstream validation so founders earn the right to detailed deck feedback
+**Depends on**: Phase 37 (gating logic) + Phase 38 (framework integration patterns)
+**Requirements**: MODE-05, MODE-06, GATE-04, GATE-05
 **Success Criteria** (what must be TRUE):
-  1. During conversation, FRED detects burnout/stress signals and proactively offers support
-  2. Founders can visit a dedicated check-in page to self-assess their mental state
-  3. Mindset coaching mode is available using Fred's 6 philosophy principles (grit, resilience, etc.)
-**Plans**: 1 plan
-
-Plans:
-- [x] 17-01-PLAN.md -- Burnout detection engine, wellbeing check-in page, and mindset coaching mode
-
-### Phase 18: Intake Snapshot & Strategy Reframing
-**Goal**: Founders have a rich, evolving profile generated from onboarding and conversations, plus a dedicated strategy reframing tool
-**Depends on**: Nothing (parallel with Phases 16, 17)
-**Requirements**: FREE-07, FREE-08, FREE-09, FREE-10
-**Success Criteria** (what must be TRUE):
-  1. Enriched onboarding questionnaire captures industry, revenue, team size, and funding history
-  2. FRED auto-generates and enriches the founder profile from ongoing conversations over time
-  3. Dashboard displays a viewable snapshot document showing the current founder profile
-  4. Strategy & Execution Reframing has a dedicated UI applying Fred's 9-step framework (not just general chat)
-**Plans**: 2 plans
-
-Plans:
-- [x] 18-01-PLAN.md -- Enriched onboarding, founder profile snapshot, and snapshot page
-- [x] 18-02-PLAN.md -- Auto-enrichment from chat, strategy reframing page with 9-step framework
-
-### Phase 19: Inbox Ops Agent
-**Goal**: Studio founders have a centralized message hub that aggregates and prioritizes output from all agents
-**Depends on**: Nothing (can build independently; aggregates from existing agents)
-**Requirements**: STUDIO-01, STUDIO-02, STUDIO-03, STUDIO-04
-**Success Criteria** (what must be TRUE):
-  1. In-app message hub page exists aggregating notifications from all agents
-  2. Agent task completions, recommendations, and action items are displayed as messages
-  3. Messages are categorized and priority-surfaced (urgent items first)
-  4. Inbox Agent responses use Fred Cary's voice consistently with other agents
-**Plans**: 1 plan
-
-Plans:
-- [x] 19-01-PLAN.md -- Inbox message hub, agent task aggregation, priority sorting, and Studio tier gating
-
-### Phase 20: Investor Targeting, Outreach & Pipeline
-**Goal**: Studio founders can upload investor lists, get AI-matched recommendations, generate personalized outreach, and track their fundraising pipeline
-**Depends on**: Nothing (parallel with Phase 19)
-**Requirements**: STUDIO-05, STUDIO-06, STUDIO-07, STUDIO-08, STUDIO-09, STUDIO-10
-**Success Criteria** (what must be TRUE):
-  1. Admin can upload partner investor lists via CSV; founders can upload their own contact lists
-  2. AI matches founders to relevant investors based on stage, sector, and check size
-  3. AI generates personalized outreach email sequences with follow-up templates and timing recommendations
-  4. CRM-lite pipeline view tracks investor conversations through stages (contacted, meeting, passed, committed)
-**Plans**: 2 plans
-
-Plans:
-- [x] 20-01-PLAN.md -- Investor CSV upload, DB tables, AI matching algorithm, targeting page
-- [x] 20-02-PLAN.md -- Outreach sequence generation, pipeline Kanban board, CRM tracking
-
-### Phase 21: Memory & Compute Tiers
-**Goal**: Higher-paying tiers get measurably better AI (faster models, deeper context) and memory features are properly gated
-**Depends on**: Nothing (parallel with Phases 19, 20)
-**Requirements**: STUDIO-11, STUDIO-12, STUDIO-13
-**Success Criteria** (what must be TRUE):
-  1. Studio tier users get higher-quality AI models or queue priority compared to lower tiers
-  2. Studio tier loads more episodic context and has longer memory retention than Pro
-  3. Memory features (persistent context, conversation history beyond session) are restricted to Pro+ tiers
-**Plans**: 1 plan
-
-Plans:
-- [x] 21-01-PLAN.md -- Tier-based model routing, memory depth config, memory gating, chat route integration
-
-### Phase 22: PWA & Mobile Polish
-**Goal**: Sahara is installable as a PWA with a guided experience, and every page renders correctly on mobile devices
-**Depends on**: Nothing (parallel with feature phases)
-**Requirements**: PWA-01, PWA-02, PWA-03, PWA-04, PWA-05, PWA-06, PWA-07, PWA-08
-**Success Criteria** (what must be TRUE):
-  1. Offline fallback page with Sahara branding appears when the user has no connection
-  2. Custom install prompt detects installability and guides users through "Add to Home Screen" on first visit
-  3. PWA install instructions page provides step-by-step guides for both iOS Safari and Android Chrome
-  4. Pricing table, all 17 fixed-width files, and all interactive elements render correctly on 375px viewport with 44px touch targets
-**Plans**: 2 plans
-
-Plans:
-- [x] 22-01-PLAN.md -- PWA install experience (offline fallback page, install prompt hook/component, install instructions page, SW update)
-- [x] 22-02-PLAN.md -- Mobile responsive fixes (pricing table card layout, fixed-width audit across 5 HIGH files, TabsList scroll on 8 files, touch target CSS)
-
-### Phase 23: Admin Training Docs
-**Goal**: Admin users have an in-app reference documenting how FRED communicates, what frameworks it uses, and how each agent behaves
-**Depends on**: Phases 13, 14, 15 (voice work must be finalized before documenting voice rules)
-**Requirements**: ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05
-**Success Criteria** (what must be TRUE):
-  1. Admin-only route (/dashboard/admin/training) exists with role-based access control
-  2. Fred's Communication Style guide is readable and matches the actual implemented voice rules
-  3. Framework Reference page covers 9-Step Startup Process, Positioning, Investor Lens, and Reality Lens
-  4. Agent Behavior guide documents how each agent responds with examples
-  5. FRED Identity & Background page shows bio, companies, philosophy, and media presence
-**Plans**: 1 plan
-
-Plans:
-- [x] 23-01-PLAN.md -- Admin training layout, overview, communication, frameworks, agents, and identity pages
-
-### v3.0 Scale, Activate & Engage
-
-**Milestone Goal:** Make Sahara production-confident for real paying users by adding observability, testing, security hardening, analytics, user-facing email, and activating dormant integrations.
-
-**Parallelism:**
-- Wave 1 (no interdependencies): Phases 24, 25, 26, 27
-- Wave 2 (after Phase 25): Phases 28, 29, 30
-- Wave 3 (after Phases 25+30): Phases 31, 32
-- Wave 4 (after Phase 27): Phase 33
-
-- [x] **Phase 24: Feature Activation & Quick Fixes** - Remove false "Coming Soon", fix stubs, enhance exports/deletion
-- [x] **Phase 25: Production Observability** - Sentry error tracking, structured Pino logging, CI quality gates
-- [x] **Phase 26: E2E Testing & Coverage** - Playwright setup, critical flow E2E tests, coverage thresholds
-- [x] **Phase 27: RLS Security Hardening** - Comprehensive RLS policies, user-scoped clients, isolation tests
-- [x] **Phase 28: Web Push Notifications** - Service worker push, subscriptions, preferences
-- [x] **Phase 29: Video Coaching Sessions** - LiveKit UI activation, FRED sidebar
-- [x] **Phase 30: Product Analytics & Growth** - PostHog, funnels, onboarding checklist
-- [x] **Phase 31: Email Engagement** - Weekly digest, milestones, re-engagement
-- [x] **Phase 32: FRED Intelligence Upgrade** - TTS voice, memory browser, export
-- [x] **Phase 33: Collaboration & Sharing** - Co-founder invites, shareable links
-
-### Phase 31: Email Engagement
-**Goal**: Founders receive timely, relevant emails that keep them engaged -- weekly activity digests, milestone celebrations, and re-engagement nudges for inactive users
-**Depends on**: Phase 30 (analytics data sources for digest content)
-**Success Criteria** (what must be TRUE):
-  1. Opted-in founders receive a branded weekly digest email every Monday summarizing their activity (conversations, milestones, tasks, red flags)
-  2. When a founder completes a milestone, they receive a celebration email with a Fred quote and next step suggestion
-  3. Inactive users (7/14/30 days) receive graduated re-engagement emails that respect marketing preferences
-  4. All emails respect notification preference toggles in settings (email master, weekly, marketing)
-  5. Duplicate emails are prevented via idempotent tracking in email_sends table
-**Plans**: 2 plans
-
-Plans:
-- [x] 31-01-PLAN.md -- Email infrastructure (Resend SDK, shared layout, preferences, types) + weekly digest system (data aggregation, template, cron route)
-- [x] 31-02-PLAN.md -- Milestone celebration emails (trigger on completion, Fred quote template) + re-engagement system (inactive detection, graduated templates, daily cron)
-
-Plans:
-- [x] 24-01-PLAN.md -- Coming Soon badge removal + offline page
-- [x] 24-02-PLAN.md -- Monitoring export enhancement + account deletion cascade
-- [x] 25-01-PLAN.md -- Sentry integration (client, server, global-error, CSP, utility)
-- [x] 25-02-PLAN.md -- Structured Pino logging, correlation IDs, CI quality gates
-- [x] 26-01-PLAN.md -- Playwright setup + critical flow E2E tests (signup, login, chat, reality lens)
-- [x] 26-02-PLAN.md -- Coverage thresholds, premium flow E2E tests, CI integration
-- [x] 27-01-PLAN.md -- RLS policy SQL migration (27 tables, 140+ policies)
-- [x] 27-02-PLAN.md -- User-scoped client switch (10 routes) + RLS isolation tests
-- [x] 31-01-PLAN.md -- Email infrastructure + weekly digest system
-- [x] 31-02-PLAN.md -- Milestone celebration + re-engagement emails
+  1. Investor Readiness Score framework is fully implemented -- AI scoring across 6 categories with stage benchmarks, not just empty DB tables
+  2. Deck Request Protocol is formalized as a standalone flow: FRED issues a provisional investor verdict first, then decides whether a deck review would materially change that verdict (never asks for a deck by default)
+  3. Pitch Deck Review (11-dimension scorecard, 0-10 per dimension) is only accessible after the founder has passed upstream validation through Reality Lens -- FRED explains why if the founder tries to access it prematurely
+  4. Per-slide investor objections (2-3 skeptical questions per slide with knockout answers) are generated as part of the gated Pitch Deck Review flow
+**Plans**: TBD
 
 ## Progress
 
-### v2.0 Execution (COMPLETE)
+### v4.0 Execution
 
 **Execution Order:**
-- Wave 1 (parallel): Phases 12, 13, 14, 15, 22
-- Wave 2 (parallel, after wave 1): Phases 16, 17, 18, 19, 20, 21
-- Wave 3 (after voice phases): Phase 23
+- Wave 1: Phase 34
+- Wave 2 (parallel): Phases 35, 36
+- Wave 3 (parallel): Phases 37, 38
+- Wave 4: Phase 39
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Data Fixes & Production Hardening | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 13. Voice -- Core AI Engines | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 14. Voice -- Agents & Channels | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 15. Voice -- Helpers & Activation | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 16. Red Flag Detection | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 17. Founder Wellbeing | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 18. Intake Snapshot & Strategy Reframing | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 19. Inbox Ops Agent | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 20. Investor Targeting, Outreach & Pipeline | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 21. Memory & Compute Tiers | v2.0 | 1/1 | Complete | 2026-02-07 |
-| 22. PWA & Mobile Polish | v2.0 | 2/2 | Complete | 2026-02-07 |
-| 23. Admin Training Docs | v2.0 | 1/1 | Complete | 2026-02-07 |
-
-### v3.0 Execution (Wave 1 COMPLETE)
-
-**Execution Order:**
-- Wave 1 (parallel): Phases 24, 25, 26, 27
-
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 24. Feature Activation & Quick Fixes | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 25. Production Observability | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 26. E2E Testing & Coverage | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 27. RLS Security Hardening | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 28. Web Push Notifications | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 29. Video Coaching Sessions | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 30. Product Analytics & Growth | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 31. Email Engagement | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 32. FRED Intelligence Upgrade | v3.0 | 2/2 | Complete | 2026-02-08 |
-| 33. Collaboration & Sharing | v3.0 | 2/2 | Complete | 2026-02-08 |
+| 34. System Prompt Overhaul | v4.0 | 0/TBD | Not started | - |
+| 35. Onboarding-to-FRED Handoff | v4.0 | 0/TBD | Not started | - |
+| 36. Conversation State & Structured Flow | v4.0 | 0/TBD | Not started | - |
+| 37. Reality Lens Gate & Decision Sequencing | v4.0 | 0/TBD | Not started | - |
+| 38. Framework & Mode Integration | v4.0 | 0/TBD | Not started | - |
+| 39. Missing Frameworks & Gated Reviews | v4.0 | 0/TBD | Not started | - |
