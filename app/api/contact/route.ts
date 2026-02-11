@@ -50,8 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Get request metadata
     const userAgent = request.headers.get("user-agent") || undefined;
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    const ipAddress = forwardedFor?.split(",")[0].trim() || undefined;
+    const ipAddress = ip !== "unknown" ? ip : undefined;
 
     // Use service client for database operations
     const supabase = createServiceClient();
