@@ -26,7 +26,18 @@ import {
   ListBulletIcon,
   MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
-import { Users } from "lucide-react";
+import {
+  Users,
+  Brain,
+  Heart,
+  Bell,
+  Share2,
+  Mail,
+  Inbox,
+  Video,
+  Crosshair,
+  UserCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
@@ -78,6 +89,24 @@ const navItems: NavItem[] = [
     badge: "Free",
   },
   {
+    name: "Wellbeing",
+    href: "/dashboard/wellbeing",
+    icon: <Heart className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
+    name: "Inbox",
+    href: "/dashboard/inbox",
+    icon: <Inbox className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
+    name: "Notifications",
+    href: "/dashboard/notifications",
+    icon: <Bell className="h-4 w-4" />,
+    badge: "Free",
+  },
+  {
     name: "Monitoring",
     href: "/dashboard/monitoring",
     icon: <ActivityLogIcon className="h-4 w-4" />,
@@ -126,6 +155,20 @@ const navItems: NavItem[] = [
     badge: "Pro",
   },
   {
+    name: "Investor Targeting",
+    href: "/dashboard/investor-targeting",
+    icon: <Crosshair className="h-4 w-4" />,
+    tier: 1,
+    badge: "Pro",
+  },
+  {
+    name: "Founder Snapshot",
+    href: "/dashboard/profile/snapshot",
+    icon: <UserCircle className="h-4 w-4" />,
+    tier: 1,
+    badge: "Pro",
+  },
+  {
     name: "Weekly Check-ins",
     href: "/dashboard/sms",
     icon: <CheckCircledIcon className="h-4 w-4" />,
@@ -143,6 +186,34 @@ const navItems: NavItem[] = [
     name: "Boardy Integration",
     href: "/dashboard/boardy",
     icon: <LockClosedIcon className="h-4 w-4" />,
+    tier: 2,
+    badge: "Studio",
+  },
+  {
+    name: "Video Coaching",
+    href: "/dashboard/coaching",
+    icon: <Video className="h-4 w-4" />,
+    tier: 2,
+    badge: "Studio",
+  },
+  {
+    name: "FRED Memory",
+    href: "/dashboard/memory",
+    icon: <Brain className="h-4 w-4" />,
+    tier: 2,
+    badge: "Studio",
+  },
+  {
+    name: "Sharing",
+    href: "/dashboard/sharing",
+    icon: <Share2 className="h-4 w-4" />,
+    tier: 2,
+    badge: "Studio",
+  },
+  {
+    name: "Invitations",
+    href: "/dashboard/invitations",
+    icon: <Mail className="h-4 w-4" />,
     tier: 2,
     badge: "Studio",
   },
