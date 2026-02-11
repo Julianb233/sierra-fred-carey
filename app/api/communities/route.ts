@@ -129,9 +129,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const rawSearch = searchParams.get("search") || undefined;
-    // Escape SQL LIKE wildcards to prevent wildcard injection
+    // Escape SQL LIKE wildcards and strip PostgREST filter-syntax characters
+    // (commas, periods, parentheses) to prevent filter injection in .or() calls
     const search = rawSearch
-      ? rawSearch.replace(/[%_\\]/g, (c) => `\\${c}`)
+      ? rawSearch
+          .replace(/[%_\\]/g, (c) => `\\${c}`)
+          .replace(/[,.()"']/g, "")
       : undefined;
     const category = searchParams.get("category") || undefined;
     const limit = Math.min(
