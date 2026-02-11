@@ -765,6 +765,11 @@ export async function deletePost(
  * Toggle a reaction on a post. If the user already has this reaction type,
  * remove it; otherwise add it. Returns { added: true } or { added: false }.
  * reaction_count on the post is synced by DB triggers.
+ *
+ * Uses a delete-first approach to avoid TOCTOU race conditions:
+ * 1. Try to DELETE the reaction (atomic, no race window)
+ * 2. If nothing was deleted, INSERT a new one
+ * The UNIQUE constraint on (post_id, user_id, reaction_type) prevents duplicates.
  */
 export async function toggleReaction(
   postId: string,
@@ -773,26 +778,20 @@ export async function toggleReaction(
 ): Promise<{ added: boolean }> {
   const supabase = createServiceClient();
 
-  // Check for existing reaction of this type
-  const { data: existing } = await supabase
+  // Step 1: Attempt to delete existing reaction
+  const { data: deleted } = await supabase
     .from("community_post_reactions")
-    .select("id")
+    .delete()
     .eq("post_id", postId)
     .eq("user_id", userId)
     .eq("reaction_type", reactionType)
-    .single();
+    .select("id");
 
-  if (existing) {
-    // Remove existing reaction (trigger decrements reaction_count)
-    await supabase
-      .from("community_post_reactions")
-      .delete()
-      .eq("id", existing.id);
-
+  if (deleted && deleted.length > 0) {
     return { added: false };
   }
 
-  // Add new reaction (trigger increments reaction_count)
+  // Step 2: No existing reaction -- insert a new one
   const { error } = await supabase.from("community_post_reactions").insert({
     post_id: postId,
     user_id: userId,
@@ -800,8 +799,7 @@ export async function toggleReaction(
   });
 
   if (error) {
-    // Handle race condition: if another request already inserted this reaction,
-    // the UNIQUE constraint fires. Treat as a no-op (already reacted).
+    // Handle race: another request inserted between our delete and insert
     if (error.code === "23505") {
       return { added: true };
     }
