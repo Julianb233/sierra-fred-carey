@@ -8,21 +8,22 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v3.0 Launch Readiness
+## Current Milestone: v4.0 FRED Mentor Experience
 
-**Goal:** Make Sahara production-confident for real paying users by adding observability, analytics, user-facing email, and activating the dormant integrations that are already 85-95% built.
+**Goal:** Transform FRED from a responsive chatbot into a structured mentor that leads conversations, enforces decision sequencing, and won't let founders skip the hard questions. FRED controls the flow — not the user.
 
 **Target outcomes:**
-- Error tracking via Sentry — visibility into every production error
-- Product analytics (Vercel Analytics or PostHog) — track activation funnels and feature adoption
-- Health/uptime endpoint for production monitoring
-- Transactional user emails via Resend (welcome, weekly digest, milestone celebrations)
-- Slack notifications activated (95% built, needs webhook)
-- SMS check-ins activated (85% built, needs Twilio creds)
-- LiveKit video coaching activated for Studio tier (90% built, needs creds)
-- UX audit pass to catch broken/rough edges before real users arrive
+- FRED leads every conversation like a structured intake interview — asks, listens, guides to next step
+- Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) is a mandatory gate before any tactical advice
+- Decision sequencing enforced — no downstream work (decks, patents, hiring, fundraising) until upstream truth is established
+- System prompt rebuilt from Fred Cary's master GPT instructions — reframe before prescribe, critical-thinking default, mentor tone
+- Onboarding hands off seamlessly to FRED's first conversation — no repetition, FRED picks up where onboarding left off
+- Diagnostic engine wired into chat — Investor Mode, Positioning Mode activated silently by context, not user choice
+- Pitch Deck Review gated behind upstream validation — 11-dimension scorecard, slide-by-slide rewrites, per-slide investor objections only after foundation is solid
+- Every substantive FRED response ends with Next 3 Actions
+- Gentle redirect when founders go off track — acknowledge, then steer back
 
-**Previous Milestone:** v2.0 Production & Voice Parity (SHIPPED 2026-02-07)
+**Previous Milestone:** v3.0 Scale, Activate & Engage (SHIPPED 2026-02-08)
 
 ## Requirements
 
@@ -58,32 +59,54 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - [x] PWA & Mobile Polish — Offline fallback, install flow, responsive fixes, touch targets
 - [x] Admin Training Docs — In-app admin documentation with voice rules and framework guides
 
+**v3.0 Scale, Activate & Engage (shipped 2026-02-08)**
+- [x] Feature Activation — Coming Soon removal, offline page, monitoring export, account deletion
+- [x] Production Observability — Sentry conditional init, Pino structured logging, CI quality gates
+- [x] E2E Testing — Playwright setup, critical flow tests, coverage thresholds
+- [x] RLS Security Hardening — 1339-line migration, 27 tables, 140+ policies, user-scoped clients
+- [x] Web Push Notifications — Service worker push, subscriptions, preferences
+- [x] Video Coaching Sessions — LiveKit UI activation, FRED sidebar
+- [x] Product Analytics & Growth — PostHog, funnels, onboarding checklist
+- [x] Email Engagement — Resend SDK, weekly digest, milestone celebrations, re-engagement
+- [x] FRED Intelligence Upgrade — TTS voice, memory browser, export
+- [x] Collaboration & Sharing — Co-founder invites, shareable links, team-scoped sharing
+
 ### Active
 
-**Observability & Monitoring**
-- [ ] Sentry error tracking integrated across API routes and client components
-- [ ] Product analytics (Vercel Analytics or PostHog) tracking page views and feature adoption
-- [ ] Health/uptime endpoint (`/api/health`) with dependency checks (DB, AI, Stripe)
-- [ ] Structured logging for production debugging
+**Structured Mentor Flow (CHAT)**
+- [ ] FRED leads conversations — asks specific questions, guides to next step, controls the flow
+- [ ] Reframe-before-prescribe behavior — FRED identifies the real goal before answering the literal question
+- [ ] Critical-thinking default — every response surfaces assumptions, bottlenecks, tests, or decision criteria
+- [ ] Gentle redirect when founders drift off track — acknowledge, then steer back to structured path
+- [ ] Conversation state tracking — FRED knows where the founder is in the process and what's been established
 
-**User Email Communications**
-- [ ] Resend integration activated with transactional email templates
-- [ ] Welcome email on signup
-- [ ] Weekly digest email (FRED insights, activity summary, red flags)
-- [ ] Milestone celebration emails (first analysis, first strategy doc, etc.)
+**Reality Lens Gate (GATE)**
+- [ ] Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
+- [ ] If foundation is weak, FRED says so plainly and redirects — no sugarcoating
+- [ ] Decision sequencing enforced — no decks, patents, hiring, fundraising until upstream truth established
+- [ ] Pitch Deck Review gated — 11-dimension scorecard (0-10) only after Reality Lens passes
+- [ ] Per-slide investor objections — 2-3 skeptical questions per slide with knockout answers
 
-**Integration Activation**
-- [ ] Slack notifications wired to production events (errors, signups, payments)
-- [ ] SMS check-ins fully activated with Twilio credentials
-- [ ] LiveKit video coaching sessions activated for Studio tier
-- [ ] Email notifications (Resend) wired to agent completions and alerts
+**System Prompt Overhaul (PROMPT)**
+- [ ] System prompt rebuilt from Fred Cary's master GPT instructions
+- [ ] Mentor tone — encourage effort and discipline, not ego; no default praise or flattery
+- [ ] Founder Intake Protocol automatic — stage, product status, revenue, runway, constraint, 90-day goal
+- [ ] Output standard — every substantive response ends with Next 3 Actions
+- [ ] Weekly Check-In Protocol — structured framework (what moved, what's stuck, energy drains, next decision, priority)
 
-**UX Audit & Polish**
-- [ ] Full app walkthrough on 375px viewport — catch broken layouts
-- [ ] Navigation audit — every nav link leads to a working page
-- [ ] Form validation audit — all forms show clear errors
-- [ ] Loading/empty states — no blank pages when data is missing
-- [ ] Blog posts migrated from hardcoded to database-backed (12 posts currently hardcoded)
+**Onboarding → FRED Handoff (ONBOARD)**
+- [ ] Onboarding captures founder basics (stage, industry, challenge, revenue, team, funding)
+- [ ] FRED's first conversation picks up seamlessly — references what onboarding collected, goes deeper
+- [ ] No repetition — FRED does not re-ask what the signup form already captured
+- [ ] Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake
+
+**Framework & Mode Integration (MODE)**
+- [ ] Diagnostic engine wired into chat — silently detects context, introduces frameworks at right moment
+- [ ] Investor Mode activates when fundraising signals detected — applies Investor Lens, not user-chosen
+- [ ] Positioning Mode activates when messaging/differentiation signals detected — applies Positioning Framework
+- [ ] 9-Step Startup Process (Idea → Traction) used as default decision sequencing backbone
+- [ ] Investor Readiness Score framework fully implemented (currently DB schema only)
+- [ ] Deck Request Protocol formalized as standalone (currently embedded in Investor Lens)
 
 ### Out of Scope
 
@@ -91,14 +114,9 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - Custom AI model training — use existing providers with prompt engineering
 - White-label/multi-tenant — single brand (Sahara) only
 - Real Boardy API integration — keep mock until Boardy API is available
-- Founder community / peer matching — defer to v3.1+
-- Content library / courses — defer to v3.1+
-- Service marketplace — defer to v3.1+
-- Web Push notifications — defer to v3.1+
-- FRED voice output (TTS) — defer to v3.1+
-- Co-founder collaboration / sharing — defer to v3.1+
-- E2E test suite (Playwright) — defer to v3.1+
-- Row-Level Security audit — defer to v3.1+
+- Founder community / peer matching — defer to v5.0+
+- Content library / courses — defer to v5.0+
+- Service marketplace — defer to v5.0+
 
 ## Context
 
@@ -168,5 +186,10 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 | Both intake approaches | Signup questionnaire + FRED enriches from conversations | — Pending |
 | Red flags: chat + dashboard | Inline warnings during chat AND persistent dashboard widget | — Pending |
 
+| FRED is a mentor, not an agent | Mentor framing matches Fred's coaching identity; "agent" sounds like a bot | — Pending |
+| Reality Lens as mandatory gate | Founders can't skip hard questions — this is FRED's differentiation vs ChatGPT | — Pending |
+| Decision sequencing enforced | No downstream work until upstream truth established | — Pending |
+| Diagnostic mode switching (silent) | Frameworks introduced by context, not user choice | — Pending |
+
 ---
-*Last updated: 2026-02-07 after v3.0 Launch Readiness milestone initialization*
+*Last updated: 2026-02-11 after v4.0 FRED Mentor Experience milestone initialization*
