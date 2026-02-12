@@ -102,6 +102,7 @@ See MILESTONES.md for full details.
 - [ ] **Phase 44: Document Repository** - Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred" action
 - [ ] **Phase 45: Chat UI Redesign** - Full-screen chat with active mode bar, side panel toggle (Snapshot, Next Steps, Documents)
 - [ ] **Phase 46: Mobile App Layout** - Mobile-specific nav, Today's Focus, simplified gauges, voice input, Call Fred
+- [x] **Phase 47: Community Data Layer & Consent** - 14-table schema, consent-gated materialized views, consent CRUD, Settings UI
 
 ## Phase Details
 
@@ -279,3 +280,4 @@ See MILESTONES.md for full details.
 | 44. Document Repository | v4.0 | 0/TBD | Not started | - |
 | 45. Chat UI Redesign | v4.0 | 0/TBD | Not started | - |
 | 46. Mobile App Layout | v4.0 | 0/TBD | Not started | - |
+| 47. Community Data Layer & Consent | v4.0 | 2/2 | Complete | 2026-02-12 |
