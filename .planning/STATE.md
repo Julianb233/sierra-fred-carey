@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v4.0 FRED Mentor Experience -- Phase 39 (Missing Frameworks & Gated Reviews)
+**Current focus:** v4.0 FRED Mentor Experience + Community Data Layer (Phase 47)
 
 ## Current Position
 
-Phase: 38 of 46 (Framework & Mode Integration) -- COMPLETE
-Next: Phase 39 (Missing Frameworks & Gated Reviews)
-Status: Phases 34-38 complete, Phase 41 complete. Ready for Phase 39.
-Last activity: 2026-02-11 -- Completed Phases 34-38 + 41 via agent team execution
+Phase: 47 of 53 (Community Data Layer & Consent)
+Plan: 1 of 2 complete in Phase 47
+Status: Phases 34-38 complete, Phase 41 complete, Phase 47-01 complete. Ready for Phase 47-02.
+Last activity: 2026-02-12 -- Completed 47-01-PLAN.md (community data layer migration)
 
-Progress: [########......................] ~28% (6 of 13 v4.0 phases complete)
+Progress: [#########.....................] ~31% (7 of 13+ v4.0 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10 (v4.0)
-- Phases completed: 34 (2 plans), 35 (1 plan), 36 (2 plans), 37 (1 plan), 38 (1 plan), 41 (2 plans)
+- Total plans completed: 11 (v4.0)
+- Phases completed: 34 (2 plans), 35 (1 plan), 36 (2 plans), 37 (1 plan), 38 (1 plan), 41 (2 plans), 47 (1 of 2 plans)
 - Tests written: 60 (41 prompts.test.ts + 19 context-builder.test.ts)
 
 ## Accumulated Context
@@ -43,6 +43,14 @@ Phase 36-01 decisions:
 - Progress context loaded in parallel with profile, facts, and first-conversation check
 - Actor signatures use optional params for backward compatibility
 - Drift redirect is a separate function (buildDriftRedirectBlock) injected only on drift
+
+Phase 47-01 decisions:
+
+- Migration numbered 054 (not 053 -- 053 already taken by community_member_update_policy)
+- social_feed_posts.milestone_id is UUID (matching milestones.id UUID type from migration 009)
+- All 14 tables created in single migration for atomic deployment and FK consistency
+- Consent-gated materialized views use k-anonymity threshold of >= 5 founders
+- REPLICA IDENTITY FULL set on social_feed_posts and founder_messages for future Supabase Realtime
 
 ### Key Architectural Gaps (from codebase analysis)
 
@@ -87,8 +95,8 @@ Ralph PRD: scripts/ralph/prd.json (15 user stories, all passing)
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: Phases 34-38 + 41 complete, 677 tests passing, ready for Phase 39
+Last session: 2026-02-12
+Stopped at: Phase 47-01 complete (community data layer migration 054), ready for Phase 47-02
 Resume file: None
 
 ### Phase Execution Log (2026-02-11)
