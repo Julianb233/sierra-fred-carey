@@ -1,0 +1,3 @@
+[agent]
+name = "fred-cary-voice"
+dockerfile = "workers/voice-agent/Dockerfile"

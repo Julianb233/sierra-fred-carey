@@ -1,0 +1,5 @@
+[agent]
+name = "fred-cary-voice"
+
+[cloud]
+url = "wss://sahara-ppvs24oj.livekit.cloud"
