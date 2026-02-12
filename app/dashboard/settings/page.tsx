@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { NotificationSettings } from "@/components/settings/NotificationSettings"
 import { VoiceSettings } from "@/components/settings/voice-settings"
+import { ConsentSettings } from "@/components/settings/ConsentSettings"
 import { useTier } from "@/lib/context/tier-context"
 import { createClient } from "@/lib/supabase/client"
 import { UserTier, TIER_FEATURES } from "@/lib/constants"
@@ -481,6 +482,9 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Community Data Sharing Consent */}
+      <ConsentSettings />
 
       {/* Voice & TTS Settings - Pro+ only */}
       {tier >= UserTier.PRO && (
