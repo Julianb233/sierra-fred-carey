@@ -114,7 +114,7 @@ const CONDITIONAL_NAV: ConditionalNavItem[] = [
   {
     key: "documents",
     name: "Documents",
-    href: "/dashboard/strategy",
+    href: "/dashboard/documents",
     icon: "file-text",
     minTier: 1,
     alwaysVisible: false,
