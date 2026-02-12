@@ -7,7 +7,6 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================================================
 // Types

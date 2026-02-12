@@ -5,7 +5,7 @@
 - [x] **v1.0 MVP** - Phases 1-11 (shipped 2026-02-07)
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
-- [ ] **v4.0 FRED Mentor Experience** - Phases 34-46 (in progress)
+- [x] **v4.0 FRED Mentor Experience** - Phases 34-46 (shipped 2026-02-12)
 
 ## Phases
 
@@ -95,13 +95,13 @@ See MILESTONES.md for full details.
 - [x] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
 - [x] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
 - [x] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
-- [ ] **Phase 40: Dashboard Redesign — Founder Command Center** - Nav restructure, Home with Snapshot Card + Decision Box + Funding Gauge + Weekly Momentum, dynamic display rules
+- [x] **Phase 40: Dashboard Redesign — Founder Command Center** - Nav restructure, Home with Snapshot Card + Decision Box + Funding Gauge + Weekly Momentum, dynamic display rules
 - [x] **Phase 41: Founder Communities** - User-created communities with Circles, Topic Rooms, Events, and Graduates sections
-- [ ] **Phase 42: Multi-Channel FRED Access** - Call (scheduled + on-demand), text (SMS), and message FRED 24/7 from any screen
-- [ ] **Phase 43: Next Steps Hub & Readiness Tab** - Next Steps (Critical/Important/Optional) + combined Investor Readiness + Positioning Readiness view
-- [ ] **Phase 44: Document Repository** - Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred" action
-- [ ] **Phase 45: Chat UI Redesign** - Full-screen chat with active mode bar, side panel toggle (Snapshot, Next Steps, Documents)
-- [ ] **Phase 46: Mobile App Layout** - Mobile-specific nav, Today's Focus, simplified gauges, voice input, Call Fred
+- [x] **Phase 42: Multi-Channel FRED Access** - Call (scheduled + on-demand), text (SMS), and message FRED 24/7 from any screen
+- [x] **Phase 43: Next Steps Hub & Readiness Tab** - Next Steps (Critical/Important/Optional) + combined Investor Readiness + Positioning Readiness view
+- [x] **Phase 44: Document Repository** - Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred" action
+- [x] **Phase 45: Chat UI Redesign** - Full-screen chat with active mode bar, side panel toggle (Snapshot, Next Steps, Documents)
+- [x] **Phase 46: Mobile App Layout** - Mobile-specific nav, Today's Focus, simplified gauges, voice input, Call Fred
 - [x] **Phase 47: Community Data Layer & Consent** - 14-table schema, consent-gated materialized views, consent CRUD, Settings UI
 
 ## Phase Details
@@ -273,11 +273,11 @@ See MILESTONES.md for full details.
 | 37. Reality Lens Gate & Decision Sequencing | v4.0 | 1/1 | Complete | 2026-02-11 |
 | 38. Framework & Mode Integration | v4.0 | 1/1 | Complete | 2026-02-11 |
 | 39. Missing Frameworks & Gated Reviews | v4.0 | 1/1 | Complete | 2026-02-11 |
-| 40. Dashboard Redesign — Founder Command Center | v4.0 | 0/TBD | Not started | - |
+| 40. Dashboard Redesign — Founder Command Center | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
 | 41. Founder Communities | v4.0 | 2/2 | Complete | 2026-02-11 |
-| 42. Multi-Channel FRED Access | v4.0 | 0/TBD | Not started | - |
-| 43. Next Steps Hub & Readiness Tab | v4.0 | 0/TBD | Not started | - |
-| 44. Document Repository | v4.0 | 0/TBD | Not started | - |
-| 45. Chat UI Redesign | v4.0 | 0/TBD | Not started | - |
-| 46. Mobile App Layout | v4.0 | 0/TBD | Not started | - |
+| 42. Multi-Channel FRED Access | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
+| 43. Next Steps Hub & Readiness Tab | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
+| 44. Document Repository | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
+| 45. Chat UI Redesign | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
+| 46. Mobile App Layout | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
 | 47. Community Data Layer & Consent | v4.0 | 2/2 | Complete | 2026-02-12 |

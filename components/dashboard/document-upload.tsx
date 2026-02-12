@@ -75,9 +75,8 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("type", "other");
 
-        const response = await fetch("/api/documents/upload", {
+        const response = await fetch("/api/document-repository", {
           method: "POST",
           body: formData,
         });

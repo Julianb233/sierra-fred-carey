@@ -94,7 +94,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
       {/* Input area */}
       <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl bg-background/80 border-t border-white/10">
         <div className="max-w-4xl mx-auto">
-          <ChatInput onSend={handleSendMessage} isLoading={isProcessing} />
+          <ChatInput onSend={handleSendMessage} isLoading={isProcessing} showVoiceInput />
         </div>
       </div>
     </div>

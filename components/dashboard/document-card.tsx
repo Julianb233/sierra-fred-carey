@@ -18,23 +18,22 @@ import {
 import { cn } from "@/lib/utils";
 
 // ============================================================================
-// Types
+// Types — aligned with RepositoryDocument from /api/document-repository
 // ============================================================================
 
-export type DocumentFolder = "decks" | "strategy" | "reports" | "uploaded";
+export type DocumentFolder = "decks" | "strategy" | "reports" | "uploads";
 
 export interface DocumentItem {
   id: string;
-  name: string;
-  type: string;
+  title: string;
+  description: string | null;
   folder: DocumentFolder;
-  source: "generated" | "uploaded";
-  size?: number;
-  pageCount?: number | null;
-  status?: string;
+  fileUrl: string | null;
+  fileType: string | null;
+  fileSize: number | null;
+  sourceType: "upload" | "generated" | "strategy" | "linked" | null;
   createdAt: string;
-  fileUrl?: string | null;
-  contentPreview?: string;
+  updatedAt: string;
 }
 
 // ============================================================================
@@ -45,10 +44,10 @@ const FOLDER_ICONS: Record<DocumentFolder, React.ReactNode> = {
   decks: <FileBarChart className="h-5 w-5 text-blue-500" />,
   strategy: <FileSpreadsheet className="h-5 w-5 text-emerald-500" />,
   reports: <FileText className="h-5 w-5 text-purple-500" />,
-  uploaded: <Upload className="h-5 w-5 text-gray-500 dark:text-gray-400" />,
+  uploads: <Upload className="h-5 w-5 text-gray-500 dark:text-gray-400" />,
 };
 
-function formatFileSize(bytes?: number): string {
+function formatFileSize(bytes: number | null | undefined): string {
   if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -61,6 +60,16 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatFileType(fileType: string | null): string {
+  if (!fileType) return "";
+  if (fileType.includes("pdf")) return "PDF";
+  if (fileType.includes("word") || fileType.includes("docx")) return "DOCX";
+  if (fileType.includes("text")) return "TXT";
+  if (fileType.includes("spreadsheet") || fileType.includes("xlsx")) return "XLSX";
+  if (fileType.includes("presentation") || fileType.includes("pptx")) return "PPTX";
+  return fileType.split("/").pop()?.toUpperCase() || "";
 }
 
 // ============================================================================
@@ -79,8 +88,7 @@ export function DocumentCard({
   onDelete,
 }: DocumentCardProps) {
   const [deleting, setDeleting] = useState(false);
-  const icon = FOLDER_ICONS[document.folder] || FOLDER_ICONS.uploaded;
-  const isProcessing = document.status === "processing";
+  const icon = FOLDER_ICONS[document.folder] || FOLDER_ICONS.uploads;
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -88,42 +96,39 @@ export function DocumentCard({
     setDeleting(false);
   };
 
+  const fileTypeLabel = formatFileType(document.fileType);
+
   return (
     <Card className="transition-all hover:shadow-md group">
       <CardContent className="p-4 space-y-3">
-        {/* Header: icon + title + status */}
+        {/* Header: icon + title */}
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex-shrink-0 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
             {icon}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {document.name}
+              {document.title}
             </p>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDate(document.createdAt)}
               </span>
-              {document.size ? (
+              {fileTypeLabel && (
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] h-4 px-1.5"
+                >
+                  {fileTypeLabel}
+                </Badge>
+              )}
+              {document.fileSize ? (
                 <span className="text-xs text-gray-400 dark:text-gray-500">
-                  {formatFileSize(document.size)}
-                </span>
-              ) : null}
-              {document.pageCount ? (
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  {document.pageCount} pages
+                  {formatFileSize(document.fileSize)}
                 </span>
               ) : null}
             </div>
           </div>
-          {isProcessing && (
-            <Badge
-              variant="outline"
-              className="text-xs shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-            >
-              Processing
-            </Badge>
-          )}
         </div>
 
         {/* Actions */}
@@ -132,7 +137,6 @@ export function DocumentCard({
             variant="outline"
             size="sm"
             onClick={() => onView(document)}
-            disabled={isProcessing}
             className="flex-1 text-xs h-8"
           >
             <Eye className="h-3 w-3 mr-1" />
@@ -141,7 +145,6 @@ export function DocumentCard({
           <Link href={`/chat?documentId=${document.id}`} className="flex-1">
             <Button
               size="sm"
-              disabled={isProcessing}
               className={cn(
                 "w-full text-xs h-8",
                 "bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
@@ -155,7 +158,7 @@ export function DocumentCard({
             variant="ghost"
             size="sm"
             onClick={handleDelete}
-            disabled={deleting || isProcessing}
+            disabled={deleting}
             className="h-8 w-8 p-0 text-gray-400 hover:text-red-500 shrink-0"
           >
             {deleting ? (

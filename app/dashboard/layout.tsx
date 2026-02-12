@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
-  HamburgerMenuIcon,
   DashboardIcon,
   GearIcon,
-  Cross2Icon,
   TargetIcon,
   EyeOpenIcon,
 } from "@radix-ui/react-icons";
@@ -28,6 +25,9 @@ import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
 import { useTier } from "@/lib/context/tier-context";
 import { createClient } from "@/lib/supabase/client";
+import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
+import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 
 // ============================================================================
 // Navigation Configuration
@@ -63,7 +63,7 @@ const coreNavItems: NavItem[] = [
   },
   {
     name: "Next Steps",
-    href: "/dashboard/startup-process",
+    href: "/dashboard/next-steps",
     icon: <ListChecks className="h-4 w-4" />,
   },
   {
@@ -85,13 +85,13 @@ const coreNavItems: NavItem[] = [
 const conditionalNavItems: NavItem[] = [
   {
     name: "Readiness",
-    href: "/dashboard/investor-readiness",
+    href: "/dashboard/readiness",
     icon: <BarChart3 className="h-4 w-4" />,
     condition: "showReadiness",
   },
   {
     name: "Documents",
-    href: "/dashboard/strategy",
+    href: "/dashboard/documents",
     icon: <FileText className="h-4 w-4" />,
     condition: "showDocuments",
   },
@@ -123,9 +123,11 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [callModalOpen, setCallModalOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { tier } = useTier();
+  const handleCallFred = useCallback(() => setCallModalOpen(true), []);
   const [userInfo, setUserInfo] = useState<{
     name: string;
     email: string;
@@ -279,24 +281,8 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16 lg:pt-20">
       <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)]">
-        {/* Mobile Sidebar */}
+        {/* Mobile Sidebar (hamburger drawer — hidden on md+, supplements bottom nav for full menu) */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="fixed z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 right-4"
-              style={{
-                bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
-              }}
-            >
-              {sidebarOpen ? (
-                <Cross2Icon className="h-5 w-5" />
-              ) : (
-                <HamburgerMenuIcon className="h-5 w-5" />
-              )}
-            </Button>
-          </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[280px] sm:w-72">
             <SidebarContent />
           </SheetContent>
@@ -307,13 +293,24 @@ export default function DashboardLayout({
           <SidebarContent />
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content — extra bottom padding on mobile for bottom nav */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-28 md:pb-8">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Phase 46: Mobile Bottom Navigation */}
+      <MobileBottomNav />
+
+      {/* Phase 42: Floating Chat Widget — available on all dashboard pages, hidden on mobile (bottom nav has Chat tab) */}
+      <div className="hidden md:block">
+        <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
+      </div>
+
+      {/* Phase 42: Call Fred Modal — Pro+ only */}
+      <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
     </div>
   );
 }

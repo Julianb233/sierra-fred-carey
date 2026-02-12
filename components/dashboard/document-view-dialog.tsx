@@ -29,53 +29,43 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch content when doc changes
+  // Fetch document details when doc changes
   useEffect(() => {
     if (!doc) {
       setContent(null);
       return;
     }
 
-    if (doc.source === "uploaded") {
-      // For uploaded docs, fetch the file URL from the detail endpoint
-      setLoading(true);
-      fetch(`/api/documents/uploaded/${doc.id}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.success && data.document?.fileUrl) {
-            setContent(data.document.fileUrl);
-          } else {
-            setContent(null);
-          }
-        })
-        .catch(() => setContent(null))
-        .finally(() => setLoading(false));
-    } else {
-      // For generated docs, fetch full content
-      setLoading(true);
-      fetch(`/api/documents/${doc.id}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.success && data.document?.content) {
-            setContent(data.document.content);
-          } else {
-            setContent(null);
-          }
-        })
-        .catch(() => setContent(null))
-        .finally(() => setLoading(false));
+    // If the document has a fileUrl already, use it directly for PDFs
+    if (doc.fileUrl && doc.fileType?.includes("pdf")) {
+      setContent(doc.fileUrl);
+      return;
     }
+
+    // Otherwise fetch from the review endpoint to get content
+    setLoading(true);
+    fetch(`/api/document-repository/${doc.id}/review`, { method: "POST" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.content) {
+          setContent(data.content);
+        } else {
+          setContent(null);
+        }
+      })
+      .catch(() => setContent(null))
+      .finally(() => setLoading(false));
   }, [doc]);
 
   if (!doc) return null;
 
-  const isUploadedPdf = doc.source === "uploaded" && content;
+  const isPdf = doc.fileType?.includes("pdf") && doc.fileUrl;
 
   return (
     <Dialog open={!!doc} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="truncate pr-8">{doc.name}</DialogTitle>
+          <DialogTitle className="truncate pr-8">{doc.title}</DialogTitle>
         </DialogHeader>
 
         {/* Content area */}
@@ -84,11 +74,11 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
             </div>
-          ) : isUploadedPdf ? (
+          ) : isPdf && doc.fileUrl ? (
             <iframe
-              src={content}
+              src={doc.fileUrl}
               className="w-full h-[60vh] rounded-lg border border-gray-200 dark:border-gray-700"
-              title={doc.name}
+              title={doc.title}
             />
           ) : content ? (
             <div className="prose prose-sm dark:prose-invert max-w-none p-4 bg-gray-50 dark:bg-gray-900 rounded-lg whitespace-pre-wrap text-sm leading-relaxed">
@@ -111,11 +101,11 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
             })}
           </div>
           <div className="flex gap-2">
-            {isUploadedPdf && (
+            {isPdf && doc.fileUrl && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(content, "_blank")}
+                onClick={() => window.open(doc.fileUrl!, "_blank")}
               >
                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
                 New Tab

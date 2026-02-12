@@ -1,9 +1,11 @@
 /**
  * Inbound SMS Webhook Handler
  * Phase 04: Studio Tier Features - Plan 05
+ * Phase 42: Enhanced with FRED conversation routing
  *
  * Processes inbound SMS messages from Twilio webhook.
- * Handles STOP/START keywords for compliance and stores inbound check-in responses.
+ * Handles STOP/START keywords for compliance, stores inbound check-in responses,
+ * and routes conversational messages through FRED for mentor responses.
  */
 
 import { logger } from "@/lib/logger";
@@ -15,6 +17,7 @@ import {
   getCheckinHistory,
 } from '@/lib/db/sms';
 import { createServiceClient } from '@/lib/supabase/server';
+import { processFredSMS } from '@/lib/sms/fred-sms-handler';
 
 /**
  * Normalize a phone number to E.164 format.
@@ -116,4 +119,16 @@ export async function processInboundSMS(
   logger.log(
     `[SMS Webhook] Stored inbound check-in response from user ${user.userId} (week ${weekNumber}/${year})`
   );
+
+  // Phase 42: Route conversational messages through FRED for mentor response.
+  // Messages that look like check-in responses to a recent outbound prompt
+  // are handled by the existing check-in flow above. All other messages
+  // are treated as FRED conversations and get a mentor response via SMS.
+  const isConversational = !outboundCheckin || trimmedBody.length > 50;
+  if (isConversational) {
+    // Fire-and-forget: process FRED response asynchronously
+    processFredSMS(user.userId, normalizedPhone, trimmedBody).catch((err) => {
+      logger.log(`[SMS Webhook] FRED SMS processing failed (non-blocking): ${err}`);
+    });
+  }
 }

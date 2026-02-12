@@ -48,7 +48,7 @@ const FOLDERS: {
     emptyCta: { text: "Generate a Report", href: "/dashboard/strategy" },
   },
   {
-    key: "uploaded",
+    key: "uploads",
     label: "Uploaded Files",
     emptyMessage:
       "No uploaded files yet. Drag and drop a PDF to upload it for review.",
@@ -86,19 +86,6 @@ export default function DocumentsPage() {
 // Content
 // ============================================================================
 
-interface ApiDocItem {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  fileUrl: string | null;
-  pageCount: number | null;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  canReviewWithFred: boolean;
-}
-
 function DocumentsContent() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,13 +94,13 @@ function DocumentsContent() {
   const [activeTab, setActiveTab] = useState<DocumentFolder>("decks");
   const [viewDoc, setViewDoc] = useState<DocumentItem | null>(null);
 
-  // Fetch all documents from unified API
+  // Fetch all documents from the document-repository API
   const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch("/api/dashboard/documents");
+      const res = await fetch("/api/document-repository");
       const json = await res.json();
 
       if (!json.success) {
@@ -121,31 +108,7 @@ function DocumentsContent() {
         return;
       }
 
-      const data = json.data;
-      const allDocs: DocumentItem[] = [];
-
-      // Map each category from the API response
-      for (const apiDoc of (data.decks || []) as ApiDocItem[]) {
-        allDocs.push(mapApiDoc(apiDoc, "decks", "uploaded"));
-      }
-      for (const apiDoc of (data.strategyDocs || []) as ApiDocItem[]) {
-        allDocs.push(mapApiDoc(apiDoc, "strategy", "generated"));
-      }
-      for (const apiDoc of (data.uploadedFiles || []) as ApiDocItem[]) {
-        allDocs.push(mapApiDoc(apiDoc, "uploaded", "uploaded"));
-      }
-
-      // Track report IDs (subset of strategyDocs)
-      const reportIds = new Set(
-        ((data.reports || []) as ApiDocItem[]).map((d) => d.id)
-      );
-      for (const doc of allDocs) {
-        if (doc.folder === "strategy" && reportIds.has(doc.id)) {
-          (doc as DocumentItem & { isReport?: boolean }).isReport = true;
-        }
-      }
-
-      setDocuments(allDocs);
+      setDocuments(json.documents as DocumentItem[]);
     } catch {
       setError("Failed to load documents");
     } finally {
@@ -157,7 +120,7 @@ function DocumentsContent() {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  // Handle View action — always open inline dialog
+  // Handle View action — open inline dialog
   const handleView = useCallback((doc: DocumentItem) => {
     setViewDoc(doc);
   }, []);
@@ -167,12 +130,9 @@ function DocumentsContent() {
     async (doc: DocumentItem) => {
       try {
         setError(null);
-        const url =
-          doc.source === "uploaded"
-            ? `/api/documents/uploaded/${doc.id}`
-            : `/api/documents/${doc.id}`;
-
-        const res = await fetch(url, { method: "DELETE" });
+        const res = await fetch(`/api/document-repository/${doc.id}`, {
+          method: "DELETE",
+        });
 
         if (res.ok) {
           setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
@@ -189,23 +149,12 @@ function DocumentsContent() {
 
   // Filter documents by active folder and search query
   const filteredDocuments = useMemo(() => {
-    let filtered: DocumentItem[];
-    if (activeTab === "reports") {
-      filtered = documents.filter(
-        (d) =>
-          d.folder === "strategy" &&
-          (d as DocumentItem & { isReport?: boolean }).isReport
-      );
-    } else {
-      filtered = documents.filter((d) => d.folder === activeTab);
-    }
+    let filtered = documents.filter((d) => d.folder === activeTab);
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (d) =>
-          d.name.toLowerCase().includes(query) ||
-          d.type.toLowerCase().includes(query)
+      filtered = filtered.filter((d) =>
+        d.title.toLowerCase().includes(query)
       );
     }
     return filtered;
@@ -217,16 +166,10 @@ function DocumentsContent() {
       decks: 0,
       strategy: 0,
       reports: 0,
-      uploaded: 0,
+      uploads: 0,
     };
     for (const doc of documents) {
       counts[doc.folder]++;
-      if (
-        doc.folder === "strategy" &&
-        (doc as DocumentItem & { isReport?: boolean }).isReport
-      ) {
-        counts.reports++;
-      }
     }
     return counts;
   }, [documents]);
@@ -294,7 +237,11 @@ function DocumentsContent() {
       >
         <TabsList className="w-full justify-start overflow-x-auto">
           {FOLDERS.map((folder) => (
-            <TabsTrigger key={folder.key} value={folder.key} className="gap-1">
+            <TabsTrigger
+              key={folder.key}
+              value={folder.key}
+              className="gap-1"
+            >
               {folder.label}
               {folderCounts[folder.key] > 0 && (
                 <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">
@@ -308,7 +255,6 @@ function DocumentsContent() {
         {FOLDERS.map((folder) => (
           <TabsContent key={folder.key} value={folder.key}>
             <div className="mt-4">
-              {/* Document list */}
               {filteredDocuments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredDocuments.map((doc) => (
@@ -336,28 +282,6 @@ function DocumentsContent() {
       <DocumentViewDialog doc={viewDoc} onClose={() => setViewDoc(null)} />
     </div>
   );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function mapApiDoc(
-  apiDoc: ApiDocItem,
-  folder: DocumentFolder,
-  source: "generated" | "uploaded"
-): DocumentItem {
-  return {
-    id: apiDoc.id,
-    name: apiDoc.name,
-    type: apiDoc.type,
-    folder,
-    source,
-    fileUrl: apiDoc.fileUrl,
-    pageCount: apiDoc.pageCount,
-    status: apiDoc.status || "ready",
-    createdAt: apiDoc.createdAt,
-  };
 }
 
 // ============================================================================

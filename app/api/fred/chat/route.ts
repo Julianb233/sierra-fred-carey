@@ -30,6 +30,7 @@ import { withLogging } from "@/lib/api/with-logging";
 import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContext } from "@/lib/fred/context-builder";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState, ModeContext } from "@/lib/db/conversation-state";
@@ -533,6 +534,11 @@ async function handlePost(req: NextRequest) {
         { role: "assistant", content: result.response.content },
       ]);
 
+      // Phase 43: Fire-and-forget next steps extraction
+      extractAndStoreNextSteps(userId, result.response.content, new Date().toISOString()).catch(err =>
+        console.warn("[FRED Chat] Next steps extraction failed:", err)
+      );
+
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
         enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
@@ -743,6 +749,11 @@ async function handlePost(req: NextRequest) {
               { role: "user", content: message },
               { role: "assistant", content: response.content },
             ]);
+
+            // Phase 43: Fire-and-forget next steps extraction
+            extractAndStoreNextSteps(userId, response.content, new Date().toISOString()).catch(err =>
+              console.warn("[FRED Chat] Next steps extraction failed:", err)
+            );
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {
