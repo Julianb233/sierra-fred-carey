@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,33 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import {
   HamburgerMenuIcon,
   DashboardIcon,
-  RocketIcon,
-  PersonIcon,
-  FileTextIcon,
-  CheckCircledIcon,
   GearIcon,
   Cross2Icon,
-  OpenInNewWindowIcon,
-  LockClosedIcon,
-  BarChartIcon,
-  ActivityLogIcon,
   TargetIcon,
   EyeOpenIcon,
-  CountdownTimerIcon,
-  ListBulletIcon,
-  MagnifyingGlassIcon,
 } from "@radix-ui/react-icons";
 import {
   Users,
-  Brain,
-  Heart,
-  Bell,
-  Share2,
-  Mail,
-  Inbox,
-  Video,
-  Crosshair,
-  UserCircle,
+  MessageSquare,
+  TrendingUp,
+  ListChecks,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -44,181 +29,45 @@ import { UserTier } from "@/lib/constants";
 import { useTier } from "@/lib/context/tier-context";
 import { createClient } from "@/lib/supabase/client";
 
+// ============================================================================
+// Navigation Configuration
+// ============================================================================
+
 type NavItem = {
   name: string;
   href: string;
   icon: React.ReactNode;
-  tier?: number;
-  badge?: string;
+  /** If set, item is only shown when this condition key is true */
+  condition?: string;
 };
 
-const navItems: NavItem[] = [
+/**
+ * Core navigation items -- always visible (7 items per spec).
+ * Spec: Home, Chat with Fred, Your Progress, Next Steps, Community, Settings
+ */
+const coreNavItems: NavItem[] = [
   {
-    name: "Overview",
+    name: "Home",
     href: "/dashboard",
     icon: <DashboardIcon className="h-4 w-4" />,
   },
   {
-    name: "Reality Lens",
-    href: "/dashboard/reality-lens",
-    icon: <OpenInNewWindowIcon className="h-4 w-4" />,
-    badge: "Free",
+    name: "Chat with Fred",
+    href: "/chat",
+    icon: <MessageSquare className="h-4 w-4" />,
   },
   {
-    name: "Your Journey",
+    name: "Your Progress",
     href: "/dashboard/journey",
-    icon: <RocketIcon className="h-4 w-4" />,
-    badge: "Free",
+    icon: <TrendingUp className="h-4 w-4" />,
   },
   {
-    name: "Startup Process",
+    name: "Next Steps",
     href: "/dashboard/startup-process",
-    icon: <ListBulletIcon className="h-4 w-4" />,
-    badge: "Free",
+    icon: <ListChecks className="h-4 w-4" />,
   },
   {
-    name: "Decision History",
-    href: "/dashboard/history",
-    icon: <CountdownTimerIcon className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "AI Insights",
-    href: "/dashboard/insights",
-    icon: <BarChartIcon className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Wellbeing",
-    href: "/dashboard/wellbeing",
-    icon: <Heart className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Inbox",
-    href: "/dashboard/inbox",
-    icon: <Inbox className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Notifications",
-    href: "/dashboard/notifications",
-    icon: <Bell className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Monitoring",
-    href: "/dashboard/monitoring",
-    icon: <ActivityLogIcon className="h-4 w-4" />,
-    badge: "Free",
-  },
-  {
-    name: "Positioning",
-    href: "/dashboard/positioning",
-    icon: <TargetIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Investor Lens",
-    href: "/dashboard/investor-lens",
-    icon: <EyeOpenIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Investor Readiness",
-    href: "/dashboard/investor-readiness",
-    icon: <PersonIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Investor Evaluation",
-    href: "/dashboard/investor-evaluation",
-    icon: <MagnifyingGlassIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Pitch Deck Review",
-    href: "/dashboard/pitch-deck",
-    icon: <FileTextIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Strategy Docs",
-    href: "/dashboard/strategy",
-    icon: <FileTextIcon className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Investor Targeting",
-    href: "/dashboard/investor-targeting",
-    icon: <Crosshair className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Founder Snapshot",
-    href: "/dashboard/profile/snapshot",
-    icon: <UserCircle className="h-4 w-4" />,
-    tier: 1,
-    badge: "Pro",
-  },
-  {
-    name: "Weekly Check-ins",
-    href: "/dashboard/sms",
-    icon: <CheckCircledIcon className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Virtual Team",
-    href: "/dashboard/agents",
-    icon: <RocketIcon className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Boardy Integration",
-    href: "/dashboard/boardy",
-    icon: <LockClosedIcon className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Video Coaching",
-    href: "/dashboard/coaching",
-    icon: <Video className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "FRED Memory",
-    href: "/dashboard/memory",
-    icon: <Brain className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Sharing",
-    href: "/dashboard/sharing",
-    icon: <Share2 className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Invitations",
-    href: "/dashboard/invitations",
-    icon: <Mail className="h-4 w-4" />,
-    tier: 2,
-    badge: "Studio",
-  },
-  {
-    name: "Communities",
+    name: "Community",
     href: "/dashboard/communities",
     icon: <Users className="h-4 w-4" />,
   },
@@ -229,6 +78,44 @@ const navItems: NavItem[] = [
   },
 ];
 
+/**
+ * Conditional navigation items -- shown based on stage, tier, or feature state.
+ * Each has a `condition` key that maps to a computed visibility flag.
+ */
+const conditionalNavItems: NavItem[] = [
+  {
+    name: "Readiness",
+    href: "/dashboard/investor-readiness",
+    icon: <BarChart3 className="h-4 w-4" />,
+    condition: "showReadiness",
+  },
+  {
+    name: "Documents",
+    href: "/dashboard/strategy",
+    icon: <FileText className="h-4 w-4" />,
+    condition: "showDocuments",
+  },
+  {
+    name: "Positioning",
+    href: "/dashboard/positioning",
+    icon: <TargetIcon className="h-4 w-4" />,
+    condition: "showPositioning",
+  },
+  {
+    name: "Investor Lens",
+    href: "/dashboard/investor-lens",
+    icon: <EyeOpenIcon className="h-4 w-4" />,
+    condition: "showInvestorLens",
+  },
+];
+
+// Stages considered "early" -- hide investor/funding tools
+const EARLY_STAGES = new Set(["idea", "mvp"]);
+
+// ============================================================================
+// Layout Component
+// ============================================================================
+
 export default function DashboardLayout({
   children,
 }: {
@@ -238,25 +125,32 @@ export default function DashboardLayout({
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
-  const { tier, isLoading: tierLoading } = useTier();
-  const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
+  const { tier } = useTier();
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    email: string;
+    stage: string | null;
+  } | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
       const supabase = createClient();
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
       if (!authUser) {
         router.replace("/login");
         return;
       }
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, tier")
+        .select("name, stage")
         .eq("id", authUser.id)
         .single();
       setUserInfo({
         name: profile?.name || authUser.email?.split("@")[0] || "Founder",
         email: authUser.email || "",
+        stage: profile?.stage || null,
       });
       setIsAuthChecking(false);
     }
@@ -266,8 +160,41 @@ export default function DashboardLayout({
   const user = {
     name: userInfo?.name || "",
     email: userInfo?.email || "",
-    tier: tier,
+    tier,
+    stage: userInfo?.stage,
   };
+
+  // Compute visibility conditions for conditional nav items
+  const conditions = useMemo(() => {
+    const isEarlyStage = !user.stage || EARLY_STAGES.has(user.stage);
+
+    return {
+      // Readiness: visible when stage >= seed OR tier >= Pro
+      showReadiness: !isEarlyStage || tier >= UserTier.PRO,
+      // Documents: always show if tier >= Pro (they may have docs)
+      showDocuments: tier >= UserTier.PRO,
+      // Positioning: show for Pro+ users
+      showPositioning: tier >= UserTier.PRO,
+      // Investor Lens: show when not early stage AND tier >= Pro
+      showInvestorLens: !isEarlyStage && tier >= UserTier.PRO,
+    };
+  }, [user.stage, tier]);
+
+  // Build final nav item list
+  const visibleNavItems = useMemo(() => {
+    const visible = [...coreNavItems];
+    const conditional = conditionalNavItems.filter(
+      (item) =>
+        item.condition &&
+        conditions[item.condition as keyof typeof conditions]
+    );
+    if (conditional.length > 0) {
+      // Insert conditional items before Settings (last core item)
+      const settingsIdx = visible.findIndex((i) => i.name === "Settings");
+      visible.splice(settingsIdx, 0, ...conditional);
+    }
+    return visible;
+  }, [conditions]);
 
   const tierNames = ["Free", "Pro", "Studio"];
   const tierColors = [
@@ -283,7 +210,10 @@ export default function DashboardLayout({
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
             <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
-              {(user.name || "?").split(" ").map(n => n[0]).join("")}
+              {(user.name || "?")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -302,54 +232,28 @@ export default function DashboardLayout({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname.startsWith(item.href);
-          const isLocked = item.tier !== undefined && user.tier < item.tier;
+        {visibleNavItems.map((item) => {
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
 
           return (
             <Link
               key={item.name}
-              href={isLocked ? "#" : item.href}
-              title={isLocked ? `Upgrade to ${item.badge} to unlock ${item.name}` : undefined}
-              onClick={(e) => {
-                if (isLocked) {
-                  e.preventDefault();
-                } else {
-                  setSidebarOpen(false);
-                }
-              }}
+              href={item.href}
+              onClick={() => setSidebarOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
                 isActive
                   ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
-                  : isLocked
-                  ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               )}
             >
-              <div className={cn(
-                "transition-transform group-hover:scale-110",
-                isLocked && "opacity-50"
-              )}>
+              <div className="transition-transform group-hover:scale-110">
                 {item.icon}
               </div>
               <span className="flex-1 text-sm">{item.name}</span>
-              {item.badge && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs py-0 h-5",
-                    isActive && "border-[#ff6a1a] text-[#ff6a1a]"
-                  )}
-                >
-                  {item.badge}
-                </Badge>
-              )}
-              {isLocked && (
-                <LockClosedIcon className="h-3 w-3 text-gray-400" />
-              )}
             </Link>
           );
         })}
@@ -382,7 +286,9 @@ export default function DashboardLayout({
               variant="outline"
               size="icon"
               className="fixed z-40 lg:hidden h-14 w-14 rounded-full shadow-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 right-4"
-              style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+              style={{
+                bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+              }}
             >
               {sidebarOpen ? (
                 <Cross2Icon className="h-5 w-5" />
