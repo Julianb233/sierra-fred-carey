@@ -94,7 +94,7 @@ See MILESTONES.md for full details.
 - [x] **Phase 36: Conversation State & Structured Flow** - FRED leads conversations with state tracking, structured intake, and gentle redirects
 - [x] **Phase 37: Reality Lens Gate & Decision Sequencing** - Reality Lens as mandatory gate before tactical advice, enforced step ordering
 - [x] **Phase 38: Framework & Mode Integration** - Wire diagnostic engine and existing frameworks into chat as active conversation guides
-- [ ] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
+- [x] **Phase 39: Missing Frameworks & Gated Reviews** - Complete Investor Readiness Score, formalize Deck Request Protocol, gate Pitch Deck Review
 - [ ] **Phase 40: Dashboard Redesign — Founder Command Center** - Nav restructure, Home with Snapshot Card + Decision Box + Funding Gauge + Weekly Momentum, dynamic display rules
 - [x] **Phase 41: Founder Communities** - User-created communities with Circles, Topic Rooms, Events, and Graduates sections
 - [ ] **Phase 42: Multi-Channel FRED Access** - Call (scheduled + on-demand), text (SMS), and message FRED 24/7 from any screen
@@ -272,7 +272,7 @@ See MILESTONES.md for full details.
 | 36. Conversation State & Structured Flow | v4.0 | 2/2 | Complete | 2026-02-11 |
 | 37. Reality Lens Gate & Decision Sequencing | v4.0 | 1/1 | Complete | 2026-02-11 |
 | 38. Framework & Mode Integration | v4.0 | 1/1 | Complete | 2026-02-11 |
-| 39. Missing Frameworks & Gated Reviews | v4.0 | 0/TBD | Not started | - |
+| 39. Missing Frameworks & Gated Reviews | v4.0 | 1/1 | Complete | 2026-02-11 |
 | 40. Dashboard Redesign — Founder Command Center | v4.0 | 0/TBD | Not started | - |
 | 41. Founder Communities | v4.0 | 2/2 | Complete | 2026-02-11 |
 | 42. Multi-Channel FRED Access | v4.0 | 0/TBD | Not started | - |
