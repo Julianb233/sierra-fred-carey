@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.env*
+!.env.example
+*.md
+tests
+docs
+.planning
+get-shit-done
+fred-cary-db
+supabase-migrations
+.github
+public
+components
+app
+scripts
