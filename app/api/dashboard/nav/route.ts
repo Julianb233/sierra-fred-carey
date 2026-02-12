@@ -68,7 +68,7 @@ const CORE_NAV: NavItem[] = [
   {
     key: "next-steps",
     name: "Next Steps",
-    href: "/dashboard/startup-process",
+    href: "/dashboard/next-steps",
     icon: "list-checks",
     minTier: 0,
     alwaysVisible: true,
@@ -104,7 +104,7 @@ const CONDITIONAL_NAV: ConditionalNavItem[] = [
   {
     key: "readiness",
     name: "Readiness",
-    href: "/dashboard/investor-readiness",
+    href: "/dashboard/readiness",
     icon: "gauge",
     minTier: 1,
     alwaysVisible: false,
