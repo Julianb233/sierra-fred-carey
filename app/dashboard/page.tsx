@@ -14,6 +14,7 @@ import { DecisionBox } from "@/components/dashboard/decision-box";
 import { FundingReadinessGauge } from "@/components/dashboard/funding-readiness-gauge";
 import { WeeklyMomentum } from "@/components/dashboard/weekly-momentum";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MobileHome } from "@/components/mobile/mobile-home";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 
 function DashboardContent() {
@@ -174,14 +175,24 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
-        </div>
-      }
-    >
-      <DashboardContent />
-    </Suspense>
+    <>
+      {/* Mobile view */}
+      <div className="md:hidden">
+        <MobileHome />
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+            </div>
+          }
+        >
+          <DashboardContent />
+        </Suspense>
+      </div>
+    </>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
+import { MobileProgress } from "@/components/mobile/mobile-progress";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -117,14 +118,24 @@ export default function ReadinessPage() {
   }
 
   return (
-    <FeatureLock
-      requiredTier={UserTier.PRO}
-      currentTier={tier}
-      featureName="Readiness Dashboard"
-      description="See your investor readiness and positioning assessment side by side."
-    >
-      <ReadinessContent />
-    </FeatureLock>
+    <>
+      {/* Mobile view */}
+      <div className="md:hidden">
+        <MobileProgress />
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block">
+        <FeatureLock
+          requiredTier={UserTier.PRO}
+          currentTier={tier}
+          featureName="Readiness Dashboard"
+          description="See your investor readiness and positioning assessment side by side."
+        >
+          <ReadinessContent />
+        </FeatureLock>
+      </div>
+    </>
   );
 }
 
