@@ -12,6 +12,7 @@ import {
   Download,
   PanelRight,
   PanelRightClose,
+  Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { useUserTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -40,7 +44,9 @@ function useIsMobile() {
 export default function ChatPage() {
   const [activeMode, setActiveMode] = useState<ChatMode>("founder-os");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [callModalOpen, setCallModalOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { tier } = useUserTier();
 
   // Auto-collapse side panel on mobile
   useEffect(() => {
@@ -122,6 +128,20 @@ export default function ChatPage() {
         </div>
 
         <div className="flex items-center gap-1">
+          {/* Call Fred — Pro+ only */}
+          {tier >= UserTier.PRO && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCallModalOpen(true)}
+              className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
+              aria-label="Call Fred"
+            >
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Call</span>
+            </Button>
+          )}
+
           {/* Side panel toggle */}
           <Button
             variant="ghost"
@@ -191,6 +211,11 @@ export default function ChatPage() {
           isMobile={isMobile}
         />
       </div>
+
+      {/* Call Fred Modal — Pro+ */}
+      {tier >= UserTier.PRO && (
+        <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
+      )}
     </div>
   );
 }
