@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Send, Loader2, Mic, MicOff } from "lucide-react";
-import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
+import { Send, Loader2, Mic, Square } from "lucide-react";
+import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useVoiceInput } from "@/lib/hooks/use-voice-input";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -15,8 +16,8 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred anything...", showVoiceInput = false }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { isListening, transcript, startListening, stopListening, isSupported } = useVoiceInput();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -26,44 +27,20 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
     }
   }, [message]);
 
-  // Voice input via Web Speech API (where available)
-  const toggleVoice = useCallback(() => {
-    if (isRecording) {
-      setIsRecording(false);
-      return;
+  // Populate input when transcript arrives
+  useEffect(() => {
+    if (transcript) {
+      setMessage((prev) => (prev ? prev + " " + transcript : transcript));
     }
+  }, [transcript]);
 
-    // Check for SpeechRecognition API (vendor-prefixed in most mobile browsers)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (SpeechRecognitionCtor) {
-      const recognition = new SpeechRecognitionCtor();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
-        const transcript = event.results?.[0]?.[0]?.transcript;
-        if (transcript) {
-          setMessage((prev) => (prev ? prev + " " + transcript : transcript));
-        }
-        setIsRecording(false);
-      };
-
-      recognition.onerror = () => {
-        setIsRecording(false);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.start();
-      setIsRecording(true);
+  const toggleVoice = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
-  }, [isRecording]);
+  };
 
   const handleSend = () => {
     if (message.trim() && !isLoading) {
@@ -91,28 +68,31 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 via-blue-500/20 to-purple-500/20 blur-xl opacity-50 -z-10" />
 
         <div className="flex items-end gap-2 p-3">
-          {/* Voice input button — mobile only */}
-          {showVoiceInput && (
+          {/* Voice input button */}
+          {showVoiceInput && isSupported && (
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="md:hidden"
+              className="relative"
             >
+              {isListening && (
+                <span className="absolute inset-0 rounded-xl bg-red-500/30 animate-ping" />
+              )}
               <Button
                 onClick={toggleVoice}
                 disabled={isLoading}
                 size="icon"
                 variant="ghost"
-                aria-label={isRecording ? "Stop recording" : "Voice input"}
+                aria-label={isListening ? "Stop recording" : "Voice input"}
                 className={cn(
-                  "h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl shrink-0",
-                  isRecording
+                  "relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl shrink-0",
+                  isListening
                     ? "bg-red-100 dark:bg-red-900/30 text-red-600"
                     : "text-gray-500 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
                 )}
               >
-                {isRecording ? (
-                  <MicOff className="h-4 w-4" />
+                {isListening ? (
+                  <Square className="h-4 w-4" />
                 ) : (
                   <Mic className="h-4 w-4" />
                 )}
