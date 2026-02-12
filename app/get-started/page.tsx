@@ -160,9 +160,11 @@ const OnboardingPage = () => {
         });
       }, 200);
 
-      // Redirect after celebration
+      // Redirect after celebration — router.refresh() syncs auth state
+      // so subsequent navigations (e.g. dashboard → chat) maintain session
       const timeout = setTimeout(() => {
         router.push("/dashboard?welcome=true");
+        router.refresh();
       }, 2500);
 
       return () => clearTimeout(timeout);

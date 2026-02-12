@@ -34,7 +34,7 @@ function LoginContent() {
       return "/dashboard";
     }
     // Only allow paths under known safe prefixes
-    const safePrefixes = ["/dashboard", "/onboarding", "/pricing", "/settings"];
+    const safePrefixes = ["/dashboard", "/onboarding", "/pricing", "/settings", "/chat", "/agents", "/documents", "/profile", "/check-ins", "/communities"];
     if (!safePrefixes.some(prefix => cleaned.startsWith(prefix))) {
       return "/dashboard";
     }
