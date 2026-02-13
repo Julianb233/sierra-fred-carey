@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
+  Room,
+  RoomEvent,
+} from "livekit-client";
+import {
   Dialog,
   DialogContent,
   DialogTitle,
@@ -92,6 +96,7 @@ export function CallFredModal({
   const [transcriptEntries, setTranscriptEntries] = useState<CallTranscriptEntry[]>([]);
 
   const roomNameRef = useRef<string>("");
+  const roomRef = useRef<Room | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
   );
@@ -106,6 +111,16 @@ export function CallFredModal({
     }
   }, [seconds, callState, maxDuration]);
 
+  // Clean up LiveKit room on unmount or when modal closes
+  useEffect(() => {
+    return () => {
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+        roomRef.current = null;
+      }
+    };
+  }, []);
+
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
@@ -114,6 +129,12 @@ export function CallFredModal({
       setCallSummary(null);
       setTranscriptEntries([]);
       resetTimer();
+    } else {
+      // Disconnect room when modal closes
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+        roomRef.current = null;
+      }
     }
   }, [open, resetTimer]);
 
@@ -136,11 +157,47 @@ export function CallFredModal({
       const data = await response.json();
       roomNameRef.current = data.room;
 
-      // In production this would connect to LiveKit.
-      // For the MVP, simulate the call connection.
-      setTimeout(() => {
-        setCallState("in-call");
-      }, 1500);
+      // Connect to LiveKit room
+      const room = new Room();
+      roomRef.current = room;
+
+      // Listen for transcript data from the voice agent
+      room.on(RoomEvent.DataReceived, (payload: Uint8Array) => {
+        try {
+          const message = JSON.parse(new TextDecoder().decode(payload));
+          if (message.speaker && message.text) {
+            setTranscriptEntries((prev) => [
+              ...prev,
+              {
+                speaker: message.speaker,
+                text: message.text,
+                timestamp: message.timestamp || new Date().toISOString(),
+              },
+            ]);
+          }
+        } catch {
+          // Ignore non-JSON data packets
+        }
+      });
+
+      try {
+        await room.connect(data.url, data.token);
+      } catch (connectErr) {
+        roomRef.current = null;
+        throw new Error("Failed to connect to call server. Please check your network and try again.");
+      }
+
+      // Enable microphone after connecting
+      try {
+        await room.localParticipant.setMicrophoneEnabled(true);
+      } catch (micErr) {
+        // Disconnect since the call won't work without a mic
+        room.disconnect();
+        roomRef.current = null;
+        throw new Error("Microphone access is required for the call. Please allow microphone permissions and try again.");
+      }
+
+      setCallState("in-call");
     } catch (err) {
       console.error("[CallFred] Error starting call:", err);
       setError(err instanceof Error ? err.message : "Failed to start call");
@@ -148,8 +205,28 @@ export function CallFredModal({
     }
   };
 
+  const handleToggleMute = useCallback(async () => {
+    const room = roomRef.current;
+    if (!room) return;
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!newMuted);
+    } catch (err) {
+      console.warn("[CallFred] Failed to toggle mute:", err);
+      // Revert on failure
+      setIsMuted(!newMuted);
+    }
+  }, [isMuted]);
+
   const handleEndCall = async () => {
     setCallState("ending");
+
+    // Disconnect from LiveKit room before generating summary
+    if (roomRef.current) {
+      roomRef.current.disconnect();
+      roomRef.current = null;
+    }
 
     try {
       // Generate post-call summary
@@ -267,7 +344,7 @@ export function CallFredModal({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={handleToggleMute}
                 className={cn(
                   "h-14 w-14 rounded-full",
                   isMuted && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"

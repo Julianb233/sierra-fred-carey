@@ -51,6 +51,22 @@ export default defineAgent({
       `[Fred Voice Agent] Participant joined: ${participant.identity}`,
     );
 
+    const encoder = new TextEncoder();
+
+    function publishTranscript(speaker: 'user' | 'fred', text: string) {
+      const data = encoder.encode(
+        JSON.stringify({
+          speaker,
+          text,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      ctx.room.localParticipant?.publishData(data, {
+        reliable: true,
+        topic: 'transcript',
+      });
+    }
+
     const agent = new VoiceAgent({
       instructions: buildFredVoicePrompt(),
       stt: new STT({ model: 'whisper-1' }),
@@ -63,6 +79,7 @@ export default defineAgent({
     session.on('user_input_transcribed', (ev) => {
       if (ev.isFinal) {
         console.log(`[User] ${ev.transcript}`);
+        publishTranscript('user', ev.transcript);
       }
     });
 
@@ -74,6 +91,7 @@ export default defineAgent({
           .join('');
         if (text) {
           console.log(`[Fred] ${text}`);
+          publishTranscript('fred', text);
         }
       }
     });
