@@ -41,32 +41,44 @@ const STORAGE_KEY = "sahara-onboarding";
 // Hook
 // ============================================================================
 
-/** Sync onboarding completion + startup info to the profiles table */
+/** Sync onboarding completion + startup info to the profiles table.
+ *  Reads the existing profile first and only fills in empty fields
+ *  to avoid overwriting data set by /api/onboard or other flows. */
 async function syncCompletionToDb(state: OnboardingState) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  // Build update object with all collected startup info
+  // Read existing profile to avoid overwriting populated fields
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("name, stage, industry, challenges, revenue_range, team_size, funding_history")
+    .eq("id", user.id)
+    .single();
+
+  // Build update object — only set fields that are currently empty in the DB
   const updateData: Record<string, any> = {
     onboarding_completed: true,
     updated_at: new Date().toISOString(),
   };
 
-  // Add startup info fields that exist in profiles table
-  if (state.startupInfo.name) updateData.name = state.startupInfo.name;
-  if (state.startupInfo.stage) updateData.stage = state.startupInfo.stage;
-  if (state.startupInfo.industry) updateData.industry = state.startupInfo.industry;
+  // Add startup info fields only if the existing profile field is empty
+  if (state.startupInfo.name && !existing?.name) updateData.name = state.startupInfo.name;
+  if (state.startupInfo.stage && !existing?.stage) updateData.stage = state.startupInfo.stage;
+  if (state.startupInfo.industry && !existing?.industry) updateData.industry = state.startupInfo.industry;
 
-  // Store mainChallenge in challenges JSONB array
+  // Store mainChallenge in challenges JSONB array — merge, don't replace
   if (state.startupInfo.mainChallenge) {
-    updateData.challenges = [state.startupInfo.mainChallenge];
+    const existingChallenges = Array.isArray(existing?.challenges) ? existing.challenges : [];
+    if (existingChallenges.length === 0) {
+      updateData.challenges = [state.startupInfo.mainChallenge];
+    }
   }
 
-  // Enrichment fields (from migration 037)
-  if (state.startupInfo.revenueRange) updateData.revenue_range = state.startupInfo.revenueRange;
-  if (state.startupInfo.teamSize !== undefined) updateData.team_size = state.startupInfo.teamSize;
-  if (state.startupInfo.fundingHistory) updateData.funding_history = state.startupInfo.fundingHistory;
+  // Enrichment fields — only fill empty
+  if (state.startupInfo.revenueRange && !existing?.revenue_range) updateData.revenue_range = state.startupInfo.revenueRange;
+  if (state.startupInfo.teamSize !== undefined && !existing?.team_size) updateData.team_size = state.startupInfo.teamSize;
+  if (state.startupInfo.fundingHistory && !existing?.funding_history) updateData.funding_history = state.startupInfo.fundingHistory;
 
   // Track enrichment metadata
   if (updateData.industry || updateData.revenue_range || updateData.team_size || updateData.funding_history) {
