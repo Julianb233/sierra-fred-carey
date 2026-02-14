@@ -236,7 +236,7 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-medium text-center max-w-[80px] leading-tight hidden sm:block truncate",
+                        "text-xs font-medium text-center max-w-[90px] leading-tight hidden sm:block line-clamp-2",
                         step.stepNumber === process.currentStep
                           ? "text-[#ff6a1a]"
                           : step.status === "validated"

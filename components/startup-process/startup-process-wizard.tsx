@@ -252,13 +252,14 @@ export function StartupProcessWizard({
                           </div>
                           <span
                             className={cn(
-                              "text-xs text-center max-w-[80px] truncate",
+                              "text-xs text-center max-w-[90px] leading-tight line-clamp-2",
                               isCurrent
                                 ? "text-[#ff6a1a] font-medium"
                                 : "text-muted-foreground"
                             )}
+                            title={STEP_TITLES[step.stepNumber]}
                           >
-                            {STEP_TITLES[step.stepNumber].split(" ").slice(0, 2).join(" ")}
+                            {STEP_TITLES[step.stepNumber]}
                           </span>
                         </button>
                         {index < 8 && (
