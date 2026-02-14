@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { stripHtml } from "@/lib/communities/sanitize";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,29 @@ export async function POST(request: NextRequest) {
       return createRateLimitResponse(rateLimitResult);
     }
 
-    const { name, email, stage, challenges, teammateEmails, isQuickOnboard, password, qualifying, ref, industry, revenueRange, teamSize, fundingHistory } = await request.json();
+    const body = await request.json();
+
+    // Sanitize text inputs — strip HTML tags to prevent injection
+    const sanitizeField = (v: unknown): string | undefined =>
+      typeof v === "string" ? stripHtml(v) : undefined;
+
+    const name = sanitizeField(body.name);
+    const email = sanitizeField(body.email);
+    const stage = sanitizeField(body.stage);
+    const industry = sanitizeField(body.industry);
+    const revenueRange = sanitizeField(body.revenueRange);
+    const fundingHistory = sanitizeField(body.fundingHistory);
+    const ref = sanitizeField(body.ref);
+    const password = body.password; // passwords must not be altered
+    const isQuickOnboard = body.isQuickOnboard;
+    const qualifying = body.qualifying;
+    const teamSize = typeof body.teamSize === "number" ? body.teamSize : undefined;
+    const challenges = Array.isArray(body.challenges)
+      ? body.challenges.map((c: unknown) => (typeof c === "string" ? stripHtml(c) : String(c)))
+      : undefined;
+    const teammateEmails = Array.isArray(body.teammateEmails)
+      ? body.teammateEmails.map((e: unknown) => (typeof e === "string" ? stripHtml(e) : String(e)))
+      : undefined;
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
