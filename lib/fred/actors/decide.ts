@@ -18,7 +18,8 @@ import type {
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
 import { FRED_BIO } from "@/lib/fred-brain";
-import { COACHING_PROMPTS, buildDriftRedirectBlock } from "@/lib/ai/prompts";
+import { COACHING_PROMPTS, buildDriftRedirectBlock, buildSystemPrompt } from "@/lib/ai/prompts";
+import { generate } from "@/lib/ai/fred-client";
 import { STARTUP_STEPS } from "@/lib/ai/frameworks/startup-process";
 
 /**
@@ -48,7 +49,7 @@ export async function decideActor(
   );
 
   // Build the response content (Phase 36: includes Next 3 Actions + step questions)
-  const content = buildResponseContent(action, synthesis, validatedInput, conversationState || null);
+  const content = await buildResponseContent(action, synthesis, validatedInput, conversationState || null, founderContext || null);
 
   // Build reasoning for the decision
   const reasoning = buildDecisionReasoning(action, synthesis, validatedInput);
@@ -270,14 +271,68 @@ function checkRequiresHumanApproval(
 }
 
 /**
- * Build the response content based on action
+ * Generate a response using the LLM with Fred Cary's full personality
+ * and system prompt. Falls back gracefully if the AI call fails.
  */
-function buildResponseContent(
+async function generateWithLLM(
+  input: ValidatedInput,
+  founderContext: string | null
+): Promise<string> {
+  // Build the full FRED system prompt with founder context
+  let systemPrompt = buildSystemPrompt(founderContext || "");
+
+  // Include coaching overlay if topic detected
+  if (input.topic && input.topic in COACHING_PROMPTS) {
+    systemPrompt += `\n\n${COACHING_PROMPTS[input.topic as keyof typeof COACHING_PROMPTS]}`;
+  }
+
+  const result = await generate(input.originalMessage, {
+    system: systemPrompt,
+    temperature: 0.7,
+    maxOutputTokens: 1024,
+  });
+
+  return result.text;
+}
+
+/**
+ * Build the response content based on action.
+ * Uses LLM generation for substantive responses, with template fallback.
+ */
+async function buildResponseContent(
   action: DecisionAction,
   synthesis: SynthesisResult,
   input: ValidatedInput,
-  conversationState: ConversationStateContext | null
-): string {
+  conversationState: ConversationStateContext | null,
+  founderContext: string | null
+): Promise<string> {
+  // Clarify and defer use templates (no LLM needed)
+  if (action === "clarify") {
+    const questions = synthesis.followUpQuestions.slice(0, 2);
+    const clarifications = input.clarificationNeeded.filter((c) => c.required);
+    const allQuestions = [
+      ...clarifications.map((c) => c.question),
+      ...questions,
+    ].slice(0, 3);
+    return `I want to give you a solid answer, but I need a few more details first:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+  }
+
+  if (action === "defer") {
+    return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
+  }
+
+  // For substantive responses, try LLM generation first
+  try {
+    const llmResponse = await generateWithLLM(input, founderContext);
+    if (llmResponse) {
+      logger.log("[FRED] LLM response generated successfully");
+      return llmResponse;
+    }
+  } catch (error) {
+    logger.log("[FRED] LLM response generation failed, using template fallback:", error);
+  }
+
+  // ── Template fallback (only reached when LLM fails) ──
   let content: string;
 
   switch (action) {
@@ -317,26 +372,12 @@ function buildResponseContent(
       break;
     }
 
-    case "clarify": {
-      const questions = synthesis.followUpQuestions.slice(0, 2);
-      const clarifications = input.clarificationNeeded.filter((c) => c.required);
-      const allQuestions = [
-        ...clarifications.map((c) => c.question),
-        ...questions,
-      ].slice(0, 3);
-      return `I want to give you a solid answer, but I need a few more details first:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
-    }
-
-    case "defer":
-      return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
-
     default:
       content = synthesis.recommendation;
       break;
   }
 
   // Phase 36: Drift redirect — when founder skips ahead, prepend redirect instruction
-  // Note: clarify/defer cases return early above, so only substantive actions reach here
   if (conversationState && input.driftDetected?.isDrift) {
     const redirectBlock = buildDriftRedirectBlock(
       input.driftDetected.currentStep,
