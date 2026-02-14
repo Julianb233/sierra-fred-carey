@@ -139,9 +139,10 @@ export async function POST(request: NextRequest) {
       userId = existingUser.id;
 
       // SECURITY: Verify password before allowing profile updates on existing accounts
+      // Use a generic error message to avoid leaking whether the account exists
       if (!password) {
         return NextResponse.json(
-          { error: "Password is required for existing accounts" },
+          { error: "Invalid email or password" },
           { status: 401 }
         );
       }
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
       if (signInError) {
         console.error("[onboard] Sign in failed for existing user:", signInError.message);
         return NextResponse.json(
-          { error: "Invalid password for existing account" },
+          { error: "Invalid email or password" },
           { status: 401 }
         );
       }
