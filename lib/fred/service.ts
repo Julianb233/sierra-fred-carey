@@ -60,6 +60,7 @@ export class FredService {
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
+        chatMode: true,
       },
     });
 
@@ -145,6 +146,7 @@ export class FredService {
           retryCount: 0,
           founderContext: this.options.founderContext || null,
           conversationState: this.options.conversationState || null,
+          chatMode: true,
         },
         duration,
       };
@@ -167,10 +169,13 @@ export class FredService {
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
+        chatMode: true,
       },
     });
 
     let isComplete = false;
+    const streamTimeout = 60_000; // 60s safety net — no chat message should take this long
+    const streamStart = Date.now();
 
     // Create a promise that resolves when complete
     const completionPromise = new Promise<void>((resolve) => {
@@ -190,8 +195,14 @@ export class FredService {
       actor.start();
       actor.send({ type: "USER_INPUT", input });
 
-      // Yield state updates until complete
+      // Yield state updates until complete or timeout
       while (!isComplete) {
+        // Safety net: abort if stream exceeds timeout
+        if (Date.now() - streamStart > streamTimeout) {
+          console.error("[FRED] processStream timeout — aborting after", streamTimeout, "ms");
+          break;
+        }
+
         const snapshot = actor.getSnapshot();
         const stateValue = typeof snapshot.value === "string"
           ? snapshot.value

@@ -40,7 +40,8 @@ function createInitialContext(
   userId: string,
   sessionId: string,
   founderContext?: string,
-  conversationState?: ConversationStateContext | null
+  conversationState?: ConversationStateContext | null,
+  chatMode?: boolean
 ): FredContext {
   return {
     sessionId,
@@ -58,6 +59,7 @@ function createInitialContext(
     memoryContext: null,
     founderContext: founderContext || null,
     conversationState: conversationState || null,
+    chatMode: chatMode ?? true,
   };
 }
 
@@ -69,7 +71,7 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; chatMode?: boolean },
   },
 
   actors: {
@@ -103,12 +105,15 @@ export const fredMachine = setup({
   guards: {
     /**
      * Can FRED auto-decide without human approval?
-     * - High confidence (>=85%)
-     * - Not explicitly requiring human approval
-     * - Action is auto_execute
+     * In chatMode (default), always auto-decide — the chat UI has no
+     * approval mechanism, so entering human_review would deadlock.
+     * For non-chat flows, require high confidence + auto_execute action.
      */
     canAutoDecide: ({ context, event }) => {
-      // Check the event output first (for onDone transitions)
+      // Chat mode: always auto-decide (no approval UI exists)
+      if (context.chatMode) return true;
+
+      // Non-chat mode: require explicit auto_execute action
       const decision = (event as any)?.output || context.decision;
       if (!decision) return false;
       return (
@@ -302,7 +307,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode),
 
   states: {
     /**

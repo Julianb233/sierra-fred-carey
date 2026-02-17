@@ -66,6 +66,8 @@ export interface FredContext {
   founderContext: string | null;
   /** Conversation state for structured flow (Phase 36) */
   conversationState: ConversationStateContext | null;
+  /** When true, skip human_review state (chat has no approval UI) */
+  chatMode: boolean;
 }
 
 /**
