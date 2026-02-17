@@ -509,14 +509,14 @@ export function NotificationSettings() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Error display — only show for action errors, not initial load failures */}
+        {/* Error display — show inline warning for action errors, not initial load failures */}
         {(error || pushError) && configs.length > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950 text-red-600 rounded-lg">
-            <ExclamationTriangleIcon className="h-4 w-4" />
+          <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-lg border border-amber-200 dark:border-amber-800">
+            <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
             <span className="text-sm">{error || pushError}</span>
             <button
               onClick={() => setError(null)}
-              className="ml-auto text-red-400 hover:text-red-600"
+              className="ml-auto text-amber-400 hover:text-amber-600"
             >
               <CrossCircledIcon className="h-4 w-4" />
             </button>
