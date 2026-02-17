@@ -98,6 +98,13 @@ function CoachingLobby({
   enableRecording: boolean;
   onToggleRecording: (enabled: boolean) => void;
 }) {
+  // Use deterministic initial index (0) to avoid SSR hydration mismatch,
+  // then pick a random tip on mount
+  const [tipIndex, setTipIndex] = useState(0);
+  useEffect(() => {
+    setTipIndex(Math.floor(Math.random() * COACHING_TIPS.length));
+  }, []);
+
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <Card className="w-full max-w-lg">
@@ -167,7 +174,7 @@ function CoachingLobby({
             <div className="flex items-start gap-2 text-left">
               <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                {COACHING_TIPS[Math.floor(Math.random() * COACHING_TIPS.length)]}
+                {COACHING_TIPS[tipIndex]}
               </p>
             </div>
           </div>
