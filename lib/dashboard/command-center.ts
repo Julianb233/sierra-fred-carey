@@ -342,7 +342,7 @@ export function computeDisplayRules(
   // Growth stage: show Primary Constraint instead of positioning grade
   const showConstraintOverPositioning = stage === "growth";
 
-  // High stress detected (placeholder -- requires Phase 36 diagnostic tag extraction)
+  // High stress: no persistent wellbeing data store exists yet; burnout detector runs per-message only
   const highStressDetected = false;
 
   return {

@@ -405,7 +405,7 @@ describe("computeDisplayRules", () => {
     }
   });
 
-  it("highStressDetected defaults to false (placeholder)", () => {
+  it("highStressDetected defaults to false (no persistent wellbeing store)", () => {
     const tags: DiagnosticTags = { stage: "seed" };
     const readiness = {
       zone: "yellow" as const,
