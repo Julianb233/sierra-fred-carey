@@ -1,11 +1,6 @@
 import { WebhookReceiver } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const receiver = new WebhookReceiver(
-  process.env.LIVEKIT_API_KEY || '',
-  process.env.LIVEKIT_API_SECRET || '',
-);
-
 /**
  * LiveKit Webhook Handler
  *
@@ -19,6 +14,19 @@ const receiver = new WebhookReceiver(
  */
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.LIVEKIT_API_KEY;
+    const apiSecret = process.env.LIVEKIT_API_SECRET;
+
+    if (!apiKey || !apiSecret) {
+      console.error('[LiveKit Webhook] LIVEKIT_API_KEY or LIVEKIT_API_SECRET not configured');
+      return NextResponse.json(
+        { error: 'LiveKit webhook not configured' },
+        { status: 503 },
+      );
+    }
+
+    const receiver = new WebhookReceiver(apiKey, apiSecret);
+
     const body = await req.text();
     const authHeader = req.headers.get('authorization');
 
