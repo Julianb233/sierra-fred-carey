@@ -65,10 +65,10 @@ export function LiveMetricsPanel({
 
       // Extract metrics from API response
       const data: MetricData = {
-        requestCount: result.data?.totalRequests24h || Math.floor(Math.random() * 100000) + 50000,
-        avgLatency: result.data?.avgLatency || Math.floor(Math.random() * 50) + 80,
-        errorRate: result.data?.errorRate || Math.random() * 2,
-        uptime: result.data?.uptime || 99.9 + Math.random() * 0.09,
+        requestCount: result.data?.totalRequests24h || 0,
+        avgLatency: result.data?.avgLatency || 0,
+        errorRate: result.data?.errorRate || 0,
+        uptime: result.data?.uptime || 0,
         timestamp: new Date().toISOString(),
       };
 
@@ -144,13 +144,15 @@ export function LiveMetricsPanel({
 
   if (!currentData) return null;
 
+  const hasData = currentData.requestCount > 0 || currentData.avgLatency > 0 || currentData.errorRate > 0 || currentData.uptime > 0;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={cn("h-2 w-2 rounded-full", isUpdating ? "bg-[#ff6a1a] animate-pulse" : "bg-green-500 dark:bg-green-400")} />
+          <div className={cn("h-2 w-2 rounded-full", isUpdating ? "bg-[#ff6a1a] animate-pulse" : hasData ? "bg-green-500 dark:bg-green-400" : "bg-gray-400 dark:bg-gray-600")} />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {lastUpdate ? `Updated ${formatTimestamp(lastUpdate, true)}` : "Connecting..."}
+            {!hasData ? "No data available" : lastUpdate ? `Updated ${formatTimestamp(lastUpdate, true)}` : "Connecting..."}
           </span>
         </div>
         <Badge variant="outline" className="gap-1.5">

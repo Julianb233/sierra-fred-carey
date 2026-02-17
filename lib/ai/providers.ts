@@ -72,7 +72,7 @@ export function getPrimaryModel(): LanguageModel | null {
  */
 export function getFallback1Model(): LanguageModel | null {
   if (!hasAnthropic()) return null;
-  return anthropic("claude-3-5-sonnet-20241022");
+  return anthropic("claude-sonnet-4-5-20250929");
 }
 
 /**
@@ -80,7 +80,7 @@ export function getFallback1Model(): LanguageModel | null {
  */
 export function getFallback2Model(): LanguageModel | null {
   if (!hasGoogle()) return null;
-  return google("gemini-1.5-pro");
+  return google("gemini-2.0-flash");
 }
 
 /**
@@ -92,11 +92,11 @@ export function getFastModel(): LanguageModel | null {
 }
 
 /**
- * Get reasoning model for complex analysis (o1)
+ * Get reasoning model for complex analysis (o3)
  */
 export function getReasoningModel(): LanguageModel | null {
   if (!hasOpenAI()) return null;
-  return openai("o1");
+  return openai("o3");
 }
 
 /**
@@ -210,11 +210,11 @@ export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model"
     costPerMillionTokens: { input: 2.5, output: 10 },
   },
   fallback1: {
-    name: "Claude 3.5 Sonnet",
+    name: "Claude Sonnet 4.5",
     costPerMillionTokens: { input: 3, output: 15 },
   },
   fallback2: {
-    name: "Gemini 1.5 Pro",
+    name: "Gemini 2.0 Flash",
     costPerMillionTokens: { input: 1.25, output: 5 },
   },
   fast: {
@@ -222,8 +222,8 @@ export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model"
     costPerMillionTokens: { input: 0.15, output: 0.6 },
   },
   reasoning: {
-    name: "o1",
-    costPerMillionTokens: { input: 15, output: 60 },
+    name: "o3",
+    costPerMillionTokens: { input: 10, output: 40 },
   },
 };
 

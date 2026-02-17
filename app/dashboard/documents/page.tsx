@@ -71,14 +71,16 @@ export default function DocumentsPage() {
   }
 
   return (
-    <FeatureLock
-      requiredTier={UserTier.PRO}
-      currentTier={tier}
-      featureName="Document Repository"
-      description="Organize and review all your documents with FRED. Available on Pro tier."
-    >
-      <DocumentsContent />
-    </FeatureLock>
+    <div data-testid="documents-page">
+      <FeatureLock
+        requiredTier={UserTier.PRO}
+        currentTier={tier}
+        featureName="Document Repository"
+        description="Organize and review all your documents with FRED. Available on Pro tier."
+      >
+        <DocumentsContent />
+      </FeatureLock>
+    </div>
   );
 }
 
@@ -94,13 +96,13 @@ function DocumentsContent() {
   const [activeTab, setActiveTab] = useState<DocumentFolder>("decks");
   const [viewDoc, setViewDoc] = useState<DocumentItem | null>(null);
 
-  // Fetch all documents from the document-repository API
+  // Fetch all documents from the dashboard documents API
   const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch("/api/document-repository");
+      const res = await fetch("/api/dashboard/documents");
       const json = await res.json();
 
       if (!json.success) {
@@ -108,7 +110,25 @@ function DocumentsContent() {
         return;
       }
 
-      setDocuments(json.documents as DocumentItem[]);
+      // Normalize nested response into flat DocumentItem[]
+      const data = json.data;
+      const normalize = (
+        items: Record<string, unknown>[],
+        folder: DocumentFolder
+      ): DocumentItem[] =>
+        items.map((d) => ({
+          ...(d as unknown as DocumentItem),
+          folder,
+        }));
+
+      const allDocs: DocumentItem[] = [
+        ...normalize(data.decks || [], "decks"),
+        ...normalize(data.strategyDocs || [], "strategy"),
+        ...normalize(data.reports || [], "reports"),
+        ...normalize(data.uploadedFiles || [], "uploads"),
+      ];
+
+      setDocuments(allDocs);
     } catch {
       setError("Failed to load documents");
     } finally {
@@ -149,12 +169,12 @@ function DocumentsContent() {
 
   // Filter documents by active folder and search query
   const filteredDocuments = useMemo(() => {
-    let filtered = documents.filter((d) => d.folder === activeTab);
+    let filtered = (documents ?? []).filter((d) => d.folder === activeTab);
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((d) =>
-        d.title.toLowerCase().includes(query)
+        d.name.toLowerCase().includes(query)
       );
     }
     return filtered;
@@ -168,7 +188,7 @@ function DocumentsContent() {
       reports: 0,
       uploads: 0,
     };
-    for (const doc of documents) {
+    for (const doc of documents ?? []) {
       counts[doc.folder]++;
     }
     return counts;

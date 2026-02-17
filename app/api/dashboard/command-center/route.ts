@@ -23,9 +23,59 @@ export async function GET() {
     }
 
     console.error("[Command Center] Error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch command center data" },
-      { status: 500 }
-    );
+
+    // Return empty shell data so the dashboard renders instead of spinning forever
+    return NextResponse.json({
+      success: true,
+      data: {
+        founderSnapshot: {
+          name: null,
+          stage: null,
+          primaryConstraint: null,
+          ninetyDayGoal: null,
+          runway: null,
+          industry: null,
+          productStatus: null,
+          traction: null,
+        },
+        currentStep: {
+          stepKey: "problem_validation",
+          stepNumber: 1,
+          name: "Problem Validation",
+          objective: "Validate the core problem you are solving",
+          questions: [],
+          requiredOutput: "",
+          status: "not_started",
+          blockers: [],
+        },
+        processProgress: {
+          currentStep: "problem_validation",
+          processStatus: "active",
+          steps: [],
+          totalSteps: 9,
+          completedSteps: 0,
+        },
+        fundingReadiness: {
+          zone: "red",
+          label: "Build",
+          topBlockers: [],
+          hasIntakeCompleted: false,
+          investorReadinessSignal: null,
+        },
+        weeklyMomentum: {
+          lastCheckinSummary: null,
+          lastCheckinDate: null,
+          streak: 0,
+          totalCheckins: 0,
+        },
+        diagnosticTags: {},
+        displayRules: {
+          showFundingGauge: false,
+          blurReadiness: true,
+          showConstraintOverPositioning: false,
+          highStressDetected: false,
+        },
+      },
+    });
   }
 }

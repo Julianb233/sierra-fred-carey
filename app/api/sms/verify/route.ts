@@ -10,6 +10,7 @@
  * in SMS preferences.
  */
 
+import { randomInt } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate 6-digit verification code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = randomInt(100000, 999999).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
     // Store verification code in DB (upsert so re-sends overwrite previous codes)

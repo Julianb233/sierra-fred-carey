@@ -6,6 +6,29 @@
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
 - [x] **v4.0 FRED Mentor Experience** - Phases 34-46 (shipped 2026-02-12)
+- [ ] **v5.0 QA Fixes — Production Polish** - 5 parallel streams (from Stagehand QA audit 2026-02-16)
+
+## v5.0 QA Fixes — Production Polish
+
+**Milestone Goal:** Fix all 10 failing pages and 7 bugs found during full-platform Stagehand browser QA audit. Target: 100% page pass rate (currently 78%).
+
+**Parallelism:** All 5 streams run simultaneously with zero file overlap.
+
+| Stream | Name | Priority | Bug IDs | Key Fix |
+|--------|------|----------|---------|---------|
+| A | Dashboard Routing Fix | CRITICAL | BUG-2 | 3 dashboard routes render Settings instead of content |
+| B | Infinite Loading Spinners | CRITICAL | BUG-1, BUG-3 | 4 pages stuck on spinner (missing error boundaries) |
+| C | Demo Page Auth Fix | HIGH | BUG-5 | 2 demos redirect to login (TierProvider cascade) |
+| D | Duplicate Logo UI Fix | HIGH | BUG-4 | Second logo overlapping nav on 4 pages |
+| E | Error State Polish | HIGH | BUG-6 | "Failed to fetch" errors → friendly empty states |
+
+- [ ] **Stream A: Dashboard Routing Fix** — `/dashboard/communities`, `/dashboard/documents`, `/dashboard/coaching` render Settings
+- [ ] **Stream B: Infinite Loading Spinners** — `/dashboard`, `/dashboard/strategy`, `/documents`, `/check-ins` stuck on spinner
+- [ ] **Stream C: Demo Page Auth Fix** — `/demo/boardy`, `/demo/virtual-team` render login page
+- [ ] **Stream D: Duplicate Logo UI Fix** — Second Sahara logo on `/login`, `/chat`, demos
+- [ ] **Stream E: Error State Polish** — "Failed to fetch" errors on next-steps, settings
+
+**Full plan:** `.planning/v5.0-QA-FIXES-MILESTONE.md`
 
 ## Phases
 

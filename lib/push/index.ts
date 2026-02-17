@@ -94,12 +94,17 @@ export async function sendPushNotification(
   subscription: { endpoint: string; p256dh_key: string; auth_key: string },
   payload: PushPayload,
 ): Promise<boolean> {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const subject = process.env.VAPID_SUBJECT;
+
+  if (!publicKey || !privateKey || !subject) {
+    logger.info("[push] VAPID env vars missing -- skipping notification");
+    return false;
+  }
+
   const sendFn = await initWebPush();
   if (!sendFn) return false;
-
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-  const privateKey = process.env.VAPID_PRIVATE_KEY!;
-  const subject = process.env.VAPID_SUBJECT!;
 
   try {
     await sendFn(

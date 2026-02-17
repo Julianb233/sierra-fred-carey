@@ -10,12 +10,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowRight,
   MessageSquare,
+  Phone,
   Loader2,
   AlertCircle,
   Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useTier } from "@/lib/context/tier-context";
+import { UserTier } from "@/lib/constants";
+import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import type {
   CommandCenterData,
   ReadinessZone,
@@ -56,12 +60,15 @@ const ZONE_BAR_CONFIG: Record<
 
 export function MobileHome() {
   const router = useRouter();
+  const { tier } = useTier();
   const [data, setData] = useState<CommandCenterData | null>(null);
   const [nextSteps, setNextSteps] = useState<
     Array<{ id: string; description: string; priority: string }>
   >([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("Founder");
+  const [showCallModal, setShowCallModal] = useState(false);
+  const canCallFred = tier >= UserTier.PRO;
 
   useEffect(() => {
     async function fetchData() {
@@ -159,9 +166,26 @@ export function MobileHome() {
         blockers={data.currentStep.blockers}
       />
 
+      {/* Call Fred CTA (Pro+ tier) */}
+      {canCallFred && (
+        <Button
+          onClick={() => setShowCallModal(true)}
+          className="w-full h-12 bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-base font-semibold"
+        >
+          <Phone className="mr-2 h-4 w-4" />
+          Call Fred
+        </Button>
+      )}
+
       {/* Start Check-In CTA */}
       <Link href="/dashboard/sms" className="block">
-        <Button className="w-full h-12 bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-base font-semibold">
+        <Button
+          variant={canCallFred ? "outline" : "default"}
+          className={cn(
+            "w-full h-12 text-base font-semibold",
+            !canCallFred && "bg-[#ff6a1a] hover:bg-[#ea580c] text-white",
+          )}
+        >
           Start Check-In
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -196,6 +220,14 @@ export function MobileHome() {
         readiness={data.fundingReadiness}
         displayRules={data.displayRules}
       />
+
+      {/* Call Fred Modal (Pro+ tier) */}
+      {canCallFred && (
+        <CallFredModal
+          open={showCallModal}
+          onOpenChange={setShowCallModal}
+        />
+      )}
     </div>
   );
 }

@@ -74,39 +74,39 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 ### Active
 
 **Structured Mentor Flow (CHAT)**
-- [ ] FRED leads conversations — asks specific questions, guides to next step, controls the flow
-- [ ] Reframe-before-prescribe behavior — FRED identifies the real goal before answering the literal question
-- [ ] Critical-thinking default — every response surfaces assumptions, bottlenecks, tests, or decision criteria
-- [ ] Gentle redirect when founders drift off track — acknowledge, then steer back to structured path
-- [ ] Conversation state tracking — FRED knows where the founder is in the process and what's been established
+- [x] FRED leads conversations — asks specific questions, guides to next step, controls the flow
+- [x] Reframe-before-prescribe behavior — FRED identifies the real goal before answering the literal question
+- [x] Critical-thinking default — every response surfaces assumptions, bottlenecks, tests, or decision criteria
+- [x] Gentle redirect when founders drift off track — acknowledge, then steer back to structured path
+- [x] Conversation state tracking — FRED knows where the founder is in the process and what's been established
 
 **Reality Lens Gate (GATE)**
-- [ ] Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
-- [ ] If foundation is weak, FRED says so plainly and redirects — no sugarcoating
-- [ ] Decision sequencing enforced — no decks, patents, hiring, fundraising until upstream truth established
-- [ ] Pitch Deck Review gated — 11-dimension scorecard (0-10) only after Reality Lens passes
-- [ ] Per-slide investor objections — 2-3 skeptical questions per slide with knockout answers
+- [x] Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
+- [x] If foundation is weak, FRED says so plainly and redirects — no sugarcoating
+- [x] Decision sequencing enforced — no decks, patents, hiring, fundraising until upstream truth established
+- [x] Pitch Deck Review gated — 11-dimension scorecard (0-10) only after Reality Lens passes
+- [x] Per-slide investor objections — 2-3 skeptical questions per slide with knockout answers
 
 **System Prompt Overhaul (PROMPT)**
-- [ ] System prompt rebuilt from Fred Cary's master GPT instructions
-- [ ] Mentor tone — encourage effort and discipline, not ego; no default praise or flattery
-- [ ] Founder Intake Protocol automatic — stage, product status, revenue, runway, constraint, 90-day goal
-- [ ] Output standard — every substantive response ends with Next 3 Actions
-- [ ] Weekly Check-In Protocol — structured framework (what moved, what's stuck, energy drains, next decision, priority)
+- [x] System prompt rebuilt from Fred Cary's master GPT instructions
+- [x] Mentor tone — encourage effort and discipline, not ego; no default praise or flattery
+- [x] Founder Intake Protocol automatic — stage, product status, revenue, runway, constraint, 90-day goal
+- [x] Output standard — every substantive response ends with Next 3 Actions
+- [x] Weekly Check-In Protocol — structured framework (what moved, what's stuck, energy drains, next decision, priority)
 
 **Onboarding → FRED Handoff (ONBOARD)**
-- [ ] Onboarding captures founder basics (stage, industry, challenge, revenue, team, funding)
-- [ ] FRED's first conversation picks up seamlessly — references what onboarding collected, goes deeper
-- [ ] No repetition — FRED does not re-ask what the signup form already captured
-- [ ] Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake
+- [x] Onboarding captures founder basics (stage, industry, challenge, revenue, team, funding)
+- [x] FRED's first conversation picks up seamlessly — references what onboarding collected, goes deeper
+- [x] No repetition — FRED does not re-ask what the signup form already captured
+- [x] Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake
 
 **Framework & Mode Integration (MODE)**
-- [ ] Diagnostic engine wired into chat — silently detects context, introduces frameworks at right moment
-- [ ] Investor Mode activates when fundraising signals detected — applies Investor Lens, not user-chosen
-- [ ] Positioning Mode activates when messaging/differentiation signals detected — applies Positioning Framework
-- [ ] 9-Step Startup Process (Idea → Traction) used as default decision sequencing backbone
-- [ ] Investor Readiness Score framework fully implemented (currently DB schema only)
-- [ ] Deck Request Protocol formalized as standalone (currently embedded in Investor Lens)
+- [x] Diagnostic engine wired into chat — silently detects context, introduces frameworks at right moment
+- [x] Investor Mode activates when fundraising signals detected — applies Investor Lens, not user-chosen
+- [x] Positioning Mode activates when messaging/differentiation signals detected — applies Positioning Framework
+- [x] 9-Step Startup Process (Idea → Traction) used as default decision sequencing backbone
+- [x] Investor Readiness Score framework fully implemented (currently DB schema only)
+- [x] Deck Request Protocol formalized as standalone (currently embedded in Investor Lens)
 
 ### Out of Scope
 

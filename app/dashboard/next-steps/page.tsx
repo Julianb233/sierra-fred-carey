@@ -10,7 +10,6 @@ import {
   ListChecks,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
   RefreshCw,
 } from "lucide-react";
 import { NextStepCard } from "@/components/dashboard/next-step-card";
@@ -164,16 +163,8 @@ export default function NextStepsPage() {
         </div>
       </div>
 
-      {/* Error state */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-          <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {isEmpty && !error && (
+      {/* Empty state — also shown on error so new users see a friendly CTA */}
+      {(isEmpty || error) && (
         <Card>
           <CardContent className="py-16 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center">

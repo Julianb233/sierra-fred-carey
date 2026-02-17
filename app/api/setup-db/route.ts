@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 /**
  * GET /api/setup-db
@@ -9,14 +10,20 @@ import { createServiceClient } from "@/lib/supabase/server";
  * It's idempotent - safe to call multiple times
  *
  * SECURITY: Blocked in production. Only available in development.
+ * Requires admin auth as additional protection.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   // SECURITY: Block in production to prevent database schema exposure
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "This endpoint is disabled in production" },
       { status: 403 }
     );
+  }
+
+  // SECURITY: Require admin auth
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabase = createServiceClient();
@@ -68,10 +75,10 @@ export async function GET() {
 
 async function seedDefaultConfigs(supabase: any) {
   const configs = [
-    { analyzer: 'reality_lens', model: 'gpt-4-turbo-preview', temperature: 0.7, max_tokens: 1500, custom_settings: {} },
-    { analyzer: 'investor_score', model: 'gpt-4-turbo-preview', temperature: 0.5, max_tokens: 2000, custom_settings: {} },
-    { analyzer: 'pitch_deck', model: 'gpt-4-turbo-preview', temperature: 0.6, max_tokens: 1500, custom_settings: {} },
-    { analyzer: 'chat', model: 'gpt-4-turbo-preview', temperature: 0.7, max_tokens: 1000, custom_settings: {} },
+    { analyzer: 'reality_lens', model: 'gpt-4o', temperature: 0.7, max_tokens: 1500, custom_settings: {} },
+    { analyzer: 'investor_score', model: 'gpt-4o', temperature: 0.5, max_tokens: 2000, custom_settings: {} },
+    { analyzer: 'pitch_deck', model: 'gpt-4o', temperature: 0.6, max_tokens: 1500, custom_settings: {} },
+    { analyzer: 'chat', model: 'gpt-4o', temperature: 0.7, max_tokens: 1000, custom_settings: {} },
   ];
 
   for (const config of configs) {

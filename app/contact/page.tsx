@@ -286,12 +286,6 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800">
-                <div className="aspect-video rounded-xl bg-gradient-to-br from-[#ff6a1a]/10 to-orange-400/10 flex items-center justify-center border border-[#ff6a1a]/10">
-                  <MapPin className="w-16 h-16 text-[#ff6a1a]/30" />
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>

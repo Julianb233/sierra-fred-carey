@@ -303,70 +303,69 @@ async function handlePost(req: NextRequest) {
     // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
-    // Phase 34: Load dynamic founder context for personalized mentoring
-    const founderContext = await buildFounderContext(userId, hasPersistentMemory);
+    // ── Parallel context loading ─────────────────────────────────────
+    // These four calls are independent of each other — run in parallel.
+    const [founderContext, conversationStateResult, rlGateResult, persistedModeResult] = await Promise.all([
+      buildFounderContext(userId, hasPersistentMemory),
+      getOrCreateConversationState(userId).catch((error) => {
+        console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
+        return null as ConversationState | null;
+      }),
+      getRealityLensGate(userId).catch((error) => {
+        console.warn("[FRED Chat] Failed to load Reality Lens gate (non-blocking):", error);
+        return null;
+      }),
+      getActiveMode(userId).catch((error) => {
+        console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
+        return null;
+      }),
+    ]);
 
-    // Phase 36: Load conversation state for structured flow
-    let conversationState: ConversationState | null = null;
+    // Phase 36: Conversation state
+    const conversationState = conversationStateResult;
     let stepGuidanceBlock = "";
-    try {
-      conversationState = await getOrCreateConversationState(userId);
+    if (conversationState) {
       stepGuidanceBlock = buildStepGuidanceBlock(
         conversationState.currentStep,
         conversationState.stepStatuses,
         conversationState.currentBlockers
       );
-    } catch (error) {
-      console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
     }
 
-    // Phase 37: Load Reality Lens gate status and check against downstream request
+    // Phase 37: Reality Lens gate (reuse rlGateResult — no duplicate call)
     let rlGateBlock = "";
     let rlStatusBlock = "";
-    try {
-      const rlGate = await getRealityLensGate(userId);
-      if (rlGate) {
-        rlStatusBlock = buildRealityLensStatusBlock(rlGate);
+    if (rlGateResult) {
+      rlStatusBlock = buildRealityLensStatusBlock(rlGateResult);
 
-        // Check if downstream request detected AND gate is not open
-        const downstreamRequest = detectDownstreamRequestQuick(message);
-        if (downstreamRequest) {
-          // Pass the specific request so only RELEVANT dimensions are checked
-          const gateStatus = checkGateStatus(rlGate, downstreamRequest);
-          if (!gateStatus.gateOpen) {
-            // Load redirect count for compromise mode escalation
-            const redirectCount = await getGateRedirectCount(userId, downstreamRequest);
-
-            rlGateBlock = buildRealityLensGateBlock(
-              downstreamRequest,
-              gateStatus.weakDimensions,
-              gateStatus.unassessedDimensions,
-              redirectCount
-            );
-
-            // Fire-and-forget: increment redirect counter
-            incrementGateRedirect(userId, downstreamRequest).catch(err =>
-              console.warn("[FRED Chat] Failed to increment gate redirect:", err)
-            );
-          }
+      const downstreamRequest = detectDownstreamRequestQuick(message);
+      if (downstreamRequest) {
+        const gateStatus = checkGateStatus(rlGateResult, downstreamRequest);
+        if (!gateStatus.gateOpen) {
+          const redirectCount = await getGateRedirectCount(userId, downstreamRequest);
+          rlGateBlock = buildRealityLensGateBlock(
+            downstreamRequest,
+            gateStatus.weakDimensions,
+            gateStatus.unassessedDimensions,
+            redirectCount
+          );
+          incrementGateRedirect(userId, downstreamRequest).catch(err =>
+            console.warn("[FRED Chat] Failed to increment gate redirect:", err)
+          );
         }
       }
-    } catch (error) {
-      console.warn("[FRED Chat] Failed to load Reality Lens gate (non-blocking):", error);
     }
 
-    // Phase 38: Load persisted diagnostic mode and run mode transition
+    // Phase 38: Diagnostic mode (reuse persistedModeResult — no duplicate call)
     let activeMode: DiagnosticMode = "founder-os";
     let frameworkBlock = "";
     let modeTransitionBlock = "";
     let modeTransitioned = false;
 
-    try {
-      const persisted = await getActiveMode(userId);
-      activeMode = persisted.activeMode;
-      const modeContext = persisted.modeContext;
+    if (persistedModeResult) {
+      activeMode = persistedModeResult.activeMode;
+      const modeContext = persistedModeResult.modeContext;
 
-      // Run mode transition analysis on current message
       const hasUploadedDeck = false; // TODO: detect from attachments when file upload is wired
       const transition = determineModeTransition(
         message,
@@ -375,53 +374,36 @@ async function handlePost(req: NextRequest) {
         hasUploadedDeck
       );
 
-      // Update mode if transitioned
       if (transition.transitioned) {
         activeMode = transition.newMode;
         modeTransitioned = true;
       }
 
-      // Build framework injection for system prompt
       frameworkBlock = buildFrameworkInjectionBlock(activeMode);
 
-      // Build introduction block if entering a new mode
       if (transition.needsIntroduction && transition.framework) {
-        modeTransitionBlock = buildModeTransitionBlock(
-          transition.framework,
-          "enter"
-        );
+        modeTransitionBlock = buildModeTransitionBlock(transition.framework, "enter");
       } else if (transition.transitioned && transition.direction === "exit" && transition.framework) {
-        modeTransitionBlock = buildModeTransitionBlock(
-          transition.framework,
-          "exit"
-        );
+        modeTransitionBlock = buildModeTransitionBlock(transition.framework, "exit");
       }
 
-      // Fire-and-forget: persist mode changes and signal history
       updateActiveMode(userId, activeMode, transition.updatedModeContext).catch(err =>
         console.warn("[FRED Chat] Failed to persist mode (non-blocking):", err)
       );
 
-      // Fire-and-forget: mark introduction delivered if needed
       if (transition.needsIntroduction && transition.framework) {
-        markIntroductionDelivered(
-          userId,
-          transition.framework,
-          transition.detectedSignals.join(",")
-        ).catch(err =>
+        markIntroductionDelivered(userId, transition.framework, transition.detectedSignals.join(",")).catch(err =>
           console.warn("[FRED Chat] Failed to mark introduction (non-blocking):", err)
         );
       }
-    } catch (error) {
-      console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
     }
 
-    // Phase 39: Load IRS + build deck protocol and review blocks
+    // Phase 39: IRS + deck blocks (reuse persistedModeResult — no duplicate getActiveMode call)
     let irsBlock = "";
     let deckProtocolBlock = "";
     let deckReviewReadyBlock = "";
 
-    if (activeMode === "investor-readiness") {
+    if (activeMode === "investor-readiness" && persistedModeResult) {
       try {
         const { getLatestIRS } = await import("@/lib/fred/irs/db");
         const supabaseService = createServiceClient();
@@ -433,22 +415,16 @@ async function handlePost(req: NextRequest) {
 
         irsBlock = buildIRSPromptBlock(latestIRS, founderStage);
 
-        // Deck Protocol block
-        const persisted = await getActiveMode(userId);
-        const formalAssessments = persisted.modeContext.formalAssessments;
+        // Reuse persistedModeResult instead of duplicate getActiveMode call
+        const formalAssessments = persistedModeResult.modeContext.formalAssessments;
         const hasUploadedDeck = false; // TODO: detect from attachments
         deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, hasUploadedDeck, founderStage);
 
-        // Deck Review Ready block (only when RL gate is open for pitch_deck and verdict issued)
+        // Reuse rlGateResult instead of duplicate getRealityLensGate call
         let rlGateOpenForDeck = false;
-        try {
-          const rlGate = await getRealityLensGate(userId);
-          if (rlGate) {
-            const deckGateStatus = checkGateStatus(rlGate, "pitch_deck");
-            rlGateOpenForDeck = deckGateStatus.gateOpen;
-          }
-        } catch {
-          // non-blocking
+        if (rlGateResult) {
+          const deckGateStatus = checkGateStatus(rlGateResult, "pitch_deck");
+          rlGateOpenForDeck = deckGateStatus.gateOpen;
         }
 
         deckReviewReadyBlock = buildDeckReviewReadyBlock(

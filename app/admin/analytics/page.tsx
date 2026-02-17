@@ -156,7 +156,8 @@ export default function AdminAnalyticsPage() {
     ? buildFunnelSteps(metrics)
     : [];
 
-  const events = placeholderEvents();
+  const posthogConfigured = !!process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const events = posthogConfigured ? placeholderEvents() : [];
 
   return (
     <div className="space-y-6">
@@ -180,7 +181,9 @@ export default function AdminAnalyticsPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
+          {posthogConfigured && (
+            <TabsTrigger value="events">Events</TabsTrigger>
+          )}
           <TabsTrigger value="funnels">Funnels</TabsTrigger>
         </TabsList>
 
@@ -254,51 +257,51 @@ export default function AdminAnalyticsPage() {
           ) : null}
         </TabsContent>
 
-        {/* ----- Events Tab ----- */}
-        <TabsContent value="events">
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Recent Events</CardTitle>
-              <CardDescription>
-                Latest tracked product analytics events
-                {!process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-                  " (placeholder data — connect PostHog for live events)"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Properties</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {events.map((evt, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-xs font-mono whitespace-nowrap">
-                        {new Date(evt.timestamp).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                          {evt.event}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">
-                        {evt.userId}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono max-w-[200px] truncate">
-                        {evt.properties}
-                      </TableCell>
+        {/* ----- Events Tab (only when PostHog is configured) ----- */}
+        {posthogConfigured && (
+          <TabsContent value="events">
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Recent Events</CardTitle>
+                <CardDescription>
+                  Latest tracked product analytics events
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Timestamp</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Properties</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((evt, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs font-mono whitespace-nowrap">
+                          {new Date(evt.timestamp).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                            {evt.event}
+                          </code>
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {evt.userId}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono max-w-[200px] truncate">
+                          {evt.properties}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* ----- Funnels Tab ----- */}
         <TabsContent value="funnels">

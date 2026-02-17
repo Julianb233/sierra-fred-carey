@@ -114,7 +114,7 @@ export default function CommunitiesPage() {
   });
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500" data-testid="communities-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>

@@ -113,6 +113,91 @@ const conditionalNavItems: NavItem[] = [
 const EARLY_STAGES = new Set(["idea", "mvp"]);
 
 // ============================================================================
+// Sidebar Component (defined outside layout to avoid re-creation on render)
+// ============================================================================
+
+function SidebarContent({
+  user,
+  visibleNavItems,
+  pathname,
+  tierNames,
+  tierColors,
+  onNavClick,
+}: {
+  user: { name: string; email: string; tier: UserTier; stage: string | null };
+  visibleNavItems: NavItem[];
+  pathname: string;
+  tierNames: string[];
+  tierColors: string[];
+  onNavClick?: () => void;
+}) {
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+      {/* User Profile */}
+      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
+            <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
+              {(user.name || "?")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+              {user.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {user.email}
+            </p>
+          </div>
+        </div>
+        <Badge className={cn("w-full justify-center", tierColors[user.tier])}>
+          {tierNames[user.tier]} Plan
+        </Badge>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+        {visibleNavItems.map((item) => {
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={onNavClick}
+              className={cn(
+                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
+                isActive
+                  ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              )}
+            >
+              <div className="transition-transform group-hover:scale-110">
+                {item.icon}
+              </div>
+              <span className="flex-1 text-sm">{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Upgrade CTA */}
+      {user.tier < 2 && (
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <UpgradeBanner currentTier={user.tier as UserTier} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Layout Component
 // ============================================================================
 
@@ -205,70 +290,7 @@ export default function DashboardLayout({
     "bg-[#ff6a1a]/10 text-[#ff6a1a] dark:bg-[#ff6a1a]/20 dark:text-[#ff6a1a]",
   ];
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
-      {/* User Profile */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
-            <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
-              {(user.name || "?")
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-              {user.name}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user.email}
-            </p>
-          </div>
-        </div>
-        <Badge className={cn("w-full justify-center", tierColors[user.tier])}>
-          {tierNames[user.tier]} Plan
-        </Badge>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {visibleNavItems.map((item) => {
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
-                isActive
-                  ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              )}
-            >
-              <div className="transition-transform group-hover:scale-110">
-                {item.icon}
-              </div>
-              <span className="flex-1 text-sm">{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Upgrade CTA */}
-      {user.tier < 2 && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-          <UpgradeBanner currentTier={user.tier as UserTier} />
-        </div>
-      )}
-    </div>
-  );
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   if (isAuthChecking) {
     return (
@@ -284,13 +306,26 @@ export default function DashboardLayout({
         {/* Mobile Sidebar (hamburger drawer — hidden on md+, supplements bottom nav for full menu) */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 w-[280px] sm:w-72">
-            <SidebarContent />
+            <SidebarContent
+              user={user}
+              visibleNavItems={visibleNavItems}
+              pathname={pathname}
+              tierNames={tierNames}
+              tierColors={tierColors}
+              onNavClick={closeSidebar}
+            />
           </SheetContent>
         </Sheet>
 
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-72 shrink-0">
-          <SidebarContent />
+          <SidebarContent
+            user={user}
+            visibleNavItems={visibleNavItems}
+            pathname={pathname}
+            tierNames={tierNames}
+            tierColors={tierColors}
+          />
         </aside>
 
         {/* Main Content — extra bottom padding on mobile for bottom nav */}

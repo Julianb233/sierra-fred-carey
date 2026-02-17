@@ -37,7 +37,7 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
     }
 
     // If the document has a fileUrl already, use it directly for PDFs
-    if (doc.fileUrl && doc.fileType?.includes("pdf")) {
+    if (doc.fileUrl && doc.fileUrl.endsWith(".pdf")) {
       setContent(doc.fileUrl);
       return;
     }
@@ -59,13 +59,13 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
 
   if (!doc) return null;
 
-  const isPdf = doc.fileType?.includes("pdf") && doc.fileUrl;
+  const isPdf = doc.fileUrl?.endsWith(".pdf");
 
   return (
     <Dialog open={!!doc} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="truncate pr-8">{doc.title}</DialogTitle>
+          <DialogTitle className="truncate pr-8">{doc.name}</DialogTitle>
         </DialogHeader>
 
         {/* Content area */}
@@ -78,7 +78,7 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
             <iframe
               src={doc.fileUrl}
               className="w-full h-[60vh] rounded-lg border border-gray-200 dark:border-gray-700"
-              title={doc.title}
+              title={doc.name}
             />
           ) : content ? (
             <div className="prose prose-sm dark:prose-invert max-w-none p-4 bg-gray-50 dark:bg-gray-900 rounded-lg whitespace-pre-wrap text-sm leading-relaxed">

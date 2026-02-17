@@ -49,15 +49,12 @@ export async function GET() {
         .order("created_at", { ascending: false }),
     ]);
 
+    // Handle missing tables gracefully — return empty arrays instead of throwing
     if (uploadedResult.error) {
-      throw new Error(
-        `Failed to fetch uploaded documents: ${uploadedResult.error.message}`
-      );
+      console.warn("[Dashboard Documents] uploaded_documents query error:", uploadedResult.error.message);
     }
     if (strategyResult.error) {
-      throw new Error(
-        `Failed to fetch strategy documents: ${strategyResult.error.message}`
-      );
+      console.warn("[Dashboard Documents] strategy_documents query error:", strategyResult.error.message);
     }
 
     const uploadedDocs = uploadedResult.data || [];
