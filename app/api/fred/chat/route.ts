@@ -304,8 +304,8 @@ async function handlePost(req: NextRequest) {
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
     // ── Parallel context loading ─────────────────────────────────────
-    // These four calls are independent of each other — run in parallel.
-    const [founderContext, conversationStateResult, rlGateResult, persistedModeResult] = await Promise.all([
+    // These five calls are independent of each other — run in parallel.
+    const [founderContext, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult] = await Promise.all([
       buildFounderContext(userId, hasPersistentMemory),
       getOrCreateConversationState(userId).catch((error) => {
         console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
@@ -319,6 +319,20 @@ async function handlePost(req: NextRequest) {
         console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
         return null;
       }),
+      // Check if the user has uploaded a pitch deck (document_repository.folder='decks')
+      (async () => {
+        try {
+          const supabase = createServiceClient();
+          const { count } = await supabase
+            .from("document_repository")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("folder", "decks");
+          return (count ?? 0) > 0;
+        } catch {
+          return false;
+        }
+      })(),
     ]);
 
     // Phase 36: Conversation state
@@ -366,7 +380,7 @@ async function handlePost(req: NextRequest) {
       activeMode = persistedModeResult.activeMode;
       const modeContext = persistedModeResult.modeContext;
 
-      const hasUploadedDeck = false; // TODO: detect from attachments when file upload is wired
+      const hasUploadedDeck = deckCheckResult;
       const transition = determineModeTransition(
         message,
         activeMode,
@@ -417,8 +431,7 @@ async function handlePost(req: NextRequest) {
 
         // Reuse persistedModeResult instead of duplicate getActiveMode call
         const formalAssessments = persistedModeResult.modeContext.formalAssessments;
-        const hasUploadedDeck = false; // TODO: detect from attachments
-        deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, hasUploadedDeck, founderStage);
+        deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, deckCheckResult, founderStage);
 
         // Reuse rlGateResult instead of duplicate getRealityLensGate call
         let rlGateOpenForDeck = false;
@@ -430,7 +443,7 @@ async function handlePost(req: NextRequest) {
         deckReviewReadyBlock = buildDeckReviewReadyBlock(
           rlGateOpenForDeck,
           formalAssessments.verdictIssued,
-          hasUploadedDeck
+          deckCheckResult
         );
       } catch (error) {
         console.warn("[FRED Chat] Failed to load IRS/deck blocks (non-blocking):", error);
