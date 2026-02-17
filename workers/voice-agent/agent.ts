@@ -7,7 +7,7 @@ import {
   SAHARA_MESSAGING,
 } from '../../lib/fred-brain';
 
-const { Agent: VoiceAgent, AgentSession } = voice;
+const { Agent: VoiceAgent, AgentSession, AgentSessionEventTypes } = voice;
 
 /**
  * Build Fred Cary's voice-optimized system prompt.
@@ -67,28 +67,29 @@ export default defineAgent({
       });
     }
 
+    const stt = new STT({ model: 'whisper-1' });
+    const llm = new LLM({ model: 'gpt-4o', temperature: 0.7 });
+    const tts = new TTS({ model: 'tts-1', voice: 'alloy' });
+
     const agent = new VoiceAgent({
       instructions: buildFredVoicePrompt(),
-      stt: new STT({ model: 'whisper-1' }),
-      llm: new LLM({ model: 'gpt-4o', temperature: 0.7 }),
-      tts: new TTS({ model: 'tts-1', voice: 'alloy' }),
+      stt,
+      llm,
+      tts,
     });
 
-    const session = new AgentSession();
+    const session = new AgentSession({ stt, llm, tts });
 
-    session.on('user_input_transcribed', (ev) => {
+    session.on(AgentSessionEventTypes.UserInputTranscribed, (ev) => {
       if (ev.isFinal) {
         console.log(`[User] ${ev.transcript}`);
         publishTranscript('user', ev.transcript);
       }
     });
 
-    session.on('conversation_item_added', (ev) => {
-      if (ev.item.role === 'assistant' && ev.item.content) {
-        const text = ev.item.content
-          .filter((c: { type: string }) => c.type === 'text')
-          .map((c: { text?: string }) => c.text || '')
-          .join('');
+    session.on(AgentSessionEventTypes.ConversationItemAdded, (ev) => {
+      if (ev.item.role === 'assistant') {
+        const text = ev.item.textContent;
         if (text) {
           console.log(`[Fred] ${text}`);
           publishTranscript('fred', text);
@@ -96,11 +97,11 @@ export default defineAgent({
       }
     });
 
-    session.on('error', (ev) => {
+    session.on(AgentSessionEventTypes.Error, (ev) => {
       console.error(`[Fred Voice Agent] Error:`, ev.error);
     });
 
-    session.on('close', (ev) => {
+    session.on(AgentSessionEventTypes.Close, (ev) => {
       console.log(`[Fred Voice Agent] Session closed: ${ev.reason}`);
     });
 

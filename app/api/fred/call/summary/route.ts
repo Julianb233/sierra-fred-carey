@@ -5,6 +5,8 @@
  * POST /api/fred/call/summary
  * Generates post-call deliverables: transcript, summary, decisions, Next 3 Actions.
  * Called after a voice call ends.
+ *
+ * Uses LLM-based extraction with heuristic fallback.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,6 +16,8 @@ import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { withLogging } from "@/lib/api/with-logging";
 import { createServiceClient } from "@/lib/supabase/server";
+import { generateChatResponse } from "@/lib/ai/client";
+import { extractJSON } from "@/lib/ai/extract-json";
 
 const summaryRequestSchema = z.object({
   roomName: z.string().min(1),
@@ -29,22 +33,109 @@ const summaryRequestSchema = z.object({
   ),
 });
 
+interface CallDeliverables {
+  transcript: string;
+  summary: string;
+  decisions: string[];
+  nextActions: string[];
+}
+
+interface LLMSummaryResponse {
+  summary: string;
+  decisions: string[];
+  nextActions: string[];
+}
+
 /**
- * Extract structured deliverables from a call transcript.
- * Uses simple heuristic extraction rather than an LLM call
- * to avoid latency and cost for the MVP.
+ * Generate structured deliverables using LLM analysis of the transcript.
+ * Falls back to heuristic extraction if the LLM call fails.
  */
-function generateCallDeliverables(
+async function generateCallDeliverables(
   transcript: Array<{ speaker: string; text: string; timestamp?: string }>,
   callType: string,
   durationSeconds: number
-) {
-  // Build full transcript text
+): Promise<CallDeliverables> {
   const fullTranscript = transcript
     .map((t) => `${t.speaker === "user" ? "Founder" : "Fred"}: ${t.text}`)
     .join("\n");
 
-  // Extract Fred's final substantive messages as key points
+  try {
+    const llmResult = await generateLLMSummary(fullTranscript, callType, durationSeconds);
+    return {
+      transcript: fullTranscript,
+      ...llmResult,
+    };
+  } catch (err) {
+    console.warn("[Fred Call Summary] LLM extraction failed, using heuristic fallback:", err);
+    return {
+      transcript: fullTranscript,
+      ...generateHeuristicDeliverables(transcript, callType, durationSeconds),
+    };
+  }
+}
+
+/**
+ * Use LLM to extract structured summary, decisions, and actions from the transcript.
+ */
+async function generateLLMSummary(
+  fullTranscript: string,
+  callType: string,
+  durationSeconds: number
+): Promise<LLMSummaryResponse> {
+  const callLabel = callType === "on-demand" ? "quick decision" : "scheduled coaching";
+  const durationMin = Math.round(durationSeconds / 60);
+
+  const systemPrompt = `You are a call summary assistant for Fred Cary's founder coaching platform.
+Given a transcript of a ${callLabel} call (${durationMin} min), extract structured deliverables.
+
+Respond ONLY with valid JSON in this exact format (no markdown, no code blocks):
+{
+  "summary": "2-3 sentence summary of what was discussed and the key outcome",
+  "decisions": ["Each key decision or recommendation Fred made during the call"],
+  "nextActions": ["Action 1 the founder should take", "Action 2", "Action 3"]
+}
+
+Rules:
+- The summary should capture the core topic and outcome in 2-3 sentences.
+- Decisions should be specific commitments or recommendations, not vague statements.
+- Always return exactly 3 next actions, ordered by priority.
+- Actions should be concrete and actionable (start with a verb).
+- If the transcript is too short to extract meaningful content, still produce a reasonable summary.`;
+
+  const response = await generateChatResponse(
+    [{ role: "user", content: `Analyze this call transcript:\n\n${fullTranscript}` }],
+    systemPrompt
+  );
+
+  const parsed = extractJSON<LLMSummaryResponse>(response);
+
+  // Validate the parsed response has the expected shape
+  if (
+    typeof parsed.summary !== "string" ||
+    !Array.isArray(parsed.decisions) ||
+    !Array.isArray(parsed.nextActions)
+  ) {
+    throw new Error("LLM response missing required fields");
+  }
+
+  // Ensure exactly 3 actions
+  while (parsed.nextActions.length < 3) {
+    parsed.nextActions.push("Review the call transcript and identify your top priority");
+  }
+  parsed.nextActions = parsed.nextActions.slice(0, 3);
+
+  return parsed;
+}
+
+/**
+ * Heuristic fallback: extract structured deliverables using regex patterns.
+ * Used when the LLM call fails.
+ */
+function generateHeuristicDeliverables(
+  transcript: Array<{ speaker: string; text: string; timestamp?: string }>,
+  callType: string,
+  durationSeconds: number
+): Omit<CallDeliverables, "transcript"> {
   const fredMessages = transcript
     .filter((t) => t.speaker === "fred" && t.text.length > 30)
     .map((t) => t.text);
@@ -67,7 +158,6 @@ function generateCallDeliverables(
     }
   }
 
-  // Ensure we always have 3 actions
   while (actions.length < 3) {
     actions.push("Review the call transcript and identify your top priority");
   }
@@ -85,7 +175,6 @@ function generateCallDeliverables(
   }
 
   return {
-    transcript: fullTranscript,
     summary,
     decisions,
     nextActions: actions.slice(0, 3),
@@ -126,8 +215,8 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    // Generate deliverables
-    const deliverables = generateCallDeliverables(
+    // Generate deliverables (LLM with heuristic fallback)
+    const deliverables = await generateCallDeliverables(
       transcript,
       callType,
       durationSeconds

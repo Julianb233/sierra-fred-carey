@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
@@ -13,18 +13,23 @@ import { FounderSnapshotCard } from "@/components/dashboard/founder-snapshot-car
 import { DecisionBox } from "@/components/dashboard/decision-box";
 import { FundingReadinessGauge } from "@/components/dashboard/funding-readiness-gauge";
 import { WeeklyMomentum } from "@/components/dashboard/weekly-momentum";
+import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { MobileHome } from "@/components/mobile/mobile-home";
+import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("Founder");
-  const { refresh: refreshTier } = useTier();
+  const { tier, refresh: refreshTier } = useTier();
   const [data, setData] = useState<CommandCenterData | null>(null);
+  const canCallFred = tier >= UserTier.PRO;
 
   // Fetch command center data
   useEffect(() => {
@@ -121,8 +126,32 @@ function DashboardContent() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-1">
+            Welcome back, {userName}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Your Founder Command Center
+          </p>
+        </div>
+        <OnboardingChecklist />
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            Start a conversation with FRED to populate your command center.
+          </p>
+          <a
+            href="/dashboard/chat"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-sm font-medium transition-colors"
+          >
+            Talk to FRED
+          </a>
+        </div>
+        <WelcomeModal
+          isOpen={showWelcome}
+          onClose={handleCloseWelcome}
+          userName={userName}
+        />
       </div>
     );
   }
@@ -130,13 +159,24 @@ function DashboardContent() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Welcome Header */}
-      <div>
-        <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-1">
-          Welcome back, {userName}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Your Founder Command Center
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-1">
+            Welcome back, {userName}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Your Founder Command Center
+          </p>
+        </div>
+        {canCallFred && (
+          <Button
+            onClick={() => setShowCallModal(true)}
+            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shrink-0"
+          >
+            <Phone className="h-4 w-4 mr-2" />
+            Call Fred
+          </Button>
+        )}
       </div>
 
       {/* Onboarding Checklist (dismissible) */}
@@ -169,6 +209,14 @@ function DashboardContent() {
         onClose={handleCloseWelcome}
         userName={userName}
       />
+
+      {/* Call Fred Modal (Pro+ tier) */}
+      {canCallFred && (
+        <CallFredModal
+          open={showCallModal}
+          onOpenChange={setShowCallModal}
+        />
+      )}
     </div>
   );
 }
