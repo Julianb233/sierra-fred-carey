@@ -15,7 +15,6 @@ import {
 import {
   Users,
   MessageSquare,
-  TrendingUp,
   ListChecks,
   FileText,
   BarChart3,
@@ -42,8 +41,8 @@ type NavItem = {
 };
 
 /**
- * Core navigation items -- always visible (7 items per spec).
- * Spec: Home, Chat with Fred, Your Progress, Next Steps, Community, Settings
+ * Core navigation items -- always visible per Phase 40 spec.
+ * Spec: Home, Chat with Fred, Next Steps, Readiness, Documents, Community, Settings
  */
 const coreNavItems: NavItem[] = [
   {
@@ -57,14 +56,19 @@ const coreNavItems: NavItem[] = [
     icon: <MessageSquare className="h-4 w-4" />,
   },
   {
-    name: "Your Progress",
-    href: "/dashboard/journey",
-    icon: <TrendingUp className="h-4 w-4" />,
-  },
-  {
     name: "Next Steps",
     href: "/dashboard/next-steps",
     icon: <ListChecks className="h-4 w-4" />,
+  },
+  {
+    name: "Readiness",
+    href: "/dashboard/readiness",
+    icon: <BarChart3 className="h-4 w-4" />,
+  },
+  {
+    name: "Documents",
+    href: "/dashboard/documents",
+    icon: <FileText className="h-4 w-4" />,
   },
   {
     name: "Community",
@@ -83,18 +87,6 @@ const coreNavItems: NavItem[] = [
  * Each has a `condition` key that maps to a computed visibility flag.
  */
 const conditionalNavItems: NavItem[] = [
-  {
-    name: "Readiness",
-    href: "/dashboard/readiness",
-    icon: <BarChart3 className="h-4 w-4" />,
-    condition: "showReadiness",
-  },
-  {
-    name: "Documents",
-    href: "/dashboard/documents",
-    icon: <FileText className="h-4 w-4" />,
-    condition: "showDocuments",
-  },
   {
     name: "Positioning",
     href: "/dashboard/positioning",
@@ -256,10 +248,6 @@ export default function DashboardLayout({
     const isEarlyStage = !user.stage || EARLY_STAGES.has(user.stage);
 
     return {
-      // Readiness: visible when stage >= seed OR tier >= Pro
-      showReadiness: !isEarlyStage || tier >= UserTier.PRO,
-      // Documents: always show if tier >= Pro (they may have docs)
-      showDocuments: tier >= UserTier.PRO,
       // Positioning: show for Pro+ users
       showPositioning: tier >= UserTier.PRO,
       // Investor Lens: show when not early stage AND tier >= Pro
