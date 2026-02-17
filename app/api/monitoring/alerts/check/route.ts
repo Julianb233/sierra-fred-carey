@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual, createHmac } from "crypto";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { runAlertNotificationCheck } from "@/lib/monitoring/alert-scheduler";
 import { logger } from "@/lib/logger";
@@ -17,10 +18,16 @@ import { logger } from "@/lib/logger";
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
-  // SECURITY: Require CRON_SECRET or admin auth for alert check triggers
+  // SECURITY: Require CRON_SECRET or admin auth for alert check triggers (timing-safe)
   const authHeader = request.headers.get("authorization");
   const expectedToken = process.env.CRON_SECRET;
-  const hasCronSecret = expectedToken && authHeader === `Bearer ${expectedToken}`;
+  let hasCronSecret = false;
+  if (expectedToken && authHeader) {
+    const expected = `Bearer ${expectedToken}`;
+    const hmac1 = createHmac("sha256", "cron-auth").update(authHeader).digest();
+    const hmac2 = createHmac("sha256", "cron-auth").update(expected).digest();
+    hasCronSecret = timingSafeEqual(hmac1, hmac2);
+  }
   const hasAdminAuth = isAdminRequest(request);
 
   if (!hasCronSecret && !hasAdminAuth) {
@@ -68,10 +75,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // SECURITY: Require CRON_SECRET or admin auth for alert check triggers
+    // SECURITY: Require CRON_SECRET or admin auth for alert check triggers (timing-safe)
     const authHeader = request.headers.get("authorization");
     const expectedToken = process.env.CRON_SECRET;
-    const hasCronSecret = expectedToken && authHeader === `Bearer ${expectedToken}`;
+    let hasCronSecret = false;
+    if (expectedToken && authHeader) {
+      const expected = `Bearer ${expectedToken}`;
+      const hmac1 = createHmac("sha256", "cron-auth").update(authHeader).digest();
+      const hmac2 = createHmac("sha256", "cron-auth").update(expected).digest();
+      hasCronSecret = timingSafeEqual(hmac1, hmac2);
+    }
     const hasAdminAuth = isAdminRequest(request);
 
     if (!hasCronSecret && !hasAdminAuth) {

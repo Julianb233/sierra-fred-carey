@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { timingSafeEqual, createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/auth/admin";
 import {
@@ -24,9 +25,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, config = DEFAULT_PROMOTION_CONFIG, cronSecret } = body;
 
-    // SECURITY: Require cron secret or admin auth
+    // SECURITY: Require cron secret or admin auth (timing-safe comparison)
     const expectedSecret = process.env.AUTO_PROMOTION_CRON_SECRET;
-    const hasCronSecret = expectedSecret && cronSecret === expectedSecret;
+    let hasCronSecret = false;
+    if (expectedSecret && cronSecret) {
+      const hmac1 = createHmac("sha256", "cron-auth").update(String(cronSecret)).digest();
+      const hmac2 = createHmac("sha256", "cron-auth").update(expectedSecret).digest();
+      hasCronSecret = timingSafeEqual(hmac1, hmac2);
+    }
     const hasAdminAuth = isAdminRequest(request);
 
     if (!hasCronSecret && !hasAdminAuth) {
