@@ -229,7 +229,7 @@ export default function DashboardLayout({
       setUserInfo({
         name: profile?.name || authUser.email?.split("@")[0] || "Founder",
         email: authUser.email || "",
-        stage: profile?.stage || null,
+        stage: profile?.stage ?? null,
       });
       setIsAuthChecking(false);
     }
@@ -240,7 +240,7 @@ export default function DashboardLayout({
     name: userInfo?.name || "",
     email: userInfo?.email || "",
     tier,
-    stage: userInfo?.stage,
+    stage: userInfo?.stage ?? null,
   };
 
   // Compute visibility conditions for conditional nav items
