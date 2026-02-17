@@ -9,7 +9,6 @@
  * Related: .planning/debug/backend-user-system.md
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import { createServiceClient } from "@/lib/supabase/server";
 import { supabaseSignUp } from "@/lib/supabase/auth-helpers";
 
