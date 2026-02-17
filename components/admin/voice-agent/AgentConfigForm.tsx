@@ -297,7 +297,7 @@ export function AgentConfigForm({ config, onSave }: AgentConfigFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Fallback Response</CardTitle>
-          <CardDescription>What to say when the agent can't help</CardDescription>
+          <CardDescription>What to say when the agent can&apos;t help</CardDescription>
         </CardHeader>
         <CardContent>
           <Textarea

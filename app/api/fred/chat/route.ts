@@ -33,8 +33,8 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContext } from "@/lib/fred/context-builder";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
-import type { ConversationState, ModeContext } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildDriftRedirectBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
+import type { ConversationState } from "@/lib/db/conversation-state";
+import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 

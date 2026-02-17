@@ -17,7 +17,6 @@ import {
   Mic,
   MicOff,
   Loader2,
-  Clock,
   FileText,
   CheckCircle2,
   AlertCircle,

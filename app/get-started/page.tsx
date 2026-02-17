@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import {
@@ -357,10 +356,10 @@ const OnboardingPage = () => {
                 >
                   <div className="text-center space-y-3">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                      What's your <span className="text-[#ff6a1a]">#1 challenge</span>?
+                      What&apos;s your <span className="text-[#ff6a1a]">#1 challenge</span>?
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
-                      We'll customize your experience
+                      We&apos;ll customize your experience
                     </p>
                   </div>
 
@@ -422,7 +421,7 @@ const OnboardingPage = () => {
                 >
                   <div className="text-center space-y-3">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                      Let's <span className="text-[#ff6a1a]">get started</span>!
+                      Let&apos;s <span className="text-[#ff6a1a]">get started</span>!
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
                       Create your account
@@ -567,7 +566,7 @@ const OnboardingPage = () => {
                     className="space-y-3"
                   >
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                      You're in! 🎉
+                      You&apos;re in! 🎉
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-400">
                       Welcome to Sahara

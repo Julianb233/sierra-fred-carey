@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ReloadIcon, ArrowRightIcon } from "@radix-ui/react-icons";
-import { Target, FileText, Users, Lightbulb, BarChart3, Download, RotateCcw } from "lucide-react";
+import { Target, FileText, Lightbulb, BarChart3, Download, RotateCcw } from "lucide-react";
 import { PositioningGradeCard, type Grade } from "./positioning-grade-card";
 import { CategoryScore, type CategoryScoreData } from "./category-score";
 import { GapsAndActions, type Gap, type Action } from "./gaps-and-actions";

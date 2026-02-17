@@ -133,10 +133,10 @@ export function FredIntroStep({ startupInfo, onNext, onBack }: FredIntroStepProp
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Let's Chat
+          Let&apos;s Chat
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Ask FRED anything about your startup or the challenges you're facing.
+          Ask FRED anything about your startup or the challenges you&apos;re facing.
         </p>
       </div>
 

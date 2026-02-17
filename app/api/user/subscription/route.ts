@@ -11,7 +11,7 @@ import { getOptionalUserId } from "@/lib/auth";
  * (e.g. /demo/*) using TierProvider never receive a 401 error response.
  * Authenticated users still receive their actual subscription data.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const userId = await getOptionalUserId();
 

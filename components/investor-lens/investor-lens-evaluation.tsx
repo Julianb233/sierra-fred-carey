@@ -138,7 +138,7 @@ export function InvestorLensEvaluation() {
             <div>
               <Label className="text-base font-semibold">Fundraising Stage</Label>
               <p className="text-sm text-muted-foreground">
-                Select the stage you're raising for. Evaluation criteria vary significantly by stage.
+                Select the stage you&apos;re raising for. Evaluation criteria vary significantly by stage.
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-3">

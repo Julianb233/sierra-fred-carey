@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   TrendingUp,
-  TrendingDown,
   Minus,
   Loader2,
   AlertCircle,

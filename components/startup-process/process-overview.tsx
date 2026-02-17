@@ -364,7 +364,7 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     Problem Defined
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    You've clearly articulated the problem you're solving.
+                    You&apos;ve clearly articulated the problem you&apos;re solving.
                   </p>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     Demand Validated
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    You've proven people will pay for your solution.
+                    You&apos;ve proven people will pay for your solution.
                   </p>
                 </div>
               </div>
@@ -403,7 +403,7 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     Pilot Complete
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    You've run a successful pilot program.
+                    You&apos;ve run a successful pilot program.
                   </p>
                 </div>
               </div>
@@ -416,7 +416,7 @@ export function ProcessOverview({ process, onStepClick }: ProcessOverviewProps) 
                     Process Complete!
                   </p>
                   <p className="text-sm text-[#ff6a1a]/80">
-                    You've completed the entire 9-step startup process.
+                    You&apos;ve completed the entire 9-step startup process.
                   </p>
                 </div>
               </div>

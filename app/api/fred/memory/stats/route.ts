@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { MEMORY_CONFIG, UserTier } from "@/lib/constants";
+import { UserTier } from "@/lib/constants";
 
 // Tier limits (total items: facts + episodes + decisions)
 const TIER_LIMITS: Record<number, number> = {

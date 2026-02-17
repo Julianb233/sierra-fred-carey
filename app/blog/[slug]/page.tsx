@@ -3,7 +3,7 @@
 import { use } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ArrowLeft, Share2, Bookmark, BookOpen } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
 import Footer from "@/components/footer";
 
@@ -85,20 +85,20 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
               <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
                 As artificial intelligence continues to reshape the business landscape,
                 the way we make decisions is undergoing a fundamental transformation.
-                This shift isn't just about automation—it's about augmentation.
+                This shift isn&apos;t just about automation—it&apos;s about augmentation.
               </p>
 
               <h2 className="text-3xl font-bold mt-12 mb-6 text-gray-900 dark:text-white">The Evolution of Decision-Making</h2>
               <p className="mb-6 text-gray-600 dark:text-gray-400">
                 Traditional decision-making processes relied heavily on intuition, past experience,
-                and limited data analysis. While these elements remain valuable, they're no longer
-                sufficient in today's fast-paced, data-rich environment.
+                and limited data analysis. While these elements remain valuable, they&apos;re no longer
+                sufficient in today&apos;s fast-paced, data-rich environment.
               </p>
               <p className="mb-6 text-gray-600 dark:text-gray-400">
                 Modern decision frameworks combine human judgment with AI-powered insights to create
                 a more robust and reliable decision-making process. This hybrid approach leverages
                 the best of both worlds: human creativity and contextual understanding, paired with
-                AI's ability to process vast amounts of data and identify patterns.
+                AI&apos;s ability to process vast amounts of data and identify patterns.
               </p>
 
               <h2 className="text-3xl font-bold mt-12 mb-6 text-gray-900 dark:text-white">Key Principles for AI-Enhanced Decisions</h2>
@@ -131,7 +131,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
               <h2 className="text-3xl font-bold mt-12 mb-6 text-gray-900 dark:text-white">Practical Applications</h2>
               <p className="mb-6 text-gray-600 dark:text-gray-400">
-                We've seen companies across industries successfully implement AI-enhanced decision
+                We&apos;ve seen companies across industries successfully implement AI-enhanced decision
                 frameworks. From product roadmap prioritization to market expansion strategies,
                 the combination of human insight and AI analysis consistently outperforms either
                 approach alone.
@@ -145,14 +145,14 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
               <h2 className="text-3xl font-bold mt-12 mb-6 text-gray-900 dark:text-white">Looking Ahead</h2>
               <p className="mb-6 text-gray-600 dark:text-gray-400">
-                As AI technology continues to advance, we'll see even more sophisticated decision
+                As AI technology continues to advance, we&apos;ll see even more sophisticated decision
                 support systems emerge. The organizations that thrive will be those that successfully
                 integrate these tools into their culture while maintaining the human elements that
                 drive innovation and growth.
               </p>
               <p className="mb-6 text-gray-600 dark:text-gray-400">
-                The future of decision-making isn't about choosing between human intuition and AI
-                analysis—it's about creating systems that leverage both to make better, faster,
+                The future of decision-making isn&apos;t about choosing between human intuition and AI
+                analysis—it&apos;s about creating systems that leverage both to make better, faster,
                 more informed decisions.
               </p>
             </div>

@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     const candidates = await getReEngagementCandidates();
 
     let sent = 0;
-    let skipped = 0;
+    const skipped = 0;
     let failed = 0;
 
     for (const candidate of candidates) {

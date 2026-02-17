@@ -162,7 +162,7 @@ export default function ConfigureCheckInsPage() {
             <div className="relative z-10">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sample Message</h3>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm text-gray-600 dark:text-gray-400">
-                <p className="mb-2">Hey! It's your weekly check-in.</p>
+                <p className="mb-2">Hey! It&apos;s your weekly check-in.</p>
                 <p>
                   {CHECK_IN_TYPES.find((t) => t.id === selectedType)?.description}
                 </p>

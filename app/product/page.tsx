@@ -1,9 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { GlassCard3D } from "@/components/premium/Card3D";
 import { PhoneMockup, PhoneScreenChat } from "@/components/premium/PhoneMockup";
 import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
@@ -449,7 +447,7 @@ export default function ProductPage() {
                     <h3 className="text-2xl font-bold">Weekly Check-ins</h3>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    SMS-based coaching sessions with Fred's AI coach
+                    SMS-based coaching sessions with Fred&apos;s AI coach
                   </p>
                 </div>
 

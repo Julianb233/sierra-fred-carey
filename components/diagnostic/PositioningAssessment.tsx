@@ -289,8 +289,8 @@ export function PositioningAssessment({
         <CardHeader>
           <CardTitle>Positioning Readiness Assessment</CardTitle>
           <p className="text-muted-foreground">
-            Describe your business and we'll evaluate your positioning clarity
-            using Fred Cary's framework.
+            Describe your business and we&apos;ll evaluate your positioning clarity
+            using Fred Cary&apos;s framework.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">

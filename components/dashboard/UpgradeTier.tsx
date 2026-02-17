@@ -30,7 +30,7 @@ import {
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { PLANS, type PlanId } from "@/lib/stripe/config";
-import { UserTier, TIER_FEATURES, TIER_NAMES, getUpgradeTier } from "@/lib/constants";
+import { UserTier, TIER_NAMES, getUpgradeTier } from "@/lib/constants";
 import { redirectToCheckout, redirectToPortal } from "@/lib/stripe/client";
 
 interface UpgradeTierProps {

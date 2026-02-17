@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -147,34 +146,34 @@ export function DeckProtocol({
             <p className="text-sm italic text-muted-foreground">
               {recommendation === "send_now" && (
                 <>
-                  "Thank you for your interest. I'd be happy to share our deck.
-                  We're currently raising [amount] to [key milestone]. I've attached
+                  &quot;Thank you for your interest. I&apos;d be happy to share our deck.
+                  We&apos;re currently raising [amount] to [key milestone]. I&apos;ve attached
                   our materials - would love to find time to walk you through our
-                  progress and vision."
+                  progress and vision.&quot;
                 </>
               )}
               {recommendation === "polish_first" && (
                 <>
-                  "Thank you for your interest in [Company Name]. I'm currently
+                  &quot;Thank you for your interest in [Company Name]. I&apos;m currently
                   finalizing our materials and would like to send you our most
                   compelling version. Would next week work for sharing an updated
-                  deck along with a brief intro call?"
+                  deck along with a brief intro call?&quot;
                 </>
               )}
               {recommendation === "dont_send" && (
                 <>
-                  "Thank you for your interest. We're currently heads-down on
+                  &quot;Thank you for your interest. We&apos;re currently heads-down on
                   [key initiative] and expect to have compelling new results in
-                  [timeframe]. I'd love to reconnect then when we can show you
-                  more meaningful progress."
+                  [timeframe]. I&apos;d love to reconnect then when we can show you
+                  more meaningful progress.&quot;
                 </>
               )}
               {recommendation === "wait" && (
                 <>
-                  "Thank you for reaching out. We're in an exciting building phase
+                  &quot;Thank you for reaching out. We&apos;re in an exciting building phase
                   and are targeting to begin fundraising conversations in [timeframe].
-                  I'd love to keep you updated on our progress - would it be okay
-                  to circle back then?"
+                  I&apos;d love to keep you updated on our progress - would it be okay
+                  to circle back then?&quot;
                 </>
               )}
             </p>

@@ -68,7 +68,7 @@ export function WelcomeStep({ onNext, onSkip }: WelcomeStepProps) {
         className="text-lg text-gray-600 dark:text-gray-400 mb-8"
       >
         Your AI co-founder with 50 years of experience building companies.
-        From taco stands to public companies — I've seen it all.
+        From taco stands to public companies — I&apos;ve seen it all.
       </motion.p>
 
       {/* Features grid */}
@@ -109,7 +109,7 @@ export function WelcomeStep({ onNext, onSkip }: WelcomeStepProps) {
         className="mb-8 p-4 border-l-4 border-[#ff6a1a] bg-gray-50 dark:bg-gray-800/50 rounded-r-lg text-left"
       >
         <p className="text-gray-700 dark:text-gray-300 italic">
-          "F**k average, be legendary. Let's build something extraordinary together."
+          &quot;F**k average, be legendary. Let&apos;s build something extraordinary together.&quot;
         </p>
         <cite className="text-sm text-gray-500 mt-2 block">— Fred Cary</cite>
       </motion.blockquote>
@@ -126,7 +126,7 @@ export function WelcomeStep({ onNext, onSkip }: WelcomeStepProps) {
           onClick={onNext}
           className="w-full sm:w-auto bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
         >
-          Let's Get Started
+          Let&apos;s Get Started
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
         <Button

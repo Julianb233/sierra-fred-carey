@@ -10,7 +10,6 @@ import {
   ListChecks,
   FileText,
   CheckCircle2,
-  MessageSquare,
   Loader2,
   ChevronRight,
 } from "lucide-react";

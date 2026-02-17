@@ -95,7 +95,7 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
         transition={{ delay: 0.3 }}
         className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
       >
-        You're All Set!
+        You&apos;re All Set!
       </motion.h1>
 
       {/* Subtitle */}
@@ -113,7 +113,7 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
         ) : (
           "Your account is set up and ready to go."
         )}
-        {" "}Let's build something legendary.
+        {" "}Let&apos;s build something legendary.
       </motion.p>
 
       {/* Quick links */}

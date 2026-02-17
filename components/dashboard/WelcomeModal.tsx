@@ -11,7 +11,6 @@ import {
   Brain,
   Sparkles,
   ArrowRight,
-  CheckCircle2,
   Play,
 } from "lucide-react";
 
@@ -200,7 +199,7 @@ export function WelcomeModal({
                   {isLastSlide ? (
                     <>
                       <Play className="w-4 h-4" />
-                      Let's Go!
+                      Let&apos;s Go!
                     </>
                   ) : (
                     <>

@@ -144,7 +144,7 @@ export function SessionList({
 
           {filteredSessions.length === 0 && searchQuery && (
             <div className="text-center py-8">
-              <p className="text-sm text-gray-500">No conversations match "{searchQuery}"</p>
+              <p className="text-sm text-gray-500">No conversations match &quot;{searchQuery}&quot;</p>
             </div>
           )}
         </div>

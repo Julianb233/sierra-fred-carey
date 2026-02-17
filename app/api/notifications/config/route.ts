@@ -11,7 +11,7 @@ const VALID_ALERT_LEVELS = ["info", "warning", "critical"];
  *
  * SECURITY: Requires authentication - userId from server-side session
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const userId = await requireAuth();
 

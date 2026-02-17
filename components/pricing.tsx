@@ -6,11 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 import { CheckIcon, StarIcon, RocketIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { Card3D } from "@/components/premium/Card3D";
-import { FadeUpOnScroll, GradientText } from "@/components/premium/AnimatedText";
-import { GradientBg } from "@/components/premium/GradientBg";
+import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
 import { redirectToCheckout } from "@/lib/stripe/client";
 import { PLANS } from "@/lib/stripe/config";
-import Link from "next/link";
 
 export default function Pricing() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);

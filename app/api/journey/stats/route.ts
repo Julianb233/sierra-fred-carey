@@ -27,7 +27,7 @@ async function safeCount(query: PromiseLike<{ count: number | null; error: unkno
  *
  * SECURITY: Requires authentication - userId from server-side session
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();

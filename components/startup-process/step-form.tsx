@@ -58,7 +58,7 @@ function Step1Form({
           className="resize-none"
         />
         <p className="text-xs text-muted-foreground">
-          Be specific. Avoid vague statements like "improve productivity."
+          Be specific. Avoid vague statements like &quot;improve productivity.&quot;
         </p>
       </div>
 
@@ -168,7 +168,7 @@ function Step2Form({
           disabled={disabled}
         />
         <p className="text-xs text-muted-foreground">
-          Where does your solution operate? What's the context?
+          Where does your solution operate? What&apos;s the context?
         </p>
       </div>
     </div>
@@ -293,7 +293,7 @@ function Step4Form({
           rows={5}
         />
         <p className="text-xs text-muted-foreground">
-          Being clear about what you won't do prevents scope creep.
+          Being clear about what you won&apos;t do prevents scope creep.
         </p>
       </div>
     </div>
@@ -667,7 +667,7 @@ function Step9Form({
 
       <div className="space-y-2">
         <Label htmlFor="whatDidntWork">
-          What Didn't Work <span className="text-destructive">*</span>
+          What Didn&apos;t Work <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="whatDidntWork"
@@ -723,7 +723,7 @@ function Step9Form({
             <Label htmlFor="kill" className="flex-1 cursor-pointer">
               <span className="font-medium text-red-600">Kill</span>
               <p className="text-sm text-muted-foreground">
-                This isn't working. Time to move on.
+                This isn&apos;t working. Time to move on.
               </p>
             </Label>
           </div>

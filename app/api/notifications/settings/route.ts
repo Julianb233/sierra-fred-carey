@@ -18,7 +18,6 @@ import {
   validatePagerDutyRoutingKey,
 } from "@/lib/notifications/validators";
 import { testNotificationConfig } from "@/lib/notifications";
-import type { NotificationChannel, AlertLevel } from "@/lib/notifications/types";
 
 /**
  * GET /api/notifications/settings

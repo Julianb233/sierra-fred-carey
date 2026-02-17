@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminSession } from "@/lib/auth/admin";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
