@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Network, RefreshCw, Users, Briefcase, CheckCircle, XCircle } from "lucide-react";
+import { Network, RefreshCw, Users, Briefcase, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -222,6 +222,12 @@ export default function BoardyPage() {
           <p className="text-gray-600 dark:text-gray-400">
             AI-powered connections to the right people
           </p>
+          <div className="flex items-center gap-1.5 mt-2">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+              AI-Generated Suggestions
+            </span>
+          </div>
         </div>
 
         {/* Refresh Button */}

@@ -19,6 +19,7 @@ import {
   Briefcase,
   GraduationCap,
   Handshake,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -164,6 +165,12 @@ function MatchCard({
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">
             {match.matchDescription}
           </p>
+
+          {/* AI-Generated badge */}
+          <div className="flex items-center gap-1 mb-3 text-xs text-amber-600 dark:text-amber-400">
+            <Sparkles className="w-3 h-3" />
+            <span>AI-Generated</span>
+          </div>
 
           {/* Match Score Bar */}
           <div className="mb-4">

@@ -93,6 +93,9 @@ export default function BoardyDemo() {
             AI-powered investor matching with warm intro discovery and automated
             outreach sequencing to the right funds for your stage and sector.
           </p>
+          <Badge className="mt-3 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800">
+            AI-Generated Suggestions
+          </Badge>
         </motion.div>
 
         {/* Tab Toggle */}
