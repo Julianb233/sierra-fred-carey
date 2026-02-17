@@ -285,14 +285,19 @@ describe('API Route Authentication', () => {
   });
 
   describe('User Subscription API - /api/user/subscription', () => {
-    it('should return 401 for unauthenticated request', async () => {
+    it('should return 200 with FREE plan for unauthenticated request', async () => {
       mockUnauthenticated();
 
       const { GET } = await import('@/app/api/user/subscription/route');
       const request = createMockRequest('/api/user/subscription');
 
       const response = await GET(request);
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.plan).toBeDefined();
+      expect(body.subscription).toBeNull();
+      expect(body.isActive).toBe(false);
     });
 
     it('should return subscription data for authenticated request', async () => {

@@ -158,7 +158,8 @@ describe("Next Steps Hub (/dashboard/next-steps)", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Server error")).toBeInTheDocument();
+      expect(screen.getByText("No Next Steps Yet")).toBeInTheDocument();
+      expect(screen.getByText("Start a Conversation")).toBeInTheDocument();
     });
   });
 
