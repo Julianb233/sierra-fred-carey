@@ -301,8 +301,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16 lg:pt-20">
-      <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-screen">
         {/* Mobile Sidebar (hamburger drawer — hidden on md+, supplements bottom nav for full menu) */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 w-[280px] sm:w-72">

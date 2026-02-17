@@ -33,6 +33,12 @@ function NavBar() {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
 
+  // Hide NavBar on pages that have their own full-screen layouts/headers
+  // - /chat has its own header with "Talk to Fred" and back button
+  // - /dashboard/* has its own sidebar navigation
+  const isChat = pathname === "/chat";
+  const hideNavBar = isChat || isDashboard;
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -84,6 +90,9 @@ function NavBar() {
       href: "/demo/boardy",
     }
   ];
+
+  // Don't render NavBar on pages that have their own navigation
+  if (hideNavBar) return null;
 
   return (
     <motion.nav
