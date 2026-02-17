@@ -40,6 +40,7 @@ interface FounderProfile {
   fundingHistory: string | null;
   teamSize: number | null;
   name: string | null;
+  location: string | null;
 }
 
 interface InvestorRecord {
@@ -344,9 +345,13 @@ export async function matchInvestors(
   // 1. Load founder profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stage, industry, revenue_range, funding_history, team_size, name")
+    .select("stage, industry, revenue_range, funding_history, team_size, name, enrichment_data")
     .eq("id", userId)
     .single();
+
+  // Extract location from enrichment_data JSONB if available
+  const enrichment = (profile?.enrichment_data as Record<string, unknown>) || {};
+  const founderLocation = (enrichment.location as string) || null;
 
   const founderProfile: FounderProfile = {
     stage: profile?.stage || null,
@@ -355,6 +360,7 @@ export async function matchInvestors(
     fundingHistory: profile?.funding_history || null,
     teamSize: profile?.team_size || null,
     name: profile?.name || null,
+    location: founderLocation,
   };
 
   // 2. Load investors from user's lists
@@ -383,7 +389,7 @@ export async function matchInvestors(
     const stageScore = scoreStage(founderProfile.stage, inv.stage_focus);
     const sectorScore = scoreSector(founderProfile.industry, inv.sector_focus);
     const sizeScore = scoreSize(founderProfile.stage, founderProfile.revenueRange, inv.check_size_min, inv.check_size_max);
-    const locationBonus = scoreLocation(null, inv.location); // TODO: add founder location to profile
+    const locationBonus = scoreLocation(founderProfile.location, inv.location);
 
     // Weighted average: stage 35%, sector 35%, size 30% + location bonus (capped at 100)
     const baseScore = Math.round(stageScore * 0.35 + sectorScore * 0.35 + sizeScore * 0.3);
