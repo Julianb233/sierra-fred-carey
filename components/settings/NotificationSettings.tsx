@@ -509,8 +509,8 @@ export function NotificationSettings() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Error display */}
-        {(error || pushError) && (
+        {/* Error display — only show for action errors, not initial load failures */}
+        {(error || pushError) && configs.length > 0 && (
           <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950 text-red-600 rounded-lg">
             <ExclamationTriangleIcon className="h-4 w-4" />
             <span className="text-sm">{error || pushError}</span>

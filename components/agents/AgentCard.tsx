@@ -181,25 +181,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
             </div>
           </div>
 
-          {/* Activity Sparkline (mock data) */}
-          <div className="mb-4">
-            <div className="flex items-end gap-1 h-12">
-              {Array.from({ length: 12 }).map((_, i) => {
-                const height = Math.random() * 100;
-                return (
-                  <motion.div
-                    key={i}
-                    className={`flex-1 rounded-t ${colors.bg} opacity-60 group-hover:opacity-100 transition-opacity`}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
-                  />
-                );
-              })}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">Activity last 24h</p>
-          </div>
-
           {/* CTA */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
             <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#ff6a1a] transition-colors">View Details</span>

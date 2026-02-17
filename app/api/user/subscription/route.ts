@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId, PLANS } from "@/lib/stripe/config";
-import { requireAuth } from "@/lib/auth";
+import { getOptionalUserId } from "@/lib/auth";
 
 /**
  * GET /api/user/subscription
  * Get user's subscription status and plan
  *
- * SECURITY: Requires authentication - userId from server-side session
+ * Returns FREE tier for unauthenticated users (200) so that public pages
+ * (e.g. /demo/*) using TierProvider never receive a 401 error response.
+ * Authenticated users still receive their actual subscription data.
  */
 export async function GET(request: NextRequest) {
   try {
-    // SECURITY: Get userId from server-side session
-    const userId = await requireAuth();
+    const userId = await getOptionalUserId();
+
+    // Unauthenticated users get FREE tier (no 401)
+    if (!userId) {
+      return NextResponse.json({
+        plan: PLANS.FREE,
+        subscription: null,
+        isActive: false,
+      });
+    }
 
     const subscription = await getUserSubscription(userId);
 

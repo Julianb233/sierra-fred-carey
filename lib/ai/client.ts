@@ -81,7 +81,7 @@ async function generateWithAnthropic(
     }));
 
   const response = await anthropic.messages.create({
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4-5-20250929",
     max_tokens: 1000,
     system: systemPrompt || "",
     messages: anthropicMessages,
@@ -99,7 +99,7 @@ async function generateWithGoogle(
   const google = getGoogle();
   if (!google) throw new Error("Google AI not configured");
 
-  const model = google.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = google.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   // Build conversation history
   const history = messages.slice(0, -1).map((m) => ({

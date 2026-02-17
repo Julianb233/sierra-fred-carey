@@ -5,7 +5,6 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 import { ActiveModeBar, type ChatMode } from "@/components/chat/active-mode-bar";
 import { ChatSidePanel } from "@/components/chat/chat-side-panel";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
   MessageCircle,
@@ -180,15 +179,6 @@ export default function ChatPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link href="/">
-            <Image
-              src="/sahara-logo.svg"
-              alt="Sahara"
-              width={80}
-              height={20}
-              className="h-5 w-auto opacity-70 hover:opacity-100 transition-opacity"
-            />
-          </Link>
         </div>
       </header>
 

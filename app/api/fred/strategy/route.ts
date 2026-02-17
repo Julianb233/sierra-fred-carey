@@ -17,6 +17,7 @@ import {
   STRATEGY_DOC_TYPES,
   type StrategyInput,
   type StrategyDocType,
+  type GeneratedDocument,
 } from '@/lib/fred/strategy';
 
 export async function POST(request: NextRequest) {
@@ -113,10 +114,17 @@ export async function GET(request: NextRequest) {
 
     // Fetch documents
     const supabase = await createClient();
-    const documents = await getStrategyDocuments(supabase, userId, {
-      type: type && STRATEGY_DOC_TYPES.includes(type) ? type : undefined,
-      limit: Math.min(limit, 100),
-    });
+    let documents: GeneratedDocument[];
+    try {
+      documents = await getStrategyDocuments(supabase, userId, {
+        type: type && STRATEGY_DOC_TYPES.includes(type) ? type : undefined,
+        limit: Math.min(limit, 100),
+      });
+    } catch (dbError) {
+      // Handle missing table or DB errors gracefully — return empty list
+      console.warn('[Strategy API] DB error (returning empty list):', dbError);
+      documents = [];
+    }
 
     return NextResponse.json({
       success: true,

@@ -11,7 +11,7 @@ import {
   Target,
   Clock,
   Pencil,
-  AlertCircle,
+  MessageSquare,
 } from "lucide-react";
 import {
   Card,
@@ -208,18 +208,29 @@ export default function ProfileSnapshotPage() {
     return (
       <div className="p-6">
         <div className="max-w-3xl mx-auto text-center py-16">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center">
+            <Building2 className="h-8 w-8 text-[#ff6a1a]" />
+          </div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {error || "Profile not found"}
+            Let&apos;s build your founder profile
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Complete onboarding to build your founder profile.
+          <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+            Chat with FRED or complete onboarding to create your startup
+            snapshot. The more FRED knows, the better your coaching gets.
           </p>
-          <Link href="/onboarding">
-            <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white">
-              Start Onboarding
-            </Button>
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            <Link href="/dashboard/chat">
+              <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Chat with FRED
+              </Button>
+            </Link>
+            <Link href="/onboarding">
+              <Button variant="outline">
+                Start Onboarding
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

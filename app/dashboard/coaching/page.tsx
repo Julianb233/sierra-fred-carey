@@ -63,8 +63,10 @@ function CoachingContent() {
 
 export default function CoachingPage() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <CoachingPageContent />
-    </Suspense>
+    <div data-testid="coaching-page">
+      <Suspense fallback={<LoadingFallback />}>
+        <CoachingPageContent />
+      </Suspense>
+    </div>
   );
 }

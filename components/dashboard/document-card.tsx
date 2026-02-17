@@ -18,22 +18,23 @@ import {
 import { cn } from "@/lib/utils";
 
 // ============================================================================
-// Types — aligned with RepositoryDocument from /api/document-repository
+// Types — aligned with /api/dashboard/documents response
 // ============================================================================
 
 export type DocumentFolder = "decks" | "strategy" | "reports" | "uploads";
 
 export interface DocumentItem {
   id: string;
-  title: string;
-  description: string | null;
+  name: string;
+  type: string;
   folder: DocumentFolder;
-  fileUrl: string | null;
-  fileType: string | null;
-  fileSize: number | null;
-  sourceType: "upload" | "generated" | "strategy" | "linked" | null;
+  source: string;
+  status: string;
   createdAt: string;
-  updatedAt: string;
+  pageCount: number | null;
+  fileUrl?: string | null;
+  updatedAt?: string;
+  canReviewWithFred?: boolean;
 }
 
 // ============================================================================
@@ -47,29 +48,12 @@ const FOLDER_ICONS: Record<DocumentFolder, React.ReactNode> = {
   uploads: <Upload className="h-5 w-5 text-gray-500 dark:text-gray-400" />,
 };
 
-function formatFileSize(bytes: number | null | undefined): string {
-  if (!bytes) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-}
-
-function formatFileType(fileType: string | null): string {
-  if (!fileType) return "";
-  if (fileType.includes("pdf")) return "PDF";
-  if (fileType.includes("word") || fileType.includes("docx")) return "DOCX";
-  if (fileType.includes("text")) return "TXT";
-  if (fileType.includes("spreadsheet") || fileType.includes("xlsx")) return "XLSX";
-  if (fileType.includes("presentation") || fileType.includes("pptx")) return "PPTX";
-  return fileType.split("/").pop()?.toUpperCase() || "";
 }
 
 // ============================================================================
@@ -96,8 +80,6 @@ export function DocumentCard({
     setDeleting(false);
   };
 
-  const fileTypeLabel = formatFileType(document.fileType);
-
   return (
     <Card className="transition-all hover:shadow-md group">
       <CardContent className="p-4 space-y-3">
@@ -108,25 +90,25 @@ export function DocumentCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {document.title}
+              {document.name}
             </p>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDate(document.createdAt)}
               </span>
-              {fileTypeLabel && (
+              {document.status === "processing" && (
                 <Badge
                   variant="secondary"
                   className="text-[10px] h-4 px-1.5"
                 >
-                  {fileTypeLabel}
+                  Processing
                 </Badge>
               )}
-              {document.fileSize ? (
+              {document.pageCount != null && document.pageCount > 0 && (
                 <span className="text-xs text-gray-400 dark:text-gray-500">
-                  {formatFileSize(document.fileSize)}
+                  {document.pageCount} pages
                 </span>
-              ) : null}
+              )}
             </div>
           </div>
         </div>
