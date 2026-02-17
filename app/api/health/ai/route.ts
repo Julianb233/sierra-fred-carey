@@ -6,14 +6,18 @@
  * and overall system health.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { healthMonitor } from "@/lib/ai/health-monitor";
 import { circuitBreaker } from "@/lib/ai/circuit-breaker";
 import { getProviderAvailability } from "@/lib/ai/fallback-chain";
+import { isAdminRequest } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     // Get health check results (uses cached data to avoid API calls on every request)
     const health = healthMonitor.getCachedHealth();
@@ -124,7 +128,10 @@ export async function GET() {
  * POST /api/health/ai
  * Trigger a fresh health check of all providers
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     // Perform fresh health checks
     const health = await healthMonitor.getOverallHealth();
