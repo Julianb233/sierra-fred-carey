@@ -132,10 +132,15 @@ export async function GET(request: NextRequest) {
       count: documents.length,
     });
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('[Strategy API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get strategy documents' },
-      { status: 500 }
-    );
+    // Return empty list instead of 500 so the frontend renders an empty state
+    return NextResponse.json({
+      success: true,
+      documents: [],
+      count: 0,
+    });
   }
 }

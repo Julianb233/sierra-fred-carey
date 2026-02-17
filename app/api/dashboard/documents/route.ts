@@ -95,10 +95,17 @@ export async function GET() {
     }
 
     console.error("[Dashboard Documents] Error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch documents" },
-      { status: 500 }
-    );
+    // Return empty document set instead of 500 so the frontend renders empty state
+    return NextResponse.json({
+      success: true,
+      data: {
+        decks: [],
+        strategyDocs: [],
+        reports: [],
+        uploadedFiles: [],
+        totalCount: 0,
+      },
+    });
   }
 }
 
