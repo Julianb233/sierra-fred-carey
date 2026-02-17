@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { UserTier, TIER_NAMES, canAccessFeature, getTierFromString } from "@/lib/constants";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId } from "@/lib/stripe/config";
@@ -41,37 +41,61 @@ export interface TierError {
  */
 export async function getUserTier(userId: string): Promise<UserTier> {
   try {
+    // Primary: resolve tier from Stripe subscription
     const subscription = await getUserSubscription(userId);
-    if (!subscription) return UserTier.FREE;
+    if (subscription) {
+      // Allow active, trialing, and past_due (grace period — Stripe retries payment for ~30 days)
+      if (["active", "trialing", "past_due"].includes(subscription.status)) {
+        // Primary lookup: match price ID to plan
+        const plan = getPlanByPriceId(subscription.stripePriceId);
+        if (plan) return getTierFromString(plan.id);
 
-    // Allow active, trialing, and past_due (grace period — Stripe retries payment for ~30 days)
-    if (!["active", "trialing", "past_due"].includes(subscription.status)) {
-      return UserTier.FREE;
+        // Fallback: if price ID not found in PLANS (e.g. archived price),
+        // infer tier from the price ID env vars directly
+        const fundraisingPriceId = process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID;
+        const studioPriceId = process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID;
+
+        if (subscription.stripePriceId === studioPriceId) return UserTier.STUDIO;
+        if (subscription.stripePriceId === fundraisingPriceId) return UserTier.PRO;
+
+        console.warn(
+          `[TierMiddleware] Active subscription for user ${userId} has unrecognized price ID: "${subscription.stripePriceId}". ` +
+          `Falling back to profiles.tier.`
+        );
+      }
     }
 
-    // Primary lookup: match price ID to plan
-    const plan = getPlanByPriceId(subscription.stripePriceId);
-    if (plan) return getTierFromString(plan.id);
+    // Fallback: check profiles.tier column (admin-managed or legacy tier assignments)
+    const tierFromProfile = await getProfileTier(userId);
+    if (tierFromProfile !== null) return tierFromProfile;
 
-    // Fallback: if price ID not found in PLANS (e.g. archived price),
-    // infer tier from the price ID env vars directly
-    const fundraisingPriceId = process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID;
-    const studioPriceId = process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID;
-
-    if (subscription.stripePriceId === studioPriceId) return UserTier.STUDIO;
-    if (subscription.stripePriceId === fundraisingPriceId) return UserTier.PRO;
-
-    // Last resort: user has an active subscription but we can't resolve the tier.
-    // SECURITY: Default to FREE to prevent tier escalation via unrecognized price IDs.
-    // An admin should investigate and manually map the price ID to the correct tier.
-    console.warn(
-      `[TierMiddleware] SECURITY: Active subscription for user ${userId} has unrecognized price ID: "${subscription.stripePriceId}". ` +
-      `Defaulting to FREE to prevent unauthorized tier escalation. Please verify this price ID in Stripe and update the plan configuration.`
-    );
     return UserTier.FREE;
   } catch (error) {
     console.error("[TierMiddleware] Error fetching user tier:", error);
     return UserTier.FREE;
+  }
+}
+
+/**
+ * Fallback: read tier directly from profiles table.
+ * Used when user_subscriptions table is empty or unavailable.
+ */
+async function getProfileTier(userId: string): Promise<UserTier | null> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tier")
+      .eq("id", userId)
+      .single();
+
+    if (error || !data || data.tier === null || data.tier === undefined) return null;
+    const tier = Number(data.tier);
+    if (tier >= UserTier.STUDIO) return UserTier.STUDIO;
+    if (tier >= UserTier.PRO) return UserTier.PRO;
+    return null;
+  } catch {
+    return null;
   }
 }
 
