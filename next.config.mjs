@@ -58,6 +58,11 @@ const nextConfig = {
         destination: "/dashboard/strategy",
         permanent: true,
       },
+      {
+        source: "/waitlist",
+        destination: "/get-started",
+        permanent: true,
+      },
     ];
   },
 };
