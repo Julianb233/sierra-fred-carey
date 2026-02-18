@@ -177,9 +177,16 @@ export class FredService {
     const streamTimeout = 60_000; // 60s safety net — no chat message should take this long
     const streamStart = Date.now();
 
+    // Event-driven state change notification to avoid polling latency
+    let resolveStateChange: (() => void) | null = null;
+
     // Create a promise that resolves when complete
     const completionPromise = new Promise<void>((resolve) => {
       actor.subscribe((snapshot) => {
+        // Notify the polling loop immediately on any state change
+        resolveStateChange?.();
+        resolveStateChange = null;
+
         if (
           snapshot.matches("complete") ||
           snapshot.matches("failed") ||
@@ -214,10 +221,13 @@ export class FredService {
           isComplete: false,
         };
 
-        // Wait a bit before checking again, or until complete
+        // Wait for state change event, completion, or safety fallback timeout
         await Promise.race([
           completionPromise,
-          new Promise((resolve) => setTimeout(resolve, 100)),
+          new Promise<void>((resolve) => {
+            resolveStateChange = resolve;
+          }),
+          new Promise((resolve) => setTimeout(resolve, 50)), // safety fallback
         ]);
       }
 
