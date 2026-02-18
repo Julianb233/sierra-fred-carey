@@ -256,7 +256,9 @@ async function createOrUpdateProfile(
     challenges?: string[];
   }
 ): Promise<void> {
-  const supabase = await createClient();
+  // Use service client to bypass RLS — the user's session cookie isn't available
+  // during signup since the auth record was just created.
+  const supabase = createServiceClient();
 
   const { error } = await supabase.from("profiles").upsert(
     {
