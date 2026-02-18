@@ -414,3 +414,32 @@ Integration in chat route (lines 262-286): Correctly loads state, builds guidanc
 
 ### All MEDIUM+ Security Issues: RESOLVED
 AUTH-01 (contact rate limit), API-01 (diagnostic PUT validation), API-02 (user delete tables), COMMUNITY-01 (private join), B1 (TOCTOU), B2 (PostgREST injection), B3 (UPDATE policy) -- all fixed and verified.
+
+---
+
+## 9. Re-Audit (2026-02-18) -- Delta Findings
+
+### Fixes Confirmed Since Last Audit
+
+| Issue | Status |
+|---|---|
+| Missing `/api/auth/signup` route (BUG 2) | **FIXED** -- `app/api/auth/signup/route.ts` exists with rate limiting, validation |
+| Orphan cleanup using anon client (BUG 5) | **FIXED** -- `app/api/onboard/route.ts:289` now uses `createServiceClient()` |
+| Community post leak / private join bypass | **STILL FIXED** -- RLS policies in migration 051 are solid |
+
+### Remaining Critical Issue
+
+**`createOrUpdateProfile` enrichment columns (BUG 1):**
+- `lib/supabase/auth-helpers.ts:261-282` still writes `industry: null, revenue_range: null, team_size: null, funding_history: null, enriched_at: null, enrichment_source: null`
+- Migration `037_enriched_profiles.sql` exists to add these columns
+- Supabase migration `20260212000004_add_enrichment_data_to_profiles.sql` adds `enrichment_data JSONB`
+- **If migrations have been applied to prod DB, signup via `signUp()` should now work**
+- **If migrations have NOT been applied, `signUp()` still fails -- this is the #1 blocker for the app**
+- Cannot verify from source code alone -- requires DB access
+
+### New Observations
+
+1. **No `/api/chat/route.ts`** -- chat is handled by `/api/fred/chat/route.ts` (has `requireAuth`)
+2. **No `/api/health` route** -- health checks go to `/api/monitoring/health` (admin-only) or `/api/health/ai` (admin-only). No public health endpoint exists.
+3. **115 API routes use auth guards** -- comprehensive coverage across all user-facing endpoints
+4. **Coaching routes use inline auth** -- `coaching/sessions` and `coaching/participants` use `supabase.auth.getUser()` instead of `requireAuth()`. Functionally equivalent but inconsistent.

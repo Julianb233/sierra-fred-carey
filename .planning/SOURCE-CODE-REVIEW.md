@@ -1,460 +1,268 @@
-# Source Code Review — Sahara UX Audit
+# Source Code Review - Sahara UX Audit
 
-**Reviewer:** Source Code Reviewer Agent
-**Date:** 2026-02-11
-**Scope:** All routes, API endpoints, nav components, dead code, unfinished features
+## 1. Complete Route Inventory
 
----
+### Frontend Pages (app/**/page.tsx) - 90 total
 
-## 1. All Routes (with Protection Level)
+#### Public Pages (no auth required)
+| Route | File |
+|-------|------|
+| `/` | `app/page.tsx` |
+| `/about` | `app/about/page.tsx` |
+| `/blog` | `app/blog/page.tsx` |
+| `/blog/[slug]` | `app/blog/[slug]/page.tsx` |
+| `/contact` | `app/contact/page.tsx` |
+| `/features` | `app/features/page.tsx` |
+| `/forgot-password` | `app/forgot-password/page.tsx` |
+| `/get-started` | `app/get-started/page.tsx` |
+| `/install` | `app/install/page.tsx` |
+| `/links` | `app/links/page.tsx` |
+| `/login` | `app/login/page.tsx` |
+| `/offline` | `app/offline/page.tsx` |
+| `/pricing` | `app/pricing/page.tsx` |
+| `/privacy` | `app/privacy/page.tsx` |
+| `/product` | `app/product/page.tsx` |
+| `/reset-password` | `app/reset-password/page.tsx` |
+| `/shared/[token]` | `app/shared/[token]/page.tsx` |
+| `/signup` | `app/signup/page.tsx` |
+| `/support` | `app/support/page.tsx` |
+| `/terms` | `app/terms/page.tsx` |
+| `/waitlist` | `app/waitlist/page.tsx` |
+| `/tools/investor-readiness` | `app/tools/investor-readiness/page.tsx` |
 
-### Public Pages (no auth required)
-| Route | File | Notes |
-|-------|------|-------|
-| `/` | `app/page.tsx` | Landing page |
-| `/about` | `app/about/page.tsx` | About page |
-| `/pricing` | `app/pricing/page.tsx` | Pricing page |
-| `/features` | `app/features/page.tsx` | Features page - has "Coming Soon" on Boardy |
-| `/product` | `app/product/page.tsx` | Product demo page |
-| `/blog` | `app/blog/page.tsx` | Blog listing |
-| `/blog/[slug]` | `app/blog/[slug]/page.tsx` | Blog post |
-| `/login` | `app/login/page.tsx` | Login page |
-| `/signup` | `app/signup/page.tsx` | Signup page |
-| `/get-started` | `app/get-started/page.tsx` | Registration flow |
-| `/waitlist` | `app/waitlist/page.tsx` | Waitlist signup |
-| `/contact` | `app/contact/page.tsx` | Contact form |
-| `/support` | `app/support/page.tsx` | Support page |
-| `/privacy` | `app/privacy/page.tsx` | Privacy policy |
-| `/terms` | `app/terms/page.tsx` | Terms of service |
-| `/links` | `app/links/page.tsx` | Linktree-style page |
-| `/install` | `app/install/page.tsx` | PWA install page |
-| `/offline` | `app/offline/page.tsx` | PWA offline fallback |
-| `/interactive` | `app/interactive/page.tsx` | Interactive product demo (GSAP) |
-| `/onboarding` | `app/onboarding/page.tsx` | Onboarding flow |
-| `/shared/[token]` | `app/shared/[token]/page.tsx` | Public shared content viewer |
+#### Demo Pages (no auth guard in middleware)
+| Route | File |
+|-------|------|
+| `/demo/boardy` | `app/demo/boardy/page.tsx` |
+| `/demo/investor-lens` | `app/demo/investor-lens/page.tsx` |
+| `/demo/pitch-deck` | `app/demo/pitch-deck/page.tsx` |
+| `/demo/reality-lens` | `app/demo/reality-lens/page.tsx` |
+| `/demo/virtual-team` | `app/demo/virtual-team/page.tsx` |
 
-### Demo Pages (public, no auth)
-| Route | File | Notes |
-|-------|------|-------|
-| `/demo/reality-lens` | `app/demo/reality-lens/page.tsx` | Demo Reality Lens |
-| `/demo/investor-lens` | `app/demo/investor-lens/page.tsx` | Demo Investor Lens |
-| `/demo/pitch-deck` | `app/demo/pitch-deck/page.tsx` | Demo Pitch Deck |
-| `/demo/virtual-team` | `app/demo/virtual-team/page.tsx` | Demo Virtual Team |
-| `/demo/boardy` | `app/demo/boardy/page.tsx` | Demo Boardy |
+#### Protected: Dashboard Pages (auth via middleware + client-side check in layout)
+| Route | File | In Sidebar Nav? |
+|-------|------|-----------------|
+| `/dashboard` | `app/dashboard/page.tsx` | YES (Home) |
+| `/dashboard/agents` | `app/dashboard/agents/page.tsx` | NO |
+| `/dashboard/ai-insights` | `app/dashboard/ai-insights/page.tsx` | NO (redirects to /dashboard/insights) |
+| `/dashboard/boardy` | `app/dashboard/boardy/page.tsx` | NO |
+| `/dashboard/coaching` | `app/dashboard/coaching/page.tsx` | NO |
+| `/dashboard/coaching/history` | `app/dashboard/coaching/history/page.tsx` | NO |
+| `/dashboard/communities` | `app/dashboard/communities/page.tsx` | YES (Community) |
+| `/dashboard/communities/create` | `app/dashboard/communities/create/page.tsx` | NO (subpage) |
+| `/dashboard/communities/[slug]` | `app/dashboard/communities/[slug]/page.tsx` | NO (subpage) |
+| `/dashboard/communities/[slug]/members` | `app/dashboard/communities/[slug]/members/page.tsx` | NO (subpage) |
+| `/dashboard/documents` | `app/dashboard/documents/page.tsx` | YES (Documents) |
+| `/dashboard/history` | `app/dashboard/history/page.tsx` | NO |
+| `/dashboard/inbox` | `app/dashboard/inbox/page.tsx` | NO |
+| `/dashboard/insights` | `app/dashboard/insights/page.tsx` | NO |
+| `/dashboard/investor-evaluation` | `app/dashboard/investor-evaluation/page.tsx` | NO |
+| `/dashboard/investor-lens` | `app/dashboard/investor-lens/page.tsx` | CONDITIONAL (Pro+ and non-early stage) |
+| `/dashboard/investor-readiness` | `app/dashboard/investor-readiness/page.tsx` | NO |
+| `/dashboard/investor-targeting` | `app/dashboard/investor-targeting/page.tsx` | NO |
+| `/dashboard/investor-targeting/matches` | `app/dashboard/investor-targeting/matches/page.tsx` | NO |
+| `/dashboard/investor-targeting/outreach` | `app/dashboard/investor-targeting/outreach/page.tsx` | NO |
+| `/dashboard/investor-targeting/pipeline` | `app/dashboard/investor-targeting/pipeline/page.tsx` | NO |
+| `/dashboard/invitations` | `app/dashboard/invitations/page.tsx` | NO |
+| `/dashboard/journey` | `app/dashboard/journey/page.tsx` | NO |
+| `/dashboard/memory` | `app/dashboard/memory/page.tsx` | NO |
+| `/dashboard/monitoring` | `app/dashboard/monitoring/page.tsx` | NO |
+| `/dashboard/next-steps` | `app/dashboard/next-steps/page.tsx` | YES (Next Steps) |
+| `/dashboard/notifications` | `app/dashboard/notifications/page.tsx` | NO |
+| `/dashboard/pitch-deck` | `app/dashboard/pitch-deck/page.tsx` | NO |
+| `/dashboard/positioning` | `app/dashboard/positioning/page.tsx` | CONDITIONAL (Pro+) |
+| `/dashboard/profile/snapshot` | `app/dashboard/profile/snapshot/page.tsx` | NO |
+| `/dashboard/readiness` | `app/dashboard/readiness/page.tsx` | YES (Readiness) |
+| `/dashboard/reality-lens` | `app/dashboard/reality-lens/page.tsx` | NO |
+| `/dashboard/settings` | `app/dashboard/settings/page.tsx` | YES (Settings) |
+| `/dashboard/sharing` | `app/dashboard/sharing/page.tsx` | NO |
+| `/dashboard/sms` | `app/dashboard/sms/page.tsx` | NO |
+| `/dashboard/startup-process` | `app/dashboard/startup-process/page.tsx` | NO |
+| `/dashboard/strategy` | `app/dashboard/strategy/page.tsx` | NO |
+| `/dashboard/strategy/reframing` | `app/dashboard/strategy/reframing/page.tsx` | NO |
+| `/dashboard/wellbeing` | `app/dashboard/wellbeing/page.tsx` | NO |
 
-### Protected Pages (auth required -- `/dashboard`, `/agents`, `/documents`, `/chat`)
-| Route | File | Tier | In Sidebar Nav? |
-|-------|------|------|-----------------|
-| `/dashboard` | `app/dashboard/page.tsx` | Free | Yes (Overview) |
-| `/dashboard/reality-lens` | `app/dashboard/reality-lens/page.tsx` | Free | Yes |
-| `/dashboard/journey` | `app/dashboard/journey/page.tsx` | Free | Yes |
-| `/dashboard/startup-process` | `app/dashboard/startup-process/page.tsx` | Free | Yes (layout.tsx only) |
-| `/dashboard/history` | `app/dashboard/history/page.tsx` | Free | Yes |
-| `/dashboard/insights` | `app/dashboard/insights/page.tsx` | Free | Yes |
-| `/dashboard/monitoring` | `app/dashboard/monitoring/page.tsx` | Free | Yes |
-| `/dashboard/positioning` | `app/dashboard/positioning/page.tsx` | Pro | Yes |
-| `/dashboard/investor-lens` | `app/dashboard/investor-lens/page.tsx` | Pro | Yes |
-| `/dashboard/investor-readiness` | `app/dashboard/investor-readiness/page.tsx` | Pro | Yes |
-| `/dashboard/investor-evaluation` | `app/dashboard/investor-evaluation/page.tsx` | Pro | Yes (layout.tsx only) |
-| `/dashboard/pitch-deck` | `app/dashboard/pitch-deck/page.tsx` | Pro | Yes |
-| `/dashboard/strategy` | `app/dashboard/strategy/page.tsx` | Pro | Yes |
-| `/dashboard/strategy/reframing` | `app/dashboard/strategy/reframing/page.tsx` | Pro | **NO** |
-| `/dashboard/sms` | `app/dashboard/sms/page.tsx` | Studio | Yes |
-| `/dashboard/agents` | `app/dashboard/agents/page.tsx` | Studio | Yes |
-| `/dashboard/boardy` | `app/dashboard/boardy/page.tsx` | Studio | Yes |
-| `/dashboard/communities` | `app/dashboard/communities/page.tsx` | Free | Yes |
-| `/dashboard/communities/create` | `app/dashboard/communities/create/page.tsx` | Free | No (sub-page) |
-| `/dashboard/communities/[slug]` | `app/dashboard/communities/[slug]/page.tsx` | Free | No (sub-page) |
-| `/dashboard/communities/[slug]/members` | `app/dashboard/communities/[slug]/members/page.tsx` | Free | No (sub-page) |
-| `/dashboard/settings` | `app/dashboard/settings/page.tsx` | Free | Yes |
-| `/dashboard/wellbeing` | `app/dashboard/wellbeing/page.tsx` | Free | **NO** |
-| `/dashboard/inbox` | `app/dashboard/inbox/page.tsx` | Free | **NO** |
-| `/dashboard/coaching` | `app/dashboard/coaching/page.tsx` | Studio | **NO** |
-| `/dashboard/coaching/history` | `app/dashboard/coaching/history/page.tsx` | Studio | **NO** |
-| `/dashboard/notifications` | `app/dashboard/notifications/page.tsx` | Free | **NO** (only in orphaned dashboard-shell.tsx) |
-| `/dashboard/memory` | `app/dashboard/memory/page.tsx` | Pro | **NO** |
-| `/dashboard/sharing` | `app/dashboard/sharing/page.tsx` | Pro | **NO** |
-| `/dashboard/invitations` | `app/dashboard/invitations/page.tsx` | Free | **NO** |
-| `/dashboard/profile/snapshot` | `app/dashboard/profile/snapshot/page.tsx` | Free | **NO** |
-| `/dashboard/investor-targeting` | `app/dashboard/investor-targeting/page.tsx` | Studio | **NO** |
-| `/dashboard/investor-targeting/matches` | `app/dashboard/investor-targeting/matches/page.tsx` | Studio | **NO** |
-| `/dashboard/investor-targeting/outreach` | `app/dashboard/investor-targeting/outreach/page.tsx` | Studio | **NO** |
-| `/dashboard/investor-targeting/pipeline` | `app/dashboard/investor-targeting/pipeline/page.tsx` | Studio | **NO** |
-| `/chat` | `app/chat/page.tsx` | Free | **NO** (standalone) |
-| `/agents` | `app/agents/page.tsx` | Free | **NO** |
-| `/agents/[agentId]` | `app/agents/[agentId]/page.tsx` | Free | **NO** |
-| `/documents` | `app/documents/page.tsx` | Free | **NO** |
-| `/documents/new` | `app/documents/new/page.tsx` | Free | **NO** |
-| `/documents/[docId]` | `app/documents/[docId]/page.tsx` | Free | **NO** |
-| `/check-ins/configure` | `app/check-ins/configure/page.tsx` | Free | **NO** |
-| `/check-ins/[checkInId]` | `app/check-ins/[checkInId]/page.tsx` | Free | **NO** |
-| `/video` | `app/video/page.tsx` | Free | **NO** |
-| `/video/[room]` | `app/video/[room]/page.tsx` | Free | **NO** |
-| `/tools/investor-readiness` | `app/tools/investor-readiness/page.tsx` | Free | **NO** |
+#### Protected: Other Auth-Required Pages
+| Route | File | Auth Guard |
+|-------|------|-----------|
+| `/chat` | `app/chat/page.tsx` | middleware |
+| `/agents` | `app/agents/page.tsx` | middleware |
+| `/agents/[agentId]` | `app/agents/[agentId]/page.tsx` | middleware |
+| `/check-ins` | `app/check-ins/page.tsx` | middleware |
+| `/check-ins/configure` | `app/check-ins/configure/page.tsx` | middleware |
+| `/check-ins/[checkInId]` | `app/check-ins/[checkInId]/page.tsx` | middleware |
+| `/documents` | `app/documents/page.tsx` | middleware |
+| `/documents/new` | `app/documents/new/page.tsx` | middleware |
+| `/documents/[docId]` | `app/documents/[docId]/page.tsx` | middleware |
+| `/interactive` | `app/interactive/page.tsx` | middleware |
+| `/onboarding` | `app/onboarding/page.tsx` | middleware |
+| `/video` | `app/video/page.tsx` | middleware |
+| `/video/[room]` | `app/video/[room]/page.tsx` | middleware |
 
-### Admin Pages (admin session required via `isAdminSession()`)
+#### Admin Pages (auth via admin layout isAdminSession)
 | Route | File | In Admin Nav? |
 |-------|------|---------------|
-| `/admin/login` | `app/admin/login/page.tsx` | N/A (login) |
-| `/admin` | `app/admin/page.tsx` | Yes (Dashboard) |
-| `/admin/prompts` | `app/admin/prompts/page.tsx` | Yes |
-| `/admin/config` | `app/admin/config/page.tsx` | Yes |
-| `/admin/ab-tests` | `app/admin/ab-tests/page.tsx` | Yes |
-| `/admin/training` | `app/admin/training/page.tsx` | Yes |
-| `/admin/training/identity` | `app/admin/training/identity/page.tsx` | No (sub-page) |
-| `/admin/training/communication` | `app/admin/training/communication/page.tsx` | No (sub-page) |
-| `/admin/training/frameworks` | `app/admin/training/frameworks/page.tsx` | No (sub-page) |
-| `/admin/training/agents` | `app/admin/training/agents/page.tsx` | No (sub-page) |
-| `/admin/voice-agent` | `app/admin/voice-agent/page.tsx` | **NO** |
-| `/admin/analytics` | `app/admin/analytics/page.tsx` | **NO** |
+| `/admin` | `app/admin/page.tsx` | YES (Dashboard) |
+| `/admin/login` | `app/admin/login/page.tsx` | N/A (login page) |
+| `/admin/prompts` | `app/admin/prompts/page.tsx` | YES |
+| `/admin/config` | `app/admin/config/page.tsx` | YES |
+| `/admin/ab-tests` | `app/admin/ab-tests/page.tsx` | YES |
+| `/admin/training` | `app/admin/training/page.tsx` | YES |
+| `/admin/training/agents` | `app/admin/training/agents/page.tsx` | NO (subpage of training) |
+| `/admin/training/communication` | `app/admin/training/communication/page.tsx` | NO (subpage) |
+| `/admin/training/frameworks` | `app/admin/training/frameworks/page.tsx` | NO (subpage) |
+| `/admin/training/identity` | `app/admin/training/identity/page.tsx` | NO (subpage) |
+| `/admin/voice-agent` | `app/admin/voice-agent/page.tsx` | YES |
+| `/admin/analytics` | `app/admin/analytics/page.tsx` | YES |
 
 ---
 
-## 2. All API Endpoints
+## 2. Hidden/Orphaned Features (NOT in any nav)
 
-### Auth
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/auth/login` | POST | `/login` page |
-| `/api/auth/logout` | POST | Dashboard logout |
-| `/api/auth/me` | GET | Auth context |
+### Dashboard pages with NO sidebar link (22 pages):
 
-### FRED AI
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/fred/chat` | POST | `ChatInterface` component via `useFredChat` hook |
-| `/api/fred/analyze` | POST | Reality Lens pages |
-| `/api/fred/decide` | POST | Decision engine |
-| `/api/fred/history` | GET | Decision History page |
-| `/api/fred/investor-readiness` | POST/GET | Investor Readiness page |
-| `/api/fred/pitch-review` | POST | Pitch Deck Review page |
-| `/api/fred/reality-lens` | POST | Reality Lens page |
-| `/api/fred/strategy` | GET/POST | Strategy Docs page |
-| `/api/fred/strategy/[id]` | GET/PUT/DELETE | Strategy Doc detail |
-| `/api/fred/strategy/[id]/export` | GET | Strategy PDF export |
-| `/api/fred/memory` | GET/POST/DELETE | Memory Browser page |
-| `/api/fred/memory/stats` | GET | Memory stats |
-| `/api/fred/export` | GET | Chat export button |
+1. `/dashboard/agents` - Virtual team/agents management
+2. `/dashboard/boardy` - Boardy networking integration
+3. `/dashboard/coaching` - Coaching sessions
+4. `/dashboard/coaching/history` - Coaching history
+5. `/dashboard/history` - Chat/session history
+6. `/dashboard/inbox` - Inbox/messages
+7. `/dashboard/insights` - AI Insights page (full functional page, ai-insights redirects here)
+8. `/dashboard/investor-evaluation` - Investor evaluation tool
+9. `/dashboard/investor-readiness` - Investor readiness assessment
+10. `/dashboard/investor-targeting` - Investor targeting + 3 subpages (matches, outreach, pipeline)
+11. `/dashboard/invitations` - Team invitations
+12. `/dashboard/journey` - Founder journey timeline
+13. `/dashboard/memory` - Fred memory about the user
+14. `/dashboard/monitoring` - System monitoring
+15. `/dashboard/notifications` - Notification center
+16. `/dashboard/pitch-deck` - Pitch deck review
+17. `/dashboard/profile/snapshot` - Profile snapshot
+18. `/dashboard/reality-lens` - Reality lens analysis
+19. `/dashboard/sharing` - Sharing management
+20. `/dashboard/sms` - SMS preferences
+21. `/dashboard/startup-process` - Startup process guide
+22. `/dashboard/strategy` - Strategy + reframing subpage
+23. `/dashboard/wellbeing` - Founder wellbeing
 
-### Diagnostic Engine
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/diagnostic` | POST/GET | Wired into chat internally |
-| `/api/diagnostic/analyze` | POST | Diagnostic engine (internal) |
-| `/api/diagnostic/events` | POST/GET | Diagnostic event tracking |
-| `/api/diagnostic/introduce` | POST/GET | Framework introduction |
-| `/api/diagnostic/state` | GET/PUT | Conversation state management |
-| `/api/diagnostic/positioning` | POST | Positioning diagnostic |
-| `/api/diagnostic/investor` | POST/GET | Investor diagnostic |
-
-### Dashboard and Profile
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/dashboard/stats` | GET | Dashboard overview |
-| `/api/dashboard/profile/snapshot` | GET/POST | Profile Snapshot page |
-| `/api/dashboard/strategy/reframe` | POST | Strategy Reframing page |
-
-### Investors
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/investors/match` | POST | Investor Targeting matches |
-| `/api/investors/upload` | POST | Investor list upload |
-| `/api/investors/generate-outreach` | POST | Outreach page |
-| `/api/investors/pipeline` | GET/POST/PATCH | Pipeline CRM page |
-| `/api/investor-lens/evaluate` | POST | Investor Lens page |
-| `/api/investor-lens/deck-request` | POST | Deck request |
-
-### Positioning
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/positioning/assess` | POST | Positioning page |
-| `/api/positioning/quick-check` | POST | Positioning quick check |
-
-### Documents
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/documents/[id]` | GET/PUT/DELETE | Document detail |
-| `/api/documents/[id]/search` | POST | Document search |
-| `/api/documents/uploaded/[id]` | GET | Uploaded doc access |
-
-### Pitch Deck
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/pitch-deck/upload` | POST | Pitch Deck page |
-| `/api/pitch-deck/parse` | POST | Pitch Deck parsing |
-
-### Agents
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/agents` | GET/POST | Agents page |
-| `/api/agents/[agentId]` | GET/POST | Agent detail |
-| `/api/agents/tasks` | GET/POST | Agent tasks |
-
-### Red Flags
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/red-flags` | GET/POST | RedFlagsWidget on dashboard |
-| `/api/red-flags/[id]` | GET/PATCH | Individual flag management |
-
-### Wellbeing
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/wellbeing/check-in` | GET/POST | Wellbeing page |
-
-### Inbox
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/inbox` | GET/PATCH | Inbox page |
-
-### SMS and Check-ins
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/check-ins` | GET/POST | Check-ins pages |
-| `/api/sms/webhook` | POST | Twilio webhook (external) |
-| `/api/sms/preferences` | GET/POST | SMS preferences |
-| `/api/sms/verify` | POST | Phone verification |
-
-### Boardy
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/boardy/match` | POST | Boardy page |
-| `/api/boardy/callback` | POST | External callback |
-
-### Stripe
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/stripe/checkout` | POST | Pricing / Upgrade buttons |
-| `/api/stripe/portal` | POST | Settings page |
-| `/api/stripe/webhook` | POST | Stripe webhook (external) |
-
-### User
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/user/subscription` | GET | Tier context |
-| `/api/user/delete` | DELETE | Account deletion |
-
-### Sharing and Teams
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/share` | POST | Share button |
-| `/api/share/[token]` | GET | Public shared view |
-| `/api/team` | GET/POST | Team management |
-| `/api/team/invitations` | GET | Invitations page |
-| `/api/team/accept` | POST | Accept invitation |
-
-### Communities
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/communities` | GET/POST | Communities page |
-| `/api/communities/[slug]` | GET/PUT/DELETE | Community detail |
-| `/api/communities/[slug]/members` | GET/POST/DELETE | Member management |
-| `/api/communities/[slug]/posts` | GET/POST | Community posts |
-| `/api/communities/[slug]/posts/[postId]` | GET/PUT/DELETE | Post detail |
-| `/api/communities/[slug]/posts/[postId]/reactions` | POST/DELETE | Reactions |
-| `/api/communities/[slug]/posts/[postId]/replies` | GET/POST | Replies |
-| `/api/communities/[slug]/posts/[postId]/replies/[replyId]` | PUT/DELETE | Reply detail |
-
-### Notifications and Push
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/notifications/settings` | GET/POST | Settings page |
-| `/api/notifications/logs` | GET | Notifications page |
-| `/api/notifications/config` | GET/POST | No frontend consumer (admin internal) |
-| `/api/notifications/pagerduty` | POST | No frontend consumer |
-| `/api/notifications/slack` | POST | No frontend consumer |
-| `/api/notifications/test` | POST | No frontend consumer |
-| `/api/push/subscribe` | POST | Service worker |
-| `/api/push/preferences` | GET/POST | Settings page |
-
-### Monitoring and Experiments
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/monitoring/dashboard` | GET | Monitoring page |
-| `/api/monitoring/alerts` | GET/POST | Monitoring page |
-| `/api/monitoring/alerts/check` | GET/POST | Cron / internal |
-| `/api/monitoring/health` | GET | Health check |
-| `/api/monitoring/charts` | GET | Monitoring page |
-| `/api/monitoring/experiments/[name]` | GET | Monitoring detail |
-| `/api/monitoring/experiments/[name]/promote` | GET/POST/DELETE | Monitoring detail |
-| `/api/monitoring/experiments/[name]/history` | GET | Monitoring detail |
-| `/api/monitoring/variants/[id]` | GET | Monitoring detail |
-| `/api/monitoring/auto-promotion/check` | POST/GET | Cron / internal |
-| `/api/experiments/auto-promote` | POST/GET | No frontend consumer (cron only) |
-
-### Insights and Journey
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/insights/ab-tests` | GET | Insights page |
-| `/api/insights/top-insights` | GET | Insights page |
-| `/api/insights/analytics` | GET | Insights page |
-| `/api/insights/trends` | GET | Insights page |
-| `/api/journey/timeline` | GET | Journey page |
-| `/api/journey/milestones` | GET/POST | Journey page |
-| `/api/journey/insights` | GET | Journey page |
-| `/api/journey/stats` | GET | Journey page |
-| `/api/journey/references` | GET | Journey page |
-
-### Admin
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/admin/dashboard` | GET | Admin dashboard |
-| `/api/admin/logout` | POST | Admin logout |
-| `/api/admin/prompts` | GET/POST | Admin prompts page |
-| `/api/admin/prompts/activate` | POST | Admin prompts page |
-| `/api/admin/prompts/test` | POST | Admin prompts page |
-| `/api/admin/config` | GET/POST | Admin config page |
-| `/api/admin/ab-tests` | GET/POST | Admin A/B tests page |
-| `/api/admin/ab-tests/[id]` | GET/PUT/DELETE | Admin A/B test detail |
-| `/api/admin/ab-tests/[id]/end` | POST | Admin A/B tests |
-| `/api/admin/ab-tests/[id]/traffic` | PUT | Admin A/B tests |
-| `/api/admin/ab-tests/[id]/promote` | POST | Admin A/B tests |
-| `/api/admin/training/metrics` | GET | Admin training |
-| `/api/admin/training/ratings` | GET | Admin training |
-| `/api/admin/training/requests` | GET/POST | Admin training |
-| `/api/admin/training/requests/[id]` | PATCH | Admin training |
-| `/api/admin/voice-agent/config` | GET/POST | Admin voice-agent page |
-| `/api/admin/voice-agent/escalation` | GET/POST | Admin voice-agent page |
-| `/api/admin/voice-agent/knowledge` | GET/POST | Admin voice-agent page |
-| `/api/admin/voice-agent/analytics` | GET | Admin voice-agent page |
-
-### Other
-| Endpoint | Methods | Frontend Consumer |
-|----------|---------|-------------------|
-| `/api/contact` | POST | Contact page |
-| `/api/onboard` | POST | Onboarding page |
-| `/api/onboard/invite` | POST | Referral invites |
-| `/api/ai/rating` | POST | Chat feedback |
-| `/api/setup-db` | POST | No frontend consumer (dev tool) |
-| `/api/health/ai` | GET | No frontend consumer (monitoring) |
-
-### Cron Jobs (no frontend consumer, triggered by Vercel cron)
-| Endpoint | Methods | Notes |
-|----------|---------|-------|
-| `/api/cron/weekly-checkin` | POST | SMS weekly check-in scheduler |
-| `/api/cron/weekly-digest` | POST | Email weekly digest |
-| `/api/cron/re-engagement` | POST | Re-engagement emails |
+### Summary:
+The sidebar has **7 core + 2 conditional = max 9 links**. There are **38 dashboard pages**. Approximately **23 pages are unreachable** from the sidebar navigation.
 
 ---
 
-## 3. Dead/Orphaned Code
+## 3. Nav Completeness Check
 
-### `app/dashboard/dashboard-shell.tsx` -- ORPHANED
-- Full dashboard layout component with sidebar nav (includes Notifications nav item)
-- **NOT imported anywhere** -- the actual layout uses `app/dashboard/layout.tsx`
-- Has a slightly different nav item list (includes Notifications, lacks Startup Process, Investor Evaluation)
-- This is dead code / leftover from a refactor
+### Dashboard Sidebar (`app/dashboard/layout.tsx` lines 47-102)
 
-### `components/dashboard/invitations-nav-item.tsx` -- ORPHANED
-- Standalone nav item component for Team Invitations with pending count badge
-- Comment says: "dashboard/layout.tsx has pre-commit hooks that revert modifications"
-- **Never imported or rendered anywhere** in the codebase
-- The `/dashboard/invitations` page exists and works but has no nav link
+**Core items (always visible):**
+- Home -> `/dashboard`
+- Chat with Fred -> `/chat`
+- Next Steps -> `/dashboard/next-steps`
+- Readiness -> `/dashboard/readiness`
+- Documents -> `/dashboard/documents`
+- Community -> `/dashboard/communities`
+- Settings -> `/dashboard/settings`
 
-### `components/dashboard/coaching-nav-item.tsx` -- ORPHANED
-- Standalone nav item component for Video Coaching
-- Same "pre-commit hooks" comment
-- **Never imported or rendered anywhere** in the codebase
-- The `/dashboard/coaching` page exists and works but has no nav link
+**Conditional items:**
+- Positioning -> `/dashboard/positioning` (Pro+ tier)
+- Investor Lens -> `/dashboard/investor-lens` (Pro+ AND non-early stage)
 
----
+### Mobile Bottom Nav (`components/mobile/mobile-bottom-nav.tsx`)
+Only 5 items: Home, Chat, Next, Progress (Readiness), Profile (Settings). Very limited.
 
-## 4. Unfinished Features / Gaps
-
-### Missing Dashboard Sidebar Nav Items (pages exist, no way for users to navigate there)
-These pages have full implementations but are completely invisible to users:
-
-1. **`/dashboard/wellbeing`** -- Founder Wellbeing check-in page. Fully built with `WellnessAssessment` component. No sidebar link.
-2. **`/dashboard/inbox`** -- Inbox Ops Agent message hub. Fully built with filtering, pagination. No sidebar link.
-3. **`/dashboard/coaching`** -- Video Coaching (Studio tier). Fully built with LiveKit integration. No sidebar link.
-4. **`/dashboard/coaching/history`** -- Coaching session history. Fully built. No sidebar link.
-5. **`/dashboard/notifications`** -- Push notification log page. Fully built with category filtering. No sidebar link (exists in orphaned dashboard-shell.tsx only).
-6. **`/dashboard/memory`** -- FRED Memory Browser (Pro tier). Fully built with semantic/episodic memory viewer. No sidebar link.
-7. **`/dashboard/sharing`** -- Sharing Analytics Dashboard (Pro tier). Fully built with share link management. No sidebar link.
-8. **`/dashboard/invitations`** -- Team Invitations page. Fully built with accept/decline. No sidebar link.
-9. **`/dashboard/profile/snapshot`** -- Founder Intake Snapshot. Fully built with enriched profile data. No sidebar link.
-10. **`/dashboard/investor-targeting`** -- Investor Targeting hub (Studio tier). Fully built with CSV upload, matches, outreach, pipeline sub-pages. No sidebar link.
-11. **`/dashboard/strategy/reframing`** -- Strategy Reframing (Fred's 9-step framework). Fully built. No sidebar link (accessible only if you know the URL).
-
-### Missing Admin Nav Items
-1. **`/admin/voice-agent`** -- Voice Agent admin page. Fully built with config, escalation rules, knowledge base, analytics tabs. Not in admin nav bar.
-2. **`/admin/analytics`** -- Analytics dashboard with engagement metrics, funnel, feature adoption. Not in admin nav bar.
-
-### Feature Flags / Env-Gated Features
-1. **Communities** -- Gated by `COMMUNITIES_ENABLED` env var (`lib/communities/sanitize.ts`). Returns 503 if set to `false`. Currently present in sidebar nav.
-2. **Web Push** -- Disabled if `VAPID` keys not configured. Fails silently.
-3. **PostHog Analytics** -- Disabled if `NEXT_PUBLIC_POSTHOG_KEY` not set.
-4. **Auto-Promotion Engine** -- Can be disabled globally via config.
-
-### "Coming Soon" Items
-1. **`app/features/page.tsx:87`** -- Boardy Integration marked `comingSoon: true` on the public features page, even though `dashboard/boardy` is fully built.
+### Admin Nav (`app/admin/layout.tsx` lines 49-91)
+7 links: Dashboard, Prompts, Config, A/B Tests, Training, Voice Agent, Analytics.
+**Admin nav is complete** - all top-level admin pages have entries.
 
 ---
 
-## 5. Missing Nav Items (Summary)
+## 4. AI Insights Route
 
-### Dashboard Sidebar (`app/dashboard/layout.tsx`)
-The active layout.tsx has 18 nav items. The following **11 functional pages** are MISSING from sidebar:
-- Wellbeing
-- Inbox
-- Video Coaching (+ History)
-- Notifications
-- Memory Browser
-- Sharing Analytics
-- Team Invitations
-- Profile Snapshot
-- Investor Targeting (+ Matches, Outreach, Pipeline)
-- Strategy Reframing
-
-### Top Navbar (`components/navbar.tsx`)
-- No link to `/chat` (Talk to Fred) -- users must know URL or navigate from dashboard
-- No link to `/features` page from main nav
-- No link to `/interactive` demo page
-
-### Admin Nav (`app/admin/layout.tsx`)
-- Missing: Voice Agent admin (`/admin/voice-agent`)
-- Missing: Analytics admin (`/admin/analytics`)
+- `app/dashboard/ai-insights/page.tsx` (line 9): **Redirects** to `/dashboard/insights`
+- `app/dashboard/insights/page.tsx`: Full functional page with tabs, charts, trend analytics
+- **Neither route appears in the sidebar nav** -- users cannot discover AI Insights through navigation
+- APIs used: `/api/insights/top-insights`, `/api/insights/trends`, `/api/insights/analytics`, `/api/insights/ab-tests`
 
 ---
 
-## 6. TODO/FIXME Items
+## 5. Auth Guard Coverage
 
-| File | Line | Comment |
-|------|------|---------|
-| `lib/auth/middleware-example.ts:35` | `// TODO: Validate credentials against database` |
-| `lib/investors/matching.ts:386` | `// TODO: add founder location to profile` |
+### Middleware protected paths (`lib/auth/middleware-utils.ts` line 34):
+```
+/dashboard, /agents, /documents, /settings, /profile, /chat, /check-ins, /video, /onboarding, /interactive
+```
 
-Only 2 TODO items found in active source code -- relatively clean.
+### Auth gaps: NONE FOUND (verified by backend-validator)
+
+| Route | Status | Detail |
+|-------|--------|--------|
+| `/demo/*` (5 pages) | No auth guard | Intentional -- public demos |
+| `/tools/investor-readiness` | No auth guard | Intentional -- public tool |
+| `/api/setup-db` | SAFE | Dual protection: `NODE_ENV === "production"` returns 403 + `isAdminRequest()` check |
+| `/api/cron/*` | SAFE | All 3 routes verify `Authorization: Bearer {CRON_SECRET}` via timing-safe HMAC |
+| `/api/fred/*` | SAFE | All guarded via `requireAuth()` or `checkTierForRequest()` |
+| `/api/investors/*` | SAFE | All guarded via `checkTierForRequest(request, UserTier.STUDIO)` |
+| `/api/documents/*` | SAFE | All guarded via `requireAuth()` + `checkTierForRequest()` |
+| `/api/inbox` | SAFE | Guarded via `requireAuth()` |
+| `/api/journey/*` | SAFE | All guarded via `requireAuth()` |
+
+Middleware protected paths cover page routes (redirect to /login). API routes correctly handle their own auth at handler level. No gaps.
+
+### Admin auth:
+Admin routes protected by `isAdminSession()` in `app/admin/layout.tsx` (server-side). Sufficient.
 
 ---
 
-## 7. API Endpoints with No Frontend Consumer
+## 6. Feature Flags / Disabled Code
 
-These API endpoints exist but have no frontend page or component calling them:
-1. `/api/setup-db` -- Dev-only database setup tool
-2. `/api/health/ai` -- AI provider health check (monitoring only)
-3. `/api/experiments/auto-promote` -- Cron-triggered auto-promotion (no UI)
-4. `/api/notifications/config` -- Notification config (internal admin use)
-5. `/api/notifications/pagerduty` -- PagerDuty webhook forwarder
-6. `/api/notifications/slack` -- Slack webhook forwarder
-7. `/api/notifications/test` -- Test notification sender
+No `TODO`, `FIXME`, `DISABLED`, `coming soon`, or `feature flag` patterns found in app source.
 
-These are all legitimate backend/infrastructure endpoints that don't need frontend consumers.
+Conditional visibility uses tier-based logic (not feature flags):
+- `showPositioning`: `tier >= UserTier.PRO`
+- `showInvestorLens`: `!isEarlyStage && tier >= UserTier.PRO`
 
 ---
 
-## 8. Key Findings for Code Fixer
+## 7. Recommended Fixes
 
-### CRITICAL: 11 Dashboard Pages Missing from Sidebar Navigation
-The dashboard sidebar in `app/dashboard/layout.tsx` is missing nav items for 11 fully-built feature pages. Users can only access these by knowing the direct URL. This is the single largest UX gap in the application.
+### HIGH PRIORITY - Add Missing Sidebar Nav Items
 
-### HIGH: Orphaned Nav Components Never Imported
-`components/dashboard/invitations-nav-item.tsx` and `components/dashboard/coaching-nav-item.tsx` were created specifically to add nav items but were never integrated into the layout.
+File: `app/dashboard/layout.tsx` lines 47-102
 
-### HIGH: Admin Pages Missing from Admin Nav
-`/admin/voice-agent` and `/admin/analytics` are fully built but invisible to admins.
+These pages exist and are functional but unreachable from navigation:
 
-### MEDIUM: Orphaned Dashboard Shell
-`app/dashboard/dashboard-shell.tsx` is a full duplicate of the dashboard layout that is never used. Should be removed.
+| Page | Suggested Nav Label | Priority |
+|------|-------------------|----------|
+| `/dashboard/insights` | AI Insights | HIGH |
+| `/dashboard/strategy` | Strategy | HIGH |
+| `/dashboard/strategy/reframing` | (sub-link from strategy) | HIGH |
+| `/dashboard/journey` | Journey | HIGH |
+| `/dashboard/coaching` | Coaching | HIGH |
+| `/dashboard/wellbeing` | Wellbeing | HIGH |
+| `/dashboard/agents` | Virtual Team | HIGH |
+| `/dashboard/boardy` | Boardy | MEDIUM |
+| `/dashboard/inbox` | Inbox | MEDIUM |
+| `/dashboard/history` | History | MEDIUM |
+| `/dashboard/notifications` | Notifications | MEDIUM |
+| `/dashboard/memory` | Memory | MEDIUM |
+| `/dashboard/investor-readiness` | Investor Readiness | MEDIUM (conditional) |
+| `/dashboard/investor-targeting` | Investor Targeting | MEDIUM (conditional) |
+| `/dashboard/investor-evaluation` | Investor Evaluation | MEDIUM (conditional) |
+| `/dashboard/pitch-deck` | Pitch Deck | MEDIUM (conditional) |
+| `/dashboard/reality-lens` | Reality Lens | MEDIUM (conditional) |
+| `/dashboard/invitations` | Invitations | LOW |
+| `/dashboard/sharing` | Sharing | LOW |
+| `/dashboard/sms` | SMS | LOW |
+| `/dashboard/monitoring` | Monitoring | LOW |
+| `/dashboard/startup-process` | Startup Process | LOW |
+| `/dashboard/profile/snapshot` | Profile Snapshot | LOW |
 
-### LOW: "Coming Soon" Inaccuracy
-Boardy is marked "Coming Soon" on `/features` but the dashboard integration is fully built.
+### Auth - NO ISSUES (verified by backend-validator)
+All flagged API routes confirmed protected at handler level. No fixes needed.
+
+### LOW PRIORITY - Navigation UX
+
+| Issue | Fix |
+|-------|-----|
+| Mobile bottom nav only 5 items | Add "More" menu for additional features |
+| Nav should be grouped | Use sections: Core, Investor Tools, Strategy, Account |
