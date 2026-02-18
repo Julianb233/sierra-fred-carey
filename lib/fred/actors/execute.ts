@@ -25,8 +25,9 @@ export async function executeActor(
     decision.requiresHumanApproval
   );
 
-  // Log the decision to memory
-  await logDecisionToMemory(decision, validatedInput, userId, sessionId);
+  // Log the decision to memory (fire-and-forget — response is already determined)
+  logDecisionToMemory(decision, validatedInput, userId, sessionId)
+    .catch(err => console.warn("[FRED Execute] Memory logging failed (non-blocking):", err));
 
   // Build the response based on action type
   const response = buildResponse(decision, validatedInput);
