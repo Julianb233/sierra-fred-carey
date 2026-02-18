@@ -24,10 +24,6 @@ import {
   Heart,
   Rocket,
   Compass,
-  Inbox,
-  Bell,
-  Clock,
-  Brain,
   Target,
   ShieldCheck,
   TrendingUp,
@@ -35,8 +31,6 @@ import {
   ScanEye,
   Bot,
   Network,
-  Share2,
-  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -61,6 +55,9 @@ type NavItem = {
 
 /**
  * Core navigation items -- always visible to all users.
+ * Kept to ~13 high-value items. Lower-priority pages (Inbox, Notifications,
+ * History, Memory, Sharing, Invitations) are accessible from Settings or
+ * contextual links rather than top-level nav.
  */
 const coreNavItems: NavItem[] = [
   {
@@ -122,36 +119,6 @@ const coreNavItems: NavItem[] = [
     name: "Community",
     href: "/dashboard/communities",
     icon: <Users className="h-4 w-4" />,
-  },
-  {
-    name: "Inbox",
-    href: "/dashboard/inbox",
-    icon: <Inbox className="h-4 w-4" />,
-  },
-  {
-    name: "Notifications",
-    href: "/dashboard/notifications",
-    icon: <Bell className="h-4 w-4" />,
-  },
-  {
-    name: "History",
-    href: "/dashboard/history",
-    icon: <Clock className="h-4 w-4" />,
-  },
-  {
-    name: "Memory",
-    href: "/dashboard/memory",
-    icon: <Brain className="h-4 w-4" />,
-  },
-  {
-    name: "Sharing",
-    href: "/dashboard/sharing",
-    icon: <Share2 className="h-4 w-4" />,
-  },
-  {
-    name: "Invitations",
-    href: "/dashboard/invitations",
-    icon: <UserPlus className="h-4 w-4" />,
   },
   {
     name: "Settings",
@@ -272,29 +239,49 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {visibleNavItems.map((item) => {
+        {visibleNavItems.map((item, idx) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
               : pathname.startsWith(item.href);
 
+          // Show section label before first item in a conditional group
+          const prevItem = visibleNavItems[idx - 1];
+          const showInvestorLabel =
+            item.condition?.startsWith("showInvestor") &&
+            (!prevItem || !prevItem.condition?.startsWith("showInvestor"));
+          const showStudioLabel =
+            item.condition === "showStudioFeatures" &&
+            (!prevItem || prevItem.condition !== "showStudioFeatures");
+
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={onNavClick}
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
-                isActive
-                  ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            <div key={item.name}>
+              {showInvestorLabel && (
+                <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  Investor Tools
+                </p>
               )}
-            >
-              <div className="transition-transform group-hover:scale-110">
-                {item.icon}
-              </div>
-              <span className="flex-1 text-sm">{item.name}</span>
-            </Link>
+              {showStudioLabel && (
+                <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  Studio
+                </p>
+              )}
+              <Link
+                href={item.href}
+                onClick={onNavClick}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative min-h-[44px]",
+                  isActive
+                    ? "bg-[#ff6a1a]/10 text-[#ff6a1a] font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                )}
+              >
+                <div className="transition-transform group-hover:scale-110">
+                  {item.icon}
+                </div>
+                <span className="flex-1 text-sm">{item.name}</span>
+              </Link>
+            </div>
           );
         })}
       </nav>
