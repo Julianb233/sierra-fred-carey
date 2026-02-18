@@ -68,8 +68,8 @@ export default function ProductPage() {
                   size="lg"
                   className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
                 >
-                  <Link href="/get-started">
-                    Join Waitlist
+                  <Link href="/signup">
+                    Get Started
                     <RocketIcon className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -660,8 +660,8 @@ export default function ProductPage() {
                 size="lg"
                 className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all text-lg px-8"
               >
-                <Link href="/get-started">
-                  Join the Waitlist
+                <Link href="/signup">
+                  Get Started Free
                   <RocketIcon className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
