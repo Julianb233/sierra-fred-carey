@@ -509,11 +509,13 @@ export function NotificationSettings() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Error display — show inline warning for action errors, not initial load failures */}
+        {/* Inline warning for action errors (non-fatal) */}
         {(error || pushError) && configs.length > 0 && (
           <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-lg border border-amber-200 dark:border-amber-800">
             <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
-            <span className="text-sm">{error || pushError}</span>
+            <span className="text-sm">
+              Something went wrong. Please try again or refresh the page.
+            </span>
             <button
               onClick={() => setError(null)}
               className="ml-auto text-amber-400 hover:text-amber-600"
@@ -660,8 +662,17 @@ export function NotificationSettings() {
         {configs.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <GearIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No notification channels configured yet</p>
-            <p className="text-sm">Add a Slack or PagerDuty integration to receive alerts</p>
+            <p className="font-medium">Set up your notification channels</p>
+            <p className="text-sm mt-1">
+              Add Slack, PagerDuty, or email integrations to receive alerts when it matters most.
+            </p>
+            <Button
+              className="mt-4 bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
+              onClick={() => setShowAddDialog(true)}
+            >
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Add Your First Channel
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
