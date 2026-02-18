@@ -93,5 +93,6 @@ For each fix from Code Fixer:
 | A3 | Orphan cleanup in /api/onboard uses anon client instead of service role | app/api/onboard/route.ts | Import createServiceClient; use it for admin.deleteUser call | 376d706 |
 
 | A4 | FRED chat duplicate getAllUserFacts DB call | app/api/fred/chat/route.ts, lib/fred/context-builder.ts, lib/ai/fred-client.ts, lib/fred/service.ts, lib/fred/types.ts, lib/fred/actors/load-memory.ts | Preload facts in buildFounderContextWithFacts, pass to FredService to skip redundant DB call | 6dcc6f4 |
+| A5 | 22+ dashboard pages unreachable from sidebar | app/dashboard/layout.tsx | Added 11 core nav items (AI Insights, Journey, Coaching, Wellbeing, Startup Process, Strategy, Inbox, Notifications, History, Memory, Sharing, Invitations) + 7 conditional (Investor Targeting/Readiness/Evaluation, Pitch Deck, Reality Lens for Pro+; Virtual Team, Boardy for Studio) | 19e6976 |
 
 *Updated: 2026-02-18*
