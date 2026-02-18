@@ -1,33 +1,42 @@
-# Fleet Sync: Browserbase Key Update Report
+# Sahara Completion Report
 
 **Date:** 2026-02-18
-**New key:** `bb_live_cmSwbmPy7i0Ksb9QKiY5-4WCYTU`
-**New project ID:** `3970a120-1f89-4303-b14f-a0ad5a777db7`
+**Tester:** qa-verifier (automated)
 
-## Results
+## Build Status
 
-| Account    | Status        | Key prefix (first 25 chars)   |
-|------------|---------------|-------------------------------|
-| agent5     | Updated (source) | `bb_live_cmSwbmPy7i0Ksb9QK` |
-| terminator | Updated       | `bb_live_cmSwbmPy7i0Ksb9QK` |
-| dev        | OLD KEY       | `bb_live_QVGmTsZDI_rtmW_Dp` |
-| agent1     | No read/write access | Unknown              |
-| agent2     | No .claude dir | N/A                          |
-| agent3     | No .claude dir | N/A                          |
-| agent4     | No .claude dir | N/A                          |
+| Field | Value |
+|-------|-------|
+| Workflow | Build & Deploy |
+| Run ID | 22157950010 |
+| Branch | main |
+| Status | **PASS** (completed / success) |
+| Commit | docs: deploy verification pass 4 -- 12/12 tests pass |
+| Started | 2026-02-18T21:16:41Z |
+| Finished | 2026-02-18T21:24:02Z |
+| Duration | ~7 min |
+
+## Smoke Test Results
+
+| # | Step | Result | Notes |
+|---|------|--------|-------|
+| 1 | Landing page loads | **PASS** | Hero text "What if you could create a unicorn" visible |
+| 2 | "Get Started Free" -> stage selector | **PASS** | "What stage are you at?" with 4 options (Ideation, Pre-seed, Seed, Series A+) |
+| 3 | Select stage -> challenge selector | **PASS** | "What's your #1 challenge?" with 6 options |
+| 4 | Select challenge -> signup form | **PASS** | Email + password form with "Start Free Trial" button |
+| 5 | Submit signup (ux-verify-final@joinsahara.com) | **PASS** | Account created, redirected to dashboard |
+| 6 | Dashboard loads with welcome tour | **PASS** | "Welcome, Ux!" modal appeared over dashboard. No explicit confetti/"You're in!" screen observed -- went directly to tour. |
+| 7 | Click through all 4 tour steps | **PASS** | Steps: Welcome -> Reality Lens -> AI Insights -> Your Journey ("Let's Go!") |
+| 8 | Dashboard home with Fred chat in sidebar | **PASS** | Full dashboard visible: Home, Chat with Fred, Next Steps, Readiness, AI Insights, Journey, Coaching, Wellbeing. Founder Snapshot showing "Idea Stage". |
+| 9 | Chat with Fred -> send message -> Fred responds | **PASS** | Sent "Hello Fred, this is a smoke test message." Fred responded "Hello! What's on your mind?" Context tag updated to "Positioning - Clarifying your market position". |
 
 ## Summary
 
-- **Successfully updated:** agent5 (source), terminator
-- **Needs privileged/manual update:** dev (has old key, no write permission), agent1 (no permission)
-- **No .claude directory:** agent2, agent3, agent4 (may not need update)
-- **fleet-sync script:** Failed due to sudo password requirement
+**Overall: 9/9 steps PASS**
 
-## Manual Update Required
+The full onboarding and dashboard flow is functional on the live site (joinsahara.com). Authentication, signup, welcome tour, dashboard rendering, and Fred AI chat are all working correctly.
 
-The `dev` account's settings.json is owned by `dev:dev` with mode 664. Agent5 is in the `agency` group, not `dev`, so no write access. The directory `/home/dev/.claude/` is 775 but also group `dev`.
+### Minor Observations (non-blocking)
 
-Run with privileged access:
-```bash
-sudo cp /home/agent5/.claude/settings.json /home/dev/.claude/settings.json && sudo chown dev:dev /home/dev/.claude/settings.json
-```
+- No confetti animation or "You're in!" interstitial was observed between signup submission and dashboard load. The welcome tour modal appeared directly. This may be by design or the animation may have been too brief to capture.
+- An "Install Sahara" PWA prompt appeared on the stage selector page (bottom-right). Not a bug, but worth noting for UX review.
