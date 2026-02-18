@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useVoiceInput } from "@/lib/hooks/use-voice-input";
+import { toast } from "sonner";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -43,10 +44,13 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
   };
 
   const handleSend = () => {
-    if (message.trim() && !isLoading) {
-      onSend(message.trim());
-      setMessage("");
+    if (!message.trim()) return;
+    if (isLoading) {
+      toast.info("Hold on — Fred is still thinking...");
+      return;
     }
+    onSend(message.trim());
+    setMessage("");
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {

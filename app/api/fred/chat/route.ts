@@ -703,7 +703,7 @@ async function handlePost(req: NextRequest) {
             const latencyMs = Date.now() - startTime;
 
             const response = {
-              content: update.context.decision?.content || "Unable to process request.",
+              content: update.context.decision?.content || "I wasn't able to fully process that. Could you try rephrasing or sending your message again?",
               action: update.context.decision?.action || "defer",
               confidence: update.context.decision?.confidence || 0,
               requiresApproval: update.context.decision?.requiresHumanApproval || false,

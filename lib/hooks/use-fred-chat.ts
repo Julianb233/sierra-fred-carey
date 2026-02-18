@@ -200,9 +200,15 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
   // Send message with streaming
   const sendMessage = useCallback(async (content: string) => {
+    // Abort any in-flight request before starting a new one
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
     // Add user message immediately
     const userMessage: FredMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content,
       timestamp: new Date(),
@@ -400,7 +406,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
         setState("error");
 
         const errorResponseMessage: FredMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: "Sorry, I lost my train of thought there. Could you send that again?",
           timestamp: new Date(),
@@ -423,7 +429,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
         // Add error message as assistant response
         const errorResponseMessage: FredMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: "I'm having trouble processing your message right now. Please try again.",
           timestamp: new Date(),
