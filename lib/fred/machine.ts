@@ -41,7 +41,8 @@ function createInitialContext(
   sessionId: string,
   founderContext?: string,
   conversationState?: ConversationStateContext | null,
-  chatMode?: boolean
+  chatMode?: boolean,
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>
 ): FredContext {
   return {
     sessionId,
@@ -60,6 +61,27 @@ function createInitialContext(
     founderContext: founderContext || null,
     conversationState: conversationState || null,
     chatMode: chatMode ?? true,
+    preloadedFacts,
+  };
+}
+
+// ============================================================================
+// Fast-path: build a minimal DecisionResult for greeting/feedback intents
+// so the execute actor can respond with templates (no LLM needed).
+// ============================================================================
+
+function buildSimpleDecision(input: ValidatedInput): DecisionResult {
+  return {
+    action: "auto_execute",
+    content: input.intent === "greeting" ? "greeting_placeholder" : "feedback_placeholder",
+    confidence: 1,
+    requiresHumanApproval: false,
+    reasoning: `Fast path: ${input.intent} intent uses template response`,
+    procedureUsed: "fast_path",
+    metadata: {
+      inputIntent: input.intent,
+      fastPath: true,
+    },
   };
 }
 
@@ -71,12 +93,12 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; chatMode?: boolean },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean },
   },
 
   actors: {
-    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string }>(
-      async ({ input }) => loadMemoryActor(input.userId, input.sessionId)
+    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }> }>(
+      async ({ input }) => loadMemoryActor(input.userId, input.sessionId, "free", input.preloadedFacts)
     ),
 
     validateInput: fromPromise<ValidatedInput, { input: UserInput; memoryContext: MemoryContext | null; conversationState: ConversationStateContext | null }>(
@@ -154,6 +176,16 @@ export const fredMachine = setup({
     requiresEscalation: ({ context }) => {
       if (!context.decision) return false;
       return context.decision.action === "escalate";
+    },
+
+    /**
+     * Is this a greeting or feedback message that can skip the full pipeline?
+     * These intents use template responses — no LLM, mental models, or synthesis needed.
+     */
+    isGreetingOrFeedback: ({ context }) => {
+      if (!context.validatedInput) return false;
+      const intent = context.validatedInput.intent;
+      return intent === "greeting" || intent === "feedback";
     },
   },
 
@@ -307,7 +339,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode, input.preloadedFacts),
 
   states: {
     /**
@@ -354,6 +386,7 @@ export const fredMachine = setup({
         input: ({ context }) => ({
           userId: context.userId,
           sessionId: context.sessionId,
+          preloadedFacts: context.preloadedFacts,
         }),
         onDone: {
           target: "intake",
@@ -411,7 +444,7 @@ export const fredMachine = setup({
     },
 
     /**
-     * Validation - Check if clarification needed
+     * Validation - Check if clarification needed, or fast-path for simple intents
      */
     validation: {
       always: [
@@ -419,6 +452,16 @@ export const fredMachine = setup({
           guard: "needsClarification",
           target: "clarification",
           actions: "logTransition",
+        },
+        {
+          guard: "isGreetingOrFeedback",
+          target: "execute",
+          actions: [
+            "logTransition",
+            assign({
+              decision: ({ context }) => buildSimpleDecision(context.validatedInput!),
+            }),
+          ],
         },
         {
           target: "mental_models",
