@@ -71,9 +71,32 @@ function createInitialContext(
 // ============================================================================
 
 function buildSimpleDecision(input: ValidatedInput): DecisionResult {
+  // Generate actual response content inline (no placeholders).
+  // The execute actor returns void and doesn't update context.decision,
+  // so streaming reads context.decision.content directly.
+  let content: string;
+  if (input.intent === "greeting") {
+    const greetings = [
+      "Hey! How can I help you today?",
+      "Hello! What's on your mind?",
+      "Hi there! Ready to help you think through anything.",
+      "Hey! What would you like to work on?",
+    ];
+    content = greetings[Math.floor(Math.random() * greetings.length)];
+  } else {
+    // feedback
+    if (input.sentiment === "positive") {
+      content = "Glad that was helpful! Let me know if you need anything else.";
+    } else if (input.sentiment === "negative") {
+      content = "I hear you. Let me know how I can do better or if you'd like me to approach this differently.";
+    } else {
+      content = "Got it, thanks for the feedback. What else can I help with?";
+    }
+  }
+
   return {
     action: "auto_execute",
-    content: input.intent === "greeting" ? "greeting_placeholder" : "feedback_placeholder",
+    content,
     confidence: 1,
     requiresHumanApproval: false,
     reasoning: `Fast path: ${input.intent} intent uses template response`,

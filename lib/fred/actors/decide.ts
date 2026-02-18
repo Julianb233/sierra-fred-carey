@@ -321,14 +321,20 @@ async function buildResponseContent(
     return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
   }
 
-  // Fast path: greeting and feedback use templates — no LLM needed.
-  // execute.ts overrides these with generateGreetingResponse() / generateFeedbackAcknowledgment()
-  // anyway, so the LLM call is entirely wasted for these intents.
+  // Greeting and feedback use templates — no LLM needed.
   if (input.intent === "greeting") {
-    return "greeting_placeholder";
+    const greetings = [
+      "Hey! How can I help you today?",
+      "Hello! What's on your mind?",
+      "Hi there! Ready to help you think through anything.",
+      "Hey! What would you like to work on?",
+    ];
+    return greetings[Math.floor(Math.random() * greetings.length)];
   }
   if (input.intent === "feedback") {
-    return "feedback_placeholder";
+    if (input.sentiment === "positive") return "Glad that was helpful! Let me know if you need anything else.";
+    if (input.sentiment === "negative") return "I hear you. Let me know how I can do better or if you'd like me to approach this differently.";
+    return "Got it, thanks for the feedback. What else can I help with?";
   }
 
   // For substantive responses, try LLM generation first
