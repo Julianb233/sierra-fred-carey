@@ -1,861 +1,891 @@
-# Architecture Patterns
+# Architecture Patterns: Sahara v6.0
 
-**Domain:** AI-powered founder operating system with cognitive engine
-**Researched:** 2026-01-28
-**Confidence:** HIGH (based on industry patterns, official documentation, and existing codebase analysis)
-
-## Executive Summary
-
-Building the FRED Cognitive Engine and Sahara platform requires a layered architecture combining:
-1. **Cognitive Engine Core** - State machine-driven decision framework with memory persistence
-2. **Multi-Agent Orchestration** - Specialized agents coordinated by a central router
-3. **API-First Backend** - Clean separation enabling future React Native support
-4. **Document Processing Pipeline** - PDF extraction with embedding storage for RAG
-
-The existing codebase already implements multi-provider AI fallback and request/response logging. Architecture should extend these patterns rather than replace them.
+**Domain:** AI-powered founder OS -- content library, service marketplace, Boardy API, infrastructure hardening
+**Researched:** 2026-02-18
+**Overall confidence:** HIGH (existing codebase thoroughly examined; integration patterns well-established)
 
 ---
 
-## Recommended Architecture
+## 1. Current Architecture Snapshot
 
-### High-Level System Architecture
+Before designing v6.0 additions, here is what exists and what we must preserve.
 
-```
-                                    +------------------+
-                                    |   React Native   |
-                                    |   (Future)       |
-                                    +--------+---------+
-                                             |
-+------------------+                         v
-|   Next.js Web    |              +------------------+
-|   (Dashboard)    +------------->|   API Layer      |
-+------------------+              |   (REST/tRPC)    |
-                                  +--------+---------+
-                                           |
-         +-------------------+-------------+-------------+-------------------+
-         |                   |             |             |                   |
-         v                   v             v             v                   v
-+--------+--------+ +--------+--------+ +--+----------+ +--------+--------+ +--+------------+
-| FRED Cognitive  | | Virtual Team    | | Document   | | SMS/Check-in   | | Analytics     |
-| Engine          | | Agents          | | Pipeline   | | Service        | | & Audit       |
-+-----------------+ +-----------------+ +-------------+ +----------------+ +---------------+
-         |                   |             |             |                   |
-         +-------------------+-------------+-------------+-------------------+
-                                           |
-                                  +--------v---------+
-                                  |   Data Layer     |
-                                  |   (Supabase)     |
-                                  +------------------+
-                                           |
-                   +-----------------------+-----------------------+
-                   |                       |                       |
-           +-------v-------+       +-------v-------+       +-------v-------+
-           | PostgreSQL    |       | Vector Store  |       | Realtime      |
-           | (Core Data)   |       | (pgvector)    |       | (Subscriptions)|
-           +---------------+       +---------------+       +---------------+
-```
-
-### Component Boundaries
-
-| Component | Responsibility | Communicates With | Build Priority |
-|-----------|---------------|-------------------|----------------|
-| API Layer | Request routing, auth, rate limiting | All services | Phase 1 |
-| FRED Cognitive Engine | Decision scoring, analysis framework, state machine | API Layer, Data Layer, AI Providers | Phase 1 |
-| Memory Persistence | User preferences, past decisions, outcomes | FRED Engine, Data Layer | Phase 1 |
-| Virtual Team Agents | Specialized AI assistants (ops, fundraising, growth) | API Layer, FRED Engine, Data Layer | Phase 3 |
-| Document Pipeline | PDF extraction, chunking, embedding | API Layer, Vector Store, AI Providers | Phase 2 |
-| SMS/Check-in Service | Twilio integration, scheduling, accountability | API Layer, Data Layer | Phase 3 |
-| Analytics & Audit | Decision logging, compliance, safety monitoring | All services, Data Layer | Phase 1-3 |
-
----
-
-## FRED Cognitive Engine Architecture
-
-### State Machine Design
-
-Based on [StateFlow research](https://arxiv.org/html/2403.11322v1), the cognitive engine should use a state machine architecture for deterministic, auditable decision flow.
+### Existing Component Map
 
 ```
-                        +----------------+
-                        |   INTAKE       |
-                        | Parse request, |
-                        | extract intent |
-                        +-------+--------+
-                                |
-                        +-------v--------+
-                        |  VALIDATION    |
-                        | Check context, |
-                        | verify data    |
-                        +-------+--------+
-                                |
-                        +-------v--------+
-                        | MENTAL MODELS  |
-                        | Apply 7-factor |
-                        | scoring        |
-                        +-------+--------+
-                                |
-                        +-------v--------+
-                        |  SYNTHESIS     |
-                        | Generate       |
-                        | recommendation |
-                        +-------+--------+
-                                |
-              +-----------------+-----------------+
-              |                                   |
-      +-------v--------+                 +--------v-------+
-      |  AUTO-DECIDE   |                 |   ESCALATE     |
-      | Score >= 0.8   |                 | Score < 0.8    |
-      | Low risk       |                 | High stakes    |
-      +-------+--------+                 +--------+-------+
-              |                                   |
-      +-------v--------+                 +--------v-------+
-      |   EXECUTE      |                 | HUMAN-IN-LOOP  |
-      | Take action,   |                 | Request user   |
-      | log outcome    |                 | confirmation   |
-      +----------------+                 +----------------+
-```
-
-### 7-Factor Scoring Engine
-
-```typescript
-interface DecisionScore {
-  strategicAlignment: number;  // 0-10: Does this align with stated goals?
-  leverage: number;            // 0-10: Multiplier effect on outcomes
-  speed: number;               // 0-10: How fast to results?
-  revenue: number;             // 0-10: Direct revenue impact
-  time: number;                // 0-10: Time investment required
-  risk: number;                // 0-10: Downside exposure (inverted)
-  relationships: number;       // 0-10: Network/relationship building
-
-  weights: {
-    strategicAlignment: 0.20;
-    leverage: 0.15;
-    speed: 0.10;
-    revenue: 0.20;
-    time: 0.10;
-    risk: 0.15;
-    relationships: 0.10;
-  };
-
-  composite: number;           // Weighted average
-  confidence: number;          // How certain FRED is about the score
-}
-```
-
-**Pattern:** Based on [weighted scoring model research](https://userpilot.com/blog/weighted-scoring-model/), implement as a pure function that takes inputs and returns a score object. Log all inputs and outputs for audit trail.
-
-### Auto-Decide vs Escalate Logic
-
-Based on [AI agent routing patterns](https://www.patronus.ai/ai-agent-development/ai-agent-routing):
-
-```typescript
-interface EscalationPolicy {
-  // Confidence thresholds
-  autoDecideThreshold: 0.8;      // Composite score >= 0.8 = auto-decide
-  escalateThreshold: 0.5;        // Score < 0.5 = always escalate
-
-  // Risk categories that always escalate
-  alwaysEscalate: [
-    'financial_commitment_over_1000',
-    'legal_binding',
-    'public_statement',
-    'hiring_firing',
-    'investor_communication'
-  ];
-
-  // Step budgets
-  maxRetries: 3;                 // Max clarifying questions before escalate
-  maxChainLength: 5;             // Max state transitions per decision
-}
-```
-
-### Memory Persistence Architecture
-
-Based on [COLMA architecture](https://arxiv.org/html/2509.13235) and [memory research](https://genesishumanexperience.com/2025/11/03/memory-in-agentic-ai-systems-the-cognitive-architecture-behind-intelligent-collaboration/):
-
-```
-+------------------+     +------------------+     +------------------+
-| Episodic Memory  |     | Semantic Memory  |     | Procedural Memory|
-| Recent decisions |     | User preferences |     | Learned patterns |
-| Conversation ctx |     | Company context  |     | Successful flows |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                          +-------v-------+
-                          | Memory Router |
-                          | (Context-aware|
-                          |  retrieval)   |
-                          +-------+-------+
-                                  |
-                          +-------v-------+
-                          | Vector Store  |
-                          | (pgvector)    |
-                          +---------------+
-```
-
-**Storage Strategy:**
-- **Episodic Memory:** Recent conversations, decisions (7-30 day retention)
-- **Semantic Memory:** User preferences, company info, outcomes (permanent)
-- **Procedural Memory:** What worked, what didn't (consolidated weekly)
-
-**Implementation with Supabase:**
-```sql
--- Core memory tables
-CREATE TABLE fred_memory_episodic (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  session_id UUID,
-  content TEXT,
-  embedding vector(1536),
-  memory_type TEXT, -- 'conversation', 'decision', 'observation'
-  created_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ
-);
-
-CREATE TABLE fred_memory_semantic (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  category TEXT, -- 'preference', 'context', 'outcome'
-  key TEXT,
-  value JSONB,
-  embedding vector(1536),
-  confidence FLOAT,
-  updated_at TIMESTAMPTZ
-);
-
-CREATE INDEX ON fred_memory_episodic USING hnsw (embedding vector_cosine_ops);
-CREATE INDEX ON fred_memory_semantic USING hnsw (embedding vector_cosine_ops);
-```
-
----
-
-## Multi-Agent Architecture (Virtual Team)
-
-### Orchestration Pattern
-
-Based on [Google's multi-agent patterns](https://docs.cloud.google.com/architecture/choose-design-pattern-agentic-ai-system) and [LangGraph research](https://www.langchain.com/langgraph), use an **Orchestrator-Worker** pattern:
-
-```
-                        +------------------+
-                        | User Request     |
-                        +--------+---------+
+                        +-------------------+
+                        |   Vercel Edge     |
+                        |  (Next.js 16)     |
+                        +--------+----------+
                                  |
-                        +--------v---------+
-                        | Router Agent     |
-                        | (Intent + Context)|
-                        +--------+---------+
-                                 |
-         +-----------------------+------------------------+
-         |                       |                        |
-+--------v--------+    +--------v--------+    +----------v--------+
-| Founder Ops     |    | Fundraising     |    | Growth Agent      |
-| Agent           |    | Agent           |    |                   |
-| - Priorities    |    | - Pitch prep    |    | - Market analysis |
-| - Calendar      |    | - Investor match|    | - GTM strategy    |
-| - Task mgmt     |    | - Due diligence |    | - Channel tactics |
-+-----------------+    +-----------------+    +-------------------+
-         |                       |                        |
-         +-----------------------+------------------------+
-                                 |
-                        +--------v---------+
-                        | FRED Core Engine |
-                        | (Synthesis +     |
-                        |  Decision)       |
-                        +------------------+
+              +------------------+------------------+
+              |                  |                   |
+     +--------v------+  +-------v-------+  +--------v--------+
+     | App Router    |  | API Routes    |  | Cron Routes     |
+     | ~210 pages    |  | ~100 routes   |  | weekly-checkin   |
+     | React 19 RSC  |  | requireAuth() |  | weekly-digest    |
+     +--------+------+  | tier-gate     |  | re-engagement    |
+              |          +-------+-------+  +-----------------+
+              |                  |
+     +--------v------+  +-------v-------+
+     | Client State  |  | Service Layer |
+     | TierProvider  |  | lib/fred/*    |
+     | React Context |  | lib/ai/*      |
+     +---------------+  | lib/db/*      |
+                        | lib/boardy/*  |
+                        +-------+-------+
+                                |
+              +--+--------+-----+-----+----------+
+              |  |        |           |           |
+        +-----v--v+ +----v---+ +-----v----+ +----v------+
+        | Supabase| | Stripe | | OpenAI   | | LiveKit   |
+        | Postgres| | Billing| | GPT-4o   | | Cloud     |
+        | Auth    | | Webhooks| | Whisper  | | Voice     |
+        | Storage | +--------+ | TTS      | | Agent     |
+        | RLS     |            +----------+ +-----+-----+
+        | pgvector|                               |
+        +---------+                         +-----v-----+
+                                            | Worker    |
+                                            | Railway/  |
+                                            | Docker    |
+                                            +-----------+
 ```
 
-**Key Design Decisions:**
+### Existing Patterns (Must Preserve)
 
-1. **Specialized Prompts Per Agent:** Each agent has domain-specific system prompts and tools
-2. **Shared Memory Access:** All agents read from user's semantic memory
-3. **FRED as Final Synthesizer:** All agent outputs route through FRED for consistency
-4. **Independent Scaling:** Agents can be added/modified without core changes
+| Pattern | Implementation | Where Used |
+|---------|---------------|------------|
+| Auth middleware | `requireAuth()` from `lib/auth.ts` | Every API route |
+| Tier gating | `getUserTier()` + `createTierErrorResponse()` from `lib/api/tier-middleware.ts` | Paid features |
+| Service client | `createServiceClient()` for server-side Supabase | All `lib/db/*.ts` |
+| User-scoped client | `createClient()` for RLS-respecting queries | Some API routes |
+| Strategy pattern | `getBoardyClient()` returns mock or real | `lib/boardy/client.ts` |
+| DB row mapping | DB rows (snake_case) mapped to TS interfaces (camelCase) | All `lib/db/*.ts` |
+| Stripe webhooks | Idempotent event processing with `recordStripeEvent()` | `app/api/stripe/webhook/route.ts` |
+| XState state machine | FRED cognitive engine with 10 states | `lib/fred/index.ts` |
+| Three-layer memory | Episodic + Semantic + Procedural with pgvector | `lib/db/fred-memory.ts` |
+| Conversation state | 9-Step tracking + Reality Lens gates | `lib/db/conversation-state.ts` |
+| File uploads | Vercel Blob for pitch decks, Supabase Storage for documents | `lib/storage/upload.ts` |
+| Tier enum | `UserTier.FREE=0, PRO=1, STUDIO=2` | `lib/constants.ts` |
 
-### Agent Communication Protocol
+### Existing Database Tables (27+ tables)
 
-```typescript
-interface AgentMessage {
-  agentId: string;
-  threadId: string;
-  type: 'query' | 'response' | 'handoff' | 'escalate';
-  content: string;
-  metadata: {
-    confidence: number;
-    suggestedActions?: string[];
-    requiredContext?: string[];
-  };
-}
-
-interface AgentState {
-  currentAgent: string;
-  conversationHistory: AgentMessage[];
-  sharedContext: Record<string, any>;
-  stepCount: number;
-  maxSteps: number;
-}
-```
+Core: `profiles`, `user_subscriptions`, `stripe_events`
+FRED: `episodic_memory`, `semantic_memory`, `procedural_memory`, `fred_conversation_state`, `fred_step_evidence`
+Features: `boardy_matches`, `investor_readiness_scores`, `strategy_documents`, `document_repository`, `next_steps`
+Community: `communities`, `community_members`, `community_posts`, `community_post_reactions`, `community_post_replies`
+Community v2: `community_profiles`, `consent_preferences`, `consent_audit_log`, `cohorts`, `cohort_members`, `social_feed_posts`, `social_feed_reactions`, `social_feed_comments`, `founder_messages`, `founder_connections`, `expert_listings`, `reputation_events`, `engagement_streaks`
 
 ---
 
-## Multi-Provider AI Architecture
+## 2. v6.0 New Components and Boundaries
 
-The existing codebase (`lib/ai/client.ts`) already implements provider fallback. Extend with:
+### 2A. Content Library System
 
-### LLM Gateway Pattern
+**Purpose:** Educational hub with video lessons, founder playbooks, and FRED-recommended learning paths.
 
-Based on [multi-provider research](https://www.requesty.ai/blog/implementing-zero-downtime-llm-architecture-beyond-basic-fallbacks):
+**Component boundary:** Self-contained content domain that integrates with FRED's AI for personalized recommendations. Content is admin-authored, not user-generated.
 
-```
-+------------------+
-| Application      |
-+--------+---------+
-         |
-+--------v---------+
-| LLM Gateway      |
-| - Health checks  |
-| - Circuit breaker|
-| - Rate limiting  |
-| - Caching        |
-+--------+---------+
-         |
-+--------+----------+----------+---------+
-|                   |          |         |
-v                   v          v         v
-+--------+  +-------+--+  +----+----+  +-+-------+
-| OpenAI |  | Anthropic|  | Google  |  | Local   |
-| Primary|  | Fallback1|  | Fallback2| | (future)|
-+--------+  +----------+  +---------+  +---------+
-```
+#### Architecture Decision: Video Hosting
 
-**Circuit Breaker Configuration:**
-```typescript
-interface CircuitBreakerConfig {
-  openai: {
-    failureThreshold: 0.4;        // 40% failure rate triggers circuit
-    windowMs: 60000;              // 60-second window
-    cooldownMs: 1200000;          // 20-minute cooldown
-  };
-  anthropic: { /* similar */ };
-  google: { /* similar */ };
-}
-```
+**Recommendation: Mux for video, Supabase Storage for documents/playbooks**
 
-### Prompt Compatibility Layer
+| Option | Pros | Cons | Verdict |
+|--------|------|------|---------|
+| Mux | Purpose-built video API, HLS adaptive streaming, built-in analytics, Next.js starter kit exists, handles encoding/CDN | Additional service cost (~$0.007/min encoding + $0.007/min streaming) | **Use this** |
+| Supabase Storage | Already integrated, no new vendor | No transcoding, no adaptive streaming, no player analytics, not designed for video delivery | Use for PDFs/docs only |
+| Cloudflare Stream | Good CDN, decent pricing | Less Next.js ecosystem support, another vendor to manage | Consider if cost-sensitive |
+| Self-host (S3 + CloudFront) | Full control | Must build encoding pipeline, player, analytics from scratch | Overengineered for this stage |
 
-Based on [Anthropic's OpenAI-compatible API](https://www.anthropic.com), normalize message formats:
+**Rationale:** Mux has a dedicated [Next.js video course starter kit](https://github.com/muxinc/video-course-starter-kit) that handles exactly this use case. Encoding, adaptive bitrate, signed playback URLs for content gating, and per-video analytics are all built-in. Sahara already uses Vercel (Mux's parent company partner), so the integration is well-tested.
 
-```typescript
-interface NormalizedMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-  metadata?: Record<string, any>;
-}
+**Confidence:** HIGH -- Mux is the standard choice for Next.js video platforms.
 
-function toProviderFormat(
-  messages: NormalizedMessage[],
-  provider: 'openai' | 'anthropic' | 'google'
-): ProviderSpecificFormat;
-```
-
----
-
-## Document Processing Pipeline
-
-### PDF Pitch Deck Architecture
-
-Based on [NVIDIA multimodal pipeline](https://developer.nvidia.com/blog/build-an-enterprise-scale-multimodal-document-retrieval-pipeline-with-nvidia-nim-agent-blueprint/) and [RAG best practices](https://mallahyari.github.io/rag-ebook/03_prepare_data.html):
-
-```
-+------------------+
-| PDF Upload       |
-+--------+---------+
-         |
-+--------v---------+
-| Document Ingestion|
-| - File validation |
-| - Size limits     |
-| - Type detection  |
-+--------+---------+
-         |
-+--------v---------+
-| Text Extraction   |
-| - OCR (if needed) |
-| - Layout detection|
-| - Table parsing   |
-+--------+---------+
-         |
-+--------v---------+
-| Chunking Strategy |
-| - Semantic chunks |
-| - Slide-aware     |
-| - Overlap handling|
-+--------+---------+
-         |
-+--------v---------+
-| Embedding Gen     |
-| - OpenAI ada-002  |
-| - Batch processing|
-+--------+---------+
-         |
-+--------v---------+
-| Vector Storage    |
-| - pgvector        |
-| - HNSW indexing   |
-+--------+---------+
-         |
-+--------v---------+
-| RAG Retrieval     |
-| - Semantic search |
-| - Reranking       |
-| - Context assembly|
-+------------------+
-```
-
-### Chunking Strategy
-
-Based on [2025 document processing research](https://unstract.com/blog/ai-document-processing-with-unstract/):
-
-```typescript
-interface ChunkConfig {
-  // Pitch deck specific
-  chunkSize: 800;           // tokens per chunk
-  overlap: 100;             // token overlap
-  preserveSlides: true;     // Keep slide boundaries
-  extractTables: true;      // Separate table extraction
-
-  // Metadata enrichment
-  addSlideNumber: true;
-  addSectionHeader: true;
-  addDocumentTitle: true;
-}
-```
-
-### Supabase Vector Storage
-
-Based on [Supabase AI documentation](https://supabase.com/docs/guides/ai):
+#### Data Model: Content Library
 
 ```sql
--- Pitch deck document chunks
-CREATE TABLE document_chunks (
-  id UUID PRIMARY KEY,
-  document_id UUID REFERENCES documents(id),
-  user_id UUID REFERENCES users(id),
-  chunk_index INT,
-  content TEXT,
-  embedding vector(1536),
-  metadata JSONB, -- slide_number, section, tables, etc.
-  created_at TIMESTAMPTZ
+-- Content hierarchy: Course > Module > Lesson
+-- Admin-managed, not user-generated
+
+CREATE TABLE content_courses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL,
+  thumbnail_url TEXT,
+  category TEXT NOT NULL,           -- 'fundraising', 'product', 'growth', 'operations', 'legal'
+  difficulty TEXT NOT NULL,          -- 'beginner', 'intermediate', 'advanced'
+  target_stage TEXT[],               -- ['idea', 'seed', 'series_a'] -- which founder stages
+  estimated_hours NUMERIC(4,1),
+  is_published BOOLEAN DEFAULT false,
+  tier_required INTEGER NOT NULL DEFAULT 0,  -- 0=Free, 1=Pro, 2=Studio
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- HNSW index for fast similarity search
-CREATE INDEX ON document_chunks
-USING hnsw (embedding vector_cosine_ops)
-WITH (m = 16, ef_construction = 64);
+CREATE TABLE content_modules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id UUID NOT NULL REFERENCES content_courses(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Hybrid search function
-CREATE FUNCTION search_pitch_deck(
-  query_embedding vector(1536),
-  user_id UUID,
-  match_threshold FLOAT DEFAULT 0.7,
-  match_count INT DEFAULT 5
-) RETURNS TABLE (
-  id UUID,
-  content TEXT,
-  similarity FLOAT,
-  metadata JSONB
-) AS $$
-  SELECT
-    id, content,
-    1 - (embedding <=> query_embedding) AS similarity,
-    metadata
-  FROM document_chunks
-  WHERE
-    document_chunks.user_id = search_pitch_deck.user_id
-    AND 1 - (embedding <=> query_embedding) > match_threshold
-  ORDER BY similarity DESC
-  LIMIT match_count;
-$$ LANGUAGE sql;
+CREATE TABLE content_lessons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_id UUID NOT NULL REFERENCES content_modules(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  lesson_type TEXT NOT NULL,         -- 'video', 'article', 'playbook', 'worksheet'
+  -- Video fields (Mux)
+  mux_asset_id TEXT,                 -- Mux asset ID
+  mux_playback_id TEXT,              -- Mux playback ID (public or signed)
+  mux_upload_id TEXT,                -- For tracking upload status
+  duration_seconds INTEGER,
+  -- Article/playbook fields
+  content_markdown TEXT,             -- For article/playbook lessons
+  file_url TEXT,                     -- For downloadable worksheets
+  -- Metadata
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_free_preview BOOLEAN DEFAULT false,  -- Allow free users to preview
+  tier_required INTEGER,             -- Override course tier for specific lessons
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE content_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lesson_id UUID NOT NULL REFERENCES content_lessons(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'not_started',  -- 'not_started', 'in_progress', 'completed'
+  progress_percent INTEGER DEFAULT 0,           -- 0-100 for video position
+  completed_at TIMESTAMPTZ,
+  last_position_seconds INTEGER DEFAULT 0,      -- Video resume position
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, lesson_id)
+);
+
+-- FRED recommendations: which courses FRED has suggested to this founder
+CREATE TABLE content_recommendations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES content_courses(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,               -- Why FRED recommended this
+  source TEXT NOT NULL DEFAULT 'fred_conversation',  -- 'fred_conversation', 'stage_match', 'gap_analysis'
+  source_id TEXT,                     -- e.g., conversation ID that triggered recommendation
+  priority INTEGER DEFAULT 0,
+  dismissed BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, course_id)
+);
 ```
+
+**RLS policies follow existing pattern:** user_id scoping for progress/recommendations, open read for published courses.
+
+#### Data Flow: Content Library
+
+```
+Admin uploads video
+    --> Mux API (encoding, asset creation)
+    --> Webhook: mux.asset.ready
+    --> Store mux_asset_id, mux_playback_id in content_lessons
+
+User browses courses
+    --> API: GET /api/content/courses (tier-filtered)
+    --> Client renders course catalog
+
+User watches video
+    --> API: GET /api/content/lessons/[id] (tier check)
+    --> Returns signed Mux playback URL (time-limited)
+    --> Mux Player component streams video
+    --> Client posts progress: POST /api/content/progress
+
+FRED recommends content
+    --> During chat, FRED detects knowledge gap
+    --> FRED calls tool: recommend_content(course_id, reason)
+    --> Inserts into content_recommendations
+    --> Shows in Next Steps Hub and Dashboard
+```
+
+#### SCORM/xAPI Decision
+
+**Recommendation: Do NOT implement SCORM/xAPI for v6.0.**
+
+SCORM/xAPI is for enterprise LMS interoperability (importing third-party courseware, reporting to corporate HR systems). Sahara's content is exclusively first-party (Fred Cary's lessons). The custom `content_progress` table provides all needed tracking (completion, position, time spent) without the complexity of xAPI statement storage or SCORM package parsing.
+
+**Revisit if:** Sahara ever needs to import courses from external providers or export completion data to enterprise HR/LMS systems.
+
+**Confidence:** HIGH -- SCORM/xAPI would be premature complexity.
 
 ---
 
-## API-First Design
+### 2B. Service Marketplace
 
-### REST API Structure
+**Purpose:** Vetted service providers (lawyers, designers, developers) with discovery, reviews, booking, and payments.
 
-Following [API-first architecture principles](https://makitsol.com/api-first-architecture/):
+**Component boundary:** Two-sided marketplace that extends the existing Stripe billing with Stripe Connect for provider payouts. Independent of FRED's AI except for provider recommendations.
 
-```
-/api/v1/
-  /fred/
-    POST /chat              # Main FRED interaction
-    POST /decide            # Decision with scoring
-    GET  /memory            # Retrieve user context
+#### Architecture Decision: Payment Model
 
-  /agents/
-    GET  /                  # List available agents
-    POST /:agentId/chat     # Chat with specific agent
+**Recommendation: Stripe Connect (Standard accounts) with delayed payouts**
 
-  /documents/
-    POST /upload            # Upload pitch deck
-    GET  /:id/analysis      # Get analysis results
-    POST /:id/query         # RAG query against document
+| Model | How It Works | Sahara Fit |
+|-------|-------------|------------|
+| Stripe Connect Standard | Providers create their own Stripe accounts, Sahara facilitates payments | **Best fit** -- providers are real businesses with existing Stripe accounts |
+| Stripe Connect Express | Sahara onboards providers with simplified Stripe flow | Good for individuals, more Sahara liability |
+| Stripe Connect Custom | Full control, full liability | Overengineered, too much compliance burden |
 
-  /decisions/
-    GET  /                  # Decision history
-    GET  /:id               # Specific decision detail
-    POST /:id/feedback      # User feedback on decision
+**Escrow approach:** Use Stripe's `transfer_data` with `on_behalf_of` + delayed transfers. Charge the buyer immediately, hold funds for a configurable period (default 7 days or until service delivery confirmed), then transfer to provider minus platform fee.
 
-  /check-ins/
-    GET  /schedule          # View check-in schedule
-    POST /respond           # Respond to check-in
-```
+**Platform fee model:** Sahara takes a platform fee (configurable per category, suggest 10-15% starting point) deducted from the provider payout via `application_fee_amount` on PaymentIntents.
 
-### Authentication & Authorization
+**Confidence:** HIGH -- Stripe Connect Standard is the standard pattern for professional service marketplaces.
 
-Leverage existing Supabase auth with tier-based access:
-
-```typescript
-interface TierAccess {
-  free: ['fred.chat', 'documents.view', 'decisions.history'];
-  pro: ['fred.*', 'documents.*', 'decisions.*'];
-  studio: ['fred.*', 'documents.*', 'decisions.*', 'agents.*', 'check-ins.*'];
-}
-```
-
----
-
-## Safety, Audit, and Control Layer
-
-Based on [AI agent security research](https://aws.amazon.com/blogs/security/the-agentic-ai-security-scoping-matrix-a-framework-for-securing-autonomous-ai-systems/) and [three-layer security architecture](https://www.teksystems.com/en/insights/article/safe-ai-implementation-three-layer-architecture):
-
-### Three-Layer Safety Architecture
-
-```
-+--------------------+
-| Layer 3: Governance|
-| - Policy config    |
-| - Compliance rules |
-| - Audit reporting  |
-+----------+---------+
-           |
-+----------v---------+
-| Layer 2: Runtime   |
-| - Input validation |
-| - Output filtering |
-| - Anomaly detection|
-+----------+---------+
-           |
-+----------v---------+
-| Layer 1: Infra     |
-| - Rate limiting    |
-| - Kill switches    |
-| - Encryption       |
-+--------------------+
-```
-
-### Audit Logging Schema
+#### Data Model: Service Marketplace
 
 ```sql
-CREATE TABLE fred_audit_log (
-  id UUID PRIMARY KEY,
-  user_id UUID,
-  session_id UUID,
-  action_type TEXT, -- 'decision', 'escalation', 'override', 'error'
-  decision_id UUID,
-  input_summary TEXT,
-  output_summary TEXT,
-  score_breakdown JSONB,
-  confidence FLOAT,
-  was_auto_decided BOOLEAN,
-  human_override BOOLEAN,
-  provider_used TEXT,
-  latency_ms INT,
-  tokens_used INT,
-  created_at TIMESTAMPTZ,
-
-  -- Compliance fields
-  pii_detected BOOLEAN,
-  risk_flags TEXT[],
-  review_required BOOLEAN
+-- Service providers (professionals who offer services)
+CREATE TABLE service_providers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,  -- Optional: provider may also be a Sahara user
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL,
+  description TEXT NOT NULL,
+  avatar_url TEXT,
+  category TEXT NOT NULL,            -- 'legal', 'design', 'development', 'marketing', 'finance', 'operations'
+  specializations TEXT[],            -- ['startup_incorporation', 'ip_law', 'fundraising_counsel']
+  location TEXT,
+  website_url TEXT,
+  -- Stripe Connect
+  stripe_connect_account_id TEXT,    -- Stripe Connected Account ID
+  stripe_onboarding_complete BOOLEAN DEFAULT false,
+  -- Vetting
+  is_vetted BOOLEAN DEFAULT false,
+  vetted_at TIMESTAMPTZ,
+  vetted_by TEXT,                    -- Admin who vetted
+  is_active BOOLEAN DEFAULT true,
+  -- Metrics (counter-synced by triggers)
+  avg_rating NUMERIC(3,2) DEFAULT 0,
+  review_count INTEGER DEFAULT 0,
+  booking_count INTEGER DEFAULT 0,
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX ON fred_audit_log(user_id, created_at DESC);
-CREATE INDEX ON fred_audit_log(review_required) WHERE review_required = true;
+-- Service listings (specific services a provider offers)
+CREATE TABLE service_listings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES service_providers(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price_type TEXT NOT NULL,          -- 'fixed', 'hourly', 'custom_quote'
+  price_cents INTEGER,               -- Price in cents (null for custom_quote)
+  currency TEXT DEFAULT 'usd',
+  delivery_days INTEGER,             -- Estimated delivery time
+  is_active BOOLEAN DEFAULT true,
+  tier_required INTEGER DEFAULT 1,   -- Minimum tier to access (Pro by default)
+  sort_order INTEGER DEFAULT 0,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Service bookings (transactions between founders and providers)
+CREATE TABLE service_bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  listing_id UUID NOT NULL REFERENCES service_listings(id),
+  provider_id UUID NOT NULL REFERENCES service_providers(id),
+  -- Booking details
+  status TEXT NOT NULL DEFAULT 'pending',  -- 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'disputed'
+  message TEXT,                      -- Founder's message to provider
+  -- Pricing
+  price_cents INTEGER NOT NULL,
+  platform_fee_cents INTEGER NOT NULL,
+  currency TEXT DEFAULT 'usd',
+  -- Stripe payment
+  stripe_payment_intent_id TEXT,
+  stripe_transfer_id TEXT,           -- Transfer to provider (created after completion)
+  payment_status TEXT DEFAULT 'pending',  -- 'pending', 'captured', 'transferred', 'refunded'
+  -- Scheduling
+  scheduled_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  cancelled_at TIMESTAMPTZ,
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Service reviews
+CREATE TABLE service_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id UUID NOT NULL REFERENCES service_bookings(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider_id UUID NOT NULL REFERENCES service_providers(id),
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  title TEXT,
+  content TEXT,
+  is_verified BOOLEAN DEFAULT true,  -- Verified purchase
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(booking_id, user_id)        -- One review per booking per user
+);
 ```
 
-### Kill Switch Implementation
+#### Data Flow: Service Marketplace
+
+```
+Provider onboarding:
+    Admin invites provider --> Provider creates account
+    --> Stripe Connect OAuth --> stripe_connect_account_id stored
+    --> Admin vets and activates
+
+Founder discovers provider:
+    --> GET /api/marketplace/providers (search, filter by category)
+    --> GET /api/marketplace/providers/[slug] (detail + reviews)
+    --> FRED recommends: "You need a startup lawyer. Here are vetted options."
+
+Founder books service:
+    --> POST /api/marketplace/bookings (creates PaymentIntent with transfer_data)
+    --> Stripe charges founder
+    --> Provider notified (email + in-app)
+    --> Status: pending --> confirmed --> in_progress
+
+Service completed:
+    --> Founder or provider marks complete
+    --> POST /api/marketplace/bookings/[id]/complete
+    --> Stripe transfer created to provider (minus platform fee)
+    --> Founder prompted to review
+
+Dispute flow:
+    --> POST /api/marketplace/bookings/[id]/dispute
+    --> Hold transfer, notify admin
+    --> Admin resolves (refund or release)
+```
+
+#### Stripe Connect Webhook Extension
+
+The existing `app/api/stripe/webhook/route.ts` must be extended to handle Connect events:
+
+```
+New webhook events to handle:
+  - account.updated          --> Update stripe_onboarding_complete
+  - transfer.created         --> Update booking payment_status
+  - transfer.reversed        --> Handle refund/dispute
+  - payment_intent.succeeded --> Update booking status (for marketplace payments)
+```
+
+**Key integration point:** The existing webhook handler uses idempotent event recording (`recordStripeEvent`). New marketplace events follow the same pattern -- add new `case` branches in the switch statement.
+
+---
+
+### 2C. Boardy API Integration
+
+**Purpose:** Replace the `MockBoardyClient` with real Boardy API calls for live investor matching and warm intros.
+
+**Component boundary:** The strategy pattern in `lib/boardy/client.ts` already isolates this. The boundary is clean -- implement `RealBoardyClient` implementing `BoardyClientInterface`, swap it in the factory.
+
+#### Architecture Decision: Integration Approach
+
+**Recommendation: Implement `RealBoardyClient` behind the existing strategy pattern factory**
+
+The existing code is perfectly structured for this:
 
 ```typescript
-interface KillSwitchConfig {
-  global: {
-    enabled: boolean;         // Master kill switch
-    reason?: string;
-  };
-  perUser: {
-    blockedUsers: string[];   // Specific user blocks
-    rateLimitOverrides: Record<string, number>;
-  };
-  perFeature: {
-    autoDecide: boolean;      // Disable auto-decide globally
-    agentHandoff: boolean;    // Disable agent system
-    documentProcessing: boolean;
-  };
-  thresholds: {
-    errorRateLimit: 0.1;      // 10% error rate triggers alert
-    latencyThreshold: 10000;  // 10s latency triggers alert
-    anomalyDetection: boolean;
-  };
+// lib/boardy/client.ts -- existing factory, line 59-67:
+export function getBoardyClient(): BoardyClient {
+  if (!_client) {
+    // THIS IS THE SWAP POINT:
+    if (process.env.BOARDY_API_KEY) {
+      _client = new BoardyClient(new RealBoardyClient());
+    } else {
+      _client = new BoardyClient(new MockBoardyClient());
+    }
+  }
+  return _client;
 }
+```
+
+**Confidence:** HIGH -- the architecture is already in place. This is a straight implementation task.
+
+#### Boardy API Integration Notes
+
+Boardy's public API documentation is not freely available (their website does not expose developer docs). The integration will require:
+
+1. **Partner API access** -- Contact Boardy team for API credentials and documentation
+2. **OAuth or API key auth** -- Likely API key based on their partner page pattern
+3. **Webhook receiver** -- For match notifications and intro status updates
+4. **Profile sync** -- Push founder profile data to Boardy for matching
+
+**Confidence on API specifics:** LOW -- Boardy does not publish public API docs. The architecture handles this uncertainty by keeping the strategy pattern; if Boardy's API differs from our current `BoardyClientInterface`, we adapt the implementation without changing callers.
+
+#### Data Model Changes
+
+Minimal. The existing `boardy_matches` table and `BoardyMatch` interface cover the data needs. Add:
+
+```sql
+-- Track Boardy API sync status per user
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS boardy_profile_synced_at TIMESTAMPTZ;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS boardy_profile_id TEXT;
+
+-- Track intro requests and outcomes
+ALTER TABLE boardy_matches ADD COLUMN IF NOT EXISTS boardy_intro_id TEXT;
+ALTER TABLE boardy_matches ADD COLUMN IF NOT EXISTS intro_requested_at TIMESTAMPTZ;
+ALTER TABLE boardy_matches ADD COLUMN IF NOT EXISTS intro_accepted_at TIMESTAMPTZ;
 ```
 
 ---
 
-## Patterns to Follow
+### 2D. Sentry Error Tracking & Production Monitoring
 
-### Pattern 1: State Machine for Decision Flow
+**Purpose:** Real-time error tracking, performance monitoring, alerting for production issues.
 
-**What:** Use finite state machine to model decision progression
-**When:** Any multi-step decision or analysis flow
-**Why:** Deterministic, auditable, debuggable
+**Component boundary:** Cross-cutting concern. Sentry instruments the entire Next.js app (client, server, edge) without changing business logic.
+
+#### Architecture Decision: Sentry Setup
+
+**Recommendation: `@sentry/nextjs` SDK with App Router instrumentation**
+
+The Sentry Next.js SDK provides automatic instrumentation for:
+- Client-side errors and performance (React component rendering, web vitals)
+- Server-side errors (API routes, RSC, middleware)
+- Edge runtime errors (middleware)
+- Source map upload via `withSentryConfig` in `next.config.ts`
+
+#### File Structure
+
+```
+instrumentation-client.ts          -- NEW: Client Sentry init (replaces sentry.client.config.ts in newer SDK)
+sentry.server.config.ts            -- NEW: Server-side Sentry init
+sentry.edge.config.ts              -- NEW: Edge runtime Sentry init
+instrumentation.ts                 -- NEW: Next.js instrumentation hook (imports server/edge configs)
+next.config.ts                     -- MODIFIED: Wrap with withSentryConfig
+.env.sentry-build-plugin           -- NEW: Sentry auth token for source maps (CI only, NOT committed)
+```
+
+#### Integration Points
+
+```
+Client errors:
+    React error boundary --> Sentry.captureException()
+    Unhandled rejections --> Auto-captured by SDK
+
+Server errors:
+    API route throws --> Auto-captured by SDK instrumentation
+    Sentry.setUser({ id: userId }) --> Tag errors with user identity
+
+Custom alerts:
+    Stripe webhook failure --> Sentry.captureMessage('Webhook failed', 'error')
+    FRED AI timeout --> Sentry.captureException(err, { tags: { component: 'fred-ai' }})
+    LiveKit connection failure --> Sentry.captureException(err, { tags: { component: 'voice-agent' }})
+```
+
+#### User Context Integration
 
 ```typescript
-import { createMachine, assign } from 'xstate';
+// In API routes, after requireAuth():
+import * as Sentry from '@sentry/nextjs';
 
-const fredDecisionMachine = createMachine({
-  id: 'fredDecision',
-  initial: 'intake',
-  context: {
-    input: null,
-    validationResult: null,
-    scores: null,
-    decision: null,
-    escalationReason: null,
+const userId = await requireAuth();
+Sentry.setUser({ id: userId });
+// All subsequent errors in this request are tagged with the user
+```
+
+**Confidence:** HIGH -- Sentry's Next.js integration is mature and well-documented.
+
+---
+
+### 2E. Voice Agent Production Hardening
+
+**Purpose:** Make the LiveKit voice worker reliable for production -- call quality monitoring, recording, transcription persistence, reconnection handling.
+
+**Component boundary:** The voice worker (`workers/voice-agent/`) runs as a separate process on Railway/Docker. It communicates with the main app through LiveKit's room data channel and needs new API endpoints for persisting call data.
+
+#### Current State
+
+The existing voice agent is functional but minimal:
+- `agent.ts`: 127 lines, uses `@livekit/agents` with OpenAI STT/LLM/TTS
+- `index.ts`: CLI entry point loading `.env.local`
+- `Dockerfile`: Node 22 slim, copies worker + `lib/fred-brain.ts`
+- `livekit.toml`: Points to `sahara-ppvs24oj.livekit.cloud`
+- Token route: `app/api/livekit/token/route.ts` with Studio tier gating and user-scoped rooms
+
+#### What Needs Hardening
+
+```
+1. Call Recording & Persistence
+   Worker publishes transcript via data channel (already implemented)
+   --> NEW: API endpoint POST /api/voice/calls to persist call metadata
+   --> NEW: API endpoint POST /api/voice/calls/[id]/transcript to persist transcript
+   --> NEW: Post-call summary generation (FRED AI summarizes transcript)
+
+2. Reconnection & Error Recovery
+   Worker has basic error/close handlers (already implemented)
+   --> NEW: Client-side reconnection logic (LiveKit SDK has built-in)
+   --> NEW: Health check endpoint for monitoring
+
+3. Call Quality Monitoring
+   --> NEW: Track call duration, latency, errors per call
+   --> NEW: Sentry integration in worker process (separate DSN)
+   --> NEW: Metrics endpoint or Sentry breadcrumbs for call quality
+
+4. FRED Context Integration
+   Currently: Worker has static system prompt from fred-brain.ts
+   --> NEW: Load founder context (stage, snapshot, conversation state) at call start
+   --> API: GET /api/voice/context?userId=X returns personalized prompt context
+   --> Worker builds dynamic prompt per participant
+```
+
+#### Data Model: Voice Calls
+
+```sql
+CREATE TABLE voice_calls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  room_name TEXT NOT NULL,
+  call_type TEXT NOT NULL DEFAULT 'on_demand',  -- 'on_demand', 'scheduled'
+  status TEXT NOT NULL DEFAULT 'active',         -- 'active', 'completed', 'failed', 'abandoned'
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at TIMESTAMPTZ,
+  duration_seconds INTEGER,
+  -- Quality metrics
+  stt_model TEXT DEFAULT 'whisper-1',
+  llm_model TEXT DEFAULT 'gpt-4o',
+  tts_model TEXT DEFAULT 'tts-1',
+  error_count INTEGER DEFAULT 0,
+  -- Post-call outputs
+  transcript JSONB,                   -- Array of {speaker, text, timestamp}
+  summary TEXT,                       -- AI-generated summary
+  next_actions JSONB,                 -- Extracted Next 3 Actions
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index for user's call history
+CREATE INDEX idx_voice_calls_user ON voice_calls(user_id, started_at DESC);
+```
+
+#### Worker Architecture (Hardened)
+
+```
+                     +-------------------+
+                     | LiveKit Cloud     |
+                     | (Room Management) |
+                     +--------+----------+
+                              |
+                    +---------v---------+
+                    | Fred Voice Worker |
+                    | (Railway/Docker)  |
+                    |                   |
+                    | 1. Wait for job   |
+                    | 2. Load context   |<--- GET /api/voice/context
+                    | 3. Join room      |
+                    | 4. STT -> LLM -> TTS |
+                    | 5. Publish transcripts |
+                    | 6. On close:      |
+                    |    - POST call data |--> POST /api/voice/calls
+                    |    - Summarize     |--> POST /api/voice/calls/[id]/summary
+                    +-------------------+
+```
+
+**Key constraint:** The worker currently copies only `lib/fred-brain.ts` into the Docker image. For dynamic context loading, the worker must make HTTP calls to the main app API rather than importing more lib code. This keeps the worker lightweight and decoupled.
+
+**Confidence:** HIGH -- the existing worker architecture is sound; these are incremental additions.
+
+---
+
+## 3. Cross-Cutting Integration Points
+
+### 3A. How New Features Connect to FRED
+
+FRED is the central intelligence. Every new feature should feed data into and receive recommendations from FRED.
+
+```
+Content Library --> FRED:
+  - FRED detects knowledge gap in conversation
+  - FRED calls tool: recommend_content(course_id, reason)
+  - Saved to content_recommendations
+  - "You should watch the fundraising essentials course before your pitch"
+
+Content Library <-- FRED:
+  - Completed courses inform FRED's semantic memory
+  - "I see you completed the IP strategy course. Let's apply that to your situation."
+
+Service Marketplace --> FRED:
+  - FRED detects founder needs professional help
+  - FRED suggests marketplace category: "You need a startup lawyer. Check our marketplace."
+  - NOT: FRED does not recommend specific providers (conflict of interest)
+
+Boardy --> FRED:
+  - FRED surfaces Boardy matches during investor conversations
+  - "Boardy found 3 investor matches in your sector. Want me to walk through them?"
+
+Voice Calls --> FRED:
+  - Call transcripts feed into episodic memory
+  - Post-call summaries stored as semantic memory
+  - Next 3 Actions from calls appear in Next Steps Hub
+```
+
+### 3B. FRED Tool Calling Extension
+
+The existing AI system uses Vercel AI SDK 6 tool calling. New features add new tools:
+
+```typescript
+// New tools for v6.0:
+const v6Tools = {
+  recommend_content: {
+    description: "Recommend a course or lesson to the founder",
+    parameters: z.object({
+      courseId: z.string(),
+      reason: z.string(),
+    }),
   },
-  states: {
-    intake: {
-      on: { VALIDATE: 'validation' }
-    },
-    validation: {
-      on: {
-        VALID: 'scoring',
-        INVALID: 'error'
-      }
-    },
-    scoring: {
-      on: {
-        HIGH_CONFIDENCE: 'autoDecide',
-        LOW_CONFIDENCE: 'escalate',
-        ALWAYS_ESCALATE: 'escalate'
-      }
-    },
-    autoDecide: {
-      on: { COMPLETE: 'done' }
-    },
-    escalate: {
-      on: {
-        USER_APPROVED: 'autoDecide',
-        USER_REJECTED: 'cancelled'
-      }
-    },
-    done: { type: 'final' },
-    cancelled: { type: 'final' },
-    error: { type: 'final' }
-  }
-});
+  suggest_marketplace: {
+    description: "Suggest the founder check the service marketplace for a specific need",
+    parameters: z.object({
+      category: z.enum(['legal', 'design', 'development', 'marketing', 'finance', 'operations']),
+      reason: z.string(),
+    }),
+  },
+  surface_boardy_matches: {
+    description: "Show the founder their current Boardy investor/advisor matches",
+    parameters: z.object({
+      matchType: z.enum(['investor', 'advisor', 'mentor', 'partner']).optional(),
+    }),
+  },
+};
 ```
 
-### Pattern 2: Repository Pattern for Memory
+### 3C. Tier Gating for New Features
 
-**What:** Abstract memory operations behind a clean interface
-**When:** Any memory read/write
-**Why:** Swappable storage, testable, consistent access patterns
+| Feature | Tier | Rationale |
+|---------|------|-----------|
+| Content library (browse/preview) | Free | Discovery drives upgrades |
+| Content library (full access) | Pro | Core value prop |
+| Content library (all courses) | Studio | Premium content |
+| Service marketplace (browse) | Free | Discovery |
+| Service marketplace (book) | Pro+ | Revenue feature |
+| Boardy live matching | Studio | Premium feature (unchanged) |
+| Voice calls | Studio | Already gated (unchanged) |
+| Sentry monitoring | N/A | Infrastructure, no user tier |
 
-```typescript
-interface MemoryRepository {
-  // Episodic
-  recordConversation(userId: string, content: string): Promise<void>;
-  getRecentConversations(userId: string, limit: number): Promise<Memory[]>;
+### 3D. Shared UI Patterns
 
-  // Semantic
-  setPreference(userId: string, key: string, value: any): Promise<void>;
-  getPreference(userId: string, key: string): Promise<any>;
-
-  // Search
-  semanticSearch(userId: string, query: string, limit: number): Promise<Memory[]>;
-}
-```
-
-### Pattern 3: Circuit Breaker for AI Providers
-
-**What:** Fail fast and recover gracefully from provider outages
-**When:** Any AI provider call
-**Why:** Prevent cascading failures, improve UX during outages
-
-```typescript
-class CircuitBreaker {
-  private failures = 0;
-  private lastFailure: Date | null = null;
-  private state: 'closed' | 'open' | 'half-open' = 'closed';
-
-  async execute<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.state === 'open') {
-      if (this.shouldReset()) {
-        this.state = 'half-open';
-      } else {
-        throw new CircuitOpenError();
-      }
-    }
-
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
-    }
-  }
-}
-```
+New pages follow the existing dashboard pattern:
+- Left sidebar nav (already restructured in v4.0 Phase 40)
+- Add "Learn" and "Marketplace" nav items
+- Pages: `/dashboard/learn`, `/dashboard/learn/[slug]`, `/dashboard/marketplace`, `/dashboard/marketplace/[slug]`
+- Reuse existing `FeatureLock` component for tier gating
+- Reuse existing empty state patterns (fixed in v5.0 Phase 58)
 
 ---
 
-## Anti-Patterns to Avoid
+## 4. Suggested Build Order
 
-### Anti-Pattern 1: Monolithic Prompt
+Dependencies dictate the build order. Here is the recommended sequence:
 
-**What:** Putting all FRED logic in a single giant system prompt
-**Why bad:**
-- Hard to test individual components
-- Can't A/B test sections
-- Exceeds context limits
-- No visibility into which part failed
+### Wave 1: Infrastructure (No Feature Dependencies)
 
-**Instead:** Decompose into modular prompt components assembled at runtime:
-```typescript
-const systemPrompt = [
-  loadPrompt('fred.core'),
-  loadPrompt('fred.scoring'),
-  loadPrompt('fred.communication'),
-  loadUserContext(userId),
-].join('\n\n');
+**Sentry Error Tracking**
+- Zero dependencies on other v6.0 features
+- Benefits all subsequent development (catches bugs during build)
+- Pure additive: 4 config files + `next.config.ts` modification
+- Estimated effort: Small (1-2 plans)
+
+**CI/CD Expansion** (Staging, Visual Regression)
+- Pairs naturally with Sentry (monitoring + testing)
+- No feature dependencies
+- Estimated effort: Medium (2-3 plans)
+
+### Wave 2: Content System Foundation
+
+**Content Library Data Layer**
+- Database schema, RLS policies, admin API routes
+- No dependency on Mux yet (can seed with article/playbook content first)
+- Must come before FRED integration (FRED needs something to recommend)
+- Estimated effort: Medium (2-3 plans)
+
+**Mux Video Integration**
+- Depends on content schema existing
+- Webhook receiver, upload pipeline, signed playback URLs
+- Can be done in parallel with content UI
+- Estimated effort: Medium (2 plans)
+
+**Content Library UI + FRED Integration**
+- Depends on data layer + Mux
+- Course catalog, lesson viewer, progress tracking
+- FRED tool: `recommend_content`
+- Estimated effort: Medium (2-3 plans)
+
+### Wave 3: Marketplace Foundation
+
+**Stripe Connect Setup**
+- Extends existing Stripe webhook handler
+- Provider onboarding OAuth flow
+- No dependency on marketplace UI
+- Estimated effort: Medium (2 plans)
+
+**Service Marketplace Data Layer + UI**
+- Depends on Stripe Connect
+- Provider profiles, listings, search, booking flow
+- Review system
+- Estimated effort: Large (3-4 plans)
+
+### Wave 4: External API + Voice Hardening
+
+**Boardy API Integration**
+- Depends only on having Boardy API credentials (external dependency)
+- Clean swap: `RealBoardyClient` replaces `MockBoardyClient`
+- Can happen any time after credentials obtained
+- Estimated effort: Medium (1-2 plans, depending on API complexity)
+
+**Voice Agent Hardening**
+- Independent of content/marketplace
+- Call persistence, transcript storage, FRED context loading
+- Sentry integration in worker
+- Estimated effort: Medium (2-3 plans)
+
+**Twilio SMS Activation**
+- Independent of other features
+- Swap test credentials for real ones
+- End-to-end verification
+- Estimated effort: Small (1 plan)
+
+### Wave 5: Polish & Intelligence
+
+**FRED Intelligence Upgrade**
+- Benefits from all prior features existing (more data to draw from)
+- Better response quality, memory retrieval, mode switching
+- Estimated effort: Medium (2-3 plans)
+
+**Mobile/UX Polish**
+- After all features built, polish for mobile
+- New nav items (Learn, Marketplace) need mobile layouts
+- Estimated effort: Medium (2-3 plans)
+
+**Dashboard & Analytics**
+- After all data sources exist
+- Richer visualizations combining content progress, marketplace activity, call history
+- Estimated effort: Medium (2 plans)
+
+### Build Order Rationale
+
+```
+Wave 1: Sentry + CI/CD
+    |
+    v
+Wave 2: Content Library (schema -> Mux -> UI + FRED)
+    |
+    v
+Wave 3: Marketplace (Stripe Connect -> schema + UI)
+    |        \
+    v         v
+Wave 4a:    Wave 4b:    Wave 4c:
+Boardy API  Voice       SMS
+    |         |           |
+    v         v           v
+Wave 5: FRED upgrade + Mobile polish + Analytics
 ```
 
-### Anti-Pattern 2: Synchronous Everything
-
-**What:** Processing documents and generating embeddings in the request/response cycle
-**Why bad:**
-- Timeouts on large documents
-- Poor UX (long waits)
-- Wasted resources on retries
-
-**Instead:** Use job queues for long operations:
-```typescript
-// Immediate response
-POST /documents/upload -> { jobId, status: 'processing' }
-
-// Background worker
-processDocument(jobId) -> updates status, emits events
-
-// Client polls or uses realtime
-GET /documents/:jobId/status -> { status: 'complete', results: {...} }
-```
-
-### Anti-Pattern 3: Raw AI Outputs to Users
-
-**What:** Passing LLM response directly to frontend without validation
-**Why bad:**
-- Inconsistent formats
-- Potential safety issues
-- No error handling
-
-**Instead:** Structured output with validation:
-```typescript
-interface FredResponse {
-  type: 'decision' | 'question' | 'information';
-  content: string;
-  scores?: DecisionScore;
-  suggestedActions?: Action[];
-  requiresConfirmation: boolean;
-}
-
-function validateAndStructure(rawOutput: string): FredResponse;
-```
+**Why this order:**
+1. **Sentry first** -- catches bugs during all subsequent work
+2. **Content before Marketplace** -- content is simpler (one-sided, admin-managed), provides learning foundation for founders
+3. **Marketplace after content** -- marketplace is complex (two-sided, payments, reviews), benefits from Sentry being in place
+4. **Boardy/Voice/SMS are independent** -- can parallelize in Wave 4
+5. **FRED upgrade last** -- benefits from all new data sources existing
 
 ---
 
-## Scalability Considerations
+## 5. Anti-Patterns to Avoid
 
-| Concern | At 100 Users | At 10K Users | At 1M Users |
-|---------|--------------|--------------|-------------|
-| Memory Storage | Single Postgres | Postgres + pgvector HNSW | Distributed vector DB |
-| AI Requests | Direct calls | Request queue + caching | Multi-region, edge caching |
-| Document Processing | Synchronous | Background jobs | Distributed workers |
-| Real-time | Supabase Realtime | Supabase Realtime | Dedicated pub/sub |
-| Audit Logs | Same DB | Separate DB | Time-series DB (e.g., TimescaleDB) |
+### Anti-Pattern 1: Monolithic Webhook Handler
+**What:** Putting all Stripe, Mux, Boardy, and LiveKit webhooks in a single handler
+**Why bad:** Single point of failure, hard to test, hard to debug
+**Instead:** Separate webhook routes per service:
+- `/api/stripe/webhook` -- existing (extend for Connect)
+- `/api/mux/webhook` -- NEW for video encoding callbacks
+- `/api/boardy/webhook` -- NEW for match notifications
+- `/api/livekit/webhook` -- NEW for room events (optional)
+
+### Anti-Pattern 2: Loading Full Course Data for FRED Context
+**What:** Including all course content in FRED's system prompt
+**Why bad:** Token waste, slow responses, irrelevant information
+**Instead:** FRED calls `recommend_content` tool when it detects a gap. The tool queries relevant courses by category/stage and returns only titles + descriptions for FRED to reference.
+
+### Anti-Pattern 3: Real-Time Chat in Marketplace
+**What:** Building a real-time messaging system between founders and providers
+**Why bad:** Massive complexity (presence, typing indicators, read receipts) for v6.0
+**Instead:** Async messaging via booking messages (stored in `service_bookings.metadata` or a simple `marketplace_messages` table). Real-time can come in v7.0 if demand warrants it.
+
+### Anti-Pattern 4: Building Custom Video Player
+**What:** Building a custom HLS player instead of using Mux Player
+**Why bad:** Adaptive bitrate, DRM, accessibility, analytics all need to be reimplemented
+**Instead:** Use `@mux/mux-player-react` component. It handles everything and integrates with Mux Data for analytics.
+
+### Anti-Pattern 5: Synchronous Boardy API Calls in Chat
+**What:** Calling Boardy API synchronously when FRED mentions matches
+**Why bad:** External API latency breaks chat streaming UX
+**Instead:** Pre-fetch and cache Boardy matches. FRED references cached matches. Background job refreshes periodically.
 
 ---
 
-## Build Order Implications
+## 6. Scalability Considerations
 
-Based on component dependencies:
+| Concern | Now (100 users) | 10K users | 100K users |
+|---------|-----------------|-----------|------------|
+| Video hosting | Mux handles CDN/delivery | Same (Mux scales horizontally) | Same (Mux usage-based pricing) |
+| Content progress | Direct Supabase queries | Add composite index on (user_id, status) | Consider read replica |
+| Marketplace search | Supabase text search | Add pg_trgm index for fuzzy search | Consider Typesense/Meilisearch |
+| Marketplace payments | Stripe Connect Standard | Same (Stripe handles scale) | Consider Connect Custom for better UX |
+| Voice calls | Single Railway worker | 2-3 workers (LiveKit distributes) | Kubernetes auto-scaling |
+| Boardy API | Direct API calls | Cache with 5-min TTL | Cache + background sync job |
+| Sentry | Default plan | Increase event quota | Sample rate tuning |
 
-```
-Phase 1: Core Engine
-  FRED Cognitive Engine (state machine, scoring)
-    └── Memory Persistence (required for context)
-        └── Audit Logging (required for compliance)
-            └── API-first endpoints (required for access)
+---
 
-Phase 2: Document Processing
-  PDF Pipeline (can run parallel to Virtual Team)
-    └── Vector Storage (depends on Supabase setup from Phase 1)
-        └── RAG Integration (depends on vector storage)
+## 7. Component Communication Summary
 
-Phase 3: Virtual Team & Check-ins
-  Multi-Agent Router (depends on FRED core)
-    └── Specialized Agents (depends on router)
-        └── SMS Check-ins (depends on agents for context)
-```
-
-**Critical Path:** FRED Core Engine -> Memory -> Scoring -> API endpoints
-
-**Parallel Work:**
-- Document Pipeline can start once vector storage schema exists
-- Agent prompts can be developed while core engine is built
-- SMS integration is independent after API layer exists
+| Source | Target | Method | Data |
+|--------|--------|--------|------|
+| Client | API Routes | HTTP (fetch) | JSON |
+| API Routes | Supabase | Supabase client SDK | SQL (via PostgREST) |
+| API Routes | Stripe | Stripe SDK | PaymentIntents, Transfers |
+| API Routes | Mux | Mux Node SDK | Assets, Playback URLs |
+| API Routes | Boardy | HTTP client | Matches, Profiles |
+| API Routes | OpenAI | Vercel AI SDK | Chat completions, embeddings |
+| Stripe | API Routes | Webhooks | Event payloads |
+| Mux | API Routes | Webhooks | Asset status updates |
+| LiveKit Cloud | Voice Worker | WebSocket (gRPC) | Room events, audio tracks |
+| Voice Worker | API Routes | HTTP | Call data, transcripts |
+| FRED Chat | Content DB | Tool calling | Course recommendations |
+| FRED Chat | Marketplace DB | Tool calling | Category suggestions |
+| Client | Sentry | SDK auto-capture | Errors, performance |
+| API Routes | Sentry | SDK auto-capture | Errors, performance |
 
 ---
 
 ## Sources
 
-### Memory & Cognitive Architecture
-- [AI-Native Memory and Persistent Agents](https://ajithp.com/2025/06/30/ai-native-memory-persistent-agents-second-me/)
-- [COLMA: Cognitive Layered Memory Architecture](https://arxiv.org/html/2509.13235)
-- [Memory in Agentic AI Systems](https://genesishumanexperience.com/2025/11/03/memory-in-agentic-ai-systems-the-cognitive-architecture-behind-intelligent-collaboration/)
+- [Sentry Next.js Documentation](https://docs.sentry.io/platforms/javascript/guides/nextjs/) -- HIGH confidence
+- [Sentry Manual Setup Guide](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/) -- HIGH confidence
+- [Mux Next.js Integration](https://www.mux.com/docs/integrations/next-js) -- HIGH confidence
+- [Mux Video Course Starter Kit](https://github.com/muxinc/video-course-starter-kit) -- HIGH confidence
+- [Stripe Connect Documentation](https://docs.stripe.com/connect) -- HIGH confidence
+- [Stripe Connect Marketplace Overview](https://stripe.com/connect/marketplaces) -- HIGH confidence
+- [LiveKit Agents Documentation](https://docs.livekit.io/agents/) -- HIGH confidence
+- [LiveKit Agents JS SDK](https://docs.livekit.io/reference/agents-js/) -- HIGH confidence
+- [Supabase Storage Signed URLs](https://supabase.com/docs/reference/javascript/storage-from-createsignedurl) -- HIGH confidence
+- [Boardy AI Website](https://www.boardy.ai/) -- LOW confidence (no public API docs found)
 
-### Multi-Agent Systems
-- [Google Multi-Agent Design Patterns](https://docs.cloud.google.com/architecture/choose-design-pattern-agentic-ai-system)
-- [LangGraph Framework](https://www.langchain.com/langgraph)
-- [AI Agent Orchestration Patterns (Microsoft)](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns)
+---
 
-### State Machine & Decision Systems
-- [StateFlow: State-Driven LLM Workflows](https://arxiv.org/html/2403.11322v1)
-- [Stately Agent (XState)](https://github.com/statelyai/agent)
-- [Weighted Scoring Model Guide](https://userpilot.com/blog/weighted-scoring-model/)
-
-### Multi-Provider AI
-- [Zero-Downtime LLM Architecture](https://www.requesty.ai/blog/implementing-zero-downtime-llm-architecture-beyond-basic-fallbacks)
-- [Multi-Provider LLM Orchestration Guide](https://dev.to/ash_dubai/multi-provider-llm-orchestration-in-production-a-2026-guide-1g10)
-
-### Document Processing
-- [NVIDIA Multimodal PDF Pipeline](https://developer.nvidia.com/blog/build-an-enterprise-scale-multimodal-document-retrieval-pipeline-with-nvidia-nim-agent-blueprint/)
-- [RAG Pipeline Implementation](https://mallahyari.github.io/rag-ebook/03_prepare_data.html)
-- [Supabase Vector Storage 2025](https://sparkco.ai/blog/mastering-supabase-vector-storage-a-2025-deep-dive)
-
-### Safety & Compliance
-- [AWS Agentic AI Security Framework](https://aws.amazon.com/blogs/security/the-agentic-ai-security-scoping-matrix-a-framework-for-securing-autonomous-ai-systems/)
-- [Three-Layer AI Security Architecture](https://www.teksystems.com/en/insights/article/safe-ai-implementation-three-layer-architecture)
-- [AI Agent Routing Patterns](https://www.patronus.ai/ai-agent-development/ai-agent-routing)
+*Architecture research complete. All component boundaries, data models, and integration patterns aligned with existing Sahara codebase patterns (requireAuth, tier-gate, service client, row mapping, idempotent webhooks).*

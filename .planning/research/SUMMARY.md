@@ -1,18 +1,23 @@
-# Research Summary
+# Research Summary: Sahara v6.0
 
-**Project:** Sahara - AI-Powered Founder Operating System with FRED Cognitive Engine
-**Synthesized:** 2026-01-28
-**Overall Confidence:** HIGH
+**Project:** Sahara — AI-Powered Founder OS
+**Synthesized:** 2026-02-18
+**Overall Confidence:** HIGH (existing stack is mature; new additions well-documented)
 
 ---
 
 ## Executive Summary
 
-Building Sahara/FRED requires constructing a **cognitive decision engine** with multi-step AI workflows, structured memory, and multi-provider reliability. The 2026 best practices are clear: use the Vercel AI SDK 6 for unified AI interactions, XState v5 for deterministic state machine control, and a three-layer memory architecture (episodic, semantic, procedural) using pgvector in Supabase. The existing Next.js 16 + Supabase + Stripe infrastructure is solid and should be extended, not replaced.
+Sahara v6.0 adds three new product domains (content library, service marketplace, Boardy API) and hardens production infrastructure (Sentry, Twilio SMS, LiveKit voice, CI/CD) on a mature platform (210 pages, 774 tests passing, 93% UX audit pass rate).
 
-The critical risk is **AI reliability math**: a 95%-reliable step repeated 20 times yields only 36% workflow success. FRED's multi-step analysis flow (intake, validation, scoring, synthesis, decision) must target 99%+ per-step reliability with checkpoints, observability, and human escalation triggers built in from day one. Additionally, the 7-factor scoring engine must implement calibration tracking to prevent miscalibrated confidence from eroding user trust.
+The critical insight: **most of the stack is already in place.** Only 6 new packages are needed (3 Mux for video, 2 Serwist for PWA, 1 axe-core for a11y testing). Stripe Connect for marketplace payments uses the existing Stripe SDK. Sentry, Twilio, LiveKit, PostHog, Recharts — all already installed. This is an extension milestone, not a rebuild.
 
-Feature-wise, the market has matured rapidly. Basic AI chat and pitch analysis are now table stakes. Sahara's differentiation comes from: (1) FRED's structured cognitive framework vs. generic ChatGPT wrappers, (2) memory persistence creating switching costs, (3) virtual team agents with specialized personas, and (4) SMS accountability check-ins - a surprisingly underserved niche. The pricing tiers are aggressive ($99 Pro, $249 Studio) and require clear value separation to justify conversion from strong free alternatives.
+The highest risks are external dependencies and timeline blockers:
+1. **Twilio A2P 10DLC** — 4-week registration timeline that MUST start before SMS code is written
+2. **LiveKit voice** — 3 CRITICAL bugs found (no remote audio playback, Docker container won't start, room name format breaks tracking)
+3. **Boardy API** — No public documentation; requires partnership agreement; LOW confidence
+4. **Stripe Connect** — Must be isolated from existing subscription webhooks to avoid breaking billing
+5. **CI/CD pipeline** — Every quality gate uses `|| true`, hiding failures from all v6.0 work
 
 ---
 
@@ -20,148 +25,171 @@ Feature-wise, the market has matured rapidly. Basic AI chat and pitch analysis a
 
 ### From STACK.md
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Vercel AI SDK 6** | Unified AI interface | Replace custom multi-provider code. ToolLoopAgent for FRED, native Next.js, 2.8M weekly downloads |
-| **XState v5** | Decision state machine | Visual debugging, TypeScript-first, Stately Studio for designing FRED's logic |
-| **Zod 4** | Schema validation | 14x faster, built-in JSON Schema for AI structured outputs |
-| **Twilio** | SMS check-ins | Industry standard, but A2P 10DLC registration requires 2-4 weeks lead time |
-| **Vercel Cron** | Weekly scheduling | Native integration, no external service needed |
+| New Addition | Tool | Status | New Packages? |
+|---|---|---|---|
+| Video hosting | Mux (player + uploader + node) | 3 new packages | Yes |
+| Marketplace payments | Stripe Connect Express | Already installed | No |
+| Booking/scheduling | Custom Supabase tables | No external tool | No |
+| Error monitoring | Sentry | Already installed | No |
+| Voice hardening | LiveKit | Already installed | No |
+| SMS activation | Twilio | Already installed | No |
+| Boardy API | Direct REST (no SDK) | No package available | No |
+| CI/CD expansion | Playwright | Already installed | No |
+| Dashboard analytics | PostHog + Recharts | Already installed | No |
+| PWA refinement | Serwist (next-pwa successor) | 2 new packages | Yes |
+| Accessibility testing | axe-core/playwright | 1 new dev package | Yes |
+| FRED intelligence | Vercel AI SDK + XState | Already installed | No |
 
-**Critical version requirements:**
-- AI SDK 6.x (codemod available for migration)
-- XState 5.x (dramatically improved TypeScript inference via `setup()`)
-- Zod 4.x (performance critical for AI response validation)
+**Total new packages: 6** — Everything else extends existing infrastructure.
 
 ### From FEATURES.md
 
-**Must-Have (Table Stakes):**
-- AI chat with context retention
-- Startup assessment/scoring (Reality Lens)
-- Pitch deck analysis (slide-by-slide feedback expected)
-- Document generation
-- Multi-provider AI reliability
-- Secure data handling
+**Content Library:**
+- Table stakes: Curated catalog, stage filtering, video+text, progress tracking, search, mobile-friendly, bookmarks
+- Differentiators: FRED-recommended content, content-to-action bridge, adaptive curriculum, "Ask FRED about this"
+- Anti-features: Full LMS, user-generated content, gamification, live cohorts, AI-generated courses, certificates
 
-**Should-Have (Differentiators):**
-- FRED cognitive framework (7-factor scoring) - HIGH differentiation
-- Memory & context persistence - HIGH differentiation (creates switching costs)
-- Virtual team agents (specialized) - HIGH differentiation if executed well
-- SMS accountability check-ins - UNDERSERVED market opportunity
-- Investor Readiness Score - Competitive but can differentiate via depth
+**Service Marketplace:**
+- Table stakes: Provider directory, profiles, search/filter, reviews, contact mechanism, vetting badge
+- Differentiators: FRED-triggered recommendations, context-aware matching, task-to-provider pipeline, starter packages
+- Anti-features: Full escrow, in-platform project management, automated matching algorithm, provider dashboard, real-time chat
 
-**Defer to v2+:**
-- Outcome tracking (close the loop on advice quality)
-- Multi-founder collaboration
-- Integration ecosystem (CRM, financials)
-
-**Anti-Features to Avoid:**
-- Generic chatbot without structure
-- Fake human-like personality
-- Auto-generated pitch decks (review only)
-- "Always on" unbounded agents
-- Complex usage-based pricing
+**Investor Matching (Boardy):**
+- Table stakes: Investor profiles, stage/sector filtering, match scoring, warm intro paths, pipeline CRM, outreach drafts
+- Differentiators: Readiness-gated matching (unique to Sahara), voice-first Boardy matching, investor prep coaching, post-meeting intelligence
+- Anti-features: Building own investor database, automated email sending, intro brokering, real-time activity feeds
 
 ### From ARCHITECTURE.md
 
-**Major Components:**
+**Data models designed** for:
+- Content library: 5 tables (courses, modules, lessons, progress, recommendations)
+- Service marketplace: 4 tables (providers, listings, bookings, reviews)
+- Boardy integration: Uses existing strategy pattern (`RealBoardyClient` swaps in for `MockBoardyClient`)
 
-1. **FRED Cognitive Engine** - State machine with states: INTAKE -> VALIDATION -> MENTAL_MODELS -> SYNTHESIS -> AUTO-DECIDE/ESCALATE -> EXECUTE/HUMAN-IN-LOOP
-2. **Memory Persistence** - Three-layer architecture (episodic, semantic, procedural) with pgvector
-3. **Multi-Agent Router** - Orchestrator-worker pattern routing to specialized agents
-4. **Document Pipeline** - PDF extraction -> chunking -> embedding -> RAG retrieval
-5. **Safety/Audit Layer** - Three-layer governance, runtime validation, infrastructure controls
-
-**Key Patterns:**
-- State machine for all decision flows (deterministic, auditable)
-- Repository pattern for memory (swappable, testable)
-- Circuit breaker for AI providers (40% failure threshold, 20-min cooldown)
-- Structured outputs with Zod validation (never raw AI to users)
-
-**Critical Dependencies:**
-```
-FRED Cognitive Engine (foundation)
-  -> Memory Persistence (required for context)
-    -> All other features
-```
+**Key integration points:**
+- FRED recommends content via new AI tool: `recommend_content(course_id, reason)`
+- FRED triggers provider recommendations via conversation need detection
+- Content-to-action bridge links course completion to FRED conversation modes
+- Marketplace bookings extend existing Stripe webhook handler with Connect events
 
 ### From PITFALLS.md
 
-**Top 5 Critical Pitfalls:**
-
-| Pitfall | Risk | Prevention |
-|---------|------|------------|
-| **#1 AI Reliability Math** | 20-step flow at 95%/step = 36% success | Target 99%+ per step, add checkpoints, observability from day one |
-| **#2 Context Window Mythology** | 40-60% cost waste, "lost in middle" effect | Implement structured memory blocks, budget tokens, use selective retrieval |
-| **#3 State Machine Underengineering** | Unpredictable agent behavior, debugging impossible | Use XState v5 with explicit states, deterministic backbone |
-| **#4 Decision Score Miscalibration** | Bad decisions from false confidence, legal risk | Track predicted vs actual outcomes, add uncertainty ranges |
-| **#5 A2P 10DLC Delays** | SMS feature blocked 2-4 weeks | Start registration IMMEDIATELY, plan for rejections |
-
-**Phase-Specific Warnings:**
-- FRED Foundation: Reliability, context, state machine, calibration
-- Pro Tier: PDF processing fragility, Stripe webhook silent failures
-- Studio Tier: 10DLC registration, persona drift
+| # | Pitfall | Severity | Phase | Key Prevention |
+|---|---------|----------|-------|----------------|
+| 1 | Sentry DSN activation breaks build (missing SENTRY_AUTH_TOKEN in CI) | CRITICAL | Infra | Set ALL 4 env vars simultaneously |
+| 2 | Twilio A2P 10DLC blocks SMS by 4+ weeks | CRITICAL | Infra | Start registration IMMEDIATELY |
+| 3 | LiveKit: users hear nothing (no remote audio track handling) | CRITICAL | Voice | Add TrackSubscribed handler or refactor to components-react |
+| 4 | Voice agent Docker container won't start (tsx in devDeps) | CRITICAL | Voice | Pre-compile TypeScript or move tsx to deps |
+| 5 | Room name format breaks all voice call tracking | CRITICAL | Voice | Fix userId extraction in webhook |
+| 6 | Stripe Connect conflicts with subscription webhooks | MAJOR | Marketplace | Separate webhook endpoint for Connect |
+| 7 | Video hosting choice locks in cost structure | MAJOR | Content | Use Mux, abstract behind component interface |
+| 8 | Marketplace cold start — no providers, no value | MAJOR | Marketplace | Curate 5-10 providers BEFORE launch |
+| 9 | Boardy API — external dependency with unknown reliability | MAJOR | Boardy | Circuit breaker, mock fallback, cache responses |
+| 10 | CI/CD `|| true` hides all failures | MAJOR | Infra | Remove `|| true` from test/typecheck/lint steps |
 
 ---
 
 ## Implications for Roadmap
 
-Based on combined research, the following phase structure is recommended:
-
 ### Suggested Phase Structure
 
-**Phase 1: FRED Cognitive Engine Foundation**
-- **Rationale:** Everything depends on this. 100% of features use FRED's analysis framework.
-- **Delivers:** Core state machine, 7-factor scoring, memory persistence, API endpoints
-- **Features:** Basic FRED chat, decision framework, memory storage
-- **Pitfalls to avoid:** #1 (reliability), #2 (context), #3 (state machine), #4 (calibration)
-- **Research flag:** STANDARD PATTERNS - well-documented in XState, Vercel AI SDK docs
+**Wave 1 — Infrastructure Foundation (parallel, no dependencies):**
 
-**Phase 2: Free Tier Value Proposition**
-- **Rationale:** Validate core product, build user base, test FRED in production
-- **Delivers:** Reality Lens (5-factor), decision history, tier gating infrastructure
-- **Features:** Startup assessment, basic chat, decision tracking
-- **Pitfalls to avoid:** #8 (too-generous tier), #12 (onboarding friction), #9 (scattered gating)
-- **Research flag:** NEEDS RESEARCH - tier boundary optimization requires user testing
+1. **Phase 59: Sentry + Production Monitoring**
+   - Addresses: Pitfall #1 (build-breaking DSN), Pitfall #10 (invisible CI failures)
+   - Uses: Existing @sentry/nextjs, add edge config
+   - Deliverables: Error tracking live, source maps uploading, alert rules configured, CI `|| true` removed
+   - Action item: Start Twilio 10DLC registration in parallel (4-week lead time)
 
-**Phase 3: Pro Tier - Investor Tools**
-- **Rationale:** First monetization layer, builds on FRED foundation
-- **Delivers:** Pitch deck analysis, investor readiness score, strategy documents
-- **Features:** PDF upload/analysis, scoring dashboard, document generation
-- **Pitfalls to avoid:** #6 (PDF fragility), #11 (Stripe webhooks)
-- **Research flag:** STANDARD PATTERNS - RAG/PDF extraction well-documented
+2. **Phase 60: CI/CD & Testing Expansion**
+   - Addresses: Pitfall #10 (invisible failures), Feature: visual regression, staging
+   - Uses: Existing Playwright, axe-core (new)
+   - Deliverables: Playwright in CI, visual regression baselines, staging branch, Node 22, a11y tests
 
-**Phase 4: Studio Tier - Virtual Team & SMS**
-- **Rationale:** Premium differentiation, requires proven FRED engine
-- **Delivers:** Specialized agents, SMS accountability, Boardy integration
-- **Features:** Founder ops agent, fundraising agent, growth agent, weekly check-ins
-- **Pitfalls to avoid:** #5 (10DLC - start registration in Phase 1!), #10 (persona drift)
-- **Research flag:** NEEDS RESEARCH - agent orchestration patterns, persona stability
+3. **Phase 61: Twilio SMS Activation**
+   - Addresses: Pitfall #2 (10DLC timeline blocker)
+   - Uses: Existing Twilio SDK
+   - Deliverables: A2P 10DLC registered, real SMS delivery, opt-in/opt-out compliance
+   - Note: Registration started in Phase 59, code built in Phase 61
 
-**Parallel Track: A2P 10DLC Registration**
-- **Rationale:** 4-week lead time, cannot be parallelized with development
-- **Action:** Start registration during Phase 1, expect completion by Phase 4
+**Wave 2 — Voice Hardening (depends on Sentry for monitoring):**
 
-### Phase Grouping Rationale
+4. **Phase 62: Voice Agent Production Hardening**
+   - Addresses: Pitfalls #3, #4, #5 (all CRITICAL voice bugs)
+   - Uses: Existing LiveKit packages
+   - Deliverables: Remote audio working, Docker container starts, room name tracking fixed, reconnection logic, call recording
+
+**Wave 3 — Core Improvements (parallel, depends on infra):**
+
+5. **Phase 63: FRED Intelligence Upgrade**
+   - Addresses: Feature: better responses, memory, mode switching
+   - Uses: Existing Vercel AI SDK + XState
+   - Deliverables: New FRED tools (lookup_course, find_provider), improved memory retrieval, conversation summarization
+
+6. **Phase 64: Dashboard & Analytics Enhancement**
+   - Addresses: Feature: richer visualizations, engagement tracking
+   - Uses: Existing PostHog + Recharts
+   - Deliverables: Founder metrics dashboard, historical trends, engagement scoring, export
+
+7. **Phase 65: Mobile / UX Polish**
+   - Addresses: Feature: PWA, animations, accessibility
+   - Uses: Serwist (new), axe-core (new), existing Framer Motion
+   - Deliverables: Offline content caching, push notification improvements, WCAG audit pass
+
+**Wave 4 — New Features (parallel, depends on FRED upgrade for integration):**
+
+8. **Phase 66: Content Library — Schema & Backend**
+   - Addresses: Feature: educational content hub
+   - Uses: Mux (new), existing Supabase
+   - Deliverables: 5 tables, Mux integration, API routes, admin content management, tier gating
+   - Avoids: Pitfall #7 (use Mux, abstract player)
+
+9. **Phase 67: Content Library — Frontend & FRED Integration**
+   - Addresses: Feature: course catalog, FRED recommendations
+   - Uses: Mux Player React (new), existing FRED tools
+   - Deliverables: Course catalog, video player, progress tracking, FRED content recommendations, "Ask FRED" button
+
+10. **Phase 68: Service Marketplace — Schema & Backend**
+    - Addresses: Feature: vetted provider marketplace
+    - Uses: Stripe Connect (existing SDK), existing Supabase
+    - Deliverables: 4 tables, Stripe Connect webhook, provider onboarding, booking flow
+    - Avoids: Pitfall #6 (separate Connect webhook), Pitfall #8 (curate providers first)
+
+11. **Phase 69: Service Marketplace — Frontend & Discovery**
+    - Addresses: Feature: provider directory, FRED integration
+    - Uses: Existing UI components
+    - Deliverables: Provider directory, profiles, search/filter, reviews, FRED-triggered recommendations
+
+**Wave 5 — External Integration (depends on partnership):**
+
+12. **Phase 70: Real Boardy API Integration**
+    - Addresses: Feature: live investor matching
+    - Uses: Direct REST API (no SDK)
+    - Deliverables: RealBoardyClient implementation, circuit breaker, cached fallback
+    - Avoids: Pitfall #9 (external dependency risk)
+    - Risk: LOW confidence — requires Boardy partnership. If unavailable, enhance mock with curated data.
+
+### Phase Ordering Rationale
 
 | Grouping | Rationale |
 |----------|-----------|
-| FRED first | 100% dependency - nothing works without cognitive engine |
-| Free before Pro | Validate product-market fit before monetization |
-| Pro before Studio | Build PDF/document infrastructure before agents need it |
-| SMS in Studio | Requires agent infrastructure + 10DLC compliance (long lead time) |
-| Boardy parallel | External API, minimal dependencies, can proceed independently |
+| Infrastructure first | Sentry catches bugs in all subsequent phases. CI prevents regressions. 10DLC has 4-week lead time. |
+| Voice before features | 3 CRITICAL bugs make voice non-functional. Fix before adding more features on top. |
+| FRED upgrade before content/marketplace | FRED tools (lookup_course, find_provider) must exist before content/marketplace integrate with FRED. |
+| Content before marketplace | Content creates "learn" experience; marketplace creates "do" experience. Natural progression. |
+| Boardy last | Highest external risk. If partnership doesn't materialize, everything else still ships. |
 
----
-
-## Research Flags
+### Research Flags for Phases
 
 | Phase | Research Need | Reason |
-|-------|---------------|--------|
-| Phase 1 | SKIP | Well-documented patterns: XState v5, Vercel AI SDK 6, Supabase pgvector |
-| Phase 2 | `/gsd:research-phase` | Tier boundary optimization, onboarding funnel design |
-| Phase 3 | SKIP | RAG patterns, PDF extraction well-documented |
-| Phase 4 | `/gsd:research-phase` | Multi-agent orchestration, persona drift prevention, SMS compliance nuances |
+|-------|-------------|--------|
+| 59-61 | SKIP | Well-documented: Sentry docs, Twilio 10DLC docs, Playwright docs |
+| 62 | SKIP | Voice audit reports already exist (.planning/VOICE-*-AUDIT.md) with specific fixes |
+| 63 | `/gsd:research-phase` | FRED intelligence improvements benefit from reviewing latest AI SDK patterns |
+| 64-65 | SKIP | Standard PostHog/Recharts/PWA patterns |
+| 66-67 | SKIP | Mux has Next.js starter kit; data models designed in ARCHITECTURE.md |
+| 68-69 | SKIP | Stripe Connect well-documented; data models designed |
+| 70 | `/gsd:research-phase` | Boardy API docs needed from partnership; integration approach TBD |
 
 ---
 
@@ -169,44 +197,18 @@ Based on combined research, the following phase structure is recommended:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All recommendations from official docs, massive community adoption |
-| Features | MEDIUM-HIGH | Table stakes clear; differentiator validation needs user feedback |
-| Architecture | HIGH | Patterns from Google, Microsoft, LangChain; research citations solid |
-| Pitfalls | HIGH | Multiple authoritative sources, production data from LangChain survey |
+| Stack | HIGH | Only 6 new packages. Everything else extends existing. |
+| Features | MEDIUM-HIGH | Table stakes clear. FRED integration patterns designed but need validation during build. |
+| Architecture | HIGH | Data models designed. Integration points mapped. Existing patterns preserved. |
+| Pitfalls | HIGH | 5 CRITICAL + 5 MAJOR pitfalls identified with specific prevention strategies. |
 
 ### Gaps to Address
 
-1. **Calibration tracking implementation:** Research identifies the need but doesn't provide implementation patterns. Plan for experimentation.
-
-2. **Persona drift detection:** Emerging research area. May need custom evaluation framework.
-
-3. **Boardy API specifics:** External dependency. Confirm API availability, rate limits, terms before committing to timeline.
-
-4. **Tier conversion optimization:** 2-5% freemium conversion is industry standard. Need metrics framework to iterate.
-
-5. **@stately/agent maturity:** Marked MEDIUM confidence. Evaluate during Phase 1; fallback to direct XState + AI SDK if issues arise.
-
----
-
-## Aggregated Sources
-
-### HIGH Confidence
-- Vercel AI SDK Documentation (ai-sdk.dev)
-- XState v5 Documentation (stately.ai)
-- Twilio SMS/10DLC Documentation
-- Stripe Webhooks Documentation
-- Supabase Realtime & pgvector Documentation
-- LangChain State of Agent Engineering 2025
-- Google Multi-Agent Design Patterns
-
-### MEDIUM Confidence
-- @stately/agent (newer, evaluate during implementation)
-- Persona drift research (ArXiv)
-- Freemium conversion benchmarks (industry varies)
-
-### Research Pending
-- Boardy API documentation (external dependency)
-- User testing for tier boundaries
+1. **Boardy API documentation** — Cannot implement without partner API access. Contact Boardy team.
+2. **Mux pricing at scale** — Model costs for Year 1 before committing to video hosting.
+3. **Marketplace cold start** — Provider recruitment plan needed before marketplace launch.
+4. **Twilio 10DLC registration** — Must start immediately (4-week timeline).
+5. **Voice agent audit fixes** — 3 detailed audit reports exist; fixes are documented but unimplemented.
 
 ---
 
@@ -214,18 +216,19 @@ Based on combined research, the following phase structure is recommended:
 
 This research provides clear guidance for roadmap construction:
 
-1. **Technology stack is validated** - proceed with Vercel AI SDK 6, XState v5, existing Supabase/Stripe
-2. **Phase order is dependency-driven** - FRED Foundation -> Free -> Pro -> Studio
-3. **Critical risks identified** - reliability math, 10DLC registration, calibration
-4. **Differentiation strategy clear** - cognitive framework, memory persistence, SMS accountability
+1. **Stack validated** — 6 new packages, everything else extends existing infrastructure
+2. **Phase order is risk-driven** — Infrastructure first (catches bugs), voice fixes (CRITICAL), then features
+3. **Critical risks identified** — 10DLC timeline, voice bugs, Boardy dependency, Stripe Connect isolation
+4. **Feature scope clear** — Table stakes, differentiators, and anti-features defined for all 3 new domains
+5. **Data models designed** — Content library (5 tables), marketplace (4 tables), Boardy (strategy pattern swap)
 
 **Recommended immediate actions:**
-- Start A2P 10DLC registration (4-week lead time)
-- Begin Phase 1 with constrained FRED scope
-- Instrument observability from first commit
-- Define tier boundaries before building Free tier features
+- Start A2P 10DLC registration (4-week blocker)
+- Create Sentry project and obtain DSN + auth token
+- Contact Boardy team for API partnership
+- Curate initial 5-10 service providers for marketplace launch
 
 ---
 
 *Synthesized from: STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md*
-*Research date: 2026-01-28*
+*Research date: 2026-02-18*
