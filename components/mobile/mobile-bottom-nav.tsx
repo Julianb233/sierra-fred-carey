@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, ListChecks, BarChart3, User } from "lucide-react";
+import { Home, MessageSquare, ListChecks, BarChart3, FileText, Users, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -32,6 +32,18 @@ const NAV_ITEMS = [
     name: "Progress",
     href: "/dashboard/readiness",
     icon: BarChart3,
+    matchExact: false,
+  },
+  {
+    name: "Docs",
+    href: "/dashboard/documents",
+    icon: FileText,
+    matchExact: false,
+  },
+  {
+    name: "Community",
+    href: "/dashboard/communities",
+    icon: Users,
     matchExact: false,
   },
   {
