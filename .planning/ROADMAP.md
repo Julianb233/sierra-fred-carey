@@ -6,29 +6,21 @@
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
 - [x] **v4.0 FRED Mentor Experience** - Phases 34-46 (shipped 2026-02-12)
-- [ ] **v5.0 QA Fixes — Production Polish** - 5 parallel streams (from Stagehand QA audit 2026-02-16)
+- [ ] **v5.0 QA Fixes — Production Polish** - Phases 54-58 (from Stagehand QA audit 2026-02-16)
 
 ## v5.0 QA Fixes — Production Polish
 
 **Milestone Goal:** Fix all 10 failing pages and 7 bugs found during full-platform Stagehand browser QA audit. Target: 100% page pass rate (currently 78%).
 
-**Parallelism:** All 5 streams run simultaneously with zero file overlap.
+**Parallelism:** All 5 phases run simultaneously with zero file overlap.
 
-| Stream | Name | Priority | Bug IDs | Key Fix |
-|--------|------|----------|---------|---------|
-| A | Dashboard Routing Fix | CRITICAL | BUG-2 | 3 dashboard routes render Settings instead of content |
-| B | Infinite Loading Spinners | CRITICAL | BUG-1, BUG-3 | 4 pages stuck on spinner (missing error boundaries) |
-| C | Demo Page Auth Fix | HIGH | BUG-5 | 2 demos redirect to login (TierProvider cascade) |
-| D | Duplicate Logo UI Fix | HIGH | BUG-4 | Second logo overlapping nav on 4 pages |
-| E | Error State Polish | HIGH | BUG-6 | "Failed to fetch" errors → friendly empty states |
+**Source:** `.planning/v5.0-QA-FIXES-MILESTONE.md`
 
-- [ ] **Stream A: Dashboard Routing Fix** — `/dashboard/communities`, `/dashboard/documents`, `/dashboard/coaching` render Settings
-- [ ] **Stream B: Infinite Loading Spinners** — `/dashboard`, `/dashboard/strategy`, `/documents`, `/check-ins` stuck on spinner
-- [ ] **Stream C: Demo Page Auth Fix** — `/demo/boardy`, `/demo/virtual-team` render login page
-- [ ] **Stream D: Duplicate Logo UI Fix** — Second Sahara logo on `/login`, `/chat`, demos
-- [ ] **Stream E: Error State Polish** — "Failed to fetch" errors on next-steps, settings
-
-**Full plan:** `.planning/v5.0-QA-FIXES-MILESTONE.md`
+- [ ] **Phase 54: Dashboard Routing Fix** — 3 dashboard routes render Settings instead of content (BUG-2) [CRITICAL]
+- [ ] **Phase 55: Infinite Loading Spinner Fixes** — 4 pages stuck on spinner with no error boundaries (BUG-1, BUG-3) [CRITICAL]
+- [ ] **Phase 56: Demo Page Auth Fix** — 2 demo pages redirect to login for unauthenticated users (BUG-5) [HIGH]
+- [ ] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
+- [ ] **Phase 58: Error State Polish** — "Failed to fetch" errors on next-steps and settings (BUG-6) [HIGH]
 
 ## Phases
 
@@ -276,6 +268,64 @@ See MILESTONES.md for full details.
   5. All dynamic display rules apply on mobile (hide gauge for early stage, blur without intake, etc.)
 **Plans**: TBD
 
+### Phase 54: Dashboard Routing Fix
+**Goal**: Fix 3 dashboard sub-routes (`/dashboard/communities`, `/dashboard/documents`, `/dashboard/coaching`) that render the Settings page instead of their intended content
+**Depends on**: Nothing
+**Gap Closure**: BUG-2 (CRITICAL)
+**Success Criteria** (what must be TRUE):
+  1. `/dashboard/communities` renders the Communities list page (Phase 41)
+  2. `/dashboard/documents` renders the Document Repository page (Phase 44)
+  3. `/dashboard/coaching` renders the Coaching Sessions page (Phase 29)
+  4. No other dashboard routes are affected by the fix
+  5. Each page shows appropriate content or FeatureLock for Free tier users
+**Plans**: TBD
+
+### Phase 55: Infinite Loading Spinner Fixes
+**Goal**: Fix 4 pages stuck on permanent loading spinners by ensuring API routes return empty data (not errors) for new users and adding error boundaries with timeout fallbacks
+**Depends on**: Nothing
+**Gap Closure**: BUG-1, BUG-3 (CRITICAL)
+**Success Criteria** (what must be TRUE):
+  1. `/dashboard` renders Founder Command Center (even if data sections are empty)
+  2. `/dashboard/strategy` renders Strategy page (empty state if no strategies)
+  3. `/documents` renders Document list (empty state if no documents)
+  4. `/check-ins` renders Check-ins list (empty state if no check-ins)
+  5. No page shows an infinite spinner for longer than 5 seconds
+  6. Each page shows a clear CTA for new users
+**Plans**: TBD
+
+### Phase 56: Demo Page Auth Fix
+**Goal**: Fix `/demo/boardy` and `/demo/virtual-team` rendering login form for unauthenticated users by preventing TierProvider's subscription check from triggering a redirect on demo pages
+**Depends on**: Nothing
+**Gap Closure**: BUG-5 (HIGH)
+**Success Criteria** (what must be TRUE):
+  1. `/demo/boardy` renders the Boardy demo for unauthenticated users
+  2. `/demo/virtual-team` renders the Virtual Team demo for unauthenticated users
+  3. Other demo pages (`/demo/investor-lens`, `/demo/pitch-deck`, `/demo/reality-lens`) still work
+  4. Authenticated users can also access demo pages normally
+**Plans**: TBD
+
+### Phase 57: Duplicate Logo UI Fix
+**Goal**: Remove the second Sahara logo that appears overlapping the navigation bar on `/login`, `/chat`, and demo pages
+**Depends on**: Nothing
+**Gap Closure**: BUG-4 (HIGH)
+**Success Criteria** (what must be TRUE):
+  1. Only one Sahara logo is visible on `/login`
+  2. Only one Sahara logo is visible on `/chat`
+  3. Navigation links ("See It in Action", "About") are fully visible and clickable
+  4. No layout shift or overlap on any page
+**Plans**: TBD
+
+### Phase 58: Error State Polish
+**Goal**: Replace raw "Failed to fetch" error banners on `/dashboard/next-steps` and `/dashboard/settings` with user-friendly empty states and clear CTAs
+**Depends on**: Nothing (can finalize after Phase 55)
+**Gap Closure**: BUG-6 (HIGH)
+**Success Criteria** (what must be TRUE):
+  1. No red error banners visible on any page for new users
+  2. `/dashboard/next-steps` shows empty state with "Chat with FRED" CTA
+  3. `/dashboard/settings` notification channels shows setup guide instead of error
+  4. All empty states have clear CTAs that guide users to the right action
+**Plans**: TBD
+
 ## Progress
 
 ### v4.0 Execution
@@ -304,3 +354,15 @@ See MILESTONES.md for full details.
 | 45. Chat UI Redesign | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
 | 46. Mobile App Layout | v4.0 | 1/1 (team) | Complete | 2026-02-12 |
 | 47. Community Data Layer & Consent | v4.0 | 2/2 | Complete | 2026-02-12 |
+
+### v5.0 Execution
+
+**Execution Order:** All 5 phases run in parallel (zero file overlap).
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 54. Dashboard Routing Fix | v5.0 | 0/TBD | Pending | — |
+| 55. Infinite Loading Spinner Fixes | v5.0 | 0/TBD | Pending | — |
+| 56. Demo Page Auth Fix | v5.0 | 0/TBD | Pending | — |
+| 57. Duplicate Logo UI Fix | v5.0 | 0/TBD | Pending | — |
+| 58. Error State Polish | v5.0 | 0/TBD | Pending | — |
