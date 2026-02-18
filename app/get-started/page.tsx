@@ -54,16 +54,48 @@ interface ChallengeOption {
   icon: typeof Target;
 }
 
+const WIZARD_STORAGE_KEY = "sahara_onboarding_wizard";
+
+function loadWizardState(): { step: Step; stage: Stage | null; challenge: Challenge | null; email: string } {
+  if (typeof window === "undefined") return { step: 1, stage: null, challenge: null, email: "" };
+  try {
+    const stored = localStorage.getItem(WIZARD_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        step: parsed.step ?? 1,
+        stage: parsed.stage ?? null,
+        challenge: parsed.challenge ?? null,
+        email: parsed.email ?? "",
+      };
+    }
+  } catch { /* ignore corrupt data */ }
+  return { step: 1, stage: null, challenge: null, email: "" };
+}
+
+function saveWizardState(step: Step, stage: Stage | null, challenge: Challenge | null, email: string) {
+  try {
+    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({ step, stage, challenge, email }));
+  } catch { /* storage full — ignore */ }
+}
+
 const OnboardingPage = () => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
-  const [email, setEmail] = useState("");
+  const [currentStep, setCurrentStep] = useState<Step>(() => loadWizardState().step);
+  const [selectedStage, setSelectedStage] = useState<Stage | null>(() => loadWizardState().stage);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(() => loadWizardState().challenge);
+  const [email, setEmail] = useState(() => loadWizardState().email);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Persist wizard state on changes (exclude password for security)
+  useEffect(() => {
+    if (currentStep !== "wink") {
+      saveWizardState(currentStep, selectedStage, selectedChallenge, email);
+    }
+  }, [currentStep, selectedStage, selectedChallenge, email]);
 
   // Stage options - simplified
   const stages: StageOption[] = [
@@ -239,6 +271,8 @@ const OnboardingPage = () => {
 
       // Track successful signup
       trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email" });
+      // Clear persisted wizard state
+      localStorage.removeItem(WIZARD_STORAGE_KEY);
       // Show the wink!
       setCurrentStep("wink");
     } catch (err) {

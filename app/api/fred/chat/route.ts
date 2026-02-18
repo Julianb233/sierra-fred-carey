@@ -306,7 +306,10 @@ async function handlePost(req: NextRequest) {
     // ── Parallel context loading ─────────────────────────────────────
     // These five calls are independent of each other — run in parallel.
     const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult] = await Promise.all([
-      buildFounderContextWithFacts(userId, hasPersistentMemory),
+      buildFounderContextWithFacts(userId, hasPersistentMemory).catch((error) => {
+        console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
+        return { context: "", facts: [] };
+      }),
       getOrCreateConversationState(userId).catch((error) => {
         console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
         return null as ConversationState | null;
