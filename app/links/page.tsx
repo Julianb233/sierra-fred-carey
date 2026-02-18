@@ -6,7 +6,6 @@ import Image from "next/image";
 import {
   RocketIcon,
   EnterIcon,
-  CheckCircledIcon,
   CursorArrowIcon,
   QuestionMarkCircledIcon,
   TwitterLogoIcon,
@@ -27,13 +26,6 @@ const links = [
     href: "/get-started",
     icon: EnterIcon,
     gradient: "from-[#fb923c] to-[#ff6a1a]",
-  },
-  {
-    title: "Join Waitlist",
-    description: "Early access to new features",
-    href: "/waitlist",
-    icon: CheckCircledIcon,
-    gradient: "from-[#ff8c4a] to-[#fb923c]",
   },
   {
     title: "Pricing",
