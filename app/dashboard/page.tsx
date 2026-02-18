@@ -56,13 +56,23 @@ function DashboardContent() {
           profile?.name || authUser.email?.split("@")[0] || "Founder"
         );
 
-        // Fetch command center data
-        const res = await fetch("/api/dashboard/command-center");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success) {
-            setData(json.data);
+        // Fetch command center data with timeout to prevent infinite loading
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        try {
+          const res = await fetch("/api/dashboard/command-center", {
+            signal: controller.signal,
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success) {
+              setData(json.data);
+            }
+          } else {
+            console.warn("Command center API returned status:", res.status);
           }
+        } finally {
+          clearTimeout(timeoutId);
         }
       } catch (e) {
         console.error("Failed to fetch dashboard data:", e);
