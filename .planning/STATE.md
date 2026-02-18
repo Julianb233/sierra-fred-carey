@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v5.0 QA Fixes — Production Polish (5/5 phases complete - MILESTONE SHIPPED)
+**Current focus:** v6.0 Full Platform Maturity
 
 ## Current Position
 
-Phase: 58 of 58 (Error State Polish)
-Plan: Complete (1/1)
-Status: v5.0 QA Fixes: ALL 5 PHASES COMPLETE. Milestone shipped.
-Last activity: 2026-02-18 -- Full stack UX audit + sahara-finish team completed. 12 additional fixes (A1-A10, B2, C1-C4). 2 critical auth fixes pending deploy: 71cdece (signup 500 — service client for profile creation), e78b277 (get-started CSP P0 — removed conflicting vercel.json headers blocking unsafe-eval). Stagehand verification: 16/16 first-time user flows PASS. QA team: 23/23 PASS. Awaiting Vercel deploy of latest commits.
+Phase: Not started (run /gsd:create-roadmap)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-18 — Milestone v6.0 started. Infrastructure (Sentry, Twilio, CI/CD, voice), FRED intelligence, UX polish, dashboard analytics, content library, service marketplace, Boardy API.
 
-Progress: [##############################] 100% (5/5 v5.0 phases complete)
+Progress: [______________________________] 0% (0/~12 v6.0 phases)
 
 ## Performance Metrics
 
@@ -146,7 +146,7 @@ Full report: .planning/PROD-READINESS-REPORT.md
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: v5.0 milestone complete. All 5 QA fix phases (54-58) shipped.
+Stopped at: v6.0 milestone initialized. Ready for /gsd:create-roadmap.
 Resume file: None
 
 ### Auth Debug Team (2026-02-18)

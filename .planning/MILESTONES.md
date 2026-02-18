@@ -74,4 +74,55 @@ Phase 33 (collaboration & sharing) — v4.0 continues from Phase 34
 
 ---
 
-*Archive created: 2026-02-11*
+## v4.0 FRED Mentor Experience (Complete)
+
+**Started:** 2026-02-11
+**Completed:** 2026-02-12
+**Phases:** 34-47 (14 phases, 18 plans + 6 team executions)
+
+Transformed FRED from a responsive chatbot into a structured mentor that leads conversations, enforces decision sequencing through Reality Lens gating, and integrates existing frameworks as active conversation guides.
+
+### What Shipped
+- System Prompt Overhaul (Fred Cary's master GPT instructions, mentor tone, Next 3 Actions standard)
+- Onboarding-to-FRED Handoff (seamless data flow, no repetition, Founder Snapshot populated)
+- Conversation State & Structured Flow (FRED leads, tracks progress, redirects drift)
+- Reality Lens Gate & Decision Sequencing (mandatory upstream validation before tactical advice)
+- Framework & Mode Integration (diagnostic engine, Investor/Positioning modes, 9-Step Process)
+- Missing Frameworks & Gated Reviews (Investor Readiness Score, Deck Request Protocol, gated Pitch Deck Review)
+- Dashboard Redesign — Founder Command Center (Snapshot Card, Decision Box, Funding Gauge, Weekly Momentum)
+- Founder Communities (user-created communities, circles, topic rooms, events)
+- Multi-Channel FRED Access (voice calls via LiveKit, SMS, in-app chat from any screen)
+- Next Steps Hub & Readiness Tab (Critical/Important/Optional priorities, combined readiness view)
+- Document Repository (Decks, Strategy Docs, Reports, Uploaded Files with "Review with Fred")
+- Chat UI Redesign (full-screen chat, active mode bar, side panel toggle)
+- Mobile App Layout (mobile nav, Today's Focus, simplified gauges, voice input)
+- Community Data Layer & Consent (14-table schema, consent-gated views, consent CRUD, Settings UI)
+
+### Last Phase Number
+Phase 47 (Community Data Layer & Consent) — v5.0 continues from Phase 54
+
+---
+
+## v5.0 QA Fixes — Production Polish (Complete)
+
+**Started:** 2026-02-18
+**Completed:** 2026-02-18
+**Phases:** 54-58 (5 phases, 5 plans — all parallel)
+
+Fixed all production bugs found during full-platform Stagehand browser QA audit. Achieved 93% page pass rate with 6 deploy verification passes.
+
+### What Shipped
+- Dashboard Routing Fix (3 sub-routes rendering wrong content)
+- Infinite Loading Spinner Fixes (4 pages stuck on spinner, error boundaries added)
+- Demo Page Auth Fix (demo pages accessible without login)
+- Duplicate Logo UI Fix (single logo, clean nav layout)
+- Error State Polish (user-friendly empty states replacing raw error banners)
+- Full Stack Audit: 36+ fixes across 30 atomic commits (security, navigation, auth, mobile, accessibility)
+- Deploy Verification: 6 passes, final 15/15 PASS
+
+### Last Phase Number
+Phase 58 (Error State Polish) — v6.0 continues from Phase 59
+
+---
+
+*Archive updated: 2026-02-18*
