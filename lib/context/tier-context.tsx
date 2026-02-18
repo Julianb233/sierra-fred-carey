@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import {
   UserTier,
   TIER_FEATURES,
@@ -15,6 +16,9 @@ import {
   canAccessFeature,
   getTierFromString,
 } from "@/lib/constants";
+
+/** Routes where we skip the subscription API call and default to FREE tier */
+const PUBLIC_TIER_PATHS = ["/demo/", "/pricing", "/about", "/product", "/get-started"];
 
 // ============================================================================
 // Types
@@ -56,8 +60,12 @@ interface TierProviderProps {
 }
 
 export function TierProvider({ children, initialTier }: TierProviderProps) {
-  const [tier, setTier] = useState<UserTier>(initialTier ?? UserTier.FREE);
-  const [isLoading, setIsLoading] = useState(initialTier === undefined);
+  const pathname = usePathname();
+  const isPublicPage = PUBLIC_TIER_PATHS.some((p) => pathname?.startsWith(p));
+  const effectiveInitialTier = initialTier ?? (isPublicPage ? UserTier.FREE : undefined);
+
+  const [tier, setTier] = useState<UserTier>(effectiveInitialTier ?? UserTier.FREE);
+  const [isLoading, setIsLoading] = useState(effectiveInitialTier === undefined);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
 
   const fetchTier = useCallback(async () => {
@@ -92,12 +100,12 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
     }
   }, []);
 
-  // Fetch tier on mount
+  // Fetch tier on mount — skip for public pages (demo, pricing, etc.)
   useEffect(() => {
-    if (initialTier === undefined) {
+    if (effectiveInitialTier === undefined) {
       fetchTier();
     }
-  }, [initialTier, fetchTier]);
+  }, [effectiveInitialTier, fetchTier]);
 
   const canAccess = useCallback(
     (requiredTier: UserTier) => canAccessFeature(tier, requiredTier),
