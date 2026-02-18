@@ -6,7 +6,7 @@
 - [x] **v2.0 Production & Voice Parity** - Phases 12-23 (shipped 2026-02-07)
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
 - [x] **v4.0 FRED Mentor Experience** - Phases 34-46 (shipped 2026-02-12)
-- [ ] **v5.0 QA Fixes — Production Polish** - Phases 54-58 (from Stagehand QA audit 2026-02-16)
+- [x] **v5.0 QA Fixes — Production Polish** - Phases 54-58 (shipped 2026-02-18)
 
 ## v5.0 QA Fixes — Production Polish
 
@@ -17,10 +17,10 @@
 **Source:** `.planning/v5.0-QA-FIXES-MILESTONE.md`
 
 - [x] **Phase 54: Dashboard Routing Fix** — 3 dashboard routes render Settings instead of content (BUG-2) [CRITICAL]
-- [ ] **Phase 55: Infinite Loading Spinner Fixes** — 4 pages stuck on spinner with no error boundaries (BUG-1, BUG-3) [CRITICAL]
-- [ ] **Phase 56: Demo Page Auth Fix** — 2 demo pages redirect to login for unauthenticated users (BUG-5) [HIGH]
-- [ ] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
-- [ ] **Phase 58: Error State Polish** — "Failed to fetch" errors on next-steps and settings (BUG-6) [HIGH]
+- [x] **Phase 55: Infinite Loading Spinner Fixes** — 4 pages stuck on spinner with no error boundaries (BUG-1, BUG-3) [CRITICAL]
+- [x] **Phase 56: Demo Page Auth Fix** — 2 demo pages redirect to login for unauthenticated users (BUG-5) [HIGH]
+- [x] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
+- [x] **Phase 58: Error State Polish** — "Failed to fetch" errors on next-steps and settings (BUG-6) [HIGH]
 
 ## Phases
 
@@ -362,7 +362,7 @@ See MILESTONES.md for full details.
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 54. Dashboard Routing Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
-| 55. Infinite Loading Spinner Fixes | v5.0 | 0/TBD | Pending | — |
-| 56. Demo Page Auth Fix | v5.0 | 0/TBD | Pending | — |
-| 57. Duplicate Logo UI Fix | v5.0 | 0/TBD | Pending | — |
-| 58. Error State Polish | v5.0 | 0/TBD | Pending | — |
+| 55. Infinite Loading Spinner Fixes | v5.0 | 1/1 | Complete | 2026-02-18 |
+| 56. Demo Page Auth Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
+| 57. Duplicate Logo UI Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
+| 58. Error State Polish | v5.0 | 1/1 | Complete | 2026-02-18 |
