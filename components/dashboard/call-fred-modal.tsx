@@ -100,9 +100,15 @@ export function CallFredModal({
   const roomNameRef = useRef<string>("");
   const roomRef = useRef<Room | null>(null);
   const agentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
   );
+
+  // Auto-scroll transcript to bottom when new entries arrive
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [transcriptEntries]);
 
   // Max duration in seconds
   const maxDuration = callType === "on-demand" ? 600 : 1800;
@@ -337,7 +343,7 @@ export function CallFredModal({
       <DialogContent
         className={cn(
           "sm:max-w-md p-0 gap-0 overflow-hidden",
-          callState === "ended" && callSummary && "sm:max-w-lg"
+          (callState === "in-call" || (callState === "ended" && callSummary)) && "sm:max-w-lg"
         )}
       >
         <DialogTitle className="sr-only">Call Fred</DialogTitle>
@@ -399,31 +405,70 @@ export function CallFredModal({
 
           {/* In-Call Controls */}
           {callState === "in-call" && (
-            <div className="flex items-center justify-center gap-6">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleToggleMute}
-                className={cn(
-                  "h-14 w-14 rounded-full",
-                  isMuted && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
-                )}
-                aria-label={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? (
-                  <MicOff className="h-6 w-6 text-red-500" />
+            <div className="space-y-4">
+              {/* Live Transcript */}
+              <div className="max-h-[200px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3">
+                {transcriptEntries.length === 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">
+                    Listening...
+                  </p>
                 ) : (
-                  <Mic className="h-6 w-6" />
+                  <div className="space-y-2">
+                    {transcriptEntries.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex flex-col",
+                          entry.speaker === "user" ? "items-end" : "items-start"
+                        )}
+                      >
+                        <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mb-0.5">
+                          {entry.speaker === "user" ? "You" : "Fred"}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-sm px-3 py-1.5 rounded-lg max-w-[85%] inline-block",
+                            entry.speaker === "user"
+                              ? "bg-[#ff6a1a] text-white"
+                              : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
+                          )}
+                        >
+                          {entry.text}
+                        </span>
+                      </div>
+                    ))}
+                    <div ref={transcriptEndRef} />
+                  </div>
                 )}
-              </Button>
-              <Button
-                size="icon"
-                onClick={handleEndCall}
-                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 text-white"
-                aria-label="End call"
-              >
-                <PhoneOff className="h-6 w-6" />
-              </Button>
+              </div>
+
+              {/* Call Controls */}
+              <div className="flex items-center justify-center gap-6">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleToggleMute}
+                  className={cn(
+                    "h-14 w-14 rounded-full",
+                    isMuted && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
+                  )}
+                  aria-label={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? (
+                    <MicOff className="h-6 w-6 text-red-500" />
+                  ) : (
+                    <Mic className="h-6 w-6" />
+                  )}
+                </Button>
+                <Button
+                  size="icon"
+                  onClick={handleEndCall}
+                  className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 text-white"
+                  aria-label="End call"
+                >
+                  <PhoneOff className="h-6 w-6" />
+                </Button>
+              </div>
             </div>
           )}
 
