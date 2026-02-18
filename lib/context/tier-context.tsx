@@ -167,9 +167,21 @@ export function useUserTier() {
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
 
   useEffect(() => {
+    let didTimeout = false;
+
+    const timeoutId = setTimeout(() => {
+      didTimeout = true;
+      console.warn("[useUserTier] Tier fetch timed out after 5s, defaulting to FREE");
+      setTier(UserTier.FREE);
+      setIsSubscriptionActive(false);
+      setIsLoading(false);
+    }, 5000);
+
     const fetchTier = async () => {
       try {
         const response = await fetch("/api/user/subscription");
+
+        if (didTimeout) return;
 
         if (!response.ok) {
           setTier(UserTier.FREE);
@@ -178,6 +190,8 @@ export function useUserTier() {
         }
 
         const data = await response.json();
+
+        if (didTimeout) return;
 
         // API returns: { plan: { id, name, ... }, subscription: { status, ... } | null, isActive: boolean }
         if (data.isActive && ["active", "trialing", "past_due"].includes(data.subscription?.status)) {
@@ -188,15 +202,23 @@ export function useUserTier() {
           setIsSubscriptionActive(false);
         }
       } catch (error) {
+        if (didTimeout) return;
         console.error("[useUserTier] Error:", error);
         setTier(UserTier.FREE);
         setIsSubscriptionActive(false);
       } finally {
-        setIsLoading(false);
+        if (!didTimeout) {
+          clearTimeout(timeoutId);
+          setIsLoading(false);
+        }
       }
     };
 
     fetchTier();
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const canAccess = useCallback(
