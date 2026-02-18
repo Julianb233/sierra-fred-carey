@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       shareUrl: `${getBaseUrl(request)}/api/share/${link.token}`,
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to create share link";
     log.error("POST /api/share error", { error: message });
@@ -114,16 +115,10 @@ export async function GET() {
 
     return NextResponse.json({ success: true, links });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to fetch share links";
     log.error("GET /api/share error", { error: message });
-
-    if (message === "Authentication required") {
-      return NextResponse.json(
-        { success: false, error: message },
-        { status: 401 }
-      );
-    }
 
     return NextResponse.json(
       { success: false, error: message },
@@ -161,6 +156,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to revoke share link";
     log.error("DELETE /api/share error", { error: message });

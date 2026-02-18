@@ -218,6 +218,7 @@ Remember: Default to NOT requesting a deck unless specific visual/detailed infor
       },
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Deck Request] Error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to evaluate deck request" },

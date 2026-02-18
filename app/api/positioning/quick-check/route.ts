@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Positioning Quick Check] Error:", error);
     return NextResponse.json(
       {

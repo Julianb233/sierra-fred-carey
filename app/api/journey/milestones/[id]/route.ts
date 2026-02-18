@@ -50,6 +50,7 @@ export async function GET(
     });
 
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[GET /api/journey/milestones/[id]]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch milestone" },
@@ -190,6 +191,7 @@ export async function PATCH(
     });
 
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[PATCH /api/journey/milestones/[id]]", error);
     return NextResponse.json(
       { success: false, error: "Failed to update milestone" },
@@ -233,6 +235,7 @@ export async function DELETE(
     });
 
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[DELETE /api/journey/milestones/[id]]", error);
     return NextResponse.json(
       { success: false, error: "Failed to delete milestone" },

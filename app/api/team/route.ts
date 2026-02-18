@@ -52,16 +52,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, members: allMembers });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to fetch team members";
     log.error("GET /api/team error", { error: message });
-
-    if (message === "Authentication required") {
-      return NextResponse.json(
-        { success: false, error: message },
-        { status: 401 }
-      );
-    }
 
     return NextResponse.json(
       { success: false, error: message },
@@ -127,6 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, member });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to invite team member";
     log.error("POST /api/team error", { error: message });
@@ -172,6 +167,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to remove team member";
     log.error("DELETE /api/team error", { error: message });
@@ -221,6 +217,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Response) return error;
     const message =
       error instanceof Error ? error.message : "Failed to update member role";
     log.error("PATCH /api/team error", { error: message });

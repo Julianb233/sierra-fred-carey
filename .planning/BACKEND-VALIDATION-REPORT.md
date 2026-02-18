@@ -507,3 +507,75 @@ Only one match found across `app/` and `lib/`:
 | Risk Alerts Audit | Working as designed | No dedicated page (widget only) — not a bug |
 | Signup API Test | 500 error | Not a code bug — infrastructure/config issue |
 | TODO/FIXME Scan | Clean | No actionable items |
+
+---
+
+## 10. Full Stack UX Audit v3 (2026-02-18) -- Comprehensive API Curl Test
+
+### Methodology
+
+Curled all 156 API routes against `https://www.joinsahara.com` without authentication to verify:
+1. Auth-required routes return 401 (not 500)
+2. No user data leaks without auth
+3. Admin routes are properly protected
+4. Cron routes use CRON_SECRET auth
+5. Webhook routes use signature verification
+6. Public routes are intentionally public
+
+### Auth Enforcement: 5 Routes Return 500 Instead of 401
+
+**Root cause:** `requireAuth()` throws a `NextResponse.json(...)` (a Response object). The catch blocks in these routes check `error instanceof Error` which is false for Response objects, so the error falls through to the generic 500 handler.
+
+| ID | Route | Method | Live Status | File | Lines |
+|----|-------|--------|-------------|------|-------|
+| B9 | `/api/team` | GET | 500 | `app/api/team/route.ts` | 54-70 |
+| B10 | `/api/team` | POST | 500 | `app/api/team/route.ts` | 129-143 |
+| B11 | `/api/share` | GET | 500 | `app/api/share/route.ts` | 116-132 |
+| B12 | `/api/share` | POST | 500 | `app/api/share/route.ts` | 95-103 |
+| B13 | `/api/share` | DELETE | 500 | `app/api/share/route.ts` | 163-171 |
+
+**Same pattern but POST-only (GET returns 405, hiding the bug):**
+
+| ID | Route | Method | File | Lines |
+|----|-------|--------|------|-------|
+| B14 | `/api/investor-lens/deck-request` | POST | `app/api/investor-lens/deck-request/route.ts` | 220-226 |
+| B15 | `/api/positioning/quick-check` | POST | `app/api/positioning/quick-check/route.ts` | 208-218 |
+| B16 | `/api/journey/milestones/[id]` | GET/PATCH/DELETE | `app/api/journey/milestones/[id]/route.ts` | 52-58, 192-198, 235-241 |
+
+**Fix for all:** Add `if (error instanceof Response) return error;` as the first line of each catch block.
+
+### Intentionally Public Routes -- Verified OK
+
+| Route | Response | Why Public |
+|-------|----------|------------|
+| `GET /api/fred/reality-lens` | 200, static framework metadata | Schema/factor info; POST requires auth |
+| `GET /api/user/subscription` | 200, `{"plan":{"id":"free",...}}` | TierProvider needs response on public pages |
+| `GET /api/diagnostic` | 200, framework list | Static info; POST uses optional auth + rate limit |
+| `GET /api/diagnostic/investor` | 200, stage criteria/VC axes | Static info; POST uses optional auth + rate limit |
+
+### Admin Routes -- ALL PASS (401)
+
+All 21 admin API routes tested: `admin/dashboard`, `admin/config`, `admin/prompts`, `admin/ab-tests/*`, `admin/analytics/*`, `admin/training/*`, `admin/voice-agent/*`, `admin/login`, `admin/logout`. All return 401 without auth.
+
+### Cron Routes -- ALL PASS (401)
+
+`/api/cron/weekly-checkin`, `/api/cron/weekly-digest`, `/api/cron/re-engagement` all use `CRON_SECRET` Bearer token auth.
+
+### Setup-DB -- PASS (403)
+
+Returns 403 in production with message "This endpoint is disabled in production".
+
+### SQL Injection -- NO ISSUES
+
+All `sql.unsafe` usage verified safe:
+- `user/delete`: hardcoded table/column names
+- `insights/trends`: strict 2-value allowlist for granularity
+- All other queries use parameterized `sql` template literals
+
+### Summary of New Issues (v3)
+
+| Priority | Count | Description |
+|----------|-------|-------------|
+| P1 (Medium) | 8 handlers in 5 files | Missing `error instanceof Response` check -- returns 500 instead of 401 |
+
+No new HIGH or CRITICAL security issues found. The 500-instead-of-401 bug is a correctness issue (still blocks access, but with wrong status code and generic error message).
