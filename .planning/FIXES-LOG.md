@@ -94,5 +94,9 @@ For each fix from Code Fixer:
 
 | A4 | FRED chat duplicate getAllUserFacts DB call | app/api/fred/chat/route.ts, lib/fred/context-builder.ts, lib/ai/fred-client.ts, lib/fred/service.ts, lib/fred/types.ts, lib/fred/actors/load-memory.ts | Preload facts in buildFounderContextWithFacts, pass to FredService to skip redundant DB call | 6dcc6f4 |
 | A5 | 22+ dashboard pages unreachable from sidebar | app/dashboard/layout.tsx | Added 11 core nav items (AI Insights, Journey, Coaching, Wellbeing, Startup Process, Strategy, Inbox, Notifications, History, Memory, Sharing, Invitations) + 7 conditional (Investor Targeting/Readiness/Evaluation, Pitch Deck, Reality Lens for Pro+; Virtual Team, Boardy for Studio) | 19e6976 |
+| A6 | metadataBase hardcoded to sierra-fred-carey.vercel.app (admin redirect to wrong domain) | app/layout.tsx | Use NEXT_PUBLIC_APP_URL env var with joinsahara.com fallback | 308810b |
+| A7 | /check-ins shows public navbar instead of dashboard sidebar | app/check-ins/layout.tsx | Created layout that wraps check-ins in DashboardLayout | feadf0c |
+| A8 | /demo returns 404 | app/demo/page.tsx | Created demo index page listing all 5 interactive demos | 0347455 |
+| A9 | Product page CTAs say "Join Waitlist" but signup is live | app/product/page.tsx | Changed to "Get Started" / "Get Started Free" pointing to /signup | 0ad8165 |
 
 *Updated: 2026-02-18*
