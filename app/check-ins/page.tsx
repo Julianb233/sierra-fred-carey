@@ -198,7 +198,7 @@ export default function CheckInsPage() {
               Start your weekly check-in with FRED to track momentum and stay
               accountable on your founder journey.
             </p>
-            <Link href="/dashboard/chat">
+            <Link href="/chat">
               <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25">
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Talk to FRED
