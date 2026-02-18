@@ -7,6 +7,7 @@
 - [x] **v3.0 Scale, Activate & Engage** - Phases 24-33 (shipped 2026-02-08)
 - [x] **v4.0 FRED Mentor Experience** - Phases 34-46 (shipped 2026-02-12)
 - [x] **v5.0 QA Fixes — Production Polish** - Phases 54-58 (shipped 2026-02-18)
+- [ ] **v6.0 Full Platform Maturity** - Phases 59-70
 
 ## v5.0 QA Fixes — Production Polish
 
@@ -21,6 +22,33 @@
 - [x] **Phase 56: Demo Page Auth Fix** — 2 demo pages redirect to login for unauthenticated users (BUG-5) [HIGH]
 - [x] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
 - [x] **Phase 58: Error State Polish** — "Failed to fetch" errors on next-steps and settings (BUG-6) [HIGH]
+
+## v6.0 Full Platform Maturity
+
+**Milestone Goal:** Make Sahara production-solid (infrastructure, voice, SMS), smarter (FRED intelligence, analytics), and feature-complete (content library, service marketplace, Boardy API).
+
+**Parallelism:**
+- Wave 1 (parallel, no dependencies): Phase 59, 60, 61 — infrastructure foundation
+- Wave 2 (depends on Phase 59): Phase 62 — voice hardening
+- Wave 3 (parallel, depends on infra): Phase 63, 64, 65 — core improvements
+- Wave 4 (parallel, depends on Phase 63): Phase 66, 68 — content + marketplace backends
+- Wave 5 (parallel, depends on Wave 4): Phase 67, 69 — content + marketplace frontends
+- Wave 6 (depends on partnership): Phase 70 — Boardy API
+
+**Source:** `.planning/research/SUMMARY.md`
+
+- [ ] **Phase 59: Sentry + Production Monitoring** — Error tracking, source maps, alerting, CI hardening [CRITICAL]
+- [ ] **Phase 60: CI/CD & Testing Expansion** — Playwright in CI, visual regression, axe-core a11y, staging
+- [ ] **Phase 61: Twilio SMS Activation** — A2P 10DLC registration, real SMS delivery, compliance
+- [ ] **Phase 62: Voice Agent Production Hardening** — Fix 3 CRITICAL voice bugs, reconnection, recording [CRITICAL]
+- [ ] **Phase 63: FRED Intelligence Upgrade** — Better memory, mode switching, new AI tools
+- [ ] **Phase 64: Dashboard & Analytics Enhancement** — Historical trends, engagement scoring, data export
+- [ ] **Phase 65: Mobile / UX Polish** — Serwist PWA, smooth animations, WCAG 2.1 AA compliance
+- [ ] **Phase 66: Content Library — Schema & Backend** — Mux video, 5 tables, API routes, admin management
+- [ ] **Phase 67: Content Library — Frontend & FRED Integration** — Course catalog, video player, FRED recommendations
+- [ ] **Phase 68: Service Marketplace — Schema & Backend** — Stripe Connect, 4 tables, booking flow
+- [ ] **Phase 69: Service Marketplace — Frontend & Discovery** — Provider directory, search, reviews, FRED integration
+- [ ] **Phase 70: Real Boardy API Integration** — RealBoardyClient, circuit breaker, cached fallback [RISK]
 
 ## Phases
 
@@ -326,6 +354,138 @@ See MILESTONES.md for full details.
   4. All empty states have clear CTAs that guide users to the right action
 **Plans**: TBD
 
+### Phase 59: Sentry + Production Monitoring
+**Goal**: Error tracking, source maps, alerting, and CI hardening so bugs are caught and reported automatically
+**Depends on**: Nothing (infrastructure foundation)
+**Requirements**: INFRA-01
+**Success Criteria** (what must be TRUE):
+  1. Sentry captures and reports runtime errors from production with source maps
+  2. Alert rules notify team of critical errors within 5 minutes
+  3. CI pipeline fails on type errors, lint errors, and test failures (no `|| true`)
+  4. Performance monitoring tracks page load times and API response times
+**Plans**: TBD
+
+### Phase 60: CI/CD & Testing Expansion
+**Goal**: Comprehensive CI with visual regression, accessibility testing, and staging environment
+**Depends on**: Nothing (infrastructure foundation)
+**Requirements**: INFRA-02
+**Success Criteria** (what must be TRUE):
+  1. Playwright E2E tests run in CI on every PR
+  2. Visual regression baselines detect unintended UI changes
+  3. Accessibility tests (axe-core) catch WCAG violations in CI
+  4. Staging environment exists for pre-production testing
+**Plans**: TBD
+
+### Phase 61: Twilio SMS Activation
+**Goal**: Real SMS delivery for weekly check-ins with A2P 10DLC compliance
+**Depends on**: Nothing (infrastructure foundation)
+**Requirements**: INFRA-03
+**Success Criteria** (what must be TRUE):
+  1. Weekly check-in SMS messages delivered to real phone numbers
+  2. A2P 10DLC registration approved and active
+  3. Users can opt-in and opt-out of SMS via settings
+  4. SMS delivery status tracked and reported
+**Plans**: TBD
+
+### Phase 62: Voice Agent Production Hardening
+**Goal**: Reliable LiveKit voice calls with recording and transcription
+**Depends on**: Phase 59 (Sentry monitoring for voice errors)
+**Requirements**: INFRA-04
+**Success Criteria** (what must be TRUE):
+  1. Users hear FRED's audio during voice calls (remote audio track plays)
+  2. Voice agent Docker container starts and runs reliably
+  3. Call recording and transcription work end-to-end
+  4. Calls reconnect gracefully on network interruption
+**Plans**: TBD
+
+### Phase 63: FRED Intelligence Upgrade
+**Goal**: Smarter FRED with better memory retrieval, mode switching, and new AI tools
+**Depends on**: Phase 59 (Sentry), Phase 60 (CI)
+**Requirements**: IMPROVE-01
+**Success Criteria** (what must be TRUE):
+  1. FRED retrieves relevant past conversation context more accurately
+  2. Long conversations (50+ messages) don't degrade response quality
+  3. Mode switching transitions are smoother with fewer false positives
+  4. FRED has new tools for recommending content and finding providers
+**Plans**: TBD
+
+### Phase 64: Dashboard & Analytics Enhancement
+**Goal**: Richer founder metrics with historical trends and engagement tracking
+**Depends on**: Phase 59 (Sentry), Phase 60 (CI)
+**Requirements**: IMPROVE-03
+**Success Criteria** (what must be TRUE):
+  1. Founder metrics dashboard shows historical trends (weekly/monthly charts)
+  2. Engagement scoring tracks founder activity across features
+  3. Data can be exported as CSV or PDF
+  4. PostHog funnels visualize user journey bottlenecks
+**Plans**: TBD
+
+### Phase 65: Mobile / UX Polish
+**Goal**: PWA refinements, smooth animations, and WCAG accessibility compliance
+**Depends on**: Phase 59 (Sentry), Phase 60 (CI)
+**Requirements**: IMPROVE-02
+**Success Criteria** (what must be TRUE):
+  1. Service worker caches content for offline access (Serwist)
+  2. Page transitions and interactions have smooth animations
+  3. WCAG 2.1 AA compliance on all core pages
+  4. Push notifications work reliably on mobile
+**Plans**: TBD
+
+### Phase 66: Content Library — Schema & Backend
+**Goal**: Content management backend with Mux video hosting and tier gating
+**Depends on**: Phase 63 (FRED tools for content recommendation)
+**Requirements**: FEATURE-01 (backend)
+**Success Criteria** (what must be TRUE):
+  1. Admin can create, edit, and organize courses with modules and lessons
+  2. Video content hosted on Mux with adaptive bitrate streaming
+  3. Content access gated by subscription tier
+  4. API routes serve content catalog with filtering by stage and topic
+**Plans**: TBD
+
+### Phase 67: Content Library — Frontend & FRED Integration
+**Goal**: Course catalog UI with FRED-recommended learning paths
+**Depends on**: Phase 66 (content backend)
+**Requirements**: FEATURE-01 (frontend)
+**Success Criteria** (what must be TRUE):
+  1. Founders browse and filter course catalog by stage, topic, and format
+  2. Video player plays lessons with progress tracking
+  3. FRED recommends relevant content during conversations
+  4. "Ask FRED about this" button on content pages opens contextual chat
+**Plans**: TBD
+
+### Phase 68: Service Marketplace — Schema & Backend
+**Goal**: Provider directory backend with Stripe Connect payments and booking
+**Depends on**: Phase 63 (FRED tools for provider recommendation)
+**Requirements**: FEATURE-02 (backend)
+**Success Criteria** (what must be TRUE):
+  1. Providers can be onboarded with profiles, services, and pricing
+  2. Stripe Connect Express handles marketplace payments isolated from subscriptions
+  3. Booking flow creates and tracks service engagements
+  4. Review system captures and displays founder feedback
+**Plans**: TBD
+
+### Phase 69: Service Marketplace — Frontend & Discovery
+**Goal**: Provider discovery UI with FRED-triggered recommendations
+**Depends on**: Phase 68 (marketplace backend)
+**Requirements**: FEATURE-02 (frontend)
+**Success Criteria** (what must be TRUE):
+  1. Founders browse and search provider directory with filters
+  2. Provider profiles show services, reviews, and booking options
+  3. FRED recommends providers during relevant conversations
+  4. Booking confirmation and status tracking visible on dashboard
+**Plans**: TBD
+
+### Phase 70: Real Boardy API Integration
+**Goal**: Live investor matching replacing mock client with real API
+**Depends on**: Phase 63 (FRED intelligence), Phase 59 (Sentry monitoring)
+**Requirements**: FEATURE-03
+**Success Criteria** (what must be TRUE):
+  1. RealBoardyClient connects to Boardy API with circuit breaker and fallback
+  2. Investor matches based on founder's stage, sector, and readiness score
+  3. Match results cached for performance and resilience
+  4. Graceful fallback to enhanced mock if API is unavailable
+**Plans**: TBD
+
 ## Progress
 
 ### v4.0 Execution
@@ -366,3 +526,28 @@ See MILESTONES.md for full details.
 | 56. Demo Page Auth Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
 | 57. Duplicate Logo UI Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
 | 58. Error State Polish | v5.0 | 1/1 | Complete | 2026-02-18 |
+
+### v6.0 Execution
+
+**Execution Order:**
+- Wave 1 (parallel): Phases 59, 60, 61
+- Wave 2: Phase 62
+- Wave 3 (parallel): Phases 63, 64, 65
+- Wave 4 (parallel): Phases 66, 68
+- Wave 5 (parallel): Phases 67, 69
+- Wave 6: Phase 70
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 59. Sentry + Production Monitoring | v6.0 | 0/TBD | Not started | - |
+| 60. CI/CD & Testing Expansion | v6.0 | 0/TBD | Not started | - |
+| 61. Twilio SMS Activation | v6.0 | 0/TBD | Not started | - |
+| 62. Voice Agent Production Hardening | v6.0 | 0/TBD | Not started | - |
+| 63. FRED Intelligence Upgrade | v6.0 | 0/TBD | Not started | - |
+| 64. Dashboard & Analytics Enhancement | v6.0 | 0/TBD | Not started | - |
+| 65. Mobile / UX Polish | v6.0 | 0/TBD | Not started | - |
+| 66. Content Library — Schema & Backend | v6.0 | 0/TBD | Not started | - |
+| 67. Content Library — Frontend & FRED Integration | v6.0 | 0/TBD | Not started | - |
+| 68. Service Marketplace — Schema & Backend | v6.0 | 0/TBD | Not started | - |
+| 69. Service Marketplace — Frontend & Discovery | v6.0 | 0/TBD | Not started | - |
+| 70. Real Boardy API Integration | v6.0 | 0/TBD | Not started | - |

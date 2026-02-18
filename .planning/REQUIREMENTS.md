@@ -66,6 +66,27 @@
 - [ ] **CHANNEL-03**: SMS text to FRED with structured mentor responses (leverages existing Twilio infrastructure)
 - [ ] **CHANNEL-04**: All channels share conversation context — FRED knows what was discussed regardless of channel
 
+## v6.0 Requirements
+
+### Infrastructure & Ops (INFRA)
+
+- [ ] **INFRA-01**: Sentry error tracking — DSN configuration, source maps uploading, alerting rules, performance monitoring
+- [ ] **INFRA-02**: CI/CD expansion — Playwright E2E in CI, visual regression testing, axe-core accessibility, staging environment
+- [ ] **INFRA-03**: Twilio SMS activation — A2P 10DLC registration, real SMS delivery, opt-in/opt-out compliance, delivery tracking
+- [ ] **INFRA-04**: Voice agent hardening — Remote audio playback fix, Docker container fix, room name tracking, reconnection, recording/transcription
+
+### FRED & UX Improvements (IMPROVE)
+
+- [ ] **IMPROVE-01**: FRED intelligence upgrade — Better memory retrieval, long conversation handling, smoother mode switching, new AI tools (content + provider)
+- [ ] **IMPROVE-02**: Mobile / UX polish — Serwist PWA caching, smooth animations, WCAG 2.1 AA compliance, push notification reliability
+- [ ] **IMPROVE-03**: Dashboard & analytics — Historical trend charts, engagement scoring, data export (CSV/PDF), PostHog funnel visualization
+
+### New Features (FEATURE)
+
+- [ ] **FEATURE-01**: Content library & courses — Mux video hosting, course catalog with stage/topic filtering, progress tracking, FRED recommendations, tier gating
+- [ ] **FEATURE-02**: Service marketplace — Provider directory with Stripe Connect payments, booking flow, reviews, FRED-triggered recommendations
+- [ ] **FEATURE-03**: Real Boardy API integration — RealBoardyClient implementation, circuit breaker, cached fallback, readiness-gated matching
+
 ## v2.0 Requirements (SHIPPED)
 
 <details>
@@ -219,6 +240,27 @@
 - Mapped to phases: 37
 - Unmapped: 0
 
+### v6.0 Full Platform Maturity
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| INFRA-01 | Phase 59 | Pending |
+| INFRA-02 | Phase 60 | Pending |
+| INFRA-03 | Phase 61 | Pending |
+| INFRA-04 | Phase 62 | Pending |
+| IMPROVE-01 | Phase 63 | Pending |
+| IMPROVE-02 | Phase 65 | Pending |
+| IMPROVE-03 | Phase 64 | Pending |
+| FEATURE-01 | Phases 66-67 | Pending |
+| FEATURE-02 | Phases 68-69 | Pending |
+| FEATURE-03 | Phase 70 | Pending |
+
+**Coverage:**
+- v6.0 requirements: 10 total
+- Mapped to phases: 10
+- Unmapped: 0
+
 ---
 *Requirements defined: 2026-02-07 (v2.0)*
 *Updated: 2026-02-11 -- v4.0 requirements added (37 total), phases 34-42 mapped*
+*Updated: 2026-02-18 -- v6.0 requirements added (10 total), phases 59-70 mapped*
