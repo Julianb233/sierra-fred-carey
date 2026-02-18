@@ -98,5 +98,6 @@ For each fix from Code Fixer:
 | A7 | /check-ins shows public navbar instead of dashboard sidebar | app/check-ins/layout.tsx | Created layout that wraps check-ins in DashboardLayout | feadf0c |
 | A8 | /demo returns 404 | app/demo/page.tsx | Created demo index page listing all 5 interactive demos | 0347455 |
 | A9 | Product page CTAs say "Join Waitlist" but signup is live | app/product/page.tsx | Changed to "Get Started" / "Get Started Free" pointing to /signup | 0ad8165 |
+| A10 | /ai-insights bare route returns 404 | app/ai-insights/page.tsx | Created redirect to /dashboard/insights | 8435c81 |
 
 *Updated: 2026-02-18*
