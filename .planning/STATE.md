@@ -105,6 +105,28 @@ Ralph PRD: scripts/ralph/prd.json (15 user stories, all passing)
 - 12 positive UX findings (sign-up wizard, welcome tour, Reality Lens, chat process indicator, theme toggle)
 - Full report: .planning/UX-EXPLORER-REPORT.md
 
+### Full Stack UX Audit v2 (2026-02-18)
+
+**Re-audit on www.joinsahara.com (sahara.vercel.app still paused):**
+
+FIXED since last audit:
+- Signup flow: WORKS (3-step wizard, account creation, dashboard loads)
+- Chat with Fred: WORKS (no crash, streaming with 4-step progress indicator, audio playback)
+
+STILL BROKEN:
+- /ai-insights: Still 404
+- /admin: Still redirects to sahara.vercel.app (paused domain)
+- /demo: 404 (dead route)
+
+NEW issues:
+- /product has "Join Waitlist" CTA (confusing since signup works)
+- /check-ins shows public nav instead of dashboard sidebar
+- Features nav has dropdown chevron but navigates directly
+
+All other features pass: Homepage, Pricing, About, Blog, Login (with error states), Forgot Password, Interactive demo, Dashboard (all 7 sidebar items), Welcome tour, Paywall gates, Community, Settings, Video.
+
+Full report: .planning/UX-EXPLORER-REPORT.md (29 screenshots taken)
+
 ## Production Readiness (2026-02-13)
 
 **Status: READY FOR PRODUCTION**
