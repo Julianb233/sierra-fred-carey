@@ -18,6 +18,25 @@ import {
   ListChecks,
   FileText,
   BarChart3,
+  Lightbulb,
+  Map,
+  GraduationCap,
+  Heart,
+  Rocket,
+  Compass,
+  Inbox,
+  Bell,
+  Clock,
+  Brain,
+  Target,
+  ShieldCheck,
+  TrendingUp,
+  Presentation,
+  ScanEye,
+  Bot,
+  Network,
+  Share2,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
@@ -41,8 +60,7 @@ type NavItem = {
 };
 
 /**
- * Core navigation items -- always visible per Phase 40 spec.
- * Spec: Home, Chat with Fred, Next Steps, Readiness, Documents, Community, Settings
+ * Core navigation items -- always visible to all users.
  */
 const coreNavItems: NavItem[] = [
   {
@@ -66,6 +84,36 @@ const coreNavItems: NavItem[] = [
     icon: <BarChart3 className="h-4 w-4" />,
   },
   {
+    name: "AI Insights",
+    href: "/dashboard/insights",
+    icon: <Lightbulb className="h-4 w-4" />,
+  },
+  {
+    name: "Journey",
+    href: "/dashboard/journey",
+    icon: <Map className="h-4 w-4" />,
+  },
+  {
+    name: "Coaching",
+    href: "/dashboard/coaching",
+    icon: <GraduationCap className="h-4 w-4" />,
+  },
+  {
+    name: "Wellbeing",
+    href: "/dashboard/wellbeing",
+    icon: <Heart className="h-4 w-4" />,
+  },
+  {
+    name: "Startup Process",
+    href: "/dashboard/startup-process",
+    icon: <Rocket className="h-4 w-4" />,
+  },
+  {
+    name: "Strategy",
+    href: "/dashboard/strategy",
+    icon: <Compass className="h-4 w-4" />,
+  },
+  {
     name: "Documents",
     href: "/dashboard/documents",
     icon: <FileText className="h-4 w-4" />,
@@ -74,6 +122,36 @@ const coreNavItems: NavItem[] = [
     name: "Community",
     href: "/dashboard/communities",
     icon: <Users className="h-4 w-4" />,
+  },
+  {
+    name: "Inbox",
+    href: "/dashboard/inbox",
+    icon: <Inbox className="h-4 w-4" />,
+  },
+  {
+    name: "Notifications",
+    href: "/dashboard/notifications",
+    icon: <Bell className="h-4 w-4" />,
+  },
+  {
+    name: "History",
+    href: "/dashboard/history",
+    icon: <Clock className="h-4 w-4" />,
+  },
+  {
+    name: "Memory",
+    href: "/dashboard/memory",
+    icon: <Brain className="h-4 w-4" />,
+  },
+  {
+    name: "Sharing",
+    href: "/dashboard/sharing",
+    icon: <Share2 className="h-4 w-4" />,
+  },
+  {
+    name: "Invitations",
+    href: "/dashboard/invitations",
+    icon: <UserPlus className="h-4 w-4" />,
   },
   {
     name: "Settings",
@@ -98,6 +176,48 @@ const conditionalNavItems: NavItem[] = [
     href: "/dashboard/investor-lens",
     icon: <EyeOpenIcon className="h-4 w-4" />,
     condition: "showInvestorLens",
+  },
+  {
+    name: "Investor Targeting",
+    href: "/dashboard/investor-targeting",
+    icon: <Target className="h-4 w-4" />,
+    condition: "showInvestorTools",
+  },
+  {
+    name: "Investor Readiness",
+    href: "/dashboard/investor-readiness",
+    icon: <ShieldCheck className="h-4 w-4" />,
+    condition: "showInvestorTools",
+  },
+  {
+    name: "Investor Evaluation",
+    href: "/dashboard/investor-evaluation",
+    icon: <TrendingUp className="h-4 w-4" />,
+    condition: "showInvestorTools",
+  },
+  {
+    name: "Pitch Deck",
+    href: "/dashboard/pitch-deck",
+    icon: <Presentation className="h-4 w-4" />,
+    condition: "showInvestorTools",
+  },
+  {
+    name: "Reality Lens",
+    href: "/dashboard/reality-lens",
+    icon: <ScanEye className="h-4 w-4" />,
+    condition: "showInvestorLens",
+  },
+  {
+    name: "Virtual Team",
+    href: "/dashboard/agents",
+    icon: <Bot className="h-4 w-4" />,
+    condition: "showStudioFeatures",
+  },
+  {
+    name: "Boardy",
+    href: "/dashboard/boardy",
+    icon: <Network className="h-4 w-4" />,
+    condition: "showStudioFeatures",
   },
 ];
 
@@ -252,6 +372,10 @@ export default function DashboardLayout({
       showPositioning: tier >= UserTier.PRO,
       // Investor Lens: show when not early stage AND tier >= Pro
       showInvestorLens: !isEarlyStage && tier >= UserTier.PRO,
+      // Investor tools: show when not early stage AND tier >= Pro
+      showInvestorTools: !isEarlyStage && tier >= UserTier.PRO,
+      // Studio-tier features: Virtual Team, Boardy
+      showStudioFeatures: tier >= UserTier.STUDIO,
     };
   }, [user.stage, tier]);
 
