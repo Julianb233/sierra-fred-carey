@@ -21,6 +21,8 @@ import {
   Loader2,
   Mail,
   Lock,
+  Eye,
+  EyeOff,
   Sparkles,
   PartyPopper,
 } from "lucide-react";
@@ -59,6 +61,7 @@ const OnboardingPage = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -470,13 +473,21 @@ const OnboardingPage = () => {
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
                               id="onboard-password"
-                              type="password"
+                              type={showPassword ? "text" : "password"}
                               placeholder="Create a password"
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
+                              className="w-full pl-11 pr-11 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((v) => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                           </div>
                           {/* Inline password requirements */}
                           <div className="mt-2 space-y-1 text-xs">
