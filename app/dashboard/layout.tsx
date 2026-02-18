@@ -316,7 +316,7 @@ export default function DashboardLayout({
   const [callModalOpen, setCallModalOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { tier, isLoading: isTierLoading } = useTier();
+  const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
   const [userInfo, setUserInfo] = useState<{
     name: string;
@@ -345,9 +345,12 @@ export default function DashboardLayout({
         stage: profile?.stage ?? null,
       });
       setIsAuthChecking(false);
+      // Re-fetch tier now that auth session is confirmed — the initial
+      // fetch may have raced with session setup and returned FREE.
+      refreshTier();
     }
     fetchUser();
-  }, [router]);
+  }, [router, refreshTier]);
 
   const user = {
     name: userInfo?.name || "",
