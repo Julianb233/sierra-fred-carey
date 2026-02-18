@@ -397,9 +397,22 @@ export async function deleteFact(
 }
 
 /**
- * Get all semantic memory for a user (for context building)
+ * Short-lived cache for getAllUserFacts to avoid duplicate DB queries
+ * within a single request cycle. TTL of 5 seconds ensures freshness
+ * across separate requests while deduplicating calls within one.
+ */
+const factsCache = new Map<string, { data: SemanticMemory[]; expiry: number }>();
+
+/**
+ * Get all semantic memory for a user (for context building).
+ * Results are cached for 5s to deduplicate calls within a single request.
  */
 export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]> {
+  const cached = factsCache.get(userId);
+  if (cached && Date.now() < cached.expiry) {
+    return cached.data;
+  }
+
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
@@ -414,7 +427,9 @@ export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]>
     throw error;
   }
 
-  return (data || []).map(transformSemanticRow);
+  const result = (data || []).map(transformSemanticRow);
+  factsCache.set(userId, { data: result, expiry: Date.now() + 5000 });
+  return result;
 }
 
 // ============================================================================
