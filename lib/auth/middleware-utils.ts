@@ -31,7 +31,7 @@ export interface PublicRouteConfig {
  * Default protected routes
  */
 export const DEFAULT_PROTECTED_ROUTES: ProtectedRouteConfig = {
-  paths: ['/dashboard', '/agents', '/documents', '/settings', '/profile', '/chat', '/check-ins', '/video', '/onboarding', '/interactive'],
+  paths: ['/dashboard', '/agents', '/documents', '/settings', '/profile', '/chat', '/check-ins', '/video', '/onboarding'],
   patterns: [/^\/api\/protected\//],
 };
 

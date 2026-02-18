@@ -39,7 +39,8 @@ function NavBar() {
   // - /login has a full-screen centered auth layout
   const isChat = pathname === "/chat";
   const isLogin = pathname === "/login";
-  const hideNavBar = isChat || isDashboard || isLogin;
+  const isCheckIns = pathname?.startsWith("/check-ins");
+  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns;
 
   useEffect(() => {
     const handleScroll = () => {
