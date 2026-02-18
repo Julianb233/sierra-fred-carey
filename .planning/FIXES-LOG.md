@@ -92,4 +92,6 @@ For each fix from Code Fixer:
 | A2 | createOrUpdateProfile writes non-existent enrichment columns (breaks signup) | lib/supabase/auth-helpers.ts | Removed 6 enrichment fields (industry, revenue_range, team_size, funding_history, enriched_at, enrichment_source) from upsert | 61b18b1 |
 | A3 | Orphan cleanup in /api/onboard uses anon client instead of service role | app/api/onboard/route.ts | Import createServiceClient; use it for admin.deleteUser call | 376d706 |
 
+| A4 | FRED chat duplicate getAllUserFacts DB call | app/api/fred/chat/route.ts, lib/fred/context-builder.ts, lib/ai/fred-client.ts, lib/fred/service.ts, lib/fred/types.ts, lib/fred/actors/load-memory.ts | Preload facts in buildFounderContextWithFacts, pass to FredService to skip redundant DB call | 6dcc6f4 |
+
 *Updated: 2026-02-18*
