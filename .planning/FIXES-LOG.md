@@ -84,4 +84,10 @@ For each fix from Code Fixer:
 
 **Milestone modal backdrop (reported minor issue):** Investigated add-milestone-modal.tsx -- it uses the standard Radix Dialog component which includes DialogOverlay with bg-black/50. The overlay is correctly rendered in the component chain (dialog.tsx line 59). Not reproducible from code -- overlay is present.
 
-*Updated: 2026-02-11*
+## Auth Debug Fixes (2026-02-18)
+
+| # | Issue | File(s) | Fix |
+|---|-------|---------|-----|
+| A1 | Missing signup API route | app/api/auth/signup/route.ts | Created POST handler with rate limiting (3/min/IP), input validation, `signUp` from `@/lib/auth` |
+
+*Updated: 2026-02-18*
