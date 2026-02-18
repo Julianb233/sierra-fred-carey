@@ -662,17 +662,36 @@ export function NotificationSettings() {
         {configs.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <GearIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p className="font-medium">Set up your notification channels</p>
-            <p className="text-sm mt-1">
-              Add Slack, PagerDuty, or email integrations to receive alerts when it matters most.
-            </p>
-            <Button
-              className="mt-4 bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
-              onClick={() => setShowAddDialog(true)}
-            >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Add Your First Channel
-            </Button>
+            {error ? (
+              <>
+                <p className="font-medium">Could not load notification channels</p>
+                <p className="text-sm mt-1">
+                  We had trouble loading your settings. This is usually temporary.
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => fetchConfigs()}
+                >
+                  <ReloadIcon className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium">Set up your notification channels</p>
+                <p className="text-sm mt-1">
+                  Add Slack, PagerDuty, or email integrations to receive alerts when it matters most.
+                </p>
+                <Button
+                  className="mt-4 bg-[#ff6a1a] hover:bg-[#ff6a1a]/90"
+                  onClick={() => setShowAddDialog(true)}
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add Your First Channel
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
