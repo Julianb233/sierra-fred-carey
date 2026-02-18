@@ -5,7 +5,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 // ---------------------------------------------------------------------------
 const ContentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://link.msgsndr.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://link.msgsndr.com https://vercel.live https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
