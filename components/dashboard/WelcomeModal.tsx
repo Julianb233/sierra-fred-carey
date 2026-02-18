@@ -43,14 +43,14 @@ export function WelcomeModal({
       icon: Target,
       title: "Reality Lens",
       description:
-        "Upload your pitch deck and get instant AI analysis. See exactly how investors will evaluate your startup.",
+        "Get an honest 5-factor assessment of your startup idea — feasibility, economics, demand, distribution, and timing.",
       color: "from-purple-500 to-indigo-500",
     },
     {
       icon: BarChart3,
       title: "AI Insights",
       description:
-        "Track your metrics, run A/B tests, and get data-driven recommendations tailored to your stage.",
+        "See patterns across your conversations with Fred — key decisions, progress trends, and recommendations tailored to your stage.",
       color: "from-blue-500 to-cyan-500",
     },
     {

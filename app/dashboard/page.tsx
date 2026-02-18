@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, Phone } from "lucide-react";
+import { Loader2, Phone, MessageSquare, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
@@ -146,15 +146,22 @@ function DashboardContent() {
           </p>
         </div>
         <OnboardingChecklist />
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
-            Start a conversation with FRED to populate your command center.
+        <div className="rounded-2xl border-2 border-[#ff6a1a]/30 bg-gradient-to-br from-[#ff6a1a]/5 to-orange-50 dark:from-[#ff6a1a]/10 dark:to-gray-900 p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#ff6a1a] to-orange-500 flex items-center justify-center shadow-lg shadow-[#ff6a1a]/25">
+            <MessageSquare className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Start by talking to Fred
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Fred will ask you the right questions to understand your startup and build your personalized command center.
           </p>
           <a
-            href="/dashboard/chat"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-sm font-medium transition-colors"
+            href="/chat"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#ff6a1a] hover:bg-[#ea580c] text-white font-semibold text-base transition-colors shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40"
           >
-            Talk to FRED
+            Talk to Fred
+            <ArrowRight className="w-5 h-5" />
           </a>
         </div>
         <WelcomeModal
@@ -191,6 +198,25 @@ function DashboardContent() {
 
       {/* Onboarding Checklist (dismissible) */}
       <OnboardingChecklist />
+
+      {/* Work with Fred CTA — prominent for all users */}
+      <a
+        href="/chat"
+        className="flex items-center gap-4 p-4 rounded-2xl border-2 border-[#ff6a1a]/20 bg-gradient-to-r from-[#ff6a1a]/5 to-orange-50/50 dark:from-[#ff6a1a]/10 dark:to-gray-900/50 hover:border-[#ff6a1a]/40 transition-all group"
+      >
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff6a1a] to-orange-500 flex items-center justify-center shadow-md shadow-[#ff6a1a]/20 shrink-0">
+          <MessageSquare className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            Work with Fred
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Get advice, make decisions, and move your startup forward
+          </p>
+        </div>
+        <ArrowRight className="w-5 h-5 text-[#ff6a1a] shrink-0 group-hover:translate-x-1 transition-transform" />
+      </a>
 
       {/* Top: Founder Snapshot Card */}
       <FounderSnapshotCard snapshot={data.founderSnapshot} />

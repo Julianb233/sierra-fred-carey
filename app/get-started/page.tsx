@@ -533,7 +533,8 @@ const OnboardingPage = () => {
                           )}
                         </Button>
 
-                        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-center text-base font-medium text-gray-700 dark:text-gray-300">
+                          <CheckCircle2 className="w-4 h-4 inline-block mr-1.5 text-green-500 -mt-0.5" />
                           No credit card required
                         </p>
                       </div>
