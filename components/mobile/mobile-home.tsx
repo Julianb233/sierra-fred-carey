@@ -11,7 +11,6 @@ import {
   ArrowRight,
   MessageSquare,
   Phone,
-  Loader2,
   AlertCircle,
   Lock,
 } from "lucide-react";
@@ -141,8 +140,28 @@ export function MobileHome() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      <div className="space-y-4 px-1">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            Hey, {userName}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Your Founder Command Center
+          </p>
+        </div>
+        <Card className="border-gray-200 dark:border-gray-800">
+          <CardContent className="p-6 text-center">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              Start a conversation with FRED to populate your command center.
+            </p>
+            <Link href="/dashboard/chat">
+              <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Talk to FRED
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }
