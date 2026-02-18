@@ -16,7 +16,7 @@
 
 **Source:** `.planning/v5.0-QA-FIXES-MILESTONE.md`
 
-- [ ] **Phase 54: Dashboard Routing Fix** — 3 dashboard routes render Settings instead of content (BUG-2) [CRITICAL]
+- [x] **Phase 54: Dashboard Routing Fix** — 3 dashboard routes render Settings instead of content (BUG-2) [CRITICAL]
 - [ ] **Phase 55: Infinite Loading Spinner Fixes** — 4 pages stuck on spinner with no error boundaries (BUG-1, BUG-3) [CRITICAL]
 - [ ] **Phase 56: Demo Page Auth Fix** — 2 demo pages redirect to login for unauthenticated users (BUG-5) [HIGH]
 - [ ] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
@@ -361,7 +361,7 @@ See MILESTONES.md for full details.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 54. Dashboard Routing Fix | v5.0 | 0/TBD | Pending | — |
+| 54. Dashboard Routing Fix | v5.0 | 1/1 | Complete | 2026-02-18 |
 | 55. Infinite Loading Spinner Fixes | v5.0 | 0/TBD | Pending | — |
 | 56. Demo Page Auth Fix | v5.0 | 0/TBD | Pending | — |
 | 57. Duplicate Logo UI Fix | v5.0 | 0/TBD | Pending | — |
