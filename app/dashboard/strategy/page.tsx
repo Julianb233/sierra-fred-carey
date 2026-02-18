@@ -93,26 +93,41 @@ function StrategyContent() {
   }, []);
 
   async function fetchDocuments() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/fred/strategy");
-      const data = await response.json();
+      const response = await fetch("/api/fred/strategy", {
+        signal: controller.signal,
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
 
       if (response.status === 403) {
         setError("Pro tier required for Strategy Documents");
         return;
       }
 
+      const data = await response.json();
+
       if (data.success) {
         setDocuments(data.documents || []);
       } else {
         setError(data.error || "Failed to load documents");
       }
-    } catch {
-      setError("Failed to load strategy documents");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError("Failed to load strategy documents");
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }
