@@ -20,7 +20,14 @@ import {
 export async function GET() {
   try {
     const userId = await requireAuth();
-    const data = await getNextSteps(userId);
+
+    let data;
+    try {
+      data = await getNextSteps(userId);
+    } catch (dbError) {
+      console.warn("[Next Steps API] DB query failed, returning empty:", dbError);
+      data = { critical: [], important: [], optional: [] };
+    }
 
     return NextResponse.json({
       success: true,
@@ -29,10 +36,10 @@ export async function GET() {
   } catch (error) {
     if (error instanceof Response) return error;
     console.error("[Next Steps API] GET error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch next steps" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: { critical: [], important: [], optional: [] },
+    });
   }
 }
 

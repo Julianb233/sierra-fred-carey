@@ -78,32 +78,42 @@ export default function NextStepsPage() {
 
   const handleToggleComplete = useCallback(
     async (stepId: string, completed: boolean) => {
-      const res = await fetch("/api/dashboard/next-steps", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: stepId, completed }),
-      });
-      const json = await res.json();
-      if (!json.success) {
-        throw new Error(json.error);
+      try {
+        const res = await fetch("/api/dashboard/next-steps", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: stepId, completed }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn("[Next Steps] Toggle failed:", json.error);
+        }
+        await fetchSteps();
+      } catch {
+        console.warn("[Next Steps] Toggle request failed");
+        await fetchSteps();
       }
-      await fetchSteps();
     },
     [fetchSteps]
   );
 
   const handleDismiss = useCallback(
     async (stepId: string) => {
-      const res = await fetch("/api/dashboard/next-steps", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: stepId, dismissed: true }),
-      });
-      const json = await res.json();
-      if (!json.success) {
-        throw new Error(json.error);
+      try {
+        const res = await fetch("/api/dashboard/next-steps", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: stepId, dismissed: true }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn("[Next Steps] Dismiss failed:", json.error);
+        }
+        await fetchSteps();
+      } catch {
+        console.warn("[Next Steps] Dismiss request failed");
+        await fetchSteps();
       }
-      await fetchSteps();
     },
     [fetchSteps]
   );
