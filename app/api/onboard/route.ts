@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { stripHtml } from "@/lib/communities/sanitize";
@@ -24,14 +24,10 @@ export async function POST(request: NextRequest) {
     const name = sanitizeField(body.name);
     const email = sanitizeField(body.email);
     const stage = sanitizeField(body.stage);
-    const industry = sanitizeField(body.industry);
-    const revenueRange = sanitizeField(body.revenueRange);
-    const fundingHistory = sanitizeField(body.fundingHistory);
     const ref = sanitizeField(body.ref);
     const password = body.password; // passwords must not be altered
     const isQuickOnboard = body.isQuickOnboard;
     const qualifying = body.qualifying;
-    const teamSize = typeof body.teamSize === "number" ? body.teamSize : undefined;
     const challenges = Array.isArray(body.challenges)
       ? body.challenges.map((c: unknown) => (typeof c === "string" ? stripHtml(c) : String(c)))
       : undefined;
@@ -160,17 +156,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Build enrichment fields from onboarding data
-      const enrichmentFields: Record<string, unknown> = {};
-      if (industry) enrichmentFields.industry = industry;
-      if (revenueRange) enrichmentFields.revenue_range = revenueRange;
-      if (teamSize !== undefined && teamSize !== null) enrichmentFields.team_size = teamSize;
-      if (fundingHistory) enrichmentFields.funding_history = fundingHistory;
-      if (Object.keys(enrichmentFields).length > 0) {
-        enrichmentFields.enriched_at = new Date().toISOString();
-        enrichmentFields.enrichment_source = "onboarding";
-      }
-
       // Only update profile after successful authentication
       const { error: updateError } = await supabase
         .from("profiles")
@@ -181,7 +166,6 @@ export async function POST(request: NextRequest) {
           teammate_emails: teammateEmails || [],
           onboarding_completed: true,
           updated_at: new Date().toISOString(),
-          ...enrichmentFields,
         })
         .eq("id", userId);
 
@@ -242,17 +226,6 @@ export async function POST(request: NextRequest) {
 
       userId = authData.user.id;
 
-      // Build enrichment fields for new profile
-      const newProfileEnrichment: Record<string, unknown> = {};
-      if (industry) newProfileEnrichment.industry = industry;
-      if (revenueRange) newProfileEnrichment.revenue_range = revenueRange;
-      if (teamSize !== undefined && teamSize !== null) newProfileEnrichment.team_size = teamSize;
-      if (fundingHistory) newProfileEnrichment.funding_history = fundingHistory;
-      if (Object.keys(newProfileEnrichment).length > 0) {
-        newProfileEnrichment.enriched_at = new Date().toISOString();
-        newProfileEnrichment.enrichment_source = "onboarding";
-      }
-
       // Create profile record
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: userId,
@@ -264,7 +237,6 @@ export async function POST(request: NextRequest) {
         onboarding_completed: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        ...newProfileEnrichment,
       });
 
       if (profileError) {
@@ -280,13 +252,13 @@ export async function POST(request: NextRequest) {
           onboarding_completed: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          ...newProfileEnrichment,
         });
         if (retryError) {
           console.error("[onboard] Profile creation retry failed:", retryError);
           // Clean up orphaned auth user to avoid inconsistent state
           try {
-            await supabase.auth.admin.deleteUser(userId);
+            const supabaseAdmin = createServiceClient();
+            await supabaseAdmin.auth.admin.deleteUser(userId);
             logger.log("[onboard] Cleaned up orphaned auth user:", userId);
           } catch (cleanupErr) {
             console.error("[onboard] Failed to clean up auth user:", cleanupErr);
