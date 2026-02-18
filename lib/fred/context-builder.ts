@@ -390,6 +390,19 @@ export async function buildFounderContext(
   userId: string,
   hasPersistentMemory: boolean
 ): Promise<string> {
+  const result = await buildFounderContextWithFacts(userId, hasPersistentMemory);
+  return result.context;
+}
+
+/**
+ * Build founder context AND return the pre-loaded semantic facts.
+ * The facts can be passed into the XState machine to avoid a duplicate
+ * getAllUserFacts DB call in loadMemoryActor.
+ */
+export async function buildFounderContextWithFacts(
+  userId: string,
+  hasPersistentMemory: boolean
+): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
     const [profile, facts, isFirstConversation, progressContext] = await Promise.all([
       loadFounderProfile(userId),
@@ -411,10 +424,10 @@ export async function buildFounderContext(
       context += "\n\n" + progressContext;
     }
 
-    return context;
+    return { context, facts };
   } catch (error) {
     console.warn("[FRED Context] Failed to build founder context (non-blocking):", error);
-    return "";
+    return { context: "", facts: [] };
   }
 }
 

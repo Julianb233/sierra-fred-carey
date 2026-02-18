@@ -31,7 +31,7 @@ import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
-import { buildFounderContext } from "@/lib/fred/context-builder";
+import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
@@ -305,8 +305,8 @@ async function handlePost(req: NextRequest) {
 
     // ── Parallel context loading ─────────────────────────────────────
     // These five calls are independent of each other — run in parallel.
-    const [founderContext, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult] = await Promise.all([
-      buildFounderContext(userId, hasPersistentMemory),
+    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult] = await Promise.all([
+      buildFounderContextWithFacts(userId, hasPersistentMemory),
       getOrCreateConversationState(userId).catch((error) => {
         console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
         return null as ConversationState | null;
@@ -334,6 +334,11 @@ async function handlePost(req: NextRequest) {
         }
       })(),
     ]);
+
+    // Destructure founder context result — facts are passed to the machine
+    // to avoid a duplicate getAllUserFacts DB call in loadMemoryActor
+    const founderContext = founderContextResult.context;
+    const preloadedFacts = founderContextResult.facts;
 
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
@@ -479,13 +484,14 @@ async function handlePost(req: NextRequest) {
       deckReviewReadyBlock,
     ].filter(Boolean).join("\n\n");
 
-    // Create FRED service
+    // Create FRED service — pass preloadedFacts to avoid duplicate getAllUserFacts DB call
     const fredService = createFredService({
       userId,
       sessionId: effectiveSessionId,
       enableObservability: true,
       founderContext: fullContext,
       conversationState: stateContext,
+      preloadedFacts,
     });
 
     // Non-streaming response

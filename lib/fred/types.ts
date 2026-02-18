@@ -68,6 +68,8 @@ export interface FredContext {
   conversationState: ConversationStateContext | null;
   /** When true, skip human_review state (chat has no approval UI) */
   chatMode: boolean;
+  /** Pre-loaded semantic facts from buildFounderContext to avoid duplicate DB calls */
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>;
 }
 
 /**

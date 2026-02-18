@@ -18,6 +18,8 @@ export interface FredServiceOptions {
   founderContext?: string;
   /** Conversation state for structured flow (Phase 36) */
   conversationState?: ConversationStateContext | null;
+  /** Pre-loaded semantic facts to avoid duplicate getAllUserFacts DB call */
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>;
   onStateChange?: (state: string, context: FredContext) => void;
   onError?: (error: Error) => void;
 }
@@ -60,6 +62,7 @@ export class FredService {
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
+        preloadedFacts: this.options.preloadedFacts,
         chatMode: true,
       },
     });
@@ -169,6 +172,7 @@ export class FredService {
         sessionId: this.options.sessionId,
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
+        preloadedFacts: this.options.preloadedFacts,
         chatMode: true,
       },
     });

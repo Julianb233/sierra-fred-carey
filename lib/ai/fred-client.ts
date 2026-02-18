@@ -10,7 +10,6 @@
  */
 
 import {
-  generateText,
   generateObject,
   streamText,
   streamObject,
@@ -110,7 +109,11 @@ export async function generate(
 ): Promise<GenerateResult> {
   const model = getModel(options.model || "primary");
 
-  const result = await generateText({
+  // Use streamText internally to reduce TTFB — the OpenAI API begins returning
+  // tokens faster in streaming mode. Awaiting `result.text` auto-consumes the
+  // stream and collects the full response, so callers still get a complete
+  // GenerateResult.
+  const result = streamText({
     model,
     prompt,
     system: options.system,
@@ -119,15 +122,22 @@ export async function generate(
     abortSignal: options.abortSignal,
   });
 
+  const [text, usage, finishReason, response] = await Promise.all([
+    result.text,
+    result.usage,
+    result.finishReason,
+    result.response,
+  ]);
+
   return {
-    text: result.text,
+    text,
     usage: {
-      promptTokens: result.usage.inputTokens ?? 0,
-      completionTokens: result.usage.outputTokens ?? 0,
-      totalTokens: (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
     },
-    finishReason: result.finishReason,
-    modelId: result.response?.modelId ?? "unknown",
+    finishReason,
+    modelId: response?.modelId ?? "unknown",
   };
 }
 
@@ -147,7 +157,8 @@ export async function generateFromMessages(
 ): Promise<GenerateResult> {
   const model = getModel(options.model || "primary");
 
-  const result = await generateText({
+  // Use streamText internally to reduce TTFB (same optimization as generate())
+  const result = streamText({
     model,
     messages,
     system: options.system,
@@ -156,15 +167,22 @@ export async function generateFromMessages(
     abortSignal: options.abortSignal,
   });
 
+  const [text, usage, finishReason, response] = await Promise.all([
+    result.text,
+    result.usage,
+    result.finishReason,
+    result.response,
+  ]);
+
   return {
-    text: result.text,
+    text,
     usage: {
-      promptTokens: result.usage.inputTokens ?? 0,
-      completionTokens: result.usage.outputTokens ?? 0,
-      totalTokens: (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
     },
-    finishReason: result.finishReason,
-    modelId: result.response?.modelId ?? "unknown",
+    finishReason,
+    modelId: response?.modelId ?? "unknown",
   };
 }
 

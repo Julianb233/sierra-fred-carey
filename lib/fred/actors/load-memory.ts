@@ -25,7 +25,8 @@ import type { MemoryContext } from "../types";
 export async function loadMemoryActor(
   userId: string,
   sessionId: string,
-  tier: string = "free"
+  tier: string = "free",
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>
 ): Promise<MemoryContext> {
   // Resolve tier config with graceful fallback
   const normalizedTier = (tier?.toLowerCase() || "free") as MemoryTier;
@@ -36,7 +37,7 @@ export async function loadMemoryActor(
     if (config.retentionDays === 0) {
       return {
         recentEpisodes: [],
-        relevantFacts: [],
+        relevantFacts: preloadedFacts ?? [],
         recentDecisions: [],
       };
     }
@@ -48,12 +49,15 @@ export async function loadMemoryActor(
       getRecentDecisions,
     } = await import("@/lib/db/fred-memory");
 
-    // Load in parallel for efficiency, applying tier-based limits
+    // Load in parallel for efficiency, applying tier-based limits.
+    // If facts were pre-loaded by buildFounderContext, skip the duplicate DB call.
     const [episodes, facts, decisions] = await Promise.all([
       config.loadEpisodic
         ? retrieveRecentEpisodes(userId, { limit: config.maxEpisodicItems }).catch(() => [])
         : Promise.resolve([]),
-      getAllUserFacts(userId).catch(() => []),
+      preloadedFacts
+        ? Promise.resolve(preloadedFacts)
+        : getAllUserFacts(userId).then((f) => f.map((fact) => ({ category: fact.category, key: fact.key, value: fact.value }))).catch(() => []),
       getRecentDecisions(userId, { limit: Math.min(config.maxMessages, 10) }).catch(() => []),
     ]);
 
@@ -83,7 +87,7 @@ export async function loadMemoryActor(
     // Return empty context on error - memory is non-critical
     return {
       recentEpisodes: [],
-      relevantFacts: [],
+      relevantFacts: preloadedFacts ?? [],
       recentDecisions: [],
     };
   }
