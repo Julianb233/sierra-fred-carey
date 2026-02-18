@@ -269,13 +269,6 @@ async function createOrUpdateProfile(
       teammate_emails: [],
       tier: 0, // Default to FREE tier
       onboarding_completed: false,
-      // Enrichment fields default to NULL (optional)
-      industry: null,
-      revenue_range: null,
-      team_size: null,
-      funding_history: null,
-      enriched_at: null,
-      enrichment_source: null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "id" }
