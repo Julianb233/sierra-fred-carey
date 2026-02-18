@@ -78,7 +78,7 @@ export default defineAgent({
       tts,
     });
 
-    const session = new AgentSession({ stt, llm, tts });
+    const session = new AgentSession();
 
     session.on(AgentSessionEventTypes.UserInputTranscribed, (ev) => {
       if (ev.isFinal) {
@@ -105,10 +105,19 @@ export default defineAgent({
       console.log(`[Fred Voice Agent] Session closed: ${ev.reason}`);
     });
 
+    // P1 Fix: Register shutdown callback to close session cleanly
+    ctx.addShutdownCallback(async () => {
+      console.log('[Fred Voice Agent] Shutting down, closing session...');
+      await session.close();
+    });
+
     await session.start({
       agent,
       room: ctx.room,
     });
+
+    // P1 Fix: Small delay to let audio output track initialize before greeting
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Send Fred's greeting
     session.say(

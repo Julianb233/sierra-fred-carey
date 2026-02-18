@@ -81,7 +81,8 @@ async function handlePost(req: NextRequest) {
     }
 
     // Create a unique room name scoped to this user and call
-    const roomName = `fred-call_${userId}_${Date.now()}`;
+    // userId must come first — the webhook's extractUserIdFromRoom() splits on the first underscore
+    const roomName = `${userId}_fred-call_${Date.now()}`;
     const httpUrl = getLivekitHttpUrl(livekitUrl);
 
     // 1. Create the room on LiveKit server so it exists before the client connects

@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Room,
   RoomEvent,
+  Track,
+  type RemoteTrackPublication,
+  type RemoteParticipant,
 } from "livekit-client";
 import {
   Dialog,
@@ -96,6 +99,7 @@ export function CallFredModal({
 
   const roomNameRef = useRef<string>("");
   const roomRef = useRef<Room | null>(null);
+  const agentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
   );
@@ -110,9 +114,13 @@ export function CallFredModal({
     }
   }, [seconds, callState, maxDuration]);
 
-  // Clean up LiveKit room on unmount or when modal closes
+  // Clean up LiveKit room and timers on unmount
   useEffect(() => {
     return () => {
+      if (agentTimeoutRef.current) {
+        clearTimeout(agentTimeoutRef.current);
+        agentTimeoutRef.current = null;
+      }
       if (roomRef.current) {
         roomRef.current.disconnect();
         roomRef.current = null;
@@ -160,24 +168,54 @@ export function CallFredModal({
       const room = new Room();
       roomRef.current = room;
 
-      // Listen for transcript data from the voice agent
-      room.on(RoomEvent.DataReceived, (payload: Uint8Array) => {
-        try {
-          const message = JSON.parse(new TextDecoder().decode(payload));
-          if (message.speaker && message.text) {
-            setTranscriptEntries((prev) => [
-              ...prev,
-              {
-                speaker: message.speaker,
-                text: message.text,
-                timestamp: message.timestamp || new Date().toISOString(),
-              },
-            ]);
+      // P0 Fix: Attach remote audio tracks so the user can hear Fred
+      room.on(
+        RoomEvent.TrackSubscribed,
+        (track, _publication: RemoteTrackPublication, _participant: RemoteParticipant) => {
+          if (track.kind === Track.Kind.Audio) {
+            const audioEl = track.attach();
+            document.body.appendChild(audioEl);
           }
-        } catch {
-          // Ignore non-JSON data packets
         }
+      );
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach((el) => el.remove());
       });
+
+      // P1 Fix: Handle unexpected disconnects
+      room.on(RoomEvent.Disconnected, () => {
+        if (agentTimeoutRef.current) {
+          clearTimeout(agentTimeoutRef.current);
+          agentTimeoutRef.current = null;
+        }
+        roomRef.current = null;
+        setError("Call disconnected unexpectedly. Please try again.");
+        setCallState("error");
+      });
+
+      // Listen for transcript data from the voice agent (filtered by topic)
+      room.on(
+        RoomEvent.DataReceived,
+        (payload: Uint8Array, _participant, _kind, topic) => {
+          if (topic !== undefined && topic !== "transcript") return;
+          try {
+            const message = JSON.parse(new TextDecoder().decode(payload));
+            if (message.speaker && message.text) {
+              setTranscriptEntries((prev) => [
+                ...prev,
+                {
+                  speaker: message.speaker,
+                  text: message.text,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                },
+              ]);
+            }
+          } catch {
+            // Ignore non-JSON data packets
+          }
+        }
+      );
 
       try {
         await room.connect(data.url, data.token);
@@ -194,6 +232,28 @@ export function CallFredModal({
         room.disconnect();
         roomRef.current = null;
         throw new Error("Microphone access is required for the call. Please allow microphone permissions and try again.");
+      }
+
+      // P1 Fix: Timeout if agent doesn't join within 30 seconds
+      const hasRemoteParticipant = room.remoteParticipants.size > 0;
+      if (!hasRemoteParticipant) {
+        agentTimeoutRef.current = setTimeout(() => {
+          agentTimeoutRef.current = null;
+          if (roomRef.current && roomRef.current.remoteParticipants.size === 0) {
+            roomRef.current.disconnect();
+            roomRef.current = null;
+            setError("Fred couldn't join the call. Please try again in a moment.");
+            setCallState("error");
+          }
+        }, 30_000);
+
+        // Clear timeout when agent joins
+        room.on(RoomEvent.ParticipantConnected, () => {
+          if (agentTimeoutRef.current) {
+            clearTimeout(agentTimeoutRef.current);
+            agentTimeoutRef.current = null;
+          }
+        });
       }
 
       setCallState("in-call");

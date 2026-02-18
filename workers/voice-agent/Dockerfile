@@ -2,9 +2,9 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files and install ALL dependencies (tsx is a devDependency needed at runtime)
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 # Copy only what the worker needs
 COPY workers/voice-agent/ ./workers/voice-agent/
