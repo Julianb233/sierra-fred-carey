@@ -95,7 +95,10 @@ function NavBar() {
   ];
 
   // Don't render NavBar on pages that have their own navigation
+  // Return null immediately on first render too (pathname is available synchronously from usePathname)
   if (hideNavBar) return null;
+  // Also hide if pathname hasn't resolved yet (SSR/hydration) — safer than flashing public nav
+  if (!pathname) return null;
 
   return (
     <motion.nav
