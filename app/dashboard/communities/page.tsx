@@ -27,9 +27,16 @@ export default function CommunitiesPage() {
   const [showMyOnly, setShowMyOnly] = useState(false);
   const [joiningSlugs, setJoiningSlugs] = useState<Set<string>>(new Set());
   const [error, setError] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     fetchCommunities();
+
+    const timeoutId = setTimeout(() => {
+      setTimedOut(true);
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   async function fetchCommunities() {
@@ -179,24 +186,28 @@ export default function CommunitiesPage() {
             Retry
           </Button>
         </div>
-      ) : loading ? (
+      ) : loading && !timedOut ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <CommunityCardSkeleton key={i} />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : (loading && timedOut) || filtered.length === 0 ? (
         <div className="text-center py-16">
           <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
             <Users className="h-8 w-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {search || activeCategory !== "all" || showMyOnly
+            {loading && timedOut
+              ? "Communities are taking a while to load"
+              : search || activeCategory !== "all" || showMyOnly
               ? "No communities found"
               : "No communities yet"}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-            {search || activeCategory !== "all" || showMyOnly
+            {loading && timedOut
+              ? "Try refreshing the page or check back later."
+              : search || activeCategory !== "all" || showMyOnly
               ? "Try adjusting your search or filters."
               : "Be the first to create a community for founders."}
           </p>
