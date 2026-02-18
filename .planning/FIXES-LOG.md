@@ -118,4 +118,15 @@ For each fix from Code Fixer:
 | C3 | /product page CTA audit | app/product/page.tsx | Confirmed A9 fix in place — all CTAs say "Get Started", no waitlist references | N/A (no change needed) |
 | C4 | Empty state check: insights + coaching pages | app/dashboard/insights/page.tsx, app/dashboard/coaching/page.tsx | Insights has proper empty states per tab. Coaching uses FeatureLock (upgrade prompt) + lobby state. Both adequate. | N/A (no change needed) |
 
+## Full Stack Audit v3 Fixes (2026-02-18)
+
+| # | Source | Severity | Description | File(s) | Commit | Status |
+|---|--------|----------|-------------|---------|--------|--------|
+| D1 | Backend Validator | P1 | 12 API handlers return 500 instead of 401 for unauthenticated requests | app/api/team/route.ts, app/api/share/route.ts, app/api/investor-lens/deck-request/route.ts, app/api/positioning/quick-check/route.ts, app/api/journey/milestones/[id]/route.ts | 76b3630 | DONE (pre-existing) |
+| D2 | Source Code Review | BUG | Dead link `/dashboard/chat` in check-ins empty state | app/check-ins/page.tsx:201 | 3f0dbdd | DONE |
+| D3 | Source Code Review | Minor | "Join Waitlist" duplicate entry on linktree page | app/links/page.tsx:32-37 | 6d3049f | DONE |
+| D4 | UX Explorer | Minor | "Join Waitlist" CTA on /product page | app/product/page.tsx | N/A | Already fixed (A9) |
+| D5 | Source Code Review | Cleanup | Orphaned /api/dashboard/nav endpoint | app/api/dashboard/nav/route.ts | f64b84a | DONE (removed) |
+| D6 | Source Code Review | Cleanup | Orphaned /api/dashboard/next-actions endpoint | app/api/dashboard/next-actions/route.ts | f64b84a | DONE (removed) |
+
 *Updated: 2026-02-18*

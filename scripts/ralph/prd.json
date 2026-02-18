@@ -227,6 +227,33 @@
       "priority": 2,
       "passes": true,
       "notes": "Fix B2 stripped PostgREST-special characters from search"
+    },
+    {
+      "id": "US-026",
+      "title": "API routes return 401 (not 500) for unauthenticated requests",
+      "description": "As an API consumer, unauthenticated requests should return 401 with proper error message instead of 500",
+      "acceptanceCriteria": ["GET/POST/DELETE/PATCH /api/team return 401 without auth", "GET/POST/DELETE /api/share return 401 without auth", "POST /api/investor-lens/deck-request returns 401 without auth", "POST /api/positioning/quick-check returns 401 without auth", "GET/PATCH/DELETE /api/journey/milestones/[id] return 401 without auth"],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fixed in commit 76b3630 -- added `if (error instanceof Response) return error;` to 12 catch blocks across 5 files"
+    },
+    {
+      "id": "US-027",
+      "title": "Check-ins empty state links to correct chat page",
+      "description": "As a user on the check-ins page with no check-ins, the 'Talk to FRED' button should navigate to /chat",
+      "acceptanceCriteria": ["Talk to FRED button links to /chat", "No 404 error when clicking the button"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fixed in commit 3f0dbdd -- changed href from /dashboard/chat to /chat"
+    },
+    {
+      "id": "US-028",
+      "title": "Links page has no misleading waitlist references",
+      "description": "As a visitor on the linktree page, all links should reflect that signup is live (no waitlist references)",
+      "acceptanceCriteria": ["No 'Join Waitlist' text on /links page", "No duplicate 'Get Started' entries"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fixed in commit 6d3049f -- removed duplicate entry that was formerly 'Join Waitlist'"
     }
   ]
 }
