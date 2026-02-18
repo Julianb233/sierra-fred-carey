@@ -100,4 +100,22 @@ For each fix from Code Fixer:
 | A9 | Product page CTAs say "Join Waitlist" but signup is live | app/product/page.tsx | Changed to "Get Started" / "Get Started Free" pointing to /signup | 0ad8165 |
 | A10 | /ai-insights bare route returns 404 | app/ai-insights/page.tsx | Created redirect to /dashboard/insights | 8435c81 |
 
+### Batch B — Frontend UX Fixes
+
+| # | Issue | File(s) | Fix | Commit |
+|---|-------|---------|-----|--------|
+| B1 | Features nav chevron (no dropdown) | components/navbar.tsx | Already fixed — DropdownMenu with 5 feature sub-items + "View all features" link is properly wired | N/A (no change needed) |
+| B2 | Mobile bottom nav only 5 items, Documents + Community unreachable | components/mobile/mobile-bottom-nav.tsx | Added Docs and Community items (7 total) | 8f82146 |
+| B3 | FRED greeting/feedback placeholders | lib/fred/actors/decide.ts, lib/fred/machine.ts | Already fixed in commit 819c4b2 — no remaining `[GREETING]`/`[FEEDBACK]`/`[PLACEHOLDER]` tokens found | N/A (no change needed) |
+| B4 | Hero "create a unicorn" underline animation | components/hero.tsx:107 | `inline-block` is correct for the underline pseudo-element to span text width — animation works as intended | N/A (no change needed) |
+
+## Nav & UX Polish Fixes (2026-02-18)
+
+| # | Issue | File(s) | Fix | Commit |
+|---|-------|---------|-----|--------|
+| C1 | Sidebar nav has 19+ core items (overwhelming) | app/dashboard/layout.tsx | Reduced core nav to 13 items, moved Inbox/Notifications/History/Memory/Sharing/Invitations out. Added section labels for Investor Tools and Studio conditional groups. | 66000fe |
+| C2 | /waitlist page still shows waitlist form (signup is live) | app/waitlist/page.tsx | Replaced with server-side redirect to /get-started | 5e7961a |
+| C3 | /product page CTA audit | app/product/page.tsx | Confirmed A9 fix in place — all CTAs say "Get Started", no waitlist references | N/A (no change needed) |
+| C4 | Empty state check: insights + coaching pages | app/dashboard/insights/page.tsx, app/dashboard/coaching/page.tsx | Insights has proper empty states per tab. Coaching uses FeatureLock (upgrade prompt) + lobby state. Both adequate. | N/A (no change needed) |
+
 *Updated: 2026-02-18*
