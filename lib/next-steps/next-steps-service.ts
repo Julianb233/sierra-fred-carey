@@ -243,7 +243,7 @@ function extractNextActions(
     const trimmed = line.trim();
     const itemMatch = trimmed.match(/^(?:\d+\.\s*|-\s*\*?\*?)(.+)/);
     if (itemMatch) {
-      const fullText = itemMatch[1].trim().replace(/\*+$/g, "").trim();
+      const fullText = itemMatch[1].trim().replace(/^\*+/, "").replace(/\*+$/g, "").trim();
 
       // Try to split description from "why it matters"
       const separatorMatch = fullText.match(
@@ -251,7 +251,7 @@ function extractNextActions(
       );
       if (separatorMatch && separatorMatch[2].length > 20) {
         actions.push({
-          description: separatorMatch[1].trim(),
+          description: separatorMatch[1].trim().replace(/^\*+/, "").replace(/\*+$/, ""),
           whyItMatters: separatorMatch[2].trim(),
         });
       } else {
