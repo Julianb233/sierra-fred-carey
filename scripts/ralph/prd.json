@@ -1,169 +1,232 @@
 {
-  "project": "Sahara",
-  "branchName": "ralph/phase-47-community-data-layer-consent",
-  "description": "Create the community data layer foundation (14 tables, RLS policies, materialized views, triggers) and consent management system (CRUD module, API routes, Settings UI) for Phases 47-53",
+  "project": "Sahara - AI Founder Operating System",
+  "branchName": "ralph/full-stack-audit-fixes",
+  "description": "Full stack UX audit fixes and feature validation for Sahara app",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Create migration 053 with 14 new tables and ALTER columns",
-      "description": "As a developer, I need to create migration 053_community_data_layer.sql containing all 14 new tables (community_profiles, consent_preferences, consent_audit_log, subcommunity_sponsors, cohorts, cohort_members, social_feed_posts, social_feed_reactions, social_feed_comments, founder_messages, founder_connections, expert_listings, reputation_events, engagement_streaks), 3 new columns on the existing communities table (parent_community_id, is_sponsored, tier_required), with correct columns, types, constraints, and foreign keys.",
-      "acceptanceCriteria": [
-        "File exists at lib/db/migrations/053_community_data_layer.sql",
-        "grep -c 'CREATE TABLE' returns 14",
-        "ALTER TABLE communities adds parent_community_id, is_sponsored, tier_required",
-        "Every table has id UUID PRIMARY KEY DEFAULT gen_random_uuid()",
-        "FK references match existing table column types exactly (e.g. milestones.id type)",
-        "Appropriate indexes on user_id columns, FK columns, and created_at DESC",
-        "updated_at trigger using existing update_updated_at_column() function where applicable",
-        "Typecheck passes"
-      ],
+      "title": "User can sign up with email and password",
+      "description": "As a founder, I want to create an account so that I can access FRED's mentor capabilities",
+      "acceptanceCriteria": ["Signup form submits successfully", "Account created in Supabase", "Redirected to onboarding", "No DB column errors"],
       "priority": 1,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql (054 instead of 053 since 053 was taken). Follow exact pattern from migration 051_founder_communities.sql (DO $$ BEGIN...EXCEPTION WHEN duplicate_object THEN NULL; END $$)."
+      "notes": "Auth debug team fixed missing columns and created /api/auth/signup route. Enrichment columns removed from createOrUpdateProfile and onboard route."
     },
     {
       "id": "US-002",
-      "title": "Enable RLS and create policies for all 14 new tables",
-      "description": "As a developer, I need to enable Row Level Security on all 14 new tables and create comprehensive RLS policies: user-scoped for personal data (consent_preferences, consent_audit_log, engagement_streaks, reputation_events), owner CRUD for user content (community_profiles, social_feed_posts, comments, reactions, expert_listings), party-based for messaging (founder_messages, founder_connections), cohort-member-scoped for cohorts, and service_role ALL policies on every table.",
-      "acceptanceCriteria": [
-        "grep -c 'ENABLE ROW LEVEL SECURITY' returns 14",
-        "grep -c 'CREATE POLICY' returns at least 40",
-        "Every table has a service_role ALL policy",
-        "consent_preferences SELECT policy uses auth.uid() = user_id",
-        "founder_messages SELECT allows both sender_id and recipient_id",
-        "All policies wrapped in idempotent DO $$ BEGIN...EXCEPTION blocks",
-        "Typecheck passes"
-      ],
-      "priority": 2,
+      "title": "User can log in with email and password",
+      "description": "As a founder, I want to log in to my existing account to access the dashboard",
+      "acceptanceCriteria": ["Login form accepts email/password", "Session cookie set on success", "Redirected to dashboard", "Error shown on wrong credentials"],
+      "priority": 1,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql. RLS policies are Section 7 of the migration. Already implemented as part of US-001 — 14 ENABLE RLS + 50 CREATE POLICY (14 service_role ALL)."
+      "notes": "Login flow works via /api/auth/login calling signIn from lib/auth.ts"
     },
     {
       "id": "US-003",
-      "title": "Create counter-sync triggers for social feed posts",
-      "description": "As a developer, I need to create triggers on social_feed_reactions and social_feed_comments that automatically sync reaction_count and comment_count on social_feed_posts, following the exact pattern from migration 051 (sync_post_reaction_count, sync_post_reply_count).",
-      "acceptanceCriteria": [
-        "Trigger function sync_post_reaction_count exists and updates social_feed_posts.reaction_count",
-        "Trigger function sync_post_comment_count exists and updates social_feed_posts.comment_count",
-        "Triggers fire AFTER INSERT OR DELETE on social_feed_reactions and social_feed_comments",
-        "Pattern matches migration 051 exactly",
-        "Typecheck passes"
-      ],
-      "priority": 3,
+      "title": "User can reset forgotten password",
+      "description": "As a founder, I want to reset my password if I forget it",
+      "acceptanceCriteria": ["Forgot password link on login page", "Password reset email sent", "Reset form works", "Can log in with new password"],
+      "priority": 2,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql (Section 3 of migration). Already implemented as part of US-001."
+      "notes": "Fix #25 added forgot-password link and reset pages with Supabase flow"
     },
     {
       "id": "US-004",
-      "title": "Create consent audit trigger on consent_preferences",
-      "description": "As a developer, I need to create a trigger on consent_preferences that fires AFTER INSERT OR UPDATE and inserts a row into consent_audit_log with old and new values. For INSERT, previous_value should be false (the default).",
-      "acceptanceCriteria": [
-        "Trigger function log_consent_change exists",
-        "Trigger fires AFTER INSERT OR UPDATE on consent_preferences",
-        "INSERT operations log previous_value as false",
-        "UPDATE operations log actual OLD.enabled value",
-        "consent_audit_log rows created automatically on consent_preferences changes",
-        "Typecheck passes"
-      ],
-      "priority": 4,
+      "title": "Dashboard sidebar shows all navigation items",
+      "description": "As a user, I want to see all available features in the dashboard sidebar so I can navigate to them",
+      "acceptanceCriteria": ["All dashboard routes have sidebar links", "Wellbeing, Inbox, Notifications, Investor Targeting, Snapshot, Video, Memory, Sharing, Invitations all visible"],
+      "priority": 1,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql (Section 4 of migration). Already implemented as part of US-001."
+      "notes": "Fix #1 added 9 missing sidebar items. Fix #20 ensured 44px touch targets."
     },
     {
       "id": "US-005",
-      "title": "Create consent-gated materialized views with k-anonymity",
-      "description": "As a developer, I need to create two materialized views (benchmark_stage_aggregates and benchmark_industry_aggregates) that INNER JOIN on consent_preferences to only include opted-in users, with HAVING COUNT(*) >= 5 for k-anonymity. Include unique indexes for REFRESH CONCURRENTLY and a refresh function.",
-      "acceptanceCriteria": [
-        "benchmark_stage_aggregates materialized view exists with consent JOIN",
-        "benchmark_industry_aggregates materialized view exists with consent JOIN",
-        "Both views have HAVING COUNT(*) >= 5 for k-anonymity",
-        "Unique indexes exist on stage and industry columns for CONCURRENTLY refresh",
-        "refresh_benchmark_aggregates() function exists and refreshes both views",
-        "Typecheck passes"
-      ],
-      "priority": 5,
+      "title": "FRED chat works without crashes",
+      "description": "As a founder, I want to chat with FRED AI mentor without the page crashing or losing session",
+      "acceptanceCriteria": ["Can send message to FRED", "Streaming response completes", "No about:blank crash", "Session preserved across messages"],
+      "priority": 1,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql (Section 5 of migration). Already implemented as part of US-001."
+      "notes": "Fix #28 added safe SSE stream handling, closed flag, mountedRef guards, graceful error on stream termination"
     },
     {
       "id": "US-006",
-      "title": "Set REPLICA IDENTITY FULL and add table comments",
-      "description": "As a developer, I need to set REPLICA IDENTITY FULL on social_feed_posts and founder_messages for future Supabase Realtime support, and add COMMENT ON TABLE for every new table explaining its purpose and which phase uses it.",
-      "acceptanceCriteria": [
-        "ALTER TABLE social_feed_posts REPLICA IDENTITY FULL is present",
-        "ALTER TABLE founder_messages REPLICA IDENTITY FULL is present",
-        "All 14 new tables have COMMENT ON TABLE statements",
-        "Typecheck passes"
-      ],
-      "priority": 6,
+      "title": "AI Insights page loads without 404",
+      "description": "As a founder, I want to access AI Insights from the dashboard",
+      "acceptanceCriteria": ["Clicking AI Insights in nav loads a page", "No 404 error", "/dashboard/ai-insights redirects to /dashboard/insights"],
+      "priority": 2,
       "passes": true,
-      "notes": "Files: lib/db/migrations/054_community_data_layer.sql (Sections 6 and 8 of migration). Already implemented as part of US-001."
+      "notes": "Fix #30 added redirect from /dashboard/ai-insights to /dashboard/insights"
     },
     {
       "id": "US-007",
-      "title": "Create consent CRUD module with merge-with-defaults pattern",
-      "description": "As a developer, I need to create lib/db/consent.ts exporting getConsentPreferences, updateConsentPreference, isConsentEnabled, CONSENT_DEFAULTS (all false/opt-in), and CONSENT_CATEGORIES. Follow the exact structural pattern from lib/push/preferences.ts with merge-with-defaults logic using createServiceClient().",
-      "acceptanceCriteria": [
-        "lib/db/consent.ts exists and exports getConsentPreferences, updateConsentPreference, isConsentEnabled",
-        "CONSENT_DEFAULTS has 4 categories (benchmarks, social_feed, directory, messaging) all defaulting to false",
-        "CONSENT_CATEGORIES exported as ConsentCategory[]",
-        "getConsentPreferences merges stored rows with CONSENT_DEFAULTS",
-        "updateConsentPreference uses UPSERT (not separate insert/update)",
-        "createServiceClient pattern matches push/preferences.ts",
-        "Typecheck passes"
-      ],
-      "priority": 7,
+      "title": "Risk alerts show empty state instead of error",
+      "description": "As a founder, I want to see a friendly message when there are no risk alerts instead of an error",
+      "acceptanceCriteria": ["Risk alerts widget shows empty state on no data", "No 'Unable to load' error message"],
+      "priority": 2,
       "passes": true,
-      "notes": "Files: lib/db/consent.ts. Already implemented following push/preferences.ts pattern."
+      "notes": "Fix #24 added friendly empty state on API error"
     },
     {
       "id": "US-008",
-      "title": "Create consent API route with GET and PUT handlers",
-      "description": "As a developer, I need to create app/api/community/consent/route.ts with authenticated GET (returns all consent preferences) and PUT (toggles a specific category) endpoints following the existing API response pattern { success: true/false, data/error }.",
-      "acceptanceCriteria": [
-        "app/api/community/consent/route.ts exists with GET and PUT exports",
-        "GET handler calls requireAuth() and returns preferences via getConsentPreferences",
-        "PUT handler validates category against CONSENT_CATEGORIES",
-        "PUT handler calls updateConsentPreference with UPSERT",
-        "Both handlers follow { success: true, data } / { success: false, error } pattern",
-        "Typecheck passes"
-      ],
-      "priority": 8,
+      "title": "Admin panel handles non-admin users gracefully",
+      "description": "As a non-admin user, I should see a login page or access denied instead of an infinite redirect loop",
+      "acceptanceCriteria": ["Non-admin visiting /admin sees login page", "No infinite redirect loop", "Admin login renders properly"],
+      "priority": 2,
       "passes": true,
-      "notes": "Files: app/api/community/consent/route.ts. Already implemented with GET+PUT, requireAuth via @/lib/auth."
+      "notes": "Fix #31 added middleware x-pathname header and admin layout login detection"
     },
     {
       "id": "US-009",
-      "title": "Create ConsentSettings component with instant-save toggles",
-      "description": "As a developer, I need to create components/settings/ConsentSettings.tsx as a 'use client' component with 4 toggle switches (Benchmark Data, Social Feed, Founder Directory, Direct Messaging) that save immediately on toggle via fetch to /api/community/consent, with loading skeleton and toast feedback via sonner.",
-      "acceptanceCriteria": [
-        "components/settings/ConsentSettings.tsx exists as 'use client' component",
-        "Card with title 'Community Data Sharing' and description about opt-in",
-        "4 Switch components for each consent category",
-        "Each toggle calls PUT /api/community/consent immediately (no Save button)",
-        "Loading skeleton shown while fetching initial state",
-        "Toast notifications on success/error via sonner",
-        "No server-only imports (labels/descriptions duplicated as client-safe constants)",
-        "Typecheck passes"
-      ],
-      "priority": 9,
+      "title": "Community posts require membership",
+      "description": "As a community owner, I want only members to be able to post in my community",
+      "acceptanceCriteria": ["Non-members cannot create posts", "Membership check enforced on API", "Private communities block self-join"],
+      "priority": 2,
       "passes": true,
-      "notes": "Files: components/settings/ConsentSettings.tsx. Already implemented with client-safe duplicated constants."
+      "notes": "Fixes #3 and #8 added membership and privacy checks"
     },
     {
       "id": "US-010",
-      "title": "Add ConsentSettings to the Settings page",
-      "description": "As a developer, I need to import and render the ConsentSettings component in app/dashboard/settings/page.tsx after the General Notifications card and before the Voice & TTS section. No tier gating needed.",
-      "acceptanceCriteria": [
-        "ConsentSettings imported in app/dashboard/settings/page.tsx",
-        "ConsentSettings rendered after notifications and before Voice & TTS",
-        "No tier gating on consent settings (all tiers can set preferences)",
-        "Page renders without errors",
-        "Typecheck passes"
-      ],
-      "priority": 10,
+      "title": "Contact form has rate limiting",
+      "description": "As a site operator, I want the contact form to be rate-limited to prevent spam",
+      "acceptanceCriteria": ["Contact API limited to 5 requests/hour/IP", "Rate limit response returned on exceed"],
+      "priority": 3,
       "passes": true,
-      "notes": "Files: app/dashboard/settings/page.tsx. Already implemented — ConsentSettings imported and rendered after General Notifications."
+      "notes": "Fix #2 added rate limiting"
+    },
+    {
+      "id": "US-011",
+      "title": "Chat UI is usable on mobile",
+      "description": "As a mobile user, I want the chat interface to work well on my phone",
+      "acceptanceCriteria": ["No iOS zoom on input focus (16px font)", "Touch targets >= 44px", "Chat bubbles use 85% width on mobile", "Keyboard hint hidden on mobile", "Safe area inset respected"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fixes #5, #17, #18, #19 addressed mobile chat UX"
+    },
+    {
+      "id": "US-012",
+      "title": "Onboarding flow has error boundaries",
+      "description": "As a new user, if the onboarding page crashes I should see a branded error page with retry",
+      "acceptanceCriteria": ["Error boundary on /get-started", "Error boundary on /onboarding", "Retry button works", "Navigation back to home available"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #16 created branded error pages"
+    },
+    {
+      "id": "US-013",
+      "title": "Protected routes enforce authentication",
+      "description": "As a security measure, all dashboard/user routes should require authentication",
+      "acceptanceCriteria": ["/check-ins, /video, /onboarding, /interactive in protected routes", "Unauthenticated users redirected to /login"],
+      "priority": 1,
+      "passes": true,
+      "notes": "Fix #6 added missing routes to middleware-utils.ts"
+    },
+    {
+      "id": "US-014",
+      "title": "User account deletion cleans up all data",
+      "description": "As a user, when I delete my account all my data should be removed",
+      "acceptanceCriteria": ["Delete endpoint removes data from all v3.0+ tables", "Conversation state, push, email, shares, community data all cleaned up"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix #11 added 12 missing tables to deletion"
+    },
+    {
+      "id": "US-015",
+      "title": "Admin nav shows all admin pages",
+      "description": "As an admin, I want all admin pages accessible from the admin sidebar",
+      "acceptanceCriteria": ["Voice Agent link in admin nav", "Analytics link in admin nav"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #21 added 2 missing admin nav links"
+    },
+    {
+      "id": "US-016",
+      "title": "Features page accurately reflects feature status",
+      "description": "As a visitor, I want the features page to correctly show which features are available",
+      "acceptanceCriteria": ["Boardy not marked as Coming Soon", "All available features shown as active"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #22 removed stale comingSoon flag from Boardy"
+    },
+    {
+      "id": "US-017",
+      "title": "Strategy Reframing page is discoverable",
+      "description": "As a user, I want to find and access the Strategy Reframing feature",
+      "acceptanceCriteria": ["Link to Strategy Reframing from Strategy Docs", "Page loads correctly"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #23 added link button in Strategy Docs header"
+    },
+    {
+      "id": "US-018",
+      "title": "Login page is accessible",
+      "description": "As a user with accessibility needs, the login page should support screen readers and have proper touch targets",
+      "acceptanceCriteria": ["Error messages have role=alert", "Inputs have 16px font (no iOS zoom)", "ARIA labels present"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix #13 added text-base and role=alert"
+    },
+    {
+      "id": "US-019",
+      "title": "Community reactions work without race conditions",
+      "description": "As a community member, I want reactions to toggle correctly even under concurrent clicks",
+      "acceptanceCriteria": ["Reaction toggle uses atomic operation", "Optimistic UI with rollback on error", "No duplicate reactions"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fixes B1 and F01 replaced TOCTOU with atomic pattern and added optimistic UI"
+    },
+    {
+      "id": "US-020",
+      "title": "Dashboard stat cards show meaningful values for free tier",
+      "description": "As a free-tier user, dashboard cards should show 0 with upgrade prompts instead of raw dashes",
+      "acceptanceCriteria": ["Locked features show '0' not '-'", "Upgrade to Pro/Studio link visible"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #26 added upgrade links"
+    },
+    {
+      "id": "US-021",
+      "title": "Features nav dropdown has View All link",
+      "description": "As a visitor, I want a link to see all features from the nav dropdown",
+      "acceptanceCriteria": ["View all features link at bottom of dropdown", "Links to /features page"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #27 added View all features link"
+    },
+    {
+      "id": "US-022",
+      "title": "Startup process shows full step names",
+      "description": "As a user viewing the startup process, I want to see full step names not truncated text",
+      "acceptanceCriteria": ["Step names not truncated to 2 words", "Tooltip shows full name", "Wider max-width"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #29 widened max-w and added tooltip"
+    },
+    {
+      "id": "US-023",
+      "title": "Onboard route does not write non-existent DB columns",
+      "description": "As a developer, the onboard API should not attempt to write enrichment columns that don't exist in profiles table",
+      "acceptanceCriteria": ["No industry/revenue_range/team_size/funding_history in profile upsert", "Signup with enrichment data does not fail"],
+      "priority": 1,
+      "passes": true,
+      "notes": "Enrichment fields removed from onboard route in commit 376d706. Auth-helpers fixed in commit 61b18b1."
+    },
+    {
+      "id": "US-024",
+      "title": "Diagnostic state API validates input",
+      "description": "As a security measure, the diagnostic state endpoint should validate input with Zod",
+      "acceptanceCriteria": ["Zod schema validates enum, boolean, array fields", "Invalid input returns 400"],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fix #7 added Zod validation"
+    },
+    {
+      "id": "US-025",
+      "title": "PostgREST filter injection prevented in community search",
+      "description": "As a security measure, community search should strip PostgREST-special characters",
+      "acceptanceCriteria": ["Special characters stripped from search input", "No filter syntax injection possible"],
+      "priority": 2,
+      "passes": true,
+      "notes": "Fix B2 stripped PostgREST-special characters from search"
     }
   ]
 }
