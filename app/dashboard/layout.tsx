@@ -201,6 +201,7 @@ function SidebarContent({
   pathname,
   tierNames,
   tierColors,
+  isTierLoading,
   onNavClick,
 }: {
   user: { name: string; email: string; tier: UserTier; stage: string | null };
@@ -208,6 +209,7 @@ function SidebarContent({
   pathname: string;
   tierNames: string[];
   tierColors: string[];
+  isTierLoading?: boolean;
   onNavClick?: () => void;
 }) {
   return (
@@ -232,9 +234,13 @@ function SidebarContent({
             </p>
           </div>
         </div>
-        <Badge className={cn("w-full justify-center", tierColors[user.tier])}>
-          {tierNames[user.tier]} Plan
-        </Badge>
+        {isTierLoading ? (
+          <div className="h-[22px] w-full rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        ) : (
+          <Badge className={cn("w-full justify-center", tierColors[user.tier])}>
+            {tierNames[user.tier]} Plan
+          </Badge>
+        )}
       </div>
 
       {/* Navigation */}
@@ -310,7 +316,7 @@ export default function DashboardLayout({
   const [callModalOpen, setCallModalOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { tier } = useTier();
+  const { tier, isLoading: isTierLoading } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
   const [userInfo, setUserInfo] = useState<{
     name: string;
@@ -411,6 +417,7 @@ export default function DashboardLayout({
               pathname={pathname}
               tierNames={tierNames}
               tierColors={tierColors}
+              isTierLoading={isTierLoading}
               onNavClick={closeSidebar}
             />
           </SheetContent>
@@ -424,6 +431,7 @@ export default function DashboardLayout({
             pathname={pathname}
             tierNames={tierNames}
             tierColors={tierColors}
+            isTierLoading={isTierLoading}
           />
         </aside>
 
