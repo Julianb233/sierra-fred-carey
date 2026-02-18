@@ -86,8 +86,10 @@ For each fix from Code Fixer:
 
 ## Auth Debug Fixes (2026-02-18)
 
-| # | Issue | File(s) | Fix |
-|---|-------|---------|-----|
-| A1 | Missing signup API route | app/api/auth/signup/route.ts | Created POST handler with rate limiting (3/min/IP), input validation, `signUp` from `@/lib/auth` |
+| # | Issue | File(s) | Fix | Commit |
+|---|-------|---------|-----|--------|
+| A1 | Missing signup API route | app/api/auth/signup/route.ts | Created POST handler with rate limiting (3/min/IP), input validation, `signUp` from `@/lib/auth` | 150eaae |
+| A2 | createOrUpdateProfile writes non-existent enrichment columns (breaks signup) | lib/supabase/auth-helpers.ts | Removed 6 enrichment fields (industry, revenue_range, team_size, funding_history, enriched_at, enrichment_source) from upsert | 61b18b1 |
+| A3 | Orphan cleanup in /api/onboard uses anon client instead of service role | app/api/onboard/route.ts | Import createServiceClient; use it for admin.deleteUser call | 376d706 |
 
 *Updated: 2026-02-18*

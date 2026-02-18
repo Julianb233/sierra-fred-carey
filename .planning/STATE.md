@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v5.0 QA Fixes — Production Polish (1/5 phases complete)
+**Current focus:** v5.0 QA Fixes — Production Polish (5/5 phases complete - MILESTONE SHIPPED)
 
 ## Current Position
 
-Phase: 54 of 58 (Dashboard Routing Fix)
+Phase: 58 of 58 (Error State Polish)
 Plan: Complete (1/1)
-Status: v5.0 QA Fixes: Phase 54 complete. 4 phases remaining (55-58).
-Last activity: 2026-02-18 -- Completed Phase 54 (error boundaries, tier timeout, communities timeout, build verification). Verified 6/6 must-haves.
+Status: v5.0 QA Fixes: ALL 5 PHASES COMPLETE. Milestone shipped.
+Last activity: 2026-02-18 -- Dev team completed Phases 56 (Demo Auth verified), 57 (Logo fix verified), 58 (Error state polish committed). All bugs BUG-1 through BUG-6 resolved.
 
-Progress: [######........................] 20% (1/5 v5.0 phases complete)
+Progress: [##############################] 100% (5/5 v5.0 phases complete)
 
 ## Performance Metrics
 
@@ -124,11 +124,15 @@ Full report: .planning/PROD-READINESS-REPORT.md
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Auth debug team - code-fixer created signup route, waiting for teammate reports.
+Stopped at: v5.0 milestone complete. All 5 QA fix phases (54-58) shipped.
 Resume file: None
 
 ### Auth Debug Team (2026-02-18)
-- **code-fixer**: Created `app/api/auth/signup/route.ts` (Fix A1). Waiting for auth-debugger and backend-dev reports.
+- **code-fixer**: 3 fixes committed:
+  - A1: Created `app/api/auth/signup/route.ts` (150eaae)
+  - A2: Removed non-existent enrichment columns from profile upsert (61b18b1)
+  - A3: Fixed orphan cleanup to use service role client (376d706)
+- Build: compiles successfully (208 pages). Tests: 801/805 pass.
 - **backend-dev**: Test user created and verified. UUID: `507c3364-1700-4f32-bc5c-1dd3edf05874`, email: `test-dev@joinsahara.com`. Found that DATABASE_URL (Neon) and Supabase DB are separate databases (Neon has 0 profiles). Report: `.planning/USER-CREATION-REPORT.md`.
 - **auth-debugger**: COMPLETED full auth flow audit. 6 bugs found (2 critical). Report: `.planning/AUTH-DEBUG-REPORT.md`. Key issues: (1) Missing DB columns (industry, revenue_range, etc.) cause `supabaseSignUp()` to always fail, (2) No `/api/auth/signup` route, (3) Potential email confirmation blocker, (4) Profile creation uses anon key (RLS risk), (5) Orphan cleanup in onboard uses wrong client, (6) Route config inconsistencies.
 
