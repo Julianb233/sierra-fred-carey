@@ -64,7 +64,12 @@ export function getCheckinTemplate(
  * @returns SMS message body (max 160 chars)
  */
 export function getWelcomeTemplate(founderName: string): string {
-  return `Welcome aboard, ${founderName}! Fred here. We'll check in weekly to keep you on track. Reply STOP to opt out.`.slice(
+  const full = `Welcome, ${founderName}! Fred here. Weekly check-ins start now. Msg frequency: 1x/week. Msg&data rates may apply. Reply STOP to opt out.`;
+  if (full.length <= MAX_SMS_LENGTH) {
+    return full;
+  }
+  // Trim greeting if message is too long
+  return `Welcome! Fred here. Weekly check-ins start now. Msg frequency: 1x/week. Msg&data rates may apply. Reply STOP to opt out.`.slice(
     0,
     MAX_SMS_LENGTH
   );

@@ -3,14 +3,16 @@
 /**
  * Check-in Settings Component
  * Phase 04: Studio Tier Features - Plan 07
+ * Phase 61: Twilio SMS Activation - Plan 01
  *
  * Manages SMS check-in preferences: phone, schedule, timezone, opt-in.
- * Follows project UI patterns from components/tier and components/agents.
+ * Includes TCPA-compliant consent checkbox before enabling SMS.
  */
 
 import { useState, useCallback } from "react";
 import { Phone, Clock, Globe, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -89,6 +91,7 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
   const [timezone, setTimezone] = useState(
     preferences?.timezone || "America/New_York"
   );
+  const [consentChecked, setConsentChecked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -99,13 +102,20 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
       setError(null);
       setSuccess(false);
 
-      await onSave({
+      const payload: Partial<UserSMSPreferences> = {
         phoneNumber: phoneNumber || undefined,
         checkinEnabled,
         checkinDay: Number(checkinDay),
         checkinHour: Number(checkinHour),
         timezone,
-      });
+      };
+
+      // Record consent timestamp when enabling check-ins with consent
+      if (checkinEnabled && consentChecked) {
+        payload.consentedAt = new Date();
+      }
+
+      await onSave(payload);
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -117,9 +127,12 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [phoneNumber, checkinEnabled, checkinDay, checkinHour, timezone, onSave]);
+  }, [phoneNumber, checkinEnabled, checkinDay, checkinHour, timezone, consentChecked, onSave]);
 
   const hasPhoneNumber = phoneNumber.trim().length > 0;
+
+  // Save button requires consent checkbox when check-ins are enabled
+  const canSave = !isSaving && (!checkinEnabled || consentChecked);
 
   return (
     <Card>
@@ -168,6 +181,34 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
             onCheckedChange={setCheckinEnabled}
           />
         </div>
+
+        {/* Consent Checkbox - required when check-ins are enabled */}
+        {checkinEnabled && (
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800">
+            <Checkbox
+              id="sms-consent"
+              checked={consentChecked}
+              onCheckedChange={(checked) =>
+                setConsentChecked(checked === true)
+              }
+              className="mt-0.5"
+            />
+            <label
+              htmlFor="sms-consent"
+              className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer"
+            >
+              I agree to receive weekly SMS check-in messages from Sahara at the
+              phone number provided. Message frequency: 1x/week. Msg &amp; data
+              rates may apply. Reply STOP to cancel.{" "}
+              <a
+                href="/privacy"
+                className="text-[#ff6a1a] hover:underline"
+              >
+                Privacy Policy
+              </a>
+            </label>
+          </div>
+        )}
 
         {/* Schedule Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -234,9 +275,13 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
 
         {/* A2P Compliance Notice */}
         <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-400">
-          By enabling SMS check-ins, you consent to receiving weekly messages
-          from Sahara. Reply STOP at any time to opt out. Message and data rates
-          may apply.
+          Standard message and data rates may apply. Message frequency: 1 per
+          week. Reply STOP to unsubscribe at any time. Reply HELP for help.
+          View our{" "}
+          <a href="/privacy" className="text-[#ff6a1a] hover:underline">
+            Privacy Policy
+          </a>{" "}
+          for more information.
         </div>
 
         {/* Error/Success Messages */}
@@ -254,7 +299,7 @@ export function CheckinSettings({ preferences, onSave }: CheckinSettingsProps) {
         {/* Save Button */}
         <Button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={!canSave}
           className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
         >
           {isSaving ? (
