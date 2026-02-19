@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 59 complete, Phases 60-61 planned
+**Current focus:** v6.0 Full Platform Maturity — Phase 60 (CI/CD Testing Expansion)
 
 ## Current Position
 
-Phase: 59 of 70 (Sentry + Production Monitoring) — COMPLETE
-Plan: All plans complete
-Status: Phase verified (8/8 must-haves). Ready to execute Phase 60 or 61.
-Last activity: 2026-02-19 — Phase 59 complete. CI hardened, Sentry configured (env vars pending).
+Phase: 60 of 70 (CI/CD Testing Expansion)
+Plan: 01 of 02 (complete)
+Status: In progress
+Last activity: 2026-02-19 — Completed 60-01-PLAN.md (Playwright E2E + accessibility CI)
 
-Progress: [###___________________________] 8% (1/12 v6.0 phases)
+Progress: [####__________________________] 10% (2/12 v6.0 phases — 59 complete, 60 in progress)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 1 phase complete (59)
+- v6.0: 1 phase complete (59), 1 in progress (60)
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -45,10 +45,17 @@ Phase 59 decisions:
 - withSentrySpan on non-streaming FRED chat path only
 - Alert configuration is a manual one-time script, not CI step
 
+Phase 60-01 decisions:
+- Chromium-only in CI (Firefox/WebKit too slow and flaky in headless)
+- Filter to critical+serious WCAG violations only (minor/moderate are warnings, not blockers)
+- E2E job runs parallel with security job, both depend on build
+- Deploy gated on all three: build, security, e2e
+
 ### Blockers/Concerns
 
 - **ACTIVE** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
 - **ACTIVE** CI now blocks on 335 lint errors + 12 test failures (must fix before pushing to main)
+- **ACTIVE** E2E CI secrets needed: E2E_TEST_EMAIL, E2E_TEST_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 - Twilio A2P 10DLC registration — 4-week timeline, must start before SMS code
 - Twilio credentials needed (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID)
 - Boardy API — no public docs, requires partnership agreement (LOW confidence)
@@ -58,5 +65,5 @@ Phase 59 decisions:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 59 complete. Phases 60 and 61 planned and verified, ready to execute.
+Stopped at: Completed 60-01-PLAN.md
 Resume file: None
