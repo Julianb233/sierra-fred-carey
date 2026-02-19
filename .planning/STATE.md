@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 59 (Sentry + Production Monitoring)
+**Current focus:** v6.0 Full Platform Maturity — Phase 61 (Twilio SMS Activation)
 
 ## Current Position
 
-Phase: 59 of 70 (Sentry + Production Monitoring)
-Plan: 01 of 02 (paused at checkpoint)
-Status: Awaiting human-verify checkpoint (Sentry env var activation)
-Last activity: 2026-02-18 — Completed 59-01 Tasks 1-2. Paused at Task 3 checkpoint.
+Phase: 61 of 70 (Twilio SMS Activation)
+Plan: 01 of 02 (complete)
+Status: In progress
+Last activity: 2026-02-19 — Completed 61-01-PLAN.md (SMS delivery status + compliance)
 
-Progress: [______________________________] 0% (0/12 v6.0 phases)
+Progress: [##____________________________] 8% (1/12 v6.0 phases)
 
 ## Performance Metrics
 
@@ -40,6 +40,11 @@ Phase 59-01 decisions:
 - tracePropagationTargets restricted to own domain to prevent header leaks to third-party APIs
 - Server profiling enabled at 0.1 sample rate
 
+Phase 61-01 decisions:
+- Delivery status callbacks use /api/sms/status, separate from inbound /api/sms/webhook
+- Consent checkbox only appears when checkinEnabled toggle is on (conditional UI)
+- Welcome template trimmed to fit TCPA disclosures within 160-char single SMS segment
+
 ### Blockers/Concerns
 
 - **ACTIVE** Sentry DSN needed — all 4 env vars must be set simultaneously (NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT). Checkpoint pending.
@@ -52,6 +57,6 @@ Phase 59-01 decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-18
-Stopped at: 59-01-PLAN.md Task 3 checkpoint (human-verify: set Sentry env vars)
+Last session: 2026-02-19
+Stopped at: Completed 61-01-PLAN.md
 Resume file: None
