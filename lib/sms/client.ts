@@ -37,11 +37,20 @@ function getTwilio(): Twilio.Twilio {
 /**
  * Send an SMS message via Twilio Messaging Service.
  *
+ * When NEXT_PUBLIC_APP_URL is set, automatically includes a statusCallback
+ * URL so Twilio posts delivery status updates to /api/sms/status.
+ *
  * @param to - Recipient phone number in E.164 format
  * @param body - Message body text
+ * @param opts - Optional configuration
+ * @param opts.statusCallback - Override the default status callback URL
  * @returns Twilio message SID
  */
-export async function sendSMS(to: string, body: string): Promise<string> {
+export async function sendSMS(
+  to: string,
+  body: string,
+  opts?: { statusCallback?: string }
+): Promise<string> {
   const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
   if (!messagingServiceSid) {
     throw new Error(
@@ -51,10 +60,19 @@ export async function sendSMS(to: string, body: string): Promise<string> {
   }
 
   const client = getTwilio();
+
+  // Determine statusCallback URL
+  const statusCallback =
+    opts?.statusCallback ||
+    (process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/api/sms/status`
+      : undefined);
+
   const message = await client.messages.create({
     to,
     body,
     messagingServiceSid,
+    ...(statusCallback ? { statusCallback } : {}),
   });
 
   return message.sid;

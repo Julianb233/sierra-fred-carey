@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CheckinRecord,
+  DeliveryStats,
   SMSStatus,
   UserSMSPreferences,
 } from "@/lib/sms/types";
@@ -153,6 +154,88 @@ export async function updateCheckinStatus(
   }
 }
 
+/**
+ * Update delivery status for a check-in record matched by Twilio message SID.
+ * Called by the /api/sms/status webhook when Twilio sends delivery callbacks.
+ */
+export async function updateDeliveryStatus(
+  supabase: SupabaseClient,
+  messageSid: string,
+  status: string,
+  errorCode?: string,
+  errorMessage?: string
+): Promise<void> {
+  const updates: Record<string, unknown> = {
+    delivery_status: status,
+    status_updated_at: new Date().toISOString(),
+  };
+
+  if (errorCode) {
+    updates.delivery_error_code = errorCode;
+  }
+  if (errorMessage) {
+    updates.delivery_error_message = errorMessage;
+  }
+  if (status === "delivered") {
+    updates.delivered_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from("sms_checkins")
+    .update(updates)
+    .eq("message_sid", messageSid);
+
+  if (error) {
+    throw new Error(`Failed to update delivery status: ${error.message}`);
+  }
+}
+
+/**
+ * Get aggregated delivery statistics for outbound SMS messages.
+ * Returns total, delivered, failed, pending counts and delivery rate.
+ */
+export async function getDeliveryStats(
+  supabase: SupabaseClient,
+  opts?: { userId?: string; startDate?: Date; endDate?: Date }
+): Promise<DeliveryStats> {
+  let query = supabase
+    .from("sms_checkins")
+    .select("status, delivery_status")
+    .eq("direction", "outbound");
+
+  if (opts?.userId) {
+    query = query.eq("user_id", opts.userId);
+  }
+  if (opts?.startDate) {
+    query = query.gte("created_at", opts.startDate.toISOString());
+  }
+  if (opts?.endDate) {
+    query = query.lte("created_at", opts.endDate.toISOString());
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to get delivery stats: ${error.message}`);
+  }
+
+  const records = data || [];
+  const total = records.length;
+  const delivered = records.filter(
+    (r) => r.delivery_status === "delivered" || r.status === "delivered"
+  ).length;
+  const failed = records.filter(
+    (r) =>
+      r.delivery_status === "failed" ||
+      r.delivery_status === "undelivered" ||
+      r.status === "failed"
+  ).length;
+  const pending = total - delivered - failed;
+  const deliveryRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+  return { total, delivered, failed, pending, deliveryRate };
+}
+
 // ============================================================================
 // User SMS Preferences
 // ============================================================================
@@ -229,6 +312,8 @@ export async function updateSMSPreferences(
   if (updates.checkinHour !== undefined)
     dbUpdates.checkin_hour = updates.checkinHour;
   if (updates.timezone !== undefined) dbUpdates.timezone = updates.timezone;
+  if (updates.consentedAt !== undefined)
+    dbUpdates.consent_at = updates.consentedAt.toISOString();
 
   const { data, error } = await supabase
     .from("user_sms_preferences")
@@ -290,6 +375,15 @@ function mapCheckin(row: Record<string, unknown>): CheckinRecord {
       ? new Date(row.received_at as string)
       : undefined,
     createdAt: new Date(row.created_at as string),
+    deliveryStatus: (row.delivery_status as string) || undefined,
+    deliveryErrorCode: (row.delivery_error_code as string) || undefined,
+    deliveryErrorMessage: (row.delivery_error_message as string) || undefined,
+    deliveredAt: row.delivered_at
+      ? new Date(row.delivered_at as string)
+      : undefined,
+    statusUpdatedAt: row.status_updated_at
+      ? new Date(row.status_updated_at as string)
+      : undefined,
   };
 }
 
@@ -302,6 +396,9 @@ function mapPreferences(row: Record<string, unknown>): UserSMSPreferences {
     checkinDay: (row.checkin_day as number) ?? 1,
     checkinHour: (row.checkin_hour as number) ?? 9,
     timezone: (row.timezone as string) || "America/New_York",
+    consentedAt: row.consent_at
+      ? new Date(row.consent_at as string)
+      : undefined,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
   };

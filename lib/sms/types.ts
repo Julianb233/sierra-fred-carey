@@ -1,6 +1,7 @@
 /**
  * SMS Types
  * Phase 04: Studio Tier Features - Plan 05
+ * Phase 61: Twilio SMS Activation - Plan 01
  *
  * Type definitions for SMS check-in system.
  */
@@ -8,6 +9,30 @@
 export type SMSDirection = 'outbound' | 'inbound';
 
 export type SMSStatus = 'queued' | 'sent' | 'delivered' | 'failed' | 'received';
+
+/**
+ * Twilio message delivery statuses.
+ * @see https://www.twilio.com/docs/messaging/api/message-resource#message-status-values
+ */
+export type TwilioMessageStatus =
+  | 'accepted'
+  | 'queued'
+  | 'sending'
+  | 'sent'
+  | 'delivered'
+  | 'undelivered'
+  | 'failed';
+
+/**
+ * Aggregated delivery statistics for reporting.
+ */
+export interface DeliveryStats {
+  total: number;
+  delivered: number;
+  failed: number;
+  pending: number;
+  deliveryRate: number;
+}
 
 export interface CheckinRecord {
   id: string;
@@ -24,6 +49,11 @@ export interface CheckinRecord {
   sentAt?: Date;
   receivedAt?: Date;
   createdAt: Date;
+  deliveryStatus?: string;
+  deliveryErrorCode?: string;
+  deliveryErrorMessage?: string;
+  deliveredAt?: Date;
+  statusUpdatedAt?: Date;
 }
 
 export interface UserSMSPreferences {
@@ -34,6 +64,7 @@ export interface UserSMSPreferences {
   checkinDay: number;
   checkinHour: number;
   timezone: string;
+  consentedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
