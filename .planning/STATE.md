@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 60 (CI/CD Testing Expansion)
+**Current focus:** v6.0 Full Platform Maturity — Phase 60 complete, ready for Phase 61
 
 ## Current Position
 
-Phase: 60 of 70 (CI/CD Testing Expansion)
-Plan: 01 of 02 (complete)
-Status: In progress
-Last activity: 2026-02-19 — Completed 60-01-PLAN.md (Playwright E2E + accessibility CI)
+Phase: 60 of 70 (CI/CD Testing Expansion) -- COMPLETE
+Plan: 02 of 02 (complete)
+Status: Phase complete
+Last activity: 2026-02-19 — Completed 60-02-PLAN.md (Visual regression + staging deployment URL)
 
-Progress: [####__________________________] 10% (2/12 v6.0 phases — 59 complete, 60 in progress)
+Progress: [######________________________] 17% (3/12 v6.0 phases — 59, 60 complete)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 1 phase complete (59), 1 in progress (60)
+- v6.0: 2 phases complete (59, 60), ready for 61
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -51,6 +51,12 @@ Phase 60-01 decisions:
 - E2E job runs parallel with security job, both depend on build
 - Deploy gated on all three: build, security, e2e
 
+Phase 60-02 decisions:
+- 1% maxDiffPixelRatio and 0.2 threshold for cross-platform visual regression tolerance
+- test.skip with fs.existsSync guard prevents CI failure when baselines not committed
+- fullPage screenshots for comprehensive visual coverage
+- Mask dynamic content (timestamps, user data) to prevent false failures
+
 ### Blockers/Concerns
 
 - **ACTIVE** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -65,5 +71,5 @@ Phase 60-01 decisions:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 60-01-PLAN.md
+Stopped at: Completed 60-02-PLAN.md (Phase 60 complete)
 Resume file: None
