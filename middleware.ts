@@ -2,8 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { isProtectedRoute } from "@/lib/auth/middleware-utils";
 import { corsHeaders, isWebhookPath } from "@/lib/api/cors";
+import * as Sentry from "@sentry/nextjs";
 
 export async function middleware(request: NextRequest) {
+  // Phase 59-02: Track request duration for slow request detection
+  const start = Date.now();
+
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
 
@@ -45,6 +49,18 @@ export async function middleware(request: NextRequest) {
     // Propagate correlation ID and pathname on every response
     response.headers.set("X-Request-ID", requestId);
     response.headers.set("x-pathname", pathname);
+
+    // Phase 59-02: Log slow middleware requests as Sentry breadcrumbs
+    const duration = Date.now() - start;
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN && duration > 2000) {
+      Sentry.addBreadcrumb({
+        message: `Slow middleware: ${pathname} (${duration}ms)`,
+        category: "performance",
+        level: "warning",
+        data: { pathname, duration },
+      });
+    }
+
     return response;
   } catch (err) {
     console.error("[middleware] Auth check failed:", err);
