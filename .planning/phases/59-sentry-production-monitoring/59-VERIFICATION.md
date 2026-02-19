@@ -1,130 +1,104 @@
 ---
 phase: 59-sentry-production-monitoring
-verified: 2026-02-19T22:00:00Z
+verified: 2026-02-19T23:30:00Z
 status: passed
-score: 8/8 must-haves verified
+score: 4/4 success criteria verified
+re_verification:
+  previous_status: passed
+  previous_score: 8/8
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 human_verification:
-  - test: "Trigger a test error in production and check Sentry dashboard"
-    expected: "Error appears in Sentry within 30 seconds with readable (non-minified) source maps"
-    why_human: "Requires Sentry DSN to be set and a live production deployment to verify end-to-end"
-  - test: "Verify source maps show readable stack traces in Sentry"
-    expected: "Stack traces reference original TypeScript files and line numbers, not webpack bundles"
-    why_human: "Source map upload verification requires checking Sentry dashboard after a build with SENTRY_AUTH_TOKEN set"
-  - test: "Run scripts/configure-sentry-alerts.ts and check Sentry alert rules page"
-    expected: "Three alert rules appear: High Error Rate, New Issue Detected, Issue Regression"
-    why_human: "Requires Sentry API credentials and dashboard access to confirm"
-  - test: "Push a commit with a lint or type error to confirm CI blocks the build"
-    expected: "GitHub Actions build job fails on the lint or typecheck step"
-    why_human: "Requires actual CI run on GitHub Actions to validate"
+  - test: "Trigger a runtime error in production and check Sentry dashboard"
+    expected: "Error appears in Sentry with readable TypeScript source maps"
+    why_human: "Requires live deployment with SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT set"
+  - test: "Run scripts/configure-sentry-alerts.ts with Sentry credentials"
+    expected: "Three alert rules created: High Error Rate, New Issue Detected, Issue Regression"
+    why_human: "Requires Sentry API credentials and dashboard access"
+  - test: "Push a commit with a type error to verify CI blocks the build"
+    expected: "GitHub Actions build fails on typecheck step"
+    why_human: "Requires actual CI run on GitHub Actions"
 ---
 
 # Phase 59: Sentry + Production Monitoring Verification Report
 
 **Phase Goal:** Error tracking, source maps, alerting, and CI hardening so bugs are caught and reported automatically
-**Verified:** 2026-02-19T22:00:00Z
+**Verified:** 2026-02-19T23:30:00Z
 **Status:** PASSED
-**Re-verification:** No -- initial verification
+**Re-verification:** Yes -- independent re-verification of previous passed result
 
 ## Goal Achievement
 
-### Observable Truths
+### Observable Truths (mapped to ROADMAP success criteria)
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | Sentry captures client-side runtime errors with readable source maps | VERIFIED | `sentry.client.config.ts` has full Sentry.init (24 lines) with DSN, replays, tracePropagationTargets. `next.config.mjs` wraps config with `withSentryConfig` including `widenClientFileUpload: true` and `hideSourceMaps: true`. `app/global-error.tsx` calls `Sentry.captureException(error)`. |
-| 2 | Sentry captures server-side API route errors with user context | VERIFIED | `sentry.server.config.ts` (25 lines) has Sentry.init with tracesSampleRate 0.2, profiling. `app/api/fred/chat/route.ts` line 259: `setUserContext(userId, tierName)`, lines 774/796: `captureError(...)`. `app/api/stripe/webhook/route.ts` line 78: `captureMessage(...)`, line 216: `captureError(...)`. |
-| 3 | Sentry captures edge runtime errors from middleware | VERIFIED | `sentry.edge.config.ts` (9 lines) initializes Sentry for edge. `instrumentation.ts` lines 8-10 import edge config when `NEXT_RUNTIME === "edge"`. Line 13 exports `captureRequestError as onRequestError`. `middleware.ts` imports `@sentry/nextjs` for breadcrumbs. |
-| 4 | Noisy errors (ResizeObserver, AbortError, network timeout) are filtered out | VERIFIED | Both `sentry.client.config.ts` and `sentry.server.config.ts` have `ignoreErrors` arrays and `beforeSend` filters that return null for `/ResizeObserver loop\|AbortError\|network timeout/i`. |
-| 5 | Sentry tunnel route bypasses ad blockers | VERIFIED | `next.config.mjs` line 78: `tunnelRoute: "/monitoring-tunnel"` in `withSentryConfig` options. |
-| 6 | CI pipeline fails when lint, typecheck, or tests fail (no silent pass-through) | VERIFIED | `.github/workflows/deploy.yml` -- lint (line 32), typecheck (line 35), test (line 38) all run without `\|\| true`. Only `npm audit` retains `\|\| true` (line 62, intentional). Quality gate comment on lines 15-17. Sentry env vars passed to build step (lines 41-45). |
-| 7 | Alert rules configured for error rate spikes | VERIFIED | `scripts/configure-sentry-alerts.ts` (87 lines) creates 3 alert rules via Sentry API: "High Error Rate" (>10 events/5min), "New Issue Detected" (first occurrence), "Issue Regression" (resolved then reappeared). Script is substantive with proper error handling and env var validation. |
-| 8 | Performance monitoring tracks page load times and API response times | VERIFIED | Client: `tracesSampleRate: 0.1` enables automatic web vitals. Server: `tracesSampleRate: 0.2`, `profilesSampleRate: 0.1`. `app/api/fred/chat/route.ts` line 507: `withSentrySpan("ai.chat.completion", "ai.run", ...)` wraps AI completion. `middleware.ts` lines 54-62: slow request (>2s) breadcrumbs. |
+| # | Truth (Success Criterion) | Status | Evidence |
+|---|---------------------------|--------|----------|
+| 1 | Sentry captures and reports runtime errors from production with source maps | VERIFIED | `sentry.client.config.ts` (24 lines): full Sentry.init with DSN, replays, tracePropagationTargets. `sentry.server.config.ts` (25 lines): server init with profiling. `sentry.edge.config.ts` (9 lines): edge init. `next.config.mjs` line 70-80: `withSentryConfig` with `widenClientFileUpload: true`, `hideSourceMaps: true`. `app/global-error.tsx` (87 lines): calls `Sentry.captureException(error)` in useEffect. `instrumentation.ts` (13 lines): exports `captureRequestError as onRequestError`. |
+| 2 | Alert rules notify team of critical errors within 5 minutes | VERIFIED | `scripts/configure-sentry-alerts.ts` (87 lines): creates 3 alert rules via Sentry API -- "High Error Rate" (>10 events/5min, frequency 300s), "New Issue Detected" (first occurrence), "Issue Regression" (resolved then reappeared). Proper error handling and env var validation. |
+| 3 | CI pipeline fails on type errors, lint errors, and test failures (no `\|\| true`) | VERIFIED | `.github/workflows/deploy.yml`: line 32 `npm run lint` (no `\|\| true`), line 35 `npx tsc --noEmit` (no `\|\| true`), line 38 `npm run test` (no `\|\| true`). Only `npm audit` on line 62 has `\|\| true` (intentional -- advisory only). Comment on lines 15-17 warns against adding `\|\| true`. |
+| 4 | Performance monitoring tracks page load times and API response times | VERIFIED | Client: `tracesSampleRate: 0.1` enables automatic web vitals. Server: `tracesSampleRate: 0.2`, `profilesSampleRate: 0.1`. `app/api/fred/chat/route.ts` line 507: `withSentrySpan("ai.chat.completion", "ai.run", ...)` wraps AI completion. `middleware.ts` lines 53-62: slow request (>2s) Sentry breadcrumbs. |
 
-**Score:** 8/8 truths verified
+**Score:** 4/4 success criteria verified
 
 ### Required Artifacts
 
-| Artifact | Expected | Status | Details |
-|----------|----------|--------|---------|
-| `sentry.edge.config.ts` | Edge runtime Sentry initialization | VERIFIED (exists, 9 lines, wired via instrumentation.ts) | Conditional on DSN, inits with tracesSampleRate 0.1 |
-| `instrumentation.ts` | Server + edge Sentry init via Next.js instrumentation hook | VERIFIED (exists, 13 lines, both nodejs and edge branches) | Exports `captureRequestError as onRequestError` |
-| `sentry.client.config.ts` | Client Sentry initialization | VERIFIED (exists, 24 lines, loaded by Next.js automatically) | Replays, tracePropagationTargets, ignoreErrors, beforeSend |
-| `sentry.server.config.ts` | Server Sentry initialization | VERIFIED (exists, 25 lines, loaded via instrumentation.ts) | Profiling, ignoreErrors, beforeSend |
-| `lib/sentry.ts` | Sentry helper functions | VERIFIED (exists, 32 lines, exports 5 functions, imported by 2 routes) | captureError, captureMessage, setUserContext, addBreadcrumb, withSentrySpan |
-| `app/api/fred/chat/route.ts` | FRED chat route with Sentry wiring | VERIFIED (810 lines, imports 4 Sentry helpers, uses all in route) | setUserContext, addBreadcrumb, withSentrySpan, captureError |
-| `app/api/stripe/webhook/route.ts` | Stripe webhook with Sentry wiring | VERIFIED (280 lines, imports 2 Sentry helpers, uses both) | captureMessage for sig failure, captureError in catch |
-| `.github/workflows/deploy.yml` | CI pipeline with real quality gates | VERIFIED (115 lines, no `\|\| true` on lint/typecheck/test) | Sentry env vars in build step, quality gate comment |
-| `scripts/configure-sentry-alerts.ts` | Alert configuration script | VERIFIED (exists, 87 lines, 3 rules defined) | High error rate, new issue, regression |
-| `next.config.mjs` | withSentryConfig wrapper for source maps | VERIFIED (82 lines, withSentryConfig wraps config) | tunnelRoute, widenClientFileUpload, hideSourceMaps |
-| `app/global-error.tsx` | Global error boundary capturing to Sentry | VERIFIED (87 lines, calls Sentry.captureException) | User-facing error UI with reset button |
-| `middleware.ts` | Slow request breadcrumb tracking | VERIFIED (93 lines, Sentry import, duration tracking) | >2s threshold, conditional on DSN |
+| Artifact | Exists | Substantive | Wired | Status |
+|----------|--------|-------------|-------|--------|
+| `sentry.client.config.ts` | Yes (24 lines) | Full Sentry.init, ignoreErrors, beforeSend filter, replay integration | Auto-loaded by Next.js Sentry plugin | VERIFIED |
+| `sentry.server.config.ts` | Yes (25 lines) | Full Sentry.init, profiling, ignoreErrors for server patterns, beforeSend | Imported by `instrumentation.ts` line 5 | VERIFIED |
+| `sentry.edge.config.ts` | Yes (9 lines) | Sentry.init with DSN and tracesSampleRate | Imported by `instrumentation.ts` line 9 | VERIFIED |
+| `instrumentation.ts` | Yes (13 lines) | Conditional imports for nodejs/edge, exports onRequestError | Next.js instrumentation hook (auto-loaded) | VERIFIED |
+| `lib/sentry.ts` | Yes (32 lines) | 5 exported functions (captureError, captureMessage, setUserContext, addBreadcrumb, withSentrySpan), all with DSN guard | Imported by 2 API routes | VERIFIED |
+| `app/global-error.tsx` | Yes (87 lines) | Full error boundary UI with Sentry.captureException, reset button, error digest display | Next.js global error boundary (auto-loaded) | VERIFIED |
+| `next.config.mjs` | Yes (82 lines) | withSentryConfig wrapping with org/project/tunnelRoute/widenClientFileUpload/hideSourceMaps | Entry point config (auto-loaded) | VERIFIED |
+| `scripts/configure-sentry-alerts.ts` | Yes (87 lines) | 3 alert rules created via Sentry REST API, proper error handling | Standalone script (run manually) | VERIFIED |
+| `.github/workflows/deploy.yml` | Yes (158 lines) | lint/typecheck/test without `\|\| true`, Sentry env vars in build step | GitHub Actions (triggered on push/PR) | VERIFIED |
+| `middleware.ts` | Yes (93 lines) | Sentry import, slow request breadcrumb (>2s threshold) | Next.js middleware (auto-loaded) | VERIFIED |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `instrumentation.ts` | `sentry.edge.config.ts` | Dynamic import for edge runtime | WIRED | Line 9: `await import("./sentry.edge.config")` |
-| `instrumentation.ts` | `sentry.server.config.ts` | Dynamic import for nodejs runtime | WIRED | Line 5: `await import("./sentry.server.config")` |
-| `app/api/fred/chat/route.ts` | `lib/sentry.ts` | Import and usage of 4 helpers | WIRED | Line 40: imports captureError, setUserContext, addBreadcrumb, withSentrySpan. Used on lines 259, 506-507, 598, 774, 796 |
-| `app/api/stripe/webhook/route.ts` | `lib/sentry.ts` | Import and usage of 2 helpers | WIRED | Line 16: imports captureError, captureMessage. Used on lines 78, 216 |
-| `next.config.mjs` | `@sentry/nextjs` | withSentryConfig wrapper | WIRED | Line 1: import, line 71: conditional wrapping when DSN set |
-| `app/global-error.tsx` | `@sentry/nextjs` | Direct Sentry.captureException | WIRED | Line 3: import, line 14: captureException in useEffect |
-| `middleware.ts` | `@sentry/nextjs` | Direct Sentry.addBreadcrumb | WIRED | Line 5: import, lines 56-62: breadcrumb for slow requests |
-| `.github/workflows/deploy.yml` | Sentry secrets | Build env vars | WIRED | Lines 42-45: NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT |
-
-### Requirements Coverage
-
-| Requirement | Status | Blocking Issue |
-|-------------|--------|----------------|
-| INFRA-01: Sentry error tracking -- DSN configuration | SATISFIED | DSN conditional pattern verified across all configs |
-| INFRA-01: Source maps uploading | SATISFIED | withSentryConfig with widenClientFileUpload + hideSourceMaps in next.config.mjs |
-| INFRA-01: Alerting rules | SATISFIED | scripts/configure-sentry-alerts.ts defines 3 rules (high error rate, new issue, regression) |
-| INFRA-01: Performance monitoring | SATISFIED | tracesSampleRate on client (0.1) and server (0.2), profilesSampleRate (0.1), withSentrySpan on chat route, middleware breadcrumbs |
+| `instrumentation.ts` | `sentry.server.config.ts` | Dynamic import (line 5) | WIRED | Conditional on `NEXT_RUNTIME === "nodejs"` |
+| `instrumentation.ts` | `sentry.edge.config.ts` | Dynamic import (line 9) | WIRED | Conditional on `NEXT_RUNTIME === "edge"` |
+| `app/api/fred/chat/route.ts` | `lib/sentry.ts` | Import of 4 helpers (line 40) | WIRED | Used on lines 259, 506, 507, 598, 774, 796 |
+| `app/api/stripe/webhook/route.ts` | `lib/sentry.ts` | Import of 2 helpers (line 16) | WIRED | Used on lines 78, 216 |
+| `next.config.mjs` | `@sentry/nextjs` | withSentryConfig wrapper (line 71) | WIRED | Conditional on NEXT_PUBLIC_SENTRY_DSN |
+| `app/global-error.tsx` | `@sentry/nextjs` | Sentry.captureException (line 14) | WIRED | Called in useEffect on error |
+| `middleware.ts` | `@sentry/nextjs` | Sentry.addBreadcrumb (line 56) | WIRED | Conditional on DSN and duration > 2000ms |
+| `deploy.yml` build step | Sentry secrets | env vars (lines 42-45) | WIRED | DSN, AUTH_TOKEN, ORG, PROJECT passed to build |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| None found | - | - | - | - |
-
-No TODO/FIXME/placeholder/stub patterns found in any phase 59 artifact.
+| None | - | - | - | Zero TODO/FIXME/placeholder/stub patterns in any Sentry artifact |
 
 ### Human Verification Required
 
-### 1. End-to-End Error Capture Test
-**Test:** After setting all 4 Sentry env vars (NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT) in Vercel and deploying, open browser console on production site and run `throw new Error("Sentry test from console")`
-**Expected:** Error appears in Sentry dashboard within 30 seconds with readable source maps showing original TypeScript file names and line numbers
+### 1. End-to-End Error Capture
+**Test:** Deploy with all 4 Sentry env vars set, trigger a runtime error in the browser
+**Expected:** Error appears in Sentry dashboard within 30 seconds with readable TypeScript source maps
 **Why human:** Requires live production deployment with real Sentry credentials
 
-### 2. Source Map Verification
-**Test:** Check Sentry Dashboard -> Settings -> Source Maps after a production build
-**Expected:** Upload artifacts listed, and any captured error shows readable (non-minified) stack trace
-**Why human:** Requires Sentry dashboard access and a build with SENTRY_AUTH_TOKEN set
-
-### 3. Alert Rules Configuration
+### 2. Alert Rule Configuration
 **Test:** Run `SENTRY_AUTH_TOKEN=... SENTRY_ORG=... SENTRY_PROJECT=... npx tsx scripts/configure-sentry-alerts.ts`
-**Expected:** Script outputs "Created alert rule: High Error Rate", "Created alert rule: New Issue Detected", "Created alert rule: Issue Regression". Rules visible in Sentry alerts page.
+**Expected:** Three alert rules created and visible in Sentry alerts page
 **Why human:** Requires Sentry API credentials
 
-### 4. CI Quality Gate Enforcement
-**Test:** Push a commit with a deliberate type error or lint error to a branch with a PR
-**Expected:** GitHub Actions build job fails and blocks the PR
+### 3. CI Quality Gate Enforcement
+**Test:** Push a commit with a deliberate type error to a PR branch
+**Expected:** GitHub Actions build fails on the typecheck step, blocking merge
 **Why human:** Requires actual CI run on GitHub Actions
 
 ### Gaps Summary
 
-No gaps found. All 8 observable truths are verified at all three levels (existence, substantive, wired). Every required artifact exists with real implementations, no stubs, and proper wiring to the rest of the codebase.
+No gaps found. All 4 success criteria from the ROADMAP are verified at every level (existence, substantive implementation, wiring). The implementation follows a clean conditional pattern -- all Sentry functionality is guarded by `NEXT_PUBLIC_SENTRY_DSN`, making the code inert without credentials and immediately active when they are set in the deployment environment.
 
-The phase is structurally complete. The code is fully wired and conditional on the `NEXT_PUBLIC_SENTRY_DSN` environment variable, meaning it is inert in development but will activate immediately when the 4 Sentry env vars are set in Vercel and GitHub Actions (a human checkpoint documented in Plan 01, Task 3).
-
-Notable implementation quality indicators:
-- All Sentry calls are no-op when DSN is not set (graceful degradation)
-- Error filtering covers both client and server noisy errors
-- User context tagging enables per-user error debugging
-- Performance monitoring spans on the highest-traffic route (FRED chat)
-- CI pipeline quality gates are enforced with a clear comment preventing `|| true` re-addition
+The `@sentry/nextjs` package (^10.38.0) is listed in package.json dependencies. Zero stub patterns detected across all phase artifacts.
 
 ---
 
-_Verified: 2026-02-19T22:00:00Z_
+_Verified: 2026-02-19T23:30:00Z_
 _Verifier: Claude (gsd-verifier)_
