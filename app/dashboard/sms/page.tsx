@@ -14,6 +14,10 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Clock,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  Send,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,7 +31,7 @@ import { CheckinSettings } from "@/components/sms/checkin-settings";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
-import type { UserSMSPreferences, CheckinRecord } from "@/lib/sms/types";
+import type { UserSMSPreferences, CheckinRecord, DeliveryStats } from "@/lib/sms/types";
 
 // ============================================================================
 // Types
@@ -68,6 +72,8 @@ export default function SMSCheckinsPage() {
   const [checkins, setCheckins] = useState<CheckinRecord[]>([]);
   const [isLoadingPrefs, setIsLoadingPrefs] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [deliveryStats, setDeliveryStats] = useState<DeliveryStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch preferences
@@ -141,10 +147,28 @@ export default function SMSCheckinsPage() {
     }
   }, []);
 
+  // Fetch delivery statistics
+  const fetchDeliveryStats = useCallback(async () => {
+    try {
+      setIsLoadingStats(true);
+      const response = await fetch("/api/sms/delivery-report");
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.stats) {
+        setDeliveryStats(data.stats as DeliveryStats);
+      }
+    } catch (err) {
+      console.error("[SMSPage] Error fetching delivery stats:", err);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPreferences();
     fetchHistory();
-  }, [fetchPreferences, fetchHistory]);
+    fetchDeliveryStats();
+  }, [fetchPreferences, fetchHistory, fetchDeliveryStats]);
 
   // Save handler
   const handleSavePreferences = useCallback(
@@ -226,6 +250,107 @@ export default function SMSCheckinsPage() {
             preferences={preferences}
             onSave={handleSavePreferences}
           />
+        )}
+
+        {/* Delivery Stats */}
+        {preferences?.phoneVerified && preferences?.checkinEnabled ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-gray-500" />
+                Delivery Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingStats ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : deliveryStats ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Total Sent */}
+                  <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Send className="h-4 w-4 text-gray-500" />
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Total Sent
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deliveryStats.total}
+                    </p>
+                  </div>
+
+                  {/* Delivered */}
+                  <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Delivered
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {deliveryStats.delivered}
+                    </p>
+                  </div>
+
+                  {/* Failed */}
+                  <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Failed
+                      </span>
+                    </div>
+                    <p className={`text-2xl font-bold ${
+                      deliveryStats.failed > 0
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-gray-400 dark:text-gray-600"
+                    }`}>
+                      {deliveryStats.failed}
+                    </p>
+                  </div>
+
+                  {/* Delivery Rate */}
+                  <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <BarChart3 className="h-4 w-4 text-gray-500" />
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Delivery Rate
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deliveryStats.total > 0 ? `${deliveryStats.deliveryRate}%` : "--"}
+                    </p>
+                    {deliveryStats.total > 0 && (
+                      <div className="mt-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            deliveryStats.deliveryRate > 90
+                              ? "bg-[#ff6a1a]"
+                              : deliveryStats.deliveryRate >= 70
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                          }`}
+                          style={{ width: `${deliveryStats.deliveryRate}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="py-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                Enable check-ins to see delivery statistics
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Check-in History */}
