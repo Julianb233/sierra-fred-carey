@@ -40,6 +40,12 @@ Phase 59-01 decisions:
 - tracePropagationTargets restricted to own domain to prevent header leaks to third-party APIs
 - Server profiling enabled at 0.1 sample rate
 
+Phase 59-02 decisions:
+- Removed || true from lint/typecheck/test despite 335 lint errors and 12 test failures (CI reflects reality)
+- Kept || true on npm audit (advisory-only, transitive dependency vulnerabilities)
+- withSentrySpan on non-streaming FRED chat path only (streaming tracks latency differently)
+- Alert configuration is a manual one-time script, not CI step
+
 Phase 61-01 decisions:
 - Delivery status callbacks use /api/sms/status, separate from inbound /api/sms/webhook
 - Consent checkbox only appears when checkinEnabled toggle is on (conditional UI)
@@ -53,7 +59,7 @@ Phase 61-01 decisions:
 - Boardy API — no public docs, requires partnership agreement (LOW confidence)
 - LiveKit — 3 CRITICAL bugs (no remote audio, Docker won't start, room name format)
 - Stripe Connect must be isolated from existing subscription webhooks
-- CI/CD `|| true` hides all failures — fix in Phase 60
+- **RESOLVED** CI/CD `|| true` removed in 59-02 — but CI now blocks on 335 lint errors and 12 test failures (must fix in Phase 60)
 
 ## Session Continuity
 
