@@ -37,6 +37,7 @@ import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
+import { captureError, setUserContext, addBreadcrumb } from "@/lib/sentry";
 
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
@@ -253,6 +254,9 @@ async function handlePost(req: NextRequest) {
 
     // Resolve tier name for model routing and memory gating (Phase 21)
     const tierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+
+    // Phase 59: Tag Sentry errors with user context
+    setUserContext(userId, tierName);
     const _modelProviderKey = getModelForTier(tierName, "chat");
 
     // Determine if this tier gets persistent memory (Pro+ only)
@@ -499,6 +503,7 @@ async function handlePost(req: NextRequest) {
 
     // Non-streaming response
     if (!stream) {
+      addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: false });
       const result = await fredService.process({
         message,
         timestamp: new Date(),
@@ -588,6 +593,7 @@ async function handlePost(req: NextRequest) {
     }
 
     // Streaming response
+    addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: true });
     const { stream: sseStream, send, close } = createSSEStream();
 
     // Process in background
@@ -763,6 +769,7 @@ async function handlePost(req: NextRequest) {
         }
       } catch (error) {
         console.error("[FredChat] Streaming error:", error);
+        captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
         send("error", {
           message: "An error occurred while processing your request",
         });
@@ -784,6 +791,7 @@ async function handlePost(req: NextRequest) {
     }
 
     console.error("[FredChat] Error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat" });
 
     return NextResponse.json(
       {

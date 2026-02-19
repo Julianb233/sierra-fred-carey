@@ -13,6 +13,7 @@ import { getTierFromString, UserTier } from "@/lib/constants";
 import Stripe from "stripe";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureError, captureMessage } from "@/lib/sentry";
 
 // Helper to get period timestamps from subscription
 function getSubscriptionPeriod(subscription: Stripe.Subscription) {
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
     event = await constructWebhookEvent(payload, signature);
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
+    captureMessage("Stripe webhook signature verification failed", "warning");
 
     // Check if this is a configuration error
     if (err instanceof Error && err.message.includes("STRIPE_WEBHOOK_SECRET")) {
@@ -211,6 +213,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook processing error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/stripe/webhook", eventType: event.type });
     // Track the failure for debugging and retry analysis
     try {
       await markEventAsFailed(

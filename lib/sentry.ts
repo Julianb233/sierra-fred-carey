@@ -21,3 +21,12 @@ export function addBreadcrumb(message: string, category: string, data?: Record<s
   if (!process.env.NEXT_PUBLIC_SENTRY_DSN) return;
   Sentry.addBreadcrumb({ message, category, data });
 }
+
+export function withSentrySpan<T>(
+  name: string,
+  op: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  if (!process.env.NEXT_PUBLIC_SENTRY_DSN) return fn();
+  return Sentry.startSpan({ name, op }, fn);
+}
