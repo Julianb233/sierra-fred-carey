@@ -5,21 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 61 (Twilio SMS Activation)
+**Current focus:** v6.0 Full Platform Maturity — Phase 59 complete, Phases 60-61 planned
 
 ## Current Position
 
-Phase: 61 of 70 (Twilio SMS Activation)
-Plan: 01 of 02 (complete)
-Status: In progress
-Last activity: 2026-02-19 — Completed 61-01-PLAN.md (SMS delivery status + compliance)
+Phase: 59 of 70 (Sentry + Production Monitoring) — COMPLETE
+Plan: All plans complete
+Status: Phase verified (8/8 must-haves). Ready to execute Phase 60 or 61.
+Last activity: 2026-02-19 — Phase 59 complete. CI hardened, Sentry configured (env vars pending).
 
-Progress: [##____________________________] 8% (1/12 v6.0 phases)
+Progress: [###___________________________] 8% (1/12 v6.0 phases)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
+- v6.0: 1 phase complete (59)
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -35,34 +36,27 @@ v6.0 milestone decisions:
 - Boardy last (highest external risk — if partnership doesn't materialize, everything else ships)
 - Only 6 new packages needed (Mux x3, Serwist x2, axe-core x1)
 
-Phase 59-01 decisions:
-- Chat route is at app/api/fred/chat/route.ts (not app/api/chat/route.ts as initially assumed)
-- tracePropagationTargets restricted to own domain to prevent header leaks to third-party APIs
+Phase 59 decisions:
+- Chat route is at app/api/fred/chat/route.ts (not app/api/chat/route.ts)
+- tracePropagationTargets restricted to own domain to prevent header leaks
 - Server profiling enabled at 0.1 sample rate
-
-Phase 59-02 decisions:
-- Removed || true from lint/typecheck/test despite 335 lint errors and 12 test failures (CI reflects reality)
+- Removed || true from lint/typecheck/test despite 335 lint errors and 12 test failures
 - Kept || true on npm audit (advisory-only, transitive dependency vulnerabilities)
-- withSentrySpan on non-streaming FRED chat path only (streaming tracks latency differently)
+- withSentrySpan on non-streaming FRED chat path only
 - Alert configuration is a manual one-time script, not CI step
-
-Phase 61-01 decisions:
-- Delivery status callbacks use /api/sms/status, separate from inbound /api/sms/webhook
-- Consent checkbox only appears when checkinEnabled toggle is on (conditional UI)
-- Welcome template trimmed to fit TCPA disclosures within 160-char single SMS segment
 
 ### Blockers/Concerns
 
-- **ACTIVE** Sentry DSN needed — all 4 env vars must be set simultaneously (NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT). Checkpoint pending.
+- **ACTIVE** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
+- **ACTIVE** CI now blocks on 335 lint errors + 12 test failures (must fix before pushing to main)
 - Twilio A2P 10DLC registration — 4-week timeline, must start before SMS code
 - Twilio credentials needed (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID)
 - Boardy API — no public docs, requires partnership agreement (LOW confidence)
 - LiveKit — 3 CRITICAL bugs (no remote audio, Docker won't start, room name format)
 - Stripe Connect must be isolated from existing subscription webhooks
-- **RESOLVED** CI/CD `|| true` removed in 59-02 — but CI now blocks on 335 lint errors and 12 test failures (must fix in Phase 60)
 
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 61-01-PLAN.md
+Stopped at: Phase 59 complete. Phases 60 and 61 planned and verified, ready to execute.
 Resume file: None
