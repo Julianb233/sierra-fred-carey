@@ -7,10 +7,17 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
     tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
+    tracePropagationTargets: [/^\//, /^https:\/\/.*\.sahara/],
     integrations: [Sentry.replayIntegration()],
+    ignoreErrors: [
+      "Non-Error promise rejection",
+      "Load failed",
+      "Failed to fetch",
+    ],
     beforeSend(event) {
       const msg = event.exception?.values?.[0]?.value || "";
-      if (/ResizeObserver loop|AbortError|network timeout/i.test(msg)) return null;
+      if (/ResizeObserver loop|AbortError|network timeout/i.test(msg))
+        return null;
       return event;
     },
   });
