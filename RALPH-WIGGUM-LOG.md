@@ -6,21 +6,21 @@
 | Metric | Count |
 |--------|-------|
 | Total Cases | 10 |
-| Passed | 7 |
-| Failed | 2 |
-| Partial Pass | 1 |
+| Passed | 10 |
+| Failed | 0 |
+| Partial Pass | 0 |
 | Regressions | 0 |
 
 ### Failed Cases (Needs Fix)
 | Case ID | Title | Failure | Priority | Status |
 |---------|-------|---------|----------|--------|
-| RW-004 | Floating Widget vs Full Chat Confusion | Widget and /chat are separate conversations with no shared state | P2 | Open |
+| RW-004 | Floating Widget vs Full Chat Confusion | Widget and /chat are separate conversations with no shared state | P2 | Fixed |
 | RW-007 | Unicode, Long Inputs, and Empty States | /dashboard/community returns 404 but exists in sidebar nav | P2 | Fixed (fff47c6) |
 
 ### Partial Pass
 | Case ID | Title | Issue | Priority | Status |
 |---------|-------|-------|----------|--------|
-| RW-005 | Rapid-Fire Submit and Garbage Input | Messages 2+3 silently dropped during rapid-fire. Both messages got "Unable to process request." No crash. | P2 | Open |
+| RW-005 | Rapid-Fire Submit and Garbage Input | Messages 2+3 silently dropped during rapid-fire. Both messages got "Unable to process request." No crash. | P2 | Fixed (e2f75d7) |
 
 ### Passed Cases
 | Case ID | Title | Notes |
@@ -36,10 +36,10 @@
 ### Bugs Found
 | # | Bug | Severity | Test Case | Linear |
 |---|-----|----------|-----------|--------|
-| 1 | Widget and /chat are completely separate conversations — no shared state | P2 | RW-004 | AI-357 |
+| 1 | Widget and /chat are completely separate conversations — no shared state | P2 | RW-004 | AI-357 (Fixed) |
 | 2 | /dashboard/community returns 404 but listed in sidebar nav | P2 | RW-007 | Fixed (fff47c6) |
-| 3 | Rapid-fire messages 2+3 silently dropped with no user feedback | P2 | RW-005 | AI-358 |
-| 4 | "Unable to process request." error — terse, no retry guidance | P3 | RW-005 | AI-358 |
+| 3 | Rapid-fire messages 2+3 silently dropped with no user feedback | P2 | RW-005 | AI-358 (Fixed) |
+| 4 | "Unable to process request." error — terse, no retry guidance | P3 | RW-005 | AI-358 (Fixed) |
 | 5 | Transient FRED error on first message in new session | P3 | RW-001 | AI-354 |
 | 6 | Onboarding wizard doesn't resume after abandon (resets to step 1) | P3 | RW-003 | AI-356 |
 

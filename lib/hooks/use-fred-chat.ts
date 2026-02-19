@@ -118,6 +118,7 @@ function mapState(serverState: string): FredState {
 // ============================================================================
 
 const SESSION_STORAGE_KEY = "fred-session-id";
+const MESSAGES_STORAGE_KEY = "fred-chat-messages";
 
 function getOrCreateSessionId(providedId?: string): string {
   // Use provided ID if given
@@ -143,6 +144,31 @@ function getOrCreateSessionId(providedId?: string): string {
 }
 
 // ============================================================================
+// Message Persistence (survives navigation between widget ↔ /chat)
+// ============================================================================
+
+function loadPersistedMessages(): FredMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = sessionStorage.getItem(MESSAGES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Array<FredMessage & { timestamp: string }>;
+    return parsed.map((m) => ({ ...m, timestamp: new Date(m.timestamp) }));
+  } catch {
+    return [];
+  }
+}
+
+function persistMessages(messages: FredMessage[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messages));
+  } catch {
+    // sessionStorage full — silently ignore
+  }
+}
+
+// ============================================================================
 // Hook Implementation
 // ============================================================================
 
@@ -156,8 +182,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     onSynthesis,
   } = options;
 
-  // State
-  const [messages, setMessages] = useState<FredMessage[]>([]);
+  // State — hydrate messages from sessionStorage so they survive navigation
+  const [messages, setMessages] = useState<FredMessage[]>(loadPersistedMessages);
   const [state, setState] = useState<FredState>("idle");
   const [analysis, setAnalysis] = useState<FredAnalysis | null>(null);
   const [synthesis, setSynthesis] = useState<FredSynthesis | null>(null);
@@ -178,6 +204,11 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
   }, []);
+
+  // Persist messages to sessionStorage on every change
+  useEffect(() => {
+    persistMessages(messages);
+  }, [messages]);
 
   // Notify on state change
   useEffect(() => {
@@ -468,11 +499,12 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setError(null);
     setRedFlags([]);
 
-    // Generate new session ID
+    // Generate new session ID and clear persisted messages
     const newSessionId = crypto.randomUUID();
     sessionIdRef.current = newSessionId;
     if (typeof window !== "undefined") {
       sessionStorage.setItem(SESSION_STORAGE_KEY, newSessionId);
+      sessionStorage.removeItem(MESSAGES_STORAGE_KEY);
     }
   }, []);
 
