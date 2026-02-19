@@ -12,6 +12,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Quality gates: lint, typecheck, and test MUST pass.
+    # Do NOT add `|| true` — failures must block the build.
+    # See: .planning/research/PITFALLS.md (Pitfall #10)
 
     steps:
       - uses: actions/checkout@v4
@@ -26,15 +29,20 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Run linting
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Type check
-        run: npx tsc --noEmit || true
+        run: npx tsc --noEmit
 
       - name: Run tests
-        run: npm run test || true
+        run: npm run test
 
       - name: Build application
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: npm run build
 
       - name: Upload build artifacts
