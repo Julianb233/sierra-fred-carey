@@ -45,16 +45,8 @@ async function handlePost(req: NextRequest) {
   try {
     const userId = await requireAuth();
 
-    // Require Pro+ for voice calls
+    // Voice calls now allowed for all tiers (client gating removed)
     const userTier = await getUserTier(userId);
-    if (userTier < UserTier.PRO) {
-      return createTierErrorResponse({
-        allowed: false,
-        userTier,
-        requiredTier: UserTier.PRO,
-        userId,
-      });
-    }
 
     const body = await req.json();
     const parsed = callRequestSchema.safeParse(body);

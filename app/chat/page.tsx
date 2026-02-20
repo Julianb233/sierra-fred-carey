@@ -48,14 +48,8 @@ export default function ChatPage() {
   const { tier } = useUserTier();
   const isProOrAbove = tier >= UserTier.PRO;
   const handleCallClick = useCallback(() => {
-    if (isProOrAbove) {
-      setCallModalOpen(true);
-    } else {
-      toast.info("Voice calls are available on Pro+. Upgrade to unlock.", {
-        description: "Upgrade from Pricing or Settings > Billing.",
-      });
-    }
-  }, [isProOrAbove]);
+    setCallModalOpen(true);
+  }, []);
 
   // Auto-collapse side panel on mobile
   useEffect(() => {
@@ -144,12 +138,9 @@ export default function ChatPage() {
             onClick={handleCallClick}
             className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
             aria-label="Call Fred"
-            disabled={tier === undefined}
           >
             <Phone className="h-4 w-4" />
-            <span className="hidden sm:inline text-xs">
-              {isProOrAbove ? "Call" : "Call (Pro+)"}
-            </span>
+            <span className="hidden sm:inline text-xs">Call</span>
           </Button>
 
           {/* Side panel toggle */}
@@ -219,18 +210,15 @@ export default function ChatPage() {
           onClick={handleCallClick}
           className="h-12 px-4 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg hover:shadow-xl"
           aria-label="Call Fred"
-          disabled={tier === undefined}
         >
           <Phone className="h-5 w-5 mr-2" />
-          <span className="hidden sm:inline">{isProOrAbove ? "Call Fred" : "Call (Pro+)"}</span>
+          <span className="hidden sm:inline">Call Fred</span>
           <span className="sm:hidden">Call</span>
         </Button>
       </div>
 
-      {/* Call Fred Modal — Pro+ */}
-      {tier >= UserTier.PRO && (
-        <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
-      )}
+      {/* Call Fred Modal — now available to all tiers */}
+      <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
     </div>
   );
 }
