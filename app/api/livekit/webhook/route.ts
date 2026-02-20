@@ -266,6 +266,55 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case 'egress_ended': {
+        const egressInfo = event.egressInfo;
+        if (!egressInfo) {
+          console.warn('[LiveKit Webhook] egress_ended: no egressInfo');
+          break;
+        }
+
+        const egressRoomName = egressInfo.roomName;
+        if (!egressRoomName) {
+          console.warn('[LiveKit Webhook] egress_ended: no roomName in egressInfo');
+          break;
+        }
+
+        // Extract file URL from file results
+        // fileResults contains completed file upload info
+        let recordingUrl: string | null = null;
+
+        if (egressInfo.fileResults && egressInfo.fileResults.length > 0) {
+          // location is the download URL; filename is the S3 key
+          recordingUrl = egressInfo.fileResults[0].location || egressInfo.fileResults[0].filename || null;
+        }
+
+        if (!recordingUrl) {
+          // Construct predictable URL from the filepath we set at recording start
+          const s3Endpoint = process.env.RECORDING_S3_ENDPOINT;
+          const s3Bucket = process.env.RECORDING_S3_BUCKET;
+          if (s3Endpoint && s3Bucket) {
+            recordingUrl = `${s3Endpoint}/${s3Bucket}/voice-recordings/${egressRoomName}.ogg`;
+          }
+        }
+
+        if (recordingUrl) {
+          const { error } = await supabase
+            .from('coaching_sessions')
+            .update({ recording_url: recordingUrl })
+            .eq('room_name', egressRoomName);
+
+          if (error) {
+            console.error('[LiveKit Webhook] Failed to store recording URL:', error.message);
+          } else {
+            console.log(`[LiveKit Webhook] Recording URL stored for room ${egressRoomName}: ${recordingUrl}`);
+          }
+        } else {
+          console.warn(`[LiveKit Webhook] egress_ended for room ${egressRoomName} but no recording URL found`);
+        }
+
+        break;
+      }
+
       default:
         console.log(`[LiveKit Webhook] Unhandled event: ${event.event}`);
     }

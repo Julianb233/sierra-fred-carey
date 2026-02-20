@@ -222,9 +222,33 @@ async function handlePost(req: NextRequest) {
       durationSeconds
     );
 
+    const supabase = createServiceClient();
+
+    // Persist transcript and summary to coaching_sessions
+    try {
+      const { error: updateError } = await supabase
+        .from('coaching_sessions')
+        .update({
+          transcript_json: transcript,
+          summary: deliverables.summary,
+          decisions: deliverables.decisions,
+          next_actions: deliverables.nextActions,
+          call_type: callType,
+        })
+        .eq('room_name', roomName)
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.warn('[Fred Call Summary] Failed to persist to coaching_sessions:', updateError.message);
+      } else {
+        console.log(`[Fred Call Summary] Persisted transcript and summary for room: ${roomName}`);
+      }
+    } catch (persistErr) {
+      console.warn('[Fred Call Summary] coaching_sessions persistence error:', persistErr);
+    }
+
     // Store call record in episodic memory for context continuity
     try {
-      const supabase = createServiceClient();
       await supabase.from("fred_episodic_memory").insert({
         user_id: userId,
         session_id: roomName,
