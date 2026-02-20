@@ -96,6 +96,7 @@ export function CallFredModal({
   const [error, setError] = useState<string | null>(null);
   const [callSummary, setCallSummary] = useState<CallSummary | null>(null);
   const [transcriptEntries, setTranscriptEntries] = useState<CallTranscriptEntry[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting'>('connected');
 
   const roomNameRef = useRef<string>("");
   const roomRef = useRef<Room | null>(null);
@@ -141,6 +142,7 @@ export function CallFredModal({
       setError(null);
       setCallSummary(null);
       setTranscriptEntries([]);
+      setConnectionStatus('connected');
       resetTimer();
     } else {
       // Disconnect room when modal closes
@@ -198,6 +200,16 @@ export function CallFredModal({
         roomRef.current = null;
         setError("Call disconnected unexpectedly. Please try again.");
         setCallState("error");
+      });
+
+      // Reconnection UX: show banner during network interruption
+      room.on(RoomEvent.Reconnecting, () => {
+        console.log('[CallFred] Reconnecting...');
+        setConnectionStatus('reconnecting');
+      });
+      room.on(RoomEvent.Reconnected, () => {
+        console.log('[CallFred] Reconnected');
+        setConnectionStatus('connected');
       });
 
       // Listen for transcript data from the voice agent (filtered by topic)
@@ -406,6 +418,14 @@ export function CallFredModal({
           {/* In-Call Controls */}
           {callState === "in-call" && (
             <div className="space-y-4">
+              {/* Reconnecting Banner */}
+              {connectionStatus === 'reconnecting' && (
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs text-center py-1.5 rounded-md flex items-center justify-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Reconnecting...
+                </div>
+              )}
+
               {/* Live Transcript */}
               <div className="max-h-[200px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3">
                 {transcriptEntries.length === 0 ? (
