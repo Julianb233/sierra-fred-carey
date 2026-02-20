@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { ActiveModeBar, type ChatMode } from "@/components/chat/active-mode-bar";
 import { ChatSidePanel } from "@/components/chat/chat-side-panel";
