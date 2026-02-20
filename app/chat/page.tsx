@@ -46,6 +46,16 @@ export default function ChatPage() {
   const [callModalOpen, setCallModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const { tier } = useUserTier();
+  const isProOrAbove = tier >= UserTier.PRO;
+  const handleCallClick = useCallback(() => {
+    if (isProOrAbove) {
+      setCallModalOpen(true);
+    } else {
+      toast.info("Voice calls are available on Pro+. Upgrade to unlock.", {
+        description: "Upgrade from Pricing or Settings > Billing.",
+      });
+    }
+  }, [isProOrAbove]);
 
   // Auto-collapse side panel on mobile
   useEffect(() => {
@@ -127,19 +137,20 @@ export default function ChatPage() {
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Call Fred — Pro+ only */}
-          {tier >= UserTier.PRO && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCallModalOpen(true)}
-              className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
-              aria-label="Call Fred"
-            >
-              <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline text-xs">Call</span>
-            </Button>
-          )}
+          {/* Call Fred — shown to all; Pro+ unlocks voice */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCallClick}
+            className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
+            aria-label="Call Fred"
+            disabled={tier === undefined}
+          >
+            <Phone className="h-4 w-4" />
+            <span className="hidden sm:inline text-xs">
+              {isProOrAbove ? "Call" : "Call (Pro+)"}
+            </span>
+          </Button>
 
           {/* Side panel toggle */}
           <Button
@@ -200,6 +211,20 @@ export default function ChatPage() {
           onOpenChange={setSidePanelOpen}
           isMobile={isMobile}
         />
+      </div>
+
+      {/* Floating Call button inside chat page (so it's visible after navigation) */}
+      <div className="fixed bottom-6 right-4 md:right-6 z-40">
+        <Button
+          onClick={handleCallClick}
+          className="h-12 px-4 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg hover:shadow-xl"
+          aria-label="Call Fred"
+          disabled={tier === undefined}
+        >
+          <Phone className="h-5 w-5 mr-2" />
+          <span className="hidden sm:inline">{isProOrAbove ? "Call Fred" : "Call (Pro+)"}</span>
+          <span className="sm:hidden">Call</span>
+        </Button>
       </div>
 
       {/* Call Fred Modal — Pro+ */}
