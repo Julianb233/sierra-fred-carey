@@ -103,10 +103,10 @@ export async function POST(req: NextRequest) {
 
         const now = new Date().toISOString();
 
-        // Fetch the room to calculate duration
+        // Fetch the room to calculate duration and preserve existing metadata
         const { data: room } = await supabase
           .from('video_rooms')
-          .select('id, started_at')
+          .select('id, started_at, metadata')
           .eq('room_name', roomName)
           .maybeSingle();
 
@@ -114,16 +114,20 @@ export async function POST(req: NextRequest) {
           ? Math.floor((Date.now() - new Date(room.started_at).getTime()) / 1000)
           : null;
 
+        // Merge with existing metadata so room_started fields are preserved
+        const mergedMetadata = {
+          ...(room?.metadata as Record<string, unknown> || {}),
+          livekit_sid: event.room?.sid,
+          duration_seconds: durationSeconds,
+        };
+
         // Update video_rooms status
         const { error } = await supabase
           .from('video_rooms')
           .update({
             status: 'ended',
             ended_at: now,
-            metadata: {
-              livekit_sid: event.room?.sid,
-              duration_seconds: durationSeconds,
-            },
+            metadata: mergedMetadata,
           })
           .eq('room_name', roomName);
 
@@ -296,8 +300,8 @@ function extractUserIdFromRoom(roomName: string): string | null {
  */
 function extractUserIdFromIdentity(identity: string): string | null {
   if (!identity) return null;
-  // AI agents have identities like "ai-agent-xxx" or "fred-agent"
-  if (identity.startsWith('ai-agent') || identity.startsWith('fred')) return null;
+  // AI agents use exact identity 'fred-cary-voice' or prefix 'ai-agent'
+  if (identity === 'fred-cary-voice' || identity.startsWith('ai-agent')) return null;
   // If it looks like a UUID, return it
   if (identity.length >= 32) return identity;
   return null;

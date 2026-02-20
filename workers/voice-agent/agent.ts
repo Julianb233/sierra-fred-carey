@@ -87,9 +87,21 @@ async function loadVoiceContext(userId: string) {
 
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    await ctx.connect();
+    try {
+      await ctx.connect();
+    } catch (err) {
+      console.error('[Fred Voice Agent] Failed to connect:', err);
+      return;
+    }
 
-    const participant = await ctx.waitForParticipant();
+    let participant;
+    try {
+      participant = await ctx.waitForParticipant();
+    } catch (err) {
+      console.error('[Fred Voice Agent] Participant wait failed:', err);
+      return;
+    }
+
     console.log(
       `[Fred Voice Agent] Participant joined: ${participant.identity}`,
     );
