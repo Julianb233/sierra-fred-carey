@@ -13,7 +13,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   AccessToken,
   AgentDispatchClient,
+  EgressClient,
+  EncodedFileOutput,
+  EncodedFileType,
   RoomServiceClient,
+  S3Upload,
 } from "livekit-server-sdk";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
@@ -87,6 +91,49 @@ async function handlePost(req: NextRequest) {
     });
     console.log(`[Fred Call] Room created: ${roomName}`);
 
+    // 1.5 Start audio-only recording via Egress (non-blocking)
+    let egressId: string | null = null;
+    const s3AccessKey = process.env.RECORDING_S3_ACCESS_KEY;
+    const s3Secret = process.env.RECORDING_S3_SECRET;
+    const s3Bucket = process.env.RECORDING_S3_BUCKET;
+    const s3Region = process.env.RECORDING_S3_REGION;
+
+    if (s3AccessKey && s3Secret && s3Bucket && s3Region) {
+      try {
+        const egressClient = new EgressClient(httpUrl, apiKey, apiSecret);
+
+        const s3Output = new S3Upload({
+          accessKey: s3AccessKey,
+          secret: s3Secret,
+          bucket: s3Bucket,
+          region: s3Region,
+          endpoint: process.env.RECORDING_S3_ENDPOINT || '',
+          forcePathStyle: !!process.env.RECORDING_S3_ENDPOINT,
+        });
+
+        const fileOutput = new EncodedFileOutput({
+          fileType: EncodedFileType.OGG,
+          filepath: `voice-recordings/${roomName}.ogg`,
+          output: {
+            case: 's3' as const,
+            value: s3Output,
+          },
+        });
+
+        const egressInfo = await egressClient.startRoomCompositeEgress(
+          roomName,
+          fileOutput,
+          { audioOnly: true }
+        );
+        egressId = egressInfo.egressId;
+        console.log(`[Fred Call] Recording started: egress=${egressId}`);
+      } catch (egressErr) {
+        console.warn('[Fred Call] Recording start failed (call will proceed without recording):', egressErr);
+      }
+    } else {
+      console.log('[Fred Call] Recording skipped: S3 credentials not configured');
+    }
+
     // 2. Explicitly dispatch the voice agent to join this room
     const dispatchClient = new AgentDispatchClient(httpUrl, apiKey, apiSecret);
     const dispatch = await dispatchClient.createDispatch(
@@ -120,6 +167,7 @@ async function handlePost(req: NextRequest) {
       room: roomName,
       callType,
       maxDuration: callType === "on-demand" ? 600 : 1800, // seconds
+      egressId, // null if recording not available
     });
   } catch (error) {
     if (error instanceof Response) return error;

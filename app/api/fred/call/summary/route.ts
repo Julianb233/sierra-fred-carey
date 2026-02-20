@@ -30,7 +30,7 @@ const summaryRequestSchema = z.object({
       text: z.string(),
       timestamp: z.string().optional(),
     })
-  ),
+  ).max(500),
 });
 
 interface CallDeliverables {
