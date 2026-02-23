@@ -173,6 +173,7 @@ export function CallFredModal({
       roomNameRef.current = data.room;
 
       // Connect to LiveKit room
+      console.log('[CallFred] Creating room, url:', data.url, 'room:', data.room);
       const room = new Room();
       roomRef.current = room;
 
@@ -180,9 +181,14 @@ export function CallFredModal({
       room.on(
         RoomEvent.TrackSubscribed,
         (track, _publication: RemoteTrackPublication, _participant: RemoteParticipant) => {
+          console.log('[CallFred] Track subscribed:', track.kind, 'from:', _participant.identity);
           if (track.kind === Track.Kind.Audio) {
             const audioEl = track.attach();
+            audioEl.volume = 1;
             document.body.appendChild(audioEl);
+            console.log('[CallFred] Audio element attached, paused:', audioEl.paused);
+            // Force play in case autoplay is blocked
+            audioEl.play().catch((e) => console.warn('[CallFred] Audio play blocked:', e));
           }
         }
       );
@@ -236,21 +242,46 @@ export function CallFredModal({
       );
 
       try {
+        console.log('[CallFred] Connecting to LiveKit...');
         await room.connect(data.url, data.token);
+        console.log('[CallFred] Connected! State:', room.state, 'localParticipant:', room.localParticipant.identity);
+        console.log('[CallFred] Remote participants:', room.remoteParticipants.size);
+        for (const [, p] of room.remoteParticipants) {
+          console.log('[CallFred] Remote:', p.identity, 'tracks:', p.trackPublications.size);
+        }
       } catch (connectErr) {
+        console.error('[CallFred] Connect failed:', connectErr);
         roomRef.current = null;
         throw new Error("Failed to connect to call server. Please check your network and try again.");
       }
 
       // Enable microphone after connecting
       try {
+        console.log('[CallFred] Enabling microphone...');
         await room.localParticipant.setMicrophoneEnabled(true);
+        const micPubs = Array.from(room.localParticipant.trackPublications.values());
+        console.log('[CallFred] Microphone enabled. Published tracks:', micPubs.length, micPubs.map(p => p.kind));
       } catch (micErr) {
+        console.error('[CallFred] Microphone failed:', micErr);
         // Disconnect since the call won't work without a mic
         room.disconnect();
         roomRef.current = null;
         throw new Error("Microphone access is required for the call. Please allow microphone permissions and try again.");
       }
+
+      // Log all participant and connection events for debugging
+      room.on(RoomEvent.ParticipantConnected, (p) => {
+        console.log('[CallFred] ParticipantConnected:', p.identity, 'kind:', p.kind);
+      });
+      room.on(RoomEvent.TrackPublished, (pub, participant) => {
+        console.log('[CallFred] TrackPublished:', pub.kind, 'from:', participant.identity);
+      });
+      room.on(RoomEvent.ConnectionQualityChanged, (quality, participant) => {
+        console.log('[CallFred] ConnectionQuality:', quality, 'for:', participant.identity);
+      });
+      room.on(RoomEvent.SignalConnected, () => {
+        console.log('[CallFred] SignalConnected');
+      });
 
       // P1 Fix: Timeout if agent doesn't join within 30 seconds
       const hasRemoteParticipant = room.remoteParticipants.size > 0;
