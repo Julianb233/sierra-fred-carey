@@ -1,5 +1,6 @@
 import { defineAgent, type JobContext, voice } from '@livekit/agents';
 import * as openai from '@livekit/agents-plugin-openai';
+import * as silero from '@livekit/agents-plugin-silero';
 import {
   FRED_BIO,
   FRED_COMMUNICATION_STYLE,
@@ -100,6 +101,10 @@ class FredAgent extends BaseAgent {
 }
 
 export default defineAgent({
+  prewarm: async (proc) => {
+    // Preload the Silero VAD model so it's ready when a job arrives
+    proc.userData.vad = await silero.VAD.load();
+  },
   entry: async (ctx: JobContext) => {
     const encoder = new TextEncoder();
 
@@ -122,6 +127,7 @@ export default defineAgent({
     const tts = new openai.TTS({ model: 'tts-1', voice: 'alloy' });
 
     const session = new AgentSession({
+      vad: ctx.proc.userData.vad as silero.VAD,
       stt,
       llm,
       tts,
