@@ -71,6 +71,7 @@ interface TimelineEvent {
 }
 
 export default function JourneyDashboard() {
+  useEffect(() => { localStorage.setItem("sahara_features_explored", "true"); }, []);
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);

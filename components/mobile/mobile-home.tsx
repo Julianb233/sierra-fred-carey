@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Lock,
 } from "lucide-react";
+import { GetStartedWithFred } from "@/components/dashboard/get-started-with-fred";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
@@ -149,19 +150,7 @@ export function MobileHome() {
             Your Founder Command Center
           </p>
         </div>
-        <Card className="border-gray-200 dark:border-gray-800">
-          <CardContent className="p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Start a conversation with FRED to populate your command center.
-            </p>
-            <Link href="/dashboard/chat">
-              <Button className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Talk to FRED
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <GetStartedWithFred variant="mobile" />
       </div>
     );
   }
@@ -177,6 +166,9 @@ export function MobileHome() {
           Here is what matters today.
         </p>
       </div>
+
+      {/* Get Started with Fred */}
+      <GetStartedWithFred variant="mobile" />
 
       {/* Today's Focus -- most important decision */}
       <TodaysFocus

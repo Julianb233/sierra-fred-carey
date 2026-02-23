@@ -35,6 +35,7 @@ import type {
 } from "@/lib/types/insights";
 
 export default function InsightsDashboardPage() {
+  useEffect(() => { localStorage.setItem("sahara_features_explored", "true"); }, []);
   const [abTests, setAbTests] = useState<ABTestResult[]>([]);
   const [analytics, setAnalytics] = useState<AIAnalytics | null>(null);
   const [topInsights, setTopInsights] = useState<TopInsight[]>([]);

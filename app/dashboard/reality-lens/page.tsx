@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +76,7 @@ interface ApiResponse {
 // ---------------------------------------------------------------------------
 
 export default function RealityLensPage() {
+  useEffect(() => { localStorage.setItem("sahara_features_explored", "true"); }, []);
   const [idea, setIdea] = useState("");
   const [stage, setStage] = useState<string>("");
   const [market, setMarket] = useState("");

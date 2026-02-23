@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
 import { WelcomeModal } from "@/components/dashboard/WelcomeModal";
-import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { GetStartedWithFred } from "@/components/dashboard/get-started-with-fred";
 import { RedFlagsWidget } from "@/components/dashboard/red-flags-widget";
 import { FounderSnapshotCard } from "@/components/dashboard/founder-snapshot-card";
 import { DecisionBox } from "@/components/dashboard/decision-box";
@@ -145,25 +145,7 @@ function DashboardContent() {
             Your Founder Command Center
           </p>
         </div>
-        <OnboardingChecklist />
-        <div className="rounded-2xl border-2 border-[#ff6a1a]/30 bg-gradient-to-br from-[#ff6a1a]/5 to-orange-50 dark:from-[#ff6a1a]/10 dark:to-gray-900 p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#ff6a1a] to-orange-500 flex items-center justify-center shadow-lg shadow-[#ff6a1a]/25">
-            <MessageSquare className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Start by talking to Fred
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Fred will ask you the right questions to understand your startup and build your personalized command center.
-          </p>
-          <a
-            href="/chat"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#ff6a1a] hover:bg-[#ea580c] text-white font-semibold text-base transition-colors shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40"
-          >
-            Talk to Fred
-            <ArrowRight className="w-5 h-5" />
-          </a>
-        </div>
+        <GetStartedWithFred />
         <WelcomeModal
           isOpen={showWelcome}
           onClose={handleCloseWelcome}
@@ -196,8 +178,8 @@ function DashboardContent() {
         )}
       </div>
 
-      {/* Onboarding Checklist (dismissible) */}
-      <OnboardingChecklist />
+      {/* Get Started with Fred (auto-hides when core steps complete) */}
+      <GetStartedWithFred />
 
       {/* Work with Fred CTA — prominent for all users */}
       <a
