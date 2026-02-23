@@ -9,7 +9,7 @@ const ContentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com https://*.ingest.sentry.io https://*.msgsndr.com",
+  "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com https://*.ingest.sentry.io https://*.msgsndr.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
