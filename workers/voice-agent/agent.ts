@@ -1,5 +1,5 @@
 import { defineAgent, type JobContext, voice } from '@livekit/agents';
-import { STT, LLM, TTS } from '@livekit/agents-plugin-openai';
+import * as openai from '@livekit/agents-plugin-openai';
 import {
   FRED_BIO,
   FRED_COMMUNICATION_STYLE,
@@ -9,7 +9,7 @@ import {
 import { buildFounderContextWithFacts } from '../../lib/fred/context-builder';
 import { getConversationContext } from '../../lib/channels/conversation-context';
 
-const { Agent: VoiceAgent, AgentSession, AgentSessionEventTypes } = voice;
+const { Agent: BaseAgent, AgentSession, AgentSessionEventTypes } = voice;
 
 /**
  * Build Fred Cary's voice-optimized system prompt.
@@ -85,27 +85,18 @@ async function loadVoiceContext(userId: string) {
   }
 }
 
+/**
+ * Fred Cary voice agent — extends voice.Agent with Fred's persona.
+ * Instructions are set dynamically after loading founder context.
+ */
+class FredAgent extends BaseAgent {
+  constructor(instructions: string) {
+    super({ instructions });
+  }
+}
+
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    try {
-      await ctx.connect();
-    } catch (err) {
-      console.error('[Fred Voice Agent] Failed to connect:', err);
-      return;
-    }
-
-    let participant;
-    try {
-      participant = await ctx.waitForParticipant();
-    } catch (err) {
-      console.error('[Fred Voice Agent] Participant wait failed:', err);
-      return;
-    }
-
-    console.log(
-      `[Fred Voice Agent] Participant joined: ${participant.identity}`,
-    );
-
     const encoder = new TextEncoder();
 
     function publishTranscript(speaker: 'user' | 'fred', text: string) {
@@ -122,20 +113,15 @@ export default defineAgent({
       });
     }
 
-    const context = await loadVoiceContext(participant.identity);
+    const stt = new openai.STT({ model: 'whisper-1' });
+    const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
+    const tts = new openai.TTS({ model: 'tts-1', voice: 'alloy' });
 
-    const stt = new STT({ model: 'whisper-1' });
-    const llm = new LLM({ model: 'gpt-4o', temperature: 0.7 });
-    const tts = new TTS({ model: 'tts-1', voice: 'alloy' });
-
-    const agent = new VoiceAgent({
-      instructions: buildFredVoicePrompt(context),
+    const session = new AgentSession({
       stt,
       llm,
       tts,
     });
-
-    const session = new AgentSession();
 
     session.on(AgentSessionEventTypes.UserInputTranscribed, (ev) => {
       if (ev.isFinal) {
@@ -162,23 +148,32 @@ export default defineAgent({
       console.log(`[Fred Voice Agent] Session closed: ${ev.reason}`);
     });
 
-    // P1 Fix: Register shutdown callback to close session cleanly
+    // Register shutdown callback to close session cleanly
     ctx.addShutdownCallback(async () => {
       console.log('[Fred Voice Agent] Shutting down, closing session...');
       await session.close();
     });
 
+    // Load founder context in parallel with session setup
+    // Extract userId from room name format: {userId}_fred-call_{timestamp}
+    const roomName = ctx.room.name || '';
+    const userId = roomName.split('_')[0] || '';
+    const context = userId ? await loadVoiceContext(userId) : undefined;
+
+    // Start session first, then connect — matches SDK 1.0 lifecycle order
     await session.start({
-      agent,
+      agent: new FredAgent(buildFredVoicePrompt(context)),
       room: ctx.room,
     });
 
-    // P1 Fix: Small delay to let audio output track initialize before greeting
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await ctx.connect();
 
-    // Send Fred's greeting
-    session.say(
-      "Hey, Fred Cary here. What's on your mind? Let's get into it.",
-    );
+    console.log('[Fred Voice Agent] Connected, sending greeting...');
+
+    // Use generateReply for greeting — this goes through the full LLM pipeline
+    // so Fred's persona and voice style are applied
+    session.generateReply({
+      instructions: "Greet the user warmly as Fred Cary. Say something like: Hey, Fred Cary here. What's on your mind? Let's get into it.",
+    });
   },
 });

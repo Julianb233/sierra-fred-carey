@@ -32,6 +32,7 @@
     "@livekit/agents-plugin-openai": "^1.0.43",
     "@livekit/components-react": "^2.9.17",
     "@livekit/components-styles": "^1.2.0",
+    "@livekit/rtc-node": "^0.13.24",
     "@paper-design/shaders-react": "^0.0.68",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
