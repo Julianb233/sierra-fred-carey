@@ -6,8 +6,6 @@ import {
   FRED_COMPANIES,
   SAHARA_MESSAGING,
 } from '../../lib/fred-brain';
-import { buildFounderContextWithFacts } from '../../lib/fred/context-builder';
-import { getConversationContext } from '../../lib/channels/conversation-context';
 
 const { Agent: BaseAgent, AgentSession, AgentSessionEventTypes } = voice;
 
@@ -60,6 +58,12 @@ function truncate(str: string, max = 1200) {
 
 async function loadVoiceContext(userId: string) {
   try {
+    // Dynamic imports — these modules transitively import next/headers
+    // via lib/supabase/server.ts, which crashes outside Next.js runtime.
+    // Dynamic import defers loading so the worker can start without crashing.
+    const { buildFounderContextWithFacts } = await import('../../lib/fred/context-builder');
+    const { getConversationContext } = await import('../../lib/channels/conversation-context');
+
     const [founder, conversation] = await Promise.all([
       buildFounderContextWithFacts(userId, true).catch(() => ({ context: '' })),
       getConversationContext(userId, 12).catch(() => null),
