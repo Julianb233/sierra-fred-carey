@@ -40,6 +40,7 @@ import { createClient } from "@/lib/supabase/client";
 import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
+import { PageTransition } from "@/components/animations/PageTransition";
 
 // ============================================================================
 // Navigation Configuration
@@ -441,7 +442,9 @@ export default function DashboardLayout({
         {/* Main Content — extra bottom padding on mobile for bottom nav */}
         <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-28 md:pb-8">
-            {children}
+            <PageTransition>
+              {children}
+            </PageTransition>
           </div>
         </main>
       </div>
