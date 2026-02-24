@@ -15,6 +15,7 @@ import {
   streamObject,
   embed,
   embedMany,
+  stepCountIs,
   type StreamTextResult,
 } from "ai";
 import type { ModelMessage } from "ai";
@@ -49,6 +50,10 @@ export interface GenerateOptions {
   system?: string;
   /** Abort signal for cancellation */
   abortSignal?: AbortSignal;
+  /** Tools available to the model during generation */
+  tools?: Record<string, any>;
+  /** Maximum number of tool-calling steps (default: 1, no tool loop) */
+  maxSteps?: number;
 }
 
 export interface GenerateResult {
@@ -120,6 +125,10 @@ export async function generate(
     maxOutputTokens: options.maxOutputTokens ?? 4096,
     temperature: options.temperature ?? 0.7,
     abortSignal: options.abortSignal,
+    ...(options.tools ? { tools: options.tools } : {}),
+    ...(options.tools && options.maxSteps
+      ? { stopWhen: stepCountIs(options.maxSteps) }
+      : {}),
   });
 
   const [text, usage, finishReason, response] = await Promise.all([

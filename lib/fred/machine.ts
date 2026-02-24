@@ -136,8 +136,8 @@ export const fredMachine = setup({
       async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext, input.conversationState)
     ),
 
-    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null }>(
-      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState)
+    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null; userId: string }>(
+      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState, input.userId)
     ),
 
     execute: fromPromise<void, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string; conversationState: ConversationStateContext | null }>(
@@ -604,6 +604,7 @@ export const fredMachine = setup({
           validatedInput: context.validatedInput!,
           founderContext: context.founderContext,
           conversationState: context.conversationState,
+          userId: context.userId,
         }),
         onDone: [
           {
