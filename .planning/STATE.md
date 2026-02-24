@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 62 of 70 (Voice Agent Production Hardening)
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-02-20 — Completed 62-01-PLAN.md
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-02-23 — Completed 62-02-PLAN.md
 
-Progress: [######________________________] 29% (3.5/12 v6.0 phases)
+Progress: [########______________________] 33% (4/12 v6.0 phases)
 
 ## Performance Metrics
 
@@ -65,6 +65,10 @@ Phase 62 decisions:
 - Reconnection uses connectionStatus state with RoomEvent.Reconnecting/Reconnected
 - Agent identity detection uses exact match 'fred-cary-voice' instead of prefix 'fred'
 - Worker returns early on connect/waitForParticipant failure instead of crashing
+- Supabase Storage chosen for S3-compatible call recording storage
+- Recording failure is non-blocking (try/catch fallback, calls proceed without recording)
+- Transcript capped at 500 entries to prevent abuse
+- egress_ended webhook populates recording_url from fileResults
 
 ### Blockers/Concerns
 
@@ -75,11 +79,13 @@ Phase 62 decisions:
 - **DEFERRED** Twilio A2P 10DLC registration — 4-week timeline, must start now
 - **DEFERRED** 6 visual regression baselines need authenticated test credentials to generate
 - Boardy API — no public docs, requires partnership agreement (LOW confidence)
-- LiveKit — 3 CRITICAL bugs (no remote audio, Docker won't start, room name format) — 3 MEDIUM bugs fixed in 62-01
+- LiveKit — 3 CRITICAL bugs fixed in 62-01, recording + transcript persistence complete in 62-02
+- **DEFERRED** Supabase Storage S3 access keys needed for call recording (RECORDING_S3_ACCESS_KEY, RECORDING_S3_SECRET)
+- **DEFERRED** Migration 062_call_recording_columns.sql needs to be run against database
 - Stripe Connect must be isolated from existing subscription webhooks
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Completed 62-01-PLAN.md (voice client + webhook + worker hardening)
+Last session: 2026-02-23
+Stopped at: Completed 62-02-PLAN.md (call recording, transcript persistence, egress webhook)
 Resume file: None
