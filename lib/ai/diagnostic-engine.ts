@@ -9,6 +9,7 @@
 import {
   detectPositioningSignals,
   needsPositioningFramework,
+  countPositioningSignals,
   type PositioningSignals,
   POSITIONING_INTRODUCTION_LANGUAGE,
   generatePositioningPrompt,
@@ -17,6 +18,7 @@ import {
 import {
   detectInvestorSignals,
   needsInvestorLens,
+  countInvestorSignals as countInvestorSignalsFromFramework,
   type InvestorReadinessSignals,
   INVESTOR_LENS_INTRODUCTION,
   generateInvestorLensPrompt,
@@ -55,11 +57,11 @@ export interface ConversationContext {
 }
 
 function countTrueSignals(signals: PositioningSignals): number {
-  return Object.values(signals).filter(Boolean).length;
+  return countPositioningSignals(signals);
 }
 
-function countInvestorSignals(signals: InvestorReadinessSignals): number {
-  return Object.values(signals).filter(Boolean).length;
+function countInvSignals(signals: InvestorReadinessSignals): number {
+  return countInvestorSignalsFromFramework(signals);
 }
 
 function calculateSignalStrength(count: number, total: number): SignalStrength {
@@ -111,7 +113,7 @@ export function analyzeConversation(
 
   // Calculate signal strengths
   const positioningCount = countTrueSignals(positioningSignals);
-  const investorCount = countInvestorSignals(investorSignals);
+  const investorCount = countInvSignals(investorSignals);
 
   const positioningSignalStrength = calculateSignalStrength(positioningCount, 4);
   const investorSignalStrength = calculateSignalStrength(investorCount, 5);
@@ -287,8 +289,15 @@ export function runDiagnosticAnalysis(
 
 import type { ModeContext } from "@/lib/db/conversation-state";
 
-/** How many consecutive messages without signals before exiting a mode */
-const MODE_EXIT_THRESHOLD = 3;
+/**
+ * How many consecutive messages without signals before exiting a mode.
+ * 5 consecutive quiet messages prevents premature exit from frameworks
+ * that naturally have question-answer gaps.
+ */
+const MODE_EXIT_THRESHOLD = 5;
+
+/** Minimum number of framework signals required to trigger a mode transition */
+const MIN_SIGNALS_TO_TRANSITION = 2;
 
 export interface ModeTransitionResult {
   /** The mode FRED should be in after this message */
@@ -303,6 +312,8 @@ export interface ModeTransitionResult {
   needsIntroduction: boolean;
   /** Signals detected in this message */
   detectedSignals: string[];
+  /** Confidence score (0-1) based on detected signals / total possible signals */
+  signalConfidence: number;
   /** Updated mode context (caller persists this) */
   updatedModeContext: ModeContext;
 }
@@ -312,9 +323,10 @@ export interface ModeTransitionResult {
  *
  * Rules:
  * 1. Investor signals override everything (investor > positioning > founder-os)
- * 2. Entering a mode requires at least 1 strong signal
- * 3. Exiting a mode requires MODE_EXIT_THRESHOLD consecutive quiet messages
- * 4. Introduction is needed only if the framework hasn't been introduced yet
+ * 2. Entering a mode requires MIN_SIGNALS_TO_TRANSITION (2+) signals from framework functions
+ * 3. Sliding window: at least 1 recent signal in the last 3 history entries for the target framework
+ * 4. Exiting a mode requires MODE_EXIT_THRESHOLD (5) consecutive quiet messages
+ * 5. Introduction is needed only if the framework hasn't been introduced yet
  */
 export function determineModeTransition(
   currentMessage: string,
@@ -358,6 +370,12 @@ export function determineModeTransition(
     updatedContext.quietCount = (updatedContext.quietCount || 0) + 1;
   }
 
+  // --- Sliding window confidence check ---
+  // Look at the last 3 entries in signal history to prevent single-message bursts
+  // from triggering mode entry. Requires at least 1 recent signal for the target
+  // framework in the sliding window (or the current message must have strong signals).
+  const recentHistory = updatedContext.signalHistory.slice(-3);
+
   // --- Mode transition logic ---
 
   let newMode: DiagnosticMode = currentMode;
@@ -367,21 +385,33 @@ export function determineModeTransition(
 
   // Case 1: Investor signals detected — enter investor mode (highest priority)
   if (hasInvestorSignals && currentMode !== "investor-readiness") {
-    newMode = "investor-readiness";
-    transitioned = true;
-    direction = "enter";
-    framework = "investor";
-    updatedContext.activatedAt = new Date().toISOString();
-    updatedContext.activatedBy = "signal_detected";
+    // Sliding window: allow if uploadedDeck OR at least 1 recent investor signal in history
+    const recentInvestorSignals = recentHistory.filter(
+      (h) => h.framework === "investor"
+    ).length;
+    if (invSignals.uploadedDeck || recentInvestorSignals >= 1) {
+      newMode = "investor-readiness";
+      transitioned = true;
+      direction = "enter";
+      framework = "investor";
+      updatedContext.activatedAt = new Date().toISOString();
+      updatedContext.activatedBy = "signal_detected";
+    }
   }
   // Case 2: Positioning signals detected — enter positioning mode (only if not in investor)
   else if (hasPositioningSignals && currentMode === "founder-os") {
-    newMode = "positioning";
-    transitioned = true;
-    direction = "enter";
-    framework = "positioning";
-    updatedContext.activatedAt = new Date().toISOString();
-    updatedContext.activatedBy = "signal_detected";
+    // Sliding window: allow if at least 1 recent positioning signal in history
+    const recentPositioningSignals = recentHistory.filter(
+      (h) => h.framework === "positioning"
+    ).length;
+    if (recentPositioningSignals >= 1) {
+      newMode = "positioning";
+      transitioned = true;
+      direction = "enter";
+      framework = "positioning";
+      updatedContext.activatedAt = new Date().toISOString();
+      updatedContext.activatedBy = "signal_detected";
+    }
   }
   // Case 3: No signals for a while — consider exiting to founder-os
   else if (
@@ -406,6 +436,17 @@ export function determineModeTransition(
     needsIntroduction = !introState.introduced;
   }
 
+  // Calculate signal confidence for observability
+  // 4 possible positioning signals, 5 possible investor signals
+  const posCount = countPositioningSignals(posSignals);
+  const invCount = countInvestorSignalsFromFramework(invSignals);
+  let signalConfidence = 0;
+  if (hasInvestorSignals) {
+    signalConfidence = invCount / 5;
+  } else if (hasPositioningSignals) {
+    signalConfidence = posCount / 4;
+  }
+
   return {
     newMode,
     transitioned,
@@ -413,6 +454,7 @@ export function determineModeTransition(
     framework,
     needsIntroduction,
     detectedSignals,
+    signalConfidence,
     updatedModeContext: updatedContext,
   };
 }
