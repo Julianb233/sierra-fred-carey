@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 63 of 70 (FRED Intelligence Upgrade)
-Plan: 02 of 04 complete
+Plan: 03 of 04 complete
 Status: In progress
-Last activity: 2026-02-24 — Completed 63-02-PLAN.md
+Last activity: 2026-02-24 — Completed 63-03-PLAN.md
 
 Progress: [########______________________] 33% (4/12 v6.0 phases)
 
@@ -81,6 +81,11 @@ Phase 63-02 decisions:
 - 2-signal threshold enforced at framework level (needsPositioningFramework, needsInvestorLens)
 - uploadedDeck always triggers investor mode by itself (explicit user action)
 
+Phase 63-03 decisions:
+- 100K token budget for system prompt context (128K limit - 4K response - ~24K conversation)
+- Priority-based block truncation: founderContext highest, deckReviewReady lowest
+- shouldSummarize threshold: 60% context limit AND >20 messages (dual condition prevents false positives)
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -99,5 +104,5 @@ Phase 63-02 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 63-02-PLAN.md (mode switching false positive reduction)
+Stopped at: Completed 63-03-PLAN.md (context window management and summarization)
 Resume file: None
