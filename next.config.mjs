@@ -1,4 +1,20 @@
+import { spawnSync } from "node:child_process";
+import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
+
+// ---------------------------------------------------------------------------
+// Serwist PWA – service worker compilation (wraps before Sentry)
+// ---------------------------------------------------------------------------
+const revision =
+  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ??
+  crypto.randomUUID();
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  additionalPrecacheEntries: [{ url: "/offline", revision }],
+  disable: process.env.NODE_ENV === "development",
+});
 
 // ---------------------------------------------------------------------------
 // Content-Security-Policy – allow self, Stripe, Supabase, and AI providers
@@ -67,8 +83,11 @@ const nextConfig = {
   },
 };
 
+// Serwist wraps first (inner), then Sentry wraps second (outer)
+const serwistConfig = withSerwist(nextConfig);
+
 const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(nextConfig, {
+  ? withSentryConfig(serwistConfig, {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
@@ -77,6 +96,6 @@ const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
       disableLogger: true,
       tunnelRoute: "/monitoring-tunnel",
     })
-  : nextConfig;
+  : serwistConfig;
 
 export default finalConfig;
