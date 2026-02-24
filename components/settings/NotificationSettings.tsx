@@ -103,13 +103,14 @@ export function NotificationSettings() {
 
   // Push notification state
   const {
-    isSupported: pushSupported,
-    permission: pushPermission,
     isSubscribed: pushSubscribed,
+    isLoading: pushLoading,
+    error: pushError,
+    permissionState: pushPermission,
+    isIOS: pushIsIOS,
+    isIOSStandalone: pushIsIOSStandalone,
     subscribe: pushSubscribe,
     unsubscribe: pushUnsubscribe,
-    loading: pushLoading,
-    error: pushError,
   } = usePushSubscription();
 
   // Push category preferences
@@ -532,19 +533,45 @@ export function NotificationSettings() {
             <h3 className="font-semibold text-base">Browser Push Notifications</h3>
           </div>
 
-          {!pushSupported ? (
-            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+          {pushPermission === "unsupported" ? (
+            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
               <ExclamationTriangleIcon className="h-4 w-4 text-gray-400" />
               <span className="text-sm text-gray-500">
                 Push notifications are not supported in this browser.
               </span>
             </div>
+          ) : pushIsIOS && !pushIsIOSStandalone ? (
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-2">
+                <BellIcon className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                    To receive push notifications on iOS:
+                  </p>
+                  <ol className="text-sm text-blue-700 dark:text-blue-400 mt-2 space-y-1 list-decimal list-inside">
+                    <li>Tap the Share button in Safari</li>
+                    <li>Select &quot;Add to Home Screen&quot;</li>
+                    <li>Open Sahara from your home screen</li>
+                    <li>Enable notifications here</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
           ) : pushPermission === "denied" ? (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-              <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm text-yellow-700 dark:text-yellow-400">
-                Notifications are blocked. Please update your browser settings.
-              </span>
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2">
+                <ExclamationTriangleIcon className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                    Push notifications are blocked. To re-enable:
+                  </p>
+                  <ol className="text-sm text-amber-700 dark:text-amber-400 mt-2 space-y-1 list-decimal list-inside">
+                    <li>Click the lock/info icon in your browser&apos;s address bar</li>
+                    <li>Find &quot;Notifications&quot; and change to &quot;Allow&quot;</li>
+                    <li>Reload this page</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           ) : (
             <div
