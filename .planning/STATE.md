@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 63 in progress, Wave 3 (Phases 63, 64, 65)
+**Current focus:** v6.0 Full Platform Maturity — Phases 63, 65 in progress, Wave 3 (Phases 63, 64, 65)
 
 ## Current Position
 
-Phase: 63 of 70 (FRED Intelligence Upgrade)
-Plan: 03 of 04 complete
+Phase: 65 of 70 (Mobile / UX Polish)
+Plan: 01 of 04 complete
 Status: In progress
-Last activity: 2026-02-24 — Completed 63-03-PLAN.md
+Last activity: 2026-02-24 — Completed 65-01-PLAN.md
 
 Progress: [########______________________] 33% (4/12 v6.0 phases)
 
@@ -86,6 +86,11 @@ Phase 63-03 decisions:
 - Priority-based block truncation: founderContext highest, deckReviewReady lowest
 - shouldSummarize threshold: 60% context limit AND >20 messages (dual condition prevents false positives)
 
+Phase 65-01 decisions:
+- Serwist wraps inner, Sentry wraps outer in next.config.mjs (ensures SW compilation before source maps)
+- Push handlers placed BEFORE serwist.addEventListeners() to ensure registration
+- Serwist disabled in development mode (Turbopack incompatible)
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -104,5 +109,5 @@ Phase 63-03 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 63-03-PLAN.md (context window management and summarization)
+Stopped at: Completed 65-01-PLAN.md (Serwist PWA service worker migration)
 Resume file: None
