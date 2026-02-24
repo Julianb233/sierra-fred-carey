@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 62 (Voice Agent Production Hardening)
+**Current focus:** v6.0 Full Platform Maturity — Phase 62 complete, next: Wave 3 (Phases 63, 64, 65)
 
 ## Current Position
 
@@ -20,7 +20,7 @@ Progress: [########______________________] 33% (4/12 v6.0 phases)
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 3 phases complete (59, 60, 61) — Wave 1 done
+- v6.0: 4 phases complete (59, 60, 61, 62) — Waves 1-2 done
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 

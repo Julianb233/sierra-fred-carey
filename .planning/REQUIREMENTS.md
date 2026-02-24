@@ -73,7 +73,7 @@
 - [x] **INFRA-01**: Sentry error tracking — DSN configuration, source maps uploading, alerting rules, performance monitoring
 - [x] **INFRA-02**: CI/CD expansion — Playwright E2E in CI, visual regression testing, axe-core accessibility, staging environment
 - [x] **INFRA-03**: Twilio SMS activation — A2P 10DLC registration, real SMS delivery, opt-in/opt-out compliance, delivery tracking
-- [ ] **INFRA-04**: Voice agent hardening — Remote audio playback fix, Docker container fix, room name tracking, reconnection, recording/transcription
+- [x] **INFRA-04**: Voice agent hardening — Remote audio playback fix, Docker container fix, room name tracking, reconnection, recording/transcription
 
 ### FRED & UX Improvements (IMPROVE)
 
@@ -247,7 +247,7 @@
 | INFRA-01 | Phase 59 | Complete |
 | INFRA-02 | Phase 60 | Complete |
 | INFRA-03 | Phase 61 | Complete |
-| INFRA-04 | Phase 62 | Pending |
+| INFRA-04 | Phase 62 | Complete |
 | IMPROVE-01 | Phase 63 | Pending |
 | IMPROVE-02 | Phase 65 | Pending |
 | IMPROVE-03 | Phase 64 | Pending |
