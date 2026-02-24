@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 64 complete, Phase 65 in progress, Wave 3 (Phases 63, 64, 65)
+**Current focus:** v6.0 Full Platform Maturity — Phase 65 complete, Wave 3 (Phases 63, 64, 65) done
 
 ## Current Position
 
 Phase: 65 of 70 (Mobile / UX Polish)
-Plan: 03 of 04 remaining (01, 02, 04 complete)
-Status: In progress
-Last activity: 2026-02-24 — Completed 65-04-PLAN.md
+Plan: 04 of 04 complete
+Status: Phase complete
+Last activity: 2026-02-24 — Completed 65-03-PLAN.md
 
-Progress: [##########____________________] 42% (5/12 v6.0 phases)
+Progress: [############__________________] 50% (6/12 v6.0 phases)
 
 ## Performance Metrics
 
@@ -102,6 +102,10 @@ Phase 65-02 decisions:
 - 200ms page transition, 400ms scroll fade-in with staggered delays (0, 0.1, 0.2, 0.3)
 - Reduced motion via useReducedMotion sets duration to 0 for WCAG compliance
 
+Phase 65-03 decisions:
+- aria-hidden on nav section headings (simpler than aria-labelledby groups)
+- role=main alongside id=main-content for legacy screen reader compatibility
+
 Phase 65-04 decisions:
 - subscribeWithRetry helper with 3 attempts and 1s/2s/4s exponential backoff
 - Track actual PushSubscription object instead of boolean flag
@@ -125,5 +129,5 @@ Phase 65-04 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 65-04-PLAN.md (Push notification hardening with retry and iOS detection)
+Stopped at: Completed 65-03-PLAN.md (WCAG accessibility compliance and expanded a11y tests)
 Resume file: None
