@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 62 complete, next: Wave 3 (Phases 63, 64, 65)
+**Current focus:** v6.0 Full Platform Maturity — Phase 63 in progress, Wave 3 (Phases 63, 64, 65)
 
 ## Current Position
 
-Phase: 62 of 70 (Voice Agent Production Hardening)
-Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-02-23 — Completed 62-02-PLAN.md
+Phase: 63 of 70 (FRED Intelligence Upgrade)
+Plan: 01 of 04 complete
+Status: In progress
+Last activity: 2026-02-24 — Completed 63-01-PLAN.md
 
 Progress: [########______________________] 33% (4/12 v6.0 phases)
 
@@ -20,7 +20,7 @@ Progress: [########______________________] 33% (4/12 v6.0 phases)
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 4 phases complete (59, 60, 61, 62) — Waves 1-2 done
+- v6.0: 4 phases complete (59, 60, 61, 62) — Waves 1-2 done, Wave 3 in progress
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -70,6 +70,11 @@ Phase 62 decisions:
 - Transcript capped at 500 entries to prevent abuse
 - egress_ended webhook populates recording_url from fileResults
 
+Phase 63-01 decisions:
+- Thread currentMessage through machine context.input.message (no service-level changes needed)
+- Embedding generation runs in parallel with recency queries for lower latency
+- Similarity thresholds: 0.75 for episodes, 0.7 for facts
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -82,10 +87,11 @@ Phase 62 decisions:
 - LiveKit — 3 CRITICAL bugs fixed in 62-01, recording + transcript persistence complete in 62-02
 - **DEFERRED** Supabase Storage S3 access keys needed for call recording (RECORDING_S3_ACCESS_KEY, RECORDING_S3_SECRET)
 - **DEFERRED** Migration 062_call_recording_columns.sql needs to be run against database
+- **DEFERRED** Migration 063_memory_vector_search_rpcs.sql needs to be run against database
 - Stripe Connect must be isolated from existing subscription webhooks
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 62-02-PLAN.md (call recording, transcript persistence, egress webhook)
+Last session: 2026-02-24
+Stopped at: Completed 63-01-PLAN.md (embedding-based memory retrieval)
 Resume file: None
