@@ -68,6 +68,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.className} antialiased`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black dark:focus:bg-gray-900 dark:focus:text-white focus:rounded-md focus:shadow-lg focus:top-4 focus:left-4"
+        >
+          Skip to main content
+        </a>
         <Script
           src="https://link.msgsndr.com/js/external-tracking.js"
           data-tracking-id="tk_42c4652bb7654480a513653a8c7f4e1f"

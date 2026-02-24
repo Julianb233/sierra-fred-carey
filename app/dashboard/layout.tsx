@@ -245,7 +245,7 @@ function SidebarContent({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto p-4 space-y-1">
         {visibleNavItems.map((item, idx) => {
           const isActive =
             item.href === "/dashboard"
@@ -264,14 +264,14 @@ function SidebarContent({
           return (
             <div key={item.name}>
               {showInvestorLabel && (
-                <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <h3 aria-hidden="true" className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                   Investor Tools
-                </p>
+                </h3>
               )}
               {showStudioLabel && (
-                <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <h3 aria-hidden="true" className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                   Studio
-                </p>
+                </h3>
               )}
               <Link
                 href={item.href}
@@ -404,7 +404,9 @@ export default function DashboardLayout({
   if (isAuthChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6a1a]" />
+        <div role="status" aria-label="Loading" className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6a1a]">
+          <span className="sr-only">Loading...</span>
+        </div>
       </div>
     );
   }
@@ -440,7 +442,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content — extra bottom padding on mobile for bottom nav */}
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" role="main" className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-28 md:pb-8">
             <PageTransition>
               {children}
