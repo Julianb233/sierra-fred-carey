@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phases 63, 65 in progress, Wave 3 (Phases 63, 64, 65)
+**Current focus:** v6.0 Full Platform Maturity — Phase 63 complete, Phase 65 in progress, Wave 3 (Phases 63, 64, 65)
 
 ## Current Position
 
 Phase: 65 of 70 (Mobile / UX Polish)
 Plan: 01 of 04 complete
 Status: In progress
-Last activity: 2026-02-24 — Completed 65-01-PLAN.md
+Last activity: 2026-02-24 — Completed 63-04-PLAN.md (Phase 63 complete)
 
-Progress: [########______________________] 33% (4/12 v6.0 phases)
+Progress: [##########____________________] 42% (5/12 v6.0 phases)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 4 phases complete (59, 60, 61, 62) — Waves 1-2 done, Wave 3 in progress
+- v6.0: 5 phases complete (59, 60, 61, 62, 63) — Waves 1-2 done, Wave 3 in progress
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -86,6 +86,12 @@ Phase 63-03 decisions:
 - Priority-based block truncation: founderContext highest, deckReviewReady lowest
 - shouldSummarize threshold: 60% context limit AND >20 messages (dual condition prevents false positives)
 
+Phase 63-04 decisions:
+- AI SDK v6 uses inputSchema (not parameters) for tool definitions
+- AI SDK v6 uses stopWhen: stepCountIs(3) instead of maxSteps: 3
+- userId threaded from machine context through decide actor to generate()
+- Tools passed conditionally via spread to keep non-tool paths unchanged
+
 Phase 65-01 decisions:
 - Serwist wraps inner, Sentry wraps outer in next.config.mjs (ensures SW compilation before source maps)
 - Push handlers placed BEFORE serwist.addEventListeners() to ensure registration
@@ -109,5 +115,5 @@ Phase 65-01 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 65-01-PLAN.md (Serwist PWA service worker migration)
+Stopped at: Completed 63-04-PLAN.md (AI tool definitions — Phase 63 complete)
 Resume file: None
