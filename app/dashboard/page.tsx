@@ -14,11 +14,14 @@ import { DecisionBox } from "@/components/dashboard/decision-box";
 import { FundingReadinessGauge } from "@/components/dashboard/funding-readiness-gauge";
 import { WeeklyMomentum } from "@/components/dashboard/weekly-momentum";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { MomentumIndicator } from "@/components/dashboard/momentum-indicator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MobileHome } from "@/components/mobile/mobile-home";
+import { FadeIn } from "@/components/animations/FadeIn";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
+import type { MomentumIndicator as MomentumIndicatorType } from "@/lib/dashboard/engagement-score";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -29,6 +32,7 @@ function DashboardContent() {
   const [userName, setUserName] = useState<string>("Founder");
   const { tier, refresh: refreshTier } = useTier();
   const [data, setData] = useState<CommandCenterData | null>(null);
+  const [momentumData, setMomentumData] = useState<MomentumIndicatorType | null>(null);
   const canCallFred = tier >= UserTier.PRO;
 
   // Fetch command center data
@@ -56,20 +60,31 @@ function DashboardContent() {
           profile?.name || authUser.email?.split("@")[0] || "Founder"
         );
 
-        // Fetch command center data with timeout to prevent infinite loading
+        // Fetch command center data and momentum in parallel with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         try {
-          const res = await fetch("/api/dashboard/command-center", {
-            signal: controller.signal,
-          });
-          if (res.ok) {
-            const json = await res.json();
+          const [ccRes, momentumRes] = await Promise.all([
+            fetch("/api/dashboard/command-center", {
+              signal: controller.signal,
+            }),
+            fetch("/api/dashboard/engagement", {
+              signal: controller.signal,
+            }),
+          ]);
+          if (ccRes.ok) {
+            const json = await ccRes.json();
             if (json.success) {
               setData(json.data);
             }
           } else {
-            console.warn("Command center API returned status:", res.status);
+            console.warn("Command center API returned status:", ccRes.status);
+          }
+          if (momentumRes.ok) {
+            const json = await momentumRes.json();
+            if (json.success) {
+              setMomentumData(json.data);
+            }
           }
         } finally {
           clearTimeout(timeoutId);
@@ -179,7 +194,9 @@ function DashboardContent() {
       </div>
 
       {/* Get Started with Fred (auto-hides when core steps complete) */}
-      <GetStartedWithFred />
+      <FadeIn>
+        <GetStartedWithFred />
+      </FadeIn>
 
       {/* Work with Fred CTA — prominent for all users */}
       <a
@@ -204,22 +221,37 @@ function DashboardContent() {
       <FounderSnapshotCard snapshot={data.founderSnapshot} />
 
       {/* Red Flag Alerts */}
-      <RedFlagsWidget />
+      <FadeIn delay={0.1}>
+        <RedFlagsWidget />
+      </FadeIn>
 
       {/* Center: Decision Box (left) + Funding Gauge (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DecisionBox
-          currentStep={data.currentStep}
-          processProgress={data.processProgress}
-        />
-        <FundingReadinessGauge
-          readiness={data.fundingReadiness}
-          displayRules={data.displayRules}
-        />
-      </div>
+      <FadeIn delay={0.2}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DecisionBox
+            currentStep={data.currentStep}
+            processProgress={data.processProgress}
+          />
+          <FundingReadinessGauge
+            readiness={data.fundingReadiness}
+            displayRules={data.displayRules}
+          />
+        </div>
+      </FadeIn>
 
       {/* Bottom: Weekly Momentum */}
-      <WeeklyMomentum momentum={data.weeklyMomentum} />
+      <FadeIn delay={0.3}>
+        <WeeklyMomentum momentum={data.weeklyMomentum} />
+      </FadeIn>
+
+      {/* Momentum Indicator (compact) */}
+      {momentumData && (
+        <MomentumIndicator
+          trend={momentumData.trend}
+          summary={momentumData.summary}
+          compact
+        />
+      )}
 
       {/* Welcome Modal for new users */}
       <WelcomeModal
