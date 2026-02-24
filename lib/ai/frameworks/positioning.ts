@@ -219,46 +219,111 @@ export interface PositioningSignals {
   highEffortLowTraction: boolean;
 }
 
+/**
+ * Negative patterns that suppress false positive positioning signals.
+ * These are phrases where positioning-related words appear in non-positioning contexts.
+ */
+export const NEGATIVE_POSITIONING_PATTERNS: RegExp[] = [
+  /\b(my|our|their) position (in|at|on)\b/i, // "my position in the company"
+  /\bposition (paper|statement)\b/i,           // academic, not marketing
+  /\bposition(ed|ing)? (myself|himself|herself|themselves)\b/i, // personal positioning, not market
+];
+
+/** Patterns for non-target uses of "everyone" */
+const NEGATIVE_EVERYONE_PATTERNS: RegExp[] = [
+  /\beveryone knows\b/i,
+  /\beveryone does\b/i,
+  /\btell everyone\b/i,
+  /\beveryone on (my|our|the) team\b/i,
+  /\beveryone (here|there|else)\b/i,
+];
+
+/** Buzzwords that must appear together (2+) to trigger genericMessaging */
+const BUZZWORDS = [
+  "innovative",
+  "revolutionary",
+  "disrupt",
+  "game-changing",
+  "cutting-edge",
+  "paradigm",
+  "synergy",
+  "leverage",
+  "best-in-class",
+];
+
 export function detectPositioningSignals(
   conversationContext: string
 ): PositioningSignals {
   const lowerContext = conversationContext.toLowerCase();
 
+  // Check if any negative positioning patterns match (suppress false positives)
+  const hasNegativeMatch = NEGATIVE_POSITIONING_PATTERNS.some((p) =>
+    p.test(conversationContext)
+  );
+
+  // ICP vague: explicit signals only, with minimum length check for the absence heuristic
+  const icpExplicitSignals =
+    lowerContext.includes("not sure who") ||
+    lowerContext.includes("still figuring out") ||
+    lowerContext.includes("anyone who");
+
+  // Only apply the "no customer/buyer mention" heuristic for messages >100 chars
+  // Short messages are unlikely to be ICP discussions
+  const icpAbsenceHeuristic =
+    conversationContext.length > 100 &&
+    !lowerContext.includes("customer") &&
+    !lowerContext.includes("buyer");
+
+  const icpVagueOrUndefined =
+    !hasNegativeMatch && (icpExplicitSignals || icpAbsenceHeuristic);
+
+  // Everyone as target: check for negative "everyone" patterns
+  const hasEveryoneKeyword =
+    lowerContext.includes("everyone") ||
+    lowerContext.includes("all businesses") ||
+    lowerContext.includes("any company") ||
+    lowerContext.includes("anyone can use");
+
+  const hasNegativeEveryone = NEGATIVE_EVERYONE_PATTERNS.some((p) =>
+    p.test(conversationContext)
+  );
+
+  const everyoneAsTarget = hasEveryoneKeyword && !hasNegativeEveryone;
+
+  // Generic messaging: require 2+ buzzwords together, not standalone
+  const buzzwordCount = BUZZWORDS.filter((bw) =>
+    lowerContext.includes(bw)
+  ).length;
+  const genericMessaging = buzzwordCount >= 2;
+
+  // High effort low traction: unchanged (already requires compound signals)
+  const highEffortLowTraction =
+    (lowerContext.includes("working hard") ||
+      lowerContext.includes("been trying") ||
+      lowerContext.includes("months") ||
+      lowerContext.includes("year")) &&
+    (lowerContext.includes("no traction") ||
+      lowerContext.includes("struggling") ||
+      lowerContext.includes("not working"));
+
   return {
-    icpVagueOrUndefined:
-      lowerContext.includes("not sure who") ||
-      lowerContext.includes("still figuring out") ||
-      lowerContext.includes("anyone who") ||
-      (!lowerContext.includes("customer") && !lowerContext.includes("buyer")),
-    everyoneAsTarget:
-      lowerContext.includes("everyone") ||
-      lowerContext.includes("all businesses") ||
-      lowerContext.includes("any company") ||
-      lowerContext.includes("anyone can use"),
-    genericMessaging:
-      lowerContext.includes("innovative") ||
-      lowerContext.includes("revolutionary") ||
-      lowerContext.includes("disrupt") ||
-      lowerContext.includes("game-changing") ||
-      lowerContext.includes("cutting-edge"),
-    highEffortLowTraction:
-      (lowerContext.includes("working hard") ||
-        lowerContext.includes("been trying") ||
-        lowerContext.includes("months") ||
-        lowerContext.includes("year")) &&
-      (lowerContext.includes("no traction") ||
-        lowerContext.includes("struggling") ||
-        lowerContext.includes("not working")),
+    icpVagueOrUndefined,
+    everyoneAsTarget,
+    genericMessaging,
+    highEffortLowTraction,
   };
 }
 
+/**
+ * Count the number of true positioning signals.
+ */
+export function countPositioningSignals(signals: PositioningSignals): number {
+  return Object.values(signals).filter(Boolean).length;
+}
+
 export function needsPositioningFramework(signals: PositioningSignals): boolean {
-  return (
-    signals.icpVagueOrUndefined ||
-    signals.everyoneAsTarget ||
-    signals.genericMessaging ||
-    signals.highEffortLowTraction
-  );
+  // Require 2+ signals to trigger positioning mode (prevents single-signal false positives)
+  return countPositioningSignals(signals) >= 2;
 }
 
 export const POSITIONING_INTRODUCTION_LANGUAGE = `

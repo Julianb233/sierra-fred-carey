@@ -210,45 +210,100 @@ export interface InvestorReadinessSignals {
   uploadedDeck: boolean;
 }
 
+/**
+ * Negative patterns that suppress false positive investor signals.
+ * These are phrases where investor-related words appear in non-investor contexts.
+ */
+export const NEGATIVE_INVESTOR_PATTERNS: RegExp[] = [
+  /\bvalue (my|your|their|our) time\b/i,                        // "value my time" is not about valuation
+  /\braise (awareness|the bar|the question|hell|concern)\b/i,   // "raise awareness" is not fundraising
+  /\bcapital (letter|city|punishment|crime)\b/i,                 // not financial capital
+  /\bdeck (the halls|of cards|chair)\b/i,                        // not pitch deck
+  /\bpitch (in|fork|black|dark|perfect)\b/i,                    // not pitch deck
+  /\bslides? (into|down|across)\b/i,                             // not presentation slides
+];
+
+/** Patterns for "raise" that are NOT fundraising */
+const NEGATIVE_RAISE_PATTERNS: RegExp[] = [
+  /\braise (awareness|the bar|the question|hell|concern|children|kids|a family)\b/i,
+];
+
+/** Patterns for "pitch" that ARE investor-related (require specificity) */
+const POSITIVE_PITCH_PATTERNS: RegExp[] = [
+  /\bpitch deck\b/i,
+  /\bpitch to (investors?|vcs?|angels?)\b/i,
+  /\bmy pitch\b/i,
+  /\bour pitch\b/i,
+  /\bpitch meeting\b/i,
+  /\bpitch competition\b/i,
+  /\belevator pitch\b/i,
+];
+
 export function detectInvestorSignals(
   conversationContext: string,
   hasUploadedDeck: boolean = false
 ): InvestorReadinessSignals {
   const lower = conversationContext.toLowerCase();
 
-  return {
-    mentionsFundraising:
-      lower.includes("fundrais") ||
-      lower.includes("raise") ||
-      lower.includes("investor") ||
-      lower.includes("vc") ||
-      lower.includes("capital"),
-    mentionsValuation:
-      lower.includes("valuation") ||
+  // Check for negative investor patterns
+  const hasNegativeMatch = NEGATIVE_INVESTOR_PATTERNS.some((p) =>
+    p.test(conversationContext)
+  );
+
+  // mentionsFundraising: "raise" is too broad — check for negative raise patterns
+  const hasRaiseKeyword = lower.includes("raise");
+  const hasNegativeRaise = NEGATIVE_RAISE_PATTERNS.some((p) =>
+    p.test(conversationContext)
+  );
+  const mentionsFundraising =
+    lower.includes("fundrais") ||
+    (hasRaiseKeyword && !hasNegativeRaise) ||
+    lower.includes("investor") ||
+    lower.includes("vc") ||
+    (lower.includes("capital") && !hasNegativeMatch);
+
+  // mentionsValuation: "valuation" is specific enough, but suppress "value my time" etc.
+  const mentionsValuation =
+    !hasNegativeMatch &&
+    (lower.includes("valuation") ||
       lower.includes("pre-money") ||
       lower.includes("post-money") ||
-      lower.includes("cap table"),
-    mentionsDeck:
-      lower.includes("deck") ||
-      lower.includes("pitch") ||
-      lower.includes("slides"),
-    asksAboutReadiness:
-      lower.includes("ready to raise") ||
-      lower.includes("should i raise") ||
-      lower.includes("when to raise") ||
-      lower.includes("investor ready"),
+      lower.includes("cap table"));
+
+  // mentionsDeck: require specific pitch patterns instead of standalone "pitch"
+  const hasNegativeDeck = /\bdeck (the halls|of cards|chair)\b/i.test(conversationContext);
+  const hasDeckKeyword = lower.includes("deck") && !hasNegativeDeck;
+  const hasPitchKeyword = POSITIVE_PITCH_PATTERNS.some((p) => p.test(conversationContext));
+  const hasSlidesKeyword = lower.includes("slides") && !(/\bslides? (into|down|across)\b/i.test(conversationContext));
+  const mentionsDeck = hasDeckKeyword || hasPitchKeyword || hasSlidesKeyword;
+
+  // asksAboutReadiness: unchanged (already specific compound phrases)
+  const asksAboutReadiness =
+    lower.includes("ready to raise") ||
+    lower.includes("should i raise") ||
+    lower.includes("when to raise") ||
+    lower.includes("investor ready");
+
+  return {
+    mentionsFundraising,
+    mentionsValuation,
+    mentionsDeck,
+    asksAboutReadiness,
     uploadedDeck: hasUploadedDeck,
   };
 }
 
+/**
+ * Count the number of true investor signals.
+ */
+export function countInvestorSignals(signals: InvestorReadinessSignals): number {
+  return Object.values(signals).filter(Boolean).length;
+}
+
 export function needsInvestorLens(signals: InvestorReadinessSignals): boolean {
-  return (
-    signals.mentionsFundraising ||
-    signals.mentionsValuation ||
-    signals.mentionsDeck ||
-    signals.asksAboutReadiness ||
-    signals.uploadedDeck
-  );
+  // uploadedDeck is always an explicit action — trigger by itself
+  // All other signals require 2+ to trigger (prevents single-signal false positives)
+  return signals.uploadedDeck || countInvestorSignals(signals) >= 2;
 }
 
 export const INVESTOR_LENS_INTRODUCTION = `
