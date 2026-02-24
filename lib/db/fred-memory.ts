@@ -11,6 +11,36 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { MEMORY_CONFIG, type MemoryTier } from "@/lib/constants";
 
 // ============================================================================
+// Async Embedding Generation (fire-and-forget)
+// ============================================================================
+
+/**
+ * Fire-and-forget embedding generation for a stored episode.
+ * Generates an embedding for the text content and updates the row.
+ * Never throws — logs warnings on failure.
+ */
+function fireEmbeddingGeneration(episodeId: string, text: string): void {
+  (async () => {
+    try {
+      const { generateEmbedding } = await import("@/lib/ai/fred-client");
+      // Truncate to 8000 chars to stay within embedding model limits
+      const truncated = text.slice(0, 8000);
+      const result = await generateEmbedding(truncated);
+      const supabase = createServiceClient();
+      const { error } = await supabase
+        .from("fred_episodic_memory")
+        .update({ embedding: result.embedding })
+        .eq("id", episodeId);
+      if (error) {
+        console.warn("[FRED Memory] Failed to update episode embedding:", error.message);
+      }
+    } catch (error) {
+      console.warn("[FRED Memory] Async embedding generation failed (non-blocking):", error);
+    }
+  })();
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -141,7 +171,15 @@ export async function storeEpisode(
     throw error;
   }
 
-  return transformEpisodicRow(data);
+  const episode = transformEpisodicRow(data);
+
+  // Fire-and-forget: generate embedding for episodes with text content.
+  // Only for user/assistant messages that have a string content field.
+  if (!options.embedding && content && typeof content.content === "string" && content.content.length > 0) {
+    fireEmbeddingGeneration(episode.id, content.content as string);
+  }
+
+  return episode;
 }
 
 /**
