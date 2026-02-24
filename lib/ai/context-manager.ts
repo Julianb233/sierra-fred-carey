@@ -6,6 +6,7 @@
  */
 
 import type { ProviderKey } from "./providers";
+import { generate } from "./fred-client";
 import { logger } from "@/lib/logger";
 
 // ============================================================================
@@ -176,4 +177,84 @@ export function fitsInContext(
  */
 export function getContextLimit(model: ProviderKey): number {
   return MODEL_CONTEXT_LIMITS[model];
+}
+
+// ============================================================================
+// Conversation Summarization
+// ============================================================================
+
+/**
+ * Check if a conversation should be summarized based on message count
+ * and estimated token usage.
+ *
+ * Returns true when messages exceed 20 AND the estimated tokens
+ * (messages + system prompt) exceed 60% of the model's context limit.
+ * The 0.6 threshold triggers summarization before hitting the hard limit,
+ * leaving room for the response and buffer.
+ */
+export function shouldSummarize(
+  messages: Message[],
+  systemPromptTokens: number,
+  model: ProviderKey = "primary"
+): boolean {
+  if (messages.length <= 20) return false;
+  const messageTokens = estimateMessagesTokens(messages).tokens;
+  const totalTokens = messageTokens + systemPromptTokens;
+  return totalTokens > MODEL_CONTEXT_LIMITS[model] * 0.6;
+}
+
+/**
+ * Summarize older messages in a conversation using the LLM.
+ *
+ * Keeps the most recent `keepRecent` messages intact and summarizes
+ * older user/assistant messages into a single system message.
+ * Preserves key decisions, facts, action items, and founder context.
+ *
+ * Falls back to trimMessages() if the summarization call fails.
+ */
+export async function summarizeOlderMessages(
+  messages: Message[],
+  keepRecent: number = 10
+): Promise<Message[]> {
+  if (messages.length <= keepRecent) return messages;
+
+  const older = messages.slice(0, -keepRecent);
+  const recent = messages.slice(-keepRecent);
+
+  // Filter older to only user and assistant messages (skip system)
+  const olderConversation = older.filter(
+    (m) => m.role === "user" || m.role === "assistant"
+  );
+
+  if (olderConversation.length === 0) return messages;
+
+  try {
+    const formatted = olderConversation
+      .map((m) => `[${m.role}]: ${m.content}`)
+      .join("\n");
+
+    const result = await generate(formatted, {
+      system:
+        "Create a concise summary of a conversation between a founder and their mentor FRED. " +
+        "Preserve: key decisions made, important facts shared, action items discussed, " +
+        "the founder's current situation and challenges. Keep it under 500 words.",
+      maxOutputTokens: 512,
+      temperature: 0.3,
+    });
+
+    return [
+      {
+        role: "system" as const,
+        content: "Previous conversation summary:\n" + result.text,
+      },
+      ...recent,
+    ];
+  } catch (error) {
+    logger.log(
+      `[ContextManager] Summarization failed, falling back to trimMessages: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+    return trimMessages(messages);
+  }
 }
