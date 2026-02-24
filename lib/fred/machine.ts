@@ -120,8 +120,8 @@ export const fredMachine = setup({
   },
 
   actors: {
-    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }> }>(
-      async ({ input }) => loadMemoryActor(input.userId, input.sessionId, "free", input.preloadedFacts)
+    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; currentMessage?: string }>(
+      async ({ input }) => loadMemoryActor(input.userId, input.sessionId, "free", input.preloadedFacts, input.currentMessage)
     ),
 
     validateInput: fromPromise<ValidatedInput, { input: UserInput; memoryContext: MemoryContext | null; conversationState: ConversationStateContext | null }>(
@@ -410,6 +410,7 @@ export const fredMachine = setup({
           userId: context.userId,
           sessionId: context.sessionId,
           preloadedFacts: context.preloadedFacts,
+          currentMessage: context.input?.message,
         }),
         onDone: {
           target: "intake",
