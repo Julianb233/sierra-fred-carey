@@ -37,6 +37,7 @@ import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
+import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
 
 /** Map numeric UserTier enum to rate-limit tier key */
@@ -479,7 +480,7 @@ async function handlePost(req: NextRequest) {
 
     // Assemble full system prompt context
     // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview
-    const fullContext = [
+    let fullContext = [
       founderContext,
       stepGuidanceBlock,
       rlStatusBlock,
@@ -490,6 +491,49 @@ async function handlePost(req: NextRequest) {
       deckProtocolBlock,
       deckReviewReadyBlock,
     ].filter(Boolean).join("\n\n");
+
+    // Phase 63-03: Context window management — ensure fullContext fits within token budget
+    // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt
+    const contextTokens = estimateTokens(fullContext);
+    if (contextTokens > 100_000) {
+      // Truncation priority (keep most important first):
+      // 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
+      // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
+      // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
+      // Drop least critical blocks first (reverse priority)
+      const blocksInPriority = [
+        { name: "founderContext", value: founderContext },
+        { name: "frameworkBlock", value: frameworkBlock },
+        { name: "stepGuidanceBlock", value: stepGuidanceBlock },
+        { name: "rlStatusBlock", value: rlStatusBlock },
+        { name: "rlGateBlock", value: rlGateBlock },
+        { name: "modeTransitionBlock", value: modeTransitionBlock },
+        { name: "irsBlock", value: irsBlock },
+        { name: "deckProtocolBlock", value: deckProtocolBlock },
+        { name: "deckReviewReadyBlock", value: deckReviewReadyBlock },
+      ].filter((b) => Boolean(b.value));
+
+      // Drop blocks from lowest priority until under budget
+      let truncatedBlocks = [...blocksInPriority];
+      while (truncatedBlocks.length > 1) {
+        const candidate = truncatedBlocks.map((b) => b.value).join("\n\n");
+        if (estimateTokens(candidate) <= 100_000) break;
+        truncatedBlocks.pop(); // Remove lowest priority block
+      }
+
+      fullContext = truncatedBlocks.map((b) => b.value).join("\n\n");
+
+      // If still over budget (founderContext alone is too large), truncate it
+      if (estimateTokens(fullContext) > 100_000) {
+        const maxChars = 100_000 * 4; // ~4 chars per token
+        fullContext = fullContext.substring(0, maxChars);
+      }
+
+      const truncatedTokens = estimateTokens(fullContext);
+      console.warn(
+        `[FRED Chat] Context truncated: ${contextTokens} tokens -> ${truncatedTokens} tokens`
+      );
+    }
 
     // Create FRED service — pass preloadedFacts to avoid duplicate getAllUserFacts DB call
     const fredService = createFredService({
