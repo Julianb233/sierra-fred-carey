@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 63 of 70 (FRED Intelligence Upgrade)
-Plan: 01 of 04 complete
+Plan: 02 of 04 complete
 Status: In progress
-Last activity: 2026-02-24 — Completed 63-01-PLAN.md
+Last activity: 2026-02-24 — Completed 63-02-PLAN.md
 
 Progress: [########______________________] 33% (4/12 v6.0 phases)
 
@@ -75,6 +75,12 @@ Phase 63-01 decisions:
 - Embedding generation runs in parallel with recency queries for lower latency
 - Similarity thresholds: 0.75 for episodes, 0.7 for facts
 
+Phase 63-02 decisions:
+- Sliding window checks current history entry (just pushed) so first strong-signal message passes
+- Negative pattern arrays use RegExp[] for extensibility
+- 2-signal threshold enforced at framework level (needsPositioningFramework, needsInvestorLens)
+- uploadedDeck always triggers investor mode by itself (explicit user action)
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -93,5 +99,5 @@ Phase 63-01 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 63-01-PLAN.md (embedding-based memory retrieval)
+Stopped at: Completed 63-02-PLAN.md (mode switching false positive reduction)
 Resume file: None
