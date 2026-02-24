@@ -65,7 +65,7 @@ Phase 62 decisions:
 - Reconnection uses connectionStatus state with RoomEvent.Reconnecting/Reconnected
 - Agent identity detection uses exact match 'fred-cary-voice' instead of prefix 'fred'
 - Worker returns early on connect/waitForParticipant failure instead of crashing
-- Supabase Storage chosen for S3-compatible call recording storage
+- Recording storage deferred -- S3 env vars needed for LiveKit Egress recordings (code ready, awaiting credentials)
 - Recording failure is non-blocking (try/catch fallback, calls proceed without recording)
 - Transcript capped at 500 entries to prevent abuse
 - egress_ended webhook populates recording_url from fileResults
