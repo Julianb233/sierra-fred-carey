@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 65 of 70 (Mobile / UX Polish)
-Plan: 01 of 04 complete
+Plan: 02 of 04 complete
 Status: In progress
-Last activity: 2026-02-24 — Completed 63-04-PLAN.md (Phase 63 complete)
+Last activity: 2026-02-24 — Completed 65-02-PLAN.md
 
 Progress: [##########____________________] 42% (5/12 v6.0 phases)
 
@@ -97,6 +97,11 @@ Phase 65-01 decisions:
 - Push handlers placed BEFORE serwist.addEventListeners() to ensure registration
 - Serwist disabled in development mode (Turbopack incompatible)
 
+Phase 65-02 decisions:
+- Transform-only animations (opacity + translateY) to avoid layout thrashing
+- 200ms page transition, 400ms scroll fade-in with staggered delays (0, 0.1, 0.2, 0.3)
+- Reduced motion via useReducedMotion sets duration to 0 for WCAG compliance
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -115,5 +120,5 @@ Phase 65-01 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 63-04-PLAN.md (AI tool definitions — Phase 63 complete)
+Stopped at: Completed 65-02-PLAN.md (Dashboard page transitions and animations)
 Resume file: None
