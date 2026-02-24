@@ -77,7 +77,7 @@
 
 ### FRED & UX Improvements (IMPROVE)
 
-- [ ] **IMPROVE-01**: FRED intelligence upgrade — Better memory retrieval, long conversation handling, smoother mode switching, new AI tools (content + provider)
+- [x] **IMPROVE-01**: FRED intelligence upgrade — Better memory retrieval, long conversation handling, smoother mode switching, new AI tools (content + provider)
 - [ ] **IMPROVE-02**: Mobile / UX polish — Serwist PWA caching, smooth animations, WCAG 2.1 AA compliance, push notification reliability
 - [ ] **IMPROVE-03**: Dashboard & analytics — Historical trend charts, engagement scoring, data export (CSV/PDF), PostHog funnel visualization
 
@@ -248,7 +248,7 @@
 | INFRA-02 | Phase 60 | Complete |
 | INFRA-03 | Phase 61 | Complete |
 | INFRA-04 | Phase 62 | Complete |
-| IMPROVE-01 | Phase 63 | Pending |
+| IMPROVE-01 | Phase 63 | Complete |
 | IMPROVE-02 | Phase 65 | Pending |
 | IMPROVE-03 | Phase 64 | Pending |
 | FEATURE-01 | Phases 66-67 | Pending |
