@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 63 complete, Phase 65 in progress, Wave 3 (Phases 63, 64, 65)
+**Current focus:** v6.0 Full Platform Maturity — Phase 64 complete, Phase 65 in progress, Wave 3 (Phases 63, 64, 65)
 
 ## Current Position
 
 Phase: 65 of 70 (Mobile / UX Polish)
-Plan: 02 of 04 complete
+Plan: 03 of 04 remaining (01, 02, 04 complete)
 Status: In progress
-Last activity: 2026-02-24 — Completed 65-02-PLAN.md
+Last activity: 2026-02-24 — Completed 65-04-PLAN.md
 
 Progress: [##########____________________] 42% (5/12 v6.0 phases)
 
@@ -20,7 +20,7 @@ Progress: [##########____________________] 42% (5/12 v6.0 phases)
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 5 phases complete (59, 60, 61, 62, 63) — Waves 1-2 done, Wave 3 in progress
+- v6.0: 6 phases complete (59, 60, 61, 62, 63, 64) — Waves 1-2 done, Wave 3 in progress
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 208 pages compiling
 
@@ -102,6 +102,11 @@ Phase 65-02 decisions:
 - 200ms page transition, 400ms scroll fade-in with staggered delays (0, 0.1, 0.2, 0.3)
 - Reduced motion via useReducedMotion sets duration to 0 for WCAG compliance
 
+Phase 65-04 decisions:
+- subscribeWithRetry helper with 3 attempts and 1s/2s/4s exponential backoff
+- Track actual PushSubscription object instead of boolean flag
+- iOS non-standalone check comes before denied-permission check in UI cascade
+
 ### Blockers/Concerns
 
 - **DEFERRED** Sentry env vars not yet configured — Linear issue AI-388 tracks setup
@@ -120,5 +125,5 @@ Phase 65-02 decisions:
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 65-02-PLAN.md (Dashboard page transitions and animations)
+Stopped at: Completed 65-04-PLAN.md (Push notification hardening with retry and iOS detection)
 Resume file: None
