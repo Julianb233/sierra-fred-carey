@@ -72,6 +72,8 @@ export interface FredContext {
   preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>;
   /** User tier (free/pro/studio) for memory loading */
   tier?: string;
+  /** Token streaming channel — emits LLM response tokens as they arrive */
+  tokenChannel?: { emit: (chunk: string) => void } | null;
 }
 
 /**
