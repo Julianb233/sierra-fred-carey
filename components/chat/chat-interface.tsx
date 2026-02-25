@@ -15,6 +15,8 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 interface ChatInterfaceProps {
   className?: string;
+  /** Current page path — passed to FRED so it can help users navigate the platform */
+  pageContext?: string;
 }
 
 function buildFredGreeting(): Message {
@@ -26,8 +28,8 @@ function buildFredGreeting(): Message {
   };
 }
 
-export function ChatInterface({ className }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat();
+export function ChatInterface({ className, pageContext }: ChatInterfaceProps) {
+  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [greeting] = useState<Message>(() => buildFredGreeting());

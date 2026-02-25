@@ -56,6 +56,8 @@ export interface UseFredChatOptions {
   };
   /** Whether to store messages in FRED's memory */
   storeInMemory?: boolean;
+  /** Current page path so FRED can provide navigation-aware guidance */
+  pageContext?: string;
   /** Callback when state changes */
   onStateChange?: (state: FredState) => void;
   /** Callback when analysis is received */
@@ -177,6 +179,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     sessionId: providedSessionId,
     context,
     storeInMemory = true,
+    pageContext,
     onStateChange,
     onAnalysis,
     onSynthesis,
@@ -265,6 +268,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           sessionId: sessionIdRef.current,
           stream: true,
           storeInMemory,
+          pageContext,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -471,7 +475,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     } finally {
       abortControllerRef.current = null;
     }
-  }, [context, storeInMemory]);
+  }, [context, storeInMemory, pageContext]);
 
   // Clear error
   // Dismiss wellbeing alert

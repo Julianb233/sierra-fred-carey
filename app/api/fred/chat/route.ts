@@ -66,7 +66,119 @@ const chatRequestSchema = z.object({
   sessionId: z.string().uuid().optional(),
   stream: z.boolean().default(true),
   storeInMemory: z.boolean().default(true),
+  /** Current page path so FRED can provide navigation-aware guidance */
+  pageContext: z.string().max(200).optional(),
 });
+
+// ============================================================================
+// Platform Navigation Map
+// Maps URL paths to human-readable descriptions and navigation hints
+// ============================================================================
+
+const PLATFORM_PAGES: Record<string, { label: string; description: string }> = {
+  "/dashboard": {
+    label: "Main Dashboard",
+    description: "Overview of all your startup metrics, progress, and key actions",
+  },
+  "/dashboard/startup-process": {
+    label: "9-Step Startup Process",
+    description: "The structured 9-step journey from idea to funded company",
+  },
+  "/dashboard/reality-lens": {
+    label: "Reality Lens",
+    description: "Validate your idea across 5 dimensions: Feasibility, Economics, Demand, Distribution, and Timing",
+  },
+  "/dashboard/investor-readiness": {
+    label: "Investor Readiness Score (IRS)",
+    description: "See how investor-ready you are across all key dimensions",
+  },
+  "/dashboard/pitch-deck": {
+    label: "Pitch Deck Review",
+    description: "Upload and get your pitch deck reviewed across 11 dimensions",
+  },
+  "/dashboard/strategy": {
+    label: "Strategy & Positioning",
+    description: "Define and refine your market position and go-to-market strategy",
+  },
+  "/dashboard/wellbeing": {
+    label: "Wellbeing & Stress Tracker",
+    description: "Monitor founder stress levels and mental health with wellbeing quizzes",
+  },
+  "/dashboard/next-steps": {
+    label: "Next Steps & Action Items",
+    description: "Your prioritized action list — the things you should be working on right now",
+  },
+  "/dashboard/journey": {
+    label: "Founder Journey",
+    description: "Track your progress through the full founder journey",
+  },
+  "/dashboard/coaching": {
+    label: "Coaching Sessions",
+    description: "Book and review one-on-one coaching sessions with Fred",
+  },
+  "/dashboard/insights": {
+    label: "AI Insights",
+    description: "AI-generated insights and patterns from your conversations with Fred",
+  },
+  "/dashboard/ai-insights": {
+    label: "AI Insights",
+    description: "AI-generated insights and patterns from your conversations with Fred",
+  },
+  "/dashboard/investor-lens": {
+    label: "Investor Lens",
+    description: "See your startup through an investor's eyes",
+  },
+  "/dashboard/investor-targeting": {
+    label: "Investor Targeting",
+    description: "Find and target the right investors for your startup",
+  },
+  "/dashboard/documents": {
+    label: "Documents",
+    description: "Upload and manage your startup documents, decks, and reports",
+  },
+  "/dashboard/memory": {
+    label: "Fred's Memory",
+    description: "Review what Fred knows about you and your startup",
+  },
+  "/dashboard/analytics": {
+    label: "Analytics",
+    description: "Track usage, engagement, and platform activity",
+  },
+  "/dashboard/settings": {
+    label: "Settings",
+    description: "Manage your account, notifications, and subscription",
+  },
+};
+
+/**
+ * Build a system prompt block telling FRED which page the user is on
+ * and what other platform features they can be directed to.
+ */
+function buildPageContextBlock(pageContext: string): string {
+  const currentPage =
+    PLATFORM_PAGES[pageContext] ??
+    Object.entries(PLATFORM_PAGES)
+      .filter(([path]) => pageContext.startsWith(path) && path !== "/dashboard")
+      .sort((a, b) => b[0].length - a[0].length)[0]?.[1] ??
+    null;
+
+  const currentPageInfo = currentPage
+    ? `The user is currently on the **${currentPage.label}** page (${currentPage.description}).`
+    : `The user is browsing the platform at path: ${pageContext}.`;
+
+  const navOptions = Object.entries(PLATFORM_PAGES)
+    .filter(([path]) => path !== pageContext && !pageContext.startsWith(path + "/"))
+    .map(([, page]) => `- **${page.label}**: ${page.description}`)
+    .join("\n");
+
+  return `## Platform Navigation Context
+${currentPageInfo}
+
+You can help the user navigate to other parts of the platform by mentioning them by name. When relevant, proactively suggest specific pages that would help them. Available platform features:
+${navOptions}
+
+When suggesting navigation, say things like "Head over to your **Wellbeing Tracker**" or "Check out the **Reality Lens** to validate that" rather than giving raw URLs. Keep suggestions natural and only recommend features that are genuinely relevant to what the user is asking.`;
+}
 
 // ============================================================================
 // SSE Helper
@@ -283,7 +395,7 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    const { message: rawMessage, context, sessionId, stream, storeInMemory } = parsed.data;
+    const { message: rawMessage, context, sessionId, stream, storeInMemory, pageContext } = parsed.data;
 
     // Prompt injection guard
     const injectionCheck = detectInjectionAttempt(rawMessage);
@@ -490,8 +602,11 @@ async function handlePost(req: NextRequest) {
         }
       : null;
 
+    // Build page navigation context block (only when chatting from an overlay, not the full /chat page)
+    const pageContextBlock = pageContext ? buildPageContextBlock(pageContext) : "";
+
     // Assemble full system prompt context
-    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview
+    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
     let fullContext = [
       founderContext,
       stepGuidanceBlock,
@@ -502,6 +617,7 @@ async function handlePost(req: NextRequest) {
       irsBlock,
       deckProtocolBlock,
       deckReviewReadyBlock,
+      pageContextBlock,
     ].filter(Boolean).join("\n\n");
 
     // Phase 63-03: Context window management — ensure fullContext fits within token budget
@@ -555,6 +671,7 @@ async function handlePost(req: NextRequest) {
       founderContext: fullContext,
       conversationState: stateContext,
       preloadedFacts,
+      tier: tierName,
     });
 
     // Non-streaming response
