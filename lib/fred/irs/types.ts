@@ -266,7 +266,7 @@ export const STAGE_BENCHMARKS: Record<StartupStage, Record<IRSCategory, number>>
 // Pure utility helpers (no server deps — safe to import in client components)
 // ============================================================================
 
-function normalizeStage(stage: string): StartupStage {
+export function normalizeStage(stage: string): StartupStage {
   const lower = stage.toLowerCase();
   if (lower.includes('idea')) return 'idea';
   if (lower.includes('pre-seed') || lower.includes('preseed')) return 'pre-seed';

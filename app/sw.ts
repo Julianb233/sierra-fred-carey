@@ -86,7 +86,7 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  const options: NotificationOptions = {
+  const options = {
     body: payload.body as string,
     icon: payload.icon as string,
     badge: payload.badge as string,
@@ -97,7 +97,7 @@ self.addEventListener("push", (event) => {
     },
     // Vibrate pattern for mobile devices
     vibrate: [100, 50, 100],
-  };
+  } as NotificationOptions;
 
   event.waitUntil(
     self.registration.showNotification(payload.title as string, options)

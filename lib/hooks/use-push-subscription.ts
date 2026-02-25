@@ -63,8 +63,8 @@ function detectIsIOS(): boolean {
 function detectIsIOSStandalone(): boolean {
   if (typeof window === "undefined") return false;
   return (
-    "standalone" in (window.navigator as Record<string, unknown>) &&
-    (window.navigator as Record<string, unknown>).standalone === true
+    "standalone" in window.navigator &&
+    (window.navigator as unknown as Record<string, unknown>).standalone === true
   );
 }
 

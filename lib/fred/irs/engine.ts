@@ -30,6 +30,7 @@ import {
   CATEGORY_LABELS,
   CATEGORY_DESCRIPTIONS,
   STAGE_BENCHMARKS,
+  normalizeStage,
 } from './types';
 
 // ============================================================================

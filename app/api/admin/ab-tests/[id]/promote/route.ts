@@ -54,7 +54,7 @@ export async function GET(
       );
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, unknown>;
 
     if (!experiment.isActive) {
       return NextResponse.json(
@@ -69,10 +69,10 @@ export async function GET(
     }
 
     // Check eligibility
-    const eligibility = await checkPromotionEligibility(experiment.name);
+    const eligibility = await checkPromotionEligibility(experiment.name as string);
 
     // Get promotion history
-    const history = await getPromotionHistory(experiment.name);
+    const history = await getPromotionHistory(experiment.name as string);
 
     // Get current traffic distribution
     const variants = await sql`
@@ -143,7 +143,8 @@ export async function POST(
         { status: 400 }
       );
     }
-    const { force = false, customRules } = body;
+    const force = (body.force as boolean | undefined) ?? false;
+    const customRules = body.customRules as Partial<import('@/lib/ab-testing/promotion-rules').PromotionRules> | undefined;
 
     logger.log(
       `[Admin AB Promote POST] Promoting experiment ${experimentId} (force: ${force})`
@@ -166,7 +167,7 @@ export async function POST(
       );
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, unknown>;
 
     if (!experiment.isActive) {
       return NextResponse.json(
@@ -184,7 +185,7 @@ export async function POST(
     const userId = request.headers.get("x-user-id") || "admin";
 
     // Attempt promotion
-    const result = await promoteWinningVariant(experiment.name, {
+    const result = await promoteWinningVariant(experiment.name as string, {
       userId,
       triggeredBy: "manual",
       customRules,
@@ -292,7 +293,7 @@ export async function DELETE(
       );
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, unknown>;
 
     // Get user ID from header (optional)
     const userId = request.headers.get("x-user-id") || "admin";
@@ -301,7 +302,7 @@ export async function DELETE(
     const { rollbackPromotion } = await import("@/lib/ab-testing/auto-promotion");
 
     // Perform rollback
-    const result = await rollbackPromotion(experiment.name, {
+    const result = await rollbackPromotion(experiment.name as string, {
       userId,
       reason,
       restoreTraffic,

@@ -538,7 +538,7 @@ async function handlePost(req: NextRequest) {
     if (downstreamRequest) {
       const gateStatus = checkGateStatus(effectiveGate, downstreamRequest);
       if (!gateStatus.gateOpen) {
-        const counts = (persistedModeResult?.modeContext?.gateRedirectCounts as Record<string, number>) ?? {};
+        const counts = (persistedModeResult?.modeContext as ({ gateRedirectCounts?: Record<string, number> } | null | undefined))?.gateRedirectCounts ?? {};
         const redirectCount = counts[downstreamRequest] ?? 0;
         rlGateBlock = buildRealityLensGateBlock(
           downstreamRequest,
