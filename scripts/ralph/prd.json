@@ -7,7 +7,12 @@
       "id": "US-001",
       "title": "User can sign up with email and password",
       "description": "As a founder, I want to create an account so that I can access FRED's mentor capabilities",
-      "acceptanceCriteria": ["Signup form submits successfully", "Account created in Supabase", "Redirected to onboarding", "No DB column errors"],
+      "acceptanceCriteria": [
+        "Signup form submits successfully",
+        "Account created in Supabase",
+        "Redirected to onboarding",
+        "No DB column errors"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Auth debug team fixed missing columns and created /api/auth/signup route. Enrichment columns removed from createOrUpdateProfile and onboard route."
@@ -16,7 +21,12 @@
       "id": "US-002",
       "title": "User can log in with email and password",
       "description": "As a founder, I want to log in to my existing account to access the dashboard",
-      "acceptanceCriteria": ["Login form accepts email/password", "Session cookie set on success", "Redirected to dashboard", "Error shown on wrong credentials"],
+      "acceptanceCriteria": [
+        "Login form accepts email/password",
+        "Session cookie set on success",
+        "Redirected to dashboard",
+        "Error shown on wrong credentials"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Login flow works via /api/auth/login calling signIn from lib/auth.ts"
@@ -25,7 +35,12 @@
       "id": "US-003",
       "title": "User can reset forgotten password",
       "description": "As a founder, I want to reset my password if I forget it",
-      "acceptanceCriteria": ["Forgot password link on login page", "Password reset email sent", "Reset form works", "Can log in with new password"],
+      "acceptanceCriteria": [
+        "Forgot password link on login page",
+        "Password reset email sent",
+        "Reset form works",
+        "Can log in with new password"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #25 added forgot-password link and reset pages with Supabase flow"
@@ -34,7 +49,10 @@
       "id": "US-004",
       "title": "Dashboard sidebar shows all navigation items",
       "description": "As a user, I want to see all available features in the dashboard sidebar so I can navigate to them",
-      "acceptanceCriteria": ["All dashboard routes have sidebar links", "Wellbeing, Inbox, Notifications, Investor Targeting, Snapshot, Video, Memory, Sharing, Invitations all visible"],
+      "acceptanceCriteria": [
+        "All dashboard routes have sidebar links",
+        "Wellbeing, Inbox, Notifications, Investor Targeting, Snapshot, Video, Memory, Sharing, Invitations all visible"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Fix #1 added 9 missing sidebar items. Fix #20 ensured 44px touch targets."
@@ -43,7 +61,12 @@
       "id": "US-005",
       "title": "FRED chat works without crashes",
       "description": "As a founder, I want to chat with FRED AI mentor without the page crashing or losing session",
-      "acceptanceCriteria": ["Can send message to FRED", "Streaming response completes", "No about:blank crash", "Session preserved across messages"],
+      "acceptanceCriteria": [
+        "Can send message to FRED",
+        "Streaming response completes",
+        "No about:blank crash",
+        "Session preserved across messages"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Fix #28 added safe SSE stream handling, closed flag, mountedRef guards, graceful error on stream termination"
@@ -52,7 +75,11 @@
       "id": "US-006",
       "title": "AI Insights page loads without 404",
       "description": "As a founder, I want to access AI Insights from the dashboard",
-      "acceptanceCriteria": ["Clicking AI Insights in nav loads a page", "No 404 error", "/dashboard/ai-insights redirects to /dashboard/insights"],
+      "acceptanceCriteria": [
+        "Clicking AI Insights in nav loads a page",
+        "No 404 error",
+        "/dashboard/ai-insights redirects to /dashboard/insights"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #30 added redirect from /dashboard/ai-insights to /dashboard/insights"
@@ -61,7 +88,10 @@
       "id": "US-007",
       "title": "Risk alerts show empty state instead of error",
       "description": "As a founder, I want to see a friendly message when there are no risk alerts instead of an error",
-      "acceptanceCriteria": ["Risk alerts widget shows empty state on no data", "No 'Unable to load' error message"],
+      "acceptanceCriteria": [
+        "Risk alerts widget shows empty state on no data",
+        "No 'Unable to load' error message"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #24 added friendly empty state on API error"
@@ -70,7 +100,11 @@
       "id": "US-008",
       "title": "Admin panel handles non-admin users gracefully",
       "description": "As a non-admin user, I should see a login page or access denied instead of an infinite redirect loop",
-      "acceptanceCriteria": ["Non-admin visiting /admin sees login page", "No infinite redirect loop", "Admin login renders properly"],
+      "acceptanceCriteria": [
+        "Non-admin visiting /admin sees login page",
+        "No infinite redirect loop",
+        "Admin login renders properly"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #31 added middleware x-pathname header and admin layout login detection"
@@ -79,7 +113,11 @@
       "id": "US-009",
       "title": "Community posts require membership",
       "description": "As a community owner, I want only members to be able to post in my community",
-      "acceptanceCriteria": ["Non-members cannot create posts", "Membership check enforced on API", "Private communities block self-join"],
+      "acceptanceCriteria": [
+        "Non-members cannot create posts",
+        "Membership check enforced on API",
+        "Private communities block self-join"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fixes #3 and #8 added membership and privacy checks"
@@ -88,7 +126,10 @@
       "id": "US-010",
       "title": "Contact form has rate limiting",
       "description": "As a site operator, I want the contact form to be rate-limited to prevent spam",
-      "acceptanceCriteria": ["Contact API limited to 5 requests/hour/IP", "Rate limit response returned on exceed"],
+      "acceptanceCriteria": [
+        "Contact API limited to 5 requests/hour/IP",
+        "Rate limit response returned on exceed"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #2 added rate limiting"
@@ -97,7 +138,13 @@
       "id": "US-011",
       "title": "Chat UI is usable on mobile",
       "description": "As a mobile user, I want the chat interface to work well on my phone",
-      "acceptanceCriteria": ["No iOS zoom on input focus (16px font)", "Touch targets >= 44px", "Chat bubbles use 85% width on mobile", "Keyboard hint hidden on mobile", "Safe area inset respected"],
+      "acceptanceCriteria": [
+        "No iOS zoom on input focus (16px font)",
+        "Touch targets >= 44px",
+        "Chat bubbles use 85% width on mobile",
+        "Keyboard hint hidden on mobile",
+        "Safe area inset respected"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fixes #5, #17, #18, #19 addressed mobile chat UX"
@@ -106,7 +153,12 @@
       "id": "US-012",
       "title": "Onboarding flow has error boundaries",
       "description": "As a new user, if the onboarding page crashes I should see a branded error page with retry",
-      "acceptanceCriteria": ["Error boundary on /get-started", "Error boundary on /onboarding", "Retry button works", "Navigation back to home available"],
+      "acceptanceCriteria": [
+        "Error boundary on /get-started",
+        "Error boundary on /onboarding",
+        "Retry button works",
+        "Navigation back to home available"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #16 created branded error pages"
@@ -115,7 +167,10 @@
       "id": "US-013",
       "title": "Protected routes enforce authentication",
       "description": "As a security measure, all dashboard/user routes should require authentication",
-      "acceptanceCriteria": ["/check-ins, /video, /onboarding, /interactive in protected routes", "Unauthenticated users redirected to /login"],
+      "acceptanceCriteria": [
+        "/check-ins, /video, /onboarding, /interactive in protected routes",
+        "Unauthenticated users redirected to /login"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Fix #6 added missing routes to middleware-utils.ts"
@@ -124,7 +179,10 @@
       "id": "US-014",
       "title": "User account deletion cleans up all data",
       "description": "As a user, when I delete my account all my data should be removed",
-      "acceptanceCriteria": ["Delete endpoint removes data from all v3.0+ tables", "Conversation state, push, email, shares, community data all cleaned up"],
+      "acceptanceCriteria": [
+        "Delete endpoint removes data from all v3.0+ tables",
+        "Conversation state, push, email, shares, community data all cleaned up"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #11 added 12 missing tables to deletion"
@@ -133,7 +191,10 @@
       "id": "US-015",
       "title": "Admin nav shows all admin pages",
       "description": "As an admin, I want all admin pages accessible from the admin sidebar",
-      "acceptanceCriteria": ["Voice Agent link in admin nav", "Analytics link in admin nav"],
+      "acceptanceCriteria": [
+        "Voice Agent link in admin nav",
+        "Analytics link in admin nav"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #21 added 2 missing admin nav links"
@@ -142,7 +203,10 @@
       "id": "US-016",
       "title": "Features page accurately reflects feature status",
       "description": "As a visitor, I want the features page to correctly show which features are available",
-      "acceptanceCriteria": ["Boardy not marked as Coming Soon", "All available features shown as active"],
+      "acceptanceCriteria": [
+        "Boardy not marked as Coming Soon",
+        "All available features shown as active"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #22 removed stale comingSoon flag from Boardy"
@@ -151,7 +215,10 @@
       "id": "US-017",
       "title": "Strategy Reframing page is discoverable",
       "description": "As a user, I want to find and access the Strategy Reframing feature",
-      "acceptanceCriteria": ["Link to Strategy Reframing from Strategy Docs", "Page loads correctly"],
+      "acceptanceCriteria": [
+        "Link to Strategy Reframing from Strategy Docs",
+        "Page loads correctly"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #23 added link button in Strategy Docs header"
@@ -160,7 +227,11 @@
       "id": "US-018",
       "title": "Login page is accessible",
       "description": "As a user with accessibility needs, the login page should support screen readers and have proper touch targets",
-      "acceptanceCriteria": ["Error messages have role=alert", "Inputs have 16px font (no iOS zoom)", "ARIA labels present"],
+      "acceptanceCriteria": [
+        "Error messages have role=alert",
+        "Inputs have 16px font (no iOS zoom)",
+        "ARIA labels present"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix #13 added text-base and role=alert"
@@ -169,7 +240,11 @@
       "id": "US-019",
       "title": "Community reactions work without race conditions",
       "description": "As a community member, I want reactions to toggle correctly even under concurrent clicks",
-      "acceptanceCriteria": ["Reaction toggle uses atomic operation", "Optimistic UI with rollback on error", "No duplicate reactions"],
+      "acceptanceCriteria": [
+        "Reaction toggle uses atomic operation",
+        "Optimistic UI with rollback on error",
+        "No duplicate reactions"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fixes B1 and F01 replaced TOCTOU with atomic pattern and added optimistic UI"
@@ -178,7 +253,10 @@
       "id": "US-020",
       "title": "Dashboard stat cards show meaningful values for free tier",
       "description": "As a free-tier user, dashboard cards should show 0 with upgrade prompts instead of raw dashes",
-      "acceptanceCriteria": ["Locked features show '0' not '-'", "Upgrade to Pro/Studio link visible"],
+      "acceptanceCriteria": [
+        "Locked features show '0' not '-'",
+        "Upgrade to Pro/Studio link visible"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #26 added upgrade links"
@@ -187,7 +265,10 @@
       "id": "US-021",
       "title": "Features nav dropdown has View All link",
       "description": "As a visitor, I want a link to see all features from the nav dropdown",
-      "acceptanceCriteria": ["View all features link at bottom of dropdown", "Links to /features page"],
+      "acceptanceCriteria": [
+        "View all features link at bottom of dropdown",
+        "Links to /features page"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #27 added View all features link"
@@ -196,7 +277,11 @@
       "id": "US-022",
       "title": "Startup process shows full step names",
       "description": "As a user viewing the startup process, I want to see full step names not truncated text",
-      "acceptanceCriteria": ["Step names not truncated to 2 words", "Tooltip shows full name", "Wider max-width"],
+      "acceptanceCriteria": [
+        "Step names not truncated to 2 words",
+        "Tooltip shows full name",
+        "Wider max-width"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #29 widened max-w and added tooltip"
@@ -205,7 +290,10 @@
       "id": "US-023",
       "title": "Onboard route does not write non-existent DB columns",
       "description": "As a developer, the onboard API should not attempt to write enrichment columns that don't exist in profiles table",
-      "acceptanceCriteria": ["No industry/revenue_range/team_size/funding_history in profile upsert", "Signup with enrichment data does not fail"],
+      "acceptanceCriteria": [
+        "No industry/revenue_range/team_size/funding_history in profile upsert",
+        "Signup with enrichment data does not fail"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Enrichment fields removed from onboard route in commit 376d706. Auth-helpers fixed in commit 61b18b1."
@@ -214,7 +302,10 @@
       "id": "US-024",
       "title": "Diagnostic state API validates input",
       "description": "As a security measure, the diagnostic state endpoint should validate input with Zod",
-      "acceptanceCriteria": ["Zod schema validates enum, boolean, array fields", "Invalid input returns 400"],
+      "acceptanceCriteria": [
+        "Zod schema validates enum, boolean, array fields",
+        "Invalid input returns 400"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fix #7 added Zod validation"
@@ -223,7 +314,10 @@
       "id": "US-025",
       "title": "PostgREST filter injection prevented in community search",
       "description": "As a security measure, community search should strip PostgREST-special characters",
-      "acceptanceCriteria": ["Special characters stripped from search input", "No filter syntax injection possible"],
+      "acceptanceCriteria": [
+        "Special characters stripped from search input",
+        "No filter syntax injection possible"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fix B2 stripped PostgREST-special characters from search"
@@ -232,7 +326,13 @@
       "id": "US-026",
       "title": "API routes return 401 (not 500) for unauthenticated requests",
       "description": "As an API consumer, unauthenticated requests should return 401 with proper error message instead of 500",
-      "acceptanceCriteria": ["GET/POST/DELETE/PATCH /api/team return 401 without auth", "GET/POST/DELETE /api/share return 401 without auth", "POST /api/investor-lens/deck-request returns 401 without auth", "POST /api/positioning/quick-check returns 401 without auth", "GET/PATCH/DELETE /api/journey/milestones/[id] return 401 without auth"],
+      "acceptanceCriteria": [
+        "GET/POST/DELETE/PATCH /api/team return 401 without auth",
+        "GET/POST/DELETE /api/share return 401 without auth",
+        "POST /api/investor-lens/deck-request returns 401 without auth",
+        "POST /api/positioning/quick-check returns 401 without auth",
+        "GET/PATCH/DELETE /api/journey/milestones/[id] return 401 without auth"
+      ],
       "priority": 1,
       "passes": true,
       "notes": "Fixed in commit 76b3630 -- added `if (error instanceof Response) return error;` to 12 catch blocks across 5 files"
@@ -241,7 +341,10 @@
       "id": "US-027",
       "title": "Check-ins empty state links to correct chat page",
       "description": "As a user on the check-ins page with no check-ins, the 'Talk to FRED' button should navigate to /chat",
-      "acceptanceCriteria": ["Talk to FRED button links to /chat", "No 404 error when clicking the button"],
+      "acceptanceCriteria": [
+        "Talk to FRED button links to /chat",
+        "No 404 error when clicking the button"
+      ],
       "priority": 2,
       "passes": true,
       "notes": "Fixed in commit 3f0dbdd -- changed href from /dashboard/chat to /chat"
@@ -250,7 +353,10 @@
       "id": "US-028",
       "title": "Links page has no misleading waitlist references",
       "description": "As a visitor on the linktree page, all links should reflect that signup is live (no waitlist references)",
-      "acceptanceCriteria": ["No 'Join Waitlist' text on /links page", "No duplicate 'Get Started' entries"],
+      "acceptanceCriteria": [
+        "No 'Join Waitlist' text on /links page",
+        "No duplicate 'Get Started' entries"
+      ],
       "priority": 3,
       "passes": true,
       "notes": "Fixed in commit 6d3049f -- removed duplicate entry that was formerly 'Join Waitlist'"
