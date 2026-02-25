@@ -10,6 +10,7 @@ import type {
   FredContext,
   FredEvent,
   FredError,
+  FredResponse,
   UserInput,
   ValidatedInput,
   MentalModelResult,
@@ -42,7 +43,8 @@ function createInitialContext(
   founderContext?: string,
   conversationState?: ConversationStateContext | null,
   chatMode?: boolean,
-  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>,
+  tier?: string
 ): FredContext {
   return {
     sessionId,
@@ -62,6 +64,7 @@ function createInitialContext(
     conversationState: conversationState || null,
     chatMode: chatMode ?? true,
     preloadedFacts,
+    tier: tier || "free",
   };
 }
 
@@ -116,12 +119,12 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean; tier?: string },
   },
 
   actors: {
-    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; currentMessage?: string }>(
-      async ({ input }) => loadMemoryActor(input.userId, input.sessionId, "free", input.preloadedFacts, input.currentMessage)
+    loadMemory: fromPromise<MemoryContext, { userId: string; sessionId: string; tier?: string; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; currentMessage?: string }>(
+      async ({ input }) => loadMemoryActor(input.userId, input.sessionId, input.tier || "free", input.preloadedFacts, input.currentMessage)
     ),
 
     validateInput: fromPromise<ValidatedInput, { input: UserInput; memoryContext: MemoryContext | null; conversationState: ConversationStateContext | null }>(
@@ -140,9 +143,9 @@ export const fredMachine = setup({
       async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState, input.userId)
     ),
 
-    execute: fromPromise<void, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string; conversationState: ConversationStateContext | null }>(
+    execute: fromPromise<FredResponse, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string; conversationState: ConversationStateContext | null }>(
       async ({ input }) => {
-        await executeActor(input.decision, input.validatedInput, input.userId, input.sessionId, input.conversationState);
+        return await executeActor(input.decision, input.validatedInput, input.userId, input.sessionId, input.conversationState);
       }
     ),
   },
@@ -362,7 +365,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode, input.preloadedFacts),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode, input.preloadedFacts, input.tier),
 
   states: {
     /**
@@ -409,6 +412,7 @@ export const fredMachine = setup({
         input: ({ context }) => ({
           userId: context.userId,
           sessionId: context.sessionId,
+          tier: context.tier,
           preloadedFacts: context.preloadedFacts,
           currentMessage: context.input?.message,
         }),
@@ -677,7 +681,16 @@ export const fredMachine = setup({
         }),
         onDone: {
           target: "complete",
-          actions: ["logTransition", "setCompleteTime"],
+          actions: [
+            "logTransition",
+            "setCompleteTime",
+            assign({
+              decision: ({ context, event }) =>
+                context.decision && event.output
+                  ? { ...context.decision, content: event.output.content, metadata: event.output.metadata }
+                  : context.decision,
+            }),
+          ],
         },
         onError: {
           target: "error",

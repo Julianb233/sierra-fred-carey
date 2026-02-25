@@ -123,6 +123,59 @@ export async function POST(req: NextRequest) {
     // Perform assessment
     const result = await assessIdea(input);
 
+    // Persist results to DB (non-blocking - don't fail the request if save fails)
+    (async () => {
+      try {
+        const { sql } = await import("@/lib/db/supabase-sql");
+        const f = result.factors;
+
+        // Save to reality_lens_analyses table
+        await sql`
+          INSERT INTO reality_lens_analyses (
+            user_id, idea, stage, market,
+            overall_score,
+            feasibility_score, feasibility_analysis,
+            economics_score, economics_analysis,
+            demand_score, demand_analysis,
+            distribution_score, distribution_analysis,
+            timing_score, timing_analysis,
+            strengths, weaknesses, recommendations
+          ) VALUES (
+            ${userId},
+            ${input.idea},
+            ${input.context?.stage || null},
+            ${input.context?.targetMarket || null},
+            ${result.overallScore},
+            ${f.feasibility.score}, ${f.feasibility.summary},
+            ${f.economics.score}, ${f.economics.summary},
+            ${f.demand.score}, ${f.demand.summary},
+            ${f.distribution.score}, ${f.distribution.summary},
+            ${f.timing.score}, ${f.timing.summary},
+            ${JSON.stringify(result.topStrengths)},
+            ${JSON.stringify(result.criticalRisks)},
+            ${JSON.stringify(result.nextSteps)}
+          )
+        `;
+
+        // Log journey event so the Journey dashboard Idea Score updates
+        await sql`
+          INSERT INTO journey_events (user_id, event_type, event_data, score_after)
+          VALUES (
+            ${userId},
+            'analysis_completed',
+            ${JSON.stringify({
+              assessmentId: result.metadata.assessmentId,
+              verdict: result.verdict,
+              idea: input.idea.slice(0, 200),
+            })},
+            ${result.overallScore}
+          )
+        `;
+      } catch (saveErr) {
+        console.error("[Reality Lens API] Failed to persist results:", saveErr);
+      }
+    })();
+
     const latencyMs = Date.now() - startTime;
 
     // Build response

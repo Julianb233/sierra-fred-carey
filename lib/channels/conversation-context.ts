@@ -8,6 +8,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { storeEpisode } from "@/lib/db/fred-memory";
 
 // ============================================================================
 // Types
@@ -196,17 +197,11 @@ export async function storeChannelEntry(
   content: string,
   extraMetadata?: Record<string, unknown>
 ): Promise<void> {
-  const supabase = createServiceClient();
-
-  await supabase.from("fred_episodic_memory").insert({
-    user_id: userId,
-    session_id: sessionId,
-    episode_type: "conversation",
-    content: {
-      role,
-      content,
-      channel,
-      ...extraMetadata,
-    },
-  });
+  await storeEpisode(
+    userId,
+    sessionId,
+    "conversation",
+    { role, content, channel, ...extraMetadata },
+    { channel }
+  );
 }

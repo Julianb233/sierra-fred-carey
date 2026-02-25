@@ -70,6 +70,8 @@ export interface FredContext {
   chatMode: boolean;
   /** Pre-loaded semantic facts from buildFounderContext to avoid duplicate DB calls */
   preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>;
+  /** User tier (free/pro/studio) for memory loading */
+  tier?: string;
 }
 
 /**

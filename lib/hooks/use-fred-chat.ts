@@ -195,6 +195,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const [wellbeingAlert, setWellbeingAlert] = useState<BurnoutSignals | null>(null);
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
+  const [sessionIdState, setSessionIdState] = useState<string>(() => sessionIdRef.current);
   const abortControllerRef = useRef<AbortController | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
@@ -315,9 +316,16 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
             // Handle different event types
             switch (eventType) {
-              case "connected":
+              case "connected": {
+                const connData = data as { sessionId?: string };
+                if (connData.sessionId && connData.sessionId !== sessionIdRef.current) {
+                  sessionIdRef.current = connData.sessionId;
+                  setSessionIdState(connData.sessionId);
+                  sessionStorage.setItem(SESSION_STORAGE_KEY, connData.sessionId);
+                }
                 if (mountedRef.current) setState("analyzing");
                 break;
+              }
 
               case "state": {
                 const stateData = data as { state: string; isComplete: boolean };
@@ -402,7 +410,13 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 break;
               }
 
-              case "done":
+              case "done": {
+                const doneData = data as { sessionId?: string };
+                if (doneData.sessionId && doneData.sessionId !== sessionIdRef.current) {
+                  sessionIdRef.current = doneData.sessionId;
+                  setSessionIdState(doneData.sessionId);
+                  sessionStorage.setItem(SESSION_STORAGE_KEY, doneData.sessionId);
+                }
                 receivedDone = true;
                 if (mountedRef.current) {
                   setState("complete");
@@ -413,6 +427,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   }, 500);
                 }
                 break;
+              }
 
               case "error": {
                 const errorData = data as { message: string };
@@ -506,6 +521,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     // Generate new session ID and clear persisted messages
     const newSessionId = crypto.randomUUID();
     sessionIdRef.current = newSessionId;
+    setSessionIdState(newSessionId);
     if (typeof window !== "undefined") {
       sessionStorage.setItem(SESSION_STORAGE_KEY, newSessionId);
       sessionStorage.removeItem(MESSAGES_STORAGE_KEY);
@@ -517,7 +533,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     sendMessage,
     state,
     isProcessing: state !== "idle" && state !== "complete" && state !== "error",
-    sessionId: sessionIdRef.current,
+    sessionId: sessionIdState,
     analysis,
     synthesis,
     error,

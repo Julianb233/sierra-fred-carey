@@ -148,6 +148,7 @@ export async function storeEpisode(
     embedding?: number[];
     importanceScore?: number;
     metadata?: Record<string, unknown>;
+    channel?: string;
   } = {}
 ): Promise<EpisodicMemory> {
   const supabase = createServiceClient();
@@ -159,6 +160,7 @@ export async function storeEpisode(
       session_id: sessionId,
       event_type: eventType,
       content,
+      channel: options.channel ?? "chat",
       embedding: options.embedding,
       importance_score: options.importanceScore ?? 0.5,
       metadata: options.metadata ?? {},

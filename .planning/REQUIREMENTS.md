@@ -7,64 +7,64 @@
 
 ### System Prompt Overhaul (PROMPT)
 
-- [ ] **PROMPT-01**: System prompt rebuilt from Fred Cary's master GPT instructions -- reframe-before-prescribe, critical-thinking default, mentor tone, decision architecture
-- [ ] **PROMPT-02**: Mentor tone enforced -- encourage effort and discipline, not ego; no default praise or flattery ("great idea!", "brilliant!", "love it!")
-- [ ] **PROMPT-03**: Founder Intake Protocol embedded -- automatically establish founder snapshot (stage, product status, revenue, runway, constraint, 90-day goal) when data is missing
-- [ ] **PROMPT-04**: Output standard -- every substantive response ends with Next 3 Actions (specific, actionable, time-bound)
-- [ ] **PROMPT-05**: Weekly Check-In Protocol -- structured framework (what moved, what's stuck, energy drains, next decision, priority)
+- [x] **PROMPT-01**: System prompt rebuilt from Fred Cary's master GPT instructions -- reframe-before-prescribe, critical-thinking default, mentor tone, decision architecture
+- [x] **PROMPT-02**: Mentor tone enforced -- encourage effort and discipline, not ego; no default praise or flattery ("great idea!", "brilliant!", "love it!")
+- [x] **PROMPT-03**: Founder Intake Protocol embedded -- automatically establish founder snapshot (stage, product status, revenue, runway, constraint, 90-day goal) when data is missing
+- [x] **PROMPT-04**: Output standard -- every substantive response ends with Next 3 Actions (specific, actionable, time-bound)
+- [x] **PROMPT-05**: Weekly Check-In Protocol -- structured framework (what moved, what's stuck, energy drains, next decision, priority)
 
 ### Onboarding-to-FRED Handoff (ONBOARD)
 
-- [ ] **ONBOARD-01**: Onboarding captures full founder basics (stage, industry, challenge, revenue range, team size, funding history)
-- [ ] **ONBOARD-02**: FRED's first conversation picks up seamlessly -- references what onboarding collected, goes deeper, never re-asks
-- [ ] **ONBOARD-03**: No repetition -- FRED does not re-ask what the signup form already captured; detects missing data and fills gaps conversationally
-- [ ] **ONBOARD-04**: Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake data
+- [x] **ONBOARD-01**: Onboarding captures full founder basics (stage, industry, challenge, revenue range, team size, funding history)
+- [x] **ONBOARD-02**: FRED's first conversation picks up seamlessly -- references what onboarding collected, goes deeper, never re-asks
+- [x] **ONBOARD-03**: No repetition -- FRED does not re-ask what the signup form already captured; detects missing data and fills gaps conversationally
+- [x] **ONBOARD-04**: Founder Snapshot populated and visible on dashboard from combined onboarding + FRED intake data
 
 ### Structured Mentor Flow (CHAT)
 
-- [ ] **CHAT-01**: FRED leads conversations -- asks specific questions, guides to next step, controls the flow (not freeform)
-- [ ] **CHAT-02**: Reframe-before-prescribe behavior -- FRED identifies the real underlying goal before answering the literal question
-- [ ] **CHAT-03**: Critical-thinking default -- every substantive response surfaces assumptions, bottlenecks, tests, or decision criteria
-- [ ] **CHAT-04**: Gentle redirect when founders drift off track -- acknowledge what they said, then steer back to structured path
-- [ ] **CHAT-05**: Conversation state tracking -- FRED knows where the founder is in the process and what's been established vs what still needs validation
+- [x] **CHAT-01**: FRED leads conversations -- asks specific questions, guides to next step, controls the flow (not freeform)
+- [x] **CHAT-02**: Reframe-before-prescribe behavior -- FRED identifies the real underlying goal before answering the literal question
+- [x] **CHAT-03**: Critical-thinking default -- every substantive response surfaces assumptions, bottlenecks, tests, or decision criteria
+- [x] **CHAT-04**: Gentle redirect when founders drift off track -- acknowledge what they said, then steer back to structured path
+- [x] **CHAT-05**: Conversation state tracking -- FRED knows where the founder is in the process and what's been established vs what still needs validation
 
 ### Reality Lens Gate (GATE)
 
-- [ ] **GATE-01**: Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
-- [ ] **GATE-02**: If foundation is weak, FRED says so plainly and redirects -- no sugarcoating, no letting founders skip ahead
-- [ ] **GATE-03**: Decision sequencing enforced -- no decks, patents, hiring, fundraising, scaling until upstream truth established
-- [ ] **GATE-04**: Pitch Deck Review gated -- 11-dimension scorecard (0-10 per dimension) only after Reality Lens passes
-- [ ] **GATE-05**: Per-slide investor objections -- 2-3 skeptical questions per slide with knockout answers, generated as part of gated review
+- [x] **GATE-01**: Reality Lens (Feasibility, Economics, Demand, Distribution, Timing) runs as mandatory gate before tactical advice
+- [x] **GATE-02**: If foundation is weak, FRED says so plainly and redirects -- no sugarcoating, no letting founders skip ahead
+- [x] **GATE-03**: Decision sequencing enforced -- no decks, patents, hiring, fundraising, scaling until upstream truth established
+- [x] **GATE-04**: Pitch Deck Review gated -- 11-dimension scorecard (0-10 per dimension) only after Reality Lens passes
+- [x] **GATE-05**: Per-slide investor objections -- 2-3 skeptical questions per slide with knockout answers, generated as part of gated review
 
 ### Framework & Mode Integration (MODE)
 
-- [ ] **MODE-01**: Diagnostic engine (lib/ai/diagnostic-engine.ts) wired into chat route -- silently detects context, introduces frameworks at right moment
-- [ ] **MODE-02**: Investor Mode activates when fundraising signals detected -- applies Investor Lens (IC Verdict, pass reasons, de-risking actions), not user-chosen
-- [ ] **MODE-03**: Positioning Mode activates when messaging/differentiation signals detected -- applies Positioning Framework (grade A-F, narrative tightness 1-10, gaps)
-- [ ] **MODE-04**: 9-Step Startup Process (Idea to Traction) used as default decision sequencing backbone for early-stage founders
-- [ ] **MODE-05**: Investor Readiness Score framework fully implemented -- AI scoring across 6 categories with stage benchmarks (currently DB schema only, no implementation)
-- [ ] **MODE-06**: Deck Request Protocol formalized as standalone flow -- provisional verdict first, then decide if deck review would change verdict (currently embedded in Investor Lens)
+- [x] **MODE-01**: Diagnostic engine (lib/ai/diagnostic-engine.ts) wired into chat route -- silently detects context, introduces frameworks at right moment
+- [x] **MODE-02**: Investor Mode activates when fundraising signals detected -- applies Investor Lens (IC Verdict, pass reasons, de-risking actions), not user-chosen
+- [x] **MODE-03**: Positioning Mode activates when messaging/differentiation signals detected -- applies Positioning Framework (grade A-F, narrative tightness 1-10, gaps)
+- [x] **MODE-04**: 9-Step Startup Process (Idea to Traction) used as default decision sequencing backbone for early-stage founders
+- [x] **MODE-05**: Investor Readiness Score framework fully implemented -- AI scoring across 6 categories with stage benchmarks (currently DB schema only, no implementation)
+- [x] **MODE-06**: Deck Request Protocol formalized as standalone flow -- provisional verdict first, then decide if deck review would change verdict (currently embedded in Investor Lens)
 
 ### Dashboard Mentor Hub (HUB)
 
-- [ ] **HUB-01**: Dashboard has prominent, always-visible "Contact Fred" section — start chat or call in one click
+- [x] **HUB-01**: Dashboard has prominent, always-visible "Contact Fred" section — start chat or call in one click
 - [ ] **HUB-02**: Funding readiness progress wheel on dashboard — visual Red → Yellow → Green indicator powered by Investor Readiness Score
 - [ ] **HUB-03**: Progress wheel updates dynamically as founder completes upstream validation steps (feasibility, demand, economics)
-- [ ] **HUB-04**: Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in nav
+- [x] **HUB-04**: Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in nav
 
 ### Founder Communities (COMM)
 
-- [ ] **COMM-01**: Founders can create communities around topics, industries, or stages (self-started, not admin-curated)
-- [ ] **COMM-02**: Founders can browse and join communities from the dashboard
-- [ ] **COMM-03**: Community feeds show posts, questions, and updates from members
-- [ ] **COMM-04**: Communities are self-moderated by users with basic moderation tools
+- [x] **COMM-01**: Founders can create communities around topics, industries, or stages (self-started, not admin-curated)
+- [x] **COMM-02**: Founders can browse and join communities from the dashboard
+- [x] **COMM-03**: Community feeds show posts, questions, and updates from members
+- [x] **COMM-04**: Communities are self-moderated by users with basic moderation tools
 
 ### Multi-Channel FRED Access (CHANNEL)
 
-- [ ] **CHANNEL-01**: In-app chat accessible from any page (floating widget or persistent sidebar)
-- [ ] **CHANNEL-02**: Voice call to FRED from dashboard (leverages existing LiveKit infrastructure)
-- [ ] **CHANNEL-03**: SMS text to FRED with structured mentor responses (leverages existing Twilio infrastructure)
-- [ ] **CHANNEL-04**: All channels share conversation context — FRED knows what was discussed regardless of channel
+- [x] **CHANNEL-01**: In-app chat accessible from any page (floating widget or persistent sidebar)
+- [x] **CHANNEL-02**: Voice call to FRED from dashboard (leverages existing LiveKit infrastructure)
+- [x] **CHANNEL-03**: SMS text to FRED with structured mentor responses (leverages existing Twilio infrastructure)
+- [x] **CHANNEL-04**: All channels share conversation context — FRED knows what was discussed regardless of channel
 
 ## v6.0 Requirements
 
@@ -78,8 +78,8 @@
 ### FRED & UX Improvements (IMPROVE)
 
 - [x] **IMPROVE-01**: FRED intelligence upgrade — Better memory retrieval, long conversation handling, smoother mode switching, new AI tools (content + provider)
-- [ ] **IMPROVE-02**: Mobile / UX polish — Serwist PWA caching, smooth animations, WCAG 2.1 AA compliance, push notification reliability
-- [ ] **IMPROVE-03**: Dashboard & analytics — Historical trend charts, engagement scoring, data export (CSV/PDF), PostHog funnel visualization
+- [x] **IMPROVE-02**: Mobile / UX polish — Serwist PWA caching, smooth animations, WCAG 2.1 AA compliance, push notification reliability
+- [x] **IMPROVE-03**: Dashboard & analytics — Historical trend charts, engagement scoring, data export (CSV/PDF), funnel visualization
 
 ### New Features (FEATURE)
 
@@ -196,48 +196,48 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROMPT-01 | Phase 34 | Pending |
-| PROMPT-02 | Phase 34 | Pending |
-| PROMPT-03 | Phase 34 | Pending |
-| PROMPT-04 | Phase 34 | Pending |
-| PROMPT-05 | Phase 34 | Pending |
-| ONBOARD-01 | Phase 35 | Pending |
-| ONBOARD-02 | Phase 35 | Pending |
-| ONBOARD-03 | Phase 35 | Pending |
-| ONBOARD-04 | Phase 35 | Pending |
-| CHAT-01 | Phase 36 | Pending |
-| CHAT-02 | Phase 36 | Pending |
-| CHAT-03 | Phase 36 | Pending |
-| CHAT-04 | Phase 36 | Pending |
-| CHAT-05 | Phase 36 | Pending |
-| GATE-01 | Phase 37 | Pending |
-| GATE-02 | Phase 37 | Pending |
-| GATE-03 | Phase 37 | Pending |
-| GATE-04 | Phase 39 | Pending |
-| GATE-05 | Phase 39 | Pending |
-| MODE-01 | Phase 38 | Pending |
-| MODE-02 | Phase 38 | Pending |
-| MODE-03 | Phase 38 | Pending |
-| MODE-04 | Phase 38 | Pending |
-| MODE-05 | Phase 39 | Pending |
-| MODE-06 | Phase 39 | Pending |
-
-| HUB-01 | Phase 40 | Pending |
+| PROMPT-01 | Phase 34 | Complete |
+| PROMPT-02 | Phase 34 | Complete |
+| PROMPT-03 | Phase 34 | Complete |
+| PROMPT-04 | Phase 34 | Complete |
+| PROMPT-05 | Phase 34 | Complete |
+| ONBOARD-01 | Phase 35 | Complete |
+| ONBOARD-02 | Phase 35 | Complete |
+| ONBOARD-03 | Phase 35 | Complete |
+| ONBOARD-04 | Phase 35 | Complete |
+| CHAT-01 | Phase 36 | Complete |
+| CHAT-02 | Phase 36 | Complete |
+| CHAT-03 | Phase 36 | Complete |
+| CHAT-04 | Phase 36 | Complete |
+| CHAT-05 | Phase 36 | Complete |
+| GATE-01 | Phase 37 | Complete |
+| GATE-02 | Phase 37 | Complete |
+| GATE-03 | Phase 37 | Complete |
+| GATE-04 | Phase 39 | Complete |
+| GATE-05 | Phase 39 | Complete |
+| MODE-01 | Phase 38 | Complete |
+| MODE-02 | Phase 38 | Complete |
+| MODE-03 | Phase 38 | Complete |
+| MODE-04 | Phase 38 | Complete |
+| MODE-05 | Phase 39 | Complete |
+| MODE-06 | Phase 39 | Complete |
+| HUB-01 | Phase 40 | Complete |
 | HUB-02 | Phase 40 | Pending |
 | HUB-03 | Phase 40 | Pending |
-| HUB-04 | Phase 40 | Pending |
-| COMM-01 | Phase 41 | Pending |
-| COMM-02 | Phase 41 | Pending |
-| COMM-03 | Phase 41 | Pending |
-| COMM-04 | Phase 41 | Pending |
-| CHANNEL-01 | Phase 42 | Pending |
-| CHANNEL-02 | Phase 42 | Pending |
-| CHANNEL-03 | Phase 42 | Pending |
-| CHANNEL-04 | Phase 42 | Pending |
+| HUB-04 | Phase 40 | Complete |
+| COMM-01 | Phase 41 | Complete |
+| COMM-02 | Phase 41 | Complete |
+| COMM-03 | Phase 41 | Complete |
+| COMM-04 | Phase 41 | Complete |
+| CHANNEL-01 | Phase 42 | Complete |
+| CHANNEL-02 | Phase 42 | Complete |
+| CHANNEL-03 | Phase 42 | Complete |
+| CHANNEL-04 | Phase 42 | Complete |
 
 **Coverage:**
 - v4.0 requirements: 37 total
-- Mapped to phases: 37
+- Complete: 35
+- Pending: 2 (HUB-02, HUB-03 — funding readiness progress wheel)
 - Unmapped: 0
 
 ### v6.0 Full Platform Maturity
@@ -249,8 +249,8 @@
 | INFRA-03 | Phase 61 | Complete |
 | INFRA-04 | Phase 62 | Complete |
 | IMPROVE-01 | Phase 63 | Complete |
-| IMPROVE-02 | Phase 65 | Pending |
-| IMPROVE-03 | Phase 64 | Pending |
+| IMPROVE-02 | Phase 65 | Complete |
+| IMPROVE-03 | Phase 64 | Complete |
 | FEATURE-01 | Phases 66-67 | Pending |
 | FEATURE-02 | Phases 68-69 | Pending |
 | FEATURE-03 | Phase 70 | Pending |

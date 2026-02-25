@@ -107,25 +107,39 @@ export default function StartupProcessPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Load process data
+  // Load process data - DB first, localStorage as fallback
   useEffect(() => {
     const loadProcess = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Try to load from localStorage first
+        // Try to load from the database first
+        const res = await fetch("/api/startup-process");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setProcess(data.data);
+            // Sync DB data to localStorage for offline resilience
+            localStorage.setItem("startup_process", JSON.stringify(data.data));
+            return;
+          }
+        }
+      } catch {
+        // DB load failed, fall through to localStorage
+      }
+
+      try {
+        // Fall back to localStorage
         const savedProcess = localStorage.getItem("startup_process");
         if (savedProcess) {
           const parsed = JSON.parse(savedProcess);
           setProcess(parsed);
         } else {
-          // Create new process
           setProcess(createInitialProcess());
         }
       } catch (err) {
         console.error("Error loading startup process:", err);
-        // Create new process on error
         setProcess(createInitialProcess());
       } finally {
         setIsLoading(false);
@@ -252,13 +266,29 @@ export default function StartupProcessPage() {
     [process, calculateProgress]
   );
 
+  // Save to both DB and localStorage
+  const persistProcess = useCallback(async (proc: typeof process) => {
+    if (!proc) return;
+    // Always write localStorage immediately (fast, offline-safe)
+    localStorage.setItem("startup_process", JSON.stringify(proc));
+    // Write to DB (best-effort)
+    try {
+      await fetch("/api/startup-process", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(proc),
+      });
+    } catch (err) {
+      console.error("Error saving startup process to DB:", err);
+    }
+  }, []);
+
   // Handle save
   const handleSave = useCallback(async () => {
     if (!process) return;
 
     try {
-      // Save to localStorage
-      localStorage.setItem("startup_process", JSON.stringify(process));
+      await persistProcess(process);
       setHasUnsavedChanges(false);
       toast.success("Draft saved");
     } catch (err) {
@@ -266,18 +296,18 @@ export default function StartupProcessPage() {
       toast.error("Failed to save draft");
       throw err;
     }
-  }, [process]);
+  }, [process, persistProcess]);
 
-  // Auto-save on changes
+  // Auto-save on changes (debounced)
   useEffect(() => {
     if (hasUnsavedChanges && process) {
-      const timeout = setTimeout(() => {
-        localStorage.setItem("startup_process", JSON.stringify(process));
+      const timeout = setTimeout(async () => {
+        await persistProcess(process);
         setHasUnsavedChanges(false);
       }, 2000);
       return () => clearTimeout(timeout);
     }
-  }, [hasUnsavedChanges, process]);
+  }, [hasUnsavedChanges, process, persistProcess]);
 
   // Warn on unsaved changes before leaving
   useEffect(() => {

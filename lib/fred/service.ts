@@ -20,6 +20,8 @@ export interface FredServiceOptions {
   conversationState?: ConversationStateContext | null;
   /** Pre-loaded semantic facts to avoid duplicate getAllUserFacts DB call */
   preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>;
+  /** User tier for memory loading (free/pro/studio) — defaults to "free" if omitted */
+  tier?: string;
   onStateChange?: (state: string, context: FredContext) => void;
   onError?: (error: Error) => void;
 }
@@ -63,6 +65,7 @@ export class FredService {
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
         preloadedFacts: this.options.preloadedFacts,
+        tier: this.options.tier || "free",
         chatMode: true,
       },
     });
@@ -173,6 +176,7 @@ export class FredService {
         founderContext: this.options.founderContext,
         conversationState: this.options.conversationState || null,
         preloadedFacts: this.options.preloadedFacts,
+        tier: this.options.tier || "free",
         chatMode: true,
       },
     });

@@ -128,6 +128,20 @@ Phase 65-04 decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Completed 65-03-PLAN.md (WCAG accessibility compliance and expanded a11y tests)
+Last session: 2026-02-25
+Stopped at: FRED chat latency debug investigation — consolidated report written to .planning/FRED-CHAT-LATENCY-REPORT.md
 Resume file: None
+
+## Debug Investigations
+
+### FRED Chat Latency (2026-02-25)
+Report: `.planning/FRED-CHAT-LATENCY-REPORT.md`
+Key findings:
+- CRITICAL: No `export const maxDuration` in chat route — Hobby plan users hit 10s timeout
+- HIGH: `getGateRedirectCount` makes a 4th sequential DB call to `fred_conversation_state` (line 372) when `persistedModeResult` already has the data
+- HIGH: Hidden 2nd AI call (GPT-4o scoring engine) triggers for every `decision_request` via `synthesize.ts:115` — adds 800ms–2s
+- HIGH: `storeEpisode` for user message is awaited BEFORE `processStream` starts (line 656) — blocks streaming by 50–200ms on Pro+
+- MEDIUM: IRS block makes sequential dynamic import + DB call after Promise.all for investor-readiness users (line 435)
+- MEDIUM: Main LLM call (decide actor) is not skipped for `question` or `information` intents — no fast-path beyond greeting/feedback
+- LOW: `getAllUserFacts` has no LIMIT clause — query grows with user history
+Quick wins: Add `export const maxDuration = 60`, disable AI scoring, make storeEpisode fire-and-forget, use cached modeContext in getGateRedirectCount
