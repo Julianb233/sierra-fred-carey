@@ -65,9 +65,9 @@ export async function getConversationContext(
   // Fetch recent episodic memory entries across all channels
   const { data: entries } = await supabase
     .from("fred_episodic_memory")
-    .select("id, session_id, episode_type, content, created_at")
+    .select("id, session_id, event_type, content, created_at")
     .eq("user_id", userId)
-    .eq("episode_type", "conversation")
+    .eq("event_type", "conversation")
     .order("created_at", { ascending: false })
     .limit(limit);
 

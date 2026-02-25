@@ -18,6 +18,7 @@ import { withLogging } from "@/lib/api/with-logging";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generateChatResponse } from "@/lib/ai/client";
 import { extractJSON } from "@/lib/ai/extract-json";
+import { storeEpisode } from "@/lib/db/fred-memory";
 
 const summaryRequestSchema = z.object({
   roomName: z.string().min(1),
@@ -247,22 +248,18 @@ async function handlePost(req: NextRequest) {
       console.warn('[Fred Call Summary] coaching_sessions persistence error:', persistErr);
     }
 
-    // Store call record in episodic memory for context continuity
+    // Store call record in episodic memory for cross-channel context continuity
     try {
-      await supabase.from("fred_episodic_memory").insert({
-        user_id: userId,
-        session_id: roomName,
-        episode_type: "voice_call",
-        content: {
-          callType,
-          durationSeconds,
-          summary: deliverables.summary,
-          decisions: deliverables.decisions,
-          nextActions: deliverables.nextActions,
-          transcriptLength: transcript.length,
-          channel: "voice",
-        },
-      });
+      await storeEpisode(userId, roomName, "conversation", {
+        role: "assistant",
+        content: deliverables.summary,
+        channel: "voice",
+        callType,
+        durationSeconds,
+        decisions: deliverables.decisions,
+        nextActions: deliverables.nextActions,
+        transcriptLength: transcript.length,
+      }, { channel: "voice", importanceScore: 0.8 });
     } catch (err) {
       console.warn("[Fred Call Summary] Failed to store call record:", err);
     }
