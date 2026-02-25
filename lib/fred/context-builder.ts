@@ -427,6 +427,30 @@ function buildContextBlock(data: FounderContextData): string {
 }
 
 // ============================================================================
+// Cross-Channel Context Loader
+// ============================================================================
+
+/**
+ * Load cross-channel conversation context so FRED knows what was discussed
+ * via SMS, voice, and chat. Returns a formatted context block string or null.
+ */
+async function loadChannelContext(userId: string): Promise<string | null> {
+  try {
+    const { getConversationContext, buildChannelContextBlock } = await import("@/lib/channels/conversation-context");
+    const context = await getConversationContext(userId, 20);
+    if (context.totalConversations === 0) return null;
+    // Only include cross-channel block if there's activity on non-chat channels
+    const hasNonChat = context.channelSummaries.some(
+      (s) => s.channel !== "chat" && s.messageCount > 0
+    );
+    if (!hasNonChat) return null;
+    return buildChannelContextBlock(context);
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
 // Public API
 // ============================================================================
 
@@ -460,11 +484,14 @@ export async function buildFounderContextWithFacts(
   hasPersistentMemory: boolean
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
-    const [profile, facts, { isFirstConversation, progressContext }, startupProcess] = await Promise.all([
+    const [profile, facts, { isFirstConversation, progressContext }, startupProcess, channelContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId),
       loadStartupProcessProgress(userId),
+      hasPersistentMemory
+        ? loadChannelContext(userId)
+        : Promise.resolve(null),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -497,6 +524,11 @@ export async function buildFounderContextWithFacts(
       lines.push("");
       lines.push("The founder has been working through the 9-Step Startup Process on their dashboard. Reference their progress naturally. If their dashboard step differs from your conversation assessment, align to the dashboard step — it reflects their self-reported progress.");
       context += "\n\n" + lines.join("\n");
+    }
+
+    // Phase 42: Append cross-channel context (SMS, voice, chat history)
+    if (channelContext) {
+      context += "\n\n" + channelContext;
     }
 
     return { context, facts };
