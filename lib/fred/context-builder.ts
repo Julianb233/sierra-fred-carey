@@ -427,6 +427,33 @@ function buildContextBlock(data: FounderContextData): string {
 }
 
 // ============================================================================
+// Red Flags Loader
+// ============================================================================
+
+/**
+ * Load active red flags for the founder so FRED can reference current risks.
+ * Returns a formatted context block string or null if no active flags.
+ */
+async function loadActiveRedFlags(userId: string): Promise<string | null> {
+  try {
+    const { getRedFlags } = await import("@/lib/db/red-flags");
+    const flags = await getRedFlags(userId, "active");
+    if (flags.length === 0) return null;
+
+    const top = flags.slice(0, 5);
+    const lines: string[] = [];
+    lines.push("## Active Risk Alerts");
+    lines.push("");
+    for (const flag of top) {
+      lines.push(`- **[${flag.severity.toUpperCase()}]** ${sanitize(flag.title)}`);
+    }
+    return lines.join("\n");
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
 // Cross-Channel Context Loader
 // ============================================================================
 
@@ -484,7 +511,7 @@ export async function buildFounderContextWithFacts(
   hasPersistentMemory: boolean
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
-    const [profile, facts, { isFirstConversation, progressContext }, startupProcess, channelContext] = await Promise.all([
+    const [profile, facts, { isFirstConversation, progressContext }, startupProcess, channelContext, redFlagsContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId),
@@ -492,6 +519,7 @@ export async function buildFounderContextWithFacts(
       hasPersistentMemory
         ? loadChannelContext(userId)
         : Promise.resolve(null),
+      loadActiveRedFlags(userId),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -529,6 +557,11 @@ export async function buildFounderContextWithFacts(
     // Phase 42: Append cross-channel context (SMS, voice, chat history)
     if (channelContext) {
       context += "\n\n" + channelContext;
+    }
+
+    // Append active red flags so FRED can reference current risks
+    if (redFlagsContext) {
+      context += "\n\n" + redFlagsContext;
     }
 
     return { context, facts };

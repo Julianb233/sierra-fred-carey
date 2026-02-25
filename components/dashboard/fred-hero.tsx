@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Phone, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,15 @@ export function FredHero({
 }: FredHeroProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState<number | null>(null);
+  const [fredOnline, setFredOnline] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/health")
+      .then((res) => {
+        if (!res.ok) setFredOnline(false);
+      })
+      .catch(() => setFredOnline(false));
+  }, []);
 
   const greeting = hasHadConversations
     ? `Welcome back, ${userName}.`
@@ -47,8 +56,16 @@ export function FredHero({
       <div className="relative p-6 sm:p-8 lg:p-10">
         {/* FRED identity */}
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-sm font-medium text-green-400">Fred is online</span>
+          <div className={cn(
+            "w-2.5 h-2.5 rounded-full",
+            fredOnline ? "bg-green-400 animate-pulse" : "bg-red-400"
+          )} />
+          <span className={cn(
+            "text-sm font-medium",
+            fredOnline ? "text-green-400" : "text-red-400"
+          )}>
+            {fredOnline ? "Fred is online" : "Fred is unavailable"}
+          </span>
         </div>
 
         {/* Main heading */}
