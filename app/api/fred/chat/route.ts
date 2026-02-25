@@ -965,6 +965,38 @@ async function handlePost(req: NextRequest) {
               latencyMs,
             });
 
+            // Fire-and-forget: restore latency observability after streaming completion
+            (async () => {
+              try {
+                const supabase = createServiceClient();
+                await supabase.from("ai_requests").insert({
+                  user_id: userId,
+                  analyzer: "fred_chat",
+                  model: _modelProviderKey,
+                  user_prompt: message.slice(0, 2000),
+                  input_data: {
+                    latency_ms: latencyMs,
+                    tier: tierName,
+                    intent: update.context.validatedInput?.intent ?? "unknown",
+                    stream: true,
+                  },
+                  created_at: new Date().toISOString(),
+                });
+              } catch {
+                // Table may not exist or schema mismatch — log structured data instead
+                console.log(JSON.stringify({
+                  event: "fred_chat_complete",
+                  userId,
+                  latencyMs,
+                  model: _modelProviderKey,
+                  tier: tierName,
+                  intent: update.context.validatedInput?.intent ?? "unknown",
+                  streaming: true,
+                  timestamp: new Date().toISOString(),
+                }));
+              }
+            })();
+
             // Phase 18-02: Fire-and-forget enrichment extraction
             fireEnrichment(userId, [
               { role: "user", content: message },
