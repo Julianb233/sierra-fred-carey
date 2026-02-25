@@ -174,9 +174,12 @@ export const fredMachine = setup({
 
     /**
      * Does the input need clarification before proceeding?
+     * In chatMode, never block — FRED proceeds and can ask clarifying questions
+     * inline in its response. Blocking deadlocks the chat just like human_review.
      */
     needsClarification: ({ context }) => {
       if (!context.validatedInput) return false;
+      if (context.chatMode) return false; // Chat mode: never block mid-turn
       return (
         context.validatedInput.clarificationNeeded.filter((c) => c.required).length > 0
       );
