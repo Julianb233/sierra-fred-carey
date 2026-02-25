@@ -292,7 +292,13 @@ function determineClarificationNeeds(
 ): ClarificationRequest[] {
   const clarifications: ClarificationRequest[] = [];
 
-  // Low confidence intent
+  // Low confidence intent — note: required is intentionally false here.
+  // Setting required: true would send the XState machine into the `clarification`
+  // state, which blocks until a CLARIFICATION_PROVIDED event is sent. Since the
+  // chat route only ever sends USER_INPUT events, the machine would deadlock and
+  // time out — surfacing as "I'm having trouble processing your message". Instead,
+  // treat low-confidence messages as optional clarifications so the full pipeline
+  // runs and FRED can still produce a useful response.
   if (intentResult.confidence < 0.6) {
     clarifications.push({
       question: "Could you help me understand what you're looking for?",
@@ -303,7 +309,7 @@ function determineClarificationNeeds(
         "I'm sharing information",
         "I'm giving feedback on your previous response",
       ],
-      required: true,
+      required: false,
     });
   }
 
