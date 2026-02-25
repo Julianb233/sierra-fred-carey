@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, Phone, MessageSquare, ArrowRight } from "lucide-react";
+import { Loader2, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
 import { toast } from "sonner";
 import { WelcomeModal } from "@/components/dashboard/WelcomeModal";
+import { FredHero } from "@/components/dashboard/fred-hero";
 import { GetStartedWithFred } from "@/components/dashboard/get-started-with-fred";
 import { RedFlagsWidget } from "@/components/dashboard/red-flags-widget";
 import { FounderSnapshotCard } from "@/components/dashboard/founder-snapshot-card";
@@ -152,14 +153,12 @@ function DashboardContent() {
   if (!data) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-1">
-            Welcome back, {userName}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Your Founder Command Center
-          </p>
-        </div>
+        <FredHero
+          userName={userName}
+          canCallFred={canCallFred}
+          onCallFred={() => setShowCallModal(true)}
+          hasHadConversations={false}
+        />
         <GetStartedWithFred />
         <WelcomeModal
           isOpen={showWelcome}
@@ -172,52 +171,30 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Welcome Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-1">
-            Welcome back, {userName}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Your Founder Command Center
-          </p>
-        </div>
-        {canCallFred && (
-          <Button
-            onClick={() => setShowCallModal(true)}
-            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shrink-0"
-          >
-            <Phone className="h-4 w-4 mr-2" />
-            Call Fred
-          </Button>
-        )}
-      </div>
+      {/* FRED HERO — front and center, the reason you're here */}
+      <FredHero
+        userName={userName}
+        canCallFred={canCallFred}
+        onCallFred={() => setShowCallModal(true)}
+        hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
+      />
 
-      {/* Get Started with Fred (auto-hides when core steps complete) */}
+      {/* Get Started checklist — only shows until core steps complete */}
       <FadeIn>
         <GetStartedWithFred />
       </FadeIn>
 
-      {/* Work with Fred CTA — prominent for all users */}
-      <a
-        href="/chat"
-        className="flex items-center gap-4 p-4 rounded-2xl border-2 border-[#ff6a1a]/20 bg-gradient-to-r from-[#ff6a1a]/5 to-orange-50/50 dark:from-[#ff6a1a]/10 dark:to-gray-900/50 hover:border-[#ff6a1a]/40 transition-all group"
-      >
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff6a1a] to-orange-500 flex items-center justify-center shadow-md shadow-[#ff6a1a]/20 shrink-0">
-          <MessageSquare className="w-6 h-6 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            Work with Fred
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Get advice, make decisions, and move your startup forward
-          </p>
-        </div>
-        <ArrowRight className="w-5 h-5 text-[#ff6a1a] shrink-0 group-hover:translate-x-1 transition-transform" />
-      </a>
+      {/* Everything below is the OUTPUT of your Fred conversations */}
+      {/* Divider label */}
+      <div className="flex items-center gap-3 pt-2">
+        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+        <span className="text-xs font-medium text-gray-400 dark:text-gray-600 uppercase tracking-wider whitespace-nowrap">
+          From your conversations
+        </span>
+        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+      </div>
 
-      {/* Top: Founder Snapshot Card */}
+      {/* Founder Snapshot */}
       <FounderSnapshotCard snapshot={data.founderSnapshot} />
 
       {/* Red Flag Alerts */}
@@ -225,7 +202,7 @@ function DashboardContent() {
         <RedFlagsWidget />
       </FadeIn>
 
-      {/* Center: Decision Box (left) + Funding Gauge (right) */}
+      {/* Decision Box + Funding Gauge */}
       <FadeIn delay={0.2}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DecisionBox
@@ -239,7 +216,7 @@ function DashboardContent() {
         </div>
       </FadeIn>
 
-      {/* Bottom: Weekly Momentum */}
+      {/* Weekly Momentum */}
       <FadeIn delay={0.3}>
         <WeeklyMomentum momentum={data.weeklyMomentum} />
       </FadeIn>
