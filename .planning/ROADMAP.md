@@ -23,6 +23,44 @@
 - [x] **Phase 57: Duplicate Logo UI Fix** — Second Sahara logo overlapping nav on 4 pages (BUG-4) [HIGH]
 - [x] **Phase 58: Error State Polish** — "Failed to fetch" errors on next-steps and settings (BUG-6) [HIGH]
 
+## Gap Closure Session (2026-02-25)
+
+**Goal:** Audit all 37 v4.0 requirements against actual code, fix data persistence gaps, harden FRED prompts, and close the last unimplemented requirements (HUB-02, HUB-03).
+
+**Result:** All 37 v4.0 requirements verified complete. 11 bugs fixed, 3 features added.
+
+### Bugs Fixed
+
+| Bug | Description | Commit |
+|-----|-------------|--------|
+| Reality Lens persistence | Results never saved to `reality_lens_analyses` or `journey_events` | `7c6b205` |
+| Startup process persistence | 9-step progress only saved to localStorage, not DB | Phase 40 (existing) |
+| Pitch deck review events | Missing `journey_events` write after deck review | `7c6b205` |
+| IRS engine AI call | Used direct `openai()` instead of `generateStructuredReliable` | `b078484` |
+| Reality Lens gate bypass | Gate bypassed for first-time users (null conversation state) | `d0df5e6` |
+| Voice call summaries | Wrong column name (`episode_type` instead of `event_type`) + invalid event_type | `e16d8e9` |
+| Cross-channel context | SMS/voice topics never injected into FRED chat prompt | `ca49109` |
+| Column typo | `episode_type` vs `event_type` in `conversation-context.ts` | `e16d8e9` |
+| Step validation events | Startup process step validations not logged to `journey_events` | `6288059` |
+| Next 3 Actions quality | No format enforcement or quality requirements in system prompt | `407caea` |
+| No-flattery rule | No explicit blocklist for praise words in system prompt | `407caea` |
+
+### Features Completed
+
+| Feature | Description | Commit |
+|---------|-------------|--------|
+| Funding readiness gauge (HUB-02 + HUB-03) | SVG semi-circular gauge powered by IRS scores, Red/Yellow/Green zones | `cd7306d` |
+| Reality Lens history | Past analyses viewable on `/dashboard/reality-lens` with `?history=true` API | `fc47696` |
+| Startup process context wiring | `startup_processes` table data injected into FRED chat context (MODE-04 end-to-end) | `de6bf46` |
+
+### Requirements Status After Session
+
+- v4.0 requirements: **37/37 complete** (was 35/37 before session)
+- Newly completed: HUB-02 (Funding Readiness Gauge powered by IRS), HUB-03 (gauge shows top blockers)
+- All traceability rows verified against actual source files
+
+---
+
 ## v6.0 Full Platform Maturity
 
 **Milestone Goal:** Make Sahara production-solid (infrastructure, voice, SMS), smarter (FRED intelligence, analytics), and feature-complete (content library, service marketplace, Boardy API).
