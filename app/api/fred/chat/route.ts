@@ -818,6 +818,10 @@ async function handlePost(req: NextRequest) {
 
     // Process in background
     (async () => {
+      // US-029: AbortController with 55s timeout (5s buffer before Vercel's 60s maxDuration)
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 55_000);
+
       try {
         // Send initial connection event
         send("connected", {
@@ -843,6 +847,12 @@ async function handlePost(req: NextRequest) {
           timestamp: new Date(),
           context,
         })) {
+          // US-029: Check if timeout fired during streaming
+          if (abortController.signal.aborted) {
+            send("error", { type: "error", error: "Request timed out. Please try again." });
+            break;
+          }
+
           // Only send if state changed
           if (update.state !== lastState) {
             send("state", {
@@ -1017,12 +1027,19 @@ async function handlePost(req: NextRequest) {
           }
         }
       } catch (error) {
-        console.error("[FredChat] Streaming error:", error);
-        captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
-        send("error", {
-          message: "An error occurred while processing your request",
-        });
+        // US-029: Distinguish timeout aborts from other errors
+        if (abortController.signal.aborted) {
+          console.warn("[FredChat] Streaming timed out after 55s", { userId });
+          send("error", { type: "error", error: "Request timed out. Please try again." });
+        } else {
+          console.error("[FredChat] Streaming error:", error);
+          captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
+          send("error", {
+            message: "An error occurred while processing your request",
+          });
+        }
       } finally {
+        clearTimeout(timeoutId);
         close();
       }
     })();

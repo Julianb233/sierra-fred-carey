@@ -367,8 +367,8 @@ export async function getCommandCenterData(
   // Get or create conversation state (single DB read for the core state)
   const state = await getOrCreateConversationState(userId);
 
-  // Run independent queries in parallel
-  const [founderSnapshot, processProgress, weeklyMomentum, latestIRS] = await Promise.all([
+  // Run independent queries in parallel — use allSettled so one failure doesn't crash the dashboard
+  const [founderSnapshotResult, processProgressResult, weeklyMomentumResult, latestIRSResult] = await Promise.allSettled([
     getFounderSnapshot(userId, state),
     getProcessProgress(userId, state),
     getWeeklyMomentum(userId),
@@ -382,6 +382,32 @@ export async function getCommandCenterData(
       }
     })(),
   ]);
+
+  const founderSnapshot: FounderSnapshotData = founderSnapshotResult.status === "fulfilled"
+    ? founderSnapshotResult.value
+    : { name: null, stage: null, primaryConstraint: null, ninetyDayGoal: null, runway: null, industry: null, productStatus: null, traction: null };
+
+  const processProgress: ProcessProgressData = processProgressResult.status === "fulfilled"
+    ? processProgressResult.value
+    : {
+        currentStep: state.currentStep,
+        processStatus: state.processStatus,
+        steps: STEP_ORDER.map((stepKey) => ({
+          stepKey,
+          stepNumber: STARTUP_STEPS[stepKey].stepNumber,
+          name: STARTUP_STEPS[stepKey].name,
+          status: state.stepStatuses[stepKey] || "not_started",
+          evidenceCount: 0,
+        })),
+        totalSteps: STEP_ORDER.length,
+        completedSteps: 0,
+      };
+
+  const weeklyMomentum: WeeklyMomentumData = weeklyMomentumResult.status === "fulfilled"
+    ? weeklyMomentumResult.value
+    : { lastCheckinSummary: null, lastCheckinDate: null, streak: 0, totalCheckins: 0 };
+
+  const latestIRS = latestIRSResult.status === "fulfilled" ? latestIRSResult.value : null;
 
   // Synchronous computations from state
   const currentStep = getCurrentStepInfo(state);
