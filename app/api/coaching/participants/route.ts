@@ -42,7 +42,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse body
-    const body = await request.json().catch(() => ({}));
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { sessionId, name } = body as {
       sessionId?: string;
       name?: string;
@@ -167,7 +175,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Parse body
-    const body = await request.json().catch(() => ({}));
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { participantId } = body as {
       participantId?: string;
     };

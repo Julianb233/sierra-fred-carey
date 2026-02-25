@@ -23,6 +23,26 @@ const SMS_SEGMENT_LENGTH = 160;
 const MAX_SMS_LENGTH = 480;
 
 // ============================================================================
+// Retry Helper
+// ============================================================================
+
+/**
+ * Send an SMS with retry logic (exponential backoff).
+ * Retries up to `attempts` times with increasing delay between attempts.
+ */
+async function sendSMSWithRetry(phone: string, message: string, attempts = 3): Promise<void> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await sendSMS(phone, message);
+      return;
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+}
+
+// ============================================================================
 // SMS Formatting
 // ============================================================================
 
@@ -152,7 +172,7 @@ export async function processFredSMS(
     // Send response via SMS
     const segments = splitIntoSegments(smsResponse);
     for (const segment of segments) {
-      await sendSMS(phoneNumber, segment);
+      await sendSMSWithRetry(phoneNumber, segment);
     }
 
     // Store in episodic memory with channel tag

@@ -120,7 +120,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse body
-    const body = await request.json().catch(() => ({}));
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { roomName, notes } = body as {
       roomName?: string;
       notes?: string;
@@ -199,7 +207,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Parse body
-    const body = await request.json().catch(() => ({}));
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { id, notes, status, duration_seconds, started_at, ended_at } = body as {
       id?: string;
       notes?: string | null;
@@ -329,7 +345,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Parse body
-    const body = await request.json().catch(() => ({}));
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { id } = body as { id?: string };
 
     if (!id || typeof id !== "string") {

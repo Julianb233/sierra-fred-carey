@@ -134,7 +134,15 @@ export async function POST(
 
   try {
     const { id: experimentId } = await params;
-    const body = await request.json().catch(() => ({}));
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } },
+        { status: 400 }
+      );
+    }
     const { force = false, customRules } = body;
 
     logger.log(
