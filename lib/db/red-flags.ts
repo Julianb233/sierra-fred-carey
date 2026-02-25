@@ -93,28 +93,37 @@ export async function getRedFlags(
 
 /**
  * Create a new red flag record.
+ * Uses ON CONFLICT DO NOTHING on (user_id, category, title) to silently skip duplicates.
+ * Returns null if the flag already exists (duplicate skipped).
  */
 export async function createRedFlag(
   flag: Omit<RedFlag, "id" | "detectedAt">
-): Promise<RedFlag> {
+): Promise<RedFlag | null> {
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("fred_red_flags")
-    .insert({
-      user_id: flag.userId,
-      category: flag.category,
-      severity: flag.severity,
-      title: flag.title,
-      description: flag.description,
-      status: flag.status,
-      source_message_id: flag.sourceMessageId ?? null,
-      resolved_at: flag.resolvedAt ?? null,
-    })
+    .upsert(
+      {
+        user_id: flag.userId,
+        category: flag.category,
+        severity: flag.severity,
+        title: flag.title,
+        description: flag.description,
+        status: flag.status,
+        source_message_id: flag.sourceMessageId ?? null,
+        resolved_at: flag.resolvedAt ?? null,
+      },
+      { onConflict: "user_id,category,title", ignoreDuplicates: true }
+    )
     .select()
     .single();
 
   if (error) {
+    // PGRST116 = no rows returned (duplicate was skipped)
+    if (error.code === "PGRST116") {
+      return null;
+    }
     console.error("[RedFlags] Failed to create red flag:", error);
     throw new Error(`Failed to create red flag: ${error.message}`);
   }

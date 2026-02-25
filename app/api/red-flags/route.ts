@@ -71,6 +71,10 @@ export async function POST(req: NextRequest) {
       sourceMessageId: sourceMessageId ?? undefined,
     });
 
+    if (!flag) {
+      return NextResponse.json({ success: true, data: null, duplicate: true }, { status: 200 });
+    }
+
     return NextResponse.json({ success: true, data: flag }, { status: 201 });
   } catch (error) {
     if (error instanceof Response) return error;

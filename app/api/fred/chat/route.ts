@@ -584,14 +584,15 @@ async function handlePost(req: NextRequest) {
         modeTransitionBlock = buildModeTransitionBlock(transition.framework, "exit");
       }
 
-      updateActiveMode(userId, activeMode, transition.updatedModeContext).catch(err =>
-        console.warn("[FRED Chat] Failed to persist mode (non-blocking):", err)
-      );
-
-      if (transition.needsIntroduction && transition.framework) {
-        markIntroductionDelivered(userId, transition.framework, transition.detectedSignals.join(",")).catch(err =>
-          console.warn("[FRED Chat] Failed to mark introduction (non-blocking):", err)
-        );
+      // Persist mode + introduction sequentially to avoid race conditions
+      // (both write to mode_context on the same row)
+      try {
+        await updateActiveMode(userId, activeMode, transition.updatedModeContext);
+        if (transition.needsIntroduction && transition.framework) {
+          await markIntroductionDelivered(userId, transition.framework, transition.detectedSignals.join(","));
+        }
+      } catch (err) {
+        console.warn("[FRED Chat] Failed to persist conversation state updates (non-blocking):", err);
       }
     }
 
@@ -917,7 +918,7 @@ async function handlePost(req: NextRequest) {
           // Persist and emit red flags if detected during synthesis
           if (update.context.synthesis?.redFlags && update.context.synthesis.redFlags.length > 0) {
             try {
-              const persistedFlags = await Promise.all(
+              const results = await Promise.all(
                 update.context.synthesis.redFlags.map((flag) =>
                   createRedFlag({
                     ...flag,
@@ -926,7 +927,11 @@ async function handlePost(req: NextRequest) {
                   })
                 )
               );
-              send("red_flag", { type: "red_flag", flags: persistedFlags });
+              // Filter out nulls (duplicates silently skipped by ON CONFLICT DO NOTHING)
+              const persistedFlags = results.filter((f): f is NonNullable<typeof f> => f !== null);
+              if (persistedFlags.length > 0) {
+                send("red_flag", { type: "red_flag", flags: persistedFlags });
+              }
 
               // Phase 28-02: Fire-and-forget push for each red flag
               for (const flag of persistedFlags) {
