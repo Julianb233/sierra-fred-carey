@@ -458,7 +458,8 @@ export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]>
     .select("*")
     .eq("user_id", userId)
     .order("category")
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(100);
 
   if (error) {
     console.error("[FRED Memory] Error getting all user facts:", error);
