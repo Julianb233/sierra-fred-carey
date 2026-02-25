@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Check,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
@@ -40,6 +41,7 @@ export function StartupProcessWizard({
 }: StartupProcessWizardProps) {
   const [isValidating, setIsValidating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeView, setActiveView] = useState<"wizard" | "overview">("wizard");
 
   const currentStep = process.steps.find(
@@ -84,6 +86,8 @@ export function StartupProcessWizard({
     setIsSaving(true);
     try {
       await onSave();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 1500);
     } finally {
       setIsSaving(false);
     }
@@ -360,15 +364,17 @@ export function StartupProcessWizard({
                           <Button
                             variant="outline"
                             onClick={handleSave}
-                            disabled={isSaving}
+                            disabled={isSaving || saveSuccess}
                             className="gap-1"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : saveSuccess ? (
+                              <Check className="h-4 w-4 text-green-500" />
                             ) : (
                               <Save className="h-4 w-4" />
                             )}
-                            Save Draft
+                            {saveSuccess ? "Saved!" : "Save Draft"}
                           </Button>
                         </div>
 
