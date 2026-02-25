@@ -19,7 +19,7 @@ import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
 import { FRED_BIO } from "@/lib/fred-brain";
 import { COACHING_PROMPTS, buildDriftRedirectBlock, buildSystemPrompt } from "@/lib/ai/prompts";
-import { generate } from "@/lib/ai/fred-client";
+import { generate, streamGenerate } from "@/lib/ai/fred-client";
 import { getFredTools } from "@/lib/fred/tools";
 import { STARTUP_STEPS } from "@/lib/ai/frameworks/startup-process";
 
@@ -31,7 +31,8 @@ export async function decideActor(
   validatedInput: ValidatedInput,
   founderContext?: string | null,
   conversationState?: ConversationStateContext | null,
-  userId?: string | null
+  userId?: string | null,
+  tokenChannel?: { emit: (chunk: string) => void } | null
 ): Promise<DecisionResult> {
   logger.log(
     "[FRED] Deciding action | Confidence:",
@@ -51,7 +52,7 @@ export async function decideActor(
   );
 
   // Build the response content (Phase 36: includes Next 3 Actions + step questions)
-  const content = await buildResponseContent(action, synthesis, validatedInput, conversationState || null, founderContext || null, userId || null);
+  const content = await buildResponseContent(action, synthesis, validatedInput, conversationState || null, founderContext || null, userId || null, tokenChannel || null);
 
   // Build reasoning for the decision
   const reasoning = buildDecisionReasoning(action, synthesis, validatedInput);
@@ -275,11 +276,13 @@ function checkRequiresHumanApproval(
 /**
  * Generate a response using the LLM with Fred Cary's full personality
  * and system prompt. Falls back gracefully if the AI call fails.
+ * When tokenChannel is provided, streams tokens live as they arrive.
  */
 async function generateWithLLM(
   input: ValidatedInput,
   founderContext: string | null,
-  userId?: string | null
+  userId?: string | null,
+  tokenChannel?: { emit: (chunk: string) => void } | null
 ): Promise<string> {
   // Build the full FRED system prompt with founder context
   let systemPrompt = buildSystemPrompt(founderContext || "");
@@ -293,6 +296,24 @@ async function generateWithLLM(
   // provider finding, and memory search during response generation)
   const tools = userId ? getFredTools(userId) : undefined;
 
+  // If we have a token channel, stream tokens live
+  if (tokenChannel) {
+    const streamResult = await streamGenerate(input.originalMessage, {
+      system: systemPrompt,
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+      ...(tools ? { tools, maxSteps: 3 } : {}),
+    });
+
+    let fullText = "";
+    for await (const chunk of streamResult.textStream) {
+      tokenChannel.emit(chunk);
+      fullText += chunk;
+    }
+    return fullText;
+  }
+
+  // No token channel — use buffered generate (non-streaming path)
   const result = await generate(input.originalMessage, {
     system: systemPrompt,
     temperature: 0.7,
@@ -313,7 +334,8 @@ async function buildResponseContent(
   input: ValidatedInput,
   conversationState: ConversationStateContext | null,
   founderContext: string | null,
-  userId: string | null
+  userId: string | null,
+  tokenChannel: { emit: (chunk: string) => void } | null
 ): Promise<string> {
   // Clarify and defer use templates (no LLM needed)
   if (action === "clarify") {
@@ -348,7 +370,7 @@ async function buildResponseContent(
 
   // For substantive responses, try LLM generation first
   try {
-    const llmResponse = await generateWithLLM(input, founderContext, userId);
+    const llmResponse = await generateWithLLM(input, founderContext, userId, tokenChannel);
     if (llmResponse) {
       logger.log("[FRED] LLM response generated successfully");
       return llmResponse;
