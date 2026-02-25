@@ -70,6 +70,10 @@ export interface FundingReadinessData {
   topBlockers: string[];
   hasIntakeCompleted: boolean;
   investorReadinessSignal: string | null;
+  /** IRS overall score (0-100) when available */
+  irsScore: number | null;
+  /** Top IRS recommendations for action items */
+  irsRecommendations: Array<{ action: string; category: string }>;
 }
 
 export interface WeeklyMomentumData {
@@ -364,10 +368,19 @@ export async function getCommandCenterData(
   const state = await getOrCreateConversationState(userId);
 
   // Run independent queries in parallel
-  const [founderSnapshot, processProgress, weeklyMomentum] = await Promise.all([
+  const [founderSnapshot, processProgress, weeklyMomentum, latestIRS] = await Promise.all([
     getFounderSnapshot(userId, state),
     getProcessProgress(userId, state),
     getWeeklyMomentum(userId),
+    (async () => {
+      try {
+        const { getLatestIRS } = await import("@/lib/fred/irs/db");
+        const sb = createServiceClient();
+        return await getLatestIRS(sb, userId);
+      } catch {
+        return null;
+      }
+    })(),
   ]);
 
   // Synchronous computations from state
@@ -378,23 +391,43 @@ export async function getCommandCenterData(
     state.stepStatuses
   );
 
-  // Check if investor readiness intake has been completed
-  const supabase = createServiceClient();
-  const { count: irsCount } = await supabase
-    .from("investor_readiness_scores")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
+  // Use latestIRS to determine intake status (no extra DB call needed)
+  const hasIRS = latestIRS !== null;
 
-  // Collect top blockers from current step blockers + kill signals
-  const topBlockers = state.currentBlockers.slice(0, 2);
+  // When IRS exists, override zone from the actual score
+  let finalZone = zone;
+  let finalLabel = label;
+  if (hasIRS && latestIRS) {
+    if (latestIRS.overall >= 70) {
+      finalZone = "green";
+      finalLabel = "Raise";
+    } else if (latestIRS.overall >= 40) {
+      finalZone = "yellow";
+      finalLabel = "Prove";
+    } else {
+      finalZone = "red";
+      finalLabel = "Build";
+    }
+  }
+
+  // Collect top blockers: prefer IRS recommendations, fall back to step blockers
+  const irsRecommendations = latestIRS?.recommendations?.slice(0, 2).map((r) => ({
+    action: r.action,
+    category: r.category,
+  })) ?? [];
+  const topBlockers = irsRecommendations.length > 0
+    ? irsRecommendations.map((r) => r.action)
+    : state.currentBlockers.slice(0, 2);
 
   const fundingReadiness: FundingReadinessData = {
-    zone,
-    label,
+    zone: finalZone,
+    label: finalLabel,
     topBlockers,
-    hasIntakeCompleted: (irsCount ?? 0) > 0,
+    hasIntakeCompleted: hasIRS,
     investorReadinessSignal:
       diagnosticTags.investorReadinessSignal ?? null,
+    irsScore: latestIRS?.overall ?? null,
+    irsRecommendations,
   };
 
   const displayRules = computeDisplayRules(diagnosticTags, fundingReadiness);

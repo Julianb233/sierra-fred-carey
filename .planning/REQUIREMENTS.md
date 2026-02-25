@@ -48,8 +48,8 @@
 ### Dashboard Mentor Hub (HUB)
 
 - [x] **HUB-01**: Dashboard has prominent, always-visible "Contact Fred" section — start chat or call in one click
-- [ ] **HUB-02**: Funding readiness progress wheel on dashboard — visual Red → Yellow → Green indicator powered by Investor Readiness Score
-- [ ] **HUB-03**: Progress wheel updates dynamically as founder completes upstream validation steps (feasibility, demand, economics)
+- [x] **HUB-02**: Funding readiness progress wheel on dashboard — visual Red → Yellow → Green indicator powered by Investor Readiness Score
+- [x] **HUB-03**: Progress wheel updates dynamically as founder completes upstream validation steps (feasibility, demand, economics)
 - [x] **HUB-04**: Dashboard feels like "this is where you build your company" — FRED's presence is central, not buried in nav
 
 ### Founder Communities (COMM)
@@ -222,8 +222,8 @@
 | MODE-05 | Phase 39 | Complete |
 | MODE-06 | Phase 39 | Complete |
 | HUB-01 | Phase 40 | Complete |
-| HUB-02 | Phase 40 | Pending |
-| HUB-03 | Phase 40 | Pending |
+| HUB-02 | Phase 40 | Complete |
+| HUB-03 | Phase 40 | Complete |
 | HUB-04 | Phase 40 | Complete |
 | COMM-01 | Phase 41 | Complete |
 | COMM-02 | Phase 41 | Complete |
@@ -236,8 +236,8 @@
 
 **Coverage:**
 - v4.0 requirements: 37 total
-- Complete: 35
-- Pending: 2 (HUB-02, HUB-03 — funding readiness progress wheel)
+- Complete: 37
+- Pending: 0
 - Unmapped: 0
 
 ### v6.0 Full Platform Maturity

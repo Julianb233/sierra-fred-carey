@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Lock } from "lucide-react";
+import { AlertCircle, Lock, ArrowRight } from "lucide-react";
 import type { FundingReadinessData, DisplayRules } from "@/lib/dashboard/command-center";
 
 // ============================================================================
@@ -15,24 +15,148 @@ const ZONE_CONFIG = {
     label: "Build",
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-100 dark:bg-red-900/30",
-    barColor: "bg-red-500",
+    arcColor: "#ef4444",
     description: "Focus on building and validating your core proposition before fundraising.",
   },
   yellow: {
     label: "Prove",
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-100 dark:bg-amber-900/30",
-    barColor: "bg-amber-500",
+    arcColor: "#f59e0b",
     description: "You have traction signals. Strengthen proof points to be raise-ready.",
   },
   green: {
     label: "Raise",
     color: "text-green-600 dark:text-green-400",
     bg: "bg-green-100 dark:bg-green-900/30",
-    barColor: "bg-green-500",
+    arcColor: "#22c55e",
     description: "Your fundamentals support fundraising. Time to prepare for investor conversations.",
   },
 } as const;
+
+// ============================================================================
+// Semi-circular Gauge SVG
+// ============================================================================
+
+function GaugeArc({ score }: { score: number }) {
+  // SVG dimensions
+  const size = 200;
+  const cx = size / 2;
+  const cy = size / 2 + 10;
+  const radius = 75;
+  const strokeWidth = 14;
+
+  // Arc goes from 180deg (left) to 0deg (right) = a semi-circle
+  // Score 0 = far left, 100 = far right
+  const startAngle = Math.PI; // 180 degrees
+  const endAngle = 0; // 0 degrees
+  const totalArc = startAngle - endAngle; // PI radians
+
+  // Background arc segments: Red (0-39), Yellow (40-69), Green (70-100)
+  const segments = [
+    { start: 0, end: 0.39, color: "#fecaca" },    // Red zone (light)
+    { start: 0.39, end: 0.69, color: "#fde68a" },  // Yellow zone (light)
+    { start: 0.69, end: 1.0, color: "#bbf7d0" },   // Green zone (light)
+  ];
+
+  // Score position on the arc
+  const clampedScore = Math.max(0, Math.min(100, score));
+  const scoreRatio = clampedScore / 100;
+  const needleAngle = startAngle - scoreRatio * totalArc;
+  const needleX = cx + radius * Math.cos(needleAngle);
+  const needleY = cy - radius * Math.sin(needleAngle);
+
+  // Filled arc color based on zone
+  let fillColor: string;
+  if (clampedScore >= 70) fillColor = "#22c55e";
+  else if (clampedScore >= 40) fillColor = "#f59e0b";
+  else fillColor = "#ef4444";
+
+  function arcPath(startFrac: number, endFrac: number): string {
+    const a1 = startAngle - startFrac * totalArc;
+    const a2 = startAngle - endFrac * totalArc;
+    const x1 = cx + radius * Math.cos(a1);
+    const y1 = cy - radius * Math.sin(a1);
+    const x2 = cx + radius * Math.cos(a2);
+    const y2 = cy - radius * Math.sin(a2);
+    const largeArc = Math.abs(a1 - a2) > Math.PI ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+  }
+
+  return (
+    <svg
+      viewBox={`0 0 ${size} ${size / 2 + 30}`}
+      className="w-full max-w-[220px] mx-auto"
+      aria-label={`Funding readiness score: ${score} out of 100`}
+      role="img"
+    >
+      {/* Background zone segments */}
+      {segments.map((seg, i) => (
+        <path
+          key={i}
+          d={arcPath(seg.start, seg.end)}
+          fill="none"
+          stroke={seg.color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          className="dark:opacity-40"
+        />
+      ))}
+
+      {/* Filled arc up to score */}
+      {clampedScore > 0 && (
+        <path
+          d={arcPath(0, scoreRatio)}
+          fill="none"
+          stroke={fillColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          style={{
+            strokeDasharray: `${scoreRatio * Math.PI * radius} ${Math.PI * radius}`,
+            transition: "stroke-dasharray 1s ease-out",
+          }}
+        />
+      )}
+
+      {/* Needle dot */}
+      <circle
+        cx={needleX}
+        cy={needleY}
+        r={6}
+        fill="white"
+        stroke={fillColor}
+        strokeWidth={3}
+        style={{ transition: "cx 1s ease-out, cy 1s ease-out" }}
+      />
+
+      {/* Score text in center */}
+      <text
+        x={cx}
+        y={cy - 10}
+        textAnchor="middle"
+        className="fill-gray-900 dark:fill-white"
+        fontSize="32"
+        fontWeight="bold"
+      >
+        {clampedScore}
+      </text>
+      <text
+        x={cx}
+        y={cy + 12}
+        textAnchor="middle"
+        className="fill-gray-400 dark:fill-gray-500"
+        fontSize="12"
+      >
+        out of 100
+      </text>
+
+      {/* Zone labels */}
+      <text x={15} y={cy + 25} fontSize="10" className="fill-red-400">Build</text>
+      <text x={cx - 10} y={15} fontSize="10" className="fill-amber-400">Prove</text>
+      <text x={size - 38} y={cy + 25} fontSize="10" className="fill-green-400">Raise</text>
+    </svg>
+  );
+}
 
 // ============================================================================
 // Component
@@ -75,7 +199,7 @@ export function FundingReadinessGauge({
                 variant="outline"
                 className="text-[#ff6a1a] border-[#ff6a1a]/30 hover:bg-[#ff6a1a]/5"
               >
-                Run Readiness Review
+                Get Assessed
               </Button>
             </Link>
           </div>
@@ -85,7 +209,9 @@ export function FundingReadinessGauge({
           <CardTitle className="text-lg">Funding Readiness</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="h-4 rounded-full bg-gray-100 dark:bg-gray-800" />
+          <div className="flex justify-center py-4">
+            <div className="w-[220px] h-[110px] bg-gray-100 dark:bg-gray-800 rounded-t-full" />
+          </div>
           <div className="space-y-2">
             <div className="h-3 w-3/4 rounded bg-gray-100 dark:bg-gray-800" />
             <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-800" />
@@ -94,6 +220,8 @@ export function FundingReadinessGauge({
       </Card>
     );
   }
+
+  const hasScore = readiness.irsScore !== null && readiness.irsScore !== undefined;
 
   return (
     <Card className="border-orange-100/20 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
@@ -108,27 +236,33 @@ export function FundingReadinessGauge({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Zone gauge */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium">
-            <span className="text-red-500">Build</span>
-            <span className="text-amber-500">Prove</span>
-            <span className="text-green-500">Raise</span>
+        {/* Visual gauge */}
+        {hasScore ? (
+          <GaugeArc score={readiness.irsScore!} />
+        ) : (
+          /* Fallback: zone-only bar when no IRS score */
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-medium">
+              <span className="text-red-500">Build</span>
+              <span className="text-amber-500">Prove</span>
+              <span className="text-green-500">Raise</span>
+            </div>
+            <div className="h-3 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex">
+              <div
+                className="h-full transition-all duration-700 ease-out"
+                style={{
+                  width:
+                    readiness.zone === "red"
+                      ? "33%"
+                      : readiness.zone === "yellow"
+                      ? "66%"
+                      : "100%",
+                  backgroundColor: config.arcColor,
+                }}
+              />
+            </div>
           </div>
-          <div className="h-3 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex">
-            <div
-              className={`h-full transition-all duration-700 ease-out ${config.barColor}`}
-              style={{
-                width:
-                  readiness.zone === "red"
-                    ? "33%"
-                    : readiness.zone === "yellow"
-                    ? "66%"
-                    : "100%",
-              }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Description */}
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -139,7 +273,7 @@ export function FundingReadinessGauge({
         {readiness.topBlockers.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-              Top Blockers
+              {hasScore ? "Next Steps" : "Top Blockers"}
             </p>
             <div className="space-y-1.5">
               {readiness.topBlockers.map((blocker, i) => (
@@ -159,9 +293,10 @@ export function FundingReadinessGauge({
         <Link href="/dashboard/investor-readiness" className="block">
           <Button
             variant="outline"
-            className="w-full border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/5"
+            className="w-full border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/5 group"
           >
-            Run Readiness Review
+            {hasScore ? "View Full Assessment" : "Run Readiness Review"}
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </Link>
       </CardContent>
