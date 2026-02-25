@@ -30,6 +30,8 @@ export interface FredMessage {
   requiresApproval?: boolean;
   /** Reasoning behind the response */
   reasoning?: string;
+  /** Whether this message is currently being streamed */
+  isStreaming?: boolean;
 }
 
 export interface FredAnalysis {
@@ -199,6 +201,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const abortControllerRef = useRef<AbortController | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const streamingMessageIdRef = useRef<string | null>(null);
 
   // Track mounted state for safe state updates after async operations
   useEffect(() => {
@@ -255,6 +258,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setAnalysis(null);
     setSynthesis(null);
     setError(null);
+    streamingMessageIdRef.current = null;
 
     // Create abort controller
     abortControllerRef.current = new AbortController();
@@ -378,6 +382,34 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 break;
               }
 
+              case "token": {
+                const tokenData = data as { text: string };
+                if (!mountedRef.current) break;
+
+                if (!streamingMessageIdRef.current) {
+                  // First token — create the streaming placeholder message
+                  const streamingId = crypto.randomUUID();
+                  streamingMessageIdRef.current = streamingId;
+                  const streamingMessage: FredMessage = {
+                    id: streamingId,
+                    role: "assistant",
+                    content: tokenData.text,
+                    timestamp: new Date(),
+                    isStreaming: true,
+                  };
+                  setMessages(prev => [...prev, streamingMessage]);
+                } else {
+                  // Subsequent tokens — append to existing streaming message
+                  const id = streamingMessageIdRef.current;
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === id
+                      ? { ...msg, content: msg.content + tokenData.text }
+                      : msg
+                  ));
+                }
+                break;
+              }
+
               case "response": {
                 const responseData = data as {
                   content: string;
@@ -396,7 +428,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 }
 
                 const assistantMessage: FredMessage = {
-                  id: crypto.randomUUID(),
+                  id: streamingMessageIdRef.current || crypto.randomUUID(),
                   role: "assistant",
                   content: responseData.content,
                   timestamp: new Date(),
@@ -404,9 +436,20 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   action: responseData.action,
                   requiresApproval: responseData.requiresApproval,
                   reasoning: responseData.reasoning,
+                  isStreaming: false,
                 };
 
-                if (mountedRef.current) setMessages(prev => [...prev, assistantMessage]);
+                if (mountedRef.current) {
+                  if (streamingMessageIdRef.current) {
+                    // Replace the streaming message with the final complete message
+                    const id = streamingMessageIdRef.current;
+                    setMessages(prev => prev.map(msg => msg.id === id ? assistantMessage : msg));
+                  } else {
+                    // No streaming happened (non-streaming path) — append as before
+                    setMessages(prev => [...prev, assistantMessage]);
+                  }
+                  streamingMessageIdRef.current = null;
+                }
                 break;
               }
 
