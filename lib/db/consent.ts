@@ -167,6 +167,38 @@ export async function isConsentEnabled(
   return prefs[category]?.enabled ?? false;
 }
 
+/**
+ * Get all user IDs that have consented to a specific category.
+ * Used by community listing queries to enforce consent filtering.
+ */
+export async function getConsentingUserIds(
+  category: ConsentCategory,
+): Promise<string[]> {
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/server");
+    const supabase = createServiceClient();
+
+    const { data, error } = await supabase
+      .from("consent_preferences")
+      .select("user_id")
+      .eq("category", category)
+      .eq("enabled", true);
+
+    if (error) {
+      logger.error(
+        "[consent] Failed to query consenting user IDs",
+        error,
+      );
+      return [];
+    }
+
+    return (data || []).map((row: { user_id: string }) => row.user_id);
+  } catch (err) {
+    logger.error("[consent] Unexpected error in getConsentingUserIds", err);
+    return [];
+  }
+}
+
 // ---------- Internal Helpers ----------
 
 /**

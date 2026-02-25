@@ -8,6 +8,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { getConsentingUserIds } from "@/lib/db/consent";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -455,6 +456,7 @@ export async function leaveCommunity(
 
 /**
  * Get all members of a community.
+ * Only returns members who have enabled 'directory' consent.
  */
 export async function getCommunityMembers(
   communityId: string,
@@ -464,10 +466,17 @@ export async function getCommunityMembers(
   const limit = opts?.limit || 50;
   const offset = opts?.offset || 0;
 
+  // Only show members who have opted into the founder directory
+  const consentingIds = await getConsentingUserIds("directory");
+  if (consentingIds.length === 0) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from("community_members")
     .select("*")
     .eq("community_id", communityId)
+    .in("user_id", consentingIds)
     .order("joined_at", { ascending: true })
     .range(offset, offset + limit - 1);
 
@@ -670,6 +679,7 @@ export async function getPost(postId: string): Promise<CommunityPost | null> {
 
 /**
  * List posts for a community, pinned first then newest.
+ * Only returns posts from authors who have enabled 'social_feed' consent.
  */
 export async function listPosts(
   communityId: string,
@@ -680,10 +690,17 @@ export async function listPosts(
   const offset = opts?.offset || 0;
   const pinFirst = opts?.pinFirst !== false;
 
+  // Only show posts from authors who have opted into social feed
+  const consentingIds = await getConsentingUserIds("social_feed");
+  if (consentingIds.length === 0) {
+    return [];
+  }
+
   let query = supabase
     .from("community_posts")
     .select("*")
-    .eq("community_id", communityId);
+    .eq("community_id", communityId)
+    .in("author_id", consentingIds);
 
   if (pinFirst) {
     query = query
@@ -991,7 +1008,9 @@ export async function deleteCommunity(id: string): Promise<void> {
   }
 }
 
-/** Alias: getPosts with total count (used by posts route). */
+/** Alias: getPosts with total count (used by posts route).
+ * Only returns posts from authors who have enabled 'social_feed' consent.
+ */
 export async function getPosts(
   communityId: string,
   opts?: { limit?: number; offset?: number; type?: PostType }
@@ -1000,10 +1019,17 @@ export async function getPosts(
   const limit = opts?.limit || 20;
   const offset = opts?.offset || 0;
 
+  // Only show posts from authors who have opted into social feed
+  const consentingIds = await getConsentingUserIds("social_feed");
+  if (consentingIds.length === 0) {
+    return { posts: [], total: 0 };
+  }
+
   let query = supabase
     .from("community_posts")
     .select("*", { count: "exact" })
     .eq("community_id", communityId)
+    .in("author_id", consentingIds)
     .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
