@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, Phone, X } from "lucide-react";
@@ -12,6 +12,13 @@ import { cn } from "@/lib/utils";
 // Pages where the widget should NOT appear (full chat page already exists)
 const HIDDEN_PATHS = ["/chat", "/dashboard/coaching"];
 
+/** Dispatch this event from anywhere to open the FRED overlay with an optional pre-seeded message */
+export function openFredChat(message?: string) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fred:open", { detail: { message } }));
+  }
+}
+
 export function FloatingChatWidget({
   onCallFred,
 }: {
@@ -19,6 +26,18 @@ export function FloatingChatWidget({
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const pendingMessageRef = useRef<string | undefined>(undefined);
+
+  // Listen for programmatic open requests (e.g. from the sidebar Help button)
+  useEffect(() => {
+    function handleOpen(e: Event) {
+      const detail = (e as CustomEvent<{ message?: string }>).detail;
+      pendingMessageRef.current = detail?.message;
+      setIsOpen(true);
+    }
+    window.addEventListener("fred:open", handleOpen);
+    return () => window.removeEventListener("fred:open", handleOpen);
+  }, []);
 
   // Hide on certain pages
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) {
@@ -102,7 +121,14 @@ export function FloatingChatWidget({
 
           {/* Chat — fills remaining height */}
           <div className="flex-1 min-h-0">
-            <ChatInterface className="h-full" pageContext={pathname} />
+            <ChatInterface
+              className="h-full"
+              pageContext={pathname}
+              initialMessage={pendingMessageRef.current}
+              onInitialMessageConsumed={() => {
+                pendingMessageRef.current = undefined;
+              }}
+            />
           </div>
         </SheetContent>
       </Sheet>

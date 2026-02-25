@@ -31,7 +31,9 @@ import {
   ScanEye,
   Bot,
   Network,
+  HelpCircle,
 } from "lucide-react";
+import { openFredChat } from "@/components/chat/floating-chat-widget";
 import { cn } from "@/lib/utils";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
@@ -292,6 +294,21 @@ function SidebarContent({
           );
         })}
       </nav>
+
+      {/* Ask Fred for Help */}
+      <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
+            "text-gray-500 dark:text-gray-400 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/5",
+            "transition-all duration-200 text-sm group"
+          )}
+        >
+          <HelpCircle className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+          <span>Ask Fred for Help</span>
+        </button>
+      </div>
 
       {/* Upgrade CTA */}
       {user.tier < 2 && (
