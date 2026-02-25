@@ -311,8 +311,8 @@ async function handlePost(req: NextRequest) {
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
     // ── Parallel context loading ─────────────────────────────────────
-    // These five calls are independent of each other — run in parallel.
-    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult] = await Promise.all([
+    // These six calls are independent of each other — run in parallel.
+    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult] = await Promise.all([
       buildFounderContextWithFacts(userId, hasPersistentMemory).catch((error) => {
         console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
         return { context: "", facts: [] };
@@ -341,6 +341,16 @@ async function handlePost(req: NextRequest) {
           return (count ?? 0) > 0;
         } catch {
           return false;
+        }
+      })(),
+      // Pre-fetch IRS data in parallel (used in investor-readiness mode)
+      (async () => {
+        try {
+          const { getLatestIRS } = await import("@/lib/fred/irs/db");
+          const supabaseService = createServiceClient();
+          return await getLatestIRS(supabaseService, userId);
+        } catch {
+          return null;
         }
       })(),
     ]);
@@ -436,9 +446,7 @@ async function handlePost(req: NextRequest) {
 
     if (activeMode === "investor-readiness" && persistedModeResult) {
       try {
-        const { getLatestIRS } = await import("@/lib/fred/irs/db");
-        const supabaseService = createServiceClient();
-        const latestIRS = await getLatestIRS(supabaseService, userId);
+        const latestIRS = irsResult; // Use pre-fetched result from parallel Promise.all
 
         const founderStage = conversationState?.founderSnapshot?.stage
           || conversationState?.diagnosticTags?.stage
