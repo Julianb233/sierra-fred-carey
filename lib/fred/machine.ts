@@ -44,7 +44,8 @@ function createInitialContext(
   conversationState?: ConversationStateContext | null,
   chatMode?: boolean,
   preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>,
-  tier?: string
+  tier?: string,
+  tokenChannel?: { emit: (chunk: string) => void } | null
 ): FredContext {
   return {
     sessionId,
@@ -65,6 +66,7 @@ function createInitialContext(
     chatMode: chatMode ?? true,
     preloadedFacts,
     tier: tier || "free",
+    tokenChannel: tokenChannel || null,
   };
 }
 
@@ -119,7 +121,7 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean; tier?: string },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean; tier?: string; tokenChannel?: { emit: (chunk: string) => void } | null },
   },
 
   actors: {
@@ -139,8 +141,8 @@ export const fredMachine = setup({
       async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext, input.conversationState)
     ),
 
-    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null; userId: string }>(
-      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState, input.userId)
+    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null; userId: string; tokenChannel: { emit: (chunk: string) => void } | null }>(
+      async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState, input.userId, input.tokenChannel)
     ),
 
     execute: fromPromise<FredResponse, { decision: DecisionResult; validatedInput: ValidatedInput; userId: string; sessionId: string; conversationState: ConversationStateContext | null }>(
@@ -365,7 +367,7 @@ export const fredMachine = setup({
 }).createMachine({
   id: "fred",
   initial: "idle",
-  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode, input.preloadedFacts, input.tier),
+  context: ({ input }) => createInitialContext(input.userId, input.sessionId, input.founderContext, input.conversationState, input.chatMode, input.preloadedFacts, input.tier, input.tokenChannel),
 
   states: {
     /**
@@ -609,6 +611,7 @@ export const fredMachine = setup({
           founderContext: context.founderContext,
           conversationState: context.conversationState,
           userId: context.userId,
+          tokenChannel: context.tokenChannel ?? null,
         }),
         onDone: [
           {
