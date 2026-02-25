@@ -12,6 +12,8 @@ export interface Message {
   content: string;
   role: "user" | "assistant";
   timestamp: Date;
+  /** Whether this message is currently being streamed */
+  isStreaming?: boolean;
 }
 
 interface ChatMessageProps {
@@ -91,6 +93,12 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
             isUser ? "text-white" : "text-foreground/90"
           )}>
             {message.content}
+            {message.isStreaming && (
+              <span
+                className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
+                aria-hidden="true"
+              />
+            )}
           </p>
         </motion.div>
 
