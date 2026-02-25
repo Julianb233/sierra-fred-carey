@@ -116,7 +116,15 @@ async function loadSemanticFacts(
  * Check if this is the user's first conversation with FRED.
  * Uses the conversation state table — if no row exists, this is a first chat.
  */
-async function checkIsFirstConversation(userId: string): Promise<boolean> {
+/**
+ * Load conversation state data in a single DB call.
+ * Replaces the two separate calls to checkIsFirstConversation and loadProgressContext,
+ * each of which queried fred_conversation_state independently.
+ */
+async function loadConversationStateContext(userId: string): Promise<{
+  isFirstConversation: boolean;
+  progressContext: string | null;
+}> {
   try {
     const supabase = createServiceClient();
     const { data, error } = await supabase
@@ -125,10 +133,15 @@ async function checkIsFirstConversation(userId: string): Promise<boolean> {
       .eq("user_id", userId)
       .single();
     // PGRST116 = no rows returned
-    if (error?.code === "PGRST116" || !data) return true;
-    return false;
+    if (error?.code === "PGRST116" || !data) {
+      return { isFirstConversation: true, progressContext: null };
+    }
+    // State exists — not first conversation; load progress context
+    const { buildProgressContext } = await import("@/lib/db/conversation-state");
+    const context = await buildProgressContext(userId);
+    return { isFirstConversation: false, progressContext: context || null };
   } catch {
-    return true; // Default to first conversation if check fails
+    return { isFirstConversation: true, progressContext: null };
   }
 }
 
@@ -404,11 +417,10 @@ export async function buildFounderContextWithFacts(
   hasPersistentMemory: boolean
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
-    const [profile, facts, isFirstConversation, progressContext] = await Promise.all([
+    const [profile, facts, { isFirstConversation, progressContext }] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
-      checkIsFirstConversation(userId),
-      loadProgressContext(userId),
+      loadConversationStateContext(userId),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -439,15 +451,6 @@ export async function buildFounderContextWithFacts(
  * Load the step progress context string from the conversation state DAL.
  * Returns null if no state exists or loading fails — never blocks the pipeline.
  */
-async function loadProgressContext(userId: string): Promise<string | null> {
-  try {
-    const { buildProgressContext } = await import("@/lib/db/conversation-state");
-    const context = await buildProgressContext(userId);
-    return context || null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Seed the conversation state founder_snapshot from the profile table.
