@@ -129,8 +129,16 @@ Phase 65-04 decisions:
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: FRED chat latency debug investigation — consolidated report written to .planning/FRED-CHAT-LATENCY-REPORT.md
+Stopped at: Live token streaming implemented and deployed — see .planning/STREAMING-IMPL.md
 Resume file: None
+
+## Streaming Implementation (2026-02-25)
+
+Token streaming is now live. FRED's LLM responses stream word-by-word instead of buffering.
+- `tokenChannel` threaded from route → service → machine → decide actor → generateWithLLM
+- `streamGenerate` used when tokenChannel is present; `generate` used otherwise
+- Frontend handles `token` SSE events to build live streaming message with blinking cursor
+- Full details: `.planning/STREAMING-IMPL.md`
 
 ## Debug Investigations
 
