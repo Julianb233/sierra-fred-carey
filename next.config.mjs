@@ -81,6 +81,11 @@ const nextConfig = {
         destination: "/get-started",
         permanent: true,
       },
+      // Common auth URL aliases → canonical routes
+      { source: "/sign-in", destination: "/login", permanent: true },
+      { source: "/signin", destination: "/login", permanent: true },
+      { source: "/sign-up", destination: "/signup", permanent: true },
+      { source: "/register", destination: "/signup", permanent: true },
     ];
   },
 };

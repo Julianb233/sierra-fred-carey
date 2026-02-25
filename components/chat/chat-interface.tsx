@@ -130,13 +130,18 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
     await sendMessage(content);
   };
 
-  // Auto-send initialMessage once when the overlay opens
+  // Auto-send initialMessage once when the overlay opens.
+  // Delay 400ms so any in-flight request from sessionStorage restoration settles first.
   useEffect(() => {
-    if (initialMessage && !initialMessageSentRef.current && !isProcessing) {
-      initialMessageSentRef.current = true;
-      handleSendMessage(initialMessage);
-      onInitialMessageConsumed?.();
-    }
+    if (!initialMessage || initialMessageSentRef.current) return;
+    const timer = setTimeout(() => {
+      if (!initialMessageSentRef.current) {
+        initialMessageSentRef.current = true;
+        handleSendMessage(initialMessage);
+        onInitialMessageConsumed?.();
+      }
+    }, 400);
+    return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage]);
 
