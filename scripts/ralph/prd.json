@@ -15,13 +15,13 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/chat/route.ts, components/chat/"
     },
     {
       "id": "US-002",
       "title": "FRED context includes founder snapshot, startup step, and recent red flags",
-      "description": "As FRED, I need access to the founder's full context — snapshot, current startup process step, and recent red flags — so my advice is relevant and not generic.",
+      "description": "As FRED, I need access to the founder's full context \u2014 snapshot, current startup process step, and recent red flags \u2014 so my advice is relevant and not generic.",
       "acceptanceCriteria": [
         "GET /api/fred/context (or equivalent) returns founderSnapshot with stage and primaryConstraint",
         "Context includes current startup process step",
@@ -30,7 +30,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: lib/fred/context-builder.ts, lib/fred/fred-client.ts"
     },
     {
@@ -45,7 +45,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/reality-lens/route.ts, lib/fred/reality-lens.ts"
     },
     {
@@ -60,7 +60,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/dashboard/reality-lens/, components/dashboard/"
     },
     {
@@ -75,13 +75,13 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/startup-process/route.ts, app/dashboard/startup-process/page.tsx"
     },
     {
       "id": "US-006",
       "title": "Dashboard command center loads all widget data within 8 seconds",
-      "description": "As a founder, I want the dashboard to load my full command center data — snapshot, current step, funding readiness, and weekly momentum — within 8 seconds.",
+      "description": "As a founder, I want the dashboard to load my full command center data \u2014 snapshot, current step, funding readiness, and weekly momentum \u2014 within 8 seconds.",
       "acceptanceCriteria": [
         "GET /api/dashboard/command-center returns 200 with success:true",
         "Response includes founderSnapshot, currentStep, processProgress, fundingReadiness, weeklyMomentum",
@@ -90,7 +90,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/dashboard/command-center/route.ts, lib/dashboard/command-center.ts"
     },
     {
@@ -106,7 +106,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/dashboard/page.tsx, components/dashboard/fred-hero.tsx"
     },
     {
@@ -122,7 +122,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: components/dashboard/funding-readiness-gauge.tsx, lib/dashboard/command-center.ts"
     },
     {
@@ -137,7 +137,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/red-flags/, components/dashboard/red-flags-widget.tsx"
     },
     {
@@ -152,7 +152,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/investor-readiness/route.ts, lib/fred/irs/"
     },
     {
@@ -166,7 +166,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/pitch-review/route.ts"
     },
     {
@@ -181,12 +181,12 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: components/dashboard/weekly-momentum.tsx, lib/dashboard/command-center.ts"
     },
     {
       "id": "US-013",
-      "title": "SMS Twilio webhook is idempotent — duplicate deliveries don't create duplicate records",
+      "title": "SMS Twilio webhook is idempotent \u2014 duplicate deliveries don't create duplicate records",
       "description": "As the system, I need the Twilio SMS webhook to be idempotent so that duplicate message deliveries (Twilio retry behavior) don't create duplicate check-in records.",
       "acceptanceCriteria": [
         "POST /api/sms/webhook with duplicate MessageSid returns 200 without creating duplicate sms_checkins row",
@@ -209,7 +209,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/stripe/webhook/route.ts. CRITICAL: subscription consistency."
     },
     {
@@ -224,7 +224,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/api/fred/reality-lens/route.ts, app/api/fred/investor-readiness/route.ts, lib/api/rate-limit.ts"
     },
     {
@@ -253,7 +253,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Files: lib/dashboard/command-center.ts — getCommandCenterData uses Promise.all, change to Promise.allSettled"
+      "notes": "Files: lib/dashboard/command-center.ts \u2014 getCommandCenterData uses Promise.all, change to Promise.allSettled"
     },
     {
       "id": "US-018",
@@ -266,8 +266,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Files: app/api/fred/chat/route.ts — empty catch blocks need at minimum console.error()"
+      "passes": true,
+      "notes": "Files: app/api/fred/chat/route.ts \u2014 empty catch blocks need at minimum console.error()"
     },
     {
       "id": "US-019",
@@ -281,7 +281,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Files: app/api/notifications/send/route.ts — empty .catch(() => {}) on push send"
+      "notes": "Files: app/api/notifications/send/route.ts \u2014 empty .catch(() => {}) on push send"
     },
     {
       "id": "US-020",
@@ -295,7 +295,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/dashboard/startup-process/page.tsx"
     },
     {
@@ -310,7 +310,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: components/dashboard/call-fred-modal.tsx, app/dashboard/page.tsx"
     },
     {
@@ -340,7 +340,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Files: app/dashboard/page.tsx (polling logic), lib/context/tier-context.tsx"
     },
     {
@@ -399,7 +399,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Files: supabase/migrations/ — verify RLS on profiles table. CRITICAL security gap."
+      "notes": "Files: supabase/migrations/ \u2014 verify RLS on profiles table. CRITICAL security gap."
     },
     {
       "id": "US-028",
@@ -417,7 +417,7 @@
     },
     {
       "id": "US-029",
-      "title": "FRED AI call has timeout protection — hung requests abort after 60 seconds",
+      "title": "FRED AI call has timeout protection \u2014 hung requests abort after 60 seconds",
       "description": "As the system, I need AI calls to have timeout protection so a stuck OpenAI request doesn't block a user indefinitely.",
       "acceptanceCriteria": [
         "FRED chat route aborts AI call after 60 seconds with a graceful error message",
@@ -427,7 +427,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Files: app/api/fred/chat/route.ts — verify AbortSignal or timeout wrapping on AI call"
+      "notes": "Files: app/api/fred/chat/route.ts \u2014 verify AbortSignal or timeout wrapping on AI call"
     },
     {
       "id": "US-030",
@@ -441,7 +441,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Files: lib/auth.ts requireAuth(), all API routes using it"
     }
   ]
