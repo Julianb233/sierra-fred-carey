@@ -54,21 +54,14 @@ export default function SettingsPage() {
       if (authUser) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("name, metadata")
+          .select("name")
           .eq("id", authUser.id)
           .single()
         setProfile({
           name: profileData?.name || authUser.email?.split("@")[0] || "",
           email: authUser.email || "",
-          company: profileData?.metadata?.company_name || "",
+          company: "",
         })
-        // Restore notification preferences if stored
-        if (profileData?.metadata?.notification_prefs) {
-          setNotifications(prev => ({
-            ...prev,
-            ...profileData.metadata.notification_prefs,
-          }))
-        }
       }
       setIsProfileLoading(false)
     }
@@ -100,21 +93,10 @@ export default function SettingsPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) return
 
-      // Fetch existing metadata to merge with
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("metadata")
-        .eq("id", authUser.id)
-        .single()
-
       const { error } = await supabase
         .from("profiles")
         .update({
           name: profile.name,
-          metadata: {
-            ...(existing?.metadata || {}),
-            company_name: profile.company,
-          },
           updated_at: new Date().toISOString(),
         })
         .eq("id", authUser.id)
@@ -196,20 +178,9 @@ export default function SettingsPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) return
 
-      // Fetch existing metadata to merge with
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("metadata")
-        .eq("id", authUser.id)
-        .single()
-
       const { error } = await supabase
         .from("profiles")
         .update({
-          metadata: {
-            ...(existing?.metadata || {}),
-            notification_prefs: notifications,
-          },
           updated_at: new Date().toISOString(),
         })
         .eq("id", authUser.id)
