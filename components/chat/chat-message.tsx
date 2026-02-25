@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
 import { RedFlagBadge } from "./red-flag-badge";
 import { TtsButton } from "./tts-button";
+import ReactMarkdown from "react-markdown";
 
 export interface Message {
   id: string;
@@ -88,18 +89,33 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#ff6a1a]/50 via-orange-500/50 to-amber-500/50 blur-xl opacity-50 -z-10" />
           )}
 
-          <p className={cn(
-            "relative z-10 text-sm leading-relaxed whitespace-pre-wrap",
-            isUser ? "text-white" : "text-foreground/90"
-          )}>
-            {message.content}
-            {message.isStreaming && (
-              <span
-                className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
-                aria-hidden="true"
-              />
-            )}
-          </p>
+          {isUser ? (
+            <p className="relative z-10 text-sm leading-relaxed whitespace-pre-wrap text-white">
+              {message.content}
+              {message.isStreaming && (
+                <span
+                  className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
+                  aria-hidden="true"
+                />
+              )}
+            </p>
+          ) : (
+            <div className={cn(
+              "relative z-10 text-sm leading-relaxed text-foreground/90",
+              "prose prose-sm dark:prose-invert max-w-none",
+              "prose-headings:text-foreground/90 prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1",
+              "prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5",
+              "prose-strong:text-foreground/90 prose-code:text-orange-400 prose-code:bg-white/10 prose-code:px-1 prose-code:rounded",
+            )}>
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+              {message.isStreaming && (
+                <span
+                  className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+          )}
         </motion.div>
 
         {/* Red Flag Badges */}

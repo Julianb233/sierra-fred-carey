@@ -61,6 +61,17 @@ interface NextStepCardProps {
   onDismiss?: (stepId: string) => Promise<void>;
 }
 
+/** Strip markdown syntax from a string for plain-text display */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")   // **bold**
+    .replace(/\*(.*?)\*/g, "$1")        // *italic*
+    .replace(/^#+\s+/gm, "")            // # headings
+    .replace(/`(.*?)`/g, "$1")          // `code`
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // [link](url)
+    .trim();
+}
+
 export function NextStepCard({
   id,
   description,
@@ -149,7 +160,7 @@ export function NextStepCard({
                     : "text-gray-900 dark:text-white"
                 )}
               >
-                {description}
+                {stripMarkdown(description)}
               </p>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <Badge

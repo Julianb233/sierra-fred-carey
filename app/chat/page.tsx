@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { ActiveModeBar, type ChatMode } from "@/components/chat/active-mode-bar";
 import { ChatSidePanel } from "@/components/chat/chat-side-panel";
@@ -41,12 +42,23 @@ function useIsMobile() {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeMode, setActiveMode] = useState<ChatMode>("founder-os");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [callModalOpen, setCallModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const { tier } = useUserTier();
   const isProOrAbove = tier >= UserTier.PRO;
+
+  // Pre-seeded message from dashboard chip (e.g. ?message=...)
+  const initialMessage = searchParams.get("message") ?? undefined;
+
+  const handleInitialMessageConsumed = useCallback(() => {
+    // Remove ?message= from URL after it's been auto-sent
+    router.replace("/chat", { scroll: false });
+  }, [router]);
+
   const handleCallClick = useCallback(() => {
     setCallModalOpen(true);
   }, []);
@@ -192,7 +204,11 @@ export default function ChatPage() {
         {/* Chat container */}
         <main className="flex-1 min-w-0">
           <div className="h-full max-w-4xl mx-auto">
-            <ChatInterface className="h-full" />
+            <ChatInterface
+              className="h-full"
+              initialMessage={initialMessage}
+              onInitialMessageConsumed={handleInitialMessageConsumed}
+            />
           </div>
         </main>
 

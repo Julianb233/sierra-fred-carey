@@ -60,19 +60,25 @@ async function validateStep(
   }
 
   try {
+    const stepTitle = STEP_TITLES[stepNumber];
+    const keyQuestions = STEP_KEY_QUESTIONS[stepNumber];
+
+    // Build a readable message from the step data for FRED
+    const dataLines = Object.entries(data as unknown as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => `- ${k}: ${String(v)}`)
+      .join("\n");
+
+    const message =
+      `Validate my answers for startup process step ${stepNumber}: "${stepTitle}".\n\n` +
+      `Key questions I should address:\n${keyQuestions.map((q) => `- ${q}`).join("\n")}\n\n` +
+      `My answers:\n${dataLines}\n\n` +
+      `Are these answers specific and strong enough to move forward? Respond with your verdict (pass if strong, needs_work if improvable, blocked if critical gaps exist), concise feedback, and 2-3 concrete improvement suggestions if needed.`;
+
     const response = await fetch("/api/fred/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "step_validation",
-        context: {
-          stepNumber,
-          stepTitle: STEP_TITLES[stepNumber],
-          stepDescription: STEP_DESCRIPTIONS[stepNumber],
-          keyQuestions: STEP_KEY_QUESTIONS[stepNumber],
-          userResponses: data,
-        },
-      }),
+      body: JSON.stringify({ message }),
     });
 
     if (!response.ok) {
@@ -81,12 +87,41 @@ async function validateStep(
 
     const result = await response.json();
 
+    // Map FRED's analysis response to ValidationResult
+    const content: string = result.response?.content || result.synthesis?.recommendation || "";
+    const confidence: number =
+      result.synthesis?.confidence ?? result.response?.confidence ?? 0.5;
+
+    // Determine pass/fail from confidence + content signals
+    const lc = content.toLowerCase();
+    let status: ValidationResult["status"];
+    if (
+      confidence >= 0.75 ||
+      lc.includes("pass") ||
+      (lc.includes("strong") && !lc.includes("not strong"))
+    ) {
+      status = "pass";
+    } else if (
+      confidence < 0.4 ||
+      lc.includes("blocked") ||
+      lc.includes("critical gap") ||
+      lc.includes("missing")
+    ) {
+      status = "blocked";
+    } else {
+      status = "needs_work";
+    }
+
+    // Extract suggestions from mental models or synthesized insights
+    const suggestions: string[] = (result.mentalModels ?? [])
+      .flatMap((m: { insights?: string[] }) => m.insights ?? [])
+      .slice(0, 3);
+
     return {
-      status: result.status || "needs_work",
-      feedback: result.feedback || "Analysis complete. Review the suggestions below.",
-      suggestions: result.suggestions || [],
-      blockerReasons: result.blockerReasons,
-      validatedAt: result.status === "pass" ? new Date().toISOString() : undefined,
+      status,
+      feedback: content || "Analysis complete. Review the suggestions below.",
+      suggestions,
+      validatedAt: status === "pass" ? new Date().toISOString() : undefined,
     };
   } catch (err) {
     console.error("[StartupProcess] Validation error:", err);
@@ -122,6 +157,7 @@ export default function StartupProcessPage() {
             setProcess(data.data);
             // Sync DB data to localStorage for offline resilience
             localStorage.setItem("startup_process", JSON.stringify(data.data));
+            setIsLoading(false);
             return;
           }
         }
