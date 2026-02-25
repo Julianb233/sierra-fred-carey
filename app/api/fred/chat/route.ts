@@ -419,7 +419,15 @@ async function handlePost(req: NextRequest) {
       serverTrack(userId, ANALYTICS_EVENTS.CHAT.SESSION_STARTED, { tier: tierName });
     }
 
-    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only
+    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only.
+    // INTENTIONAL DESIGN: Free-tier users do NOT get entries in fred_episodic_memory.
+    // Their conversations are not stored across sessions — this is a core product
+    // differentiator between Free and Pro tiers. Free users still benefit from
+    // session-scoped context (within a single request) via loadMemoryActor, but
+    // nothing is written to the DB. For re-engagement tracking, all tiers DO get
+    // journey_events rows (see the fire-and-forget insert near the "done" SSE event
+    // below) so email campaigns have activity data without exposing conversation content.
+    // To change this behaviour, update hasPersistentMemory above.
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
     // ── Parallel context loading ─────────────────────────────────────
@@ -974,6 +982,34 @@ async function handlePost(req: NextRequest) {
               sessionId: effectiveSessionId,
               latencyMs,
             });
+
+            // Fire-and-forget: log journey event after each completed FRED interaction.
+            // This populates the journey_events table so the Journey Dashboard, re-engagement
+            // emails, and digest emails have activity data to work with.
+            (async () => {
+              try {
+                const intent = update.context.validatedInput?.intent ?? "unknown";
+                const step = update.context.conversationState?.currentStep ?? null;
+                // Pick the most descriptive event_type based on intent
+                const eventType = intent === "decision_request" ? "decision_made"
+                  : intent === "question" ? "step_completed"
+                  : "message_sent";
+                const supabase = createServiceClient();
+                await supabase.from("journey_events").insert({
+                  user_id: userId,
+                  event_type: eventType,
+                  event_data: {
+                    intent,
+                    latency_ms: latencyMs,
+                    tier: tierName,
+                    step,
+                  },
+                  created_at: new Date().toISOString(),
+                });
+              } catch (err) {
+                console.warn("[FRED Chat] Failed to log journey event (non-blocking):", err);
+              }
+            })();
 
             // Fire-and-forget: restore latency observability after streaming completion
             (async () => {
