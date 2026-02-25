@@ -657,16 +657,13 @@ async function handlePost(req: NextRequest) {
         });
 
         // Store user message in memory (Pro+ only, Phase 21)
+        // Fire-and-forget: don't block processStream start on this DB write
         if (shouldPersistMemory) {
-          try {
-            await storeEpisode(userId, effectiveSessionId, "conversation", {
-              role: "user",
-              content: message,
-              context,
-            });
-          } catch (error) {
-            console.warn("[FRED Chat] Failed to store user message:", error);
-          }
+          storeEpisode(userId, effectiveSessionId, "conversation", {
+            role: "user",
+            content: message,
+            context,
+          }).catch(err => console.warn("[FRED Chat] Failed to store user message:", err));
         }
 
         // Stream state updates
