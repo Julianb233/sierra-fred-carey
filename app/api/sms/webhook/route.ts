@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
     // Extract message details
     const from = params.From;
     const body = params.Body;
+    const messageSid = params.MessageSid;
 
     if (!from || !body) {
       console.warn('[SMS Webhook] Missing From or Body in request');
@@ -82,8 +83,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process the inbound SMS
-    await processInboundSMS(from, body);
+    // Process the inbound SMS (messageSid enables idempotent dedup)
+    await processInboundSMS(from, body, messageSid);
 
     // Return empty TwiML response (Twilio expects XML)
     return new NextResponse(

@@ -13,6 +13,7 @@ import { getISOWeek, getISOWeekYear } from 'date-fns';
 import {
   findUserByPhoneNumber,
   createCheckin,
+  getCheckinByMessageSid,
   updateSMSPreferences,
   getCheckinHistory,
 } from '@/lib/db/sms';
@@ -54,7 +55,8 @@ function normalizePhoneNumber(phone: string): string {
  */
 export async function processInboundSMS(
   from: string,
-  body: string
+  body: string,
+  messageSid?: string
 ): Promise<void> {
   const normalizedPhone = normalizePhoneNumber(from);
   const trimmedBody = body.trim();
@@ -103,10 +105,22 @@ export async function processInboundSMS(
   });
   const outboundCheckin = recentCheckins.find((c) => c.direction === 'outbound');
 
+  // Idempotency: if we have a MessageSid, check for duplicate delivery
+  if (messageSid) {
+    const existing = await getCheckinByMessageSid(supabase, messageSid);
+    if (existing) {
+      logger.log(
+        `[SMS Webhook] Duplicate webhook delivery ignored (MessageSid: ${messageSid})`
+      );
+      return;
+    }
+  }
+
   // Create inbound check-in record
   await createCheckin(supabase, {
     userId: user.userId,
     phoneNumber: normalizedPhone,
+    messageSid,
     direction: 'inbound',
     body: trimmedBody,
     status: 'received',
