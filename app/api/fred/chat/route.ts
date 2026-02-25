@@ -40,6 +40,8 @@ import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
 
+export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
+
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
   [UserTier.FREE]: "free",
