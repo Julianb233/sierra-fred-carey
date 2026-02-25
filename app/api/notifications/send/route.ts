@@ -13,6 +13,16 @@ import { validateNotificationPayload } from "@/lib/notifications/validators";
 import type { NotificationPayload, AlertLevel, AlertType } from "@/lib/notifications/types";
 import { sendPushToUser } from "@/lib/push";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier } from "@/lib/constants";
+
+// Push notification rate limits per tier (per hour)
+const PUSH_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
+  [UserTier.FREE]: { limit: 10, windowSeconds: 3600 },
+  [UserTier.PRO]: { limit: 50, windowSeconds: 3600 },
+  [UserTier.STUDIO]: { limit: 10000, windowSeconds: 3600 }, // effectively unlimited
+};
 
 /**
  * POST /api/notifications/send
@@ -40,6 +50,15 @@ import { logger } from "@/lib/logger";
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    // Rate limit push notifications by user tier
+    const userTier = await getUserTier(userId);
+    const tierConfig = PUSH_RATE_LIMITS[userTier] ?? PUSH_RATE_LIMITS[UserTier.FREE];
+    const rateLimitResult = await checkRateLimit(`push:${userId}`, tierConfig);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const body = await request.json();
 
     // Check if this is a batch request
@@ -131,8 +150,8 @@ export async function POST(request: NextRequest) {
       title,
       body: message,
       url: body.url ?? "/dashboard",
-    }).catch(() => {
-      // Push delivery is best-effort — swallow errors
+    }).catch((err) => {
+      console.error('[Push Notification] Fire-and-forget delivery failed:', err);
     });
 
     // Count successes and failures
