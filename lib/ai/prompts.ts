@@ -14,8 +14,7 @@ import type { DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import { generatePositioningPrompt } from "@/lib/ai/frameworks/positioning";
 import { generateInvestorLensPrompt, shouldRequestDeck, type InvestorStage, type InvestorVerdict } from "@/lib/ai/frameworks/investor-lens";
 import type { IRSResult } from "@/lib/fred/irs/types";
-import { CATEGORY_LABELS, STAGE_BENCHMARKS, IRS_CATEGORIES, type StartupStage } from "@/lib/fred/irs/types";
-import { getReadinessLevel, compareToStage } from "@/lib/fred/irs/engine";
+import { CATEGORY_LABELS, STAGE_BENCHMARKS, IRS_CATEGORIES, getReadinessLevel, compareToStage, type StartupStage } from "@/lib/fred/irs/types";
 
 // ============================================================================
 // Dynamic identity fragments built from fred-brain.ts (single source of truth)

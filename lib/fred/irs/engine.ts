@@ -285,74 +285,8 @@ Provide a comprehensive evaluation with:
 4. Provide 5-10 prioritized recommendations for improvement`;
 }
 
-/**
- * Get readiness level from score
- */
-export function getReadinessLevel(score: number): {
-  level: 'not-ready' | 'early' | 'developing' | 'ready' | 'strong';
-  label: string;
-  description: string;
-} {
-  if (score < 30) {
-    return {
-      level: 'not-ready',
-      label: 'Not Ready',
-      description: 'Significant work needed before approaching investors',
-    };
-  }
-  if (score < 50) {
-    return {
-      level: 'early',
-      label: 'Early Stage',
-      description: 'Building blocks in place but gaps remain',
-    };
-  }
-  if (score < 70) {
-    return {
-      level: 'developing',
-      label: 'Developing',
-      description: 'Competitive but room for improvement',
-    };
-  }
-  if (score < 85) {
-    return {
-      level: 'ready',
-      label: 'Investor Ready',
-      description: 'Strong position for fundraising',
-    };
-  }
-  return {
-    level: 'strong',
-    label: 'Highly Ready',
-    description: 'Exceptional position, top-tier opportunity',
-  };
-}
-
-/**
- * Compare score to stage benchmark
- */
-export function compareToStage(
-  score: number,
-  category: IRSCategory,
-  stage: string
-): { diff: number; status: 'above' | 'at' | 'below' } {
-  const stageKey = normalizeStage(stage);
-  const benchmark = STAGE_BENCHMARKS[stageKey]?.[category] || 50;
-  const diff = score - benchmark;
-
-  if (diff > 5) return { diff, status: 'above' };
-  if (diff < -5) return { diff, status: 'below' };
-  return { diff, status: 'at' };
-}
-
-function normalizeStage(stage: string): StartupStage {
-  const lower = stage.toLowerCase();
-  if (lower.includes('idea')) return 'idea';
-  if (lower.includes('pre-seed') || lower.includes('preseed')) return 'pre-seed';
-  if (lower.includes('seed') && !lower.includes('pre')) return 'seed';
-  if (lower.includes('series a') || lower.includes('series-a')) return 'series-a';
-  return 'seed'; // default
-}
+// Pure utility helpers moved to types.ts (no server deps — safe for client imports)
+export { getReadinessLevel, compareToStage } from "@/lib/fred/irs/types";
 
 // ============================================================================
 // Phase 39: Conversation-to-IRS Adapter

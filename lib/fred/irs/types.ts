@@ -261,3 +261,41 @@ export const STAGE_BENCHMARKS: Record<StartupStage, Record<IRSCategory, number>>
     pitch: 75,
   },
 };
+
+// ============================================================================
+// Pure utility helpers (no server deps — safe to import in client components)
+// ============================================================================
+
+function normalizeStage(stage: string): StartupStage {
+  const lower = stage.toLowerCase();
+  if (lower.includes('idea')) return 'idea';
+  if (lower.includes('pre-seed') || lower.includes('preseed')) return 'pre-seed';
+  if (lower.includes('seed') && !lower.includes('pre')) return 'seed';
+  if (lower.includes('series a') || lower.includes('series-a')) return 'series-a';
+  return 'seed';
+}
+
+export function getReadinessLevel(score: number): {
+  level: 'not-ready' | 'early' | 'developing' | 'ready' | 'strong';
+  label: string;
+  description: string;
+} {
+  if (score < 30) return { level: 'not-ready', label: 'Not Ready', description: 'Significant work needed before approaching investors' };
+  if (score < 50) return { level: 'early', label: 'Early Stage', description: 'Building blocks in place but gaps remain' };
+  if (score < 70) return { level: 'developing', label: 'Developing', description: 'Competitive but room for improvement' };
+  if (score < 85) return { level: 'ready', label: 'Investor Ready', description: 'Strong position for fundraising' };
+  return { level: 'strong', label: 'Highly Ready', description: 'Exceptional position, top-tier opportunity' };
+}
+
+export function compareToStage(
+  score: number,
+  category: IRSCategory,
+  stage: string
+): { diff: number; status: 'above' | 'at' | 'below' } {
+  const stageKey = normalizeStage(stage);
+  const benchmark = STAGE_BENCHMARKS[stageKey]?.[category] || 50;
+  const diff = score - benchmark;
+  if (diff > 5) return { diff, status: 'above' };
+  if (diff < -5) return { diff, status: 'below' };
+  return { diff, status: 'at' };
+}

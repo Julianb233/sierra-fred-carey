@@ -37,6 +37,8 @@ const nextConfig = {
   // NOTE: Do NOT add generateBuildId with a static string — it breaks Turbopack builds
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas"],
   transpilePackages: ["framer-motion"],
+  // Acknowledge Turbopack as the default bundler in Next.js 16
+  turbopack: {},
   typescript: {
     // tsc --noEmit passes separately; skip during build to avoid
     // race with .next/types generation
