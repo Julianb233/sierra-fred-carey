@@ -26,6 +26,29 @@ import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // ---------------------------------------------------------------------------
+// History types
+// ---------------------------------------------------------------------------
+
+interface HistoryEntry {
+  id: number;
+  idea: string;
+  stage: string | null;
+  market: string | null;
+  overallScore: number;
+  scores: {
+    feasibility: number;
+    economics: number;
+    demand: number;
+    distribution: number;
+    timing: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
 // Types matching the FRED Reality Lens API response
 // ---------------------------------------------------------------------------
 
@@ -83,6 +106,23 @@ export default function RealityLensPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<RealityLensData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [expandedHistory, setExpandedHistory] = useState<number | null>(null);
+
+  // Fetch history on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/fred/reality-lens?history=true&limit=10");
+        const data = await res.json();
+        if (data.success && data.data) {
+          setHistory(data.data);
+        }
+      } catch {
+        // Non-blocking — history is optional
+      }
+    })();
+  }, []);
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -116,6 +156,31 @@ export default function RealityLensPage() {
       }
 
       setResults(data.data || null);
+      // Prepend to history so the user sees it immediately
+      if (data.data) {
+        const d = data.data;
+        setHistory((prev) => [
+          {
+            id: Date.now(),
+            idea,
+            stage: stage || null,
+            market: market || null,
+            overallScore: d.overallScore,
+            scores: {
+              feasibility: d.factors.feasibility.score,
+              economics: d.factors.economics.score,
+              demand: d.factors.demand.score,
+              distribution: d.factors.distribution.score,
+              timing: d.factors.timing.score,
+            },
+            strengths: d.topStrengths,
+            weaknesses: d.criticalRisks,
+            recommendations: d.nextSteps,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
       trackEvent(ANALYTICS_EVENTS.FEATURES.REALITY_LENS_USED, { featureName: "reality_lens" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
@@ -545,6 +610,140 @@ export default function RealityLensPage() {
               </div>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* Past Analyses History */}
+      {history.length > 0 && !analyzing && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Past Analyses
+          </h2>
+          <div className="space-y-3">
+            {history.map((entry) => {
+              const isExpanded = expandedHistory === entry.id;
+              const verdictLabel =
+                entry.overallScore >= 80
+                  ? "Strong"
+                  : entry.overallScore >= 60
+                  ? "Promising"
+                  : entry.overallScore >= 40
+                  ? "Needs Work"
+                  : "Reconsider";
+              const verdictClass =
+                entry.overallScore >= 80
+                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                  : entry.overallScore >= 60
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                  : entry.overallScore >= 40
+                  ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+
+              return (
+                <Card key={entry.id} className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {entry.idea.length > 100
+                          ? entry.idea.slice(0, 100) + "..."
+                          : entry.idea}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(entry.createdAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {entry.stage && ` \u00B7 ${entry.stage}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-lg font-bold ${getScoreColor(entry.overallScore)}`}>
+                        {entry.overallScore}
+                      </span>
+                      <Badge className={verdictClass}>{verdictLabel}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setExpandedHistory(isExpanded ? null : entry.id)
+                      }
+                      className="text-xs"
+                    >
+                      {isExpanded ? "Collapse" : "Expand"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIdea(entry.idea);
+                        if (entry.stage) setStage(entry.stage);
+                        if (entry.market) setMarket(entry.market);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="text-xs text-[#ff6a1a] hover:text-[#ea580c]"
+                    >
+                      Re-analyze
+                    </Button>
+                  </div>
+
+                  {/* Expanded breakdown */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                      {/* Dimension scores */}
+                      <div className="grid grid-cols-5 gap-2">
+                        {Object.entries(entry.scores).map(([dim, score]) => (
+                          <div key={dim} className="text-center">
+                            <p className="text-xs text-gray-500 capitalize">{dim}</p>
+                            <p className={`text-sm font-bold ${getScoreColor(score)}`}>
+                              {score}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Strengths */}
+                      {entry.strengths.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                            Strengths
+                          </p>
+                          <ul className="space-y-0.5">
+                            {entry.strengths.map((s: string, i: number) => (
+                              <li key={i} className="text-xs text-gray-600 dark:text-gray-400">
+                                {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Weaknesses */}
+                      {entry.weaknesses.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                            Risks
+                          </p>
+                          <ul className="space-y-0.5">
+                            {entry.weaknesses.map((w: string, i: number) => (
+                              <li key={i} className="text-xs text-gray-600 dark:text-gray-400">
+                                {w}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -222,10 +222,59 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/fred/reality-lens
- * Returns information about the Reality Lens feature and rate limits
+ * Returns feature info (default) or user's analysis history (?history=true)
  */
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const wantsHistory = searchParams.get("history") === "true";
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 20);
+
+    // History endpoint requires authentication
+    if (wantsHistory) {
+      const userId = await requireAuth();
+      const { createServiceClient } = await import("@/lib/supabase/server");
+      const supabase = createServiceClient();
+
+      const { data, error } = await supabase
+        .from("reality_lens_analyses")
+        .select("id, idea, stage, market, overall_score, feasibility_score, economics_score, demand_score, distribution_score, timing_score, strengths, weaknesses, recommendations, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("[Reality Lens API] History query failed:", error);
+        return NextResponse.json(
+          { success: false, error: { code: "QUERY_ERROR", message: "Failed to load history" } },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: (data || []).map((row) => ({
+          id: row.id,
+          idea: row.idea,
+          stage: row.stage,
+          market: row.market,
+          overallScore: row.overall_score,
+          scores: {
+            feasibility: row.feasibility_score,
+            economics: row.economics_score,
+            demand: row.demand_score,
+            distribution: row.distribution_score,
+            timing: row.timing_score,
+          },
+          strengths: row.strengths || [],
+          weaknesses: row.weaknesses || [],
+          recommendations: row.recommendations || [],
+          createdAt: row.created_at,
+        })),
+      });
+    }
+
+    // Default: return feature info
     // Optionally check auth for personalized limits
     let userId: string | null = null;
     let tier: RealityLensTier = "free";
