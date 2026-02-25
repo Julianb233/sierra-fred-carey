@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Get variants for each experiment with metrics
     const experimentsWithVariants = await Promise.all(
-      experiments.map(async (experiment: any) => {
+      experiments.map(async (experiment: Record<string, unknown>) => {
         const variants = await sql`
           SELECT
             v.id,
@@ -57,11 +57,11 @@ export async function GET(request: NextRequest) {
         `;
 
         // Format the metrics
-        const variantsWithMetrics = variants.map((variant: any) => ({
+        const variantsWithMetrics = variants.map((variant: Record<string, unknown>) => ({
           ...variant,
-          totalRequests: parseInt(variant.totalRequests, 10) || 0,
-          avgLatency: parseFloat(variant.avgLatency) || null,
-          errorRate: parseFloat(variant.errorRate) || null,
+          totalRequests: parseInt(String(variant.totalRequests), 10) || 0,
+          avgLatency: parseFloat(String(variant.avgLatency)) || null,
+          errorRate: parseFloat(String(variant.errorRate)) || null,
         }));
 
         return {
@@ -195,11 +195,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Admin A/B Tests POST] Error:", error);
 
     // Handle unique constraint violation
-    if (error.code === "23505") {
+    if (error instanceof Error && (error as Error & { code?: string }).code === "23505") {
       return NextResponse.json(
         {
           success: false,
@@ -280,7 +280,7 @@ export async function PATCH(request: NextRequest) {
           AND id != ${variantId}
       `;
 
-      const otherTraffic = parseFloat(trafficSum[0]?.totalTraffic || 0);
+      const otherTraffic = parseFloat(String(trafficSum[0]?.totalTraffic || 0));
       const totalTraffic = otherTraffic + trafficPercentage;
 
       if (totalTraffic > 100) {
@@ -296,7 +296,7 @@ export async function PATCH(request: NextRequest) {
 
     // Build dynamic UPDATE query
     const setters: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (trafficPercentage !== undefined) {

@@ -136,7 +136,7 @@ function getAvailableProviders(): Provider[] {
 async function logAIRequest(
   userId: string | null,
   analyzer: string,
-  inputData: any,
+  inputData: unknown,
   systemPrompt: string,
   userPrompt: string,
   promptVersion: number | null,
@@ -161,7 +161,7 @@ async function logAIRequest(
       VALUES (
         ${userId},
         ${analyzer},
-        ${inputData.sourceId || null},
+        ${(inputData as Record<string, unknown>)?.sourceId || null},
         ${JSON.stringify(inputData)},
         ${systemPrompt},
         ${userPrompt},
@@ -189,7 +189,7 @@ async function logAIRequest(
 async function logAIResponse(
   requestId: string,
   responseText: string,
-  parsedResponse: any | null,
+  parsedResponse: unknown,
   tokensUsed: number | null,
   latencyMs: number,
   provider: string,
@@ -325,7 +325,7 @@ export async function generateTrackedResponse(
     userId?: string;
     analyzer?: string;
     sourceId?: string;
-    inputData?: any;
+    inputData?: unknown;
   }
 ): Promise<{
   content: string;
@@ -404,11 +404,11 @@ export async function generateTrackedResponse(
             // Apply variant overrides
             if (variantAssignment.configOverrides) {
               const overrides = variantAssignment.configOverrides;
-              if (overrides.model) model = overrides.model;
+              if (overrides.model) model = overrides.model as string;
               if (overrides.temperature !== undefined)
-                temperature = overrides.temperature;
+                temperature = overrides.temperature as number;
               if (overrides.maxTokens !== undefined)
-                maxTokens = overrides.maxTokens;
+                maxTokens = overrides.maxTokens as number;
             }
 
             // Use variant's prompt if specified

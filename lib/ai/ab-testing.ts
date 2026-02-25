@@ -8,7 +8,7 @@ export interface ABVariant {
   experimentName: string;
   variantName: string;
   promptId: string | null;
-  configOverrides: Record<string, any>;
+  configOverrides: Record<string, unknown>;
   trafficPercentage: number;
 }
 
@@ -61,7 +61,7 @@ export async function getActiveExperiments(): Promise<string[]> {
         AND (end_date IS NULL OR end_date > NOW())
     `;
 
-    const experiments = result as any as ABExperiment[];
+    const experiments = result as unknown as ABExperiment[];
 
     // Update cache
     experimentsCache = {
@@ -116,7 +116,7 @@ export async function getVariantAssignment(
       return null;
     }
 
-    const variants = result as any as ABVariant[];
+    const variants = result as unknown as ABVariant[];
 
     // Deterministic assignment based on hash
     const hashValue = hashUserExperiment(userId, experimentName);
@@ -225,11 +225,11 @@ export async function getVariantStats(
       ORDER BY v.variant_name
     `;
 
-    const stats = result.map((row: any) => ({
-      variantName: row.variantName,
-      totalRequests: parseInt(row.totalRequests, 10),
-      avgLatency: parseFloat(row.avgLatency) || 0,
-      errorRate: parseFloat(row.errorRate) || 0,
+    const stats = result.map((row: Record<string, unknown>) => ({
+      variantName: row.variantName as string,
+      totalRequests: parseInt(row.totalRequests as string, 10),
+      avgLatency: parseFloat(row.avgLatency as string) || 0,
+      errorRate: parseFloat(row.errorRate as string) || 0,
     }));
 
     logger.log(`[A/B Test] Retrieved stats for ${stats.length} variants`);
@@ -254,7 +254,7 @@ export async function createExperiment(
   variants: Array<{
     variantName: string;
     promptId?: string;
-    configOverrides?: Record<string, any>;
+    configOverrides?: Record<string, unknown>;
     trafficPercentage: number;
   }>,
   userId: string

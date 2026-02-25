@@ -134,7 +134,7 @@ export const agentOrchestratorMachine = setup({
     storeResult: assign({
       results: ({ context, event }) => {
         // For onDone transitions, the result is in event.output
-        const result = (event as any).output as AgentResult | undefined;
+        const result = (event as { output?: AgentResult }).output;
         if (result) {
           return [...context.results, result];
         }
@@ -152,7 +152,7 @@ export const agentOrchestratorMachine = setup({
     storeError: assign({
       error: ({ event }): Error | null => {
         // For onError transitions, the error is in event.error
-        const err = (event as any).error;
+        const err = (event as { error?: unknown }).error;
         if (err instanceof Error) return err;
         if (err) return new Error(String(err));
         return new Error("Unknown agent error");

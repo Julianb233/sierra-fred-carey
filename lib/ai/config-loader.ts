@@ -8,7 +8,7 @@ export interface AIConfig {
   maxTokens: number;
   dimensionWeights: Record<string, number> | null;
   scoreThresholds: Record<string, number> | null;
-  customSettings: Record<string, any>;
+  customSettings: Record<string, unknown>;
 }
 
 export interface AIPrompt {
@@ -57,7 +57,7 @@ export async function getAIConfig(analyzer: string): Promise<AIConfig> {
       throw new Error(`No AI config found for analyzer: ${analyzer}`);
     }
 
-    const config: AIConfig = result[0] as any;
+    const config: AIConfig = result[0] as unknown as AIConfig;
 
     // Cache the config
     configCache.set(analyzer, {
@@ -109,7 +109,7 @@ export async function getActivePrompt(
       return null;
     }
 
-    const prompt: AIPrompt = result[0] as any;
+    const prompt: AIPrompt = result[0] as unknown as AIPrompt;
 
     // Cache the prompt
     promptCache.set(promptName, {
@@ -177,7 +177,7 @@ export async function getMultipleConfigs(
       `;
 
       for (const row of result) {
-        const config = row as any as AIConfig;
+        const config = row as unknown as AIConfig;
         configs.set(config.analyzer, config);
 
         // Cache it
@@ -215,7 +215,7 @@ export async function updateAIConfig(
 
   try {
     const setters: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (updates.model !== undefined) {

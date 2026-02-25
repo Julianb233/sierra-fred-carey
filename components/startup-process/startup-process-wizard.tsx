@@ -114,52 +114,32 @@ export function StartupProcessWizard({
   // Check if current step has required fields filled
   const isCurrentStepComplete = (): boolean => {
     if (!currentStep?.data) return false;
-    const data = currentStep.data;
+    const d = currentStep.data as unknown as Record<string, unknown>;
 
     // Check required fields based on step number
     switch (process.currentStep) {
       case 1:
-        return !!(
-          (data as any).problemStatement &&
-          (data as any).who &&
-          (data as any).frequency &&
-          (data as any).urgency
-        );
+        return !!(d.problemStatement && d.who && d.frequency && d.urgency);
       case 2:
-        return !!(
-          (data as any).economicBuyer &&
-          (data as any).user &&
-          (data as any).environment
-        );
+        return !!(d.economicBuyer && d.user && d.environment);
       case 3:
-        return !!(
-          (data as any).founderEdge &&
-          (data as any).uniqueInsight &&
-          (data as any).unfairAdvantage
-        );
+        return !!(d.founderEdge && d.uniqueInsight && d.unfairAdvantage);
       case 4:
-        return !!(
-          (data as any).simplestSolution && (data as any).explicitlyExcluded
-        );
+        return !!(d.simplestSolution && d.explicitlyExcluded);
       case 5:
-        return !!((data as any).validationMethod && (data as any).evidence);
+        return !!(d.validationMethod && d.evidence);
       case 6:
-        return !!((data as any).gtmChannel && (data as any).approach);
+        return !!(d.gtmChannel && d.approach);
       case 7:
         return !!(
-          (data as any).weeklyPriorities?.some((p: string) => p.trim()) &&
-          (data as any).ownershipStructure
+          Array.isArray(d.weeklyPriorities) &&
+          (d.weeklyPriorities as string[]).some((p) => p.trim()) &&
+          d.ownershipStructure
         );
       case 8:
-        return !!(
-          (data as any).pilotDefinition && (data as any).successCriteria
-        );
+        return !!(d.pilotDefinition && d.successCriteria);
       case 9:
-        return !!(
-          (data as any).whatWorked &&
-          (data as any).whatDidntWork &&
-          (data as any).scaleDecision
-        );
+        return !!(d.whatWorked && d.whatDidntWork && d.scaleDecision);
       default:
         return false;
     }

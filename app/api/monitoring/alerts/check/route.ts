@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       duration: `${duration}ms`,
       timestamp: result.timestamp,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Alert Check API] Error running alert check:", error);
 
     return NextResponse.json(
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         minimumLevel,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Alert Check API] Error in manual alert check:", error);
 
     return NextResponse.json(

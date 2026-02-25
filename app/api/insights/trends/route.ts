@@ -85,12 +85,12 @@ export async function GET(req: NextRequest) {
       ORDER BY ds.date ASC
     `;
 
-    const trendData: TrendDataPoint[] = trends.map((row: any) => ({
-      date: new Date(row.date).toISOString().split("T")[0],
-      totalRequests: row.total_requests,
-      successRate: parseFloat((row.success_rate * 100).toFixed(2)),
-      avgResponseTime: row.avg_response_time,
-      insights: row.insights,
+    const trendData: TrendDataPoint[] = trends.map((row) => ({
+      date: new Date(row.date as string).toISOString().split("T")[0],
+      totalRequests: row.total_requests as number,
+      successRate: parseFloat(((row.success_rate as number) * 100).toFixed(2)),
+      avgResponseTime: row.avg_response_time as number,
+      insights: row.insights as number,
     }));
 
     const response: TrendsResponse = {

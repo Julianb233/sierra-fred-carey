@@ -28,7 +28,8 @@ export function InstallPrompt() {
         return; // still dismissed
       }
     }
-    setDismissed(false);
+    const timer = setTimeout(() => setDismissed(false), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // 5-second delay before showing
@@ -40,17 +41,17 @@ export function InstallPrompt() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+  };
+
   // Auto-dismiss after 15 seconds of being visible
   useEffect(() => {
     if (!showPrompt || dismissed) return;
     const timer = setTimeout(handleDismiss, AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
   }, [showPrompt, dismissed]);
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem(DISMISS_KEY, Date.now().toString());
-  };
 
   // Don't render if: dashboard, standalone, installed, dismissed, not ready, or no platform support
   if (isDashboard || isStandalone || isInstalled || dismissed || !showPrompt || (!canPrompt && !isIOS)) {

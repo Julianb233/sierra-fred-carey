@@ -60,12 +60,13 @@ export async function GET(request: NextRequest) {
     const prompts = await query;
 
     // Group by prompt name for easier consumption
-    const groupedPrompts: Record<string, any[]> = {};
-    for (const prompt of prompts as any[]) {
-      if (!groupedPrompts[prompt.name]) {
-        groupedPrompts[prompt.name] = [];
+    const groupedPrompts: Record<string, Record<string, unknown>[]> = {};
+    for (const prompt of prompts as Record<string, unknown>[]) {
+      const name = prompt.name as string;
+      if (!groupedPrompts[name]) {
+        groupedPrompts[name] = [];
       }
-      groupedPrompts[prompt.name].push(prompt);
+      groupedPrompts[name].push(prompt);
     }
 
     return NextResponse.json({
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       WHERE name = ${name}
     `;
 
-    const maxVersion = maxVersionResult[0]?.maxVersion || 0;
+    const maxVersion = Number(maxVersionResult[0]?.maxVersion || 0);
     const newVersion = maxVersion + 1;
 
     // Get user ID from header (optional for now)

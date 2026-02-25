@@ -57,7 +57,7 @@ async function syncCompletionToDb(state: OnboardingState) {
     .single();
 
   // Build update object — only set fields that are currently empty in the DB
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, unknown> = {
     onboarding_completed: true,
     updated_at: new Date().toISOString(),
   };

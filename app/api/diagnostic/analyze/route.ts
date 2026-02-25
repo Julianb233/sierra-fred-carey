@@ -269,8 +269,8 @@ export async function POST(request: NextRequest) {
       let existingInvestorSignals: SignalDetection[] = [];
 
       if (existingState && existingState.length > 0) {
-        existingPositioningSignals = existingState[0].positioningSignals || [];
-        existingInvestorSignals = existingState[0].investorSignals || [];
+        existingPositioningSignals = (existingState[0].positioningSignals as SignalDetection[]) || [];
+        existingInvestorSignals = (existingState[0].investorSignals as SignalDetection[]) || [];
       }
 
       // Add only new unique signals

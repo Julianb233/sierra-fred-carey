@@ -34,9 +34,11 @@ export async function GET(_request: NextRequest) {
       data: checkIns,
       total: checkIns.length,
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("Check-ins fetch error:", error);
 

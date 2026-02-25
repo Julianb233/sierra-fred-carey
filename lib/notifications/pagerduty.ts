@@ -46,12 +46,12 @@ export async function sendPagerDutyNotification(
       messageId: responseData.dedup_key,
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[PagerDuty] Failed to send notification:", error);
     return {
       success: false,
       channel: "pagerduty",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }
@@ -71,7 +71,7 @@ function formatPagerDutyEvent(
   const severity = mapAlertLevelToSeverity(payload.level);
 
   // Build custom details
-  const customDetails: Record<string, any> = {
+  const customDetails: Record<string, unknown> = {
     alert_type: payload.type,
     level: payload.level,
   };
@@ -206,12 +206,12 @@ export async function resolvePagerDutyIncident(
       channel: "pagerduty",
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[PagerDuty] Failed to resolve incident:", error);
     return {
       success: false,
       channel: "pagerduty",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }

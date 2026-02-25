@@ -29,11 +29,8 @@ export function RadarChart({
   const angleSlice = (Math.PI * 2) / data.length;
 
   useEffect(() => {
-    if (animate) {
-      setTimeout(() => setIsVisible(true), 100);
-    } else {
-      setIsVisible(true);
-    }
+    const timer = setTimeout(() => setIsVisible(true), animate ? 100 : 0);
+    return () => clearTimeout(timer);
   }, [animate]);
 
   const getPointPosition = (index: number, value: number) => {

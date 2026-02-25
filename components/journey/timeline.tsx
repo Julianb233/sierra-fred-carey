@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 interface JourneyEvent {
   id: string;
   eventType: string;
-  eventData: any;
+  eventData: Record<string, unknown>;
   scoreBefore?: number;
   scoreAfter?: number;
   createdAt: string;
@@ -30,10 +30,10 @@ interface TimelineProps {
 const eventConfig: Record<
   string,
   {
-    icon: any;
+    icon: typeof CheckCircle;
     color: string;
     bgColor: string;
-    getTitle: (data: any) => string;
+    getTitle: (data: Record<string, unknown>) => string;
   }
 > = {
   analysis_completed: {
@@ -176,9 +176,9 @@ export function Timeline({ events, onLoadMore }: TimelineProps) {
                             )}
                           </div>
 
-                          {event.eventData.description && (
+                          {!!event.eventData.description && (
                             <p className="text-sm text-muted-foreground line-clamp-2">
-                              {event.eventData.description}
+                              {String(event.eventData.description)}
                             </p>
                           )}
                         </div>

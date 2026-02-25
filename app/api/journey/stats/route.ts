@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest) {
           .eq("event_type", "analysis_completed")
           .order("created_at", { ascending: false })
           .limit(1),
-        [] as any[]
+        [] as Record<string, unknown>[]
       ),
 
       // Latest investor readiness score
@@ -61,7 +61,7 @@ export async function GET(_request: NextRequest) {
           .eq("event_type", "score_improved")
           .order("created_at", { ascending: false })
           .limit(1),
-        [] as any[]
+        [] as Record<string, unknown>[]
       ),
 
       // Milestone statistics - count by status

@@ -57,9 +57,9 @@ export function VoiceSettings() {
     const supported =
       "speechSynthesis" in window &&
       typeof SpeechSynthesisUtterance !== "undefined";
-    setIsSupported(supported);
+    const supportTimer = setTimeout(() => setIsSupported(supported), 0);
 
-    if (!supported) return;
+    if (!supported) return () => clearTimeout(supportTimer);
 
     function loadVoices() {
       const available = window.speechSynthesis.getVoices();
@@ -75,6 +75,7 @@ export function VoiceSettings() {
     window.speechSynthesis.onvoiceschanged = loadVoices;
 
     return () => {
+      clearTimeout(supportTimer);
       window.speechSynthesis.onvoiceschanged = null;
     };
   }, []);
@@ -84,19 +85,22 @@ export function VoiceSettings() {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as Partial<TTSSettings>;
-        setSettings((prev) => ({
-          voiceURI: parsed.voiceURI ?? prev.voiceURI,
-          rate: parsed.rate ?? prev.rate,
-          pitch: parsed.pitch ?? prev.pitch,
-        }));
+    const timer = setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as Partial<TTSSettings>;
+          setSettings((prev) => ({
+            voiceURI: parsed.voiceURI ?? prev.voiceURI,
+            rate: parsed.rate ?? prev.rate,
+            pitch: parsed.pitch ?? prev.pitch,
+          }));
+        }
+      } catch {
+        // Corrupted localStorage data; use defaults
       }
-    } catch {
-      // Corrupted localStorage data; use defaults
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Save settings to localStorage

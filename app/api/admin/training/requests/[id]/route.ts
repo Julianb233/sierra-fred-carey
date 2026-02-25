@@ -6,12 +6,13 @@ import { logger } from "@/lib/logger";
 /**
  * Helper: run a query and return a fallback on table-not-found errors
  */
-async function safeQuery<T = any>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
+async function safeQuery<T = Record<string, unknown>>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
   try {
     return await query;
-  } catch (err: any) {
-    const msg = err?.message || "";
-    if (err?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
+  } catch (err: unknown) {
+    const errObj = err as Error & { code?: string };
+    const msg = errObj?.message || "";
+    if (errObj?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
       return fallback;
     }
     throw err;
@@ -88,7 +89,7 @@ export async function GET(
     );
 
     // Fetch ratings for the associated response(s)
-    let ratings: any[] = [];
+    let ratings: Record<string, unknown>[] = [];
     if (responses.length > 0) {
       // Get ratings for each response
       for (const response of responses) {

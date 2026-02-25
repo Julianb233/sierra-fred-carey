@@ -71,12 +71,15 @@ export async function POST(request: NextRequest) {
         verdict: d.icVerdict,
         confidence: d.axes?.fundFit?.score ?? 50,
         reasoning: d.icVerdictReasoning,
-        axes: Object.entries(d.axes || {}).map(([name, val]: [string, any]) => ({
-          name,
-          score: val.score,
-          subscores: val.subscores,
-          feedback: val.feedback,
-        })),
+        axes: Object.entries(d.axes || {}).map(([name, val]) => {
+          const axis = val as Record<string, unknown>;
+          return {
+            name,
+            score: axis.score,
+            subscores: axis.subscores,
+            feedback: axis.feedback,
+          };
+        }),
         hiddenFilters: d.hiddenFilters || [],
         passReasons: d.topPassReasons || [],
         deriskingActions: d.deriskingActions || [],

@@ -25,54 +25,57 @@ export default function NightModeParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
 
-    // Generate random particles
-    const generatedParticles: Particle[] = [];
+      // Generate random particles
+      const generatedParticles: Particle[] = [];
 
-    // Stars - small twinkling points
-    for (let i = 0; i < 30; i++) {
-      generatedParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 3 + 1,
-        duration: Math.random() * 3 + 2,
-        delay: Math.random() * 2,
-        opacity: Math.random() * 0.5 + 0.3,
-        type: "star",
-      });
-    }
+      // Stars - small twinkling points
+      for (let i = 0; i < 30; i++) {
+        generatedParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 3 + 1,
+          duration: Math.random() * 3 + 2,
+          delay: Math.random() * 2,
+          opacity: Math.random() * 0.5 + 0.3,
+          type: "star",
+        });
+      }
 
-    // Sparks - rising orange sparks
-    for (let i = 30; i < 45; i++) {
-      generatedParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 4 + 2,
-        duration: Math.random() * 4 + 3,
-        delay: Math.random() * 3,
-        opacity: Math.random() * 0.6 + 0.2,
-        type: "spark",
-      });
-    }
+      // Sparks - rising orange sparks
+      for (let i = 30; i < 45; i++) {
+        generatedParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 4 + 2,
+          duration: Math.random() * 4 + 3,
+          delay: Math.random() * 3,
+          opacity: Math.random() * 0.6 + 0.2,
+          type: "spark",
+        });
+      }
 
-    // Orbs - larger glowing circles
-    for (let i = 45; i < 55; i++) {
-      generatedParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 20 + 10,
-        duration: Math.random() * 8 + 6,
-        delay: Math.random() * 4,
-        opacity: Math.random() * 0.15 + 0.05,
-        type: "orb",
-      });
-    }
+      // Orbs - larger glowing circles
+      for (let i = 45; i < 55; i++) {
+        generatedParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 20 + 10,
+          duration: Math.random() * 8 + 6,
+          delay: Math.random() * 4,
+          opacity: Math.random() * 0.15 + 0.05,
+          type: "orb",
+        });
+      }
 
-    setParticles(generatedParticles);
+      setParticles(generatedParticles);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Don't render on server or in light mode

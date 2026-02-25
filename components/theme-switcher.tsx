@@ -10,7 +10,8 @@ export default function ThemeSwitcher() {
 
   // Only show the toggle after mounting to avoid hydration mismatch
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClick = () => {

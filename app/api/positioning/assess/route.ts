@@ -60,19 +60,22 @@ export async function POST(request: NextRequest) {
         overallGrade: d.positioningGrade,
         narrativeTightnessScore: d.narrativeTightnessScore,
         summary: `Grade: ${d.positioningGrade} | Narrative Tightness: ${d.narrativeTightnessScore}/10`,
-        categories: Object.entries(d.categories || {}).map(([name, val]: [string, any]) => ({
-          name,
-          score: val.score,
-          grade: val.grade,
-          elements: val.elements,
-          feedback: val.feedback,
-        })),
-        gaps: (d.gaps || []).map((g: any) => ({
+        categories: Object.entries(d.categories || {}).map(([name, val]) => {
+          const cat = val as Record<string, unknown>;
+          return {
+            name,
+            score: cat.score,
+            grade: cat.grade,
+            elements: cat.elements,
+            feedback: cat.feedback,
+          };
+        }),
+        gaps: (d.gaps || []).map((g: Record<string, unknown>) => ({
           category: g.category,
           gap: g.gap,
           severity: g.severity,
         })),
-        actions: (d.nextActions || []).map((a: any) => ({
+        actions: (d.nextActions || []).map((a: Record<string, unknown>) => ({
           action: a.action,
           priority: a.priority,
           expectedImpact: a.expectedImpact,

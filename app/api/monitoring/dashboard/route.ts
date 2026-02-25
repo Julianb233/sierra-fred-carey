@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       data: dashboard,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Monitoring API] Dashboard error:", error);
     return NextResponse.json(
       {

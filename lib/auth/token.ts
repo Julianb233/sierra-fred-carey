@@ -39,7 +39,7 @@ export function getJWTSecret(): string {
  * @returns Signed JWT token
  */
 export async function signJWT(
-  payload: Record<string, any>,
+  payload: Record<string, unknown>,
   options?: {
     expiresIn?: string | number;
     secret?: string;

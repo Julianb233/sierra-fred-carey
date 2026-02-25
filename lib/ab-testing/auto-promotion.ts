@@ -84,7 +84,7 @@ export async function checkPromotionEligibility(
       throw new Error(`Experiment not found: ${experimentName}`);
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, string>;
 
     // Calculate test duration
     const startDate = new Date(experiment.startDate);
@@ -204,7 +204,7 @@ export async function promoteWinningVariant(
       throw new Error(`Active experiment not found: ${experimentName}`);
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, string>;
 
     // Get current comparison to find winner
     const comparison = await compareExperimentVariants(experimentName);
@@ -231,7 +231,7 @@ export async function promoteWinningVariant(
     `;
 
     const winningVariant = variantsResult.find(
-      (v: any) => v.variantName === comparison.winningVariant
+      (v) => (v as Record<string, string>).variantName === comparison.winningVariant
     );
 
     if (!winningVariant) {
@@ -239,7 +239,7 @@ export async function promoteWinningVariant(
     }
 
     // Check if already promoted (100% traffic)
-    if (parseFloat(winningVariant.trafficPercentage) === 100) {
+    if (parseFloat(winningVariant.trafficPercentage as string) === 100) {
       logger.log(`[Auto-Promotion] Already promoted: ${comparison.winningVariant}`);
       return {
         success: true,
@@ -252,8 +252,8 @@ export async function promoteWinningVariant(
     }
 
     // Find previous winner (variant with highest traffic)
-    const previousWinner = variantsResult.reduce((prev: any, curr: any) => {
-      return parseFloat(curr.trafficPercentage) > parseFloat(prev.trafficPercentage)
+    const previousWinner = variantsResult.reduce((prev: Record<string, unknown>, curr: Record<string, unknown>) => {
+      return parseFloat(curr.trafficPercentage as string) > parseFloat(prev.trafficPercentage as string)
         ? curr
         : prev;
     }, variantsResult[0]);
@@ -371,7 +371,7 @@ export async function rollbackPromotion(
       throw new Error(`Experiment not found: ${experimentName}`);
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, string>;
 
     // Get most recent promotion
     const promotionResult = await sql`
@@ -393,7 +393,7 @@ export async function rollbackPromotion(
       throw new Error(`No active promotion found for ${experimentName}`);
     }
 
-    const promotion = promotionResult[0] as any;
+    const promotion = promotionResult[0] as Record<string, string>;
 
     // Get all variants
     const variantsResult = await sql`
@@ -415,7 +415,7 @@ export async function rollbackPromotion(
       const equalTraffic = 100 / variantsResult.length;
       trafficDistribution = {};
       for (const variant of variantsResult) {
-        trafficDistribution[variant.id] = equalTraffic;
+        trafficDistribution[variant.id as string] = equalTraffic;
       }
     }
 
@@ -533,11 +533,11 @@ export async function getPromotionHistory(
       ORDER BY promoted_at DESC
     `;
 
-    return result.map((row: any) => ({
+    return result.map((row: Record<string, unknown>) => ({
       ...row,
-      promotedAt: new Date(row.promotedAt),
-      rolledBackAt: row.rolledBackAt ? new Date(row.rolledBackAt) : undefined,
-    }));
+      promotedAt: new Date(row.promotedAt as string),
+      rolledBackAt: row.rolledBackAt ? new Date(row.rolledBackAt as string) : undefined,
+    })) as unknown as PromotionAuditLog[];
   } catch (error) {
     console.error(`[Auto-Promotion] Error fetching promotion history:`, error);
     throw error;
@@ -576,7 +576,7 @@ export async function checkAllExperimentsForPromotion(
     };
 
     for (const experiment of experimentsResult) {
-      const experimentName = (experiment as any).name;
+      const experimentName = (experiment as Record<string, string>).name;
 
       try {
         // Check eligibility

@@ -12,10 +12,28 @@ interface StreakCounterProps {
 export function StreakCounter({ currentStreak, bestStreak }: StreakCounterProps) {
   const [celebrate, setCelebrate] = useState(false);
 
+  // Pre-compute random particle positions to avoid impure calls during render
+  const [particleOffsets, setParticleOffsets] = useState(
+    () => Array.from({ length: 12 }, () => ({
+      x: 50 + (Math.random() - 0.5) * 100,
+      y: 50 + (Math.random() - 0.5) * 100,
+    }))
+  );
+
   useEffect(() => {
     if (currentStreak > 0 && currentStreak % 5 === 0) {
-      setCelebrate(true);
-      setTimeout(() => setCelebrate(false), 2000);
+      const timer = setTimeout(() => {
+        setParticleOffsets(Array.from({ length: 12 }, () => ({
+          x: 50 + (Math.random() - 0.5) * 100,
+          y: 50 + (Math.random() - 0.5) * 100,
+        })));
+        setCelebrate(true);
+      }, 0);
+      const endTimer = setTimeout(() => setCelebrate(false), 2000);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(endTimer);
+      };
     }
   }, [currentStreak]);
 
@@ -109,8 +127,8 @@ export function StreakCounter({ currentStreak, bestStreak }: StreakCounterProps)
                   opacity: 1,
                 }}
                 animate={{
-                  x: `${50 + (Math.random() - 0.5) * 100}%`,
-                  y: `${50 + (Math.random() - 0.5) * 100}%`,
+                  x: `${particleOffsets[i].x}%`,
+                  y: `${particleOffsets[i].y}%`,
                   scale: [0, 1, 0],
                   opacity: [1, 1, 0],
                 }}

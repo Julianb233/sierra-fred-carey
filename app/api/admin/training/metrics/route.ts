@@ -6,12 +6,13 @@ import { logger } from "@/lib/logger";
 /**
  * Helper: run a query and return a fallback on table-not-found errors
  */
-async function safeQuery<T = any>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
+async function safeQuery<T = Record<string, unknown>>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
   try {
     return await query;
-  } catch (err: any) {
-    const msg = err?.message || "";
-    if (err?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
+  } catch (err: unknown) {
+    const errObj = err as Error & { code?: string };
+    const msg = errObj?.message || "";
+    if (errObj?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
       return fallback;
     }
     throw err;
@@ -113,11 +114,11 @@ export async function GET(request: NextRequest) {
       `
     );
 
-    const totalRequests = parseInt(requestMetrics[0]?.total_requests || "0", 10);
-    const totalResponses = parseInt(responseMetrics[0]?.total_responses || "0", 10);
-    const successfulResponses = parseInt(latencyMetrics[0]?.count || "0", 10);
-    const errorCount = parseInt(errorMetrics[0]?.error_count || "0", 10);
-    const totalRatings = parseInt(ratingMetrics[0]?.total_ratings || "0", 10);
+    const totalRequests = parseInt(String(requestMetrics[0]?.total_requests || "0"), 10);
+    const totalResponses = parseInt(String(responseMetrics[0]?.total_responses || "0"), 10);
+    const successfulResponses = parseInt(String(latencyMetrics[0]?.count || "0"), 10);
+    const errorCount = parseInt(String(errorMetrics[0]?.error_count || "0"), 10);
+    const totalRatings = parseInt(String(ratingMetrics[0]?.total_ratings || "0"), 10);
     const errorRate = totalResponses > 0 ? errorCount / totalResponses : 0;
 
     return NextResponse.json({
@@ -129,13 +130,13 @@ export async function GET(request: NextRequest) {
         errorCount,
         errorRate: Math.round(errorRate * 10000) / 10000,
         totalRatings,
-        analyzerBreakdown: analyzerBreakdown.map((row: any) => ({
+        analyzerBreakdown: analyzerBreakdown.map((row: Record<string, unknown>) => ({
           analyzer: row.analyzer,
-          requestCount: parseInt(row.request_count || "0", 10),
+          requestCount: parseInt((row.request_count as string) || "0", 10),
         })),
-        modelUsage: modelUsage.map((row: any) => ({
+        modelUsage: modelUsage.map((row: Record<string, unknown>) => ({
           model: row.model,
-          usageCount: parseInt(row.usage_count || "0", 10),
+          usageCount: parseInt((row.usage_count as string) || "0", 10),
         })),
       },
     });

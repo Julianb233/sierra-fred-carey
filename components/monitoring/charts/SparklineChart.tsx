@@ -54,7 +54,7 @@ export function SparklineChart({
 
   const gradientId = useMemo(() => `sparkline-gradient-${Math.random().toString(36).substr(2, 9)}`, []);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: SparklineDataPoint & { timestamp: number } }> }) => {
     if (!active || !payload || !payload[0]) return null;
     const dataPoint = payload[0].payload as SparklineDataPoint & { timestamp: number };
     return (

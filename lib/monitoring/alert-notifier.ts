@@ -144,9 +144,9 @@ export async function notifyAlerts(
     logger.log(
       `[Alert Notifier] Sent ${stats.notificationsSent} notifications, ${stats.notificationsFailed} failed`
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Alert Notifier] Error processing alerts:", error);
-    stats.errors.push(error.message);
+    stats.errors.push(error instanceof Error ? error.message : String(error));
   }
 
   return stats;
@@ -191,11 +191,11 @@ async function notifySingleAlert(
       success: hasSuccess,
       error: errors.length > 0 ? errors.join(", ") : undefined,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Alert Notifier] Error sending notification:", error);
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -236,11 +236,11 @@ async function getAlertSubscribers(
         AND array_length(alert_levels, 1) > 0
     `;
 
-    return result.map((row: any) => ({
-      userId: row.userId,
+    return result.map((row: Record<string, unknown>) => ({
+      userId: row.userId as string,
       experimentName: experimentName,
-      levels: row.levels || ["critical"],
-      enabled: row.enabled,
+      levels: (row.levels as ("info" | "warning" | "critical")[]) || ["critical"],
+      enabled: Boolean(row.enabled),
     }));
   } catch (error) {
     console.error("[Alert Notifier] Error fetching subscribers:", error);

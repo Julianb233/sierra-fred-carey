@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -94,6 +95,14 @@ const socialVariants = {
 };
 
 export default function LinksPage() {
+  const [particles] = useState(() =>
+    Array.from({ length: 8 }, () => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 3 + Math.random() * 4,
+      delay: Math.random() * 5,
+    }))
+  );
   return (
     <div className="relative min-h-screen overflow-hidden bg-white dark:bg-gray-950">
       {/* Animated background blobs */}
@@ -316,22 +325,22 @@ export default function LinksPage() {
 
       {/* Floating particles */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-20">
-        {[...Array(8)].map((_, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
             className="absolute w-2 h-2 bg-[#ff6a1a] rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
             }}
             animate={{
               y: [0, -100, 0],
               opacity: [0, 1, 0],
             }}
             transition={{
-              duration: 3 + Math.random() * 4,
+              duration: p.duration,
               repeat: Infinity,
-              delay: Math.random() * 5,
+              delay: p.delay,
             }}
           />
         ))}

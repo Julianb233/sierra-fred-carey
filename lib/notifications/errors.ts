@@ -8,7 +8,7 @@ export class NotificationError extends Error {
     message: string,
     public readonly channel: 'slack' | 'pagerduty' | 'email',
     public readonly code: string,
-    public readonly details?: Record<string, any>
+    public readonly details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'NotificationError';
@@ -116,7 +116,7 @@ export function getErrorMessage(error: unknown): string {
 /**
  * Format error for logging with full context
  */
-export function formatErrorForLogging(error: unknown): Record<string, any> {
+export function formatErrorForLogging(error: unknown): Record<string, unknown> {
   if (isNotificationError(error)) {
     return {
       name: error.name,

@@ -22,7 +22,9 @@ export function TtsButton({ text, className }: TtsButtonProps) {
 
   // Check support on mount (avoids SSR mismatch)
   useEffect(() => {
-    setSupported(tts.isSupported());
+    const isSupported = tts.isSupported();
+    const timer = setTimeout(() => setSupported(isSupported), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Clean up on unmount

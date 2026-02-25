@@ -77,7 +77,7 @@ export interface BaseAgentConfig {
   /** System prompt defining the agent's personality and capabilities */
   systemPrompt: string;
   /** Tools available to this agent (AI SDK tool definitions) */
-  tools: Record<string, any>;
+  tools: Record<string, unknown>;
   /** Maximum number of tool-call steps the agent can take */
   maxSteps: number;
   /** Optional model override (defaults to 'primary') */

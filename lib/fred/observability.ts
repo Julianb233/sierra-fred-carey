@@ -44,25 +44,27 @@ export class FredObservability {
   /**
    * Attach observability to an XState actor
    */
-  attachToActor(actor: any): void {
+  attachToActor(actor: { subscribe: (cb: (snapshot: { value: unknown; context: unknown }) => void) => void }): void {
     this.startTime = new Date();
     this.lastStateTime = new Date();
 
-    actor.subscribe((snapshot: any) => {
+    actor.subscribe((snapshot: { value: unknown; context: unknown }) => {
       const currentState = typeof snapshot.value === "string"
         ? snapshot.value
         : JSON.stringify(snapshot.value);
 
+      const ctx = snapshot.context as FredContext;
+
       if (currentState !== this.lastState) {
-        this.logTransition(this.lastState, currentState, snapshot.context);
+        this.logTransition(this.lastState, currentState, ctx);
         this.lastState = currentState;
       }
 
       // Check for errors in context
-      if (snapshot.context.error && !this.errors.some(
-        (e) => e.message === snapshot.context.error?.message
+      if (ctx.error && !this.errors.some(
+        (e) => e.message === ctx.error?.message
       )) {
-        this.logError(new Error(snapshot.context.error.message), 0);
+        this.logError(new Error(ctx.error.message), 0);
       }
     });
   }

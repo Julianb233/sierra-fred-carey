@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     // For each experiment, get variant stats
     const results = await Promise.all(
-      experiments.map(async (exp: any) => {
+      experiments.map(async (exp) => {
         const variantStats = await sql`
           SELECT
             v.variant_name as "variantName",
@@ -65,16 +65,16 @@ export async function GET(req: NextRequest) {
         `;
 
         return {
-          experimentName: exp.name,
-          description: exp.description,
-          isActive: exp.isActive,
-          startDate: exp.startDate,
-          endDate: exp.endDate,
-          variants: variantStats.map((v: any) => ({
-            variantName: v.variantName,
-            totalRequests: v.total_requests || 0,
-            avgLatency: v.avg_latency || 0,
-            errorRate: parseFloat(v.error_rate || "0"),
+          experimentName: exp.name as string,
+          description: exp.description as string,
+          isActive: exp.isActive as boolean,
+          startDate: exp.startDate as string,
+          endDate: (exp.endDate as string) || undefined,
+          variants: variantStats.map((v) => ({
+            variantName: v.variantName as string,
+            totalRequests: (v.total_requests as number) || 0,
+            avgLatency: (v.avg_latency as number) || 0,
+            errorRate: parseFloat((v.error_rate as string) || "0"),
           })),
         };
       })

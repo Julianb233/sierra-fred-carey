@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       // Check if positioning already introduced
       if (currentState.positioning_framework_introduced) {
         response.alreadyIntroduced = true;
-        response.triggerReason = currentState.positioning_framework_trigger;
+        response.triggerReason = currentState.positioning_framework_trigger as string | null;
         return NextResponse.json({ success: true, data: response });
       }
 
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check signals to determine if introduction is needed
-      const signals = currentState.positioning_signals || [];
+      const signals = (currentState.positioning_signals as Array<{ signal: string }>) || [];
       const positioningSignals: PositioningSignals = {
         icpVagueOrUndefined: signals.some(
           (s: { signal: string }) => s.signal === "icp_vague"
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       // Check if investor lens already introduced
       if (currentState.investor_lens_introduced) {
         response.alreadyIntroduced = true;
-        response.triggerReason = currentState.investor_lens_trigger;
+        response.triggerReason = currentState.investor_lens_trigger as string | null;
         return NextResponse.json({ success: true, data: response });
       }
 
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
       // So we don't check if positioning is active
 
       // Check signals to determine if introduction is needed
-      const signals = currentState.investor_signals || [];
+      const signals = (currentState.investor_signals as Array<{ signal: string }>) || [];
       const investorSignals: InvestorReadinessSignals = {
         mentionsFundraising: signals.some(
           (s: { signal: string }) => s.signal === "mentions_fundraising"

@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       // Use the enhanced alert notifier to send to all subscribed users
       notifyAlerts(allAlerts, {
         immediate: true,
-        minimumLevel: levelFilter as any || "warning",
+        minimumLevel: (levelFilter as "info" | "warning" | "critical") || "warning",
       })
         .then((stats) => {
           logger.log(

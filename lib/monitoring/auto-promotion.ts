@@ -77,7 +77,7 @@ export interface PromotionRecord {
   promotedAt: Date;
   rollbackAt?: Date;
   rollbackReason?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -243,12 +243,12 @@ export async function checkPromotionEligibility(
         errorRateAcceptable,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[AutoPromotion] Error checking eligibility for ${experimentName}:`,
       error
     );
-    throw new Error(`Failed to check promotion eligibility: ${error.message}`);
+    throw new Error(`Failed to check promotion eligibility: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -352,7 +352,7 @@ export async function promoteWinner(
         metadata
     `;
 
-    const record = promotionResult[0] as PromotionRecord;
+    const record = promotionResult[0] as unknown as PromotionRecord;
 
     // Update experiment to redirect all traffic to winner
     await sql`
@@ -378,12 +378,12 @@ export async function promoteWinner(
     );
 
     return record;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[AutoPromotion] Error promoting winner for ${experimentName}:`,
       error
     );
-    throw new Error(`Failed to promote winner: ${error.message}`);
+    throw new Error(`Failed to promote winner: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -413,7 +413,7 @@ export async function rollbackPromotion(
       throw new Error(`No active promotion found for experiment: ${experimentName}`);
     }
 
-    const promotion = promotionResult[0] as any;
+    const promotion = promotionResult[0] as Record<string, string>;
 
     // Revert traffic to control
     await sql`
@@ -447,12 +447,12 @@ export async function rollbackPromotion(
     logger.log(
       `[AutoPromotion] Successfully rolled back promotion for experiment ${experimentName}`
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[AutoPromotion] Error rolling back promotion for ${experimentName}:`,
       error
     );
-    throw new Error(`Failed to rollback promotion: ${error.message}`);
+    throw new Error(`Failed to rollback promotion: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -486,13 +486,13 @@ export async function getPromotionHistory(
       ORDER BY promoted_at DESC
     `;
 
-    return result as PromotionRecord[];
-  } catch (error: any) {
+    return result as unknown as PromotionRecord[];
+  } catch (error: unknown) {
     console.error(
       `[AutoPromotion] Error fetching promotion history for ${experimentName}:`,
       error
     );
-    throw new Error(`Failed to fetch promotion history: ${error.message}`);
+    throw new Error(`Failed to fetch promotion history: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -528,7 +528,7 @@ export async function notifyPromotion(
     logger.log(
       `[AutoPromotion] Sent promotion notification for experiment ${record.experimentName}`
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[AutoPromotion] Error sending promotion notification:`,
       error
@@ -566,7 +566,7 @@ export async function autoCheckPromotions(
 
     for (const exp of experimentsResult) {
       try {
-        const experimentName = (exp as any).name;
+        const experimentName = (exp as Record<string, string>).name;
         const eligibility = await checkPromotionEligibility(experimentName, config);
 
         if (eligibility.isEligible) {
@@ -579,9 +579,9 @@ export async function autoCheckPromotions(
             promoted_experiments.push(experimentName);
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(
-          `[AutoPromotion] Error checking experiment ${(exp as any).name}:`,
+          `[AutoPromotion] Error checking experiment ${(exp as Record<string, string>).name}:`,
           error
         );
         // Continue checking other experiments
@@ -598,8 +598,8 @@ export async function autoCheckPromotions(
       eligible,
       promoted_experiments,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[AutoPromotion] Error in auto-check:`, error);
-    throw new Error(`Auto-check failed: ${error.message}`);
+    throw new Error(`Auto-check failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

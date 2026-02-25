@@ -32,18 +32,18 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
   // Fetch document details when doc changes
   useEffect(() => {
     if (!doc) {
-      setContent(null);
-      return;
+      const timer = setTimeout(() => setContent(null), 0);
+      return () => clearTimeout(timer);
     }
 
     // If the document has a fileUrl already, use it directly for PDFs
     if (doc.fileUrl && doc.fileUrl.endsWith(".pdf")) {
-      setContent(doc.fileUrl);
-      return;
+      const pdfTimer = setTimeout(() => setContent(doc.fileUrl!), 0);
+      return () => clearTimeout(pdfTimer);
     }
 
     // Otherwise fetch from the review endpoint to get content
-    setLoading(true);
+    const loadTimer = setTimeout(() => setLoading(true), 0);
     fetch(`/api/document-repository/${doc.id}/review`, { method: "POST" })
       .then((r) => r.json())
       .then((data) => {
@@ -55,6 +55,8 @@ export function DocumentViewDialog({ doc, onClose }: DocumentViewDialogProps) {
       })
       .catch(() => setContent(null))
       .finally(() => setLoading(false));
+
+    return () => clearTimeout(loadTimer);
   }, [doc]);
 
   if (!doc) return null;

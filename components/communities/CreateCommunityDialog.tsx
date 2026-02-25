@@ -87,8 +87,8 @@ export function CreateCommunityDialog({ children, onCreated }: CreateCommunityDi
       resetForm();
       onCreated?.();
       router.push(`/dashboard/communities/${json.data?.slug || ""}`);
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSubmitting(false);
     }

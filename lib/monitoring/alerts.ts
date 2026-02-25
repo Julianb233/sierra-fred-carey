@@ -53,7 +53,7 @@ export async function sendPerformanceAlert(
   metric: string,
   value: number,
   threshold: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   const level: AlertLevel = value > threshold * 2 ? 'critical' : 'warning';
 

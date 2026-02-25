@@ -58,12 +58,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        configs: configs.map((config: any) => ({
+        configs: configs.map((config) => ({
           id: config.id,
           channel: config.channel,
-          webhookUrl: config.webhookUrl ? maskUrl(config.webhookUrl) : null,
+          webhookUrl: config.webhookUrl ? maskUrl(config.webhookUrl as string) : null,
           emailAddress: config.emailAddress,
-          routingKey: config.routingKey ? maskKey(config.routingKey) : null,
+          routingKey: config.routingKey ? maskKey(config.routingKey as string) : null,
           enabled: config.enabled,
           alertLevels: config.alertLevels || [],
           metadata: config.metadata || {},
@@ -73,9 +73,11 @@ export async function GET(request: NextRequest) {
         stats: stats[0] || { total: 0, sent: 0, failed: 0 },
       },
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[GET /api/notifications/settings]", error);
     return NextResponse.json(
@@ -223,7 +225,7 @@ export async function POST(request: NextRequest) {
 
     // Test the configuration if requested
     if (body.testOnCreate) {
-      const testResult = await testNotificationConfig(newConfig.id, userId);
+      const testResult = await testNotificationConfig(newConfig.id as string, userId);
       if (!testResult.success) {
         // Delete the config if test failed
         await sql`
@@ -250,9 +252,11 @@ export async function POST(request: NextRequest) {
         createdAt: newConfig.createdAt,
       },
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[POST /api/notifications/settings]", error);
     return NextResponse.json(
@@ -358,9 +362,11 @@ export async function PATCH(request: NextRequest) {
       success: true,
       data: result[0],
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[PATCH /api/notifications/settings]", error);
     return NextResponse.json(
@@ -406,9 +412,11 @@ export async function DELETE(request: NextRequest) {
       success: true,
       data: { deleted: true },
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[DELETE /api/notifications/settings]", error);
     return NextResponse.json(

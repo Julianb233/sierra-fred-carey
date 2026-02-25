@@ -76,7 +76,7 @@ export async function DELETE(_request: NextRequest) {
         LIMIT 1
       `;
       if (subRows.length > 0 && subRows[0].stripe_subscription_id) {
-        await stripe.subscriptions.cancel(subRows[0].stripe_subscription_id);
+        await stripe.subscriptions.cancel(subRows[0].stripe_subscription_id as string);
         logger.info({ subscriptionId: subRows[0].stripe_subscription_id }, "[user/delete] Stripe subscription cancelled");
       }
     } catch (err) {

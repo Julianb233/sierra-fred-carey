@@ -52,15 +52,15 @@ export async function GET(req: NextRequest) {
     `;
 
     const analytics: AIAnalytics = {
-      totalRequests: parseInt(totalStats[0]?.total_requests || "0", 10),
-      avgResponseTime: totalStats[0]?.avg_response_time || 0,
-      successRate: parseFloat(totalStats[0]?.success_rate || "0"),
-      totalTokensUsed: totalStats[0]?.total_tokens_used || 0,
-      requestsByAnalyzer: analyzerStats.map((row: any) => ({
-        analyzer: row.analyzer,
-        count: row.count,
-        avgLatency: row.avg_latency || 0,
-        errorRate: parseFloat(row.error_rate || "0"),
+      totalRequests: parseInt((totalStats[0]?.total_requests as string) || "0", 10),
+      avgResponseTime: (totalStats[0]?.avg_response_time as number) || 0,
+      successRate: parseFloat((totalStats[0]?.success_rate as string) || "0"),
+      totalTokensUsed: (totalStats[0]?.total_tokens_used as number) || 0,
+      requestsByAnalyzer: analyzerStats.map((row) => ({
+        analyzer: row.analyzer as string,
+        count: row.count as number,
+        avgLatency: (row.avg_latency as number) || 0,
+        errorRate: parseFloat((row.error_rate as string) || "0"),
       })),
     };
 

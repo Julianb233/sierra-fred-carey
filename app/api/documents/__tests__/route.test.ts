@@ -297,9 +297,9 @@ describe('Documents API', () => {
       mockAuthenticated('user-secure-123');
 
       let capturedQuery: string | null = null;
-      let capturedParams: any[] = [];
+      let capturedParams: unknown[] = [];
 
-      mockSql.mockImplementation((strings: TemplateStringsArray, ...values: any[]) => {
+      mockSql.mockImplementation((strings: TemplateStringsArray, ...values: unknown[]) => {
         capturedQuery = strings.join('?');
         capturedParams = values;
         return Promise.resolve([]);

@@ -14,17 +14,18 @@ export function useInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // Detect standalone mode
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as unknown as Record<string, unknown>).standalone === true;
-    setIsStandalone(standalone);
+    // Detect standalone mode and iOS via timeout to avoid synchronous setState in effect
+    const timer = setTimeout(() => {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as unknown as Record<string, unknown>).standalone === true;
+      setIsStandalone(standalone);
 
-    // Detect iOS
-    const ios =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-      !(window as unknown as Record<string, unknown>).MSStream;
-    setIsIOS(ios);
+      const ios =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+        !(window as unknown as Record<string, unknown>).MSStream;
+      setIsIOS(ios);
+    }, 0);
 
     // Listen for beforeinstallprompt
     const handleBeforeInstall = (e: Event) => {
@@ -42,6 +43,7 @@ export function useInstallPrompt() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };

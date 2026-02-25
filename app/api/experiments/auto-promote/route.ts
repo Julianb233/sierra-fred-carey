@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Auto-Promote API] Error:", error);
     return NextResponse.json(
       {
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const preset = searchParams.get("preset") as any;
+    const preset = searchParams.get("preset") || undefined;
 
     const config = loadAutoPromotionConfig(preset);
     const validation = validateAutoPromotionConfig(config);
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Auto-Promote API] Error:", error);
     return NextResponse.json(
       {

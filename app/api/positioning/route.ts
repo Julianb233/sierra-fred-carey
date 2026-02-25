@@ -493,7 +493,7 @@ export async function POST(request: NextRequest) {
       await extractAndSaveInsights(
         userId,
         "positioning_assessment",
-        savedAssessment.id,
+        savedAssessment.id as string,
         aiResponse,
         `Positioning assessment for: ${companyDescription.substring(0, 100)}`
       );
@@ -546,10 +546,12 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle auth errors (NextResponse thrown by requireAuth)
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[Positioning] Assessment error:", error);
     return NextResponse.json(
@@ -596,7 +598,7 @@ export async function GET(request: NextRequest) {
       FROM positioning_assessments
       WHERE user_id = ${userId}
     `;
-    const total = countResult?.[0]?.total ? parseInt(countResult[0].total) : 0;
+    const total = countResult?.[0]?.total ? parseInt(countResult[0].total as string) : 0;
 
     // Get assessments with pagination
     const assessments = await sql`
@@ -642,7 +644,7 @@ export async function GET(request: NextRequest) {
     `;
 
     // Transform data for response
-    const formattedAssessments = assessments.map((a: any) => ({
+    const formattedAssessments = assessments.map((a) => ({
       id: a.id,
       positioningGrade: a.positioningGrade,
       narrativeTightnessScore: a.narrativeTightnessScore,
@@ -705,9 +707,11 @@ export async function GET(request: NextRequest) {
         hasMore: offset + limit < total,
       },
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[Positioning] Fetch error:", error);
     return NextResponse.json(

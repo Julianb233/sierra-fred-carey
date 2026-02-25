@@ -284,7 +284,7 @@ async function getUserRateLimitPreference(
       return null;
     }
 
-    return { disabled: result[0].rate_limit_disabled };
+    return { disabled: Boolean(result[0].rate_limit_disabled) };
   } catch (error) {
     // Table might not exist yet
     return null;
@@ -356,7 +356,7 @@ async function sendToChannel(
       default:
         throw new Error(`Unknown channel: ${config.channel}`);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[Notifications] Error sending to ${config.channel}:`,
       error
@@ -364,7 +364,7 @@ async function sendToChannel(
     return {
       success: false,
       channel: config.channel,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }
@@ -446,7 +446,7 @@ export async function testNotificationConfig(
       throw new Error("Notification config not found");
     }
 
-    const config = result[0] as any;
+    const config = result[0] as Record<string, string>;
 
     switch (config.channel) {
       case "slack":
@@ -470,11 +470,11 @@ export async function testNotificationConfig(
       default:
         throw new Error(`Testing not supported for channel: ${config.channel}`);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       channel: "slack",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }
@@ -491,7 +491,7 @@ export async function getNotificationLogs(
     level?: AlertLevel;
     type?: string;
   } = {}
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   try {
     const { limit = 50, channel, level, type } = options;
 
@@ -534,7 +534,7 @@ export async function getNotificationLogs(
       LIMIT ${limit}
     `;
 
-    return (await query) as any[];
+    return (await query) as Record<string, unknown>[];
   } catch (error) {
     console.error("[Notifications] Error fetching logs:", error);
     return [];
@@ -582,7 +582,7 @@ export async function getNotificationStats(userId: string): Promise<{
       };
     }
 
-    return stats[0] as any;
+    return stats[0] as unknown as { total: number; sent: number; failed: number; byChannel: Record<string, number>; byLevel: Record<string, number> };
   } catch (error) {
     console.error("[Notifications] Error fetching stats:", error);
     return {

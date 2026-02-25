@@ -250,9 +250,9 @@ export async function searchEpisodesByEmbedding(
     return episodes.map((e) => ({ ...e, similarity: 0 }));
   }
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: Record<string, unknown>) => ({
     ...transformEpisodicRow(row),
-    similarity: row.similarity,
+    similarity: row.similarity as number,
   }));
 }
 
@@ -407,9 +407,9 @@ export async function searchFactsByEmbedding(
     return facts.slice(0, options.limit ?? 5).map((f) => ({ ...f, similarity: 0 }));
   }
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: Record<string, unknown>) => ({
     ...transformSemanticRow(row),
-    similarity: row.similarity,
+    similarity: row.similarity as number,
   }));
 }
 
@@ -784,71 +784,71 @@ export async function enforceRetentionLimits(
 // Transform Functions (snake_case -> camelCase)
 // ============================================================================
 
-function transformEpisodicRow(row: any): EpisodicMemory {
+function transformEpisodicRow(row: Record<string, unknown>): EpisodicMemory {
   return {
-    id: row.id,
-    userId: row.user_id,
-    sessionId: row.session_id,
-    eventType: row.event_type,
-    content: row.content,
-    embedding: row.embedding,
-    importanceScore: row.importance_score,
-    createdAt: new Date(row.created_at),
-    metadata: row.metadata || {},
+    id: row.id as string,
+    userId: row.user_id as string,
+    sessionId: row.session_id as string,
+    eventType: row.event_type as EpisodeEventType,
+    content: row.content as Record<string, unknown>,
+    embedding: row.embedding as number[] | undefined,
+    importanceScore: row.importance_score as number,
+    createdAt: new Date(row.created_at as string),
+    metadata: (row.metadata || {}) as Record<string, unknown>,
   };
 }
 
-function transformSemanticRow(row: any): SemanticMemory {
+function transformSemanticRow(row: Record<string, unknown>): SemanticMemory {
   return {
-    id: row.id,
-    userId: row.user_id,
-    category: row.category,
-    key: row.key,
-    value: row.value,
-    embedding: row.embedding,
-    confidence: row.confidence,
-    source: row.source,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
+    id: row.id as string,
+    userId: row.user_id as string,
+    category: row.category as SemanticCategory,
+    key: row.key as string,
+    value: row.value as Record<string, unknown>,
+    embedding: row.embedding as number[] | undefined,
+    confidence: row.confidence as number,
+    source: row.source as string | undefined,
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string),
   };
 }
 
-function transformProceduralRow(row: any): ProceduralMemory {
+function transformProceduralRow(row: Record<string, unknown>): ProceduralMemory {
   return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    procedureType: row.procedure_type,
-    steps: row.steps || [],
-    triggers: row.triggers,
-    inputSchema: row.input_schema,
-    outputSchema: row.output_schema,
-    successRate: row.success_rate,
-    usageCount: row.usage_count,
-    version: row.version,
-    isActive: row.is_active,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
+    id: row.id as string,
+    name: row.name as string,
+    description: row.description as string | undefined,
+    procedureType: row.procedure_type as ProcedureType,
+    steps: (row.steps || []) as ProceduralMemory["steps"],
+    triggers: row.triggers as Record<string, unknown> | undefined,
+    inputSchema: row.input_schema as Record<string, unknown> | undefined,
+    outputSchema: row.output_schema as Record<string, unknown> | undefined,
+    successRate: row.success_rate as number,
+    usageCount: row.usage_count as number,
+    version: row.version as number,
+    isActive: row.is_active as boolean,
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string),
   };
 }
 
-function transformDecisionRow(row: any): DecisionLog {
+function transformDecisionRow(row: Record<string, unknown>): DecisionLog {
   return {
-    id: row.id,
-    userId: row.user_id,
-    sessionId: row.session_id,
-    decisionType: row.decision_type,
-    inputContext: row.input_context,
-    analysis: row.analysis,
-    scores: row.scores,
-    recommendation: row.recommendation,
-    finalDecision: row.final_decision,
-    outcome: row.outcome,
-    outcomeScore: row.outcome_score,
-    procedureUsed: row.procedure_used,
-    confidence: row.confidence,
-    createdAt: new Date(row.created_at),
-    decidedAt: row.decided_at ? new Date(row.decided_at) : undefined,
-    outcomeRecordedAt: row.outcome_recorded_at ? new Date(row.outcome_recorded_at) : undefined,
+    id: row.id as string,
+    userId: row.user_id as string,
+    sessionId: row.session_id as string,
+    decisionType: row.decision_type as DecisionLog["decisionType"],
+    inputContext: row.input_context as Record<string, unknown>,
+    analysis: row.analysis as Record<string, unknown> | undefined,
+    scores: row.scores as Record<string, number> | undefined,
+    recommendation: row.recommendation as Record<string, unknown> | undefined,
+    finalDecision: row.final_decision as Record<string, unknown> | undefined,
+    outcome: row.outcome as Record<string, unknown> | undefined,
+    outcomeScore: row.outcome_score as number | undefined,
+    procedureUsed: row.procedure_used as string | undefined,
+    confidence: row.confidence as number | undefined,
+    createdAt: new Date(row.created_at as string),
+    decidedAt: row.decided_at ? new Date(row.decided_at as string) : undefined,
+    outcomeRecordedAt: row.outcome_recorded_at ? new Date(row.outcome_recorded_at as string) : undefined,
   };
 }

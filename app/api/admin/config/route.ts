@@ -259,11 +259,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Admin Config POST] Error:", error);
 
     // Handle unique constraint violation
-    if (error.code === "23505") {
+    if (error instanceof Error && (error as Error & { code?: string }).code === "23505") {
       return NextResponse.json(
         {
           success: false,

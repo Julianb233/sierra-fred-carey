@@ -30,9 +30,11 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
 
   // Populate input when transcript arrives
   useEffect(() => {
-    if (transcript) {
+    if (!transcript) return;
+    const timer = setTimeout(() => {
       setMessage((prev) => (prev ? prev + " " + transcript : transcript));
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [transcript]);
 
   const toggleVoice = () => {

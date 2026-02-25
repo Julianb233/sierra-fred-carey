@@ -124,7 +124,7 @@ const HEADER_ALIASES: Record<string, keyof InvestorRow> = {
 export function parseDollarAmount(value: string): number | undefined {
   if (!value || !value.trim()) return undefined;
 
-  let cleaned = value.trim()
+  const cleaned = value.trim()
     .replace(/^\$/, "")        // Remove leading $
     .replace(/,/g, "")         // Remove commas
     .trim();

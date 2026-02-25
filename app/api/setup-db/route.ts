@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-async function seedDefaultConfigs(supabase: any) {
+async function seedDefaultConfigs(supabase: ReturnType<typeof createServiceClient>) {
   const configs = [
     { analyzer: 'reality_lens', model: 'gpt-4o', temperature: 0.7, max_tokens: 1500, custom_settings: {} },
     { analyzer: 'investor_score', model: 'gpt-4o', temperature: 0.5, max_tokens: 2000, custom_settings: {} },

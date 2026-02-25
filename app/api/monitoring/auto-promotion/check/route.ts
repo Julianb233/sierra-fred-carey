@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           : "No experiments eligible for auto-promotion",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Auto-Promotion] Error in auto-check:", error);
 
     return NextResponse.json(

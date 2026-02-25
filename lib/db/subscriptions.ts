@@ -3,6 +3,36 @@
 
 import { sql } from "./supabase-sql";
 
+/** Raw row shape from user_subscriptions table */
+interface SubscriptionRow {
+  user_id: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string;
+  status: UserSubscription["status"];
+  current_period_start: string;
+  current_period_end: string;
+  canceled_at: string | null;
+  cancel_at_period_end: boolean;
+  trial_start: string | null;
+  trial_end: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Raw row shape from stripe_events table */
+interface StripeEventRow {
+  id: string;
+  stripe_event_id: string;
+  stripe_customer_id: string | null;
+  type: string;
+  status: StripeEvent["status"];
+  payload: Record<string, unknown>;
+  error: string | null;
+  created_at: string;
+  processed_at: string | null;
+}
+
 export interface UserSubscription {
   userId: string;
   stripeCustomerId: string;
@@ -40,22 +70,8 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
 
     if (!result || result.length === 0) return null;
 
-    const data = result[0];
-    return {
-      userId: data.user_id,
-      stripeCustomerId: data.stripe_customer_id,
-      stripeSubscriptionId: data.stripe_subscription_id,
-      stripePriceId: data.stripe_price_id,
-      status: data.status,
-      currentPeriodStart: new Date(data.current_period_start),
-      currentPeriodEnd: new Date(data.current_period_end),
-      canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
-      cancelAtPeriodEnd: data.cancel_at_period_end,
-      trialStart: data.trial_start ? new Date(data.trial_start) : null,
-      trialEnd: data.trial_end ? new Date(data.trial_end) : null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-    };
+    const data = result[0] as unknown as SubscriptionRow;
+    return transformSubscriptionRow(data);
   } catch (error) {
     console.error("[getUserSubscription] Error (table may not exist):", error);
     return null;
@@ -70,22 +86,8 @@ export async function getSubscriptionByCustomerId(customerId: string): Promise<U
 
     if (!result || result.length === 0) return null;
 
-    const data = result[0];
-    return {
-      userId: data.user_id,
-      stripeCustomerId: data.stripe_customer_id,
-      stripeSubscriptionId: data.stripe_subscription_id,
-      stripePriceId: data.stripe_price_id,
-      status: data.status,
-      currentPeriodStart: new Date(data.current_period_start),
-      currentPeriodEnd: new Date(data.current_period_end),
-      canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
-      cancelAtPeriodEnd: data.cancel_at_period_end,
-      trialStart: data.trial_start ? new Date(data.trial_start) : null,
-      trialEnd: data.trial_end ? new Date(data.trial_end) : null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-    };
+    const data = result[0] as unknown as SubscriptionRow;
+    return transformSubscriptionRow(data);
   } catch (error) {
     console.error("[getSubscriptionByCustomerId] Error (table may not exist):", error);
     return null;
@@ -140,22 +142,8 @@ export async function createOrUpdateSubscription(
     RETURNING *
   `;
 
-  const data = result[0];
-  return {
-    userId: data.user_id,
-    stripeCustomerId: data.stripe_customer_id,
-    stripeSubscriptionId: data.stripe_subscription_id,
-    stripePriceId: data.stripe_price_id,
-    status: data.status,
-    currentPeriodStart: new Date(data.current_period_start),
-    currentPeriodEnd: new Date(data.current_period_end),
-    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
-    cancelAtPeriodEnd: data.cancel_at_period_end,
-    trialStart: data.trial_start ? new Date(data.trial_start) : null,
-    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-  };
+  const data = result[0] as unknown as SubscriptionRow;
+  return transformSubscriptionRow(data);
 }
 
 export async function recordStripeEvent(
@@ -181,18 +169,8 @@ export async function recordStripeEvent(
 
   if (!result || result.length === 0) return null;
 
-  const data = result[0];
-  return {
-    id: data.id,
-    stripeEventId: data.stripe_event_id,
-    stripeCustomerId: data.stripe_customer_id,
-    type: data.type,
-    status: data.status,
-    payload: data.payload,
-    error: data.error,
-    createdAt: new Date(data.created_at),
-    processedAt: data.processed_at ? new Date(data.processed_at) : null,
-  };
+  const data = result[0] as unknown as StripeEventRow;
+  return transformStripeEventRow(data);
 }
 
 export async function getStripeEventById(stripeEventId: string): Promise<StripeEvent | null> {
@@ -202,18 +180,8 @@ export async function getStripeEventById(stripeEventId: string): Promise<StripeE
 
   if (!result || result.length === 0) return null;
 
-  const data = result[0];
-  return {
-    id: data.id,
-    stripeEventId: data.stripe_event_id,
-    stripeCustomerId: data.stripe_customer_id,
-    type: data.type,
-    status: data.status,
-    payload: data.payload,
-    error: data.error,
-    createdAt: new Date(data.created_at),
-    processedAt: data.processed_at ? new Date(data.processed_at) : null,
-  };
+  const data = result[0] as unknown as StripeEventRow;
+  return transformStripeEventRow(data);
 }
 
 export async function markEventAsProcessed(id: string): Promise<void> {
@@ -230,4 +198,36 @@ export async function markEventAsFailed(id: string, error: string): Promise<void
     SET status = 'failed', error = ${error}, processed_at = NOW()
     WHERE id = ${id}::uuid
   `;
+}
+
+function transformSubscriptionRow(data: SubscriptionRow): UserSubscription {
+  return {
+    userId: data.user_id,
+    stripeCustomerId: data.stripe_customer_id,
+    stripeSubscriptionId: data.stripe_subscription_id,
+    stripePriceId: data.stripe_price_id,
+    status: data.status,
+    currentPeriodStart: new Date(data.current_period_start),
+    currentPeriodEnd: new Date(data.current_period_end),
+    canceledAt: data.canceled_at ? new Date(data.canceled_at) : null,
+    cancelAtPeriodEnd: data.cancel_at_period_end,
+    trialStart: data.trial_start ? new Date(data.trial_start) : null,
+    trialEnd: data.trial_end ? new Date(data.trial_end) : null,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
+}
+
+function transformStripeEventRow(data: StripeEventRow): StripeEvent {
+  return {
+    id: data.id,
+    stripeEventId: data.stripe_event_id,
+    stripeCustomerId: data.stripe_customer_id,
+    type: data.type,
+    status: data.status,
+    payload: data.payload,
+    error: data.error,
+    createdAt: new Date(data.created_at),
+    processedAt: data.processed_at ? new Date(data.processed_at) : null,
+  };
 }

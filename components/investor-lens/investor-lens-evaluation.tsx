@@ -75,7 +75,7 @@ export function InvestorLensEvaluation() {
   const [results, setResults] = useState<EvaluationResults | null>(null);
 
   const updateField = (field: keyof InvestorProfile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value as any }));
+    setProfile((prev) => ({ ...prev, [field]: value as InvestorProfile[typeof field] }));
   };
 
   const handleEvaluate = async () => {

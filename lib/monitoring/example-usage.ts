@@ -11,7 +11,7 @@ import {
   startGlobalAlertScheduler,
   stopGlobalAlertScheduler,
 } from "./index";
-import { Alert } from "./ab-test-metrics";
+import { Alert, AUTO_NOTIFY_ALERTS } from "./ab-test-metrics";
 
 // =============================================================================
 // Example 1: Automatic Notifications (Default Behavior)
@@ -228,7 +228,7 @@ export function exampleDisableAutoNotifications() {
   // AUTO_NOTIFY_ALERTS=false
 
   // Or check the current setting:
-  const { AUTO_NOTIFY_ALERTS } = require("./ab-test-metrics");
+  // Import at top of file: import { AUTO_NOTIFY_ALERTS } from "./ab-test-metrics";
   console.log(`Auto-notify enabled: ${AUTO_NOTIFY_ALERTS}`);
 }
 

@@ -160,12 +160,12 @@ export async function sendSlackNotification(
       channel: "slack",
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Slack] Failed to send notification:", error);
     return {
       success: false,
       channel: "slack",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }
@@ -277,7 +277,7 @@ function formatSlackMessage(payload: NotificationPayload): SlackMessage {
         action_id: `action_${index}`,
         style: button.style,
       })),
-    } as any);
+    } as SlackBlock);
   }
 
   // Add metadata footer
@@ -297,7 +297,7 @@ function formatSlackMessage(payload: NotificationPayload): SlackMessage {
         text: `*Level:* ${getLevelBadge(payload.level)} | *Type:* ${payload.type} | *Time:* ${timestamp}`,
       },
     ],
-  } as any);
+  } as SlackBlock);
 
   return {
     text: `${emoji} ${payload.title}`, // Fallback text for notifications
@@ -487,7 +487,7 @@ export async function sendSlackAlertSummary(
           text: `_And ${alerts.length - 5} more alerts..._`,
         },
       ],
-    } as any);
+    } as SlackBlock);
   }
 
   const message: SlackMessage = {
@@ -511,11 +511,11 @@ export async function sendSlackAlertSummary(
       channel: "slack",
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       channel: "slack",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }

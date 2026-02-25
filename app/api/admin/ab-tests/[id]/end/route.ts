@@ -115,14 +115,14 @@ export async function POST(
       ORDER BY v.variant_name
     `;
 
-    const formattedVariants = variants.map((variant: any) => ({
+    const formattedVariants = variants.map((variant: Record<string, unknown>) => ({
       id: variant.id,
       variantName: variant.variantName,
-      trafficPercentage: parseFloat(variant.trafficPercentage) || 0,
-      totalRequests: parseInt(variant.totalRequests, 10) || 0,
-      avgLatency: parseFloat(variant.avgLatency) || null,
-      errorRate: parseFloat(variant.errorRate) || null,
-      avgTokensUsed: parseFloat(variant.avgTokensUsed) || null,
+      trafficPercentage: parseFloat(String(variant.trafficPercentage)) || 0,
+      totalRequests: parseInt(String(variant.totalRequests), 10) || 0,
+      avgLatency: parseFloat(String(variant.avgLatency)) || null,
+      errorRate: parseFloat(String(variant.errorRate)) || null,
+      avgTokensUsed: parseFloat(String(variant.avgTokensUsed)) || null,
       isWinner: winningVariantId === variant.id,
     }));
 

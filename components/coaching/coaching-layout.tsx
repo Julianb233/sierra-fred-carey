@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Video,
@@ -102,7 +102,10 @@ function CoachingLobby({
   // then pick a random tip on mount
   const [tipIndex, setTipIndex] = useState(0);
   useEffect(() => {
-    setTipIndex(Math.floor(Math.random() * COACHING_TIPS.length));
+    const timer = setTimeout(() => {
+      setTipIndex(Math.floor(Math.random() * COACHING_TIPS.length));
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -199,13 +202,13 @@ export function CoachingLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [enableRecording, setEnableRecording] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const startedAtRef = useRef<Date | null>(null);
   const isStudio = userTier >= 2;
 
   // Generate a unique room name for this session
-  const roomName = useMemo(
-    () => `coaching-${userId}-${Date.now()}`,
-    [userId]
+  const [roomName] = useState(
+    () => `coaching-${userId}-${Date.now()}`
   );
 
   // Handle browser close / tab close -- attempt to complete session
@@ -242,12 +245,13 @@ export function CoachingLayout({
     setConnectionState("connecting");
 
     // Create session record and mark as in_progress
-    const sessionId = await createSession(roomName);
-    if (sessionId) {
-      sessionIdRef.current = sessionId;
+    const newSessionId = await createSession(roomName);
+    if (newSessionId) {
+      sessionIdRef.current = newSessionId;
+      setSessionId(newSessionId);
       const now = new Date();
       startedAtRef.current = now;
-      await updateSession(sessionId, {
+      await updateSession(newSessionId, {
         status: "in_progress",
         started_at: now.toISOString(),
       });
@@ -269,6 +273,7 @@ export function CoachingLayout({
         duration_seconds: durationSeconds,
       });
       sessionIdRef.current = null;
+      setSessionId(null);
       startedAtRef.current = null;
     }
 
@@ -341,7 +346,7 @@ export function CoachingLayout({
             <VideoRoom
               roomName={roomName}
               userName={userName}
-              sessionId={sessionIdRef.current ?? undefined}
+              sessionId={sessionId ?? undefined}
               onLeave={handleLeave}
             />
           )}
@@ -363,7 +368,7 @@ export function CoachingLayout({
             >
               <CoachingSidebar
                 className="h-full"
-                sessionId={sessionIdRef.current ?? undefined}
+                sessionId={sessionId ?? undefined}
                 onDisconnectPersist
               />
             </motion.div>

@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
         timestamp: result.timestamp,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 
@@ -273,7 +273,7 @@ export async function GET(request: NextRequest) {
     const sanitizedConfig = configs.length > 0 ? {
       ...configs[0],
       routingKey: configs[0].routingKey
-        ? `${configs[0].routingKey.substring(0, 8)}...`
+        ? `${String(configs[0].routingKey).substring(0, 8)}...`
         : null,
     } : null;
 
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: sanitizedConfig,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 

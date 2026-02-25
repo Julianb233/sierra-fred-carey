@@ -103,7 +103,7 @@ export async function checkPromotionEligibility(
       return result;
     }
 
-    const experiment = experimentData[0] as any;
+    const experiment = experimentData[0] as Record<string, string>;
     result.experimentId = experiment.id;
 
     // Check if experiment is active
@@ -219,9 +219,9 @@ export async function checkPromotionEligibility(
     result.eligible = result.reasons.length === 0;
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[Auto-Promotion] Error checking eligibility:`, error);
-    result.reasons.push(`Error: ${error.message}`);
+    result.reasons.push(`Error: ${error instanceof Error ? error.message : String(error)}`);
     return result;
   }
 }
@@ -400,7 +400,7 @@ export async function promoteWinner(
       RETURNING id
     `;
 
-    result.promotionId = promotionRecord[0].id;
+    result.promotionId = promotionRecord[0].id as string;
     result.success = true;
 
     logger.log(
@@ -417,9 +417,9 @@ export async function promoteWinner(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[Auto-Promotion] Error promoting ${experimentName}:`, error);
-    result.error = error.message;
+    result.error = error instanceof Error ? error.message : String(error);
     return result;
   }
 }
@@ -445,7 +445,7 @@ async function sendPromotionNotifications(
 
     for (const subscriber of subscribers) {
       const payload: NotificationPayload = {
-        userId: subscriber.user_id,
+        userId: subscriber.user_id as string,
         level: "info",
         type: "winner",
         title: `[${promotion.experimentName}] A/B Test Winner Promoted`,
@@ -535,7 +535,7 @@ export async function scanAndPromoteWinners(
         AND promoted_at > NOW() - INTERVAL '1 hour'
     `;
 
-    const recentPromotions = parseInt(currentPromotions[0].count, 10);
+    const recentPromotions = parseInt(currentPromotions[0].count as string, 10);
     const remainingSlots = finalConfig.maxConcurrentPromotions - recentPromotions;
 
     if (remainingSlots <= 0) {
@@ -554,11 +554,11 @@ export async function scanAndPromoteWinners(
         break;
       }
 
-      const eligibility = await checkPromotionEligibility(exp.name, finalConfig);
+      const eligibility = await checkPromotionEligibility(exp.name as string, finalConfig);
 
       if (eligibility.eligible) {
         stats.eligible++;
-        const result = await promoteWinner(exp.name, finalConfig);
+        const result = await promoteWinner(exp.name as string, finalConfig);
         stats.results.push(result);
 
         if (result.success) {
@@ -598,8 +598,8 @@ export async function rollbackPromotion(
     logger.log(`[Auto-Promotion] Rolled back promotion ${promotionId}: ${reason}`);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[Auto-Promotion] Error rolling back promotion:`, error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

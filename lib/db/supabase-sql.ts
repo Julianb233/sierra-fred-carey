@@ -7,6 +7,8 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 
+type SupabaseClient = ReturnType<typeof createServiceClient>;
+
 /**
  * Helper for raw/unsafe SQL strings (used in dynamic queries)
  */
@@ -17,12 +19,12 @@ function unsafeSql(value: string): { __unsafeRaw: string } {
 /**
  * Parse SQL query and execute using Supabase's native methods
  */
-async function sqlQuery(strings: TemplateStringsArray, ...values: any[]) {
+async function sqlQuery(strings: TemplateStringsArray, ...values: unknown[]) {
   const supabase = createServiceClient();
 
   // Build the full query string for parsing
   let query = '';
-  const params: any[] = [];
+  const params: unknown[] = [];
 
   strings.forEach((str, i) => {
     query += str;
@@ -73,7 +75,7 @@ async function sqlQuery(strings: TemplateStringsArray, ...values: any[]) {
  * Handle INSERT queries using Supabase's insert method
  * Supports ON CONFLICT ... DO UPDATE (upsert) and ON CONFLICT ... DO NOTHING (idempotent insert)
  */
-async function handleInsert(supabase: any, query: string, params: any[]) {
+async function handleInsert(supabase: SupabaseClient, query: string, params: unknown[]) {
   // Parse: INSERT INTO table_name (columns) VALUES (values) [ON CONFLICT ...] [RETURNING ...]
   const insertMatch = query.match(
     /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i
@@ -88,7 +90,7 @@ async function handleInsert(supabase: any, query: string, params: any[]) {
   const columns = columnsStr.split(',').map(c => c.trim());
 
   // Build the data object
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
   columns.forEach((col, i) => {
     data[col] = params[i];
   });
@@ -147,7 +149,7 @@ async function handleInsert(supabase: any, query: string, params: any[]) {
 /**
  * Handle SELECT queries using Supabase's select method
  */
-async function handleSelect(supabase: any, query: string, params: any[]) {
+async function handleSelect(supabase: SupabaseClient, query: string, params: unknown[]) {
   // Normalize whitespace (collapse newlines and multiple spaces)
   const normalizedQuery = query.replace(/\s+/g, ' ').trim();
 
@@ -329,8 +331,8 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
 
   // Transform data to use aliased column names
   if (data && Object.keys(aliasMap).length > 0) {
-    return data.map((row: Record<string, any>) => {
-      const transformed: Record<string, any> = {};
+    return (data as unknown as Record<string, unknown>[]).map((row) => {
+      const transformed: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(row)) {
         const alias = aliasMap[key];
         transformed[alias || key] = value;
@@ -345,7 +347,7 @@ async function handleSelect(supabase: any, query: string, params: any[]) {
 /**
  * Handle UPDATE queries using Supabase's update method
  */
-async function handleUpdate(supabase: any, query: string, params: any[]) {
+async function handleUpdate(supabase: SupabaseClient, query: string, params: unknown[]) {
   // Parse: UPDATE table SET column = value WHERE conditions
   const updateMatch = query.match(
     /UPDATE\s+(\w+)\s+SET\s+(.+?)\s+WHERE\s+(.+)/i
@@ -359,7 +361,7 @@ async function handleUpdate(supabase: any, query: string, params: any[]) {
   const [, tableName, setClause, whereClause] = updateMatch;
 
   // Parse SET clause
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
   const setParts = setClause.split(',');
   for (const part of setParts) {
     // Match parameterized: column = $1
@@ -428,7 +430,7 @@ async function handleUpdate(supabase: any, query: string, params: any[]) {
 /**
  * Handle DELETE queries using Supabase's delete method
  */
-async function handleDelete(supabase: any, query: string, params: any[]) {
+async function handleDelete(supabase: SupabaseClient, query: string, params: unknown[]) {
   // Parse: DELETE FROM table WHERE conditions
   const deleteMatch = query.match(
     /DELETE\s+FROM\s+(\w+)\s+WHERE\s+(.+)/i
@@ -475,7 +477,7 @@ async function handleDelete(supabase: any, query: string, params: any[]) {
  * This bridges the gap for dynamic queries that build SQL strings with
  * positional parameters and a separate values array.
  */
-async function executeSql(query: string, params: any[] = []): Promise<any[]> {
+async function executeSql(query: string, params: unknown[] = []): Promise<Record<string, unknown>[]> {
   const supabase = createServiceClient();
   const trimmed = query.trim().replace(/\s+/g, ' ').toUpperCase();
 
@@ -484,13 +486,13 @@ async function executeSql(query: string, params: any[] = []): Promise<any[]> {
       return await handleInsert(supabase, query, params);
     }
     if (trimmed.startsWith('SELECT')) {
-      return await handleSelect(supabase, query, params);
+      return await handleSelect(supabase, query, params) as Record<string, unknown>[];
     }
     if (trimmed.startsWith('UPDATE')) {
-      return await handleUpdate(supabase, query, params);
+      return await handleUpdate(supabase, query, params) as Record<string, unknown>[];
     }
     if (trimmed.startsWith('DELETE')) {
-      return await handleDelete(supabase, query, params);
+      return await handleDelete(supabase, query, params) as Record<string, unknown>[];
     }
 
     console.warn('[db] Unsupported query type in execute:', trimmed.substring(0, 20));
@@ -503,9 +505,9 @@ async function executeSql(query: string, params: any[] = []): Promise<any[]> {
 
 // Create the sql function with the unsafe and execute methods attached
 interface SqlFunction {
-  (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
+  (strings: TemplateStringsArray, ...values: unknown[]): Promise<Record<string, unknown>[]>;
   unsafe(value: string): { __unsafeRaw: string };
-  execute(query: string, params?: any[]): Promise<any[]>;
+  execute(query: string, params?: unknown[]): Promise<Record<string, unknown>[]>;
 }
 
 const sqlWithMethods = sqlQuery as SqlFunction;

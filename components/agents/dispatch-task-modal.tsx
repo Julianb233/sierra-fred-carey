@@ -65,13 +65,15 @@ export function DispatchTaskModal({
 
   // Reset form when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
       setAgentType(defaultAgentType || "founder_ops");
       setTaskType("");
       setDescription("");
       setState("idle");
       setErrorMessage("");
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [isOpen, defaultAgentType]);
 
   // Escape key handler

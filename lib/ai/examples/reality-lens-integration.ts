@@ -34,7 +34,7 @@ export async function analyzeWithRealityLens(
 ): Promise<{
   analysis: RealityLensOutput;
   requestId: string;
-  insights: Array<any>;
+  insights: Array<Record<string, unknown>>;
 }> {
   // Build the user prompt
   const userPrompt = `Analyze this startup check-in:
@@ -84,7 +84,7 @@ Provide scores (1-10) and reasoning for each dimension.`;
   return {
     analysis,
     requestId: result.requestId,
-    insights,
+    insights: insights as unknown as Record<string, unknown>[],
   };
 }
 

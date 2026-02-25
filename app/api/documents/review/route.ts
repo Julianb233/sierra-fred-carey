@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
         WHERE id = ${documentId} AND user_id = ${userId}
       `;
       if (result.length > 0) {
-        documentName = result[0].title;
-        documentType = result[0].type;
-        documentContent = result[0].content;
+        documentName = result[0].title as string | null;
+        documentType = result[0].type as string | null;
+        documentContent = result[0].content as string | null;
       }
     }
 

@@ -32,12 +32,12 @@ export async function runAlertNotificationCheck(): Promise<{
       message,
       timestamp: new Date().toISOString(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Alert Scheduler] Error during alert check:", error);
 
     return {
       success: false,
-      message: `Alert check failed: ${error.message}`,
+      message: `Alert check failed: ${error instanceof Error ? error.message : String(error)}`,
       timestamp: new Date().toISOString(),
     };
   }

@@ -361,7 +361,7 @@ export async function createPromotionAuditLog(
         metadata
     `;
 
-    const auditLog = result[0] as PromotionAuditLog;
+    const auditLog = result[0] as unknown as PromotionAuditLog;
 
     logger.log(
       `[Promoter] Created audit log ${auditLog.id} for experiment ${experimentName}`

@@ -48,11 +48,14 @@ function useReducedMotion(): boolean {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    // Initialize from media query via callback to avoid synchronous setState in effect
+    const timer = setTimeout(() => setPrefersReducedMotion(mediaQuery.matches), 0);
     mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
+    return () => {
+      clearTimeout(timer);
+      mediaQuery.removeEventListener("change", handler);
+    };
   }, []);
 
   return prefersReducedMotion;

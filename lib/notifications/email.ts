@@ -79,12 +79,12 @@ export async function sendEmailNotification(
       messageId: result.id,
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Email] Failed to send notification:", error);
     return {
       success: false,
       channel: "email",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }
@@ -590,12 +590,12 @@ export async function sendDigestEmail(
       messageId: result.id,
       timestamp: new Date(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Email] Failed to send digest email:", error);
     return {
       success: false,
       channel: "email",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date(),
     };
   }

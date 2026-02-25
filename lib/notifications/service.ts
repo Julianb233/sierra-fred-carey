@@ -293,7 +293,7 @@ export class NotificationService {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (retries > 0) {
         logger.log(`[NotificationService] Error, retrying... (${retries} attempts left)`);
         await this.delay(delay);
@@ -303,7 +303,7 @@ export class NotificationService {
       return {
         success: false,
         channel: "slack" as NotificationChannel,
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date(),
       };
     }
@@ -333,7 +333,7 @@ export async function sendAlert(
     metric?: string;
     value?: number;
     threshold?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   const payload: NotificationPayload = {
@@ -362,7 +362,7 @@ export async function sendCriticalAlert(
     metric?: string;
     value?: number;
     threshold?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   return sendAlert(userId, "critical", type, title, message, options);
@@ -382,7 +382,7 @@ export async function sendWarningAlert(
     metric?: string;
     value?: number;
     threshold?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   return sendAlert(userId, "warning", type, title, message, options);
@@ -402,7 +402,7 @@ export async function sendInfoNotification(
     metric?: string;
     value?: number;
     threshold?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   return sendAlert(userId, "info", type, title, message, options);
@@ -420,7 +420,7 @@ export async function sendPerformanceAlert(
   options: {
     experimentName?: string;
     variantName?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   const title = `Performance Alert: ${metric}`;
@@ -446,7 +446,7 @@ export async function sendErrorAlert(
   options: {
     experimentName?: string;
     variantName?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   const title = level === "critical" ? "Critical Error Rate Alert" : "Error Rate Alert";
@@ -475,7 +475,7 @@ export async function sendSignificanceNotification(
   improvement: number,
   confidence: number,
   options: {
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   const title = "Experiment Reached Statistical Significance";
@@ -501,7 +501,7 @@ export async function sendWinnerNotification(
   improvement: number,
   options: {
     metric?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<NotificationResult[]> {
   const title = "Winner Detected";

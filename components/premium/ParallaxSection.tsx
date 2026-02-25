@@ -38,6 +38,32 @@ export function Parallax({
   );
 }
 
+// Individual parallax layer - extracted so hooks can be called at top level
+function ParallaxLayer({
+  index,
+  scrollYProgress,
+  speed,
+}: {
+  index: number;
+  scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+  speed: number;
+}) {
+  const y = useTransform(scrollYProgress, [0, 1], [50 * speed, -50 * speed]);
+  return (
+    <motion.div
+      style={{ y }}
+      className={`absolute inset-0 pointer-events-none opacity-${20 + index * 10}`}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(circle at ${30 + index * 20}% ${20 + index * 30}%, hsl(var(--primary) / ${0.05 + index * 0.02}), transparent ${30 + index * 10}%)`,
+        }}
+      />
+    </motion.div>
+  );
+}
+
 // Section with parallax background layers
 export function ParallaxBackground({
   children,
@@ -59,23 +85,14 @@ export function ParallaxBackground({
   return (
     <div ref={ref} className={`relative overflow-hidden ${className}`}>
       {/* Background layers */}
-      {Array.from({ length: layers }).map((_, i) => {
-        const y = useTransform(scrollYProgress, [0, 1], [50 * layerSpeeds[i], -50 * layerSpeeds[i]]);
-        return (
-          <motion.div
-            key={i}
-            style={{ y }}
-            className={`absolute inset-0 pointer-events-none opacity-${20 + i * 10}`}
-          >
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `radial-gradient(circle at ${30 + i * 20}% ${20 + i * 30}%, hsl(var(--primary) / ${0.05 + i * 0.02}), transparent ${30 + i * 10}%)`,
-              }}
-            />
-          </motion.div>
-        );
-      })}
+      {Array.from({ length: layers }).map((_, i) => (
+        <ParallaxLayer
+          key={i}
+          index={i}
+          scrollYProgress={scrollYProgress}
+          speed={layerSpeeds[i]}
+        />
+      ))}
       {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>

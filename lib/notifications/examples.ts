@@ -14,7 +14,7 @@ import type { NotificationPayload, AlertLevel } from './types';
 export async function notifyCriticalError(
   userId: string,
   error: Error,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ) {
   const payload: NotificationPayload = {
     userId,

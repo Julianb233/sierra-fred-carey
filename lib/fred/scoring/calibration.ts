@@ -374,21 +374,21 @@ function calculateTypeCalibration(
 /**
  * Transform database row to CalibrationRecord
  */
-function transformCalibrationRow(row: any): CalibrationRecord {
+function transformCalibrationRow(row: Record<string, unknown>): CalibrationRecord {
   return {
-    id: row.id,
-    decisionId: row.decision_id,
-    userId: row.user_id,
-    predictedScore: row.predicted_score,
-    predictedConfidence: row.predicted_confidence,
-    predictedRange: row.predicted_range,
-    decisionType: row.decision_type,
-    factors: row.factors,
-    actualOutcome: row.actual_outcome,
-    outcomeNotes: row.outcome_notes,
-    predictedAt: new Date(row.predicted_at),
+    id: row.id as string,
+    decisionId: row.decision_id as string,
+    userId: row.user_id as string,
+    predictedScore: row.predicted_score as number,
+    predictedConfidence: row.predicted_confidence as number,
+    predictedRange: row.predicted_range as [number, number],
+    decisionType: row.decision_type as string,
+    factors: row.factors as FactorScores,
+    actualOutcome: row.actual_outcome as number | null,
+    outcomeNotes: row.outcome_notes as string | null,
+    predictedAt: new Date(row.predicted_at as string),
     outcomeRecordedAt: row.outcome_recorded_at
-      ? new Date(row.outcome_recorded_at)
+      ? new Date(row.outcome_recorded_at as string)
       : null,
   };
 }

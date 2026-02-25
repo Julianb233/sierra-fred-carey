@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         timestamp: result.timestamp,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 

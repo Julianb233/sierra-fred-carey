@@ -180,7 +180,7 @@ export async function PATCH(
       `;
 
       // Fire-and-forget: send milestone celebration email
-      sendMilestoneEmail(userId, 'milestone_completed', updated.title).catch(err =>
+      sendMilestoneEmail(userId, 'milestone_completed', updated.title as string).catch(err =>
         logger.error('[Milestones] Failed to send milestone email', err)
       );
     }

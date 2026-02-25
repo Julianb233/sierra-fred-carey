@@ -473,16 +473,18 @@ function formatProfileForPrompt(profile: StartupProfile, stage: FundingStage): s
 }
 
 // Validation helper
-function validateResponse(data: any): data is InvestorLensResponse {
+function validateResponse(data: unknown): data is InvestorLensResponse {
   if (!data || typeof data !== "object") return false;
-  if (!["yes", "no", "not_yet"].includes(data.icVerdict)) return false;
-  if (typeof data.icVerdictReasoning !== "string") return false;
-  if (!data.axes || typeof data.axes !== "object") return false;
-  if (typeof data.ventureBackable !== "boolean") return false;
+  const d = data as Record<string, unknown>;
+  if (!["yes", "no", "not_yet"].includes(d.icVerdict as string)) return false;
+  if (typeof d.icVerdictReasoning !== "string") return false;
+  if (!d.axes || typeof d.axes !== "object") return false;
+  if (typeof d.ventureBackable !== "boolean") return false;
 
+  const axes = d.axes as Record<string, Record<string, unknown>>;
   const requiredAxes = ["team", "market", "problem", "solution", "gtm", "traction", "businessModel", "fundFit", "valuation"];
   for (const axis of requiredAxes) {
-    if (!data.axes[axis] || typeof data.axes[axis].score !== "number") return false;
+    if (!axes[axis] || typeof axes[axis].score !== "number") return false;
   }
 
   return true;
@@ -723,7 +725,7 @@ export async function POST(request: NextRequest) {
       await extractAndSaveInsights(
         userId,
         "investor_lens",
-        savedEvaluation.id,
+        savedEvaluation.id as string,
         aiResponse,
         `Investor Lens IC evaluation - Verdict: ${evaluation.icVerdict}, Stage: ${fundingStage}`
       );
@@ -858,7 +860,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform for response
-    const formattedEvaluations = evaluations.map((e: any) => ({
+    const formattedEvaluations = evaluations.map((e) => ({
       id: e.id,
       fundingStage: e.funding_stage,
       icVerdict: e.ic_verdict,

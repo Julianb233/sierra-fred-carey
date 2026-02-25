@@ -289,7 +289,7 @@ export function createRateLimitHeaders(
  * - Trims whitespace and limits length to 1000 characters
  */
 export function sanitizeInput(input: string): string {
-  let sanitized = input
+  const sanitized = input
     // HTML-entity-encode dangerous characters (& first to avoid double-encoding)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

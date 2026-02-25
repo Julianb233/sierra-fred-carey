@@ -8,12 +8,13 @@ export async function GET(_request: NextRequest) {
   }
 
   // Helper: run a query and return a fallback on table-not-found errors
-  async function safeQuery(query: Promise<any[]>): Promise<any[]> {
+  async function safeQuery(query: Promise<Record<string, unknown>[]>): Promise<Record<string, unknown>[]> {
     try {
       return await query;
-    } catch (err: any) {
-      const msg = err?.message || "";
-      if (err?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
+    } catch (err: unknown) {
+      const errObj = err as Error & { code?: string };
+      const msg = errObj?.message || "";
+      if (errObj?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
         return [];
       }
       throw err;
@@ -26,14 +27,14 @@ export async function GET(_request: NextRequest) {
       SELECT COUNT(DISTINCT name) as count
       FROM ai_prompts
     `);
-    const totalPrompts = parseInt(promptsResult[0]?.count || "0", 10);
+    const totalPrompts = parseInt(String(promptsResult[0]?.count || "0"), 10);
 
     // Get config count
     const configsResult = await safeQuery(sql`
       SELECT COUNT(*) as count
       FROM ai_config
     `);
-    const totalConfigs = parseInt(configsResult[0]?.count || "0", 10);
+    const totalConfigs = parseInt(String(configsResult[0]?.count || "0"), 10);
 
     // Get active experiments count
     const experimentsResult = await safeQuery(sql`
@@ -41,14 +42,14 @@ export async function GET(_request: NextRequest) {
       FROM ab_experiments
       WHERE is_active = true
     `);
-    const activeExperiments = parseInt(experimentsResult[0]?.count || "0", 10);
+    const activeExperiments = parseInt(String(experimentsResult[0]?.count || "0"), 10);
 
     // Get average rating (last 30 days)
     const ratingsResult = await safeQuery(sql`
       SELECT COUNT(*) as count
       FROM ai_ratings
     `);
-    const avgRating = ratingsResult.length > 0 ? parseFloat(ratingsResult[0]?.count || "0") : 0;
+    const avgRating = ratingsResult.length > 0 ? parseFloat(String(ratingsResult[0]?.count || "0")) : 0;
 
     // Get recent activity from prompt and config changes (separate queries
     // instead of UNION, since the custom SQL parser does not support UNION)
@@ -70,13 +71,13 @@ export async function GET(_request: NextRequest) {
 
     // Merge and sort activity entries
     const recentActivity = [
-      ...promptActivity.map((row: any) => ({
+      ...promptActivity.map((row: Record<string, unknown>) => ({
         id: String(row.id),
         type: "prompt",
         message: `Prompt updated: ${String(row.name || "")}`,
         timestamp: row.updated_at ? new Date(row.updated_at as string).toISOString() : new Date().toISOString(),
       })),
-      ...configActivity.map((row: any) => ({
+      ...configActivity.map((row: Record<string, unknown>) => ({
         id: String(row.id),
         type: "config",
         message: `Config updated: ${String(row.analyzer || "")}`,

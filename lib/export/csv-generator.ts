@@ -171,19 +171,19 @@ export class CSVGenerator<T = Record<string, unknown>> {
     // Support nested paths (e.g., 'metadata.value')
     if (field.includes('.')) {
       const parts = field.split('.');
-      let value: any = row;
+      let value: unknown = row;
 
       for (const part of parts) {
         if (value === null || value === undefined) {
           return null;
         }
-        value = value[part];
+        value = (value as Record<string, unknown>)[part];
       }
 
       return value;
     }
 
-    return (row as any)[field];
+    return (row as Record<string, unknown>)[field];
   }
 
   /**
@@ -374,13 +374,13 @@ export function csvToJSON<T = Record<string, string>>(
     }
 
     const values = parseCSVLine(lines[i], delimiter);
-    const obj: any = {};
+    const obj: Record<string, string> = {};
 
     headers.forEach((header, index) => {
       obj[header] = values[index] || '';
     });
 
-    results.push(obj);
+    results.push(obj as unknown as T);
   }
 
   return results;

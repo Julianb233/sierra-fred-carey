@@ -76,9 +76,9 @@ export function WelcomeModal({
 
   // Reset slide when modal opens
   useEffect(() => {
-    if (isOpen) {
-      setCurrentSlide(0);
-    }
+    if (!isOpen) return;
+    const timer = setTimeout(() => setCurrentSlide(0), 0);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   if (!isOpen) return null;

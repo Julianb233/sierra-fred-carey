@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: result[0] as DiagnosticEvent,
+        data: result[0] as unknown as DiagnosticEvent,
       },
       { status: 201 }
     );
@@ -218,11 +218,11 @@ export async function GET(request: NextRequest) {
         AND (${framework}::text IS NULL OR framework = ${framework})
     `;
 
-    const total = parseInt(countResult[0]?.total || "0", 10);
+    const total = parseInt((countResult[0]?.total as string) || "0", 10);
 
     return NextResponse.json({
       success: true,
-      data: events as DiagnosticEvent[],
+      data: events as unknown as DiagnosticEvent[],
       meta: {
         total,
         limit,

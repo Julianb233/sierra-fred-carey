@@ -76,23 +76,23 @@ export async function GET(
     `;
 
     // Format the metrics
-    const variantsWithMetrics = variants.map((variant: any) => ({
+    const variantsWithMetrics = variants.map((variant: Record<string, unknown>) => ({
       ...variant,
-      totalRequests: parseInt(variant.totalRequests, 10) || 0,
-      avgLatency: parseFloat(variant.avgLatency) || null,
-      minLatency: parseFloat(variant.minLatency) || null,
-      maxLatency: parseFloat(variant.maxLatency) || null,
-      p50Latency: parseFloat(variant.p50Latency) || null,
-      p95Latency: parseFloat(variant.p95Latency) || null,
-      p99Latency: parseFloat(variant.p99Latency) || null,
-      errorRate: parseFloat(variant.errorRate) || null,
-      avgTokensUsed: parseFloat(variant.avgTokensUsed) || null,
-      totalTokensUsed: parseInt(variant.totalTokensUsed, 10) || 0,
+      totalRequests: parseInt(String(variant.totalRequests), 10) || 0,
+      avgLatency: parseFloat(String(variant.avgLatency)) || null,
+      minLatency: parseFloat(String(variant.minLatency)) || null,
+      maxLatency: parseFloat(String(variant.maxLatency)) || null,
+      p50Latency: parseFloat(String(variant.p50Latency)) || null,
+      p95Latency: parseFloat(String(variant.p95Latency)) || null,
+      p99Latency: parseFloat(String(variant.p99Latency)) || null,
+      errorRate: parseFloat(String(variant.errorRate)) || null,
+      avgTokensUsed: parseFloat(String(variant.avgTokensUsed)) || null,
+      totalTokensUsed: parseInt(String(variant.totalTokensUsed), 10) || 0,
     }));
 
     // Get prompt details for variants that have prompt_id
     const variantsWithPrompts = await Promise.all(
-      variantsWithMetrics.map(async (variant: any) => {
+      variantsWithMetrics.map(async (variant: Record<string, unknown>) => {
         if (variant.promptId) {
           const promptResult = await sql`
             SELECT
@@ -229,7 +229,7 @@ export async function PATCH(
 
     // Build dynamic UPDATE query
     const setters: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (description !== undefined) {
@@ -360,7 +360,7 @@ export async function POST(
       WHERE experiment_id = ${experimentId}
     `;
 
-    const currentTraffic = parseFloat(trafficSum[0]?.totalTraffic || 0);
+    const currentTraffic = parseFloat(String(trafficSum[0]?.totalTraffic || 0));
     const totalTraffic = currentTraffic + trafficPercentage;
 
     if (totalTraffic > 100) {
@@ -412,11 +412,11 @@ export async function POST(
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Admin A/B Test POST Variant] Error:", error);
 
     // Handle unique constraint violation
-    if (error.code === "23505") {
+    if (error instanceof Error && (error as Error & { code?: string }).code === "23505") {
       return NextResponse.json(
         {
           success: false,

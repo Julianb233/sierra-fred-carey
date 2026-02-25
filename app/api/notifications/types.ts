@@ -32,7 +32,7 @@ export interface SlackNotificationRequest {
   /** Threshold value (optional) */
   threshold?: number;
   /** Additional metadata (optional) */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -80,7 +80,7 @@ export interface PagerDutyNotificationRequest {
   /** Threshold value (optional) */
   threshold?: number;
   /** Additional metadata (optional) */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -113,7 +113,7 @@ export interface NotificationConfigResponse {
     routingKey?: string;
     enabled: boolean;
     alertLevels: AlertLevel[];
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
   } | null;

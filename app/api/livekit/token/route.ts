@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AccessToken } from 'livekit-server-sdk';
+import { AccessToken, type VideoGrant } from 'livekit-server-sdk';
 import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import { getUserTier, createTierErrorResponse } from '@/lib/api/tier-middleware';
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Grant permissions for the user-scoped room
-    const grants: Record<string, unknown> = {
+    const grants: VideoGrant = {
       room: scopedRoom,
       roomJoin: true,
       canPublish: true,
@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
 
     // Phase 29-02: Add recording permission for Studio users
     if (enableRecording) {
-      grants.recorder = true;
+      grants.roomRecord = true;
     }
 
-    at.addGrant(grants as any);
+    at.addGrant(grants);
 
     const token = await at.toJwt();
 

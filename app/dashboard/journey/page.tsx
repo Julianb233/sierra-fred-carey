@@ -64,7 +64,7 @@ interface Milestone {
 interface TimelineEvent {
   id: string;
   eventType: string;
-  eventData: any;
+  eventData: Record<string, unknown>;
   scoreBefore?: number;
   scoreAfter?: number;
   createdAt: string;
@@ -107,7 +107,7 @@ export default function JourneyDashboard() {
         }
 
         if (insightsData.success) {
-          setInsights(insightsData.data.map((insight: any) => ({
+          setInsights(insightsData.data.map((insight: Record<string, unknown>) => ({
             id: insight.id,
             insightType: insight.type || "recommendation",
             title: insight.title,
@@ -121,7 +121,7 @@ export default function JourneyDashboard() {
         }
 
         if (milestonesData.success) {
-          setMilestones(milestonesData.data.map((m: any) => ({
+          setMilestones(milestonesData.data.map((m: Record<string, unknown>) => ({
             id: m.id,
             title: m.title,
             description: m.description,
@@ -133,7 +133,7 @@ export default function JourneyDashboard() {
         }
 
         if (timelineData.success) {
-          setEvents(timelineData.data.map((e: any) => ({
+          setEvents(timelineData.data.map((e: Record<string, unknown>) => ({
             id: e.id,
             eventType: e.eventType,
             eventData: e.eventData,
@@ -204,7 +204,7 @@ export default function JourneyDashboard() {
     }
   };
 
-  const handleAddMilestone = async (newMilestone: any) => {
+  const handleAddMilestone = async (newMilestone: Record<string, unknown>) => {
     try {
       const res = await fetch("/api/journey/milestones", {
         method: "POST",

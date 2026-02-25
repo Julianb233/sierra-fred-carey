@@ -617,7 +617,7 @@ async function handlePost(req: NextRequest) {
 
         // Use effectiveGate (falls back to default all-not_assessed gate)
         const deckGateStatus = checkGateStatus(effectiveGate, "pitch_deck");
-        let rlGateOpenForDeck = deckGateStatus.gateOpen;
+        const rlGateOpenForDeck = deckGateStatus.gateOpen;
 
         deckReviewReadyBlock = buildDeckReviewReadyBlock(
           rlGateOpenForDeck,
@@ -684,7 +684,7 @@ async function handlePost(req: NextRequest) {
       ].filter((b) => Boolean(b.value));
 
       // Drop blocks from lowest priority until under budget
-      let truncatedBlocks = [...blocksInPriority];
+      const truncatedBlocks = [...blocksInPriority];
       while (truncatedBlocks.length > 1) {
         const candidate = truncatedBlocks.map((b) => b.value).join("\n\n");
         if (estimateTokens(candidate) <= 100_000) break;

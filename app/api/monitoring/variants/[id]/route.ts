@@ -65,7 +65,7 @@ export async function GET(
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       `[Monitoring API] Error fetching variant:`,
       error

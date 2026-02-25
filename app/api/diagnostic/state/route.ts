@@ -37,23 +37,23 @@ export interface DiagnosticStateResponse {
   updatedAt: string;
 }
 
-function mapRowToResponse(row: any): DiagnosticStateResponse {
+function mapRowToResponse(row: Record<string, unknown>): DiagnosticStateResponse {
   return {
-    userId: row.user_id,
-    positioningClarity: row.positioning_clarity,
-    investorReadiness: row.investor_readiness,
-    positioningFrameworkIntroduced: row.positioning_framework_introduced,
-    positioningFrameworkIntroducedAt: row.positioning_framework_introduced_at,
-    positioningFrameworkTrigger: row.positioning_framework_trigger,
-    investorLensIntroduced: row.investor_lens_introduced,
-    investorLensIntroducedAt: row.investor_lens_introduced_at,
-    investorLensTrigger: row.investor_lens_trigger,
-    positioningSignals: row.positioning_signals,
-    investorSignals: row.investor_signals,
-    formalAssessmentsOffered: row.formal_assessments_offered,
-    formalAssessmentsAccepted: row.formal_assessments_accepted,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    userId: row.user_id as string,
+    positioningClarity: row.positioning_clarity as DiagnosticStateResponse["positioningClarity"],
+    investorReadiness: row.investor_readiness as DiagnosticStateResponse["investorReadiness"],
+    positioningFrameworkIntroduced: row.positioning_framework_introduced as boolean,
+    positioningFrameworkIntroducedAt: row.positioning_framework_introduced_at as string | null,
+    positioningFrameworkTrigger: row.positioning_framework_trigger as string | null,
+    investorLensIntroduced: row.investor_lens_introduced as boolean,
+    investorLensIntroducedAt: row.investor_lens_introduced_at as string | null,
+    investorLensTrigger: row.investor_lens_trigger as string | null,
+    positioningSignals: row.positioning_signals as DiagnosticStateResponse["positioningSignals"],
+    investorSignals: row.investor_signals as DiagnosticStateResponse["investorSignals"],
+    formalAssessmentsOffered: row.formal_assessments_offered as boolean,
+    formalAssessmentsAccepted: row.formal_assessments_accepted as boolean,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
   };
 }
 
@@ -174,7 +174,7 @@ export async function PUT(request: NextRequest) {
     } = parsed.data;
 
     // Build update data object with only defined fields
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 

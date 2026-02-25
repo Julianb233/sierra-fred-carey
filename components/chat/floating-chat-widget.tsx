@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, Phone, X } from "lucide-react";
@@ -26,13 +26,13 @@ export function FloatingChatWidget({
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const pendingMessageRef = useRef<string | undefined>(undefined);
+  const [pendingMessage, setPendingMessage] = useState<string | undefined>(undefined);
 
   // Listen for programmatic open requests (e.g. from the sidebar Help button)
   useEffect(() => {
     function handleOpen(e: Event) {
       const detail = (e as CustomEvent<{ message?: string }>).detail;
-      pendingMessageRef.current = detail?.message;
+      setPendingMessage(detail?.message);
       setIsOpen(true);
     }
     window.addEventListener("fred:open", handleOpen);
@@ -124,9 +124,9 @@ export function FloatingChatWidget({
             <ChatInterface
               className="h-full"
               pageContext={pathname}
-              initialMessage={pendingMessageRef.current}
+              initialMessage={pendingMessage}
               onInitialMessageConsumed={() => {
-                pendingMessageRef.current = undefined;
+                setPendingMessage(undefined);
               }}
             />
           </div>

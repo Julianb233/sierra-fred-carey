@@ -62,15 +62,15 @@ export async function GET(req: NextRequest) {
 
     const results = await query;
 
-    const insights: TopInsight[] = results.map((row: any) => ({
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      content: row.content,
-      importance: row.importance,
-      tags: row.tags || [],
-      sourceType: row.sourceType,
-      createdAt: row.createdAt.toISOString().split('T')[0],
+    const insights: TopInsight[] = results.map((row) => ({
+      id: row.id as string,
+      type: row.type as TopInsight["type"],
+      title: row.title as string,
+      content: row.content as string,
+      importance: row.importance as number,
+      tags: (row.tags as string[]) || [],
+      sourceType: row.sourceType as string,
+      createdAt: (row.createdAt as Date).toISOString().split('T')[0],
     }));
 
     const response: TopInsightsResponse = {

@@ -1,7 +1,7 @@
 import { test as base, expect, type Page } from "@playwright/test";
 
 export const test = base.extend<{ authenticatedPage: Page }>({
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }, provide) => {
     await page.goto("/login");
     await page.fill(
       'input[type="email"]',
@@ -13,7 +13,7 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     );
     await page.click('button[type="submit"]');
     await page.waitForURL("**/dashboard**", { timeout: 10000 });
-    await use(page);
+    await provide(page);
   },
 });
 

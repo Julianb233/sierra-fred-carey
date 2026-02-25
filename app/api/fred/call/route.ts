@@ -156,7 +156,7 @@ async function handlePost(req: NextRequest) {
       canPublish: true,
       canPublishData: true,
       canSubscribe: true,
-    } as any);
+    });
 
     const token = await at.toJwt();
 

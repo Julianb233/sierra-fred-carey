@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
         timestamp: result.timestamp,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 
@@ -225,7 +225,7 @@ export async function GET(request: NextRequest) {
     const sanitizedConfigs = configs.length > 0 ? {
       ...configs[0],
       webhookUrl: configs[0].webhookUrl
-        ? `${configs[0].webhookUrl.substring(0, 30)}...`
+        ? `${String(configs[0].webhookUrl).substring(0, 30)}...`
         : null,
     } : null;
 
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: sanitizedConfigs,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly
     if (error instanceof Response) return error;
 

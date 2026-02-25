@@ -16,7 +16,7 @@ export default function Pricing() {
   const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
     if (!priceId) {
       // Free plan - redirect to dashboard/sign-up
-      window.location.href = "/dashboard";
+      window.location.assign("/dashboard");
       return;
     }
 

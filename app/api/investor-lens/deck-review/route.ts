@@ -317,7 +317,7 @@ Provide a thorough IC-perspective review with slide-by-slide analysis, objection
       await extractAndSaveInsights(
         userId,
         "deck_review",
-        savedReview.id,
+        savedReview.id as string,
         trackedResult.content,
         `Deck review - Score: ${review.overallScore}, Type: ${deckType}`
       );
@@ -486,7 +486,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch deck reviews: ${dataError.message}`);
     }
 
-    const formattedReviews = (reviews || []).map((r: any) => ({
+    const formattedReviews = (reviews || []).map((r) => ({
       id: r.id,
       evaluationId: r.investor_lens_id,
       deckUrl: r.deck_url,

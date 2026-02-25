@@ -34,13 +34,13 @@ export async function GET(_request: NextRequest) {
     `;
 
     // Redact sensitive information (partial display only)
-    const sanitizedConfigs = configs.map((config: any) => ({
+    const sanitizedConfigs = configs.map((config) => ({
       ...config,
       webhookUrl: config.webhookUrl
-        ? `${config.webhookUrl.substring(0, 30)}...`
+        ? `${String(config.webhookUrl).substring(0, 30)}...`
         : null,
       routingKey: config.routingKey
-        ? `${config.routingKey.substring(0, 8)}...`
+        ? `${String(config.routingKey).substring(0, 8)}...`
         : null,
     }));
 
@@ -48,14 +48,17 @@ export async function GET(_request: NextRequest) {
       success: true,
       data: sanitizedConfigs,
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[GET /api/notifications/config]", error);
 
     // Handle missing table gracefully
-    if (error?.code === "42P01" || error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+    const dbErr = error as { code?: string; message?: string };
+    if (dbErr?.code === "42P01" || dbErr?.message?.includes("does not exist") || dbErr?.message?.includes("relation")) {
       return NextResponse.json({
         success: true,
         data: [],
@@ -192,9 +195,11 @@ export async function POST(request: NextRequest) {
       { success: true, data: result[0] },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[POST /api/notifications/config]", error);
 
@@ -309,9 +314,11 @@ export async function PATCH(request: NextRequest) {
       success: true,
       data: result[0],
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[PATCH /api/notifications/config]", error);
 
@@ -358,9 +365,11 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: "Notification config deleted",
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[DELETE /api/notifications/config]", error);
 

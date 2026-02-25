@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -36,18 +36,13 @@ const STEPS: Record<Platform, { title: string; steps: string[] }> = {
 const PLATFORM_ORDER: Platform[] = ["ios", "android", "desktop"];
 
 export default function InstallPage() {
-  const [activePlatform, setActivePlatform] = useState<Platform>("ios");
-
-  useEffect(() => {
+  const [activePlatform, setActivePlatform] = useState<Platform>(() => {
+    if (typeof window === "undefined") return "ios";
     const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua)) {
-      setActivePlatform("ios");
-    } else if (/Android/.test(ua)) {
-      setActivePlatform("android");
-    } else {
-      setActivePlatform("desktop");
-    }
-  }, []);
+    if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+    if (/Android/.test(ua)) return "android";
+    return "desktop";
+  });
 
   return (
     <div className="min-h-dvh bg-gray-50 dark:bg-gray-900">

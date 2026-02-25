@@ -132,7 +132,7 @@ export async function collectVariantMetrics(
       return null;
     }
 
-    const data = result[0] as any;
+    const data = result[0] as Record<string, string>;
     const totalRequests = parseInt(data.totalRequests, 10) || 0;
     const errorCount = parseInt(data.errorCount, 10) || 0;
 
@@ -188,7 +188,7 @@ export async function compareExperimentVariants(
       throw new Error(`Experiment not found: ${experimentName}`);
     }
 
-    const experiment = experimentResult[0] as any;
+    const experiment = experimentResult[0] as Record<string, unknown>;
 
     const variantsResult = await sql`
       SELECT id
@@ -197,8 +197,8 @@ export async function compareExperimentVariants(
     `;
 
     const variantMetrics = await Promise.all(
-      variantsResult.map((v: any) =>
-        collectVariantMetrics(v.id, start, end)
+      variantsResult.map((v) =>
+        collectVariantMetrics(String(v.id), start, end)
       )
     );
 
@@ -219,8 +219,8 @@ export async function compareExperimentVariants(
           return notifyAlerts(alerts, {
             immediate: true,
             minimumLevel: "warning",
-            experimentName: experiment.name,
-            experimentId: experiment.id,
+            experimentName: experiment.name as string,
+            experimentId: experiment.id as string,
           });
         })
         .then((stats) => {
@@ -239,11 +239,11 @@ export async function compareExperimentVariants(
     }
 
     return {
-      experimentName: experiment.name,
-      experimentId: experiment.id,
-      isActive: experiment.isActive,
-      startDate: new Date(experiment.startDate),
-      endDate: experiment.endDate ? new Date(experiment.endDate) : undefined,
+      experimentName: experiment.name as string,
+      experimentId: experiment.id as string,
+      isActive: Boolean(experiment.isActive),
+      startDate: new Date(experiment.startDate as string),
+      endDate: experiment.endDate ? new Date(experiment.endDate as string) : undefined,
       variants: validMetrics,
       totalRequests,
       totalUsers,
@@ -316,7 +316,7 @@ export const AUTO_NOTIFY_ALERTS = process.env.AUTO_NOTIFY_ALERTS !== "false";
 
 function generateAlerts(
   variants: VariantMetrics[],
-  experiment: any
+  experiment: Record<string, unknown>
 ): Alert[] {
   const alerts: Alert[] = [];
   const now = new Date();
@@ -432,8 +432,8 @@ export async function getMonitoringDashboard(): Promise<{
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const experiments = await Promise.all(
-      experimentsResult.map((exp: any) =>
-        compareExperimentVariants(exp.name, yesterday, now)
+      experimentsResult.map((exp) =>
+        compareExperimentVariants(String(exp.name), yesterday, now)
       )
     );
 

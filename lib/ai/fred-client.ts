@@ -17,6 +17,7 @@ import {
   embedMany,
   stepCountIs,
   type StreamTextResult,
+  type ToolSet,
 } from "ai";
 import type { ModelMessage } from "ai";
 import { z } from "zod";
@@ -51,7 +52,7 @@ export interface GenerateOptions {
   /** Abort signal for cancellation */
   abortSignal?: AbortSignal;
   /** Tools available to the model during generation */
-  tools?: Record<string, any>;
+  tools?: ToolSet;
   /** Maximum number of tool-calling steps (default: 1, no tool loop) */
   maxSteps?: number;
 }

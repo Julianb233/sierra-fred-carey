@@ -317,7 +317,7 @@ export async function getUserInsights(
     const result = await query;
 
     logger.log(`[Insights] Found ${result.length} insights`);
-    return result as any;
+    return result as unknown as Array<ExtractedInsight & { id: string; sourceType: string; sourceId: string; isDismissed: boolean; createdAt: Date }>;
   } catch (error) {
     console.error("[Insights] Error getting user insights:", error);
     return [];

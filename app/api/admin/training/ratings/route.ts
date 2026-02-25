@@ -6,12 +6,13 @@ import { logger } from "@/lib/logger";
 /**
  * Helper: run a query and return a fallback on table-not-found errors
  */
-async function safeQuery<T = any>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
+async function safeQuery<T = Record<string, unknown>>(query: Promise<T[]>, fallback: T[] = []): Promise<T[]> {
   try {
     return await query;
-  } catch (err: any) {
-    const msg = err?.message || "";
-    if (err?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
+  } catch (err: unknown) {
+    const errObj = err as Error & { code?: string };
+    const msg = errObj?.message || "";
+    if (errObj?.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")) {
       return fallback;
     }
     throw err;
@@ -52,10 +53,10 @@ export async function GET(request: NextRequest) {
       `
     );
 
-    const totalRatings = parseInt(statsResult[0]?.total_ratings || "0", 10);
+    const totalRatings = parseInt(String(statsResult[0]?.total_ratings || "0"), 10);
 
     // Fetch individual ratings with optional filters
-    let ratings: any[];
+    let ratings: Record<string, unknown>[];
 
     if (responseId) {
       ratings = await safeQuery(
@@ -262,11 +263,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Admin Training Ratings POST] Error:", error);
 
     // Handle foreign key violation (invalid responseId)
-    if (error?.code === "23503") {
+    if (error instanceof Error && (error as Error & { code?: string })?.code === "23503") {
       return NextResponse.json(
         { success: false, error: "Invalid responseId. The AI response does not exist." },
         { status: 404 }

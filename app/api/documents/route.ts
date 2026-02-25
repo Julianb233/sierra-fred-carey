@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     // SECURITY: Get userId from tier check (already authenticated via checkTierForRequest)
     const userId = tierCheck.user.id;
 
-    let documents;
+    let documents: Record<string, unknown>[] = [];
     try {
       documents = await sql`
         SELECT
@@ -104,9 +104,9 @@ export async function GET(request: NextRequest) {
         ORDER BY created_at DESC
         LIMIT 50
       `;
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       // Handle missing table or DB errors gracefully — return empty list
-      console.warn("[Documents GET] DB error (returning empty list):", dbError?.message);
+      console.warn("[Documents GET] DB error (returning empty list):", dbError instanceof Error ? dbError.message : String(dbError));
       documents = [];
     }
 

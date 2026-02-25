@@ -154,14 +154,15 @@ export async function POST(request: NextRequest) {
       rating: result[0],
       message: "Rating submitted successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Return auth errors directly (thrown by requireAuth)
     if (error instanceof Response) return error as NextResponse;
 
     console.error("[AI Rating] Error:", error);
 
     // Handle specific database errors
-    if (error.code === "42P01") {
+    const dbError = error as { code?: string };
+    if (dbError.code === "42P01") {
       // Table does not exist
       return NextResponse.json(
         {
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error.code === "23503") {
+    if (dbError.code === "23503") {
       // Foreign key violation
       return NextResponse.json(
         {

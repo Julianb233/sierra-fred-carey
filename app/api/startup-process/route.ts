@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import type { StartupProcess, StepData, StepNumber } from "@/types/startup-process";
-import { STEP_TITLES } from "@/types/startup-process";
+import { STEP_TITLES, STEP_DESCRIPTIONS, STEP_KEY_QUESTIONS } from "@/types/startup-process";
 
 /**
  * GET /api/startup-process
@@ -304,8 +304,6 @@ function buildStepValidations(steps: StartupProcess["steps"]) {
 }
 
 function buildStepsFromRow(row: Record<string, unknown>): StartupProcess["steps"] {
-  const { STEP_TITLES, STEP_DESCRIPTIONS, STEP_KEY_QUESTIONS } = require("@/types/startup-process");
-
   return Array.from({ length: 9 }, (_, i) => {
     const num = (i + 1) as StartupProcess["steps"][number]["stepNumber"];
     const completed = Boolean(row[`step_${num}_completed`]);

@@ -170,10 +170,10 @@ export async function GET() {
 
     if (posRow) {
       const categories = [
-        { name: "Clarity", grade: posRow.clarityGrade, score: posRow.clarityScore },
-        { name: "Differentiation", grade: posRow.differentiationGrade, score: posRow.differentiationScore },
-        { name: "Market Understanding", grade: posRow.marketUnderstandingGrade, score: posRow.marketUnderstandingScore },
-        { name: "Narrative Strength", grade: posRow.narrativeStrengthGrade, score: posRow.narrativeStrengthScore },
+        { name: "Clarity", grade: posRow.clarityGrade as string, score: posRow.clarityScore as number },
+        { name: "Differentiation", grade: posRow.differentiationGrade as string, score: posRow.differentiationScore as number },
+        { name: "Market Understanding", grade: posRow.marketUnderstandingGrade as string, score: posRow.marketUnderstandingScore as number },
+        { name: "Narrative Strength", grade: posRow.narrativeStrengthGrade as string, score: posRow.narrativeStrengthScore as number },
       ];
 
       const gaps = ((posRow.gaps || []) as Array<{ gap?: string; category?: string }>)
@@ -185,8 +185,8 @@ export async function GET() {
         .filter(Boolean);
 
       positioningReadiness = {
-        grade: posRow.positioningGrade,
-        narrativeTightness: posRow.narrativeTightnessScore,
+        grade: posRow.positioningGrade as string | null,
+        narrativeTightness: posRow.narrativeTightnessScore as number | null,
         categories,
         gaps,
         nextActions,

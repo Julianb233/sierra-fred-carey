@@ -11,7 +11,7 @@
  * The orchestrator handles retries at a higher level.
  */
 
-import { generateText, stepCountIs } from 'ai';
+import { generateText, stepCountIs, type ToolSet } from 'ai';
 import { getModel } from '@/lib/ai/providers';
 import { getModelForTier } from '@/lib/ai/tier-routing';
 import type { ProviderKey } from '@/lib/ai/providers';
@@ -48,16 +48,16 @@ export async function runAgent(
       model,
       system: config.systemPrompt,
       prompt: buildPrompt(task),
-      tools: config.tools,
+      tools: config.tools as ToolSet,
       stopWhen: stepCountIs(config.maxSteps),
     });
 
     // Extract tool calls from all steps
     // In AI SDK 6, tool call properties use `input` (not `args`)
     const toolCalls = result.steps.flatMap((step) =>
-      (step.toolCalls || []).map((tc: any) => ({
+      (step.toolCalls || []).map((tc) => ({
         toolName: tc.toolName as string,
-        args: (tc.input ?? {}) as Record<string, unknown>,
+        args: ((tc as Record<string, unknown>).input ?? {}) as Record<string, unknown>,
         result: null as unknown,
       }))
     );

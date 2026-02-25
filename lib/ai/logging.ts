@@ -464,7 +464,7 @@ export async function getAnalyzerStats(
       ORDER BY request_count DESC
     `;
 
-    return result.map((row: any) => ({
+    return result.map((row: Record<string, unknown>) => ({
       analyzer: row.analyzer as string,
       requestCount: Number(row.request_count) || 0,
       avgLatencyMs: Number(row.avg_latency_ms) || 0,

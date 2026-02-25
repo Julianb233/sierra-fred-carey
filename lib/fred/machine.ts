@@ -164,7 +164,7 @@ export const fredMachine = setup({
       if (context.chatMode) return true;
 
       // Non-chat mode: require explicit auto_execute action
-      const decision = (event as any)?.output || context.decision;
+      const decision = (event as { output?: typeof context.decision })?.output || context.decision;
       if (!decision) return false;
       return (
         !decision.requiresHumanApproval &&
@@ -387,7 +387,7 @@ export const fredMachine = setup({
           actions: [
             "logTransition",
             "setStartTime",
-            assign({ input: ({ event }) => (event as any).input }),
+            assign({ input: ({ event }) => (event as unknown as { input: UserInput }).input }),
           ],
         },
         ERROR: {
@@ -395,7 +395,7 @@ export const fredMachine = setup({
           actions: [
             "logTransition",
             assign({
-              error: ({ event }) => (event as any).error,
+              error: ({ event }) => (event as unknown as { error: FredError }).error,
             }),
           ],
         },

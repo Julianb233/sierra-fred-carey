@@ -29,14 +29,17 @@ export async function GET(request: NextRequest) {
         limit,
       },
     });
-  } catch (error: any) {
-    if (error instanceof Response || (error && typeof error.status === 'number' && typeof error.json === 'function')) {
-      return error;
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
+    const errObj = error as Record<string, unknown>;
+    if (errObj && typeof errObj.status === 'number' && typeof errObj.json === 'function') {
+      return errObj as unknown as NextResponse;
     }
     console.error("[GET /api/notifications/logs]", error);
 
     // Handle missing table gracefully
-    if (error?.code === "42P01" || error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+    const dbErr = error as { code?: string; message?: string };
+    if (dbErr?.code === "42P01" || dbErr?.message?.includes("does not exist") || dbErr?.message?.includes("relation")) {
       return NextResponse.json({
         success: true,
         data: [],
