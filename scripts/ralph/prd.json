@@ -1,259 +1,448 @@
 {
   "project": "Sahara - AI Founder Operating System",
-  "branchName": "ralph/full-stack-audit-fixes",
-  "description": "Full stack UX audit fixes and feature validation for Sahara app",
+  "branchName": "ralph/feature-reliability-audit-2026-02-25",
+  "description": "Comprehensive feature validation and reliability audit covering all Sahara features: FRED chat, Reality Lens, Startup Process journey, Dashboard, Funding Readiness, IRS, Red Flags, SMS Check-ins, Pitch Review, Voice, Notifications, Stripe billing, and all identified reliability gaps from the 2026-02-25 audit.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "User can sign up with email and password",
-      "description": "As a founder, I want to create an account so that I can access FRED's mentor capabilities",
-      "acceptanceCriteria": ["Signup form submits successfully", "Account created in Supabase", "Redirected to onboarding", "No DB column errors"],
+      "title": "FRED chat streams a real response and saves to conversation history",
+      "description": "As a founder, I want to send a message to FRED and receive a streaming AI response that persists to the conversation history so I can refer back to it later.",
+      "acceptanceCriteria": [
+        "POST /api/fred/chat returns a streaming response",
+        "Message appears in conversation list after refresh",
+        "Response is coherent and contextual (not empty or error)",
+        "Conversation stored in fred_conversations table",
+        "Typecheck passes"
+      ],
       "priority": 1,
-      "passes": true,
-      "notes": "Auth debug team fixed missing columns and created /api/auth/signup route. Enrichment columns removed from createOrUpdateProfile and onboard route."
+      "passes": false,
+      "notes": "Files: app/api/fred/chat/route.ts, components/chat/"
     },
     {
       "id": "US-002",
-      "title": "User can log in with email and password",
-      "description": "As a founder, I want to log in to my existing account to access the dashboard",
-      "acceptanceCriteria": ["Login form accepts email/password", "Session cookie set on success", "Redirected to dashboard", "Error shown on wrong credentials"],
+      "title": "FRED context includes founder snapshot, startup step, and recent red flags",
+      "description": "As FRED, I need access to the founder's full context — snapshot, current startup process step, and recent red flags — so my advice is relevant and not generic.",
+      "acceptanceCriteria": [
+        "GET /api/fred/context (or equivalent) returns founderSnapshot with stage and primaryConstraint",
+        "Context includes current startup process step",
+        "Context includes at least the count of active red flags if any exist",
+        "FRED response references founder's stage or context when relevant",
+        "Typecheck passes"
+      ],
       "priority": 1,
-      "passes": true,
-      "notes": "Login flow works via /api/auth/login calling signIn from lib/auth.ts"
+      "passes": false,
+      "notes": "Files: lib/fred/context-builder.ts, lib/fred/fred-client.ts"
     },
     {
       "id": "US-003",
-      "title": "User can reset forgotten password",
-      "description": "As a founder, I want to reset my password if I forget it",
-      "acceptanceCriteria": ["Forgot password link on login page", "Password reset email sent", "Reset form works", "Can log in with new password"],
-      "priority": 2,
-      "passes": true,
-      "notes": "Fix #25 added forgot-password link and reset pages with Supabase flow"
+      "title": "Reality Lens assessment persists results to database",
+      "description": "As a founder, I want my Reality Lens idea assessment to be saved so I can view history and the Journey dashboard shows my Idea Score.",
+      "acceptanceCriteria": [
+        "POST /api/fred/reality-lens returns success with overallScore",
+        "Row exists in reality_lens_analyses table after assessment",
+        "Row exists in journey_events with event_type='analysis_completed'",
+        "GET /api/fred/reality-lens?history=true returns the saved assessment",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/api/fred/reality-lens/route.ts, lib/fred/reality-lens.ts"
     },
     {
       "id": "US-004",
-      "title": "Dashboard sidebar shows all navigation items",
-      "description": "As a user, I want to see all available features in the dashboard sidebar so I can navigate to them",
-      "acceptanceCriteria": ["All dashboard routes have sidebar links", "Wellbeing, Inbox, Notifications, Investor Targeting, Snapshot, Video, Memory, Sharing, Invitations all visible"],
-      "priority": 1,
-      "passes": true,
-      "notes": "Fix #1 added 9 missing sidebar items. Fix #20 ensured 44px touch targets."
+      "title": "Reality Lens history page shows past assessments",
+      "description": "As a founder, I want to view a history of my past Reality Lens assessments to track how my ideas have evolved.",
+      "acceptanceCriteria": [
+        "GET /api/fred/reality-lens?history=true returns array of past assessments",
+        "Each item has id, idea, overallScore, scores breakdown, createdAt",
+        "History page UI renders without error",
+        "Empty state shown when no history exists",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: app/dashboard/reality-lens/, components/dashboard/"
     },
     {
       "id": "US-005",
-      "title": "FRED chat works without crashes",
-      "description": "As a founder, I want to chat with FRED AI mentor without the page crashing or losing session",
-      "acceptanceCriteria": ["Can send message to FRED", "Streaming response completes", "No about:blank crash", "Session preserved across messages"],
+      "title": "9-Step Startup Process saves progress to database and reloads on return",
+      "description": "As a founder, I want my startup process progress to persist to the database so I don't lose my work between sessions.",
+      "acceptanceCriteria": [
+        "PUT /api/startup-process saves process data to startup_processes table",
+        "GET /api/startup-process returns the saved process",
+        "Reloading the startup process page shows previously entered data",
+        "journey_events row created with event_type='milestone_achieved' when a step is validated",
+        "Typecheck passes"
+      ],
       "priority": 1,
-      "passes": true,
-      "notes": "Fix #28 added safe SSE stream handling, closed flag, mountedRef guards, graceful error on stream termination"
+      "passes": false,
+      "notes": "Files: app/api/startup-process/route.ts, app/dashboard/startup-process/page.tsx"
     },
     {
       "id": "US-006",
-      "title": "AI Insights page loads without 404",
-      "description": "As a founder, I want to access AI Insights from the dashboard",
-      "acceptanceCriteria": ["Clicking AI Insights in nav loads a page", "No 404 error", "/dashboard/ai-insights redirects to /dashboard/insights"],
-      "priority": 2,
-      "passes": true,
-      "notes": "Fix #30 added redirect from /dashboard/ai-insights to /dashboard/insights"
+      "title": "Dashboard command center loads all widget data within 8 seconds",
+      "description": "As a founder, I want the dashboard to load my full command center data — snapshot, current step, funding readiness, and weekly momentum — within 8 seconds.",
+      "acceptanceCriteria": [
+        "GET /api/dashboard/command-center returns 200 with success:true",
+        "Response includes founderSnapshot, currentStep, processProgress, fundingReadiness, weeklyMomentum",
+        "Response time under 8000ms",
+        "Dashboard page renders all widgets without blank states",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/api/dashboard/command-center/route.ts, lib/dashboard/command-center.ts"
     },
     {
       "id": "US-007",
-      "title": "Risk alerts show empty state instead of error",
-      "description": "As a founder, I want to see a friendly message when there are no risk alerts instead of an error",
-      "acceptanceCriteria": ["Risk alerts widget shows empty state on no data", "No 'Unable to load' error message"],
-      "priority": 2,
-      "passes": true,
-      "notes": "Fix #24 added friendly empty state on API error"
+      "title": "FRED Hero is the first element on dashboard with working CTA buttons",
+      "description": "As a founder, I want the FRED conversation hero to be the first thing I see on the dashboard, with working buttons to start chatting.",
+      "acceptanceCriteria": [
+        "Dashboard page renders FredHero as first visible element",
+        "Message Fred button navigates to /chat",
+        "Call Fred button is visible (shows Pro badge for free tier)",
+        "Conversation starters navigate to /chat?message=...",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/dashboard/page.tsx, components/dashboard/fred-hero.tsx"
     },
     {
       "id": "US-008",
-      "title": "Admin panel handles non-admin users gracefully",
-      "description": "As a non-admin user, I should see a login page or access denied instead of an infinite redirect loop",
-      "acceptanceCriteria": ["Non-admin visiting /admin sees login page", "No infinite redirect loop", "Admin login renders properly"],
+      "title": "Funding Readiness Gauge renders correct zone from IRS score",
+      "description": "As a founder, I want the Funding Readiness Gauge to show my correct zone (Red/Yellow/Green) based on my Investor Readiness Score.",
+      "acceptanceCriteria": [
+        "FundingReadinessGauge component renders without JS error",
+        "Zone is 'green' when IRS score >= 70, 'yellow' when 40-69, 'red' when < 40",
+        "Gauge shows blurred/locked state when no IRS assessment completed",
+        "Top blockers list renders correctly",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fix #31 added middleware x-pathname header and admin layout login detection"
+      "passes": false,
+      "notes": "Files: components/dashboard/funding-readiness-gauge.tsx, lib/dashboard/command-center.ts"
     },
     {
       "id": "US-009",
-      "title": "Community posts require membership",
-      "description": "As a community owner, I want only members to be able to post in my community",
-      "acceptanceCriteria": ["Non-members cannot create posts", "Membership check enforced on API", "Private communities block self-join"],
+      "title": "Red Flags widget shows active alerts from database",
+      "description": "As a founder, I want to see my active red flag alerts on the dashboard so I know what risks need my attention.",
+      "acceptanceCriteria": [
+        "GET /api/fred/red-flags returns active red flags for authenticated user",
+        "RedFlagsWidget renders list of active alerts",
+        "Empty state shown when no red flags exist",
+        "Red flags have title, severity, and created date",
+        "Typecheck passes"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fixes #3 and #8 added membership and privacy checks"
+      "passes": false,
+      "notes": "Files: app/api/fred/red-flags/, components/dashboard/red-flags-widget.tsx"
     },
     {
       "id": "US-010",
-      "title": "Contact form has rate limiting",
-      "description": "As a site operator, I want the contact form to be rate-limited to prevent spam",
-      "acceptanceCriteria": ["Contact API limited to 5 requests/hour/IP", "Rate limit response returned on exceed"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #2 added rate limiting"
+      "title": "Investor Readiness Score (IRS) assessment completes and persists",
+      "description": "As a founder, I want to complete an IRS assessment and have the score persisted so my Funding Readiness Gauge reflects it.",
+      "acceptanceCriteria": [
+        "POST /api/fred/investor-readiness returns IRS result with overall score",
+        "Row exists in investor_readiness_scores table after assessment",
+        "journey_events row created with event_type='irs_completed' or equivalent",
+        "GET /api/dashboard/command-center reflects updated IRS score",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: app/api/fred/investor-readiness/route.ts, lib/fred/irs/"
     },
     {
       "id": "US-011",
-      "title": "Chat UI is usable on mobile",
-      "description": "As a mobile user, I want the chat interface to work well on my phone",
-      "acceptanceCriteria": ["No iOS zoom on input focus (16px font)", "Touch targets >= 44px", "Chat bubbles use 85% width on mobile", "Keyboard hint hidden on mobile", "Safe area inset respected"],
+      "title": "Pitch Deck Review completes and writes to journey events",
+      "description": "As a founder, I want my pitch deck review to save results so my journey progress reflects the analysis.",
+      "acceptanceCriteria": [
+        "POST /api/fred/pitch-review returns review results",
+        "journey_events row created after pitch review",
+        "Review results saved to pitch_reviews table",
+        "Typecheck passes"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fixes #5, #17, #18, #19 addressed mobile chat UX"
+      "passes": false,
+      "notes": "Files: app/api/fred/pitch-review/route.ts"
     },
     {
       "id": "US-012",
-      "title": "Onboarding flow has error boundaries",
-      "description": "As a new user, if the onboarding page crashes I should see a branded error page with retry",
-      "acceptanceCriteria": ["Error boundary on /get-started", "Error boundary on /onboarding", "Retry button works", "Navigation back to home available"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #16 created branded error pages"
+      "title": "Weekly Momentum shows last SMS check-in and streak",
+      "description": "As a founder, I want to see my weekly check-in streak and last SMS message in the dashboard so I can track my momentum.",
+      "acceptanceCriteria": [
+        "WeeklyMomentum widget renders without error",
+        "Shows streak count correctly (0 when no check-ins)",
+        "Shows last check-in date and summary when check-ins exist",
+        "Empty state renders gracefully",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: components/dashboard/weekly-momentum.tsx, lib/dashboard/command-center.ts"
     },
     {
       "id": "US-013",
-      "title": "Protected routes enforce authentication",
-      "description": "As a security measure, all dashboard/user routes should require authentication",
-      "acceptanceCriteria": ["/check-ins, /video, /onboarding, /interactive in protected routes", "Unauthenticated users redirected to /login"],
+      "title": "SMS Twilio webhook is idempotent — duplicate deliveries don't create duplicate records",
+      "description": "As the system, I need the Twilio SMS webhook to be idempotent so that duplicate message deliveries (Twilio retry behavior) don't create duplicate check-in records.",
+      "acceptanceCriteria": [
+        "POST /api/sms/webhook with duplicate MessageSid returns 200 without creating duplicate sms_checkins row",
+        "sms_checkins table has unique constraint or upsert on MessageSid/external_id",
+        "Second identical webhook delivery is a no-op",
+        "Typecheck passes"
+      ],
       "priority": 1,
-      "passes": true,
-      "notes": "Fix #6 added missing routes to middleware-utils.ts"
+      "passes": false,
+      "notes": "Files: app/api/sms/webhook/route.ts, lib/sms/webhook-handler.ts. CRITICAL: data duplication bug."
     },
     {
       "id": "US-014",
-      "title": "User account deletion cleans up all data",
-      "description": "As a user, when I delete my account all my data should be removed",
-      "acceptanceCriteria": ["Delete endpoint removes data from all v3.0+ tables", "Conversation state, push, email, shares, community data all cleaned up"],
-      "priority": 2,
-      "passes": true,
-      "notes": "Fix #11 added 12 missing tables to deletion"
+      "title": "Stripe webhook handles duplicate event delivery idempotently",
+      "description": "As the system, I need the Stripe webhook to handle duplicate event.id deliveries idempotently so subscription state stays consistent.",
+      "acceptanceCriteria": [
+        "POST /api/stripe/webhook with duplicate event.id returns 200 without duplicate processing",
+        "stripe_events table has unique constraint on event_id",
+        "Second delivery of same event does not change subscription state",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/api/stripe/webhook/route.ts. CRITICAL: subscription consistency."
     },
     {
       "id": "US-015",
-      "title": "Admin nav shows all admin pages",
-      "description": "As an admin, I want all admin pages accessible from the admin sidebar",
-      "acceptanceCriteria": ["Voice Agent link in admin nav", "Analytics link in admin nav"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #21 added 2 missing admin nav links"
+      "title": "Rate limiting applied to Reality Lens and IRS endpoints",
+      "description": "As the system, I need rate limiting on the expensive AI endpoints (Reality Lens, IRS, Pitch Review) to prevent abuse and token exhaustion.",
+      "acceptanceCriteria": [
+        "POST /api/fred/reality-lens returns 429 after exceeding tier limit",
+        "POST /api/fred/investor-readiness has rate limiting applied",
+        "POST /api/fred/pitch-review has rate limiting applied",
+        "Rate limit headers present in responses (X-RateLimit-Remaining)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/api/fred/reality-lens/route.ts, app/api/fred/investor-readiness/route.ts, lib/api/rate-limit.ts"
     },
     {
       "id": "US-016",
-      "title": "Features page accurately reflects feature status",
-      "description": "As a visitor, I want the features page to correctly show which features are available",
-      "acceptanceCriteria": ["Boardy not marked as Coming Soon", "All available features shown as active"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #22 removed stale comingSoon flag from Boardy"
+      "title": "Upload endpoints have rate limiting",
+      "description": "As the system, I need rate limiting on file upload endpoints to prevent storage abuse.",
+      "acceptanceCriteria": [
+        "POST /api/documents/upload (or equivalent) returns 429 after rate limit exceeded",
+        "POST /api/pitch-deck/upload has rate limiting",
+        "Rate limit is per-user not global",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: app/api/documents/, app/api/pitch-deck/, lib/api/rate-limit.ts"
     },
     {
       "id": "US-017",
-      "title": "Strategy Reframing page is discoverable",
-      "description": "As a user, I want to find and access the Strategy Reframing feature",
-      "acceptanceCriteria": ["Link to Strategy Reframing from Strategy Docs", "Page loads correctly"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #23 added link button in Strategy Docs header"
+      "title": "Dashboard context API uses Promise.allSettled for graceful degradation",
+      "description": "As the system, I need the dashboard context queries to use Promise.allSettled so a single failed data source doesn't break the entire dashboard.",
+      "acceptanceCriteria": [
+        "GET /api/dashboard/command-center returns partial data (not 500) if one sub-query fails",
+        "If IRS query fails, dashboard still loads with zone defaulting to computed value",
+        "If weekly momentum query fails, other widgets still render",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: lib/dashboard/command-center.ts — getCommandCenterData uses Promise.all, change to Promise.allSettled"
     },
     {
       "id": "US-018",
-      "title": "Login page is accessible",
-      "description": "As a user with accessibility needs, the login page should support screen readers and have proper touch targets",
-      "acceptanceCriteria": ["Error messages have role=alert", "Inputs have 16px font (no iOS zoom)", "ARIA labels present"],
+      "title": "FRED chat enrichment failures are logged, not silently swallowed",
+      "description": "As the system, I need fire-and-forget enrichment failures to be logged so we can debug profile sync issues in production.",
+      "acceptanceCriteria": [
+        "fireEnrichment() catch block logs error with console.error or logger",
+        "extractAndStoreNextSteps() catch block logs failure",
+        "No empty .catch(() => {}) handlers in chat route without logging",
+        "Typecheck passes"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fix #13 added text-base and role=alert"
+      "passes": false,
+      "notes": "Files: app/api/fred/chat/route.ts — empty catch blocks need at minimum console.error()"
     },
     {
       "id": "US-019",
-      "title": "Community reactions work without race conditions",
-      "description": "As a community member, I want reactions to toggle correctly even under concurrent clicks",
-      "acceptanceCriteria": ["Reaction toggle uses atomic operation", "Optimistic UI with rollback on error", "No duplicate reactions"],
+      "title": "Notification push endpoint has rate limiting and proper error logging",
+      "description": "As the system, I need push notification sending to be rate-limited and log failures rather than silently discarding them.",
+      "acceptanceCriteria": [
+        "POST /api/notifications/send returns 429 if called too frequently",
+        "Failed push delivery is logged with console.error (not empty catch)",
+        "Notification result (success/failure) logged to notifications table or console",
+        "Typecheck passes"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fixes B1 and F01 replaced TOCTOU with atomic pattern and added optimistic UI"
+      "passes": false,
+      "notes": "Files: app/api/notifications/send/route.ts — empty .catch(() => {}) on push send"
     },
     {
       "id": "US-020",
-      "title": "Dashboard stat cards show meaningful values for free tier",
-      "description": "As a free-tier user, dashboard cards should show 0 with upgrade prompts instead of raw dashes",
-      "acceptanceCriteria": ["Locked features show '0' not '-'", "Upgrade to Pro/Studio link visible"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #26 added upgrade links"
+      "title": "Startup process page loads data from DB before falling back to localStorage",
+      "description": "As a founder, I want my startup process to load from the database first so I never lose progress when switching devices.",
+      "acceptanceCriteria": [
+        "Startup process page fetches GET /api/startup-process on mount",
+        "If DB has data, localStorage is not used as primary source",
+        "If DB is empty, falls back to localStorage",
+        "Saving always writes to both DB and localStorage",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/dashboard/startup-process/page.tsx"
     },
     {
       "id": "US-021",
-      "title": "Features nav dropdown has View All link",
-      "description": "As a visitor, I want a link to see all features from the nav dropdown",
-      "acceptanceCriteria": ["View all features link at bottom of dropdown", "Links to /features page"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #27 added View all features link"
+      "title": "Voice call Fred modal works for Pro tier users",
+      "description": "As a Pro tier founder, I want to initiate a voice call with FRED from the dashboard hero.",
+      "acceptanceCriteria": [
+        "Call Fred button is enabled for Pro tier users",
+        "CallFredModal opens when button clicked",
+        "Modal shows call initiation UI without errors",
+        "Free tier shows 'Pro' badge and redirects to upgrade instead",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: components/dashboard/call-fred-modal.tsx, app/dashboard/page.tsx"
     },
     {
       "id": "US-022",
-      "title": "Startup process shows full step names",
-      "description": "As a user viewing the startup process, I want to see full step names not truncated text",
-      "acceptanceCriteria": ["Step names not truncated to 2 words", "Tooltip shows full name", "Wider max-width"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #29 widened max-w and added tooltip"
+      "title": "Mobile home page renders all key features for mobile users",
+      "description": "As a founder on mobile, I want the mobile home page to show the FRED CTA and key dashboard widgets in a mobile-optimized layout.",
+      "acceptanceCriteria": [
+        "MobileHome component renders without errors at 375px width",
+        "FRED chat CTA is visible and tappable on mobile",
+        "No horizontal scroll on mobile dashboard",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: components/mobile/mobile-home.tsx, app/dashboard/page.tsx"
     },
     {
       "id": "US-023",
-      "title": "Onboard route does not write non-existent DB columns",
-      "description": "As a developer, the onboard API should not attempt to write enrichment columns that don't exist in profiles table",
-      "acceptanceCriteria": ["No industry/revenue_range/team_size/funding_history in profile upsert", "Signup with enrichment data does not fail"],
-      "priority": 1,
-      "passes": true,
-      "notes": "Enrichment fields removed from onboard route in commit 376d706. Auth-helpers fixed in commit 61b18b1."
+      "title": "Stripe subscription upgrade flow completes and tier reflects immediately",
+      "description": "As a founder, I want upgrading to Pro to immediately reflect in the app so I can use Pro features without refreshing.",
+      "acceptanceCriteria": [
+        "Stripe checkout session created successfully",
+        "After redirect back with ?success=true, tier polling starts",
+        "useTier() hook reflects new tier within 10 seconds",
+        "Call Fred button becomes active after tier upgrade",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: app/dashboard/page.tsx (polling logic), lib/context/tier-context.tsx"
     },
     {
       "id": "US-024",
-      "title": "Diagnostic state API validates input",
-      "description": "As a security measure, the diagnostic state endpoint should validate input with Zod",
-      "acceptanceCriteria": ["Zod schema validates enum, boolean, array fields", "Invalid input returns 400"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fix #7 added Zod validation"
+      "title": "Get Started checklist completes and hides after all steps done",
+      "description": "As a new founder, I want the Get Started checklist to guide me through first steps and then disappear once I've completed them.",
+      "acceptanceCriteria": [
+        "GetStartedWithFred component renders for new users",
+        "Checklist items reflect actual completion state (not hardcoded)",
+        "Component hides or shows completion state when all steps done",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: components/dashboard/get-started-with-fred.tsx"
     },
     {
       "id": "US-025",
-      "title": "PostgREST filter injection prevented in community search",
-      "description": "As a security measure, community search should strip PostgREST-special characters",
-      "acceptanceCriteria": ["Special characters stripped from search input", "No filter syntax injection possible"],
+      "title": "Next Steps are saved and shown on dashboard",
+      "description": "As a founder, I want FRED to generate action items during our conversation and see them on my dashboard.",
+      "acceptanceCriteria": [
+        "After FRED chat, next_steps table has rows for the user",
+        "GET /api/next-steps (or equivalent) returns the user's next steps",
+        "DecisionBox or next steps component shows the items",
+        "Completed/dismissed steps are filtered from active view",
+        "Typecheck passes"
+      ],
       "priority": 2,
-      "passes": true,
-      "notes": "Fix B2 stripped PostgREST-special characters from search"
+      "passes": false,
+      "notes": "Files: app/api/fred/chat/route.ts (extractAndStoreNextSteps), components/dashboard/decision-box.tsx"
     },
     {
       "id": "US-026",
-      "title": "API routes return 401 (not 500) for unauthenticated requests",
-      "description": "As an API consumer, unauthenticated requests should return 401 with proper error message instead of 500",
-      "acceptanceCriteria": ["GET/POST/DELETE/PATCH /api/team return 401 without auth", "GET/POST/DELETE /api/share return 401 without auth", "POST /api/investor-lens/deck-request returns 401 without auth", "POST /api/positioning/quick-check returns 401 without auth", "GET/PATCH/DELETE /api/journey/milestones/[id] return 401 without auth"],
-      "priority": 1,
-      "passes": true,
-      "notes": "Fixed in commit 76b3630 -- added `if (error instanceof Response) return error;` to 12 catch blocks across 5 files"
+      "title": "Founder Snapshot card shows FRED-observed data after conversations",
+      "description": "As a founder, I want the Founder Snapshot card to show data FRED has learned about me from our conversations.",
+      "acceptanceCriteria": [
+        "FounderSnapshotCard renders without error",
+        "After FRED conversation mentioning stage, snapshot reflects it",
+        "Shows stage, primaryConstraint, ninetyDayGoal when available",
+        "Shows empty state guidance when no data yet",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: components/dashboard/founder-snapshot-card.tsx, lib/dashboard/command-center.ts"
     },
     {
       "id": "US-027",
-      "title": "Check-ins empty state links to correct chat page",
-      "description": "As a user on the check-ins page with no check-ins, the 'Talk to FRED' button should navigate to /chat",
-      "acceptanceCriteria": ["Talk to FRED button links to /chat", "No 404 error when clicking the button"],
-      "priority": 2,
-      "passes": true,
-      "notes": "Fixed in commit 3f0dbdd -- changed href from /dashboard/chat to /chat"
+      "title": "Profiles table has RLS policies protecting enrichment data",
+      "description": "As the system, I need the profiles table to have Row Level Security so one user cannot read another user's enrichment data.",
+      "acceptanceCriteria": [
+        "profiles table has RLS enabled (check information_schema or supabase dashboard)",
+        "A user can only SELECT their own row from profiles",
+        "Service role can still read all rows",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: supabase/migrations/ — verify RLS on profiles table. CRITICAL security gap."
     },
     {
       "id": "US-028",
-      "title": "Links page has no misleading waitlist references",
-      "description": "As a visitor on the linktree page, all links should reflect that signup is live (no waitlist references)",
-      "acceptanceCriteria": ["No 'Join Waitlist' text on /links page", "No duplicate 'Get Started' entries"],
-      "priority": 3,
-      "passes": true,
-      "notes": "Fixed in commit 6d3049f -- removed duplicate entry that was formerly 'Join Waitlist'"
+      "title": "Community consent filtering prevents opt-out users from appearing in directory",
+      "description": "As a founder who opted out of the community directory, I should not appear in any community listing or benchmark.",
+      "acceptanceCriteria": [
+        "GET /api/community/directory excludes users who opted out in consent_preferences",
+        "Benchmark data aggregation excludes opted-out users",
+        "consent_preferences table has rows for test users",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: app/api/community/, supabase/migrations/20260217000001_community_data_layer.sql"
+    },
+    {
+      "id": "US-029",
+      "title": "FRED AI call has timeout protection — hung requests abort after 60 seconds",
+      "description": "As the system, I need AI calls to have timeout protection so a stuck OpenAI request doesn't block a user indefinitely.",
+      "acceptanceCriteria": [
+        "FRED chat route aborts AI call after 60 seconds with a graceful error message",
+        "User sees an error message, not an infinite spinner",
+        "AbortController or timeout middleware wraps AI call",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: app/api/fred/chat/route.ts — verify AbortSignal or timeout wrapping on AI call"
+    },
+    {
+      "id": "US-030",
+      "title": "All API routes return 401 for unauthenticated requests, not 500",
+      "description": "As the system, I need API routes to return proper 401 responses when a user is not authenticated.",
+      "acceptanceCriteria": [
+        "POST /api/fred/chat without auth cookie returns 401",
+        "GET /api/dashboard/command-center without auth returns 401",
+        "POST /api/startup-process without auth returns 401",
+        "No route returns 500 for an unauthenticated request that should be 401",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files: lib/auth.ts requireAuth(), all API routes using it"
     }
   ]
 }
