@@ -32,7 +32,7 @@ import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
-import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, getGateRedirectCount, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
+import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
@@ -371,13 +371,15 @@ async function handlePost(req: NextRequest) {
       if (downstreamRequest) {
         const gateStatus = checkGateStatus(rlGateResult, downstreamRequest);
         if (!gateStatus.gateOpen) {
-          const redirectCount = await getGateRedirectCount(userId, downstreamRequest);
+          const counts = (persistedModeResult?.modeContext?.gateRedirectCounts as Record<string, number>) ?? {};
+          const redirectCount = counts[downstreamRequest] ?? 0;
           rlGateBlock = buildRealityLensGateBlock(
             downstreamRequest,
             gateStatus.weakDimensions,
             gateStatus.unassessedDimensions,
             redirectCount
           );
+          // Async increment in background (fire-and-forget)
           incrementGateRedirect(userId, downstreamRequest).catch(err =>
             console.warn("[FRED Chat] Failed to increment gate redirect:", err)
           );
