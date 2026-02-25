@@ -14,6 +14,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { sanitizeUserInput } from "@/lib/ai/guards/prompt-guard";
 import type { SemanticMemory } from "@/lib/db/fred-memory";
+import { STEP_TITLES, type StepNumber } from "@/types/startup-process";
 
 // ============================================================================
 // Types
@@ -105,6 +106,48 @@ async function loadSemanticFacts(
     }));
   } catch {
     return [];
+  }
+}
+
+// ============================================================================
+// Startup Process Loader
+// ============================================================================
+
+/**
+ * Load the founder's 9-Step Startup Process progress from the dashboard.
+ * Returns null if no process record exists.
+ */
+async function loadStartupProcessProgress(userId: string): Promise<{
+  currentStep: StepNumber;
+  completedSteps: StepNumber[];
+  completionPercentage: number;
+} | null> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("startup_processes")
+      .select("current_step, step_1_completed, step_2_completed, step_3_completed, step_4_completed, step_5_completed, step_6_completed, step_7_completed, step_8_completed, step_9_completed, completion_percentage")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+
+    const completedSteps: StepNumber[] = [];
+    for (let i = 1; i <= 9; i++) {
+      if (data[`step_${i}_completed` as keyof typeof data]) {
+        completedSteps.push(i as StepNumber);
+      }
+    }
+
+    return {
+      currentStep: (Number(data.current_step) || 1) as StepNumber,
+      completedSteps,
+      completionPercentage: Number(data.completion_percentage) || 0,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -417,10 +460,11 @@ export async function buildFounderContextWithFacts(
   hasPersistentMemory: boolean
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
-    const [profile, facts, { isFirstConversation, progressContext }] = await Promise.all([
+    const [profile, facts, { isFirstConversation, progressContext }, startupProcess] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId),
+      loadStartupProcessProgress(userId),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -434,6 +478,25 @@ export async function buildFounderContextWithFacts(
     // Phase 36: Append step progress if available
     if (progressContext) {
       context += "\n\n" + progressContext;
+    }
+
+    // Wire startup_processes dashboard data into FRED's context
+    if (startupProcess) {
+      const stepTitle = STEP_TITLES[startupProcess.currentStep] || `Step ${startupProcess.currentStep}`;
+      const completedLabels = startupProcess.completedSteps
+        .map((n) => `${n}. ${STEP_TITLES[n]}`)
+        .join(", ");
+      const lines: string[] = [];
+      lines.push("## STARTUP PROCESS PROGRESS (Dashboard)");
+      lines.push("");
+      lines.push(`**Current Step:** ${startupProcess.currentStep} — ${stepTitle}`);
+      lines.push(`**Overall Progress:** ${startupProcess.completionPercentage}%`);
+      if (completedLabels) {
+        lines.push(`**Completed Steps:** ${completedLabels}`);
+      }
+      lines.push("");
+      lines.push("The founder has been working through the 9-Step Startup Process on their dashboard. Reference their progress naturally. If their dashboard step differs from your conversation assessment, align to the dashboard step — it reflects their self-reported progress.");
+      context += "\n\n" + lines.join("\n");
     }
 
     return { context, facts };
