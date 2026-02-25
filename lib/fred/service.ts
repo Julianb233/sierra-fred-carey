@@ -24,6 +24,8 @@ export interface FredServiceOptions {
   tier?: string;
   onStateChange?: (state: string, context: FredContext) => void;
   onError?: (error: Error) => void;
+  /** Callback invoked for each LLM token chunk during streaming generation */
+  onToken?: (chunk: string) => void;
 }
 
 export interface ProcessResult {
@@ -178,6 +180,9 @@ export class FredService {
         preloadedFacts: this.options.preloadedFacts,
         tier: this.options.tier || "free",
         chatMode: true,
+        tokenChannel: this.options.onToken
+          ? { emit: (chunk: string) => this.options.onToken!(chunk) }
+          : null,
       },
     });
 
