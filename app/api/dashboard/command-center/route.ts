@@ -37,6 +37,7 @@ export async function GET() {
           industry: null,
           productStatus: null,
           traction: null,
+          lastUpdatedAt: null,
         },
         currentStep: {
           stepKey: "problem_validation",

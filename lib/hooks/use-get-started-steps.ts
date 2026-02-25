@@ -30,6 +30,7 @@ export function useGetStartedSteps(tier: UserTier): GetStartedState {
   const [profileComplete, setProfileComplete] = useState(false);
   const [hasConversation, setHasConversation] = useState(false);
   const [featuresExplored, setFeaturesExplored] = useState(false);
+  const [allProcessStepsValidated, setAllProcessStepsValidated] = useState(false);
 
   useEffect(() => {
     // Check localStorage for features explored
@@ -49,14 +50,15 @@ export function useGetStartedSteps(tier: UserTier): GetStartedState {
           return;
         }
 
-        // Fetch profile and stats in parallel
-        const [profileRes, statsRes] = await Promise.all([
+        // Fetch profile, stats, and startup process in parallel
+        const [profileRes, statsRes, processRes] = await Promise.all([
           supabase
             .from("profiles")
             .select("stage, challenges")
             .eq("id", user.id)
             .single(),
           fetch("/api/dashboard/stats"),
+          fetch("/api/startup-process"),
         ]);
 
         // Check profile completion: stage + challenges populated
@@ -72,6 +74,16 @@ export function useGetStartedSteps(tier: UserTier): GetStartedState {
           const json = await statsRes.json();
           if (json.success && json.data) {
             setHasConversation((json.data.ideasAnalyzed ?? 0) > 0);
+          }
+        }
+
+        // Check startup process completion
+        if (processRes.ok) {
+          const json = await processRes.json();
+          if (json.success && json.data) {
+            const steps = json.data.steps as Array<{ status: string }>;
+            const validatedCount = steps.filter((s) => s.status === "validated").length;
+            setAllProcessStepsValidated(validatedCount === steps.length && steps.length > 0);
           }
         }
       } catch (e) {
@@ -132,7 +144,7 @@ export function useGetStartedSteps(tier: UserTier): GetStartedState {
   const steps = [...coreSteps, optionalStep];
   const completedCount = coreSteps.filter((s) => s.completed).length;
   const coreStepCount = coreSteps.length;
-  const allCoreComplete = completedCount === coreStepCount;
+  const allCoreComplete = completedCount === coreStepCount || allProcessStepsValidated;
 
   return {
     steps,

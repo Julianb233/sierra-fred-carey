@@ -33,6 +33,7 @@ export interface FounderSnapshotData {
   industry: string | null;
   productStatus: string | null;
   traction: string | null;
+  lastUpdatedAt: string | null;
 }
 
 export interface CurrentStepInfo {
@@ -135,6 +136,7 @@ export async function getFounderSnapshot(
     industry: profile?.industry || null,
     productStatus: snap.productStatus || profile?.product_status || null,
     traction: snap.traction || profile?.traction || null,
+    lastUpdatedAt: state.updatedAt ? state.updatedAt.toISOString() : null,
   };
 }
 
@@ -385,7 +387,7 @@ export async function getCommandCenterData(
 
   const founderSnapshot: FounderSnapshotData = founderSnapshotResult.status === "fulfilled"
     ? founderSnapshotResult.value
-    : { name: null, stage: null, primaryConstraint: null, ninetyDayGoal: null, runway: null, industry: null, productStatus: null, traction: null };
+    : { name: null, stage: null, primaryConstraint: null, ninetyDayGoal: null, runway: null, industry: null, productStatus: null, traction: null, lastUpdatedAt: null };
 
   const processProgress: ProcessProgressData = processProgressResult.status === "fulfilled"
     ? processProgressResult.value
