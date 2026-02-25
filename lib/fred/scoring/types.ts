@@ -399,6 +399,6 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   maybeThreshold: 0.45,
   noThreshold: 0.3,
   defaultDecisionType: "general",
-  useAIScoring: true,
+  useAIScoring: false, // heuristics are sufficient for P50 quality; avoids hidden sequential GPT-4o call
   aiModel: "gpt-4o",
 };

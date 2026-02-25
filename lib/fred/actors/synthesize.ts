@@ -23,6 +23,7 @@ import { detectRedFlags } from "../risks/detection-engine";
 import {
   scoreDecision,
   detectDecisionType,
+  DEFAULT_SCORING_CONFIG,
   type DecisionContext,
   type CompositeScore,
 } from "../scoring";
@@ -152,11 +153,11 @@ async function getAIFactorScores(
     // Detect decision type
     const decisionType = detectDecisionType(input.originalMessage);
 
-    // Score the decision
+    // Score the decision — respects DEFAULT_SCORING_CONFIG.useAIScoring (false by default)
     const compositeScore = await scoreDecision(
       input.originalMessage,
       context,
-      { decisionType, useAI: true }
+      { decisionType, useAI: DEFAULT_SCORING_CONFIG.useAIScoring }
     );
 
     // Convert CompositeScore factors to our FactorScores format
