@@ -65,6 +65,25 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const savedResult = await saveIRSResult(supabase, userId, result);
 
+    // Record journey event for dashboard "Investor Readiness" card
+    // Fire-and-forget: don't block the response on this write
+    supabase
+      .from('journey_events')
+      .insert({
+        user_id: userId,
+        event_type: 'score_improved',
+        event_data: {
+          source: 'investor_readiness',
+          categories: Object.fromEntries(
+            Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
+          ),
+        },
+        score_after: Math.round(savedResult.overall),
+      })
+      .then(({ error }) => {
+        if (error) console.error('[IRS API] Failed to record journey event:', error.message);
+      });
+
     return NextResponse.json({
       success: true,
       result: savedResult,

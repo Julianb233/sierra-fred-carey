@@ -5,9 +5,8 @@
  * Calculates IRS across 6 categories with AI-powered analysis.
  */
 
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { generateStructuredReliable } from '@/lib/ai';
 import {
   FRED_BIO,
   FRED_IDENTITY,
@@ -85,14 +84,16 @@ const IRSResultSchema = z.object({
 export async function calculateIRS(input: IRSInput): Promise<IRSResult> {
   const context = buildContext(input);
 
-  // Generate scores using AI
-  const { object: result } = await generateObject({
-    model: openai('gpt-4o'),
-    schema: IRSResultSchema,
-    system: getSystemPrompt(),
-    prompt: buildPrompt(input),
-    temperature: 0.3,
-  });
+  // Generate scores using AI with fallback chain
+  const { object: result } = await generateStructuredReliable(
+    buildPrompt(input),
+    IRSResultSchema,
+    {
+      system: getSystemPrompt(),
+      temperature: 0.3,
+      maxOutputTokens: 4096,
+    }
+  );
 
   // Calculate overall score from category scores
   const categories = {
