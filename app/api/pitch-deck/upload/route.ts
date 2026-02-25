@@ -3,6 +3,14 @@ import { uploadToBlob, FileValidationError } from '@/lib/storage/upload';
 import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import { getUserTier, createTierErrorResponse } from '@/lib/api/tier-middleware';
+import { checkRateLimit, createRateLimitResponse } from '@/lib/api/rate-limit';
+
+// Upload rate limits per tier (per day)
+const UPLOAD_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
+  [UserTier.FREE]: { limit: 20, windowSeconds: 86400 },
+  [UserTier.PRO]: { limit: 100, windowSeconds: 86400 },
+  [UserTier.STUDIO]: { limit: 500, windowSeconds: 86400 },
+};
 
 /**
  * Error response structure
@@ -43,8 +51,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
 
-    // SECURITY: Require Pro tier for pitch deck uploads
+    // Rate limit uploads by user tier
     const userTier = await getUserTier(userId);
+    const tierConfig = UPLOAD_RATE_LIMITS[userTier] ?? UPLOAD_RATE_LIMITS[UserTier.FREE];
+    const rateLimitResult = await checkRateLimit(`upload:${userId}`, tierConfig);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult) as NextResponse<UploadResponse>;
+    }
+
+    // SECURITY: Require Pro tier for pitch deck uploads
     if (userTier < UserTier.PRO) {
       return createTierErrorResponse({
         allowed: false,

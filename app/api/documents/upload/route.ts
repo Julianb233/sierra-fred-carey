@@ -11,9 +11,17 @@ import { createClient } from '@supabase/supabase-js';
 import { createDocument } from '@/lib/db/documents';
 import { processDocument } from '@/lib/documents/process-document';
 import { isValidPdf } from '@/lib/documents/pdf-processor';
-import { checkTierForRequest } from '@/lib/api/tier-middleware';
+import { checkTierForRequest, getUserTier } from '@/lib/api/tier-middleware';
 import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
+import { checkRateLimit, createRateLimitResponse } from '@/lib/api/rate-limit';
+
+// Upload rate limits per tier (per day)
+const UPLOAD_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
+  [UserTier.FREE]: { limit: 20, windowSeconds: 86400 },
+  [UserTier.PRO]: { limit: 100, windowSeconds: 86400 },
+  [UserTier.STUDIO]: { limit: 500, windowSeconds: 86400 },
+};
 import type { DocumentType } from '@/lib/documents/types';
 import { clientEnv, serverEnv } from '@/lib/env';
 
@@ -50,6 +58,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = tierCheck.user.id;
+
+    // Rate limit uploads by user tier
+    const userTier = await getUserTier(userId);
+    const tierConfig = UPLOAD_RATE_LIMITS[userTier] ?? UPLOAD_RATE_LIMITS[UserTier.FREE];
+    const rateLimitResult = await checkRateLimit(`upload:${userId}`, tierConfig);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
 
     // Parse multipart form data
     const formData = await request.formData();

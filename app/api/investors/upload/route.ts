@@ -10,9 +10,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { checkTierForRequest } from "@/lib/api/tier-middleware";
+import { checkTierForRequest, getUserTier } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { createServiceClient } from "@/lib/supabase/server";
+
+// Upload rate limits per tier (per day)
+const UPLOAD_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
+  [UserTier.FREE]: { limit: 20, windowSeconds: 86400 },
+  [UserTier.PRO]: { limit: 100, windowSeconds: 86400 },
+  [UserTier.STUDIO]: { limit: 500, windowSeconds: 86400 },
+};
 import { parseInvestorCSV } from "@/lib/investors/csv-parser";
 
 /** Max file size: 1MB */
@@ -81,6 +89,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = tierCheck.user.id;
+
+    // Rate limit uploads by user tier
+    const userTier = await getUserTier(userId);
+    const tierConfig = UPLOAD_RATE_LIMITS[userTier] ?? UPLOAD_RATE_LIMITS[UserTier.FREE];
+    const rateLimitResult = await checkRateLimit(`upload:${userId}`, tierConfig);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
 
     // Parse multipart form data
     const formData = await request.formData();
