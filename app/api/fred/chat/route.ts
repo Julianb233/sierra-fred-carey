@@ -424,7 +424,7 @@ async function handlePost(req: NextRequest) {
 
     // ── Parallel context loading ─────────────────────────────────────
     // These six calls are independent of each other — run in parallel.
-    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult] = await Promise.all([
+    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult] = await Promise.all([
       buildFounderContextWithFacts(userId, hasPersistentMemory).catch((error) => {
         console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
         return { context: "", facts: [] };
@@ -465,6 +465,22 @@ async function handlePost(req: NextRequest) {
           return null;
         }
       })(),
+      // Pre-fetch latest Reality Lens assessment (GATE-01: gate downstream work)
+      (async () => {
+        try {
+          const supabase = createServiceClient();
+          const { data } = await supabase
+            .from("reality_lens_analyses")
+            .select("overall_score, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+          return data as { overall_score: number; created_at: string } | null;
+        } catch {
+          return null;
+        }
+      })(),
     ]);
 
     // Destructure founder context result — facts are passed to the machine
@@ -483,29 +499,49 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    // Phase 37: Reality Lens gate (reuse rlGateResult — no duplicate call)
+    // Phase 37 + GATE-01/02/03: Reality Lens gate
+    // When no gate exists in conversation state, use a default gate (all not_assessed)
+    // so downstream requests are still blocked until the founder runs Reality Lens.
     let rlGateBlock = "";
     let rlStatusBlock = "";
-    if (rlGateResult) {
-      rlStatusBlock = buildRealityLensStatusBlock(rlGateResult);
 
-      const downstreamRequest = detectDownstreamRequestQuick(message);
-      if (downstreamRequest) {
-        const gateStatus = checkGateStatus(rlGateResult, downstreamRequest);
-        if (!gateStatus.gateOpen) {
-          const counts = (persistedModeResult?.modeContext?.gateRedirectCounts as Record<string, number>) ?? {};
-          const redirectCount = counts[downstreamRequest] ?? 0;
-          rlGateBlock = buildRealityLensGateBlock(
-            downstreamRequest,
-            gateStatus.weakDimensions,
-            gateStatus.unassessedDimensions,
-            redirectCount
-          );
-          // Async increment in background (fire-and-forget)
-          incrementGateRedirect(userId, downstreamRequest).catch(err =>
-            console.warn("[FRED Chat] Failed to increment gate redirect:", err)
-          );
-        }
+    // Build Reality Lens status block from actual assessment data
+    if (rlAssessmentResult) {
+      const score = rlAssessmentResult.overall_score;
+      if (score < 60) {
+        rlStatusBlock = `Reality Lens: COMPLETED (Score: ${score}/100). Foundation is WEAK. Be direct: do not let the founder skip ahead to tactical work until upstream gaps are addressed. If they request pitch decks, fundraising, hiring, scaling, or patents, redirect to strengthening fundamentals first.`;
+      } else {
+        rlStatusBlock = `Reality Lens: COMPLETED (Score: ${score}/100). Foundation assessed — tactical advice unlocked.`;
+      }
+    } else {
+      rlStatusBlock = `Reality Lens: NOT COMPLETED. The founder has not run a Reality Lens assessment. If they ask about pitch decks, investor outreach, hiring plans, scaling, patents, or fundraising strategy, redirect them: "Before we work on that, we need to establish whether your idea foundation is solid. Head over to your **Reality Lens** to run the assessment — it takes 5 minutes and will give us a clear picture."`;
+    }
+
+    // Use the conversation-state gate if available, otherwise default gate (all not_assessed)
+    const effectiveGate = rlGateResult ?? {
+      feasibility: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      economics: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      demand: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      distribution: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      timing: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+    };
+
+    const downstreamRequest = detectDownstreamRequestQuick(message);
+    if (downstreamRequest) {
+      const gateStatus = checkGateStatus(effectiveGate, downstreamRequest);
+      if (!gateStatus.gateOpen) {
+        const counts = (persistedModeResult?.modeContext?.gateRedirectCounts as Record<string, number>) ?? {};
+        const redirectCount = counts[downstreamRequest] ?? 0;
+        rlGateBlock = buildRealityLensGateBlock(
+          downstreamRequest,
+          gateStatus.weakDimensions,
+          gateStatus.unassessedDimensions,
+          redirectCount
+        );
+        // Async increment in background (fire-and-forget)
+        incrementGateRedirect(userId, downstreamRequest).catch(err =>
+          console.warn("[FRED Chat] Failed to increment gate redirect:", err)
+        );
       }
     }
 
@@ -570,12 +606,9 @@ async function handlePost(req: NextRequest) {
         const formalAssessments = persistedModeResult.modeContext.formalAssessments;
         deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, deckCheckResult, founderStage);
 
-        // Reuse rlGateResult instead of duplicate getRealityLensGate call
-        let rlGateOpenForDeck = false;
-        if (rlGateResult) {
-          const deckGateStatus = checkGateStatus(rlGateResult, "pitch_deck");
-          rlGateOpenForDeck = deckGateStatus.gateOpen;
-        }
+        // Use effectiveGate (falls back to default all-not_assessed gate)
+        const deckGateStatus = checkGateStatus(effectiveGate, "pitch_deck");
+        let rlGateOpenForDeck = deckGateStatus.gateOpen;
 
         deckReviewReadyBlock = buildDeckReviewReadyBlock(
           rlGateOpenForDeck,
