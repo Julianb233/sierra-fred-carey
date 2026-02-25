@@ -152,6 +152,27 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const savedReview = await savePitchReview(supabase, userId, review);
 
+    // Log journey event (fire-and-forget, non-blocking)
+    supabase
+      .from('journey_events')
+      .insert({
+        user_id: userId,
+        event_type: 'pitch_review_completed',
+        event_data: {
+          reviewId: savedReview.id,
+          documentId,
+          overallScore: savedReview.overallScore,
+          structureScore: savedReview.structureScore,
+          contentScore: savedReview.contentScore,
+          slideCount: savedReview.slides.length,
+          missingSections: savedReview.missingSections,
+        },
+        score_after: Math.round(savedReview.overallScore),
+      })
+      .then(({ error: journeyErr }) => {
+        if (journeyErr) console.error('[PitchReview API] Failed to record journey event:', journeyErr.message);
+      });
+
     return NextResponse.json({
       success: true,
       review: savedReview,
