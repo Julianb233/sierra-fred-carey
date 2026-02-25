@@ -260,10 +260,12 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setError(null);
     streamingMessageIdRef.current = null;
 
-    // Create abort controller
-    abortControllerRef.current = new AbortController();
-
-    try {
+    /**
+     * Core streaming logic extracted so we can retry once on transient failures.
+     * Throws on any error (fetch failure, interrupted stream, SSE error event).
+     * On success, updates all React state (messages, analysis, synthesis, etc.).
+     */
+    const attemptStream = async (signal: AbortSignal): Promise<void> => {
       const response = await fetch("/api/fred/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -275,7 +277,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           storeInMemory,
           pageContext,
         }),
-        signal: abortControllerRef.current.signal,
+        signal,
       });
 
       if (!response.ok) {
@@ -473,12 +475,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
               }
 
               case "error": {
-                const errorData = data as { message: string };
-                if (mountedRef.current) {
-                  setError(errorData.message);
-                  setState("error");
-                }
-                break;
+                const errorData = data as { message?: string; error?: string };
+                throw new Error(errorData.message || errorData.error || "Stream error from server");
               }
             }
           }
@@ -493,42 +491,73 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       }
 
       // If the stream ended without a "done" event, the server likely crashed mid-response.
-      // Show a graceful error instead of leaving the UI stuck in a processing state.
-      if (!receivedDone && mountedRef.current) {
-        setError("Connection to FRED was interrupted. Please try again.");
-        setState("error");
-
-        const errorResponseMessage: FredMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "Sorry, I lost my train of thought there. Could you send that again?",
-          timestamp: new Date(),
-          confidence: "low",
-        };
-        setMessages(prev => [...prev, errorResponseMessage]);
+      if (!receivedDone) {
+        throw new Error("Connection to FRED was interrupted");
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        // User cancelled - don't show error
+    };
+
+    // Create abort controller
+    abortControllerRef.current = new AbortController();
+
+    try {
+      await attemptStream(abortControllerRef.current.signal);
+    } catch (firstErr) {
+      if (firstErr instanceof Error && firstErr.name === "AbortError") {
+        // User cancelled - don't show error or retry
         if (mountedRef.current) setState("idle");
         return;
       }
 
-      console.error("[useFredChat] Error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to get response";
-      if (mountedRef.current) {
-        setError(errorMessage);
-        setState("error");
+      // Silent auto-retry: transient failures (~20% first-message) usually succeed on retry.
+      // Remove any partial streaming message from the failed attempt before retrying.
+      console.warn("[useFredChat] First attempt failed, retrying once:", firstErr);
+      if (streamingMessageIdRef.current && mountedRef.current) {
+        const partialId = streamingMessageIdRef.current;
+        setMessages(prev => prev.filter(msg => msg.id !== partialId));
+        streamingMessageIdRef.current = null;
+      }
 
-        // Add error message as assistant response
-        const errorResponseMessage: FredMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "I'm having trouble processing your message right now. Please try again.",
-          timestamp: new Date(),
-          confidence: "low",
-        };
-        setMessages(prev => [...prev, errorResponseMessage]);
+      // Reset UI state for the retry attempt
+      if (mountedRef.current) {
+        setState("connecting");
+        setAnalysis(null);
+        setSynthesis(null);
+      }
+
+      // Create a fresh abort controller for the retry
+      abortControllerRef.current = new AbortController();
+
+      try {
+        await attemptStream(abortControllerRef.current.signal);
+      } catch (retryErr) {
+        if (retryErr instanceof Error && retryErr.name === "AbortError") {
+          if (mountedRef.current) setState("idle");
+          return;
+        }
+
+        console.error("[useFredChat] Retry also failed:", retryErr);
+        const errorMessage = retryErr instanceof Error ? retryErr.message : "Failed to get response";
+        if (mountedRef.current) {
+          // Clean up any partial streaming message from the retry attempt
+          if (streamingMessageIdRef.current) {
+            const partialId = streamingMessageIdRef.current;
+            setMessages(prev => prev.filter(msg => msg.id !== partialId));
+            streamingMessageIdRef.current = null;
+          }
+
+          setError(errorMessage);
+          setState("error");
+
+          // Add error message as assistant response
+          const errorResponseMessage: FredMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "I'm having trouble processing your message right now. Please try again.",
+            timestamp: new Date(),
+            confidence: "low",
+          };
+          setMessages(prev => [...prev, errorResponseMessage]);
+        }
       }
     } finally {
       abortControllerRef.current = null;
