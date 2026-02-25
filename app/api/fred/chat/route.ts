@@ -696,19 +696,19 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    // Create FRED service — pass preloadedFacts to avoid duplicate getAllUserFacts DB call
-    const fredService = createFredService({
-      userId,
-      sessionId: effectiveSessionId,
-      enableObservability: true,
-      founderContext: fullContext,
-      conversationState: stateContext,
-      preloadedFacts,
-      tier: tierName,
-    });
-
     // Non-streaming response
     if (!stream) {
+      // Create FRED service — no token streaming needed for buffered response
+      const fredService = createFredService({
+        userId,
+        sessionId: effectiveSessionId,
+        enableObservability: true,
+        founderContext: fullContext,
+        conversationState: stateContext,
+        preloadedFacts,
+        tier: tierName,
+      });
+
       addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: false });
       const result = await withSentrySpan("ai.chat.completion", "ai.run", async () =>
         fredService.process({
@@ -803,6 +803,18 @@ async function handlePost(req: NextRequest) {
     // Streaming response
     addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: true });
     const { stream: sseStream, send, close } = createSSEStream();
+
+    // Create FRED service with token streaming — onToken fires SSE token events
+    const fredService = createFredService({
+      userId,
+      sessionId: effectiveSessionId,
+      enableObservability: true,
+      founderContext: fullContext,
+      conversationState: stateContext,
+      preloadedFacts,
+      tier: tierName,
+      onToken: (chunk: string) => send("token", { text: chunk }),
+    });
 
     // Process in background
     (async () => {
