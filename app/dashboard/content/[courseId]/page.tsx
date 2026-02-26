@@ -174,7 +174,7 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     if (!courseId) return;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- loading reset before async fetch
 
     fetch(`/api/content/${courseId}`)
       .then((r) => {
