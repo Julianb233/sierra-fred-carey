@@ -8,6 +8,7 @@ import { RedFlagBadge } from "./red-flag-badge";
 import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
 import { CourseCardInline } from "@/components/content/course-card-inline";
+import { ProviderCardInline } from "@/components/marketplace/provider-card-inline";
 
 export interface Message {
   id: string;
@@ -24,6 +25,17 @@ export interface Message {
     slug: string;
     tier_required: string;
     stage?: string;
+  }>;
+  /** Provider recommendations from FRED's provider-finder tool */
+  providers?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    tagline: string;
+    category: string;
+    rating: number;
+    review_count: number;
+    is_verified?: boolean;
   }>;
 }
 
@@ -139,6 +151,27 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
                       slug={course.slug}
                       tier_required={course.tier_required}
                       stage={course.stage}
+                    />
+                  ))}
+                </div>
+              )}
+              {/* Provider recommendations from FRED provider-finder tool */}
+              {message.providers && message.providers.length > 0 && (
+                <div className="mt-3 space-y-1 not-prose">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">
+                    Recommended Providers:
+                  </p>
+                  {message.providers.map((provider) => (
+                    <ProviderCardInline
+                      key={provider.id}
+                      id={provider.id}
+                      name={provider.name}
+                      slug={provider.slug}
+                      tagline={provider.tagline}
+                      category={provider.category}
+                      rating={provider.rating}
+                      review_count={provider.review_count}
+                      is_verified={provider.is_verified}
                     />
                   ))}
                 </div>

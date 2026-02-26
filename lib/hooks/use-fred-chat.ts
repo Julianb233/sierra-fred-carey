@@ -41,6 +41,17 @@ export interface FredMessage {
     tier_required: string;
     stage?: string;
   }>;
+  /** Provider recommendations from FRED's provider-finder tool */
+  providers?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    tagline: string;
+    category: string;
+    rating: number;
+    review_count: number;
+    is_verified?: boolean;
+  }>;
 }
 
 export interface FredAnalysis {
@@ -213,6 +224,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const streamingMessageIdRef = useRef<string | null>(null);
   /** Pending courses from tool results, attached to the next assistant message */
   const pendingCoursesRef = useRef<FredMessage["courses"]>(undefined);
+  /** Pending providers from tool results, attached to the next assistant message */
+  const pendingProvidersRef = useRef<FredMessage["providers"]>(undefined);
 
   // Track mounted state for safe state updates after async operations
   useEffect(() => {
@@ -271,6 +284,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setError(null);
     streamingMessageIdRef.current = null;
     pendingCoursesRef.current = undefined;
+    pendingProvidersRef.current = undefined;
 
     /**
      * Core streaming logic extracted so we can retry once on transient failures.
@@ -410,6 +424,16 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                       tier_required: string;
                       stage?: string;
                     }>;
+                    providers?: Array<{
+                      id: string;
+                      name: string;
+                      slug: string;
+                      tagline: string;
+                      category: string;
+                      rating: number;
+                      review_count: number;
+                      is_verified?: boolean;
+                    }>;
                   };
                 };
                 if (
@@ -419,6 +443,15 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   toolResultData.result.courses.length > 0
                 ) {
                   pendingCoursesRef.current = toolResultData.result.courses;
+                }
+                // Detect findProvider tool results and stage providers for the next assistant message
+                if (
+                  toolResultData.toolName === "findProvider" &&
+                  toolResultData.result?.status === "success" &&
+                  Array.isArray(toolResultData.result?.providers) &&
+                  toolResultData.result.providers.length > 0
+                ) {
+                  pendingProvidersRef.current = toolResultData.result.providers;
                 }
                 break;
               }
@@ -480,6 +513,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   isStreaming: false,
                   // Attach any staged course recommendations from tool results
                   courses: pendingCoursesRef.current,
+                  // Attach any staged provider recommendations from tool results
+                  providers: pendingProvidersRef.current,
                 };
 
                 if (mountedRef.current) {

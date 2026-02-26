@@ -120,6 +120,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
       timestamp: m.timestamp,
       isStreaming: m.isStreaming,
       courses: m.courses,
+      providers: m.providers,
     }));
     return [greeting, ...mapped];
   }, [fredMessages, greeting]);
