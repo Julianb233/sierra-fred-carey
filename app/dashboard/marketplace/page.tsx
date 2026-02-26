@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -243,32 +243,32 @@ export default function MarketplacePage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchProviders = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    const params = new URLSearchParams();
-    if (category !== "all") params.set("category", category);
-    if (stage !== "all") params.set("stage", stage);
-    if (debouncedSearch) params.set("search", debouncedSearch);
-
-    fetch(`/api/marketplace?${params.toString()}`)
-      .then((r) => {
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (category !== "all") params.set("category", category);
+        if (stage !== "all") params.set("stage", stage);
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        const r = await fetch(`/api/marketplace?${params.toString()}`);
+        if (cancelled) return;
         if (!r.ok) throw new Error("Failed to fetch providers");
-        return r.json();
-      })
-      .then((data: { providers?: Provider[] }) => {
+        const data: { providers?: Provider[] } = await r.json();
+        if (cancelled) return;
         setProviders(data.providers ?? []);
         setLoading(false);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load providers");
         setLoading(false);
-      });
+      }
+    };
+    setLoading(true);
+    setError(null);
+    load();
+    return () => { cancelled = true; };
   }, [category, stage, debouncedSearch]);
-
-  useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
 
   const hasFilters = category !== "all" || stage !== "all" || debouncedSearch !== "";
 
