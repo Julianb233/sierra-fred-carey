@@ -17,7 +17,12 @@
     "test:e2e:headed": "playwright test --headed",
     "worker:voice": "tsx workers/voice-agent/index.ts dev",
     "worker:voice:start": "tsx workers/voice-agent/index.ts start",
-    "worker:voice:build": "tsc -p workers/voice-agent/tsconfig.json"
+    "worker:voice:build": "tsc -p workers/voice-agent/tsconfig.json",
+    "prepare": "git config core.hooksPath .githooks",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:preview": "./scripts/deploy.sh preview",
+    "deploy:staging": "./scripts/deploy.sh staging",
+    "deploy:production": "./scripts/deploy.sh production"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.37",
