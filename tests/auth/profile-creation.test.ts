@@ -9,6 +9,161 @@
  * Related: .planning/debug/backend-user-system.md
  */
 
+import { vi } from "vitest";
+
+// In-memory store for mock profiles and users
+const mockProfiles = new Map<string, Record<string, unknown>>();
+const mockUsers = new Map<string, Record<string, unknown>>();
+
+/**
+ * Build a chainable mock Supabase query builder that operates on mockProfiles.
+ */
+function createMockQueryBuilder() {
+  let tableName = "";
+  let filterColumn = "";
+  let filterValue = "";
+
+  const builder = {
+    from(table: string) {
+      tableName = table;
+      return builder;
+    },
+    select(_columns?: string) {
+      return builder;
+    },
+    eq(column: string, value: string) {
+      filterColumn = column;
+      filterValue = value;
+      return builder;
+    },
+    single() {
+      if (tableName === "profiles") {
+        const profile = mockProfiles.get(filterValue);
+        return { data: profile || null, error: profile ? null : { message: "Not found" } };
+      }
+      return { data: null, error: { message: "Not found" } };
+    },
+    update(updates: Record<string, unknown>) {
+      // Return a new builder that applies updates on .eq()
+      return {
+        eq(column: string, value: string) {
+          const existing = mockProfiles.get(value);
+          if (existing) {
+            mockProfiles.set(value, { ...existing, ...updates });
+            return { error: null };
+          }
+          return { error: { message: "Not found" } };
+        },
+      };
+    },
+    upsert(data: Record<string, unknown>, _opts?: unknown) {
+      const id = data.id as string;
+      mockProfiles.set(id, { ...mockProfiles.get(id), ...data });
+      return { error: null };
+    },
+  };
+  return builder;
+}
+
+// Mock @/lib/supabase/server
+vi.mock("@/lib/supabase/server", () => ({
+  createServiceClient: () => {
+    const qb = createMockQueryBuilder();
+    return {
+      from: qb.from.bind(qb),
+      auth: {
+        admin: {
+          deleteUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
+          listUsers: vi.fn().mockResolvedValue({
+            data: { users: Array.from(mockUsers.values()) },
+            error: null,
+          }),
+          createUser: vi.fn().mockImplementation(
+            (opts: { email: string; password: string; email_confirm?: boolean; user_metadata?: Record<string, unknown> }) => {
+              const userId = `trigger-${Date.now()}`;
+              const user = {
+                id: userId,
+                email: opts.email,
+                created_at: new Date().toISOString(),
+                user_metadata: opts.user_metadata || {},
+              };
+              mockUsers.set(userId, user);
+
+              // Simulate database trigger: auto-create profile from user_metadata
+              const meta = opts.user_metadata || {};
+              mockProfiles.set(userId, {
+                id: userId,
+                email: opts.email,
+                name: meta.name || null,
+                stage: meta.stage || null,
+                challenges: meta.challenges || [],
+                teammate_emails: [],
+                tier: 0,
+                onboarding_completed: false,
+                industry: null,
+                revenue_range: null,
+                team_size: null,
+                funding_history: null,
+                enriched_at: null,
+                enrichment_source: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+
+              return Promise.resolve({ data: { user }, error: null });
+            }
+          ),
+        },
+      },
+    };
+  },
+  createClient: vi.fn().mockResolvedValue({}),
+}));
+
+// Mock @/lib/supabase/auth-helpers — supabaseSignUp uses createClient() which calls cookies()
+vi.mock("@/lib/supabase/auth-helpers", async () => {
+  const actual = await import("@/lib/supabase/auth-helpers") as any;
+  return {
+    ...actual,
+    supabaseSignUp: vi.fn().mockImplementation(
+      async (email: string, _password: string, metadata?: { name?: string; stage?: string; challenges?: string[] }) => {
+        const userId = `user-${Date.now()}`;
+        const user = {
+          id: userId,
+          email,
+          name: metadata?.name || null,
+          stage: metadata?.stage || null,
+          challenges: metadata?.challenges || [],
+          created_at: new Date(),
+        };
+        mockUsers.set(userId, user);
+
+        // Simulate profile creation (what createOrUpdateProfile does)
+        mockProfiles.set(userId, {
+          id: userId,
+          email,
+          name: metadata?.name || null,
+          stage: metadata?.stage || null,
+          challenges: metadata?.challenges || [],
+          teammate_emails: [],
+          tier: 0,
+          onboarding_completed: false,
+          industry: null,
+          revenue_range: null,
+          team_size: null,
+          funding_history: null,
+          enriched_at: null,
+          enrichment_source: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        return { success: true, user };
+      }
+    ),
+  };
+});
+
 import { createServiceClient } from "@/lib/supabase/server";
 import { supabaseSignUp } from "@/lib/supabase/auth-helpers";
 
