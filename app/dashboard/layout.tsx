@@ -32,6 +32,7 @@ import {
   Bot,
   Network,
   HelpCircle,
+  BookOpen,
 } from "lucide-react";
 import { openFredChat } from "@/components/chat/floating-chat-widget";
 import { cn } from "@/lib/utils";
@@ -97,6 +98,11 @@ const coreNavItems: NavItem[] = [
     name: "Coaching",
     href: "/dashboard/coaching",
     icon: <GraduationCap className="h-4 w-4" />,
+  },
+  {
+    name: "Content",
+    href: "/dashboard/content",
+    icon: <BookOpen className="h-4 w-4" />,
   },
   {
     name: "Wellbeing",
