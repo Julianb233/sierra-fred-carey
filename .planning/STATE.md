@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 68 complete (1/1 plans done)
+**Current focus:** v6.0 Full Platform Maturity — Phase 69 complete (1/1 plans done)
 
 ## Current Position
 
-Phase: 68 of 70 (Service Marketplace Backend)
+Phase: 69 of 70 (Service Marketplace Frontend)
 Plan: 01 of 01 complete
-Status: Phase 68 complete
-Last activity: 2026-02-26 — Completed 68-01-PLAN.md
+Status: Phase 69 complete
+Last activity: 2026-02-26 — Completed 69-01-PLAN.md
 
-Progress: [#######################_______] 67% (10/12 v6.0 phases done)
+Progress: [##########################____] 92% (11/12 v6.0 phases done)
 
 ## Performance Metrics
 
@@ -129,7 +129,7 @@ Phase 65-04 decisions:
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Phase 68 complete — service marketplace schema + backend: 4-table migration, 5 API routes, FRED tool upgraded
+Stopped at: Phase 69 complete — service marketplace frontend: 5 pages/components, FRED chat integration, sidebar nav update
 Resume file: None
 
 ## Streaming Implementation (2026-02-25)
@@ -187,6 +187,15 @@ Phase 68-01 decisions:
 - serviceType → category keyword matching (not enum) — handles "lawyer", "attorney", "contract" → legal
 - updateProviderRating called synchronously after createReview (acceptable latency, simpler than background job)
 - createServiceClient() used in all DB helpers (consistent with content.ts pattern)
+
+Phase 69-01 decisions:
+- Debounced search 400ms in provider directory (matches content library pattern)
+- ProviderCardInline mirrors CourseCardInline pattern exactly (avatar initial vs BookOpen icon)
+- Booking modal uses inline success state (no external toast library)
+- pendingProvidersRef mirrors pendingCoursesRef in use-fred-chat.ts
+- Tool name "findProvider" matches getFredTools() registry key exactly
+- ShoppingBag nav item in coreNavItems after Content (visible all tiers)
+- providers field optional on FredMessage and Message — non-breaking
 
 Phase 67-03 decisions:
 - tool_result SSE event handler in use-fred-chat.ts — cleanest integration point
