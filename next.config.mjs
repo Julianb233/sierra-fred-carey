@@ -35,7 +35,7 @@ const ContentSecurityPolicy = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // NOTE: Do NOT add generateBuildId with a static string — it breaks Turbopack builds
-  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas"],
+  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas", "@prisma/instrumentation", "@opentelemetry/instrumentation"],
   transpilePackages: ["framer-motion"],
   // Acknowledge Turbopack as the default bundler in Next.js 16
   turbopack: {},
