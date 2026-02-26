@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 65 complete, Wave 3 (Phases 63, 64, 65) done
+**Current focus:** v6.0 Full Platform Maturity — Phase 66 plans 01-03 complete (plan 04 deferred: autonomous:false, requires Mux credentials)
 
 ## Current Position
 
-Phase: 65 of 70 (Mobile / UX Polish)
-Plan: 04 of 04 complete
-Status: Phase complete
-Last activity: 2026-02-24 — Completed 65-03-PLAN.md
+Phase: 66 of 70 (Content Library Backend)
+Plan: 03 of 04 complete (04 skipped — requires Mux credentials from user)
+Status: In progress (plans 01-03 done, plan 04 deferred)
+Last activity: 2026-02-25 — Completed 66-01, 66-02, 66-03-PLAN.md
 
-Progress: [############__________________] 50% (6/12 v6.0 phases)
+Progress: [#############_________________] 54% (7/12 v6.0 phases in progress)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 6 phases complete (59, 60, 61, 62, 63, 64) — Waves 1-2 done, Wave 3 in progress
+- v6.0: 7 phases complete/in-progress (59, 60, 61, 62, 63, 64, 65) — Wave 3 done; Phase 66 plans 01-03 shipped
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
-- Build: 208 pages compiling
+- Build: 212 pages compiling (4 new content API routes added)
 
 ## Accumulated Context
 
@@ -129,8 +129,8 @@ Phase 65-04 decisions:
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Live token streaming implemented and deployed — see .planning/STREAMING-IMPL.md
-Resume file: None
+Stopped at: Phase 66 plans 01-03 complete — content library schema, Mux helpers, API routes, FRED tool wired
+Resume file: None (plan 04 deferred — awaiting Mux credentials from user)
 
 ## Streaming Implementation (2026-02-25)
 
@@ -153,3 +153,19 @@ Key findings:
 - MEDIUM: Main LLM call (decide actor) is not skipped for `question` or `information` intents — no fast-path beyond greeting/feedback
 - LOW: `getAllUserFacts` has no LIMIT clause — query grows with user history
 Quick wins: Add `export const maxDuration = 60`, disable AI scoring, make storeEpisode fire-and-forget, use cached modeContext in getGateRedirectCount
+
+Phase 66-01 decisions:
+- npm install used instead of pnpm add (EPERM chmod in this workspace environment)
+- Migration created but not run (no live DB credentials in workspace)
+- tier_required CHECK: 'free' | 'pro' | 'studio' (normalized lowercase)
+
+Phase 66-02 decisions:
+- Mux SDK v12 uses type:"video" not type:"playback" for signPlaybackId (fixed TypeScript error)
+- createServiceClient() used directly in lib/db/content.ts (sql template tag doesn't support multi-table fetches)
+- Mux client uses ?? "" fallback for missing credentials (warns at startup, fails at runtime gracefully)
+
+Phase 66-03 decisions:
+- Preview lessons (is_preview=true) bypass tier check at playback-token endpoint
+- Tier check only fires when tier_required > free — avoids DB lookup for free courses
+- FRED content-recommender falls back to coming_soon on any DB error (never crashes FRED)
+- Plan 66-04 deferred — autonomous:false, requires MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUX_SIGNING_KEY_ID, MUX_SIGNING_PRIVATE_KEY from user
