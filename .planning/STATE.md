@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 66 plans 01-03 complete (plan 04 deferred: autonomous:false, requires Mux credentials)
+**Current focus:** v6.0 Full Platform Maturity — Phase 67 complete (3/3 plans done)
 
 ## Current Position
 
-Phase: 66 of 70 (Content Library Backend)
-Plan: 03 of 04 complete (04 skipped — requires Mux credentials from user)
-Status: In progress (plans 01-03 done, plan 04 deferred)
-Last activity: 2026-02-25 — Completed 66-01, 66-02, 66-03-PLAN.md
+Phase: 67 of 70 (Content Library Frontend)
+Plan: 03 of 03 complete
+Status: Phase 67 complete
+Last activity: 2026-02-26 — Completed 67-01, 67-02, 67-03-PLAN.md
 
-Progress: [#############_________________] 54% (7/12 v6.0 phases in progress)
+Progress: [###############_______________] 58% (8/12 v6.0 phases done)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 7 phases complete/in-progress (59, 60, 61, 62, 63, 64, 65) — Wave 3 done; Phase 66 plans 01-03 shipped
+- v6.0: 8 phases complete (59, 60, 61, 62, 63, 64, 65, 66, 67) — Phase 67 done
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
-- Build: 212 pages compiling (4 new content API routes added)
+- Build: 215 pages compiling (3 new content frontend pages added in Phase 67)
 
 ## Accumulated Context
 
@@ -128,9 +128,9 @@ Phase 65-04 decisions:
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Phase 66 plans 01-03 complete — content library schema, Mux helpers, API routes, FRED tool wired
-Resume file: None (plan 04 deferred — awaiting Mux credentials from user)
+Last session: 2026-02-26
+Stopped at: Phase 67 complete — content library frontend: catalog, detail, video player, FRED chat integration
+Resume file: None
 
 ## Streaming Implementation (2026-02-25)
 
@@ -169,3 +169,20 @@ Phase 66-03 decisions:
 - Tier check only fires when tier_required > free — avoids DB lookup for free courses
 - FRED content-recommender falls back to coming_soon on any DB error (never crashes FRED)
 - Plan 66-04 deferred — autonomous:false, requires MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUX_SIGNING_KEY_ID, MUX_SIGNING_PRIVATE_KEY from user
+
+Phase 67-01 decisions:
+- Enroll button uses local state only (MVP) — enrollments API exists but no frontend write path yet
+- Content nav item is core (always visible, no tier condition) — all users browse for free
+- Empty state links to /chat since no courses published yet (admin UI deferred)
+
+Phase 67-02 decisions:
+- @mux/mux-player-react@^3.11.4 installed via npm (not pnpm, EPERM constraint)
+- onTimeUpdate cast as any — MuxPlayer GenericEventListener<Event> incompatible with React handler type
+- Course nav and playback token fetched in parallel with Promise.all
+- Milestone deduplication uses useRef<Set<number>>, reset on lessonId change
+
+Phase 67-03 decisions:
+- tool_result SSE event handler in use-fred-chat.ts — cleanest integration point
+- pendingCoursesRef staging: courses staged from tool_result, attached to next response message
+- courses field optional on FredMessage and Message — fully non-breaking
+- isStreaming was not threaded in FredMessage→Message mapping (pre-existing gap), fixed inline
