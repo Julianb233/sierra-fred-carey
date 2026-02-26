@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v6.0 Full Platform Maturity — Phase 67 complete (3/3 plans done)
+**Current focus:** v6.0 Full Platform Maturity — Phase 68 complete (1/1 plans done)
 
 ## Current Position
 
-Phase: 67 of 70 (Content Library Frontend)
-Plan: 03 of 03 complete
-Status: Phase 67 complete
-Last activity: 2026-02-26 — Completed 67-01, 67-02, 67-03-PLAN.md
+Phase: 68 of 70 (Service Marketplace Backend)
+Plan: 01 of 01 complete
+Status: Phase 68 complete
+Last activity: 2026-02-26 — Completed 68-01-PLAN.md
 
-Progress: [###############_______________] 58% (8/12 v6.0 phases done)
+Progress: [#######################_______] 67% (10/12 v6.0 phases done)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
-- v6.0: 8 phases complete (59, 60, 61, 62, 63, 64, 65, 66, 67) — Phase 67 done
+- v6.0: 10 phases complete (59, 60, 61, 62, 63, 64, 65, 66, 67, 68) — Phase 68 done
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
-- Build: 215 pages compiling (3 new content frontend pages added in Phase 67)
+- Build: 221 pages compiling (marketplace API routes added in Phase 68)
 
 ## Accumulated Context
 
@@ -129,7 +129,7 @@ Phase 65-04 decisions:
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Phase 67 complete — content library frontend: catalog, detail, video player, FRED chat integration
+Stopped at: Phase 68 complete — service marketplace schema + backend: 4-table migration, 5 API routes, FRED tool upgraded
 Resume file: None
 
 ## Streaming Implementation (2026-02-25)
@@ -180,6 +180,13 @@ Phase 67-02 decisions:
 - onTimeUpdate cast as any — MuxPlayer GenericEventListener<Event> incompatible with React handler type
 - Course nav and playback token fetched in parallel with Promise.all
 - Milestone deduplication uses useRef<Set<number>>, reset on lessonId change
+
+Phase 68-01 decisions:
+- provider-finder.ts kept same export name (findProviderTool) — index.ts needed zero changes
+- Stripe Connect stubbed gracefully — stripe_account_id column present but unused
+- serviceType → category keyword matching (not enum) — handles "lawyer", "attorney", "contract" → legal
+- updateProviderRating called synchronously after createReview (acceptable latency, simpler than background job)
+- createServiceClient() used in all DB helpers (consistent with content.ts pattern)
 
 Phase 67-03 decisions:
 - tool_result SSE event handler in use-fred-chat.ts — cleanest integration point
