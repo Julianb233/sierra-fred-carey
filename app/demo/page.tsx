@@ -60,7 +60,7 @@ export default function DemoPage() {
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Explore interactive demos of Sahara&apos;s AI-powered tools for founders.
-              No account required.
+              Free account required to analyze your startup.
             </p>
           </div>
 
