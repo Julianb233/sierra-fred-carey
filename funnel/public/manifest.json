@@ -1,0 +1,17 @@
+{
+  "name": "Sahara — Talk to Fred",
+  "short_name": "Sahara",
+  "description": "AI-Powered Founder Operating System. Chat with Fred, explore the founder journey, and get answers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6a1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
