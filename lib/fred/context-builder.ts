@@ -160,14 +160,23 @@ async function loadStartupProcessProgress(userId: string): Promise<{
  * Uses the conversation state table — if no row exists, this is a first chat.
  */
 /**
- * Load conversation state data in a single DB call.
- * Replaces the two separate calls to checkIsFirstConversation and loadProgressContext,
- * each of which queried fred_conversation_state independently.
+ * Derive isFirstConversation from a pre-loaded conversation state.
+ * When the route already fetched conversation state via getOrCreateConversationState,
+ * pass it here to avoid a duplicate fred_conversation_state DB query.
+ * Falls back to a lightweight SELECT when no pre-loaded state is provided (e.g. SMS handler).
  */
-async function loadConversationStateContext(userId: string): Promise<{
+async function loadConversationStateContext(
+  userId: string,
+  preloadedConversationState?: { id: string } | null
+): Promise<{
   isFirstConversation: boolean;
-  progressContext: string | null;
 }> {
+  // If caller provided a pre-loaded state, use it directly (no DB call)
+  if (preloadedConversationState !== undefined) {
+    return { isFirstConversation: preloadedConversationState === null };
+  }
+
+  // Fallback: query DB (used by buildFounderContext without pre-loaded state, e.g. SMS)
   try {
     const supabase = createServiceClient();
     const { data, error } = await supabase
@@ -177,14 +186,11 @@ async function loadConversationStateContext(userId: string): Promise<{
       .single();
     // PGRST116 = no rows returned
     if (error?.code === "PGRST116" || !data) {
-      return { isFirstConversation: true, progressContext: null };
+      return { isFirstConversation: true };
     }
-    // State exists — not first conversation; load progress context
-    const { buildProgressContext } = await import("@/lib/db/conversation-state");
-    const context = await buildProgressContext(userId);
-    return { isFirstConversation: false, progressContext: context || null };
+    return { isFirstConversation: false };
   } catch {
-    return { isFirstConversation: true, progressContext: null };
+    return { isFirstConversation: true };
   }
 }
 
@@ -508,13 +514,14 @@ export async function buildFounderContext(
  */
 export async function buildFounderContextWithFacts(
   userId: string,
-  hasPersistentMemory: boolean
+  hasPersistentMemory: boolean,
+  preloadedConversationState?: { id: string } | null
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
   try {
-    const [profile, facts, { isFirstConversation, progressContext }, startupProcess, channelContext, redFlagsContext] = await Promise.all([
+    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
-      loadConversationStateContext(userId),
+      loadConversationStateContext(userId, preloadedConversationState),
       loadStartupProcessProgress(userId),
       hasPersistentMemory
         ? loadChannelContext(userId)
@@ -529,11 +536,6 @@ export async function buildFounderContextWithFacts(
     }
 
     let context = buildContextBlock({ profile, facts, isFirstConversation });
-
-    // Phase 36: Append step progress if available
-    if (progressContext) {
-      context += "\n\n" + progressContext;
-    }
 
     // Wire startup_processes dashboard data into FRED's context
     if (startupProcess) {

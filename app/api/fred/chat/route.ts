@@ -431,15 +431,18 @@ async function handlePost(req: NextRequest) {
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
 
     // ── Parallel context loading ─────────────────────────────────────
-    // These six calls are independent of each other — run in parallel.
-    const [founderContextResult, conversationStateResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult] = await Promise.all([
-      buildFounderContextWithFacts(userId, hasPersistentMemory).catch((error) => {
+    // Fetch conversation state first (single fast query) so it can be
+    // threaded into buildFounderContextWithFacts, eliminating a duplicate
+    // fred_conversation_state DB read inside the context builder.
+    const conversationStateResult = await getOrCreateConversationState(userId).catch((error) => {
+      console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
+      return null as ConversationState | null;
+    });
+
+    const [founderContextResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult] = await Promise.all([
+      buildFounderContextWithFacts(userId, hasPersistentMemory, conversationStateResult).catch((error) => {
         console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
         return { context: "", facts: [] };
-      }),
-      getOrCreateConversationState(userId).catch((error) => {
-        console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
-        return null as ConversationState | null;
       }),
       getRealityLensGate(userId).catch((error) => {
         console.warn("[FRED Chat] Failed to load Reality Lens gate (non-blocking):", error);
