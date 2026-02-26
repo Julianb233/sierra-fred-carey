@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, type MutableRefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChatMessage, Message } from "./chat-message";
 import { ChatInput } from "./chat-input";
@@ -92,6 +92,8 @@ interface ChatInterfaceProps {
   initialMessage?: string;
   /** Called after the initialMessage has been sent, so the parent can clear it */
   onInitialMessageConsumed?: () => void;
+  /** Mutable ref that the parent can use to imperatively send messages (e.g. from voice overlay) */
+  onSendRef?: MutableRefObject<((msg: string) => void) | null>;
 }
 
 function buildFredGreeting(): Message {
@@ -103,7 +105,7 @@ function buildFredGreeting(): Message {
   };
 }
 
-export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed }: ChatInterfaceProps) {
+export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
   const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -137,6 +139,18 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
     }
     await sendMessage(content);
   };
+
+  // Expose sendMessage to parent via ref (used by voice overlay)
+  useEffect(() => {
+    if (onSendRef) {
+      onSendRef.current = handleSendMessage;
+    }
+    return () => {
+      if (onSendRef) {
+        onSendRef.current = null;
+      }
+    };
+  }, [onSendRef, handleSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-send initialMessage once when the overlay opens.
   // Delay 400ms so any in-flight request from sessionStorage restoration settles first.

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, Phone, X } from "lucide-react";
+import { MessageSquare, Mic, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 import { cn } from "@/lib/utils";
 
 // Pages where the widget should NOT appear (full chat page already exists)
@@ -25,8 +26,11 @@ export function FloatingChatWidget({
   onCallFred?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | undefined>(undefined);
+  const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
+  const sendMessageRef = useRef<((msg: string) => void) | null>(null);
 
   // Listen for programmatic open requests (e.g. from the sidebar Help button)
   useEffect(() => {
@@ -35,13 +39,45 @@ export function FloatingChatWidget({
       setPendingMessage(detail?.message);
       setIsOpen(true);
     }
+    // Listen for voice open requests from MobileBottomNav
+    function handleVoice() {
+      // If on chat page, dispatch to the chat page's voice overlay
+      if (pathname.startsWith("/chat")) {
+        // The chat page handles its own voice overlay
+        return;
+      }
+      setVoiceOverlayOpen(true);
+    }
     window.addEventListener("fred:open", handleOpen);
-    return () => window.removeEventListener("fred:open", handleOpen);
-  }, []);
+    window.addEventListener("fred:voice", handleVoice);
+    return () => {
+      window.removeEventListener("fred:open", handleOpen);
+      window.removeEventListener("fred:voice", handleVoice);
+    };
+  }, [pathname]);
+
+  // Handle voice overlay sending a message — open chat and send
+  const handleVoiceSend = useCallback(
+    (text: string) => {
+      setVoiceOverlayOpen(false);
+      // Navigate to chat with the message
+      router.push(`/chat?message=${encodeURIComponent(text)}`);
+    },
+    [router]
+  );
 
   // Hide on certain pages
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) {
-    return null;
+    return (
+      <>
+        {/* Still render voice overlay even on hidden paths for mobile nav */}
+        <VoiceChatOverlay
+          open={voiceOverlayOpen}
+          onClose={() => setVoiceOverlayOpen(false)}
+          onSendMessage={handleVoiceSend}
+        />
+      </>
+    );
   }
 
   return (
@@ -57,22 +93,24 @@ export function FloatingChatWidget({
             bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {onCallFred && (
-            <Button
-              onClick={onCallFred}
-              size="icon"
-              className={cn(
-                "h-12 w-12 rounded-full shadow-lg",
-                "bg-white text-[#ff6a1a] hover:text-white",
-                "hover:bg-[#ff6a1a] border border-[#ff6a1a]",
-                "hover:shadow-xl hover:shadow-[#ff6a1a]/25",
-                "transition-all duration-300"
-              )}
-              aria-label="Call Fred (voice)"
-            >
-              <Phone className="h-5 w-5" />
-            </Button>
-          )}
+          {/* Voice Chat — prominent, always visible */}
+          <Button
+            onClick={() => setVoiceOverlayOpen(true)}
+            size="icon"
+            className={cn(
+              "h-12 w-12 rounded-full shadow-lg",
+              "bg-white dark:bg-gray-900 text-[#ff6a1a]",
+              "border border-[#ff6a1a]/30",
+              "hover:bg-[#ff6a1a] hover:text-white",
+              "hover:shadow-xl hover:shadow-[#ff6a1a]/25",
+              "transition-all duration-300"
+            )}
+            aria-label="Voice chat with Fred"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+
+          {/* Text Chat — primary large button */}
           <Button
             onClick={() => setIsOpen(true)}
             size="icon"
@@ -108,15 +146,29 @@ export function FloatingChatWidget({
                 Talk to Fred
               </span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              aria-label="Close chat"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsOpen(false);
+                  setVoiceOverlayOpen(true);
+                }}
+                className="h-8 w-8 text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
+                aria-label="Switch to voice input"
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                aria-label="Close chat"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Chat — fills remaining height */}
@@ -128,10 +180,18 @@ export function FloatingChatWidget({
               onInitialMessageConsumed={() => {
                 setPendingMessage(undefined);
               }}
+              onSendRef={sendMessageRef}
             />
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Voice Chat Overlay — Whisper Flow powered */}
+      <VoiceChatOverlay
+        open={voiceOverlayOpen}
+        onClose={() => setVoiceOverlayOpen(false)}
+        onSendMessage={handleVoiceSend}
+      />
     </>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { ActiveModeBar, type ChatMode } from "@/components/chat/active-mode-bar";
 import { ChatSidePanel } from "@/components/chat/chat-side-panel";
+import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,6 +14,7 @@ import {
   PanelRight,
   PanelRightClose,
   Phone,
+  Mic,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +27,7 @@ import { toast } from "sonner";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -47,9 +50,13 @@ export default function ChatPage() {
   const [activeMode, setActiveMode] = useState<ChatMode>("founder-os");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [callModalOpen, setCallModalOpen] = useState(false);
+  const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
   const isMobile = useIsMobile();
   const { tier } = useUserTier();
   const isProOrAbove = tier >= UserTier.PRO;
+
+  // Ref to imperatively send a message via ChatInterface
+  const sendMessageRef = useRef<((msg: string) => void) | null>(null);
 
   // Pre-seeded message from dashboard chip (e.g. ?message=...)
   const initialMessage = searchParams.get("message") ?? undefined;
@@ -61,6 +68,17 @@ export default function ChatPage() {
 
   const handleCallClick = useCallback(() => {
     setCallModalOpen(true);
+  }, []);
+
+  const handleVoiceClick = useCallback(() => {
+    setVoiceOverlayOpen(true);
+  }, []);
+
+  // When voice overlay produces text, send it to the chat
+  const handleVoiceSend = useCallback((text: string) => {
+    if (sendMessageRef.current) {
+      sendMessageRef.current(text);
+    }
   }, []);
 
   // Auto-collapse side panel on mobile
@@ -143,7 +161,19 @@ export default function ChatPage() {
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Call Fred — shown to all; Pro+ unlocks voice */}
+          {/* Voice input — prominent header button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleVoiceClick}
+            className="gap-1 text-[#ff6a1a] hover:text-[#ea580c] hover:bg-[#ff6a1a]/10 px-2"
+            aria-label="Voice input"
+          >
+            <Mic className="h-4 w-4" />
+            <span className="hidden sm:inline text-xs font-medium">Voice</span>
+          </Button>
+
+          {/* Call Fred — shown to all; Pro+ unlocks real-time voice */}
           <Button
             variant="ghost"
             size="sm"
@@ -208,6 +238,7 @@ export default function ChatPage() {
               className="h-full"
               initialMessage={initialMessage}
               onInitialMessageConsumed={handleInitialMessageConsumed}
+              onSendRef={sendMessageRef}
             />
           </div>
         </main>
@@ -220,18 +251,46 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Floating Call button inside chat page (so it's visible after navigation) */}
-      <div className="fixed bottom-6 right-4 md:right-6 z-40">
+      {/* Floating buttons — Voice (prominent) + Call */}
+      <div className="fixed bottom-6 right-4 md:right-6 z-40 flex flex-col gap-3 items-end">
+        {/* Voice Chat — large, prominent, orange */}
+        <Button
+          onClick={handleVoiceClick}
+          className={cn(
+            "h-14 w-14 rounded-full",
+            "bg-[#ff6a1a] hover:bg-[#ea580c] text-white",
+            "shadow-lg shadow-[#ff6a1a]/30 hover:shadow-xl hover:shadow-[#ff6a1a]/40",
+            "transition-all duration-300"
+          )}
+          aria-label="Voice chat with Fred"
+        >
+          <Mic className="h-6 w-6" />
+        </Button>
+
+        {/* Call Fred — smaller, secondary */}
         <Button
           onClick={handleCallClick}
-          className="h-12 px-4 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg hover:shadow-xl"
+          className={cn(
+            "h-11 px-4 rounded-full",
+            "bg-white dark:bg-gray-900 text-[#ff6a1a]",
+            "border border-[#ff6a1a]/30",
+            "hover:bg-[#ff6a1a] hover:text-white",
+            "shadow-md hover:shadow-lg",
+            "transition-all duration-300"
+          )}
           aria-label="Call Fred"
         >
-          <Phone className="h-5 w-5 mr-2" />
-          <span className="hidden sm:inline">Call Fred</span>
-          <span className="sm:hidden">Call</span>
+          <Phone className="h-4 w-4 mr-1.5" />
+          <span className="text-xs font-medium">Call</span>
         </Button>
       </div>
+
+      {/* Voice Chat Overlay — Whisper Flow powered */}
+      <VoiceChatOverlay
+        open={voiceOverlayOpen}
+        onClose={() => setVoiceOverlayOpen(false)}
+        onSendMessage={handleVoiceSend}
+      />
 
       {/* Call Fred Modal — now available to all tiers */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
