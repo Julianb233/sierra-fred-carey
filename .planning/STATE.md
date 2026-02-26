@@ -9,12 +9,15 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 
 ## Current Position
 
-Phase: 69 of 70 (Service Marketplace Frontend)
-Plan: 01 of 01 complete
-Status: Phase 69 complete
-Last activity: 2026-02-26 — Completed 69-01-PLAN.md
+Phase: 69 of 70 (Service Marketplace — Frontend)
+Status: Phase complete
+Last activity: 2026-02-25 — Completed Phase 69 service marketplace frontend
 
-Progress: [##########################____] 92% (11/12 v6.0 phases done)
+Progress: [####################__________] 67% (8/12 v6.0 phases)
+
+### Blocked items requiring user action:
+- Phase 66 Plan 04 (Mux admin routes + webhook): needs MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUX_SIGNING_KEY_ID, MUX_SIGNING_PRIVATE_KEY, MUX_WEBHOOK_SECRET
+- Phase 70 (Boardy API): blocked pending Boardy partnership and API credentials
 
 ## Performance Metrics
 
