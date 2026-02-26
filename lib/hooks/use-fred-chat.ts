@@ -32,6 +32,15 @@ export interface FredMessage {
   reasoning?: string;
   /** Whether this message is currently being streamed */
   isStreaming?: boolean;
+  /** Course recommendations from FRED's content-recommender tool */
+  courses?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    slug: string;
+    tier_required: string;
+    stage?: string;
+  }>;
 }
 
 export interface FredAnalysis {
@@ -202,6 +211,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const streamingMessageIdRef = useRef<string | null>(null);
+  /** Pending courses from tool results, attached to the next assistant message */
+  const pendingCoursesRef = useRef<FredMessage["courses"]>(undefined);
 
   // Track mounted state for safe state updates after async operations
   useEffect(() => {
@@ -259,6 +270,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setSynthesis(null);
     setError(null);
     streamingMessageIdRef.current = null;
+    pendingCoursesRef.current = undefined;
 
     /**
      * Core streaming logic extracted so we can retry once on transient failures.
@@ -384,6 +396,33 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 break;
               }
 
+              case "tool_result": {
+                // Detect recommendContent tool results and stage courses for the next assistant message
+                const toolResultData = data as {
+                  toolName?: string;
+                  result?: {
+                    status?: string;
+                    courses?: Array<{
+                      id: string;
+                      title: string;
+                      description: string;
+                      slug: string;
+                      tier_required: string;
+                      stage?: string;
+                    }>;
+                  };
+                };
+                if (
+                  toolResultData.toolName === "recommendContent" &&
+                  toolResultData.result?.status === "success" &&
+                  Array.isArray(toolResultData.result?.courses) &&
+                  toolResultData.result.courses.length > 0
+                ) {
+                  pendingCoursesRef.current = toolResultData.result.courses;
+                }
+                break;
+              }
+
               case "token": {
                 const tokenData = data as { text: string };
                 if (!mountedRef.current) break;
@@ -439,6 +478,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   requiresApproval: responseData.requiresApproval,
                   reasoning: responseData.reasoning,
                   isStreaming: false,
+                  // Attach any staged course recommendations from tool results
+                  courses: pendingCoursesRef.current,
                 };
 
                 if (mountedRef.current) {

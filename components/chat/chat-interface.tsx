@@ -69,6 +69,11 @@ const PAGE_CHIPS: Record<string, string[]> = {
     "What milestones should I hit next?",
     "How do I accelerate my progress?",
   ],
+  "/dashboard/content": [
+    "Recommend a course for my stage",
+    "What should I learn about fundraising?",
+    "Show me courses on product-market fit",
+  ],
 };
 
 function getSuggestionChips(pageContext?: string): string[] {
@@ -113,6 +118,8 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
       content: m.content,
       role: m.role,
       timestamp: m.timestamp,
+      isStreaming: m.isStreaming,
+      courses: m.courses,
     }));
     return [greeting, ...mapped];
   }, [fredMessages, greeting]);

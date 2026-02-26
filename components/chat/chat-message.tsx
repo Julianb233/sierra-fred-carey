@@ -7,6 +7,7 @@ import type { RedFlag } from "@/lib/fred/types";
 import { RedFlagBadge } from "./red-flag-badge";
 import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
+import { CourseCardInline } from "@/components/content/course-card-inline";
 
 export interface Message {
   id: string;
@@ -15,6 +16,15 @@ export interface Message {
   timestamp: Date;
   /** Whether this message is currently being streamed */
   isStreaming?: boolean;
+  /** Course recommendations from FRED's content-recommender tool */
+  courses?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    slug: string;
+    tier_required: string;
+    stage?: string;
+  }>;
 }
 
 interface ChatMessageProps {
@@ -113,6 +123,25 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
                   className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
                   aria-hidden="true"
                 />
+              )}
+              {/* Course recommendations from FRED content-recommender tool */}
+              {message.courses && message.courses.length > 0 && (
+                <div className="mt-3 space-y-1 not-prose">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">
+                    Recommended Courses:
+                  </p>
+                  {message.courses.map((course) => (
+                    <CourseCardInline
+                      key={course.id}
+                      id={course.id}
+                      title={course.title}
+                      description={course.description}
+                      slug={course.slug}
+                      tier_required={course.tier_required}
+                      stage={course.stage}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           )}
