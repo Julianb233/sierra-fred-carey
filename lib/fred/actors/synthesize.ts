@@ -20,13 +20,6 @@ import type {
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { detectRedFlags } from "../risks/detection-engine";
-import {
-  scoreDecision,
-  detectDecisionType,
-  DEFAULT_SCORING_CONFIG,
-  type DecisionContext,
-  type CompositeScore,
-} from "../scoring";
 
 /**
  * Synthesize all analysis into a recommendation
@@ -112,80 +105,16 @@ async function calculateFactorScores(
   models: MentalModelResult[],
   memory: MemoryContext | null
 ): Promise<FactorScores> {
-  // For decision requests, try AI-powered scoring
-  if (input.intent === "decision_request" && process.env.OPENAI_API_KEY) {
-    try {
-      const aiScores = await getAIFactorScores(input, memory);
-      if (aiScores) {
-        return aiScores;
-      }
-    } catch (error) {
-      console.error("[FRED] AI scoring failed, falling back to heuristics:", error);
-    }
-  }
-
-  // Fallback to heuristic scoring
+  // Always use heuristic scoring — the AI-powered path via scoreDecision triggers
+  // a hidden sequential GPT-4o call that adds 800ms-3s latency. Since
+  // DEFAULT_SCORING_CONFIG.useAIScoring is false, the AI path was already a no-op,
+  // but removing this branch eliminates the risk entirely and avoids unnecessary
+  // overhead through the scoreDecision indirection layer.
   return calculateHeuristicFactorScores(input, models, memory);
 }
 
 /**
- * Get AI-powered factor scores using the scoring engine
- */
-async function getAIFactorScores(
-  input: ValidatedInput,
-  memory: MemoryContext | null
-): Promise<FactorScores | null> {
-  try {
-    // Build context from memory
-    const context: DecisionContext = {
-      goals: memory?.relevantFacts
-        .filter((f) => f.category === "startup_facts")
-        .map((f) => `${f.key}: ${JSON.stringify(f.value)}`)
-        .slice(0, 5),
-      recentDecisions: memory?.recentDecisions
-        .slice(0, 3)
-        .map((d) => ({
-          summary: d.decisionType,
-          outcome: d.outcome ? JSON.stringify(d.outcome) : undefined,
-        })),
-    };
-
-    // Detect decision type
-    const decisionType = detectDecisionType(input.originalMessage);
-
-    // Score the decision — respects DEFAULT_SCORING_CONFIG.useAIScoring (false by default)
-    const compositeScore = await scoreDecision(
-      input.originalMessage,
-      context,
-      { decisionType, useAI: DEFAULT_SCORING_CONFIG.useAIScoring }
-    );
-
-    // Convert CompositeScore factors to our FactorScores format
-    return convertToFactorScores(compositeScore);
-  } catch (error) {
-    console.error("[FRED] AI scoring error:", error);
-    return null;
-  }
-}
-
-/**
- * Convert CompositeScore from scoring engine to FactorScores
- */
-function convertToFactorScores(score: CompositeScore): FactorScores {
-  return {
-    strategicAlignment: score.factors.strategicAlignment.value,
-    leverage: score.factors.leverage.value,
-    speed: score.factors.speed.value,
-    revenue: score.factors.revenue.value,
-    time: score.factors.time.value,
-    risk: score.factors.risk.value,
-    relationships: score.factors.relationships.value,
-    composite: score.percentage,
-  };
-}
-
-/**
- * Calculate heuristic-based factor scores (fallback)
+ * Calculate heuristic-based factor scores
  */
 function calculateHeuristicFactorScores(
   input: ValidatedInput,

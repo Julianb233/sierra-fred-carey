@@ -367,7 +367,8 @@ export async function getFactsByCategory(
     .select("*")
     .eq("user_id", userId)
     .eq("category", category)
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(200);
 
   if (error) {
     console.error("[FRED Memory] Error getting facts by category:", error);
