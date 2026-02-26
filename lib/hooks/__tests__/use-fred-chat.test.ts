@@ -159,6 +159,8 @@ describe("useFredChat", () => {
 
   describe("Error Handling", () => {
     it("should set error state on fetch failure", async () => {
+      // Hook retries once on failure — mock both attempts
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useFredChat());
@@ -172,6 +174,8 @@ describe("useFredChat", () => {
     });
 
     it("should clear error when clearError is called", async () => {
+      // Hook retries once on failure — mock both attempts
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useFredChat());
@@ -191,6 +195,8 @@ describe("useFredChat", () => {
     });
 
     it("should add error message when fetch fails", async () => {
+      // Hook retries once on failure — mock both attempts
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useFredChat());
@@ -208,6 +214,8 @@ describe("useFredChat", () => {
 
   describe("Reset Functionality", () => {
     it("should clear all state when reset is called", async () => {
+      // Hook retries once on failure — mock both attempts
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useFredChat());
@@ -232,11 +240,14 @@ describe("useFredChat", () => {
 
   describe("HTTP Error Handling", () => {
     it("should handle HTTP error responses", async () => {
-      mockFetch.mockResolvedValueOnce({
+      // Hook retries once on failure — mock both attempts
+      const errorResponse = {
         ok: false,
         status: 500,
         json: () => Promise.resolve({ error: "Server error" }),
-      });
+      };
+      mockFetch.mockResolvedValueOnce(errorResponse);
+      mockFetch.mockResolvedValueOnce(errorResponse);
 
       const { result } = renderHook(() => useFredChat());
 
@@ -249,11 +260,14 @@ describe("useFredChat", () => {
     });
 
     it("should handle rate limit errors", async () => {
-      mockFetch.mockResolvedValueOnce({
+      // Hook retries once on failure — mock both attempts
+      const rateLimitResponse = {
         ok: false,
         status: 429,
         json: () => Promise.resolve({ message: "Rate limit exceeded" }),
-      });
+      };
+      mockFetch.mockResolvedValueOnce(rateLimitResponse);
+      mockFetch.mockResolvedValueOnce(rateLimitResponse);
 
       const { result } = renderHook(() => useFredChat());
 
