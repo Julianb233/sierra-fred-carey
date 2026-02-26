@@ -18,11 +18,25 @@ vi.mock('canvas-confetti', () => ({
   default: vi.fn(),
 }));
 
+/**
+ * Set value on a controlled React input in JSDOM.
+ * fireEvent.change alone doesn't trigger React's internal value tracking
+ * for controlled inputs — we must use the native setter then dispatch events.
+ */
+function setInputValue(input: HTMLInputElement, value: string) {
+  const nativeSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+  nativeSet.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 describe('Get Started Page (/get-started)', () => {
   const mockPush = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear persisted wizard state so each test starts at step 1
+    localStorage.removeItem('sahara_onboarding_wizard');
     (useRouter as any).mockReturnValue({
       push: mockPush,
     });
@@ -190,12 +204,12 @@ describe('Get Started Page (/get-started)', () => {
       expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    const emailInput = screen.getByPlaceholderText('you@company.com') as HTMLInputElement;
-    const submitButton = screen.getByText('Start Free Trial');
+    await act(async () => {
+      setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'invalid-email');
+    });
 
     await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-      fireEvent.click(submitButton);
+      fireEvent.click(screen.getByText('Start Free Trial'));
     });
 
     await waitFor(() => {
@@ -259,14 +273,13 @@ describe('Get Started Page (/get-started)', () => {
       expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    const emailInput = screen.getByPlaceholderText('you@company.com') as HTMLInputElement;
-    const passwordInput = screen.getByPlaceholderText('Create a password') as HTMLInputElement;
-    const submitButton = screen.getByText('Start Free Trial');
+    await act(async () => {
+      setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'test@example.com');
+      setInputValue(screen.getByPlaceholderText('Create a password') as HTMLInputElement, 'TestPass123');
+    });
 
     await act(async () => {
-      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-      fireEvent.change(passwordInput, { target: { value: 'TestPass123' } });
-      fireEvent.click(submitButton);
+      fireEvent.click(screen.getByText('Start Free Trial'));
     });
 
     // The button shows "Creating..." during submission
@@ -290,7 +303,7 @@ describe('Get Started Page (/get-started)', () => {
       render(<OnboardingPage />);
     });
 
-    // Navigate to step 3
+    // Navigate to step 2
     await act(async () => {
       fireEvent.click(screen.getByText('Seed').closest('button')!);
     });
@@ -299,17 +312,18 @@ describe('Get Started Page (/get-started)', () => {
       expect(screen.getByText('Growth & Scaling')).toBeInTheDocument();
     }, { timeout: 1000 });
 
+    // Navigate to step 3
     await act(async () => {
       fireEvent.click(screen.getByText('Growth & Scaling').closest('button')!);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Back')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    const backButtons = screen.getAllByText('Back');
+    // Click Back button to return to step 2
     await act(async () => {
-      fireEvent.click(backButtons[backButtons.length - 1]);
+      fireEvent.click(screen.getByText('Back').closest('button')!);
     });
 
     // Should be back to step 2
