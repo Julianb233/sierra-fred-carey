@@ -45,6 +45,7 @@ import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
+import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 
 // ============================================================================
 // Navigation Configuration
@@ -344,10 +345,26 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [callModalOpen, setCallModalOpen] = useState(false);
+  const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
+
+  // Listen for fred:voice custom event from MobileBottomNav
+  useEffect(() => {
+    const handleVoiceEvent = () => setVoiceOverlayOpen(true);
+    window.addEventListener("fred:voice", handleVoiceEvent);
+    return () => window.removeEventListener("fred:voice", handleVoiceEvent);
+  }, []);
+
+  // When voice overlay produces transcribed text, navigate to chat with it
+  const handleVoiceSend = useCallback(
+    (text: string) => {
+      router.push(`/chat?message=${encodeURIComponent(text)}`);
+    },
+    [router]
+  );
   const [userInfo, setUserInfo] = useState<{
     name: string;
     email: string;
@@ -490,6 +507,13 @@ export default function DashboardLayout({
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
+
+      {/* Voice Chat Overlay — available from mobile bottom nav and dashboard voice buttons */}
+      <VoiceChatOverlay
+        open={voiceOverlayOpen}
+        onClose={() => setVoiceOverlayOpen(false)}
+        onSendMessage={handleVoiceSend}
+      />
     </div>
   );
 }

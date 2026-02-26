@@ -157,6 +157,7 @@ function DashboardContent() {
           userName={userName}
           canCallFred={canCallFred}
           onCallFred={() => setShowCallModal(true)}
+          onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
           hasHadConversations={false}
         />
         <GetStartedWithFred />
@@ -176,6 +177,7 @@ function DashboardContent() {
         userName={userName}
         canCallFred={canCallFred}
         onCallFred={() => setShowCallModal(true)}
+        onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
         hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
       />
 

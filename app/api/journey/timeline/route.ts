@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       )
       VALUES (
         ${userId}, ${eventType}, ${JSON.stringify(eventData)},
-        ${scoreBefore || null}, ${scoreAfter || null}
+        ${scoreBefore ?? null}, ${scoreAfter ?? null}
       )
       RETURNING
         id,

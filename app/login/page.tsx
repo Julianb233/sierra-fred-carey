@@ -57,7 +57,7 @@ function LoginContent() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       const data = await response.json();
@@ -72,7 +72,13 @@ function LoginContent() {
       router.refresh();
     } catch (err) {
       console.error("Login error:", err);
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      const msg = err instanceof Error ? err.message : "Failed to sign in";
+      // Enhance generic auth errors with helpful guidance
+      if (msg === "Invalid email or password") {
+        setError("Invalid email or password. Double-check your credentials or use \"Forgot password?\" below to reset.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -118,7 +124,7 @@ function LoginContent() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
-                    placeholder="you@example.com"
+                    placeholder="you@saharacompanies.com"
                   />
                 </div>
               </div>

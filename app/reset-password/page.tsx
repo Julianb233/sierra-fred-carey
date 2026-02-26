@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Loader2, Lock, CheckCircle2 } from "lucide-react";
+import { Loader2, Lock, CheckCircle2, AlertCircle, Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+/** Password must match signup requirements */
+const PASSWORD_RULES = [
+  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "One number", test: (p: string) => /\d/.test(p) },
+];
+
+/** Time in ms to wait before showing the expired link message */
+const SESSION_VERIFY_TIMEOUT_MS = 15_000;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -16,60 +26,88 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
+
+  const allRulesPass = PASSWORD_RULES.every((r) => r.test(password));
 
   // Supabase handles the token exchange automatically via the URL hash
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.onAuthStateChange((event) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setSessionReady(true);
       }
     });
+
     // Also check if we already have a session (user clicked link while logged in)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
       }
     });
+
+    // Timeout: if session doesn't resolve, the link is likely expired or invalid
+    const timeout = setTimeout(() => {
+      setLinkExpired(true);
+    }, SESSION_VERIFY_TIMEOUT_MS);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
-
-      if (updateError) {
-        throw updateError;
+      if (!allRulesPass) {
+        setError("Password does not meet all requirements.");
+        return;
       }
 
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
-    } catch (err) {
-      console.error("Password update error:", err);
-      setError("Failed to update password. The link may have expired.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const supabase = createClient();
+        const { error: updateError } = await supabase.auth.updateUser({
+          password,
+        });
+
+        if (updateError) {
+          if (updateError.message.includes("same password") || updateError.message.includes("should be different")) {
+            throw new Error("New password must be different from your current password.");
+          }
+          if (updateError.message.includes("session") || updateError.message.includes("expired")) {
+            throw new Error("Your reset link has expired. Please request a new one.");
+          }
+          throw updateError;
+        }
+
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 3000);
+      } catch (err) {
+        console.error("Password update error:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to update password. Your reset link may have expired."
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [password, confirmPassword, allRulesPass, router]
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
@@ -110,19 +148,40 @@ export default function ResetPasswordPage() {
             </div>
           ) : !sessionReady ? (
             <div className="text-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a] mx-auto" />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Verifying your reset link...
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                If this takes too long, your link may have expired.{" "}
-                <Link
-                  href="/forgot-password"
-                  className="text-[#ff6a1a] hover:underline"
-                >
-                  Request a new one
-                </Link>
-              </p>
+              {linkExpired ? (
+                <>
+                  <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    This reset link appears to be expired or invalid.
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Password reset links expire after a short time for security.
+                    Please request a new one.
+                  </p>
+                  <Button
+                    asChild
+                    className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+                  >
+                    <Link href="/forgot-password">Request a new reset link</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a] mx-auto" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Verifying your reset link...
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    If this takes too long, your link may have expired.{" "}
+                    <Link
+                      href="/forgot-password"
+                      className="text-[#ff6a1a] hover:underline"
+                    >
+                      Request a new one
+                    </Link>
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -154,9 +213,34 @@ export default function ResetPasswordPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
-                    placeholder="New password (8+ characters)"
+                    placeholder="New password"
                   />
                 </div>
+                {/* Live password requirements checklist */}
+                {password.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {PASSWORD_RULES.map((rule) => {
+                      const passes = rule.test(password);
+                      return (
+                        <li
+                          key={rule.label}
+                          className={`flex items-center gap-1.5 text-xs ${
+                            passes
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-gray-400 dark:text-gray-500"
+                          }`}
+                        >
+                          {passes ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <X className="w-3.5 h-3.5" />
+                          )}
+                          {rule.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
 
               <div>
@@ -177,15 +261,24 @@ export default function ResetPasswordPage() {
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
+                    className={`w-full pl-11 pr-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:ring-2 outline-none transition-all text-base ${
+                      confirmPassword.length > 0 && password !== confirmPassword
+                        ? "border-red-300 dark:border-red-700 focus:border-red-400 focus:ring-red-200/30"
+                        : "border-gray-200 dark:border-gray-700 focus:border-[#ff6a1a] focus:ring-[#ff6a1a]/20"
+                    }`}
                     placeholder="Confirm new password"
                   />
                 </div>
+                {confirmPassword.length > 0 && password !== confirmPassword && (
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                    Passwords do not match.
+                  </p>
+                )}
               </div>
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !allRulesPass || password !== confirmPassword}
                 className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
                 size="lg"
               >

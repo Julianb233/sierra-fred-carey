@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,23 +20,48 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      setError("Please enter a valid email address (e.g. you@saharacompanies.com).");
+      setLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
+        normalizedEmail,
         {
           redirectTo: `${window.location.origin}/reset-password`,
         }
       );
 
       if (resetError) {
+        // Provide actionable error messages based on common Supabase errors
+        if (resetError.message.includes("rate limit") || resetError.status === 429) {
+          throw new Error("Too many reset attempts. Please wait a few minutes before trying again.");
+        }
+        if (resetError.message.includes("not allowed") || resetError.message.includes("not authorized")) {
+          throw new Error("Password reset is not available for this email. Please contact support.");
+        }
         throw resetError;
       }
 
       setSent(true);
     } catch (err) {
       console.error("Password reset error:", err);
-      setError("Failed to send reset email. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to send reset email. Please check your email address and try again. If the problem persists, contact support."
+      );
     } finally {
       setLoading(false);
     }
@@ -73,9 +100,14 @@ export default function ForgotPasswordPage() {
             <div className="text-center space-y-4">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                If an account exists for <strong>{email}</strong>, you will
+                If an account exists for <strong>{email.trim().toLowerCase()}</strong>, you will
                 receive a password reset email shortly.
               </p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  <strong>Tip:</strong> Check your spam/junk folder if you don&apos;t see the email within a few minutes. For @saharacompanies.com addresses, also check your IT-managed email filters.
+                </p>
+              </div>
               <Button
                 asChild
                 variant="outline"
@@ -116,7 +148,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
-                    placeholder="you@example.com"
+                    placeholder="you@saharacompanies.com"
                   />
                 </div>
               </div>
