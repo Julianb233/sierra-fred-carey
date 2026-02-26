@@ -13,6 +13,8 @@ import {
   Phone,
   AlertCircle,
   Lock,
+  Mic,
+  Send,
 } from "lucide-react";
 import { GetStartedWithFred } from "@/components/dashboard/get-started-with-fred";
 import { cn } from "@/lib/utils";
@@ -150,6 +152,7 @@ export function MobileHome() {
             Your Founder Command Center
           </p>
         </div>
+        <MobileChatInput />
         <GetStartedWithFred variant="mobile" />
       </div>
     );
@@ -166,6 +169,9 @@ export function MobileHome() {
           Here is what matters today.
         </p>
       </div>
+
+      {/* Chat input — above the fold, first interaction on mobile */}
+      <MobileChatInput />
 
       {/* Get Started with Fred */}
       <GetStartedWithFred variant="mobile" />
@@ -321,6 +327,92 @@ function CompactNextStep({
         <p className="text-sm text-gray-700 dark:text-gray-300 leading-snug line-clamp-2">
           {description}
         </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// Simplified Funding Gauge (horizontal bar)
+// ============================================================================
+
+// ============================================================================
+// Mobile Chat Input — above the fold, no scroll needed
+// ============================================================================
+
+function MobileChatInput() {
+  const router = useRouter();
+  const [message, setMessage] = useState("");
+
+  const handleSend = () => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+    router.push(`/chat?message=${encodeURIComponent(trimmed)}`);
+  };
+
+  return (
+    <Card className="border-[#ff6a1a]/30 bg-gradient-to-br from-gray-900 to-gray-950 dark:from-gray-950 dark:to-black overflow-hidden">
+      <CardContent className="p-3 space-y-3">
+        {/* Inline chat input */}
+        <div className="flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 p-2">
+          <Button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("fred:voice"));
+            }}
+            size="icon"
+            variant="ghost"
+            aria-label="Voice chat"
+            className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-lg shrink-0 text-gray-400 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
+          >
+            <Mic className="h-4 w-4" />
+          </Button>
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Ask Fred anything..."
+            aria-label="Message to Fred"
+            className="flex-1 bg-transparent border-0 outline-none text-sm text-white placeholder:text-gray-500 min-h-[44px]"
+          />
+          <Button
+            onClick={handleSend}
+            disabled={!message.trim()}
+            size="icon"
+            aria-label="Send message"
+            className={cn(
+              "h-10 w-10 min-h-[44px] min-w-[44px] rounded-lg shrink-0",
+              "bg-[#ff6a1a] hover:bg-[#ea580c]",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Quick starters */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+          {[
+            "What should I focus on?",
+            "Help with my pitch",
+            "Growth advice",
+          ].map((starter) => (
+            <button
+              key={starter}
+              onClick={() =>
+                router.push(`/chat?message=${encodeURIComponent(starter)}`)
+              }
+              className="text-xs px-3 py-1.5 rounded-full border border-gray-700 bg-gray-800/50 text-gray-400 hover:text-white hover:border-[#ff6a1a]/50 whitespace-nowrap transition-all"
+            >
+              {starter}
+            </button>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
