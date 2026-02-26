@@ -1,5 +1,25 @@
+import React from 'react'
 import { expect, afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
+
+// Mock framer-motion so motion.* components render as plain HTML elements in JSDOM
+vi.mock('framer-motion', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('framer-motion')>();
+  return {
+    ...actual,
+    motion: new Proxy({} as typeof actual.motion, {
+      get: (_target, prop: string) => {
+        const Component = (props: Record<string, unknown>) => {
+          const { children, ...rest } = props;
+          const { initial, animate, exit, transition, variants, whileHover, whileTap, whileFocus, whileInView, layout, layoutId, onAnimationComplete, onAnimationStart, ...htmlProps } = rest;
+          return React.createElement(prop as string, htmlProps, children as React.ReactNode);
+        };
+        return Component;
+      }
+    }),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 // Mock IntersectionObserver for framer-motion and other libraries
 class MockIntersectionObserver {
