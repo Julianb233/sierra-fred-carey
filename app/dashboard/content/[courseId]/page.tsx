@@ -174,7 +174,7 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     if (!courseId) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize loading state before fetching course data
     setLoading(true);
 
     fetch(`/api/content/${courseId}`)
