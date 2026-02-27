@@ -99,6 +99,7 @@ export function VoiceChatOverlay({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAutoSendPending(false);
       onSendMessage(transcribedText.trim());
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTranscribedText("");
       reset();
       onClose();
