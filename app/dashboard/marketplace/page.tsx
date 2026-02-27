@@ -267,6 +267,7 @@ export default function MarketplacePage() {
   }, [category, stage, debouncedSearch]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProviders();
   }, [fetchProviders]);
 

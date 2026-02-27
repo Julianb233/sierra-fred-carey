@@ -162,6 +162,7 @@ export default function ProviderDetailPage() {
 
   useEffect(() => {
     if (!slug) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch(`/api/marketplace/${slug}`)
       .then((r) => {

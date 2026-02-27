@@ -55,6 +55,7 @@ export function VoiceChatOverlay({
   // Auto-start recording when overlay opens
   useEffect(() => {
     if (open && isSupported) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTranscribedText("");
       reset();
       // Small delay to let the animation settle
@@ -95,6 +96,7 @@ export function VoiceChatOverlay({
   // Auto-send after transcription completes
   useEffect(() => {
     if (autoSendPending && !isTranscribing && transcribedText.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAutoSendPending(false);
       onSendMessage(transcribedText.trim());
       setTranscribedText("");

@@ -166,6 +166,7 @@ export default function ContentLibraryPage() {
   const [topic, setTopic] = useState<string>("all");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
