@@ -166,8 +166,10 @@ export default function ContentLibraryPage() {
   const [topic, setTopic] = useState<string>("all");
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- initialize loading/error state before kicking off fetch */
     setLoading(true);
     setError(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
     const params = new URLSearchParams();
     if (stage !== "all") params.set("stage", stage);
     if (topic !== "all") params.set("topic", topic);
