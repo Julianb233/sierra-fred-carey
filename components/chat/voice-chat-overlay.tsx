@@ -104,7 +104,6 @@ export function VoiceChatOverlay({
       reset();
       onClose();
     } else if (autoSendPending && !isTranscribing && !transcribedText.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear pending flag when no transcript is available
       setAutoSendPending(false);
     }
   }, [autoSendPending, isTranscribing, transcribedText, onSendMessage, reset, onClose]);
