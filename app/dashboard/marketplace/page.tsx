@@ -267,7 +267,7 @@ export default function MarketplacePage() {
   }, [category, stage, debouncedSearch]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchProviders updates loading/error state as filters change
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- effect triggers fetchProviders, which manages loading/error state internally
     fetchProviders();
   }, [fetchProviders]);
 

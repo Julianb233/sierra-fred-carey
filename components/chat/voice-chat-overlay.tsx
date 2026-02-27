@@ -55,7 +55,7 @@ export function VoiceChatOverlay({
   // Auto-start recording when overlay opens
   useEffect(() => {
     if (open && isSupported) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset transcript immediately when overlay opens
       setTranscribedText("");
       reset();
       // Small delay to let the animation settle
@@ -96,14 +96,15 @@ export function VoiceChatOverlay({
   // Auto-send after transcription completes
   useEffect(() => {
     if (autoSendPending && !isTranscribing && transcribedText.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      /* eslint-disable react-hooks/set-state-in-effect -- synchronous cleanup is intentional when auto-send completes */
       setAutoSendPending(false);
       onSendMessage(transcribedText.trim());
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTranscribedText("");
+      /* eslint-enable react-hooks/set-state-in-effect */
       reset();
       onClose();
     } else if (autoSendPending && !isTranscribing && !transcribedText.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear pending flag when no transcript is available
       setAutoSendPending(false);
     }
   }, [autoSendPending, isTranscribing, transcribedText, onSendMessage, reset, onClose]);
