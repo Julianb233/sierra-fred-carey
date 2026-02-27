@@ -168,6 +168,7 @@ export default function ContentLibraryPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
     const params = new URLSearchParams();
     if (stage !== "all") params.set("stage", stage);
