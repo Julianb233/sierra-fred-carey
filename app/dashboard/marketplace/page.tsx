@@ -267,7 +267,7 @@ export default function MarketplacePage() {
   }, [category, stage, debouncedSearch]);
 
   useEffect(() => {
-    fetchProviders();
+    fetchProviders(); // eslint-disable-line react-hooks/set-state-in-effect -- fetch triggers setState internally
   }, [fetchProviders]);
 
   const hasFilters = category !== "all" || stage !== "all" || debouncedSearch !== "";

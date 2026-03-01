@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Pre-push hook: prevents direct pushes to main without going through
+# the Vercel CLI deployment workflow or a pull request.
+#
+# Install: git config core.hooksPath .githooks
+#
+# To bypass in emergencies: git push --no-verify (use sparingly)
+
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+PROTECTED_BRANCHES="main"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Extract branch name from ref
+  branch=$(echo "$remote_ref" | sed 's|refs/heads/||')
+
+  for protected in $PROTECTED_BRANCHES; do
+    if [ "$branch" = "$protected" ]; then
+      echo ""
+      echo -e "${RED}========================================${NC}"
+      echo -e "${RED}  BLOCKED: Direct push to '$protected'${NC}"
+      echo -e "${RED}========================================${NC}"
+      echo ""
+      echo "Direct pushes to $protected are not allowed."
+      echo "Use the deployment workflow instead:"
+      echo ""
+      echo "  1. Push to a feature branch"
+      echo "  2. Create a pull request"
+      echo "  3. After PR merge, deploy with:"
+      echo "     ./scripts/deploy.sh production"
+      echo ""
+      echo -e "${YELLOW}Emergency bypass: git push --no-verify${NC}"
+      echo ""
+      exit 1
+    fi
+  done
+done
+
+exit 0
