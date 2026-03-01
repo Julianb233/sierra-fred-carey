@@ -162,21 +162,26 @@ export default function ProviderDetailPage() {
 
   useEffect(() => {
     if (!slug) return;
-    setLoading(true);
-    fetch(`/api/marketplace/${slug}`)
-      .then((r) => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const r = await fetch(`/api/marketplace/${slug}`);
+        if (cancelled) return;
         if (r.status === 404) throw new Error("Provider not found");
         if (!r.ok) throw new Error("Failed to fetch provider");
-        return r.json();
-      })
-      .then((data: { provider?: ProviderDetail }) => {
+        const data: { provider?: ProviderDetail } = await r.json();
+        if (cancelled) return;
         setProvider(data.provider ?? null);
         setLoading(false);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load provider");
         setLoading(false);
-      });
+      }
+    };
+    setLoading(true);
+    load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   function openBookingModal(listingId?: string) {

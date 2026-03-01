@@ -166,25 +166,29 @@ export default function ContentLibraryPage() {
   const [topic, setTopic] = useState<string>("all");
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const params = new URLSearchParams();
-    if (stage !== "all") params.set("stage", stage);
-    if (topic !== "all") params.set("topic", topic);
-
-    fetch(`/api/content?${params.toString()}`)
-      .then((r) => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (stage !== "all") params.set("stage", stage);
+        if (topic !== "all") params.set("topic", topic);
+        const r = await fetch(`/api/content?${params.toString()}`);
+        if (cancelled) return;
         if (!r.ok) throw new Error("Failed to fetch courses");
-        return r.json();
-      })
-      .then((data) => {
+        const data = await r.json();
+        if (cancelled) return;
         setCourses(data.courses ?? []);
         setLoading(false);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load courses");
         setLoading(false);
-      });
+      }
+    };
+    setLoading(true);
+    setError(null);
+    load();
+    return () => { cancelled = true; };
   }, [stage, topic]);
 
   return (

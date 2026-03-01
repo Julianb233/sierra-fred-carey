@@ -174,28 +174,29 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     if (!courseId) return;
-    setLoading(true);
-
-    fetch(`/api/content/${courseId}`)
-      .then((r) => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const r = await fetch(`/api/content/${courseId}`);
+        if (cancelled) return;
         if (r.status === 404) {
           setNotFound(true);
           setLoading(false);
-          return null;
+          return;
         }
         if (!r.ok) throw new Error("Failed to load course");
-        return r.json();
-      })
-      .then((data) => {
-        if (data) {
-          setCourse(data.course);
-        }
+        const data = await r.json();
+        if (cancelled) return;
+        setCourse(data.course);
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
+        if (cancelled) return;
         setNotFound(true);
         setLoading(false);
-      });
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, [courseId]);
 
   if (loading) return <PageSkeleton />;
