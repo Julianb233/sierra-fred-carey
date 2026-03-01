@@ -302,12 +302,12 @@ const OnboardingPage = () => {
               {[1, 2, 3].map((step) => (
                 <div
                   key={step}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                     step === stepNumber
-                      ? "bg-[#ff6a1a] scale-125"
+                      ? "bg-[#ff6a1a] scale-[1.4] shadow-[0_0_6px_rgba(255,106,26,0.5)]"
                       : step < stepNumber
-                      ? "bg-[#ff6a1a]/60"
-                      : "bg-gray-300 dark:bg-gray-700"
+                      ? "bg-[#ff6a1a]/70"
+                      : "bg-gray-300 dark:bg-gray-600"
                   }`}
                 />
               ))}
