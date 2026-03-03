@@ -5,6 +5,9 @@ import {
   Room,
   RoomEvent,
   Track,
+  type AudioCaptureOptions,
+  type RoomConnectOptions,
+  type RoomOptions,
   type RemoteTrackPublication,
   type RemoteParticipant,
 } from "livekit-client";
@@ -25,6 +28,129 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ============================================================================
+// Samsung / Android WebRTC Compatibility
+// ============================================================================
+
+/**
+ * Detect Samsung Internet or Samsung devices where WebRTC voice
+ * cuts off after a few seconds due to aggressive audio track suspension.
+ */
+function isSamsungDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return (
+    ua.includes("samsungbrowser") ||
+    ua.includes("samsung") ||
+    // SM-G/SM-A/SM-S/SM-N are Samsung Galaxy model prefixes
+    /sm-[gasn]\d/i.test(navigator.userAgent)
+  );
+}
+
+/**
+ * Build RoomOptions with Samsung-friendly WebRTC configuration.
+ *
+ * Samsung Internet and Chrome on Samsung Galaxy devices have known issues:
+ * - Aggressive audio track suspension when tab loses focus
+ * - ICE candidate gathering timeouts with default settings
+ * - Opus DTX (discontinuous transmission) causes silence detection to kill tracks
+ * - Audio processing (AEC/AGC/NS) interacts badly with some Samsung audio HALs
+ */
+function buildRoomOptions(): RoomOptions {
+  const samsung = isSamsungDevice();
+
+  const options: RoomOptions = {
+    // Adaptive streaming reduces bandwidth negotiation issues
+    adaptiveStream: true,
+    // Dynacast saves bandwidth when tracks are not needed
+    dynacast: true,
+    // Prevent disconnect on page hide — Samsung notification drawer triggers this
+    disconnectOnPageLeave: false,
+    // Set default audio capture constraints for all mic enables
+    audioCaptureDefaults: buildAudioCaptureOptions(),
+  };
+
+  if (samsung) {
+    console.log("[CallFred] Samsung device detected, applying WebRTC workarounds");
+    // WebAudioMix routes all audio through Web Audio API, which works around
+    // Samsung Internet's aggressive audio track suspension and autoplay blocking
+    options.webAudioMix = true;
+  }
+
+  return options;
+}
+
+/**
+ * Build RoomConnectOptions with Samsung-friendly RTCConfiguration.
+ */
+function buildConnectOptions(): RoomConnectOptions {
+  const samsung = isSamsungDevice();
+
+  const options: RoomConnectOptions = {};
+
+  if (samsung) {
+    options.rtcConfig = {
+      // Use all ICE transport candidates for Samsung network reliability
+      iceTransportPolicy: "all",
+      // Pre-allocate ICE candidates for faster negotiation
+      iceCandidatePoolSize: 4,
+    };
+    // Samsung browsers can be slower to establish WebRTC connections
+    options.peerConnectionTimeout = 25_000;
+  }
+
+  return options;
+}
+
+/**
+ * Build audio capture options. Samsung devices need specific constraints
+ * to prevent the browser from silencing the microphone track.
+ */
+function buildAudioCaptureOptions(): AudioCaptureOptions {
+  const samsung = isSamsungDevice();
+
+  if (samsung) {
+    // Samsung audio HAL sometimes conflicts with browser-level processing.
+    // Disable autoGainControl which Samsung Internet handles at OS level,
+    // and reduce processing that can cause the track to appear silent.
+    return {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: false,
+      // Lower sample rate is more reliable on Samsung audio drivers
+      sampleRate: 16000,
+      channelCount: 1,
+    };
+  }
+
+  return {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  };
+}
+
+/**
+ * Resume any suspended AudioContext instances on the page.
+ * Samsung Internet and some Android browsers require a user gesture
+ * to resume the AudioContext, otherwise audio playback is silenced.
+ */
+async function resumeAudioContext(): Promise<void> {
+  try {
+    // The AudioContext may be created by LiveKit internally
+    // and suspended by Samsung's autoplay policy
+    const ctx = new AudioContext();
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+      console.log("[CallFred] AudioContext resumed from suspended state");
+    }
+    // Close this temporary context - LiveKit manages its own
+    await ctx.close();
+  } catch {
+    // Not critical - LiveKit will manage its own AudioContext
+  }
+}
 
 // ============================================================================
 // Types
@@ -101,6 +227,8 @@ export function CallFredModal({
   const roomNameRef = useRef<string>("");
   const roomRef = useRef<Room | null>(null);
   const agentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMutedRef = useRef(false);
+  const samsungWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
@@ -128,6 +256,10 @@ export function CallFredModal({
         clearTimeout(agentTimeoutRef.current);
         agentTimeoutRef.current = null;
       }
+      if (samsungWatchdogRef.current) {
+        clearInterval(samsungWatchdogRef.current);
+        samsungWatchdogRef.current = null;
+      }
       if (roomRef.current) {
         roomRef.current.disconnect();
         roomRef.current = null;
@@ -146,6 +278,10 @@ export function CallFredModal({
       resetTimer();
     } else {
       // Disconnect room when modal closes
+      if (samsungWatchdogRef.current) {
+        clearInterval(samsungWatchdogRef.current);
+        samsungWatchdogRef.current = null;
+      }
       if (roomRef.current) {
         roomRef.current.disconnect();
         roomRef.current = null;
@@ -172,9 +308,12 @@ export function CallFredModal({
       const data = await response.json();
       roomNameRef.current = data.room;
 
+      // Resume AudioContext before connecting (Samsung autoplay policy)
+      await resumeAudioContext();
+
       // Connect to LiveKit room
       console.log('[CallFred] Creating room, url:', data.url, 'room:', data.room);
-      const room = new Room();
+      const room = new Room(buildRoomOptions());
       roomRef.current = room;
 
       // P0 Fix: Attach remote audio tracks so the user can hear Fred
@@ -185,10 +324,24 @@ export function CallFredModal({
           if (track.kind === Track.Kind.Audio) {
             const audioEl = track.attach();
             audioEl.volume = 1;
+            // Samsung Internet needs explicit attributes for reliable playback
+            audioEl.setAttribute("playsinline", "true");
+            audioEl.setAttribute("autoplay", "true");
             document.body.appendChild(audioEl);
             console.log('[CallFred] Audio element attached, paused:', audioEl.paused);
             // Force play in case autoplay is blocked
-            audioEl.play().catch((e) => console.warn('[CallFred] Audio play blocked:', e));
+            audioEl.play().catch((e) => {
+              console.warn('[CallFred] Audio play blocked:', e);
+              // On Samsung, retry play after a short delay
+              // as the browser may need time to negotiate audio focus
+              if (isSamsungDevice()) {
+                setTimeout(() => {
+                  audioEl.play().catch((e2) =>
+                    console.warn('[CallFred] Samsung audio retry also blocked:', e2)
+                  );
+                }, 500);
+              }
+            });
           }
         }
       );
@@ -218,6 +371,26 @@ export function CallFredModal({
         setConnectionStatus('connected');
       });
 
+      // Handle media device errors (Samsung mic revocation, permission changes)
+      room.on(RoomEvent.MediaDevicesError, (error: Error) => {
+        console.error('[CallFred] MediaDevicesError:', error.message);
+        // On Samsung, this fires when the browser suspends the mic track.
+        // Attempt to re-enable the microphone rather than showing an error.
+        if (roomRef.current) {
+          const audioOpts = buildAudioCaptureOptions();
+          roomRef.current.localParticipant
+            .setMicrophoneEnabled(true, audioOpts)
+            .then(() => {
+              console.log('[CallFred] Microphone re-enabled after device error');
+            })
+            .catch((reEnableErr) => {
+              console.error('[CallFred] Failed to re-enable mic:', reEnableErr);
+              setError("Microphone was disconnected. Please check permissions and try again.");
+              setCallState("error");
+            });
+        }
+      });
+
       // Listen for transcript data from the voice agent (filtered by topic)
       room.on(
         RoomEvent.DataReceived,
@@ -242,8 +415,9 @@ export function CallFredModal({
       );
 
       try {
-        console.log('[CallFred] Connecting to LiveKit...');
-        await room.connect(data.url, data.token);
+        const connectOpts = buildConnectOptions();
+        console.log('[CallFred] Connecting to LiveKit...', isSamsungDevice() ? '(Samsung mode)' : '');
+        await room.connect(data.url, data.token, connectOpts);
         console.log('[CallFred] Connected! State:', room.state, 'localParticipant:', room.localParticipant.identity);
         console.log('[CallFred] Remote participants:', room.remoteParticipants.size);
         for (const [, p] of room.remoteParticipants) {
@@ -255,10 +429,11 @@ export function CallFredModal({
         throw new Error("Failed to connect to call server. Please check your network and try again.");
       }
 
-      // Enable microphone after connecting
+      // Enable microphone after connecting with Samsung-friendly audio constraints
       try {
-        console.log('[CallFred] Enabling microphone...');
-        await room.localParticipant.setMicrophoneEnabled(true);
+        const audioOpts = buildAudioCaptureOptions();
+        console.log('[CallFred] Enabling microphone...', isSamsungDevice() ? '(Samsung mode)' : '');
+        await room.localParticipant.setMicrophoneEnabled(true, audioOpts);
         const micPubs = Array.from(room.localParticipant.trackPublications.values());
         console.log('[CallFred] Microphone enabled. Published tracks:', micPubs.length, micPubs.map(p => p.kind));
       } catch (micErr) {
@@ -306,6 +481,30 @@ export function CallFredModal({
       }
 
       setCallState("in-call");
+
+      // Samsung workaround: Monitor local audio track for silent muting.
+      // Samsung Internet can silently mute the track (track.isMuted becomes true)
+      // without firing MediaDevicesError. Poll and re-enable if detected.
+      if (isSamsungDevice()) {
+        samsungWatchdogRef.current = setInterval(() => {
+          const currentRoom = roomRef.current;
+          if (!currentRoom) {
+            if (samsungWatchdogRef.current) clearInterval(samsungWatchdogRef.current);
+            return;
+          }
+          const micPub = Array.from(
+            currentRoom.localParticipant.trackPublications.values()
+          ).find((p) => p.source === Track.Source.Microphone);
+
+          if (micPub && micPub.isMuted && !isMutedRef.current) {
+            console.warn('[CallFred] Samsung: Detected silent mic mute, re-enabling...');
+            const audioOpts = buildAudioCaptureOptions();
+            currentRoom.localParticipant
+              .setMicrophoneEnabled(true, audioOpts)
+              .catch((e) => console.warn('[CallFred] Samsung mic re-enable failed:', e));
+          }
+        }, 3000);
+      }
     } catch (err) {
       console.error("[CallFred] Error starting call:", err);
       setError(err instanceof Error ? err.message : "Failed to start call");
@@ -318,17 +517,26 @@ export function CallFredModal({
     if (!room) return;
     const newMuted = !isMuted;
     setIsMuted(newMuted);
+    isMutedRef.current = newMuted;
     try {
-      await room.localParticipant.setMicrophoneEnabled(!newMuted);
+      const audioOpts = buildAudioCaptureOptions();
+      await room.localParticipant.setMicrophoneEnabled(!newMuted, audioOpts);
     } catch (err) {
       console.warn("[CallFred] Failed to toggle mute:", err);
       // Revert on failure
       setIsMuted(!newMuted);
+      isMutedRef.current = !newMuted;
     }
   }, [isMuted]);
 
   const handleEndCall = async () => {
     setCallState("ending");
+
+    // Clean up Samsung watchdog
+    if (samsungWatchdogRef.current) {
+      clearInterval(samsungWatchdogRef.current);
+      samsungWatchdogRef.current = null;
+    }
 
     // Disconnect from LiveKit room before generating summary
     if (roomRef.current) {
