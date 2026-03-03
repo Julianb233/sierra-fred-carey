@@ -19,6 +19,7 @@ import { MomentumIndicator } from "@/components/dashboard/momentum-indicator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MobileHome } from "@/components/mobile/mobile-home";
+import { GoalRoadmap } from "@/components/dashboard/goal-roadmap";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
@@ -161,6 +162,7 @@ function DashboardContent() {
           hasHadConversations={false}
         />
         <GetStartedWithFred />
+        <GoalRoadmap />
         <WelcomeModal
           isOpen={showWelcome}
           onClose={handleCloseWelcome}
@@ -184,6 +186,11 @@ function DashboardContent() {
       {/* Get Started checklist — only shows until core steps complete */}
       <FadeIn>
         <GetStartedWithFred />
+      </FadeIn>
+
+      {/* Goal Roadmap — structured milestones by funding stage */}
+      <FadeIn delay={0.05}>
+        <GoalRoadmap />
       </FadeIn>
 
       {/* Everything below is the OUTPUT of your Fred conversations */}

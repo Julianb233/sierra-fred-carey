@@ -17,6 +17,7 @@ import {
   Send,
 } from "lucide-react";
 import { GetStartedWithFred } from "@/components/dashboard/get-started-with-fred";
+import { GoalRoadmap } from "@/components/dashboard/goal-roadmap";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useTier } from "@/lib/context/tier-context";
@@ -154,6 +155,7 @@ export function MobileHome() {
         </div>
         <MobileChatInput />
         <GetStartedWithFred variant="mobile" />
+        <GoalRoadmap />
       </div>
     );
   }
@@ -175,6 +177,9 @@ export function MobileHome() {
 
       {/* Get Started with Fred */}
       <GetStartedWithFred variant="mobile" />
+
+      {/* Goal Roadmap — structured milestones by funding stage */}
+      <GoalRoadmap />
 
       {/* Today's Focus -- most important decision */}
       <TodaysFocus
