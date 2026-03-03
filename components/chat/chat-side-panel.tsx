@@ -207,7 +207,10 @@ function NextStepsTab({ steps }: { steps: NextStepItem[] | null }) {
                 : "text-gray-900 dark:text-white"
             )}
           >
-            {step.description}
+            {step.description
+              .replace(/\*\*(.*?)\*\*/g, "$1")
+              .replace(/\*(.*?)\*/g, "$1")
+              .replace(/\*+/g, "")}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             {step.completed && (
