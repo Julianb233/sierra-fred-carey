@@ -421,12 +421,25 @@ function buildContextBlock(data: FounderContextData): string {
     lines.push("");
     lines.push("This founder has no onboarding data. They either skipped onboarding or are a new user.");
     lines.push("- Run the Universal Entry Flow: \"What are you building?\", \"Who is it for?\", \"What are you trying to accomplish right now?\"");
-    lines.push("- Gather the Founder Snapshot fields naturally through conversation: stage, product status, traction, runway, primary constraint, 90-day goal.");
+    lines.push("- Collect the Business Fundamentals naturally: business name, sector, positioning, revenue status, team size, funding stage.");
+    lines.push("- ALSO gather deeper Founder Snapshot fields over subsequent messages: product status, traction, runway, primary constraint, 90-day goal.");
     lines.push("- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.");
+    lines.push("- If they jump straight to a specific topic, collect the 2-3 most critical fundamentals for that topic, then help them. Do not block them from getting value.");
     lines.push("- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.");
   } else {
     // Returning user with context
-    lines.push("Use this snapshot to personalize your mentoring. Skip intake questions you already have answers to. Reference what you know naturally. If key snapshot fields are missing (product status, traction, runway, primary constraint, 90-day goal), infer from conversation and state your assumptions.");
+    lines.push("Use this snapshot to personalize your mentoring. Skip intake questions you already have answers to. Reference what you know naturally.");
+    // Check which business fundamentals are still missing
+    const missingFundamentals: string[] = [];
+    if (!profile.name) missingFundamentals.push("business name");
+    if (!profile.industry) missingFundamentals.push("sector/industry");
+    if (!profile.revenueRange && !extractFactValue(facts, "metrics", "traction")) missingFundamentals.push("revenue status");
+    if (!profile.teamSize) missingFundamentals.push("team size");
+    if (!profile.fundingHistory) missingFundamentals.push("funding stage");
+    if (missingFundamentals.length > 0) {
+      lines.push(`**Missing business fundamentals:** ${missingFundamentals.join(", ")}. Weave these into the next 1-2 exchanges naturally — do not ask all at once.`);
+    }
+    lines.push("If deeper snapshot fields are missing (product status, traction, runway, primary constraint, 90-day goal), infer from conversation and state your assumptions.");
   }
 
   return lines.join("\n");

@@ -337,19 +337,34 @@ async function buildResponseContent(
   userId: string | null,
   tokenChannel: { emit: (chunk: string) => void } | null
 ): Promise<string> {
-  // Clarify and defer use templates (no LLM needed)
-  if (action === "clarify") {
-    const questions = synthesis.followUpQuestions.slice(0, 2);
-    const clarifications = input.clarificationNeeded.filter((c) => c.required);
-    const allQuestions = [
-      ...clarifications.map((c) => c.question),
-      ...questions,
-    ].slice(0, 3);
-    return `I want to give you a solid answer, but I need a few more details first:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
-  }
-
-  if (action === "defer") {
-    return "I don't have enough context to give you useful advice right now. Let's come back to this when we have more to work with.";
+  // Clarify and defer — route through LLM so Fred gives a real, helpful
+  // response instead of a vague template. The LLM has the full system prompt
+  // with Fred's personality, founder context, and coaching frameworks — it
+  // will naturally ask the right follow-up questions while still being useful.
+  // Only fall back to template if LLM fails.
+  if (action === "clarify" || action === "defer") {
+    try {
+      const llmResponse = await generateWithLLM(input, founderContext, userId, tokenChannel);
+      if (llmResponse) {
+        logger.log("[FRED] LLM response generated for clarify/defer action");
+        return llmResponse;
+      }
+    } catch (error) {
+      logger.log("[FRED] LLM failed for clarify/defer, using template fallback:", error);
+    }
+    // Template fallback only if LLM fails
+    if (action === "clarify") {
+      const questions = synthesis.followUpQuestions.slice(0, 2);
+      const clarifications = input.clarificationNeeded.filter((c) => c.required);
+      const allQuestions = [
+        ...clarifications.map((c) => c.question),
+        ...questions,
+      ].slice(0, 3);
+      if (allQuestions.length > 0) {
+        return `Let me ask a couple of things so I can give you the right guidance:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+      }
+    }
+    return "Tell me more about what you're working on and what you need help with — I want to make sure I point you in the right direction.";
   }
 
   // Greeting and feedback use templates — no LLM needed.
