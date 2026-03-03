@@ -415,6 +415,7 @@ function buildContextBlock(data: FounderContextData): string {
     lines.push("- Go deeper: ask about the specifics that onboarding didn't capture (product status, traction metrics, runway, 90-day goal, who their buyer is).");
     lines.push("- Apply the Universal Entry Flow with context: since you know their challenge, start there. Ask what they've tried, what's working, what's stuck.");
     lines.push("- Begin building the full Founder Snapshot by filling in the missing fields through natural conversation.");
+    lines.push("- A personalized goal roadmap has been generated on their dashboard based on their funding stage. Reference it naturally: \"I've mapped out a roadmap for your stage — you can track progress on your dashboard.\"");
   } else if (isFirstConversation && !hasProfileData) {
     // Skipped onboarding or no data -> FRED should run the Founder Intake Protocol
     lines.push("## HANDOFF: FIRST CONVERSATION (NO ONBOARDING DATA)");
@@ -426,6 +427,7 @@ function buildContextBlock(data: FounderContextData): string {
     lines.push("- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.");
     lines.push("- If they jump straight to a specific topic, collect the 2-3 most critical fundamentals for that topic, then help them. Do not block them from getting value.");
     lines.push("- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.");
+    lines.push("- Once you learn their funding stage, a personalized goal roadmap will be generated on their dashboard. Mention it naturally once you know their stage.");
   } else {
     // Returning user with context
     lines.push("Use this snapshot to personalize your mentoring. Skip intake questions you already have answers to. Reference what you know naturally.");
