@@ -39,7 +39,7 @@ interface MonitorResult {
 
 // ── Constants ───────────────────────────────────────────────────
 const WHATSAPP_GROUP_NAME = "Sahara Founders";
-const BROWSERBASE_SESSION_ID = "9198cda1-cb12-427a-ab54-4877e6c541db"; // Persistent authenticated session
+const BROWSERBASE_CONTEXT_ID = "ed424c84-729a-49f3-bfe2-811d5cda5282"; // Persistent context — cookies survive across sessions
 const JULIAN_PHONE = process.env.JULIAN_PHONE || "+16265226199";
 const JULIAN_EMAIL = process.env.JULIAN_EMAIL || "julian@aiacrobatics.com";
 const LINEAR_TEAM = "Ai Acrobatics";
@@ -172,7 +172,7 @@ async function updateLastCheckTimestamp(): Promise<void> {
       .upsert({
         group_name: WHATSAPP_GROUP_NAME,
         last_check_at: new Date().toISOString(),
-        session_id: BROWSERBASE_SESSION_ID,
+        context_id: BROWSERBASE_CONTEXT_ID,
       }, { onConflict: "group_name" });
   } catch (err) {
     logger.error(`Failed to update last check timestamp: ${err}`);
@@ -200,10 +200,10 @@ async function extractWhatsAppMessages(
     },
     body: JSON.stringify({
       projectId: BROWSERBASE_PROJECT_ID,
-      // Persist context to reuse WhatsApp login across sessions
+      // Use persistent context to reuse WhatsApp login across sessions
       browserSettings: {
         context: {
-          id: "sahara-whatsapp-monitor",
+          id: BROWSERBASE_CONTEXT_ID,
           persist: true,
         },
       },
