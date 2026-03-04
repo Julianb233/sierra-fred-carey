@@ -1,346 +1,290 @@
-# Feature Landscape: Sahara v6.0
+# Features Research -- v7.0 UX Feedback Loop
 
-**Domain:** AI-powered founder OS -- content library, service marketplace, investor matching
-**Researched:** 2026-02-18
-**Overall Confidence:** MEDIUM-HIGH (ecosystem well-understood; integration patterns need validation during build)
-
----
-
-## Domain 1: Content Library & Courses
-
-### Table Stakes
-
-Features founders expect from any educational content platform embedded in a mentor product. Missing any of these and the content library feels bolted-on rather than native.
-
-| Feature | Why Expected | Complexity | FRED Integration | Notes |
-|---------|-------------|------------|-----------------|-------|
-| **Curated course catalog by topic** | Every platform (YC Startup School, Antler Academy, Google Startup School) organizes content by founder topic: fundraising, PMF, hiring, unit economics | Medium | FRED recommends specific courses based on diagnosed gaps | Catalog topics should mirror FRED's existing frameworks: Reality Lens, Positioning, Investor Readiness, 9-Step Process |
-| **Stage-based content filtering** | Founders at idea stage need different content than Series A. Antler Academy uses a "nine-step pre-seed playbook" structure. YC Startup School has 8 sequential modules | Low | FRED already knows founder stage from onboarding -- use to auto-filter | Map to existing `STARTUP_STAGES`: idea, mvp, pre-seed, seed, series-a |
-| **Video + text content formats** | MasterClass uses 10-30 min video lessons. YC Startup School mixes video lectures (4-38 min), essays, and expert interviews. Founderz uses cinematic-style video. Text-only feels cheap | Medium-High | Voice FRED could summarize key takeaways from videos | Video hosting adds infrastructure complexity (storage, transcoding, CDN). Consider embedding YouTube/Vimeo unlisted links initially |
-| **Progress tracking per user** | Every learning platform tracks completion. YC Startup School has built-in progress tracking via React components. Users expect to see what they have and have not consumed | Low | FRED references completion status: "You've completed the fundraising module -- now let's apply it" | Simple: `content_progress` table with user_id, content_id, status (not_started/in_progress/completed), completed_at |
-| **Search and browse** | Users expect to find content by keyword. Antler Academy has a searchable library. Google Startup School has categorized browsing | Low | N/A -- standard UI feature | Full-text search on title + description + tags |
-| **Mobile-friendly content consumption** | 74% of organizations use mobile learning (industry data). Sahara already has PWA + mobile layout (Phase 46). Content must render well on mobile | Low | Already solved via PWA | Responsive video player, readable text on small screens |
-| **Bookmarking / save for later** | Users expect to save content they want to return to. Standard across Coursera, MasterClass, etc. | Low | FRED could remind: "You bookmarked that pricing module -- want to discuss pricing strategy?" | Simple: `content_bookmarks` table |
-
-### Differentiators
-
-Features that set Sahara's content library apart from standalone education platforms. These are where FRED integration creates unique value no competitor can match.
-
-| Feature | Value Proposition | Complexity | FRED Integration | Notes |
-|---------|------------------|------------|-----------------|-------|
-| **FRED-recommended content (contextual push)** | Unlike YC Startup School where you browse a static library, FRED actively recommends content based on what the founder is struggling with RIGHT NOW. "You're stuck on pricing -- here's a module on unit economics" | Medium | Core differentiator. FRED's diagnostic engine detects gaps and pushes relevant content in chat. Content IDs embedded in FRED responses | Requires content-to-framework mapping table. When FRED detects positioning weakness, it knows which content addresses it |
-| **Content-to-action bridge** | After consuming a course module, FRED asks: "Now that you've learned about ICP definition, let's define YOUR ICP." Bridges learning to execution. No other platform does this | Medium | FRED triggers structured conversation after content completion. "You just watched the fundraising basics module. Let's assess your Investor Readiness Score" | Links content_id to FRED framework/mode: content on fundraising triggers Investor Mode |
-| **Founder-stage adaptive curriculum** | Not just filtering by stage, but dynamically building a recommended learning path based on FRED's assessment of founder gaps. FRED says "Here are the 5 modules most critical for your situation, in this order" | Medium | FRED generates personalized curriculum from Reality Lens + IRS + Positioning gaps | Requires mapping: framework_gap -> content_ids. E.g., weak demand validation -> content on customer discovery |
-| **"Ask FRED about this" per content** | While viewing any course content, a persistent button lets the founder ask FRED questions about the material. "I watched the unit economics video but I don't understand CAC:LTV for my marketplace model" | Low | Opens chat with content context injected: "The founder is asking about [content title]. Key concepts from this content: [summary]" | Similar to existing "Review with Fred" on documents (Phase 44) |
-| **Framework worksheets tied to content** | Each course module includes a downloadable worksheet or template tied to FRED's frameworks. "Unit Economics Calculator" tied to the economics module, "ICP Template" tied to the positioning module | Medium | FRED walks through worksheet completion in chat. Worksheet outputs feed back into founder profile data | Extends existing document repository (Phase 44). Worksheets are structured templates with fillable fields |
-| **Community discussion per module** | After completing a module, founders can discuss it in a topic-specific community thread. Builds engagement beyond passive content consumption | Low | FRED could summarize community discussion highlights. "Other founders found the ICP exercise most valuable -- want to try it?" | Extends existing communities infrastructure (Phase 41). Each content piece can have a linked discussion thread |
-
-### Anti-Features
-
-Features to deliberately NOT build for the content library. These are common mistakes in this domain.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|-------------|-----------|-------------------|
-| **Building a full LMS (Learning Management System)** | Sahara is a mentor platform, not an e-learning platform. Building grading, certificates, quizzes, SCORM compliance, instructor dashboards, etc. adds massive complexity for marginal value | Keep it simple: curated content catalog + progress tracking + FRED integration. The value is FRED-powered learning, not the LMS features |
-| **User-generated content / instructor marketplace** | Allowing anyone to upload courses creates moderation burden, quality inconsistency, and dilutes Fred Cary's authority as the expert voice | All content is admin-curated. Fred Cary + selected experts are the instructors. Quality over quantity |
-| **Gamification (badges, points, leaderboards)** | Gamification feels hollow for serious founders. YC Startup School notably does NOT gamify. MasterClass does not gamify. Real founders want results, not virtual badges | Replace gamification with FRED-driven urgency: "You haven't completed the fundraising prep module and your pitch is in 2 weeks" |
-| **Live cohort-based courses with schedules** | Scheduling complexity, timezone management, instructor availability, recording + replay infrastructure. Massive operational overhead for a product that should work asynchronously | All content is on-demand. Live elements happen through existing LiveKit coaching sessions (Phase 29) and community events (Phase 41), not tied to course schedules |
-| **AI-generated course content** | Tempting to use AI to auto-generate courses. Results in generic, low-authority content. Fred Cary's expertise and voice ARE the product | Content is human-created by Fred Cary and vetted experts. AI enhances consumption (FRED explains, contextualizes, applies) but does not replace human expertise |
-| **Completion certificates / credentials** | Founders do not need certificates from Sahara. They need results. Certificates add PDF generation complexity and provide false signals of competence | Track completion for FRED's context, not for credentialing. If founders want proof, their startup results are the proof |
+**Domain:** Closed-loop UX feedback systems for AI-powered SaaS (founder coaching)
+**Platform:** Sahara -- AI Founder OS with FRED cognitive engine
+**Researched:** 2026-03-04
+**Mode:** Ecosystem (Features dimension)
 
 ---
 
-## Domain 2: Service Marketplace
+## Existing Sahara Assets (What We Already Have)
 
-### Table Stakes
+Before mapping new features, note what Sahara v1-v3 already shipped that v7.0 builds on:
 
-Features founders expect from any service provider marketplace. Based on analysis of Clutch (350K+ providers), Toptal (20K+ vetted pros), and the 21-feature services marketplace checklist from Rigby.
+| Asset | Location | Relevance |
+|-------|----------|-----------|
+| A/B testing framework | `lib/ai/ab-testing.ts` | Deterministic user-variant assignment, experiment CRUD, variant stats by latency/error rate. **Solid foundation -- needs feedback signal integration.** |
+| WhatsApp monitor + Linear pipeline | `trigger/sahara-whatsapp-monitor.ts` | Scrapes WhatsApp group, AI categorizes issues, auto-creates Linear issues, sends SMS/email reports. **Already a feedback-to-tracker pipeline.** |
+| Multi-channel conversation context | `lib/channels/conversation-context.ts` | Unified context across chat/voice/SMS with channel tagging. **Cross-channel memory exists.** |
+| PostHog analytics | `lib/analytics/` | Product analytics, funnels, onboarding tracking (shipped v3.0 Phase 30). |
+| Email engagement | `lib/email/` | Weekly digests, milestone notifications, re-engagement (shipped v3.0 Phase 31). |
+| FRED memory system | `lib/db/fred-memory.ts` | Episodic memory with per-tier limits. |
+| Sentry error tracking | Configured | Production observability (shipped v3.0 Phase 25). |
+| Admin panel | `app/admin/` | Existing admin interface to extend. |
 
-| Feature | Why Expected | Complexity | FRED Integration | Notes |
-|---------|-------------|------------|-----------------|-------|
-| **Provider directory with categories** | Every marketplace has browsable categories. Clutch uses service type (development, design, marketing, legal, accounting). Toptal uses role type (developer, designer, finance expert) | Medium | FRED says "You need a pitch deck designer -- here are vetted providers" and links to filtered directory | Categories: Legal (incorporation, IP, contracts), Financial (accounting, bookkeeping, tax), Design (pitch decks, branding, UX), Development (MVP, mobile, web), Marketing (growth, content, PR) |
-| **Provider profiles with details** | Clutch shows verified reviews, portfolio, pricing range, team size, location. Toptal shows skills, experience, availability. Founders need enough info to evaluate | Medium | FRED could surface provider recommendations based on founder's specific need and budget | Profile fields: name, category, description, pricing_range, portfolio_url, reviews, rating, availability, location |
-| **Search and filter by category/budget/rating** | Standard marketplace discovery. Filter by service type, price range, rating, availability | Low | N/A -- standard UI | Leverage existing search patterns from investor contacts page |
-| **Reviews and ratings from other founders** | 67% of marketplace users want identity verification. Reviews are the primary trust signal on Clutch. Founders want social proof from other founders | Medium | After project completion, FRED prompts: "How was your experience with [provider]? Your review helps other founders" | `provider_reviews` table with rating, text, reviewer_id (anonymized display), project_type |
-| **Contact/inquiry mechanism** | Founders need a way to reach out to providers. In-platform messaging keeps communication tracked and prevents disintermediation | Medium | FRED drafts initial outreach: "Based on your needs, here's a suggested message to [provider]" | In-app messaging or structured inquiry form. Start with inquiry form (simpler), add messaging later |
-| **Provider vetting indication** | Clutch uses verified reviews. Toptal accepts only top 3%. Founders need to know these are vetted, not random freelancers. 40% of gig platform users worry about fraud | Low | FRED says "All providers on Sahara are vetted by our team" -- trust comes from platform curation | Admin-managed vetting. Providers apply, admin reviews, approves/rejects. Display "Sahara Vetted" badge |
-
-### Differentiators
-
-Features that make Sahara's marketplace uniquely valuable versus going to Clutch or Toptal directly.
-
-| Feature | Value Proposition | Complexity | FRED Integration | Notes |
-|---------|------------------|------------|-----------------|-------|
-| **FRED-triggered provider recommendations** | Unlike browsing Clutch, FRED identifies WHAT the founder needs and WHEN. During conversation: "You need to incorporate in Delaware before fundraising. Here are 3 vetted legal providers who handle startup incorporation" | Medium | FRED's conversation state detects needs (legal, financial, design) and proactively suggests providers from the marketplace. Next Steps can include "Find a [category] provider" action | Requires mapping: detected_need -> provider_category. E.g., deck review reveals poor design -> suggest pitch deck designer |
-| **Context-aware matching** | Providers matched based on founder's specific situation: stage, budget, industry, specific need. Not just category browsing but "here's who fits YOUR situation" | Medium | FRED has full founder context. Matching accounts for budget (from financial data), complexity (from project description), urgency (from fundraising timeline) | Deterministic pre-filter (category, budget range) + optional AI ranking for top matches |
-| **Task-to-provider pipeline** | When FRED identifies a task the founder cannot do themselves, it becomes a Next Steps item with "Find Provider" action. Seamless flow from mentoring to marketplace | Low | "You need a financial model for investor conversations. You can build it yourself (here's the template) or hire a vetted financial modeler" -- links to marketplace | Extends Next Steps Hub (Phase 43). New action type: "find_provider" with category filter |
-| **Starter package pricing** | Providers offer Sahara-specific starter packages at known price points. Unlike Clutch where pricing is opaque, founders see "Startup Incorporation Package: $500-$800" upfront | Low | FRED can quote expected costs: "Incorporation typically runs $500-$800 through our vetted providers" | Admin manages starter packages per provider. Not a full escrow system -- just transparent pricing |
-| **Project outcome tracking** | After hiring a provider through Sahara, track whether the deliverable was received and its impact. "Pitch deck redesign complete -- now let's run it through FRED's deck review" | Medium | FRED follows up: "Your deck designer delivered last week. Want to review the new deck together?" Closes the loop between marketplace and mentoring | `marketplace_projects` table with status tracking. Simple: requested/in_progress/completed/reviewed |
-
-### Anti-Features
-
-Features to deliberately NOT build for the service marketplace. These are common marketplace over-engineering mistakes.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|-------------|-----------|-------------------|
-| **Full escrow payment processing** | Escrow requires payment processor integration (Stripe Connect), complex fund holding, dispute resolution, tax compliance (1099s), and significant regulatory overhead. Services marketplace escrow is a standalone product | Sahara connects founders with providers. Payment happens off-platform directly between founder and provider. Sahara takes no transaction fee initially. Revenue comes from provider listing fees or referral commissions tracked manually |
-| **In-platform project management** | Milestone tracking, file sharing, time tracking, work verification -- this is what Upwork builds. It is a massive engineering investment | Founders manage projects with providers outside Sahara. Sahara tracks that the project exists and its outcome (for FRED context). Use simple status: requested/in_progress/completed |
-| **Automated provider matching algorithm** | Building sophisticated two-sided marketplace matching with availability calendars, auto-scheduling, real-time bidding. This is Toptal's core product and took years to build | Manual curation by admin team. FRED recommends from curated list. Start with 10-20 vetted providers, not 10,000. Quality over scale |
-| **Provider-side dashboard / analytics** | Provider CRM, lead management, analytics dashboard, calendar management. This is building a second product for a second user type | Providers get a simple profile page they can edit. Inquiries come via email. Track basic metrics (views, inquiries) in admin panel only |
-| **Two-sided reviews (provider reviews founder)** | Adds complexity and creates negative incentive (founders avoid honest reviews fearing retribution). Clutch is one-sided (clients review providers) and it works | One-sided: founders review providers. Admin monitors review quality. Providers cannot review or rate founders |
-| **Real-time chat/messaging system** | Building real-time messaging (WebSocket, presence indicators, typing indicators, message history, push notifications) is a significant infrastructure investment | Start with structured inquiry forms. Provider receives email notification. Initial conversations happen via email. Add in-platform messaging only if inquiry volume justifies it |
+**Key insight:** Sahara is not starting from zero. The WhatsApp-to-Linear pipeline is an early feedback loop. v7.0 formalizes and extends this into a comprehensive system.
 
 ---
 
-## Domain 3: Investor Matching (Real Boardy API Integration)
+## Table Stakes
 
-### Table Stakes
+Features users expect from an AI product that claims to improve over time. Missing these means the feedback system feels broken or performative.
 
-Features founders expect from any investor matching tool. Based on analysis of AngelList (5M+ members), Signal by NFX (10K+ investor profiles), Metal (fundraising CRM), Gust (80K investors), and existing Sahara Boardy mock.
+### TS-1: Thumbs Up/Down on AI Responses
+**Complexity:** Low
+**Why expected:** Every major AI product (ChatGPT, Claude, Copilot, Gemini) has this. Users reflexively look for it. Its absence signals the product does not care about quality.
+**Implementation pattern:**
+- Thumbs up/down icons inline on each FRED response (chat and voice transcript)
+- On thumbs-down: expand to optional category selector (irrelevant, incorrect, too vague, too long, wrong tone) plus free-text box
+- On thumbs-up: optional "What was helpful?" text box
+- Store: `feedback_signals` table with `user_id`, `message_id`, `session_id`, `channel`, `rating` (1/-1), `categories[]`, `comment`, `created_at`
+- Fire-and-forget write -- zero UX friction
+**Competitive examples:** ChatGPT (thumbs + category on downvote), Claude (thumbs + freetext), Microsoft Copilot Studio (thumbs + comments, aggregated in analytics dashboard)
+**Confidence:** HIGH -- universal pattern, well-documented
 
-| Feature | Why Expected | Complexity | FRED Integration | Notes |
-|---------|-------------|------------|-----------------|-------|
-| **Investor profile database** | AngelList has 100K+ investor profiles. Signal has 10K+. Metal has filterable database with 20+ criteria. Founders expect to browse real investors, not AI-generated fictional ones | Medium | FRED references real investor data: "Based on your stage and sector, Sequoia's seed fund and First Round Capital are strong fits" | Current Boardy mock generates FICTIONAL investors. Real Boardy API would provide actual investor profiles. If Boardy API unavailable, build internal curated database |
-| **Stage/sector/check-size filtering** | Every platform supports this. Signal filters by industry, stage, geography. Metal filters across 20+ criteria. AngelList has advanced search | Low | FRED already captures founder's stage, sector, and fundraising target. Auto-apply as default filters | Already partially built in Phase 20 investor contacts (stages, sectors, check_size_min/max arrays) |
-| **Match scoring / relevance ranking** | AngelList provides "Investment Likelihood Score." Metal uses empirical precision based on historical data. Gust matches startups with relevant investors. Founders need to know WHO to prioritize | Medium | FRED explains scores: "First Round is a 92% match because they invested in 3 companies at your stage in your sector last year" | Existing `ai_match_score` in `fundraising_pipelines` table. Enhance with real Boardy data or curated scoring |
-| **Warm intro path mapping** | Metal maps Gmail + LinkedIn connections to show warm intro paths. Signal reveals warm intro paths via Gmail metadata. NFX built this as a core feature. Warm intros are 10x more effective than cold outreach | High | FRED asks "Do you know anyone at [firm]?" and helps craft intro requests | This is where Boardy's real API provides unique value -- they map relationship networks. Without Boardy API, this is very hard to build from scratch |
-| **Pipeline / CRM tracking** | Signal has built-in CRM. Metal is a fundraising CRM. Foundersuite tracks communications. Even a spreadsheet template (Techstars provides one) is expected | Medium | FRED updates pipeline: "You had the meeting with [investor] -- how did it go? Let me update your pipeline and suggest next steps" | Already built in Phase 20: `fundraising_pipelines` table with 11 stages. Enhance UI and connect to real data |
-| **Outreach draft generation** | Multiple tools offer this. Metal has outreach tools. EasyVC has LinkedIn automation. Foundersuite tracks communications. At minimum, founders expect help crafting outreach | Low | Already built. FRED's fundraising agent has `outreachDraft` tool generating email sequences. Enhance with real investor context | Existing infrastructure in `lib/agents/fundraising/tools.ts`. Wire to real investor data instead of mock |
+### TS-2: Feedback Admin Dashboard
+**Complexity:** Medium
+**Why expected:** Without visibility, feedback collection is a black hole. The admin (Fred Cary) needs to see what founders are saying about FRED. This is table stakes because the WhatsApp monitoring PRD already revealed that Fred demands visibility into quality issues.
+**Implementation pattern:**
+- New section in existing `app/admin/` panel
+- Views: (1) Feedback feed with filters (date, channel, rating, category), (2) Aggregate stats (thumbs ratio over time, top complaint categories), (3) Per-session drill-down
+- Key metrics: daily feedback volume, positive/negative ratio, category distribution, response time to resolution
+- Export to CSV for offline analysis
+**Competitive examples:** Intercom feedback dashboard, Zendesk satisfaction analytics, Microsoft Copilot Studio analytics page
+**Confidence:** HIGH -- standard admin pattern
 
-### Differentiators
+### TS-3: Basic Sentiment Tracking on Conversations
+**Complexity:** Medium
+**Why expected:** An AI coaching product must know when a founder is frustrated, confused, or disengaged. Without sentiment awareness, FRED cannot self-correct in-session or flag problematic interactions for review.
+**Implementation pattern:**
+- Lightweight per-message sentiment scoring using the LLM already in the pipeline (piggyback on FRED's response generation -- add a structured output field for detected user sentiment: positive/neutral/negative/frustrated)
+- Store sentiment alongside conversation in episodic memory metadata
+- Aggregate session-level sentiment score (weighted average of message sentiments)
+- Flag sessions where sentiment degrades sharply (frustration spike detection)
+- Surface flagged sessions in admin dashboard
+**Why not a separate NLP model:** Sahara already uses LLMs for every interaction. Adding a sentiment field to the existing structured output is cheaper and more contextually accurate than running a separate sentiment analysis service.
+**Competitive examples:** Hume AI (emotion detection), Intercom (customer satisfaction prediction), Drift (conversation health scoring)
+**Confidence:** MEDIUM -- the piggyback approach is common in AI-native products but requires prompt engineering to avoid degrading response quality
 
-Features that make Sahara's investor matching uniquely valuable versus using Signal, Metal, or AngelList standalone.
-
-| Feature | Value Proposition | Complexity | FRED Integration | Notes |
-|---------|------------------|------------|-----------------|-------|
-| **Readiness-gated matching** | Unlike AngelList where anyone can browse investors, FRED gates investor matching behind Investor Readiness Score. "You're not ready to fundraise yet -- here's what to fix first." Prevents founders from burning investor relationships prematurely | Low | Already built (Phase 37, Phase 39). Reality Lens gates downstream activities. IRS gates fundraising tools. Extend gating to investor matching | Unique to Sahara. No other platform prevents premature fundraising. This is FRED's mentoring philosophy encoded as product behavior |
-| **Boardy voice-first matching** | Boardy's unique value is VOICE-based networking. Founders have a phone conversation with Boardy AI, which learns about them and makes double-opt-in introductions. No other platform does this | Low (API integration) | FRED says "Want to expand your investor network? Call Boardy for a 10-minute conversation and they'll match you with investors who fit" | Sahara already has voice infrastructure (LiveKit, Twilio). Boardy adds a complementary voice-based networking layer |
-| **Investor preparation coaching** | Metal has "Round Coach" for call prep. Sahara goes deeper: FRED runs a full mock investor meeting, tests the founder's answers, identifies weak spots, and generates specific preparation materials | Medium | Existing `meetingPrep` fundraising tool generates talking points and anticipated questions. Enhance with roleplay mode where FRED plays the investor | Extends existing meeting prep tool. Add conversational roleplay as a FRED mode: "Let me play devil's advocate as an investor and pressure-test your pitch" |
-| **Post-meeting intelligence** | After an investor meeting, FRED debriefs: "What questions did they ask? What concerned them? Let me analyze and suggest follow-up strategy." Updates pipeline automatically with meeting notes and AI-generated next actions | Medium | FRED conducts structured debrief via chat. Extracts signals (interest level, concerns, timeline). Updates pipeline stage and generates follow-up outreach | New FRED conversation mode: "Investor Meeting Debrief." Structured questions, AI analysis, automatic pipeline update |
-| **Unified investor context across all FRED interactions** | Unlike using Signal for CRM + separate tool for outreach + another for prep, FRED has ALL context: readiness score, pitch deck quality, meeting history, investor feedback. Every recommendation is holistic | Low | This is inherent to Sahara's architecture. All data lives in one database. FRED accesses everything. No context switching between tools | Not a feature to build -- it is an architectural advantage to market. "Everything in one place, understood by one AI mentor" |
-
-### Anti-Features
-
-Features to deliberately NOT build for investor matching.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|-------------|-----------|-------------------|
-| **Building a full investor database from scratch** | AngelList has 5M members. Crunchbase has comprehensive VC data. Building and maintaining a proprietary investor database is a data operations business, not a mentor platform feature | Integrate with Boardy API for real-time matching. Supplement with admin-curated partner lists (Phase 20 infrastructure). Allow founder CSV upload. Do NOT try to build a comprehensive database |
-| **Automated email sending to investors** | Sending fundraising emails from Sahara's domain. Domain reputation risk, deliverability management, SPF/DKIM complexity, and founders lose control of their fundraising communications | Generate drafts only. Copy to clipboard. Track send status manually (founder marks as "sent"). This design decision is already documented in Phase 20 research |
-| **Direct intro brokering** | Positioning Sahara as an intro broker between founders and investors. This requires investor opt-in, relationship management, and creates liability if introductions go poorly | Boardy handles intros via their double-opt-in system. Sahara helps founders PREPARE for meetings. FRED coaches -- Boardy connects |
-| **Real-time investor activity feeds** | Showing which investors just made investments, what rounds closed, live deal flow. This is Crunchbase/PitchBook territory and requires expensive data partnerships | Focus on founder-specific investor insights: "Based on [investor]'s recent portfolio, here's why they might be interested in you." AI-synthesized, not real-time data feeds |
-| **LinkedIn/email automation / scraping** | EasyVC does LinkedIn outreach automation. This violates platform ToS, creates legal risk, and damages professional relationships | All outreach is founder-initiated. FRED crafts the message, founder sends it themselves. No automation of sending. Sahara teaches founders to fundraise authentically |
+### TS-4: Feedback Storage and Data Model
+**Complexity:** Low-Medium
+**Why expected:** Without a proper data model, nothing else works. This is infrastructure, not a user-facing feature, but it is table stakes for the feedback system.
+**Implementation pattern:**
+- `feedback_signals` table: explicit feedback (thumbs, ratings, comments)
+- `feedback_sessions` table: session-level aggregates (sentiment arc, engagement metrics)
+- `feedback_categories` table: configurable taxonomy (bug, quality, relevance, tone, missing-info)
+- Link to existing `ai_requests`/`ai_responses` tables for A/B test correlation
+- Link to existing `fred_episodic_memory` for conversation context
+- Channel tagging using existing `Channel` type from `conversation-context.ts`
+**Confidence:** HIGH -- data modeling, no external dependencies
 
 ---
 
-## Domain 4: Infrastructure Hardening (Cross-Cutting)
+## Differentiators
 
-### Table Stakes
+Features that create competitive advantage for Sahara specifically. Not expected, but valuable -- especially for an AI coaching product where the AI must demonstrably improve.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|-------------|------------|-------|
-| **Error monitoring (Sentry)** | Production platforms need error tracking. Currently only basic logging exists | Medium | Sentry SDK integration, source maps, alert rules, issue tracking |
-| **Activated SMS check-ins (Twilio)** | SMS infrastructure exists (Phase 42) but is not yet activated for real delivery. Founders on Studio tier expect SMS check-ins to work | Low | `lib/sms/client.ts` exists with Twilio. Need to activate with real Twilio credentials and test delivery |
-| **CI/CD pipeline** | Automated testing and deployment. Currently manual deployment | Medium | GitHub Actions: lint, test, build, deploy to Vercel. Run Stagehand browser tests on PR |
-| **Voice call reliability (LiveKit)** | LiveKit integration exists (Phase 29, Phase 42) but needs production hardening: connection retry, fallback, quality monitoring | Medium | Connection state management, retry logic, call quality metrics, graceful degradation |
+### D-1: AI-Powered Feedback Categorization and Pattern Detection
+**Complexity:** Medium
+**Value proposition:** Transform raw feedback into actionable insights automatically. Instead of Fred Cary manually reading hundreds of thumbs-down comments, FRED identifies patterns: "23 founders this week said FRED's fundraising advice was too generic for their stage."
+**Implementation pattern:**
+- Scheduled job (Trigger.dev, like existing WhatsApp monitor) runs daily/weekly
+- Pulls recent negative feedback + low-sentiment sessions
+- LLM analysis: cluster by theme, identify recurring patterns, rank by frequency and severity
+- Output: structured report stored in `feedback_insights` table
+- Surface in admin dashboard as "Top Issues This Week" with drill-down
+**Why differentiating:** Most AI products collect feedback but do not synthesize it. Synthesis is the hard part.
+**Competitive examples:** Thematic (AI feedback categorization SaaS), Userpilot (AI-powered feedback analysis for SaaS product teams), BuildBetter (AI feedback tools)
+**Confidence:** MEDIUM -- the pattern is proven in dedicated feedback tools; implementing it as a native feature in Sahara is novel but feasible
 
-### Differentiators
+### D-2: Prompt Self-Refinement from Feedback Signals (RLHF-Lite)
+**Complexity:** High
+**Value proposition:** FRED actually gets better based on user feedback -- the core promise of v7.0. Not full RLHF (which requires model fine-tuning), but a practical "RLHF-lite" that refines prompts and retrieval.
+**Implementation pattern:**
+- **Feedback-weighted prompt examples:** Thumbs-up responses become few-shot examples in FRED's prompt library. Thumbs-down responses become "avoid this" negative examples.
+- **Category-driven prompt patches:** When pattern detection (D-1) identifies recurring complaints (e.g., "too vague on unit economics"), generate a prompt patch: additional instructions appended to FRED's system prompt for that coaching topic.
+- **Prompt version control:** Store prompt versions in DB (extend existing `ab_experiments` schema). Each patch creates a new version. A/B test new vs. old automatically using existing `lib/ai/ab-testing.ts`.
+- **Human-in-the-loop gate:** Prompt patches are proposed, not auto-deployed. Admin reviews and approves in dashboard before going live.
+- **Feedback loop closure:** After deploying a prompt patch, track whether thumbs-up ratio improves for that topic.
+**Why differentiating:** Most AI SaaS products treat feedback as a quality signal for humans to act on. Sahara would use it to directly improve FRED -- a tighter loop.
+**Risk:** Prompt drift, regression on unrelated topics. Mitigated by A/B testing and human gate.
+**Competitive examples:** Braintrust (production traces become eval datasets), PromptLayer (prompt versioning + evaluation), Yohei Nakajima's self-improving agent patterns
+**Confidence:** MEDIUM -- the individual components (prompt versioning, A/B testing, few-shot examples) are well-understood; the integration is novel
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|------------------|------------|-------|
-| **FRED Intelligence Upgrade** | Smarter AI responses, better context window management, improved framework detection. Phase 32 already did one upgrade. v6.0 pushes further with better memory and reasoning | High | Upgrade model, tune prompts, improve diagnostic engine accuracy, add conversation summarization |
-| **Dashboard Analytics** | Richer founder metrics beyond current Snapshot Card. Trend lines, comparative benchmarks, progress visualization over time | Medium | New analytics page with charts: readiness score over time, next steps completion rate, check-in streak, content consumption |
-| **PWA refinements** | Smoother offline experience, better push notification handling, app-like transitions | Low-Medium | Already has PWA (Phase 22). Polish: offline content caching, notification grouping, transition animations |
+### D-3: Close-the-Loop Notifications
+**Complexity:** Medium
+**Value proposition:** When a founder reports an issue and it gets fixed, they receive a notification: "Thanks for your feedback -- FRED now gives more specific fundraising advice for pre-seed founders." This creates a virtuous cycle where founders feel heard and continue providing feedback.
+**Implementation pattern:**
+- Track which feedback signals contributed to which prompt patches or bug fixes
+- When a fix ships (Linear issue closed, prompt patch deployed), query related feedback signals
+- Send targeted notification via existing email engagement system (`lib/email/`) or in-app notification
+- Template: "You helped improve FRED! Your feedback about [topic] led to [improvement]. Try it out."
+- Link back to relevant feature/conversation
+**Why differentiating:** Research shows "customer-obsessed" companies see 41% faster revenue growth from communicating changes back to users. Very few AI products do this.
+**Competitive examples:** Aha! (marks feature requests as shipped + notifies followers), Canny (close-the-loop notifications), FeatureBot (automated feedback loop closure)
+**Confidence:** MEDIUM -- the notification infrastructure exists in Sahara; linking feedback to fixes requires careful data modeling
+
+### D-4: Multi-Channel Feedback Aggregation
+**Complexity:** Medium-High
+**Value proposition:** Sahara uniquely has FRED accessible via chat, voice, SMS, and WhatsApp (indirectly via monitoring). Founders give feedback everywhere -- not just through thumbs buttons. A frustrated WhatsApp message, a curt SMS, or an abandoned voice call are all feedback signals.
+**Implementation pattern:**
+- **Explicit signals:** Thumbs up/down (chat), post-call rating prompt (voice), reply-based rating ("Reply 1-5 to rate this advice" in SMS)
+- **Implicit signals:** Session abandonment (started conversation, left mid-flow), sentiment degradation across messages, repeated questions (FRED did not answer satisfactorily), voice call duration vs. engagement
+- **WhatsApp signals:** Already captured via `trigger/sahara-whatsapp-monitor.ts` -- extend to tag as feedback, not just bugs
+- **Unified view:** All signals flow into `feedback_signals` table with channel tag, visible in admin dashboard with channel filtering
+**Why differentiating:** Most feedback tools are single-channel. Sahara's multi-channel FRED gives it a unique aggregation advantage.
+**Dependency:** Requires TS-4 (data model) and TS-1 (explicit feedback UI)
+**Confidence:** MEDIUM -- explicit channel feedback is straightforward; implicit signal extraction (abandonment, repeated questions) requires careful heuristic design
+
+### D-5: A/B Testing Integration with Feedback Signals
+**Complexity:** Medium
+**Value proposition:** Sahara already has A/B testing (`lib/ai/ab-testing.ts`) with latency and error rate metrics. Adding feedback signals (thumbs ratio, sentiment scores) as first-class A/B test metrics transforms experiments from "does it break?" to "does it help?"
+**Implementation pattern:**
+- Extend `getVariantStats()` to include feedback metrics: thumbs-up ratio, average sentiment score, session completion rate per variant
+- Add statistical significance calculation (chi-squared test for binary feedback, t-test for sentiment scores)
+- Admin dashboard: experiment results with feedback-aware metrics, auto-flag winning variants
+- Integrate with D-2: prompt patches automatically enter A/B tests, feedback metrics determine winner
+**Why differentiating:** Connects experimentation to user satisfaction rather than just technical metrics.
+**Competitive examples:** Braintrust (quality gates prevent regressions), Promptfoo (systematic prompt evaluation), Maxim AI (prompt optimization platform)
+**Confidence:** HIGH -- extending existing infrastructure with new metrics is well-understood
+
+---
+
+## Anti-Features
+
+Features to deliberately NOT build for v7.0. Common traps in feedback system design.
+
+### AF-1: Full RLHF / Model Fine-Tuning
+**Why avoid:** Sahara uses third-party LLMs (Anthropic, OpenAI, Google) via Vercel AI SDK. Fine-tuning requires hosting your own model, managing training infrastructure, and introduces severe regression risk. The ROI is terrible for a startup at Sahara's scale.
+**What to do instead:** RLHF-lite via prompt refinement (D-2). Adjust the prompts, examples, and retrieval context -- not the model weights.
+
+### AF-2: Real-Time Feedback Popups / Interruptions
+**Why avoid:** Founders are busy. Interrupting a coaching session with "Rate this response!" mid-conversation destroys the flow. Research shows interruptive feedback requests reduce both feedback quality and user satisfaction.
+**What to do instead:** Inline thumbs (non-blocking, attached to each message). Post-session micro-survey (1 question max). Passive sentiment detection. Never block the conversation flow.
+
+### AF-3: NPS Surveys Inside the AI Chat
+**Why avoid:** NPS ("How likely are you to recommend...") is a product-level metric, not a conversation-level metric. Asking it inside FRED's chat conflates the coaching relationship with product marketing. It also yields low-quality data because the context is wrong.
+**What to do instead:** NPS via email (periodic, quarterly). In-app NPS on the dashboard (not in chat). Keep FRED's chat sacred -- it is a coaching space.
+
+### AF-4: Building a Custom Feedback Analytics SaaS
+**Why avoid:** Sahara is a founder OS, not a feedback tool. Do not over-invest in building Thematic/Userpilot/Canny inside Sahara. Build what is needed for FRED's improvement loop; use existing tools (PostHog, Linear) for everything else.
+**What to do instead:** Lean admin dashboard (TS-2), integrate with PostHog for complex analytics, use Linear for issue tracking (already connected).
+
+### AF-5: Public Feedback Board / Feature Voting
+**Why avoid:** Sahara is a 1-on-1 coaching platform, not a community product. A public "vote on features" board exposes the roadmap to competitors, creates expectation debt, and does not match the intimate founder-AI relationship.
+**What to do instead:** Close-the-loop notifications (D-3) give the feeling of being heard without the governance overhead of a public board.
+
+### AF-6: Automated Prompt Deployment Without Human Review
+**Why avoid:** Auto-deploying prompt changes based on feedback signals is a recipe for prompt injection, quality regression, and unpredictable behavior. One bad batch of feedback could poison FRED's prompts.
+**What to do instead:** Human-in-the-loop gate (part of D-2). AI proposes prompt patches, admin approves, A/B test validates.
 
 ---
 
 ## Feature Dependencies
 
 ```
-CONTENT LIBRARY chain:
-  Admin content management (CMS)
-    -> Content catalog page
-    -> Stage-based filtering
-    -> Progress tracking
-    -> FRED content recommendations
-    -> Content-to-action bridge
-    -> Framework worksheets
-
-SERVICE MARKETPLACE chain:
-  Admin provider management
-    -> Provider directory page
-    -> Provider profiles
-    -> Search/filter
-    -> Reviews system
-    -> FRED-triggered recommendations
-    -> Task-to-provider pipeline
-
-INVESTOR MATCHING chain:
-  Boardy API client (replace mock)
-    -> Real investor profiles in match list
-    -> Warm intro path mapping
-    -> Enhanced pipeline CRM UI
-    -> Investor preparation coaching
-    -> Post-meeting intelligence
-
-CROSS-DEPENDENCIES:
-  Content Library + FRED: Content recommendations require content-to-framework mapping
-  Service Marketplace + FRED: Provider recommendations require need-detection in conversation
-  Service Marketplace + Next Steps: "Find provider" action type in Next Steps Hub
-  Investor Matching + IRS: Readiness gating uses Investor Readiness Score (already built)
-  Investor Matching + Content: Fundraising content modules tied to investor readiness gaps
-  Content Library + Marketplace: Course on "hiring developers" links to dev provider category
+TS-4 (Data Model)
+ |
+ +---> TS-1 (Thumbs Up/Down)
+ |      |
+ |      +---> D-4 (Multi-Channel Aggregation)
+ |      |
+ |      +---> D-5 (A/B Test + Feedback Metrics)
+ |             |
+ |             +---> D-2 (Prompt Self-Refinement / RLHF-Lite)
+ |
+ +---> TS-3 (Sentiment Tracking)
+ |      |
+ |      +---> D-1 (AI Categorization + Pattern Detection)
+ |             |
+ |             +---> D-2 (Prompt Self-Refinement / RLHF-Lite)
+ |             |
+ |             +---> D-3 (Close-the-Loop Notifications)
+ |
+ +---> TS-2 (Admin Dashboard)
+        |
+        +---> D-1 (surfaces insights in dashboard)
+        +---> D-5 (surfaces experiment results in dashboard)
 ```
+
+**Critical path:** TS-4 -> TS-1 -> D-5 -> D-2
+
+**Parallel tracks:**
+- Track A (User-facing): TS-1 -> D-4 -> D-5
+- Track B (Analysis): TS-3 -> D-1 -> D-2
+- Track C (Admin): TS-2 -> surfaces results from A and B
+- Track D (Engagement): D-3 (can start once D-1 exists)
+
+**Recommended build order:**
+1. **Phase 1:** TS-4 (data model) + TS-1 (thumbs UI) + TS-2 (basic admin dashboard)
+2. **Phase 2:** TS-3 (sentiment tracking) + D-4 (multi-channel aggregation) + D-5 (A/B test integration)
+3. **Phase 3:** D-1 (AI categorization) + D-2 (RLHF-lite prompt refinement)
+4. **Phase 4:** D-3 (close-the-loop notifications) + polish
+
+---
+
+## Competitive Examples
+
+| Product | Feedback Mechanism | What Sahara Can Learn |
+|---------|-------------------|----------------------|
+| **ChatGPT** | Thumbs up/down on every response, category selector on downvote, optional freetext. Regenerate button as implicit negative signal. | Gold standard for explicit feedback UX. Copy the pattern exactly. |
+| **Claude (Anthropic)** | Thumbs up/down with freetext. Simple, non-intrusive. | Simplicity works. Do not over-engineer the feedback widget. |
+| **Intercom Fin** | AI customer support with CSAT after resolution, escalation as implicit negative signal, admin analytics dashboard. | Post-resolution rating pattern applicable to post-coaching-session rating. |
+| **Copilot Studio (Microsoft)** | Thumbs up/down with comments, analytics dashboard aggregating reactions, agent analytics page. | Enterprise-grade feedback analytics -- good reference for admin dashboard design. |
+| **Braintrust** | Production traces automatically become eval datasets, quality gates prevent regressions. | The trace-to-evaluation pipeline is exactly what D-5 should achieve. |
+| **PromptLayer** | "GitHub for prompts" -- version control, A/B evaluation against historical data. | Prompt versioning pattern for D-2. |
+| **Canny** | Feature request board, auto-notify when shipped, changelog integration. | Close-the-loop notification pattern for D-3 (without the public board). |
+| **Thematic** | AI-powered feedback categorization, theme detection, sentiment analysis across channels. | Pattern detection approach for D-1. |
+
+---
+
+## Confidence Assessment
+
+| Feature | Confidence | Reasoning |
+|---------|------------|-----------|
+| TS-1 (Thumbs) | HIGH | Universal pattern, well-documented, simple implementation |
+| TS-2 (Admin Dashboard) | HIGH | Standard admin UI, existing admin panel to extend |
+| TS-3 (Sentiment) | MEDIUM | LLM-piggyback approach is sound but needs prompt testing to validate quality |
+| TS-4 (Data Model) | HIGH | Standard database design, no external dependencies |
+| D-1 (AI Categorization) | MEDIUM | Proven in dedicated tools; quality depends on prompt engineering for Sahara's domain |
+| D-2 (RLHF-Lite) | MEDIUM | Individual components proven; full integration is novel, needs careful rollout |
+| D-3 (Close-the-Loop) | MEDIUM | Notification infra exists; linking feedback to fixes requires data modeling discipline |
+| D-4 (Multi-Channel) | MEDIUM | Explicit signals straightforward; implicit signals (abandonment, repeated Qs) need heuristic tuning |
+| D-5 (A/B + Feedback) | HIGH | Extending existing `lib/ai/ab-testing.ts` with new metrics -- incremental work |
 
 ---
 
 ## MVP Recommendation
 
-### Phase 1 Priority: Content Library (Foundation)
+For the minimum viable feedback loop, prioritize:
 
-Build the content library first because:
-1. **Lowest external dependency** -- no third-party API integration required (unlike Boardy)
-2. **Highest FRED integration value** -- content recommendations make FRED immediately smarter
-3. **All tiers benefit** -- Free tier can access some content (growth strategy)
-4. **Content populates immediately** -- Fred Cary can record/write content in parallel with development
-5. **Foundation for marketplace** -- "here's how to do X" naturally leads to "here's who can do X for you"
+1. **TS-4** (Data model) -- foundation for everything
+2. **TS-1** (Thumbs up/down) -- starts collecting signal immediately
+3. **TS-2** (Admin dashboard) -- gives Fred Cary visibility he is already demanding via WhatsApp
+4. **D-5** (A/B test + feedback integration) -- connects to existing A/B infra, makes experiments meaningful
 
-MVP features:
-1. Admin content management (create/edit/publish courses)
-2. Content catalog page with stage filtering
-3. Individual content viewing (video embed + text)
-4. Progress tracking (started/completed)
-5. FRED content recommendations in chat
-6. "Ask FRED about this" button on content pages
-
-Defer to post-MVP:
-- Framework worksheets (requires new document type infrastructure)
-- Community discussion per module (extension of existing communities)
-- Adaptive curriculum generation (requires content-to-gap mapping maturity)
-
-### Phase 2 Priority: Service Marketplace (MVP)
-
-Build after content library because:
-1. Content creates the "learn" experience; marketplace creates the "do" experience
-2. Provider curation can happen in parallel with content library development
-3. Simpler technically than investor matching (no external API dependency)
-
-MVP features:
-1. Admin provider management (add/edit/vet providers)
-2. Provider directory with category browsing
-3. Provider profile pages with details
-4. Inquiry form (contact provider)
-5. FRED-triggered provider recommendations in chat
-6. "Find Provider" action in Next Steps Hub
-
-Defer to post-MVP:
-- Reviews and ratings (need critical mass of completed projects first)
-- Context-aware matching (start with category match, add AI ranking later)
-- Project outcome tracking (too early without transaction volume)
-
-### Phase 3 Priority: Real Boardy API Integration
-
-Build last because:
-1. **External API dependency** -- requires Boardy API access, documentation, and testing
-2. **Existing mock provides value** -- AI-generated matches work for demo/early users
-3. **Infrastructure already exists** -- Strategy pattern in `lib/boardy/client.ts` designed for exactly this swap
-4. **High value but high risk** -- if Boardy API is unavailable or changes, having it last means less rework
-
-MVP features:
-1. Replace MockBoardyClient with RealBoardyClient
-2. Real investor profiles in match results
-3. Deep link to Boardy for voice networking
-4. Warm intro path display (if Boardy API supports it)
-5. Enhanced match display with real investor data
-
-Defer to post-MVP:
-- Investor preparation roleplay mode
-- Post-meeting debrief automation
-- Full warm intro path mapping (depends on Boardy API capabilities)
-
-### Infrastructure: Interleave Throughout
-
-- **Sentry**: Add in Phase 1 (catches errors during content library development)
-- **Twilio activation**: Add in Phase 1 (independent, quick win)
-- **CI/CD**: Add in Phase 1 (protects all subsequent development)
-- **FRED Intelligence Upgrade**: Add in Phase 2 (benefits from content library data)
-- **Dashboard Analytics**: Add in Phase 3 (benefits from all data sources)
-- **PWA Polish**: Add in Phase 3 (final UX refinement)
-
----
-
-## Tier Distribution for New Features
-
-| Feature | Free | Pro | Studio |
-|---------|------|-----|--------|
-| Content Library (basic catalog) | Yes (limited) | Yes (full) | Yes (full) |
-| FRED content recommendations | No | Yes | Yes |
-| Framework worksheets | No | Yes | Yes |
-| Service Marketplace (browse) | Yes (view only) | Yes (inquire) | Yes (inquire + priority) |
-| FRED provider recommendations | No | Yes | Yes |
-| Boardy real matching | No | No | Yes |
-| Investor prep coaching | No | Pro (basic) | Studio (full) |
-| Dashboard Analytics | Basic | Full | Full |
-| SMS Check-ins (activated) | No | No | Yes |
-
----
-
-## Competitive Landscape Summary
-
-### Content Library Competitors
-
-| Platform | Model | Strength | Sahara Advantage |
-|----------|-------|----------|-----------------|
-| YC Startup School | Free, open | Brand, breadth, co-founder matching | FRED personalizes + bridges to action |
-| Antler Academy | Free, open | Step-by-step playbook, community | FRED recommends based on gaps, not just sequence |
-| Google Startup School | Free, guided | Google brand, structured workshops | FRED knows your startup deeply -- not generic |
-| MasterClass | $15-23/mo subscription | Celebrity instructors, production quality | Fred Cary as expert + AI that applies learning |
-| Founderz | Subscription | Cinematic AI education | FRED is the AI, content feeds the mentor |
-
-### Service Marketplace Competitors
-
-| Platform | Model | Strength | Sahara Advantage |
-|----------|-------|----------|-----------------|
-| Clutch | Free for buyers | Scale (350K+ providers), verified reviews | FRED identifies WHAT you need and WHEN |
-| Toptal | Premium (top 3%) | Elite talent, fast matching (24-48hr) | Startup-specific curation, FRED context |
-| UpCounsel | Legal marketplace | Legal specialization | Integrated with full founder journey |
-| Paro | Financial talent | Pre-vetted CPAs/analysts | FRED bridges financial gaps to providers |
-
-### Investor Matching Competitors
-
-| Platform | Model | Strength | Sahara Advantage |
-|----------|-------|----------|-----------------|
-| AngelList | Free platform | Scale (5M members), ecosystem | Readiness gating prevents premature outreach |
-| Signal (NFX) | Free CRM | Warm intro mapping via Gmail | FRED coaches prep + debriefs meetings |
-| Metal | Freemium CRM | 20+ filter criteria, Round Coach | Unified context across all mentoring |
-| Gust | Free/paid | 80K investors, legal tools | FRED assesses readiness before matching |
-| Boardy | Free networking | Voice-first, double-opt-in intros | Integrated into FRED's ecosystem |
+Defer to later phases:
+- **D-2** (RLHF-lite): High complexity, needs data accumulation first. Defer until 2-4 weeks of feedback data exists.
+- **D-3** (Close-the-loop): Needs fixes to close the loop ON. Defer until the system is generating actionable insights.
+- **D-4** (Multi-channel aggregation): SMS and voice rating prompts are useful but secondary to chat feedback.
 
 ---
 
 ## Sources
 
-### HIGH Confidence (Official docs, codebase analysis)
-- Sahara codebase: `lib/boardy/client.ts`, `lib/boardy/mock.ts`, `lib/boardy/types.ts` -- read in full
-- Sahara codebase: `lib/constants.ts` -- read in full (tier features, nav, stages)
-- Sahara codebase: Phase 20 research (`20-RESEARCH.md`) -- read in full (investor infrastructure)
-- [YC Startup School Curriculum](https://www.startupschool.org/curriculum) -- fetched and analyzed
-- [Rigby Services Marketplace 21-Feature Checklist](https://www.rigbyjs.com/blog/services-marketplace-features) -- fetched and analyzed
-- [Metal Fundraising CRM](https://www.metal.so) -- fetched and analyzed
+Research sources with confidence annotations:
 
-### MEDIUM Confidence (Multiple sources agree)
-- [Clutch Marketplace](https://clutch.co/) -- WebSearch verified
-- [Toptal Features](https://clutch.co/profile/toptal) -- WebSearch verified
-- [AngelList 2025 Guide](https://builders.saralgroups.com/news/angellist-the-ultimate-2025-guide-to-startup-funding-and-angel-investing/) -- WebSearch
-- [Signal by NFX](https://signal.nfx.com/) -- WebSearch, multiple sources
-- [Gust Platform Features](https://gust.com/) -- WebSearch, multiple sources
-- [Boardy AI Features](https://www.boardy.ai/) -- WebSearch, multiple sources
-- [Antler Academy](https://www.antler.co/academy) -- WebSearch
-- [Best Investor Discovery Platforms](https://qubit.capital/blog/best-investor-discovery-tools) -- fetched and analyzed
-- [a16z Marketplace Evolution](https://a16z.com/whats-next-for-marketplace-startups/) -- WebSearch
-- [Sharetribe Marketplace Payments Guide](https://www.sharetribe.com/academy/marketplace-payments/) -- WebSearch
-
-### LOW Confidence (Single source, needs validation)
-- EdTech mobile learning stat (74% of organizations) -- single source, but widely cited
-- Gig platform fraud concern stat (40% worry about fraud, 67% want verification) -- single source from Rigby
-- LXP market growth projection ($2.8B to $28.9B by 2033, 33.79% CAGR) -- single source
+- [Zonka Feedback: Thumbs Up/Down Surveys](https://www.zonkafeedback.com/blog/collecting-feedback-with-thumbs-up-thumbs-down-survey) -- HIGH, practical UX guidance
+- [Microsoft Copilot Studio: Collect Thumbs Feedback](https://learn.microsoft.com/en-us/power-platform/release-plan/2025wave1/microsoft-copilot-studio/collect-thumbs-up-or-down-feedback-comments-agents) -- HIGH, official Microsoft docs
+- [Microsoft Data Science: Beyond Thumbs Up and Down](https://medium.com/data-science-at-microsoft/beyond-thumbs-up-and-thumbs-down-a-human-centered-approach-to-evaluation-design-for-llm-products-d2df5c821da5) -- MEDIUM, good framework for feedback granularity
+- [OrangeLoops: 9 UX Patterns for Trustworthy AI Assistants](https://orangeloops.com/2025/07/9-ux-patterns-to-build-trustworthy-ai-assistants/) -- MEDIUM, UX pattern reference
+- [Userpilot: AI Customer Feedback Analysis for SaaS](https://userpilot.com/blog/ai-customer-feedback-analysis/) -- MEDIUM, SaaS feedback analysis patterns
+- [FeatureBot: Closing the Feedback Loop with AI](https://featurebot.com/blog/closing-the-feedback-loop) -- MEDIUM, close-the-loop patterns
+- [Getthematic: Customer Feedback Loop Guide](https://getthematic.com/insights/customer-feedback-loop-guide) -- MEDIUM, comprehensive loop design
+- [Braintrust: Best Prompt Evaluation Tools 2025](https://www.braintrust.dev/articles/best-prompt-evaluation-tools-2025) -- HIGH, authoritative on eval tooling
+- [Maxim AI: A/B Testing with Prompts Guide](https://www.getmaxim.ai/articles/how-to-perform-a-b-testing-with-prompts-a-comprehensive-guide-for-ai-teams/) -- MEDIUM, practical A/B testing patterns
+- [Yohei Nakajima: Self-Improving AI Agents](https://yoheinakajima.com/better-ways-to-build-self-improving-ai-agents/) -- MEDIUM, architectural patterns for self-improvement
+- [Linear AI Workflows](https://linear.app/ai) -- HIGH, official Linear docs on AI features
+- [SaaS Playbooks: Feedback Loop Automation Guide](https://saasplaybooks.com/ultimate-guide-to-feedback-loop-automation/) -- LOW, single source
+- [Crescendo AI: Customer Sentiment Analysis Guide 2026](https://www.crescendo.ai/blog/customer-sentiment-analysis) -- MEDIUM, sentiment analysis overview
+- Sahara codebase: `lib/ai/ab-testing.ts`, `trigger/sahara-whatsapp-monitor.ts`, `lib/channels/conversation-context.ts` -- HIGH, first-party source
