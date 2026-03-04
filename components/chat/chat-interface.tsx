@@ -201,7 +201,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
         </div>
       )}
 
-      {/* Suggestion chips — shown only before first message */}
+      {/* Welcome guide + Suggestion chips — shown only before first message */}
       <AnimatePresence>
         {fredMessages.length === 0 && !isProcessing && (
           <motion.div
@@ -209,8 +209,30 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2 }}
-            className="px-4 pb-2"
+            className="px-4 pb-2 space-y-3"
           >
+            {/* Welcome guide card */}
+            <div className="max-w-4xl mx-auto">
+              <div className="rounded-xl border border-[#ff6a1a]/30 bg-gradient-to-br from-[#ff6a1a]/5 to-orange-500/5 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-[#ff6a1a] mb-2">
+                  Welcome to Sahara
+                </h3>
+                <p className="text-sm text-foreground/80 leading-relaxed mb-3">
+                  Sahara is your AI-powered founder operating system. Your mentor Fred Cary has built 30+ companies, taken 3 public, and mentored 10,000+ founders.
+                </p>
+                <div className="space-y-1.5 text-xs text-foreground/70">
+                  <p>Here&apos;s what to expect:</p>
+                  <ul className="list-disc list-inside space-y-1 pl-1">
+                    <li>Structured mentoring — Fred will guide you step by step</li>
+                    <li>He&apos;ll start by understanding your business fundamentals</li>
+                    <li>Then help you with strategy, positioning, and investor readiness</li>
+                    <li>Track your progress in the Progress tab as you go</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Suggestion chips */}
             <div className="max-w-4xl mx-auto flex flex-wrap gap-2">
               {getSuggestionChips(pageContext).map((chip) => (
                 <button
