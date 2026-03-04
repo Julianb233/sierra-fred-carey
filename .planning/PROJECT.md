@@ -8,23 +8,22 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v6.0 Full Platform Maturity
+## Current Milestone: v7.0 UX Feedback Loop
 
-**Goal:** Make Sahara production-solid (infrastructure), smarter (FRED intelligence), and feature-complete (content library, service marketplace, Boardy) — the full platform maturity push.
+**Goal:** Build a closed-loop feedback system that collects user experience signals from every channel (in-app, WhatsApp, SMS, analytics), analyzes them with AI, auto-prioritizes issues, feeds insights back into FRED's behavior, and surfaces actionable intelligence to the admin team.
 
 **Target features:**
-- Sentry error tracking + production monitoring with alerting
-- CI/CD expansion + visual regression testing + staging environment
-- Twilio SMS activation for real weekly check-ins
-- FRED intelligence upgrade — better responses, smarter mode switching, improved memory
-- Mobile / UX polish — PWA refinements, animations, accessibility
-- Dashboard & analytics — richer visualizations, founder metrics, engagement tracking
-- Voice agent production hardening — reliable LiveKit calls, recording, transcription
-- Content library & courses — educational hub with FRED-recommended learning paths
-- Service marketplace — vetted providers, discovery, reviews, booking
-- Real Boardy API integration — live investor matching replacing mock client
+- In-app feedback collection — thumbs up/down on FRED responses, NPS surveys, contextual feedback widgets, feature request submissions
+- WhatsApp/SMS feedback ingestion — monitor WhatsApp conversations for sentiment and feedback signals, parse SMS replies for satisfaction data
+- PostHog analytics pipeline — session recordings, funnel drop-off detection, heatmaps, automated UX friction identification
+- AI feedback analyzer — FRED-powered pattern detection across all feedback channels, trend surfacing, auto-categorization, severity scoring
+- Admin feedback dashboard — aggregated view of all feedback, sentiment trends, top issues, filterable by channel/feature/tier/date
+- Auto-prioritization engine — AI ranks issues by impact (affected users × severity × frequency), suggests sprint priorities
+- FRED self-improvement loop — negative feedback triggers prompt refinement suggestions, positive signals reinforce effective patterns, A/B tracking
+- Linear/GitHub integration — auto-create issues from feedback patterns, link feedback to existing issues, close-the-loop notifications
+- Feedback-to-founder loop — notify founders when their feedback leads to changes, build trust and engagement
 
-**Previous Milestone:** v5.0 QA Fixes — Production Polish (SHIPPED 2026-02-18)
+**Previous Milestone:** v6.0 Full Platform Maturity (67% complete — 8/12 phases shipped)
 
 ## Requirements
 
@@ -95,21 +94,26 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 
 ### Active
 
-**Infrastructure & Ops (INFRA)**
-- [ ] Sentry error tracking — DSN configuration, alerting rules, source maps, performance monitoring
-- [ ] CI/CD expansion — Playwright E2E coverage, visual regression testing, staging environment, automated deploy checks
-- [ ] Twilio SMS activation — Real credentials, weekly check-in scheduling, end-to-end SMS delivery
-- [ ] Voice agent hardening — Production-ready LiveKit calls, call quality monitoring, recording/transcription reliability
+**Feedback Collection (COLLECT)**
+- [ ] In-app feedback widgets — Thumbs up/down on FRED responses, contextual feedback forms, NPS micro-surveys, feature request submission
+- [ ] WhatsApp feedback ingestion — Parse WhatsApp conversations for sentiment signals, feedback extraction, satisfaction scoring
+- [ ] SMS feedback parsing — Analyze SMS check-in replies for satisfaction data, keyword detection, sentiment analysis
+- [ ] PostHog analytics pipeline — Session recordings, funnel analysis, heatmaps, automated friction detection
 
-**FRED & UX Improvements (IMPROVE)**
-- [ ] FRED intelligence upgrade — Better response quality, smarter mode switching, improved memory retrieval, long conversation handling
-- [ ] Mobile / UX polish — PWA refinements, animation smoothness, responsive edge cases, accessibility gaps
-- [ ] Dashboard & analytics — Richer visualizations, founder metrics, engagement tracking, historical trends, export
+**Feedback Intelligence (ANALYZE)**
+- [ ] AI feedback analyzer — Cross-channel pattern detection, trend surfacing, auto-categorization by feature/severity/theme
+- [ ] Auto-prioritization engine — Impact scoring (users × severity × frequency), sprint priority suggestions, urgency classification
+- [ ] Sentiment tracking — Per-feature sentiment over time, cohort analysis by tier/stage, early warning alerts
 
-**New Features (FEATURE)**
-- [ ] Content library & courses — Educational hub with video lessons, founder playbooks, FRED-recommended learning paths
-- [ ] Service marketplace — Vetted providers (lawyers, designers, devs), discovery, reviews, booking flow
-- [ ] Real Boardy API integration — Replace mock client with live investor matching, warm intros, outreach sequencing
+**Feedback Actions (ACT)**
+- [ ] Admin feedback dashboard — Aggregated multi-channel view, sentiment trends, top issues, filters by channel/feature/tier/date
+- [ ] FRED self-improvement loop — Negative feedback triggers prompt audit, positive signals reinforce patterns, A/B prompt tracking
+- [ ] Linear/GitHub auto-triage — Auto-create issues from feedback clusters, link feedback to existing issues, dedup
+- [ ] Feedback-to-founder notifications — Close the loop: notify founders when their feedback ships, build engagement
+
+**Carried from v6.0 (DEFERRED)**
+- [ ] Real Boardy API integration — Blocked pending partnership and API credentials
+- [ ] Mux admin routes — Blocked pending Mux credentials
 
 ### Out of Scope
 
@@ -190,5 +194,9 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 | Decision sequencing enforced | No downstream work until upstream truth established | — Pending |
 | Diagnostic mode switching (silent) | Frameworks introduced by context, not user choice | — Pending |
 
+| Closed-loop feedback system | Feedback → AI analysis → prioritize → fix → notify founder — full cycle | — Pending |
+| Multi-channel collection | In-app + WhatsApp + SMS + analytics — no single point of failure | — Pending |
+| FRED self-improvement from feedback | Negative signals trigger prompt refinement, not just bug reports | — Pending |
+
 ---
-*Last updated: 2026-02-18 after v6.0 Full Platform Maturity milestone initialization*
+*Last updated: 2026-03-04 after v7.0 UX Feedback Loop milestone initialization*
