@@ -94,7 +94,12 @@ CREATE INDEX IF NOT EXISTS idx_notification_logs_channel ON notification_logs(ch
 ALTER TABLE notification_configs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
 
--- Notification configs policies
+-- ⚠️  WARNING: The policies below used current_setting('app.user_id', true) which
+-- the application NEVER sets, causing all user-scoped operations to silently fail.
+-- Fixed in migration 20260305000002_fix_notification_rls_policies.sql (AI-1418)
+-- which replaces these with auth.uid()::text-based policies.
+
+-- Notification configs policies (SUPERSEDED — see 20260305000002)
 CREATE POLICY "Users can view own notification configs"
   ON notification_configs FOR SELECT
   USING (user_id = current_setting('app.user_id', true));

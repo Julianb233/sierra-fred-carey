@@ -17,7 +17,7 @@ const NAV_ITEMS_LEFT = [
     matchExact: true,
   },
   {
-    name: "Chat",
+    name: "Mentor",
     href: "/chat",
     icon: MessageSquare,
     matchExact: false,

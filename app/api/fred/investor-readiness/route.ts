@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
 
     // Record journey event for dashboard "Investor Readiness" card
     // Fire-and-forget: don't block the response on this write
+    // NOTE: Uses user-scoped client — requires auth.uid()-based RLS on journey_events
+    // (fixed in migration 20260305000001_fix_journey_rls_policies.sql)
     supabase
       .from('journey_events')
       .insert({

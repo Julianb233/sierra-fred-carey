@@ -10,6 +10,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   MessageCircle,
+  GraduationCap,
   Download,
   PanelRight,
   PanelRightClose,
@@ -154,9 +155,9 @@ export default function ChatPage() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <MessageCircle className="h-4 w-4 text-[#ff6a1a]" />
+          <GraduationCap className="h-4 w-4 text-[#ff6a1a]" />
           <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-            Talk to Fred
+            Your Mentor
           </h1>
         </div>
 

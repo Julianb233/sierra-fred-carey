@@ -17,6 +17,9 @@ import {
   ArrowRight,
   TrendingUp,
   AlertTriangle,
+  CheckCircle2,
+  Circle,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -70,15 +73,46 @@ interface TimelineEvent {
   createdAt: string;
 }
 
+const FUNDAMENTALS = [
+  { key: "name", label: "Business Name", profileField: "company_name" },
+  { key: "sector", label: "Sector / Industry", profileField: "industry" },
+  { key: "positioning", label: "Positioning", profileField: "positioning" },
+  { key: "revenue", label: "Revenue Status", profileField: "revenue_range" },
+  { key: "team", label: "Team Size", profileField: "team_size" },
+  { key: "funding", label: "Funding Stage", profileField: "stage" },
+] as const;
+
 export default function JourneyDashboard() {
   useEffect(() => { localStorage.setItem("sahara_features_explored", "true"); }, []);
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
+  const [fundamentals, setFundamentals] = useState<Record<string, boolean>>({});
   const [insights, setInsights] = useState<Insight[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [stats, setStats] = useState<JourneyStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Load profile fundamentals
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) return;
+        const data = await res.json();
+        const profile = data.data || data;
+        const completed: Record<string, boolean> = {};
+        for (const f of FUNDAMENTALS) {
+          const val = profile[f.profileField];
+          completed[f.key] = val != null && val !== "" && val !== "unknown";
+        }
+        setFundamentals(completed);
+      } catch {
+        // Non-critical — fundamentals bar just won't show
+      }
+    }
+    loadProfile();
+  }, []);
 
   // Load data from real API endpoints
   useEffect(() => {
@@ -288,7 +322,7 @@ export default function JourneyDashboard() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            Your Founder Journey
+            Your Progress
           </h1>
           <p className="text-muted-foreground">
             Track your progress, insights, and milestones in one place
@@ -321,12 +355,63 @@ export default function JourneyDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-          Your Founder Journey
+          Your Progress
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground">
           Track your progress, insights, and milestones in one place
         </p>
       </div>
+
+      {/* Business Fundamentals Progress */}
+      {(() => {
+        const completedCount = Object.values(fundamentals).filter(Boolean).length;
+        const total = FUNDAMENTALS.length;
+        const pct = Math.round((completedCount / total) * 100);
+        return (
+          <Card className="border-[#ff6a1a]/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold">
+                  Business Fundamentals
+                </CardTitle>
+                <span className="text-sm text-muted-foreground">
+                  {completedCount} of {total} completed
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Progress value={pct} className="h-2" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {FUNDAMENTALS.map((f) => (
+                  <div
+                    key={f.key}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    {fundamentals[f.key] ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0" />
+                    )}
+                    <span className={fundamentals[f.key] ? "text-foreground" : "text-muted-foreground"}>
+                      {f.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {completedCount < total && (
+                <Link
+                  href="/chat"
+                  className="inline-flex items-center gap-1.5 text-sm text-[#ff6a1a] hover:text-[#ea580c] font-medium mt-1"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Chat with Fred to complete your profile
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Score Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

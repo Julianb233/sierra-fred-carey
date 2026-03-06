@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,20 @@ import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
 import { CourseCardInline } from "@/components/content/course-card-inline";
 import { ProviderCardInline } from "@/components/marketplace/provider-card-inline";
+
+/**
+ * Strip orphaned/unclosed markdown tokens during streaming to prevent
+ * raw asterisks from flashing in the UI.
+ */
+function cleanStreamingMarkdown(text: string): string {
+  // Remove trailing unclosed bold markers: odd number of ** at end
+  let cleaned = text.replace(/(\*{1,2})$/, "");
+  // Remove trailing unclosed underscores
+  cleaned = cleaned.replace(/(_+)$/, "");
+  // Remove trailing unclosed heading markers at end of stream
+  cleaned = cleaned.replace(/#+\s*$/, "");
+  return cleaned;
+}
 
 export interface Message {
   id: string;
@@ -47,14 +62,14 @@ interface ChatMessageProps {
   showTts?: boolean;
 }
 
-export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps) {
+export const ChatMessage = memo(function ChatMessage({ message, index, risks, showTts }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      transition={{ duration: 0.3, delay: Math.min(index, 3) * 0.05 }}
       className={cn(
         "flex items-start gap-3 mb-6",
         isUser ? "flex-row-reverse" : "flex-row"
@@ -64,7 +79,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.3, delay: index * 0.05 + 0.1 }}
+        transition={{ duration: 0.3, delay: Math.min(index, 3) * 0.05 + 0.05 }}
       >
         {isUser ? (
           <Avatar className="h-10 w-10 border-2 border-[#ff6a1a]/50 ring-2 ring-[#ff6a1a]/20">
@@ -88,7 +103,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
         <motion.div
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 0.2, delay: index * 0.05 + 0.15 }}
+          transition={{ duration: 0.2, delay: Math.min(index, 3) * 0.05 + 0.1 }}
           className={cn(
             "relative px-4 py-3 rounded-2xl shadow-lg group",
             isUser
@@ -129,7 +144,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
               "prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5",
               "prose-strong:text-foreground/90 prose-code:text-orange-400 prose-code:bg-white/10 prose-code:px-1 prose-code:rounded",
             )}>
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <ReactMarkdown>{message.isStreaming ? cleanStreamingMarkdown(message.content) : message.content}</ReactMarkdown>
               {message.isStreaming && (
                 <span
                   className="inline-block w-0.5 h-4 bg-current ml-0.5 align-middle animate-pulse"
@@ -185,7 +200,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.05 + 0.25 }}
+            transition={{ duration: 0.2, delay: Math.min(index, 3) * 0.05 + 0.15 }}
             className="flex flex-wrap gap-1.5 mt-2 px-1"
           >
             {risks.map((flag, i) => (
@@ -203,7 +218,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, delay: index * 0.05 + 0.2 }}
+          transition={{ duration: 0.2, delay: Math.min(index, 3) * 0.05 + 0.2 }}
           className="flex items-center gap-1 mt-1.5 px-2"
         >
           {/* TTS button -- assistant messages only, Pro+ tier */}
@@ -218,7 +233,7 @@ export function ChatMessage({ message, index, risks, showTts }: ChatMessageProps
       </div>
     </motion.div>
   );
-}
+});
 
 function formatTimestamp(date: Date): string {
   const now = new Date();

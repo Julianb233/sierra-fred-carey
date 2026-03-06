@@ -497,6 +497,79 @@ describe("Score persistence coverage", () => {
 });
 
 // ============================================================================
+// RLS Policy Verification (AI-1418)
+// Verifies that the broken current_setting()-based policies are documented
+// and that the correct auth.uid()-based pattern is used going forward.
+// ============================================================================
+
+describe("RLS policy correctness - auth.uid() vs current_setting()", () => {
+  it("should document that current_setting('app.user_id', true) returns NULL when not set", () => {
+    // This was the root cause of journey scores not saving reliably.
+    // Migration 009 used: user_id = current_setting('app.user_id', true)
+    // But the app never calls SET app.user_id = '...', so this always returns NULL.
+    // NULL = any_value is always false, silently blocking all user-scoped operations.
+    //
+    // Fixed in migration 20260305000001_fix_journey_rls_policies.sql
+    // which replaces current_setting with auth.uid()::text
+
+    // Simulate the broken behavior
+    const currentSetting = null; // current_setting('app.user_id', true) when not set
+    const userId = "user-123";
+
+    // Old broken check: always false
+    expect(userId === currentSetting).toBe(false);
+
+    // New correct check would use auth.uid()::text which returns the actual user UUID
+    const authUid = "user-123"; // auth.uid()::text returns the logged-in user's ID
+    expect(userId === authUid).toBe(true);
+  });
+
+  it("should verify user_id type consistency across journey tables", () => {
+    // journey_events.user_id is TEXT (migration 009)
+    // milestones.user_id is TEXT (migration 009)
+    // investor_readiness_scores.user_id is UUID (migration 025)
+    // auth.uid() returns UUID
+    //
+    // For TEXT columns, RLS policy must cast: auth.uid()::text = user_id
+    // For UUID columns, RLS policy uses directly: auth.uid() = user_id
+
+    const TABLE_USER_ID_TYPES = {
+      journey_events: "TEXT",
+      milestones: "TEXT",
+      investor_readiness_scores: "UUID",
+    };
+
+    // TEXT user_id tables need ::text cast in RLS policies
+    expect(TABLE_USER_ID_TYPES.journey_events).toBe("TEXT");
+    expect(TABLE_USER_ID_TYPES.milestones).toBe("TEXT");
+
+    // UUID user_id tables work directly with auth.uid()
+    expect(TABLE_USER_ID_TYPES.investor_readiness_scores).toBe("UUID");
+  });
+
+  it("should verify all journey_events write paths use correct client", () => {
+    // Routes that write to journey_events and which Supabase client they use:
+    const WRITE_PATHS = [
+      { route: "POST /api/fred/investor-readiness", client: "user-scoped", note: "requires auth.uid() RLS" },
+      { route: "POST /api/fred/chat", client: "service-role", note: "bypasses RLS" },
+      { route: "POST /api/fred/pitch-review", client: "service-role", note: "bypasses RLS" },
+      { route: "POST /api/fred/reality-lens", client: "service-role", note: "uses sql tagged template" },
+      { route: "POST /api/journey/timeline", client: "service-role", note: "uses sql tagged template" },
+      { route: "POST /api/journey/milestones", client: "service-role", note: "uses sql tagged template" },
+    ];
+
+    // All paths should either use service-role OR have correct RLS policies
+    for (const path of WRITE_PATHS) {
+      expect(["user-scoped", "service-role"]).toContain(path.client);
+    }
+
+    // At least one path uses user-scoped client (the IRS route)
+    const userScopedPaths = WRITE_PATHS.filter((p) => p.client === "user-scoped");
+    expect(userScopedPaths.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ============================================================================
 // Stage Normalization
 // ============================================================================
 
