@@ -1,195 +1,278 @@
-# Research Summary: Sahara v6.0
+# Research Summary -- v7.0 UX Feedback Loop
 
-**Project:** Sahara — AI-Powered Founder OS
-**Synthesized:** 2026-02-18
-**Overall Confidence:** HIGH (existing stack is mature; new additions well-documented)
+**Project:** Sahara v7.0
+**Synthesized:** 2026-03-04
+**Overall confidence:** MEDIUM-HIGH
+**Inputs:** STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md
 
 ---
 
 ## Executive Summary
 
-Sahara v6.0 adds three new product domains (content library, service marketplace, Boardy API) and hardens production infrastructure (Sentry, Twilio SMS, LiveKit voice, CI/CD) on a mature platform (210 pages, 774 tests passing, 93% UX audit pass rate).
+- **Sahara is not starting from scratch.** The existing A/B testing framework, WhatsApp-to-Linear pipeline, multi-channel conversation context, PostHog analytics, and Resend email infrastructure provide 60-70% of the scaffolding needed. v7.0 adds new tables, API routes, UI components, and scheduled jobs -- not new infrastructure.
 
-The critical insight: **most of the stack is already in place.** Only 6 new packages are needed (3 Mux for video, 2 Serwist for PWA, 1 axe-core for a11y testing). Stripe Connect for marketplace payments uses the existing Stripe SDK. Sentry, Twilio, LiveKit, PostHog, Recharts — all already installed. This is an extension milestone, not a rebuild.
+- **No new major dependencies required.** The entire feedback loop can be built on Supabase (storage), Vercel AI SDK (sentiment piggyback), Trigger.dev (scheduled analysis), and the existing A/B testing module. The only potential new library is `simple-statistics` for significance testing. This is a rare "extend everything, add nothing" milestone.
 
-The highest risks are external dependencies and timeline blockers:
-1. **Twilio A2P 10DLC** — 4-week registration timeline that MUST start before SMS code is written
-2. **LiveKit voice** — 3 CRITICAL bugs found (no remote audio playback, Docker container won't start, room name format breaks tracking)
-3. **Boardy API** — No public documentation; requires partnership agreement; LOW confidence
-4. **Stripe Connect** — Must be isolated from existing subscription webhooks to avoid breaking billing
-5. **CI/CD pipeline** — Every quality gate uses `|| true`, hiding failures from all v6.0 work
+- **The critical differentiator is RLHF-Lite (D-2): feedback-driven prompt self-refinement with human-in-the-loop approval.** This is what makes Sahara's feedback loop more than a thumbs-up counter. Most AI products collect feedback for humans to act on. Sahara would use it to propose prompt patches, A/B test them, and deploy winners -- a genuine self-improving AI coaching engine.
+
+- **The existential risk is FRED voice drift (Pitfall C1).** Feedback-driven optimization naturally favors agreeable, verbose, hedging language. FRED's core value is blunt truth-telling. An unguarded optimizer will sand down the edges that make FRED valuable. The immutable core prompt + layered supplemental guidance architecture is non-negotiable and must be in place before any optimization loop runs.
+
+- **The biggest operational risk is over-engineering.** Building a full feedback analytics platform (Thematic, Canny, Userpilot) inside Sahara would be scope creep. The correct scope is a lean, tightly integrated loop: collect signals, detect patterns, propose improvements, test them, deploy winners, notify users. No more.
 
 ---
 
-## Key Findings
+## Stack Consensus
 
-### From STACK.md
+**Recommendation: Zero new infrastructure. Extend everything that exists.**
 
-| New Addition | Tool | Status | New Packages? |
-|---|---|---|---|
-| Video hosting | Mux (player + uploader + node) | 3 new packages | Yes |
-| Marketplace payments | Stripe Connect Express | Already installed | No |
-| Booking/scheduling | Custom Supabase tables | No external tool | No |
-| Error monitoring | Sentry | Already installed | No |
-| Voice hardening | LiveKit | Already installed | No |
-| SMS activation | Twilio | Already installed | No |
-| Boardy API | Direct REST (no SDK) | No package available | No |
-| CI/CD expansion | Playwright | Already installed | No |
-| Dashboard analytics | PostHog + Recharts | Already installed | No |
-| PWA refinement | Serwist (next-pwa successor) | 2 new packages | Yes |
-| Accessibility testing | axe-core/playwright | 1 new dev package | Yes |
-| FRED intelligence | Vercel AI SDK + XState | Already installed | No |
+| Technology | Status | v7.0 Role |
+|------------|--------|-----------|
+| Supabase | Existing | 3 new tables: `feedback_signals`, `feedback_sessions`, `feedback_insights` |
+| Vercel AI SDK | Existing | Piggyback sentiment extraction on FRED's LLM calls (structured output field) |
+| Trigger.dev | Existing | Daily pattern detection job, weekly prompt refinement proposals (mirrors WhatsApp monitor pattern) |
+| PostHog | Existing | Feedback event tracking, funnel analysis for feedback submission rates |
+| Resend | Existing | Close-the-loop notification emails, weekly feedback digest to admin |
+| `lib/ai/ab-testing.ts` | Existing | Extend `getVariantStats()` with feedback metrics (thumbs ratio, sentiment) |
+| `simple-statistics` | NEW (optional) | Chi-squared / t-test for A/B significance when D-5 is implemented |
 
-**Total new packages: 6** — Everything else extends existing infrastructure.
+**Alternatives rejected:** Dedicated feedback SaaS (Canny, UserVoice), separate NLP service (AWS Comprehend), external dashboard tool (Retool), external prompt eval tool (Braintrust, PromptLayer). All add dependencies that duplicate existing Sahara capabilities.
 
-### From FEATURES.md
+---
 
-**Content Library:**
-- Table stakes: Curated catalog, stage filtering, video+text, progress tracking, search, mobile-friendly, bookmarks
-- Differentiators: FRED-recommended content, content-to-action bridge, adaptive curriculum, "Ask FRED about this"
-- Anti-features: Full LMS, user-generated content, gamification, live cohorts, AI-generated courses, certificates
+## Feature Priorities
 
-**Service Marketplace:**
-- Table stakes: Provider directory, profiles, search/filter, reviews, contact mechanism, vetting badge
-- Differentiators: FRED-triggered recommendations, context-aware matching, task-to-provider pipeline, starter packages
-- Anti-features: Full escrow, in-platform project management, automated matching algorithm, provider dashboard, real-time chat
+### Table Stakes (must ship for v7.0 to be credible)
 
-**Investor Matching (Boardy):**
-- Table stakes: Investor profiles, stage/sector filtering, match scoring, warm intro paths, pipeline CRM, outreach drafts
-- Differentiators: Readiness-gated matching (unique to Sahara), voice-first Boardy matching, investor prep coaching, post-meeting intelligence
-- Anti-features: Building own investor database, automated email sending, intro brokering, real-time activity feeds
+| ID | Feature | Complexity | Confidence | Rationale |
+|----|---------|------------|------------|-----------|
+| TS-4 | Feedback data model | Low-Medium | HIGH | Foundation for everything; 3 tables + indexes + RLS |
+| TS-1 | Thumbs up/down on FRED responses | Low | HIGH | Universal pattern (ChatGPT, Claude, Copilot); absence signals "we don't care about quality" |
+| TS-2 | Feedback admin dashboard | Medium | HIGH | Fred Cary is already demanding visibility via WhatsApp; extend existing `app/admin/` |
+| TS-3 | Sentiment tracking on conversations | Medium | MEDIUM | LLM piggyback approach; flag sessions where sentiment degrades sharply |
 
-### From ARCHITECTURE.md
+### Differentiators (ordered by build priority based on dependencies)
 
-**Data models designed** for:
-- Content library: 5 tables (courses, modules, lessons, progress, recommendations)
-- Service marketplace: 4 tables (providers, listings, bookings, reviews)
-- Boardy integration: Uses existing strategy pattern (`RealBoardyClient` swaps in for `MockBoardyClient`)
+| ID | Feature | Complexity | Confidence | Depends On |
+|----|---------|------------|------------|------------|
+| D-5 | A/B testing + feedback metrics | Medium | HIGH | TS-1, TS-4 |
+| D-4 | Multi-channel feedback aggregation | Medium-High | MEDIUM | TS-1, TS-4 |
+| D-1 | AI-powered categorization and pattern detection | Medium | MEDIUM | TS-3, TS-4 |
+| D-2 | Prompt self-refinement (RLHF-Lite) | High | MEDIUM | D-1, D-5 |
+| D-3 | Close-the-loop notifications | Medium | MEDIUM | D-1 |
 
-**Key integration points:**
-- FRED recommends content via new AI tool: `recommend_content(course_id, reason)`
-- FRED triggers provider recommendations via conversation need detection
-- Content-to-action bridge links course completion to FRED conversation modes
-- Marketplace bookings extend existing Stripe webhook handler with Connect events
+### Defer to v8+ (anti-features)
 
-### From PITFALLS.md
+- Full RLHF / model fine-tuning (wrong scale, wrong risk profile)
+- Real-time feedback popups or interruptions (destroys coaching flow)
+- NPS surveys inside FRED chat (conflates coaching with marketing)
+- Public feedback board / feature voting (exposes roadmap, creates expectation debt)
+- Automated prompt deployment without human review (prompt injection / regression risk)
 
-| # | Pitfall | Severity | Phase | Key Prevention |
+---
+
+## Architecture Blueprint
+
+### Three-Layer Design
+
+```
+COLLECTION          ANALYSIS              ACTION
+-----------         ----------            ------
+Thumbs UI     -->   Sentiment Track  -->  Prompt Patches
+Post-call     -->   Pattern Detect   -->  A/B Experiments
+SMS rating    -->   AI Categorize    -->  Linear Issues
+Implicit      -->   Trend Analysis   -->  Close-the-Loop
+WhatsApp      -->                    -->  Admin Dashboard
+      |                 |                      |
+      v                 v                      v
++-----------------------------------------------------------+
+|              FEEDBACK DATA LAYER (Supabase)                |
+| feedback_signals | feedback_sessions | feedback_insights   |
+| Links to: ai_requests, fred_episodic_memory, ab_variants   |
++-----------------------------------------------------------+
+```
+
+### Key Integration Points
+
+1. **Feedback -> AI Requests:** `feedback_signals.ai_request_id` links every thumbs-up/down to the exact prompt version, model, and A/B variant that produced the response. Full traceability.
+2. **Sentiment -> FRED Pipeline:** Sentiment extraction piggybacks on FRED's existing LLM calls via a structured output field. No separate NLP service.
+3. **Pattern Detection -> Trigger.dev:** Daily scheduled job (same pattern as `sahara-whatsapp-monitor.ts`) clusters feedback, identifies themes, writes to `feedback_insights`.
+4. **Prompt Patches -> A/B Testing:** Proposed patches enter the existing `ab_experiments` / `ab_variants` tables. Canary rollout via existing variant assignment.
+5. **Close-the-Loop -> Resend:** Resolution notifications use existing `lib/email/` infrastructure.
+
+### Key Architectural Patterns
+
+- **Fire-and-forget for feedback writes** -- never block the chat pipeline
+- **Scheduled batch analysis, not real-time** -- individual signals are noisy; patterns emerge over time
+- **Extend, don't replace** -- wire into PostHog, Linear, A/B testing, admin panel; do not build parallel systems
+- **Human-in-the-loop for prompt changes** -- AI proposes, admin reviews, A/B validates, admin promotes
+- **Self-contained file structure** -- `lib/feedback/`, `components/feedback/`, `app/api/feedback/` to minimize git conflicts with concurrent agents
+
+### Schema (3 new tables)
+
+- `feedback_signals` -- explicit feedback (thumbs, ratings, comments) linked to `ai_requests`
+- `feedback_sessions` -- session-level aggregates (sentiment arc, abandonment, engagement)
+- `feedback_insights` -- AI-generated pattern analysis with status workflow (new -> reviewed -> actioned -> resolved)
+
+---
+
+## Critical Pitfalls
+
+### Top 5 Risks (MUST address)
+
+| # | Pitfall | Severity | Phase | Prevention |
+|---|---------|----------|-------|------------|
+| C1 | FRED voice drift from prompt optimization | CRITICAL | 1 | Immutable core prompt + layered supplemental guidance + voice regression test suite (20+ scenarios) + human gate |
+| C2 | Feedback-driven issue flood without deduplication | CRITICAL | 2 | Semantic dedup before Linear issue creation + 4-hour aggregation windows + severity escalation not duplication |
+| C3 | A/B testing without statistical controls | CRITICAL | 3 | Pre-registration + minimum sample size (500 sessions/variant) + segmented analysis + model drift guard |
+| H1 | Feedback fatigue from wrong timing/frequency | HIGH | 2 | Session-end only + throttle per user (1 detailed/week) + passive signals first + progressive disclosure |
+| H3 | Performance impact on chat pipeline | HIGH | 2 | Fire-and-forget writes + lazy-load widgets + batch Supabase writes + <50ms p95 budget + <20KB bundle budget |
+
+### Secondary Risks (address but lower urgency)
+
+| # | Pitfall | Severity | Phase | Key Mitigation |
 |---|---------|----------|-------|----------------|
-| 1 | Sentry DSN activation breaks build (missing SENTRY_AUTH_TOKEN in CI) | CRITICAL | Infra | Set ALL 4 env vars simultaneously |
-| 2 | Twilio A2P 10DLC blocks SMS by 4+ weeks | CRITICAL | Infra | Start registration IMMEDIATELY |
-| 3 | LiveKit: users hear nothing (no remote audio track handling) | CRITICAL | Voice | Add TrackSubscribed handler or refactor to components-react |
-| 4 | Voice agent Docker container won't start (tsx in devDeps) | CRITICAL | Voice | Pre-compile TypeScript or move tsx to deps |
-| 5 | Room name format breaks all voice call tracking | CRITICAL | Voice | Fix userId extraction in webhook |
-| 6 | Stripe Connect conflicts with subscription webhooks | MAJOR | Marketplace | Separate webhook endpoint for Connect |
-| 7 | Video hosting choice locks in cost structure | MAJOR | Content | Use Mux, abstract behind component interface |
-| 8 | Marketplace cold start — no providers, no value | MAJOR | Marketplace | Curate 5-10 providers BEFORE launch |
-| 9 | Boardy API — external dependency with unknown reliability | MAJOR | Boardy | Circuit breaker, mock fallback, cache responses |
-| 10 | CI/CD `|| true` hides all failures | MAJOR | Infra | Remove `|| true` from test/typecheck/lint steps |
+| H2 | Negativity bias in feedback data | HIGH | 2-3 | Stratified sampling by tier + separate bugs from quality feedback + weight by user value |
+| H4 | WhatsApp API compliance (BrowserBase scraping) | HIGH | 1 | Migrate to official WhatsApp Business API before building notifications on top |
+| H5 | Admin dashboard becomes data graveyard | HIGH | 4 | Build triage workflow not dashboard + weekly digest email + link themes to Linear |
+| M1 | Sentiment overconfidence on short text | MEDIUM | 3 | Classify confidence alongside sentiment + context-aware analysis + "coaching discomfort" category |
+| M3 | GDPR concerns with feedback + AI analysis | MEDIUM | 1-2 | Explicit consent at collection + data minimization before AI analysis + 90-day retention + right to deletion |
+
+### Sahara-Specific Risks
+
+- **F1:** Pre-commit hooks auto-revert changes to `dashboard/layout.tsx` -- use wrapper/adapter pattern for feedback UI
+- **F2:** 335 existing lint errors hide new regressions -- baseline snapshot before Phase 1
+- **F3:** FRED chat latency already a pain point -- profile pipeline before and after each feature addition
+- **F4:** Concurrent agents cause git conflicts -- self-contained `lib/feedback/` directory structure
+- **F5:** Free-tier users give biased negative feedback -- tier-aware weighting, minimum 5-message threshold
 
 ---
 
 ## Implications for Roadmap
 
-### Suggested Phase Structure
+### Suggested Phase Structure (6 phases)
 
-**Wave 1 — Infrastructure Foundation (parallel, no dependencies):**
+**Phase 0: Pre-Work (Baseline and Guardrails)**
+- Snapshot existing lint errors and test failures (delta checking for CI)
+- Mark FRED core prompt as immutable constant
+- Establish `lib/feedback/`, `components/feedback/`, `app/api/feedback/` directory structure
+- Addresses: F1 (pre-commit hooks), F2 (lint baseline), C1 (voice protection)
+- Uses: Existing codebase
+- Standard patterns: Yes, skip research
 
-1. **Phase 59: Sentry + Production Monitoring**
-   - Addresses: Pitfall #1 (build-breaking DSN), Pitfall #10 (invisible CI failures)
-   - Uses: Existing @sentry/nextjs, add edge config
-   - Deliverables: Error tracking live, source maps uploading, alert rules configured, CI `|| true` removed
-   - Action item: Start Twilio 10DLC registration in parallel (4-week lead time)
+**Phase 1: Foundation (Data Model + Voice Protection)**
+- Create `feedback_signals`, `feedback_sessions`, `feedback_insights` tables with RLS
+- Build layered prompt architecture (immutable core + mutable supplemental layer)
+- Create voice regression test suite (20+ canonical FRED scenarios)
+- Add GDPR consent mechanism to feedback collection points
+- Addresses: TS-4, C1 prevention, M3 consent
+- Avoids: C1 (voice drift) by establishing guardrails before any optimization
+- Uses: Supabase (existing), `FRED_CAREY_SYSTEM_PROMPT`
+- Standard patterns: Yes, database schema + RLS
 
-2. **Phase 60: CI/CD & Testing Expansion**
-   - Addresses: Pitfall #10 (invisible failures), Feature: visual regression, staging
-   - Uses: Existing Playwright, axe-core (new)
-   - Deliverables: Playwright in CI, visual regression baselines, staging branch, Node 22, a11y tests
+**Phase 2: Collection (Feedback UI + Explicit Signals)**
+- Thumbs up/down component on FRED chat responses (fire-and-forget writes)
+- Progressive disclosure: thumbs-down expands to category selector + optional text
+- Tier-aware collection (no widgets for users with <5 messages; weight Pro/Studio 3-5x)
+- Performance validation (<50ms p95 latency impact, <20KB bundle addition)
+- Addresses: TS-1, D-4 (chat channel), H1 prevention, H3 prevention
+- Avoids: H1 (feedback fatigue) via session-end timing + throttling; H3 (performance) via fire-and-forget + lazy loading
+- Uses: React components, Supabase, existing `use-fred-chat.ts` hook (via wrapper, not modification)
+- Needs research: Feedback widget UX for voice call post-session rating
 
-3. **Phase 61: Twilio SMS Activation**
-   - Addresses: Pitfall #2 (10DLC timeline blocker)
-   - Uses: Existing Twilio SDK
-   - Deliverables: A2P 10DLC registered, real SMS delivery, opt-in/opt-out compliance
-   - Note: Registration started in Phase 59, code built in Phase 61
+**Phase 3: Visibility (Admin Dashboard + Sentiment)**
+- Feedback admin section in existing `app/admin/` panel
+- Triage workflow (New -> Reviewed -> Actioned -> Resolved -> Communicated), not just charts
+- Sentiment extraction piggybacking on FRED's LLM calls (structured output field)
+- Flagged sessions where sentiment degrades sharply
+- Weekly feedback digest email to admin via Resend
+- Addresses: TS-2, TS-3, H5 prevention
+- Avoids: H5 (data graveyard) by building workflow not dashboard; M1 (sentiment overconfidence) via confidence scores + coaching discomfort category
+- Uses: Existing `app/admin/`, Vercel AI SDK structured output, Resend
+- Standard patterns: Admin CRUD + LLM structured output
 
-**Wave 2 — Voice Hardening (depends on Sentry for monitoring):**
+**Phase 4: Intelligence (Pattern Detection + A/B Integration)**
+- Trigger.dev daily job for AI-powered feedback categorization and pattern detection
+- Deduplication logic for Linear issue creation (semantic matching + aggregation windows)
+- Extend `getVariantStats()` with feedback metrics (thumbs ratio, sentiment per variant)
+- Statistical significance testing (minimum sample sizes, segmented analysis)
+- Pre-registration template for experiments
+- Addresses: D-1, D-5, C2 prevention, C3 prevention
+- Avoids: C2 (issue flood) via dedup; C3 (bad stats) via significance testing
+- Uses: Trigger.dev, `lib/ai/ab-testing.ts`, `simple-statistics` (new)
+- Needs research: Optimal aggregation windows, sample size thresholds for Sahara's user base
 
-4. **Phase 62: Voice Agent Production Hardening**
-   - Addresses: Pitfalls #3, #4, #5 (all CRITICAL voice bugs)
-   - Uses: Existing LiveKit packages
-   - Deliverables: Remote audio working, Docker container starts, room name tracking fixed, reconnection logic, call recording
-
-**Wave 3 — Core Improvements (parallel, depends on infra):**
-
-5. **Phase 63: FRED Intelligence Upgrade**
-   - Addresses: Feature: better responses, memory, mode switching
-   - Uses: Existing Vercel AI SDK + XState
-   - Deliverables: New FRED tools (lookup_course, find_provider), improved memory retrieval, conversation summarization
-
-6. **Phase 64: Dashboard & Analytics Enhancement**
-   - Addresses: Feature: richer visualizations, engagement tracking
-   - Uses: Existing PostHog + Recharts
-   - Deliverables: Founder metrics dashboard, historical trends, engagement scoring, export
-
-7. **Phase 65: Mobile / UX Polish**
-   - Addresses: Feature: PWA, animations, accessibility
-   - Uses: Serwist (new), axe-core (new), existing Framer Motion
-   - Deliverables: Offline content caching, push notification improvements, WCAG audit pass
-
-**Wave 4 — New Features (parallel, depends on FRED upgrade for integration):**
-
-8. **Phase 66: Content Library — Schema & Backend**
-   - Addresses: Feature: educational content hub
-   - Uses: Mux (new), existing Supabase
-   - Deliverables: 5 tables, Mux integration, API routes, admin content management, tier gating
-   - Avoids: Pitfall #7 (use Mux, abstract player)
-
-9. **Phase 67: Content Library — Frontend & FRED Integration**
-   - Addresses: Feature: course catalog, FRED recommendations
-   - Uses: Mux Player React (new), existing FRED tools
-   - Deliverables: Course catalog, video player, progress tracking, FRED content recommendations, "Ask FRED" button
-
-10. **Phase 68: Service Marketplace — Schema & Backend**
-    - Addresses: Feature: vetted provider marketplace
-    - Uses: Stripe Connect (existing SDK), existing Supabase
-    - Deliverables: 4 tables, Stripe Connect webhook, provider onboarding, booking flow
-    - Avoids: Pitfall #6 (separate Connect webhook), Pitfall #8 (curate providers first)
-
-11. **Phase 69: Service Marketplace — Frontend & Discovery**
-    - Addresses: Feature: provider directory, FRED integration
-    - Uses: Existing UI components
-    - Deliverables: Provider directory, profiles, search/filter, reviews, FRED-triggered recommendations
-
-**Wave 5 — External Integration (depends on partnership):**
-
-12. **Phase 70: Real Boardy API Integration**
-    - Addresses: Feature: live investor matching
-    - Uses: Direct REST API (no SDK)
-    - Deliverables: RealBoardyClient implementation, circuit breaker, cached fallback
-    - Avoids: Pitfall #9 (external dependency risk)
-    - Risk: LOW confidence — requires Boardy partnership. If unavailable, enhance mock with curated data.
+**Phase 5: Self-Improvement (RLHF-Lite + Close-the-Loop)**
+- Prompt self-refinement: feedback-weighted few-shot examples + category-driven prompt patches
+- Prompt version control in `ab_experiments` / `ab_variants` tables
+- Human-in-the-loop approval workflow in admin dashboard
+- Close-the-loop monthly digest: "Here's what we improved based on your feedback"
+- Staleness cutoff (30 days), severity threshold, opt-in notifications
+- Addresses: D-2, D-3, M2 prevention
+- Avoids: C1 (voice drift) via immutable core + regression tests from Phase 1; M2 (notification spam) via batching + throttling
+- Uses: A/B testing infrastructure, Resend, admin approval queue
+- Needs research: Prompt patch generation strategies, regression testing automation, feedback-to-fix linking data model
 
 ### Phase Ordering Rationale
 
-| Grouping | Rationale |
-|----------|-----------|
-| Infrastructure first | Sentry catches bugs in all subsequent phases. CI prevents regressions. 10DLC has 4-week lead time. |
-| Voice before features | 3 CRITICAL bugs make voice non-functional. Fix before adding more features on top. |
-| FRED upgrade before content/marketplace | FRED tools (lookup_course, find_provider) must exist before content/marketplace integrate with FRED. |
-| Content before marketplace | Content creates "learn" experience; marketplace creates "do" experience. Natural progression. |
-| Boardy last | Highest external risk. If partnership doesn't materialize, everything else still ships. |
+1. **Phase 0 before everything:** Cannot measure regressions without a baseline; cannot protect FRED's voice without guardrails already in place.
+2. **Phase 1 (data model) before Phase 2 (collection):** Nowhere to store feedback without the schema. GDPR consent must exist before collecting anything.
+3. **Phase 2 (collection) before Phase 3 (visibility):** Dashboard is empty without data. 2-4 weeks of data accumulation needed before analysis is meaningful.
+4. **Phase 3 (visibility) before Phase 4 (intelligence):** Admin needs to see raw feedback before trusting AI-generated insights. Builds confidence in the system.
+5. **Phase 4 (intelligence) before Phase 5 (self-improvement):** RLHF-Lite needs pattern detection (D-1) and feedback-aware A/B testing (D-5) as inputs. Cannot propose prompt patches without knowing what is wrong.
+6. **Phase 5 is the capstone:** It is the hardest and highest-value phase. It requires all prior infrastructure and accumulated data.
 
-### Research Flags for Phases
+### Parallel Track Opportunities
 
-| Phase | Research Need | Reason |
-|-------|-------------|--------|
-| 59-61 | SKIP | Well-documented: Sentry docs, Twilio 10DLC docs, Playwright docs |
-| 62 | SKIP | Voice audit reports already exist (.planning/VOICE-*-AUDIT.md) with specific fixes |
-| 63 | `/gsd:research-phase` | FRED intelligence improvements benefit from reviewing latest AI SDK patterns |
-| 64-65 | SKIP | Standard PostHog/Recharts/PWA patterns |
-| 66-67 | SKIP | Mux has Next.js starter kit; data models designed in ARCHITECTURE.md |
-| 68-69 | SKIP | Stripe Connect well-documented; data models designed |
-| 70 | `/gsd:research-phase` | Boardy API docs needed from partnership; integration approach TBD |
+- **Track A (User-facing):** Phase 2 collection can run in parallel with Phase 1 schema work (schema first, then UI immediately after)
+- **Track B (Admin):** Phase 3 dashboard can begin design/wireframing while Phase 2 ships
+- **Phases 4 and 5 are sequential:** Intelligence feeds self-improvement
+
+### Research Flags
+
+| Phase | Research Needed? | Reason |
+|-------|-----------------|--------|
+| Phase 0 | No | Standard engineering baseline work |
+| Phase 1 | No | Standard Supabase schema + RLS; FRED prompt architecture documented |
+| Phase 2 | Light | Voice call post-session UX; SMS rating collection mechanics |
+| Phase 3 | No | Standard admin CRUD + LLM structured output |
+| Phase 4 | Yes | Statistical significance thresholds for Sahara's scale; aggregation window tuning |
+| Phase 5 | Yes | Prompt patch generation strategies; regression testing automation; feedback-to-fix linking |
+
+---
+
+## Cross-Cutting Concerns
+
+These affect ALL phases and must be tracked throughout:
+
+1. **FRED Voice Preservation:** Every phase that touches FRED's output must validate against the voice regression test suite. The immutable core prompt + supplemental guidance layer is a hard constraint.
+
+2. **Performance Budget:** <50ms p95 latency increase on chat pipeline; <20KB bundle addition for feedback widgets. Measure before and after every phase.
+
+3. **GDPR / Data Privacy:** Consent at collection, data minimization before AI analysis, 90-day retention policy, right-to-deletion cascade. Must be designed in from Phase 1, not bolted on.
+
+4. **Tier-Aware Design:** All feedback collection, analysis, and optimization must segment by tier. Free-tier feedback is informational, not directional. Pro/Studio feedback drives prompt optimization.
+
+5. **Fire-and-Forget Pattern:** All feedback writes are asynchronous and non-blocking. This is not optional -- FRED latency is already a documented pain point.
+
+6. **Pre-Commit Hook Workaround:** Feedback UI must use wrapper/adapter components, not modify `dashboard/layout.tsx` or `documents/new/page.tsx` directly.
+
+7. **Concurrent Agent Safety:** Self-contained directory structure (`lib/feedback/`, `components/feedback/`, `app/api/feedback/`). Minimize touchpoints with shared files.
+
+---
+
+## Open Questions
+
+Aggregated from all 4 research files:
+
+1. **Statistical thresholds:** What sample size is sufficient for A/B significance testing given Sahara's current user base? Is 500 sessions/variant realistic?
+2. **Voice call feedback UX:** How to prompt for rating after a LiveKit voice session without disrupting the experience? Timing and modality are unclear.
+3. **SMS feedback collection:** Character limits and response parsing for rating collection via SMS. How to handle non-numeric responses?
+4. **Prompt versioning schema:** How to track which prompt version (core + supplemental + few-shot examples) produced which response? The current `ab_variants` table may need extension.
+5. **Regression testing automation:** How to automatically validate that a prompt patch for one topic does not degrade another? What does the test harness look like?
+6. **Feedback-to-fix linking:** Data model for connecting a Linear issue resolution back to the specific `feedback_signals` records that originated it. Required for close-the-loop.
+7. **WhatsApp Business API migration timeline:** When to migrate off BrowserBase scraping? Before or during v7.0? What is the effort estimate?
+8. **Implicit signal calibration:** What constitutes "session abandonment" vs. "user got what they needed quickly"? Heuristic design for implicit feedback.
+9. **"Coaching discomfort" sentiment category:** How to distinguish "FRED was too harsh" (real issue) from "FRED challenged my assumptions and it was uncomfortable" (working as designed)?
 
 ---
 
@@ -197,38 +280,42 @@ The highest risks are external dependencies and timeline blockers:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Only 6 new packages. Everything else extends existing. |
-| Features | MEDIUM-HIGH | Table stakes clear. FRED integration patterns designed but need validation during build. |
-| Architecture | HIGH | Data models designed. Integration points mapped. Existing patterns preserved. |
-| Pitfalls | HIGH | 5 CRITICAL + 5 MAJOR pitfalls identified with specific prevention strategies. |
+| Stack | HIGH | Zero new infrastructure; extending proven existing stack |
+| Table Stakes Features | HIGH | Universal patterns (thumbs, dashboards) with extensive competitive examples |
+| Differentiator Features | MEDIUM | Individual components proven; full integration (especially D-2 RLHF-Lite) is novel |
+| Architecture | HIGH | Extends existing Sahara patterns; three-layer design is straightforward |
+| Critical Pitfalls (C1-C3) | HIGH | Based on direct codebase analysis + well-documented industry anti-patterns |
+| High Pitfalls (H1-H5) | MEDIUM-HIGH | UX patterns well-studied; Sahara-specific timing/impact extrapolated |
+| Medium Pitfalls (M1-M4) | MEDIUM | Known risks with clear mitigations; severity depends on user geography and scale |
+| FRED-Specific Risks (F1-F5) | HIGH | Based on documented project history and codebase constraints |
 
-### Gaps to Address
-
-1. **Boardy API documentation** — Cannot implement without partner API access. Contact Boardy team.
-2. **Mux pricing at scale** — Model costs for Year 1 before committing to video hosting.
-3. **Marketplace cold start** — Provider recruitment plan needed before marketplace launch.
-4. **Twilio 10DLC registration** — Must start immediately (4-week timeline).
-5. **Voice agent audit fixes** — 3 detailed audit reports exist; fixes are documented but unimplemented.
+**Overall: MEDIUM-HIGH.** The domain is well-understood and Sahara's existing infrastructure provides strong scaffolding. The main uncertainty is in Phase 5 (RLHF-Lite) where the full integration is genuinely novel. Phases 0-4 use standard patterns with high confidence.
 
 ---
 
-## Ready for Roadmap
+## Sources
 
-This research provides clear guidance for roadmap construction:
+Aggregated from all research files. Confidence annotations reflect cross-referencing across multiple research dimensions.
 
-1. **Stack validated** — 6 new packages, everything else extends existing infrastructure
-2. **Phase order is risk-driven** — Infrastructure first (catches bugs), voice fixes (CRITICAL), then features
-3. **Critical risks identified** — 10DLC timeline, voice bugs, Boardy dependency, Stripe Connect isolation
-4. **Feature scope clear** — Table stakes, differentiators, and anti-features defined for all 3 new domains
-5. **Data models designed** — Content library (5 tables), marketplace (4 tables), Boardy (strategy pattern swap)
+**First-Party (HIGH):**
+- Sahara codebase: `lib/ai/ab-testing.ts`, `trigger/sahara-whatsapp-monitor.ts`, `lib/channels/conversation-context.ts`, `lib/ai/prompts.ts`, `lib/email/`
+- Sahara `package.json` and existing infrastructure
 
-**Recommended immediate actions:**
-- Start A2P 10DLC registration (4-week blocker)
-- Create Sentry project and obtain DSN + auth token
-- Contact Boardy team for API partnership
-- Curate initial 5-10 service providers for marketplace launch
+**Industry Research (MEDIUM-HIGH):**
+- [Braintrust: Prompt Evaluation Tools 2025](https://www.braintrust.dev/articles/best-prompt-evaluation-tools-2025)
+- [Statsig: Prompt Regression Testing](https://www.statsig.com/perspectives/slug-prompt-regression-testing)
+- [Statsig: When Statistical Significance Misleads](https://www.statsig.com/perspectives/abtesting-llms-misleading)
+- [Microsoft Copilot Studio: Collect Thumbs Feedback](https://learn.microsoft.com/en-us/power-platform/release-plan/2025wave1/microsoft-copilot-studio/collect-thumbs-up-or-down-feedback-comments-agents)
+- [Chatarmin: WhatsApp Messaging Limits 2026](https://chatarmin.com/en/blog/whats-app-messaging-limits)
 
----
+**UX and Feedback Patterns (MEDIUM):**
+- [Zonka Feedback: Thumbs Up/Down Surveys](https://www.zonkafeedback.com/blog/collecting-feedback-with-thumbs-up-thumbs-down-survey)
+- [Thematic: Customer Feedback Loop Guide](https://getthematic.com/insights/customer-feedback-loop-guide)
+- [Userpilot: AI Customer Feedback Analysis](https://userpilot.com/blog/ai-customer-feedback-analysis/)
+- [FeatureBot: Closing the Feedback Loop](https://featurebot.com/blog/closing-the-feedback-loop)
+- [OrangeLoops: UX Patterns for AI Assistants](https://orangeloops.com/2025/07/9-ux-patterns-to-build-trustworthy-ai-assistants/)
 
-*Synthesized from: STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md*
-*Research date: 2026-02-18*
+**Compliance and Regulatory (MEDIUM):**
+- [SecurePrivacy: AI GDPR Compliance 2025](https://secureprivacy.ai/blog/ai-gdpr-compliance-challenges-2025)
+- [Orrick: EDPB Opinion on AI and GDPR](https://www.orrick.com/en/Insights/2025/03/The-European-Data-Protection-Board-Shares-Opinion-on-How-to-Use-AI-in-Compliance-with-GDPR)
+- [GMCSCO: WhatsApp API Compliance 2026](https://gmcsco.com/your-simple-guide-to-whatsapp-api-compliance-2026/)
