@@ -1,0 +1,9 @@
+export const FEEDBACK_CATEGORIES = ['irrelevant', 'incorrect', 'too_vague', 'too_long', 'wrong_tone', 'coaching_discomfort', 'helpful', 'other'] as const
+export const FEEDBACK_CHANNELS = ['chat', 'voice', 'sms', 'whatsapp'] as const
+export const SIGNAL_TYPES = ['thumbs_up', 'thumbs_down', 'sentiment', 'implicit'] as const
+export const INSIGHT_STATUSES = ['new', 'reviewed', 'actioned', 'resolved', 'communicated'] as const
+export const SEVERITY_LEVELS = ['low', 'medium', 'high', 'critical'] as const
+export const TIER_WEIGHTS = { free: 1.0, pro: 3.0, studio: 5.0 } as const
+export const RETENTION_DAYS = 90
+export const MIN_MESSAGES_FOR_FEEDBACK = 5
+export const MAX_DETAILED_FEEDBACK_PER_WEEK = 1
