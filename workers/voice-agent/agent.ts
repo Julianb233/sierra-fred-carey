@@ -76,7 +76,8 @@ export default defineAgent({
 
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
-    const tts = new elevenlabs.TTS({ voiceId: 'fpxks3eObfRI1jkeCD2k' });
+    // Use re-cloned Fred Sahara voice (old ID fpxks3eObfRI1jkeCD2k is orphaned/workspace-scoped)
+    const tts = new elevenlabs.TTS({ voiceId: 'aaQizCmJvktUuEsdq9xS' });
 
     const session = new AgentSession({
       vad: ctx.proc.userData.vad as silero.VAD,
@@ -115,11 +116,6 @@ export default defineAgent({
       await session.close();
     });
 
-    await session.start({
-      agent: new FredAgent(),
-      room: ctx.room,
-    });
-
     try {
       await ctx.connect();
     } catch (connectErr) {
@@ -127,7 +123,32 @@ export default defineAgent({
       return;
     }
 
-    console.log('[Fred Voice Agent] Connected, sending greeting...');
+    console.log('[Fred Voice Agent] Connected to room, waiting for participant...');
+
+    // Wait for a participant to join (with 60s timeout to avoid hanging forever)
+    const participantPromise = ctx.waitForParticipant();
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 60_000),
+    );
+    const participant = await Promise.race([participantPromise, timeoutPromise]);
+
+    if (!participant) {
+      console.warn('[Fred Voice Agent] Timed out waiting for participant, shutting down');
+      return;
+    }
+
+    console.log(`[Fred Voice Agent] Participant joined: ${participant.identity}`);
+
+    // Start the session AFTER connecting and confirming a participant is present
+    await session.start({
+      agent: new FredAgent(),
+      room: ctx.room,
+    });
+
+    // Small delay to let TTS pipeline initialize before generating the greeting
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    console.log('[Fred Voice Agent] Session started, sending greeting...');
 
     session.generateReply({
       instructions: "Greet the user warmly as Fred Cary. Say something like: Hey, Fred Cary here. What's on your mind? Let's get into it.",
