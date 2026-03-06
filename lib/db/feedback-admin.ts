@@ -6,7 +6,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
-import type { FeedbackSignal } from "@/lib/feedback/types";
+import type { FeedbackSignal, FeedbackSession } from "@/lib/feedback/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -184,5 +184,52 @@ export async function getFeedbackStats(
     flaggedSessionCount: flaggedCount ?? 0,
     categoryDistribution,
     dailyVolume,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Query: Digest summary for weekly email
+// ---------------------------------------------------------------------------
+
+export interface DigestSummary {
+  stats: FeedbackStats;
+  flaggedSessions: FeedbackSession[];
+  topCategories: Array<{ category: string; count: number }>;
+  period: { from: string; to: string };
+}
+
+export async function getDigestSummary(daysBack: number = 7): Promise<DigestSummary> {
+  const now = new Date();
+  const dateFrom = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+
+  const fromStr = dateFrom.toISOString().slice(0, 10);
+  const toStr = now.toISOString().slice(0, 10);
+
+  // Get aggregate stats for the period
+  const stats = await getFeedbackStats(fromStr, toStr);
+
+  // Query flagged sessions from the period
+  const supabase = createServiceClient();
+  const { data: flaggedData } = await supabase
+    .from("feedback_sessions")
+    .select("*")
+    .eq("flagged", true)
+    .gte("created_at", dateFrom.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const flaggedSessions = (flaggedData ?? []) as FeedbackSession[];
+
+  // Compute top 5 categories
+  const topCategories = Object.entries(stats.categoryDistribution)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  return {
+    stats,
+    flaggedSessions,
+    topCategories,
+    period: { from: fromStr, to: toStr },
   };
 }
