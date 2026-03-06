@@ -122,7 +122,12 @@ GROUP BY user_id;
 ALTER TABLE milestones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journey_events ENABLE ROW LEVEL SECURITY;
 
--- Milestone policies
+-- ⚠️  WARNING: The policies below used current_setting('app.user_id', true) which
+-- the application NEVER sets, causing all user-scoped operations to silently fail.
+-- Fixed in migration 20260305000001_fix_journey_rls_policies.sql (AI-1418)
+-- which replaces these with auth.uid()::text-based policies.
+
+-- Milestone policies (SUPERSEDED — see 20260305000001)
 CREATE POLICY "Users can view own milestones"
   ON milestones FOR SELECT
   USING (user_id = current_setting('app.user_id', true));
@@ -140,7 +145,7 @@ CREATE POLICY "Users can delete own milestones"
   ON milestones FOR DELETE
   USING (user_id = current_setting('app.user_id', true));
 
--- Journey events policies
+-- Journey events policies (SUPERSEDED — see 20260305000001)
 CREATE POLICY "Users can view own journey events"
   ON journey_events FOR SELECT
   USING (user_id = current_setting('app.user_id', true));
