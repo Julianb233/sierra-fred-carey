@@ -1,6 +1,7 @@
 import { defineAgent, type JobContext, voice } from '@livekit/agents';
 import * as openai from '@livekit/agents-plugin-openai';
 import * as silero from '@livekit/agents-plugin-silero';
+import * as elevenlabs from '@livekit/agents-plugin-elevenlabs';
 import {
   FRED_BIO,
   FRED_COMMUNICATION_STYLE,
@@ -75,7 +76,10 @@ export default defineAgent({
 
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
-    const tts = new openai.TTS({ model: 'tts-1', voice: 'alloy' });
+    const tts = new elevenlabs.TTS({
+      voiceId: process.env.ELEVENLABS_VOICE_ID || 'fpxks3eObfRI1jkeCD2k',
+      apiKey: process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_API_KEY,
+    });
 
     const session = new AgentSession({
       vad: ctx.proc.userData.vad as silero.VAD,
