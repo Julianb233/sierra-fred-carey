@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 
 // Helper to safely execute a Supabase query with a fallback
 async function safeQuery<T>(query: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T> {
@@ -31,7 +31,11 @@ export async function GET(_request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
-    const supabase = await createClient();
+    // Use service-role client to bypass RLS for reliable reads
+    // (original user-scoped client failed silently due to broken RLS policies
+    // that used current_setting('app.user_id') which was never set)
+    // Security is maintained via requireAuth() above + explicit user_id filtering
+    const supabase = createServiceClient();
 
     // Fetch multiple stats in parallel with individual error handling
     const [

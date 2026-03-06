@@ -25,6 +25,7 @@ import {
   validateInput,
   type RealityLensInput,
 } from "@/lib/fred/reality-lens";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 // ============================================================================
 // Rate Limit Configuration
@@ -156,25 +157,23 @@ export async function POST(req: NextRequest) {
             ${JSON.stringify(result.nextSteps)}
           )
         `;
-
-        // Log journey event so the Journey dashboard Idea Score updates
-        await sql`
-          INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-          VALUES (
-            ${userId},
-            'analysis_completed',
-            ${JSON.stringify({
-              assessmentId: result.metadata.assessmentId,
-              verdict: result.verdict,
-              idea: input.idea.slice(0, 200),
-            })},
-            ${result.overallScore}
-          )
-        `;
       } catch (saveErr) {
-        console.error("[Reality Lens API] Failed to persist results:", saveErr);
+        console.error("[Reality Lens API] Failed to persist analysis:", saveErr);
       }
     })();
+
+    // Log journey event so the Journey dashboard Idea Score updates
+    // Uses resilient logJourneyEventAsync with retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: "analysis_completed",
+      eventData: {
+        assessmentId: result.metadata.assessmentId,
+        verdict: result.verdict,
+        idea: input.idea.slice(0, 200),
+      },
+      scoreAfter: result.overallScore,
+    });
 
     const latencyMs = Date.now() - startTime;
 

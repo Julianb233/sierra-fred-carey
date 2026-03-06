@@ -17,6 +17,7 @@ import {
   getLatestIRS,
   type IRSInput,
 } from '@/lib/fred/irs';
+import { logJourneyEventAsync } from '@/lib/db/journey-events';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,23 +67,19 @@ export async function POST(request: NextRequest) {
     const savedResult = await saveIRSResult(supabase, userId, result);
 
     // Record journey event for dashboard "Investor Readiness" card
-    // Fire-and-forget: don't block the response on this write
-    supabase
-      .from('journey_events')
-      .insert({
-        user_id: userId,
-        event_type: 'score_improved',
-        event_data: {
-          source: 'investor_readiness',
-          categories: Object.fromEntries(
-            Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
-          ),
-        },
-        score_after: Math.round(savedResult.overall),
-      })
-      .then(({ error }) => {
-        if (error) console.error('[IRS API] Failed to record journey event:', error.message);
-      });
+    // Uses service-role client via logJourneyEventAsync for reliable persistence
+    // (previous version used user-scoped client which failed with broken RLS policies)
+    logJourneyEventAsync({
+      userId,
+      eventType: 'score_improved',
+      eventData: {
+        source: 'investor_readiness',
+        categories: Object.fromEntries(
+          Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
+        ),
+      },
+      scoreAfter: Math.round(savedResult.overall),
+    });
 
     return NextResponse.json({
       success: true,

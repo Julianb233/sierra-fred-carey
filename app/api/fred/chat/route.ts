@@ -39,6 +39,7 @@ import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnosti
 import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -994,30 +995,23 @@ async function handlePost(req: NextRequest) {
             // Fire-and-forget: log journey event after each completed FRED interaction.
             // This populates the journey_events table so the Journey Dashboard, re-engagement
             // emails, and digest emails have activity data to work with.
-            (async () => {
-              try {
-                const intent = update.context.validatedInput?.intent ?? "unknown";
-                const step = update.context.conversationState?.currentStep ?? null;
-                // Pick the most descriptive event_type based on intent
-                const eventType = intent === "decision_request" ? "decision_made"
-                  : intent === "question" ? "step_completed"
-                  : "message_sent";
-                const supabase = createServiceClient();
-                await supabase.from("journey_events").insert({
-                  user_id: userId,
-                  event_type: eventType,
-                  event_data: {
-                    intent,
-                    latency_ms: latencyMs,
-                    tier: tierName,
-                    step,
-                  },
-                  created_at: new Date().toISOString(),
-                });
-              } catch (err) {
-                console.warn("[FRED Chat] Failed to log journey event (non-blocking):", err);
-              }
-            })();
+            {
+              const intent = update.context.validatedInput?.intent ?? "unknown";
+              const step = update.context.conversationState?.currentStep ?? null;
+              const eventType = intent === "decision_request" ? "decision_made"
+                : intent === "question" ? "step_completed"
+                : "message_sent";
+              logJourneyEventAsync({
+                userId,
+                eventType,
+                eventData: {
+                  intent,
+                  latency_ms: latencyMs,
+                  tier: tierName,
+                  step,
+                },
+              });
+            }
 
             // Fire-and-forget: restore latency observability after streaming completion
             (async () => {

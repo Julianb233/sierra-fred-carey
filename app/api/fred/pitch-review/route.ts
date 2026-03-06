@@ -18,6 +18,7 @@ import {
   getPitchReviewByDocument,
 } from '@/lib/fred/pitch';
 import { getRealityLensGate, checkGateStatus } from '@/lib/db/conversation-state';
+import { logJourneyEventAsync } from '@/lib/db/journey-events';
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,26 +153,21 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const savedReview = await savePitchReview(supabase, userId, review);
 
-    // Log journey event (fire-and-forget, non-blocking)
-    supabase
-      .from('journey_events')
-      .insert({
-        user_id: userId,
-        event_type: 'pitch_review_completed',
-        event_data: {
-          reviewId: savedReview.id,
-          documentId,
-          overallScore: savedReview.overallScore,
-          structureScore: savedReview.structureScore,
-          contentScore: savedReview.contentScore,
-          slideCount: savedReview.slides.length,
-          missingSections: savedReview.missingSections,
-        },
-        score_after: Math.round(savedReview.overallScore),
-      })
-      .then(({ error: journeyErr }) => {
-        if (journeyErr) console.error('[PitchReview API] Failed to record journey event:', journeyErr.message);
-      });
+    // Log journey event with resilient retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: 'pitch_review_completed',
+      eventData: {
+        reviewId: savedReview.id,
+        documentId,
+        overallScore: savedReview.overallScore,
+        structureScore: savedReview.structureScore,
+        contentScore: savedReview.contentScore,
+        slideCount: savedReview.slides.length,
+        missingSections: savedReview.missingSections,
+      },
+      scoreAfter: Math.round(savedReview.overallScore),
+    });
 
     return NextResponse.json({
       success: true,
