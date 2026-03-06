@@ -1,74 +1,78 @@
 /**
- * Feedback Collection Types
+ * Feedback System Types
  *
- * Phase 72-01: Core type definitions for the FRED chat feedback system.
- * Thumbs up/down on assistant messages with optional free-text comments.
+ * Core type definitions for the feedback signal collection and
+ * analysis pipeline. Used across collection, admin dashboard,
+ * sentiment analysis, and reporting modules.
  */
 
-// ---------------------------------------------------------------------------
-// Feedback signal
-// ---------------------------------------------------------------------------
+export type FeedbackChannel = "chat" | "voice" | "sms" | "whatsapp";
 
-/** The binary feedback signal a user can submit */
-export type FeedbackSignal = "thumbs_up" | "thumbs_down"
+export type FeedbackSignalType = "thumbs" | "detailed" | "sentiment" | "nps";
 
-/** Where the feedback was collected from */
-export type FeedbackSource = "chat" | "voice" | "inline"
+export type FeedbackCategory =
+  | "irrelevant"
+  | "incorrect"
+  | "too_vague"
+  | "too_long"
+  | "wrong_tone"
+  | "coaching_discomfort"
+  | "helpful"
+  | "other";
 
-// ---------------------------------------------------------------------------
-// Feedback record (matches future Supabase table shape)
-// ---------------------------------------------------------------------------
+export type SentimentLabel = "positive" | "neutral" | "negative" | "frustrated";
 
-export interface FeedbackRecord {
-  /** Unique feedback ID (UUID) */
-  id: string
-  /** User who submitted the feedback */
-  user_id: string
-  /** The FRED message ID being rated */
-  message_id: string
-  /** Chat session ID for context grouping */
-  session_id: string
-  /** The binary signal */
-  signal: FeedbackSignal
-  /** Optional free-text comment (max 500 chars) */
-  comment?: string
-  /** Source of the feedback interaction */
-  source: FeedbackSource
-  /** ISO timestamp when feedback was submitted */
-  created_at: string
+export type UserTier = "free" | "pro" | "studio";
+
+export interface FeedbackSignal {
+  id: string;
+  user_id: string;
+  session_id: string | null;
+  message_id: string | null;
+  channel: FeedbackChannel;
+  signal_type: FeedbackSignalType;
+  rating: number | null; // 1 = positive, -1 = negative
+  category: FeedbackCategory | null;
+  comment: string | null;
+  sentiment_score: number | null; // -1 to 1
+  sentiment_confidence: number | null; // 0 to 1
+  user_tier: UserTier;
+  weight: number;
+  consent_given: boolean;
+  expires_at: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// ---------------------------------------------------------------------------
-// API request / response
-// ---------------------------------------------------------------------------
-
-export interface SubmitFeedbackRequest {
-  message_id: string
-  session_id: string
-  signal: FeedbackSignal
-  comment?: string
-  source?: FeedbackSource
+export interface FeedbackSignalInsert {
+  user_id: string;
+  session_id?: string | null;
+  message_id?: string | null;
+  channel: FeedbackChannel;
+  signal_type: FeedbackSignalType;
+  rating?: number | null;
+  category?: FeedbackCategory | null;
+  comment?: string | null;
+  sentiment_score?: number | null;
+  sentiment_confidence?: number | null;
+  user_tier: UserTier;
+  weight?: number;
+  consent_given: boolean;
+  expires_at?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
-export interface SubmitFeedbackResponse {
-  success: boolean
-  id?: string
-  error?: string
-}
-
-// ---------------------------------------------------------------------------
-// Client-side feedback state per message
-// ---------------------------------------------------------------------------
-
-export interface MessageFeedbackState {
-  /** Current signal (null = no feedback yet) */
-  signal: FeedbackSignal | null
-  /** Whether the comment form is open */
-  isCommentOpen: boolean
-  /** The comment text being drafted */
-  comment: string
-  /** Whether a submission is in flight */
-  isSubmitting: boolean
-  /** Whether feedback has been successfully submitted */
-  isSubmitted: boolean
+export interface FeedbackSession {
+  id: string;
+  session_id: string;
+  user_id: string;
+  channel: FeedbackChannel;
+  signal_count: number;
+  avg_sentiment: number | null;
+  trend: "improving" | "stable" | "degrading" | "spike_negative" | null;
+  flagged: boolean;
+  flag_reason: string | null;
+  created_at: string;
+  updated_at: string;
 }

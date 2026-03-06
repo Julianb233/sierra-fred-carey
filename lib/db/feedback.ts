@@ -1,146 +1,111 @@
 /**
- * Feedback system DB helpers
+ * Feedback Database Operations
  *
- * Provides typed query functions for the feedback tables:
- * feedback_signals, feedback_sessions, feedback_insights.
- * Used by API routes in app/api/feedback/ and by the
- * sentiment analysis pipeline.
+ * Core database operations for the feedback signal collection pipeline.
+ * Uses the service client (bypasses RLS) for background/system operations.
  */
+
 import { createServiceClient } from "@/lib/supabase/server";
-import type {
-  FeedbackSignalInsert,
-  FeedbackSessionInsert,
-  FeedbackInsightInsert,
-} from "@/lib/feedback";
+import type { FeedbackSignal, FeedbackSignalInsert, FeedbackSession } from "@/lib/feedback/types";
 
-// ============================================================================
-// Signals
-// ============================================================================
-
-export async function insertFeedbackSignal(signal: FeedbackSignalInsert) {
+/**
+ * Insert a feedback signal into the feedback_signals table.
+ */
+export async function insertFeedbackSignal(
+  signal: FeedbackSignalInsert
+): Promise<FeedbackSignal | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("feedback_signals")
     .insert(signal)
     .select()
     .single();
-  if (error) throw error;
-  return data;
+
+  if (error) {
+    console.error("[feedback] Failed to insert signal:", error.message);
+    return null;
+  }
+
+  return data as FeedbackSignal;
 }
 
-export async function getFeedbackSignalsByUser(userId: string, limit = 50) {
+/**
+ * Get feedback signals for a specific user.
+ */
+export async function getFeedbackSignalsByUser(
+  userId: string,
+  options?: { limit?: number; signalType?: string }
+): Promise<FeedbackSignal[]> {
   const supabase = createServiceClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("feedback_signals")
     .select("*")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data;
+    .order("created_at", { ascending: false });
+
+  if (options?.signalType) {
+    query = query.eq("signal_type", options.signalType);
+  }
+
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[feedback] Failed to get signals:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as FeedbackSignal[];
 }
 
+/**
+ * Get feedback signals for a specific session.
+ */
 export async function getFeedbackSignalsBySession(
   sessionId: string,
-  signalType?: string,
-  limit = 200
-) {
+  signalType?: string
+): Promise<FeedbackSignal[]> {
   const supabase = createServiceClient();
   let query = supabase
     .from("feedback_signals")
     .select("*")
     .eq("session_id", sessionId)
-    .order("created_at", { ascending: true })
-    .limit(limit);
+    .order("created_at", { ascending: true });
+
   if (signalType) {
     query = query.eq("signal_type", signalType);
   }
+
   const { data, error } = await query;
-  if (error) throw error;
-  return data;
+
+  if (error) {
+    console.error("[feedback] Failed to get session signals:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as FeedbackSignal[];
 }
 
-// ============================================================================
-// Sessions
-// ============================================================================
-
+/**
+ * Upsert a feedback session record (aggregated session-level data).
+ */
 export async function upsertFeedbackSession(
-  session: FeedbackSessionInsert & { id?: string }
-) {
+  session: Omit<FeedbackSession, "id" | "created_at" | "updated_at">
+): Promise<FeedbackSession | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("feedback_sessions")
-    .upsert(session)
+    .upsert(session, { onConflict: "session_id" })
     .select()
     .single();
-  if (error) throw error;
-  return data;
-}
 
-export async function getFlaggedSessions(limit = 20) {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("feedback_sessions")
-    .select("*")
-    .eq("flagged", true)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data;
-}
+  if (error) {
+    console.error("[feedback] Failed to upsert session:", error.message);
+    return null;
+  }
 
-// ============================================================================
-// Insights
-// ============================================================================
-
-export async function insertFeedbackInsight(insight: FeedbackInsightInsert) {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("feedback_insights")
-    .insert(insight)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-export async function getInsightsByStatus(status: string, limit = 50) {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("feedback_insights")
-    .select("*")
-    .eq("status", status)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data;
-}
-
-// ============================================================================
-// GDPR Retention
-// ============================================================================
-
-export async function deleteExpiredFeedback() {
-  const supabase = createServiceClient();
-  const { error } = await supabase
-    .from("feedback_signals")
-    .delete()
-    .lt("expires_at", new Date().toISOString())
-    .not("expires_at", "is", null);
-  if (error) throw error;
-}
-
-export async function deleteFeedbackForUser(userId: string) {
-  const supabase = createServiceClient();
-  // Cascade: signals first, then sessions
-  const { error: sigErr } = await supabase
-    .from("feedback_signals")
-    .delete()
-    .eq("user_id", userId);
-  if (sigErr) throw sigErr;
-  const { error: sesErr } = await supabase
-    .from("feedback_sessions")
-    .delete()
-    .eq("user_id", userId);
-  if (sesErr) throw sesErr;
+  return data as FeedbackSession;
 }

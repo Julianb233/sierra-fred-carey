@@ -1,35 +1,57 @@
 /**
- * Feedback Collection Constants
+ * Feedback System Constants
  *
- * Phase 72-01: Shared constants for the feedback system.
+ * Shared constants for the feedback collection and analysis pipeline.
  */
 
-/** Maximum length for feedback comments */
-export const MAX_COMMENT_LENGTH = 500
+import type { FeedbackChannel, FeedbackCategory } from "./types";
 
-/** Debounce delay (ms) before submitting feedback after signal click */
-export const FEEDBACK_SUBMIT_DELAY = 300
+/** All supported feedback collection channels */
+export const FEEDBACK_CHANNELS: FeedbackChannel[] = [
+  "chat",
+  "voice",
+  "sms",
+  "whatsapp",
+];
 
-/** API endpoint for submitting feedback */
-export const FEEDBACK_API_ENDPOINT = "/api/feedback"
+/** All supported feedback categories */
+export const FEEDBACK_CATEGORIES: FeedbackCategory[] = [
+  "irrelevant",
+  "incorrect",
+  "too_vague",
+  "too_long",
+  "wrong_tone",
+  "coaching_discomfort",
+  "helpful",
+  "other",
+];
 
-/** Comment placeholder prompts based on signal type */
-export const COMMENT_PLACEHOLDERS = {
-  thumbs_up: "What was helpful about this response? (optional)",
-  thumbs_down: "How could this response be improved? (optional)",
-} as const
+/** Tier-based signal weighting -- higher-tier users' feedback has more weight */
+export const TIER_WEIGHTS = {
+  free: 1,
+  pro: 2,
+  studio: 3,
+} as const;
 
-/** Analytics event names for feedback interactions */
-export const FEEDBACK_EVENTS = {
-  SIGNAL_SUBMITTED: "feedback.signal_submitted",
-  COMMENT_SUBMITTED: "feedback.comment_submitted",
-  COMMENT_OPENED: "feedback.comment_opened",
-  SIGNAL_CHANGED: "feedback.signal_changed",
-} as const
+/** Max detailed feedback submissions per user per week */
+export const MAX_DETAILED_FEEDBACK_PER_WEEK = 5;
 
-/** Toast messages shown after feedback submission */
-export const FEEDBACK_TOASTS = {
-  SUCCESS: "Thanks for your feedback!",
-  ERROR: "Could not save feedback. Please try again.",
-  COMMENT_SUCCESS: "Comment added. Thank you!",
-} as const
+/** Sentiment label to numeric score mapping */
+export const SENTIMENT_SCORES = {
+  positive: 1,
+  neutral: 0,
+  negative: -0.5,
+  frustrated: -1,
+} as const;
+
+/** Spike detection thresholds */
+export const SPIKE_THRESHOLD = {
+  /** Average sentiment below this in last 3 messages triggers spike */
+  avgNegativeThreshold: -0.5,
+  /** Previous 3 messages must be above this for it to count as a "spike" (sharp drop) */
+  previousPositiveThreshold: 0,
+  /** Single message sentiment below this with high confidence triggers spike */
+  singleMessageThreshold: -0.8,
+  /** Minimum confidence for single-message spike detection */
+  singleMessageConfidence: 0.7,
+} as const;
