@@ -262,8 +262,8 @@ export default function JourneyDashboard() {
   };
 
   // Calculate display values
-  const ideaScore = stats?.ideaScore ?? 0;
-  const investorReadiness = stats?.investorReadiness ?? 0;
+  const ideaScore = stats?.ideaScore ?? null;
+  const investorReadiness = stats?.investorReadiness ?? null;
   const executionStreak = stats?.executionStreak ?? 0;
 
   if (isLoading) {
@@ -342,7 +342,7 @@ export default function JourneyDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {ideaScore > 0 ? (
+              {ideaScore !== null ? (
                 <>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold text-[#ff6a1a]">
@@ -387,7 +387,7 @@ export default function JourneyDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {investorReadiness > 0 ? (
+              {investorReadiness !== null ? (
                 <>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold text-blue-600">

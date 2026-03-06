@@ -152,26 +152,28 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const savedReview = await savePitchReview(supabase, userId, review);
 
-    // Log journey event (fire-and-forget, non-blocking)
-    supabase
-      .from('journey_events')
-      .insert({
-        user_id: userId,
-        event_type: 'pitch_review_completed',
-        event_data: {
-          reviewId: savedReview.id,
-          documentId,
-          overallScore: savedReview.overallScore,
-          structureScore: savedReview.structureScore,
-          contentScore: savedReview.contentScore,
-          slideCount: savedReview.slides.length,
-          missingSections: savedReview.missingSections,
-        },
-        score_after: Math.round(savedReview.overallScore),
-      })
-      .then(({ error: journeyErr }) => {
-        if (journeyErr) console.error('[PitchReview API] Failed to record journey event:', journeyErr.message);
-      });
+    // Log journey event (awaited -- must complete before response in serverless)
+    try {
+      const { error: journeyErr } = await supabase
+        .from('journey_events')
+        .insert({
+          user_id: userId,
+          event_type: 'pitch_review_completed',
+          event_data: {
+            reviewId: savedReview.id,
+            documentId,
+            overallScore: savedReview.overallScore,
+            structureScore: savedReview.structureScore,
+            contentScore: savedReview.contentScore,
+            slideCount: savedReview.slides.length,
+            missingSections: savedReview.missingSections,
+          },
+          score_after: Math.round(savedReview.overallScore),
+        });
+      if (journeyErr) console.error('[PitchReview API] Journey event save failed:', journeyErr.message);
+    } catch (e) {
+      console.error('[PitchReview API] Journey event save error:', e);
+    }
 
     return NextResponse.json({
       success: true,

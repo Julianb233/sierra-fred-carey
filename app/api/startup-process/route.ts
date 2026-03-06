@@ -195,7 +195,7 @@ export async function PUT(request: NextRequest) {
       `;
     }
 
-    // Log journey_events for newly validated steps (fire-and-forget)
+    // Log journey_events for newly validated steps
     const newlyValidated: number[] = [];
     for (let i = 1; i <= 9; i++) {
       if (stepValidations[i].completed && !oldCompleted.has(i)) {
@@ -203,27 +203,25 @@ export async function PUT(request: NextRequest) {
       }
     }
     if (newlyValidated.length > 0) {
-      (async () => {
-        try {
-          for (const stepNum of newlyValidated) {
-            await sql`
-              INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-              VALUES (
-                ${userId},
-                'milestone_achieved',
-                ${JSON.stringify({
-                  source: 'startup_process',
-                  stepNumber: stepNum,
-                  stepTitle: STEP_TITLES[stepNum as StepNumber],
-                })},
-                ${completionPct}
-              )
-            `;
-          }
-        } catch (err) {
-          console.warn("[PUT /api/startup-process] Failed to log journey events:", err);
+      try {
+        for (const stepNum of newlyValidated) {
+          await sql`
+            INSERT INTO journey_events (user_id, event_type, event_data, score_after)
+            VALUES (
+              ${userId},
+              'milestone_achieved',
+              ${JSON.stringify({
+                source: 'startup_process',
+                stepNumber: stepNum,
+                stepTitle: STEP_TITLES[stepNum as StepNumber],
+              })},
+              ${completionPct}
+            )
+          `;
         }
-      })();
+      } catch (err) {
+        console.error("[PUT /api/startup-process] Failed to log journey events:", err);
+      }
     }
 
     return NextResponse.json({ success: true });

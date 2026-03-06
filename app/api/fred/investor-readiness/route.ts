@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import {
   calculateIRS,
   saveIRSResult,
@@ -66,23 +66,26 @@ export async function POST(request: NextRequest) {
     const savedResult = await saveIRSResult(supabase, userId, result);
 
     // Record journey event for dashboard "Investor Readiness" card
-    // Fire-and-forget: don't block the response on this write
-    supabase
-      .from('journey_events')
-      .insert({
-        user_id: userId,
-        event_type: 'score_improved',
-        event_data: {
-          source: 'investor_readiness',
-          categories: Object.fromEntries(
-            Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
-          ),
-        },
-        score_after: Math.round(savedResult.overall),
-      })
-      .then(({ error }) => {
-        if (error) console.error('[IRS API] Failed to record journey event:', error.message);
-      });
+    // Use service client to bypass RLS (user-scoped client fails due to current_setting policy)
+    try {
+      const serviceClient = createServiceClient();
+      const { error: journeyErr } = await serviceClient
+        .from('journey_events')
+        .insert({
+          user_id: userId,
+          event_type: 'score_improved',
+          event_data: {
+            source: 'investor_readiness',
+            categories: Object.fromEntries(
+              Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
+            ),
+          },
+          score_after: Math.round(savedResult.overall),
+        });
+      if (journeyErr) console.error('[IRS API] Journey event save failed:', journeyErr.message);
+    } catch (e) {
+      console.error('[IRS API] Journey event save error:', e);
+    }
 
     return NextResponse.json({
       success: true,
