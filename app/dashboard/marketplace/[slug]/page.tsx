@@ -162,7 +162,7 @@ export default function ProviderDetailPage() {
 
   useEffect(() => {
     if (!slug) return;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- loading reset before async fetch
     fetch(`/api/marketplace/${slug}`)
       .then((r) => {
         if (r.status === 404) throw new Error("Provider not found");

@@ -166,7 +166,7 @@ export default function ContentLibraryPage() {
   const [topic, setTopic] = useState<string>("all");
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- loading reset before async fetch
     setError(null);
     const params = new URLSearchParams();
     if (stage !== "all") params.set("stage", stage);
