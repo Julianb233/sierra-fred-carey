@@ -149,7 +149,7 @@ export default function InvestorReadinessPage() {
     const categoryScores: Record<string, { total: number; count: number }> = {};
 
     questions.forEach((q) => {
-      const score = answers[q.id] || 0;
+      const score = answers[q.id] ?? 0;
       if (!categoryScores[q.category]) {
         categoryScores[q.category] = { total: 0, count: 0 };
       }

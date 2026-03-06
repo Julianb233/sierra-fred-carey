@@ -3,7 +3,7 @@ import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 // ---------------------------------------------------------------------------
-// Serwist PWA – service worker compilation (wraps before Sentry)
+// Serwist PWA -- service worker compilation (wraps before Sentry)
 // ---------------------------------------------------------------------------
 const revision =
   spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ??
@@ -17,24 +17,13 @@ const withSerwist = withSerwistInit({
 });
 
 // ---------------------------------------------------------------------------
-// Content-Security-Policy – allow self, Stripe, Supabase, and AI providers
+// Content-Security-Policy is now set per-request in middleware.ts (AI-334)
+// with a unique nonce, removing the need for 'unsafe-inline'/'unsafe-eval'.
 // ---------------------------------------------------------------------------
-const ContentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://link.msgsndr.com https://vercel.live https://va.vercel-scripts.com",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com https://*.ingest.sentry.io https://*.msgsndr.com",
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // NOTE: Do NOT add generateBuildId with a static string — it breaks Turbopack builds
+  // NOTE: Do NOT add generateBuildId with a static string -- it breaks Turbopack builds
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "canvas", "@prisma/instrumentation", "@opentelemetry/instrumentation"],
   transpilePackages: ["framer-motion"],
   // Acknowledge Turbopack as the default bundler in Next.js 16
@@ -61,10 +50,7 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(self), geolocation=()",
           },
-          {
-            key: "Content-Security-Policy",
-            value: ContentSecurityPolicy,
-          },
+          // CSP is now set per-request in middleware.ts with nonce (AI-334)
         ],
       },
     ];
@@ -81,7 +67,7 @@ const nextConfig = {
         destination: "/get-started",
         permanent: true,
       },
-      // Common auth URL aliases → canonical routes
+      // Common auth URL aliases -> canonical routes
       { source: "/sign-in", destination: "/login", permanent: true },
       { source: "/signin", destination: "/login", permanent: true },
       { source: "/sign-up", destination: "/signup", permanent: true },

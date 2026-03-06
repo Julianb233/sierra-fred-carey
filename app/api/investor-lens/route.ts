@@ -653,38 +653,38 @@ export async function POST(request: NextRequest) {
         ${evaluation.icVerdict},
         ${evaluation.icVerdictReasoning},
 
-        ${evaluation.axes.team.subscores?.founderMarketFit || null},
-        ${evaluation.axes.team.subscores?.learningVelocity || null},
-        ${evaluation.axes.team.subscores?.abilityToRecruit || null},
+        ${evaluation.axes.team.subscores?.founderMarketFit ?? null},
+        ${evaluation.axes.team.subscores?.learningVelocity ?? null},
+        ${evaluation.axes.team.subscores?.abilityToRecruit ?? null},
         ${evaluation.axes.team.feedback},
 
-        ${evaluation.axes.market.subscores?.size || null},
-        ${evaluation.axes.market.subscores?.urgency || null},
-        ${evaluation.axes.market.subscores?.timing || null},
+        ${evaluation.axes.market.subscores?.size ?? null},
+        ${evaluation.axes.market.subscores?.urgency ?? null},
+        ${evaluation.axes.market.subscores?.timing ?? null},
         ${evaluation.axes.market.feedback},
 
-        ${evaluation.axes.problem.subscores?.painful || null},
-        ${evaluation.axes.problem.subscores?.frequent || null},
-        ${evaluation.axes.problem.subscores?.expensive || null},
+        ${evaluation.axes.problem.subscores?.painful ?? null},
+        ${evaluation.axes.problem.subscores?.frequent ?? null},
+        ${evaluation.axes.problem.subscores?.expensive ?? null},
         ${evaluation.axes.problem.feedback},
 
-        ${evaluation.axes.solution.subscores?.approach || null},
-        ${evaluation.axes.solution.subscores?.vsAlternatives || null},
-        ${evaluation.axes.solution.subscores?.whyNow || null},
+        ${evaluation.axes.solution.subscores?.approach ?? null},
+        ${evaluation.axes.solution.subscores?.vsAlternatives ?? null},
+        ${evaluation.axes.solution.subscores?.whyNow ?? null},
         ${evaluation.axes.solution.feedback},
 
-        ${evaluation.axes.gtm.subscores?.distribution || null},
-        ${evaluation.axes.gtm.subscores?.repeatability || null},
+        ${evaluation.axes.gtm.subscores?.distribution ?? null},
+        ${evaluation.axes.gtm.subscores?.repeatability ?? null},
         ${evaluation.axes.gtm.feedback},
 
-        ${evaluation.axes.traction.subscores?.retention || null},
-        ${evaluation.axes.traction.subscores?.usage || null},
-        ${evaluation.axes.traction.subscores?.revenue || null},
+        ${evaluation.axes.traction.subscores?.retention ?? null},
+        ${evaluation.axes.traction.subscores?.usage ?? null},
+        ${evaluation.axes.traction.subscores?.revenue ?? null},
         ${evaluation.axes.traction.feedback},
 
-        ${evaluation.axes.businessModel.subscores?.pricing || null},
-        ${evaluation.axes.businessModel.subscores?.margin || null},
-        ${evaluation.axes.businessModel.subscores?.scalability || null},
+        ${evaluation.axes.businessModel.subscores?.pricing ?? null},
+        ${evaluation.axes.businessModel.subscores?.margin ?? null},
+        ${evaluation.axes.businessModel.subscores?.scalability ?? null},
         ${evaluation.axes.businessModel.feedback},
 
         ${evaluation.axes.fundFit.score},
@@ -700,9 +700,9 @@ export async function POST(request: NextRequest) {
         ${fundingStage === "pre_seed" ? JSON.stringify(evaluation.stageSpecific?.killSignals || []) : null},
         ${fundingStage === "pre_seed" ? JSON.stringify(evaluation.stageSpecific?.thirtyDayPlan || []) : null},
 
-        ${fundingStage === "seed" ? evaluation.stageSpecific?.tractionQualityScore || null : null},
-        ${fundingStage === "seed" ? evaluation.stageSpecific?.repeatabilityScore || null : null},
-        ${fundingStage === "seed" ? evaluation.stageSpecific?.seriesAClarity || null : null},
+        ${fundingStage === "seed" ? evaluation.stageSpecific?.tractionQualityScore ?? null : null},
+        ${fundingStage === "seed" ? evaluation.stageSpecific?.repeatabilityScore ?? null : null},
+        ${fundingStage === "seed" ? evaluation.stageSpecific?.seriesAClarity ?? null : null},
         ${fundingStage === "seed" ? JSON.stringify(evaluation.stageSpecific?.milestoneMap || []) : null},
 
         ${fundingStage === "series_a" ? JSON.stringify(evaluation.stageSpecific?.objections || []) : null},
@@ -868,9 +868,9 @@ export async function GET(request: NextRequest) {
       axes: {
         team: {
           score: Math.round(
-            ((e.team_founder_market_fit_score || 0) +
-              (e.team_learning_velocity_score || 0) +
-              (e.team_ability_to_recruit_score || 0)) / 3
+            ((e.team_founder_market_fit_score ?? 0) +
+              (e.team_learning_velocity_score ?? 0) +
+              (e.team_ability_to_recruit_score ?? 0)) / 3
           ),
           subscores: {
             founderMarketFit: e.team_founder_market_fit_score,
@@ -881,9 +881,9 @@ export async function GET(request: NextRequest) {
         },
         market: {
           score: Math.round(
-            ((e.market_size_score || 0) +
-              (e.market_urgency_score || 0) +
-              (e.market_timing_score || 0)) / 3
+            ((e.market_size_score ?? 0) +
+              (e.market_urgency_score ?? 0) +
+              (e.market_timing_score ?? 0)) / 3
           ),
           subscores: {
             size: e.market_size_score,
@@ -894,9 +894,9 @@ export async function GET(request: NextRequest) {
         },
         problem: {
           score: Math.round(
-            ((e.problem_painful_score || 0) +
-              (e.problem_frequent_score || 0) +
-              (e.problem_expensive_score || 0)) / 3
+            ((e.problem_painful_score ?? 0) +
+              (e.problem_frequent_score ?? 0) +
+              (e.problem_expensive_score ?? 0)) / 3
           ),
           subscores: {
             painful: e.problem_painful_score,
@@ -907,9 +907,9 @@ export async function GET(request: NextRequest) {
         },
         solution: {
           score: Math.round(
-            ((e.solution_approach_score || 0) +
-              (e.solution_vs_alternatives_score || 0) +
-              (e.solution_why_now_score || 0)) / 3
+            ((e.solution_approach_score ?? 0) +
+              (e.solution_vs_alternatives_score ?? 0) +
+              (e.solution_why_now_score ?? 0)) / 3
           ),
           subscores: {
             approach: e.solution_approach_score,
@@ -920,7 +920,7 @@ export async function GET(request: NextRequest) {
         },
         gtm: {
           score: Math.round(
-            ((e.gtm_distribution_score || 0) + (e.gtm_repeatability_score || 0)) / 2
+            ((e.gtm_distribution_score ?? 0) + (e.gtm_repeatability_score ?? 0)) / 2
           ),
           subscores: {
             distribution: e.gtm_distribution_score,
@@ -930,9 +930,9 @@ export async function GET(request: NextRequest) {
         },
         traction: {
           score: Math.round(
-            ((e.traction_retention_score || 0) +
-              (e.traction_usage_score || 0) +
-              (e.traction_revenue_score || 0)) / 3
+            ((e.traction_retention_score ?? 0) +
+              (e.traction_usage_score ?? 0) +
+              (e.traction_revenue_score ?? 0)) / 3
           ),
           subscores: {
             retention: e.traction_retention_score,
@@ -943,9 +943,9 @@ export async function GET(request: NextRequest) {
         },
         businessModel: {
           score: Math.round(
-            ((e.business_pricing_score || 0) +
-              (e.business_margin_score || 0) +
-              (e.business_scalability_score || 0)) / 3
+            ((e.business_pricing_score ?? 0) +
+              (e.business_margin_score ?? 0) +
+              (e.business_scalability_score ?? 0)) / 3
           ),
           subscores: {
             pricing: e.business_pricing_score,
