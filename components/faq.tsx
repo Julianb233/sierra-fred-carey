@@ -35,8 +35,8 @@ export default function Faq() {
       content: (
         <div className="text-gray-600 dark:text-gray-400">
           <strong className="text-gray-900 dark:text-white">Free:</strong> Core decision-making tools, reality lens, and red flag detection.<br />
-          <strong className="text-gray-900 dark:text-white">$99/mo:</strong> Full investor lens, pitch deck reviews, strategy documents, and weekly check-ins.<br />
-          <strong className="text-gray-900 dark:text-white">$249/mo:</strong> All of the above plus Boardy integration, virtual team agents, and investor outreach tools.
+          <strong className="text-gray-900 dark:text-white">$99/mo:</strong> Full investor lens, pitch deck reviews, strategy documents, and persistent founder memory.<br />
+          <strong className="text-gray-900 dark:text-white">$249/mo:</strong> All of the above plus weekly check-ins, Boardy integration, virtual team agents, and investor outreach tools.
         </div>
       ),
     },

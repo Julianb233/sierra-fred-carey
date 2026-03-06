@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_ORIGINS = new Set([
   process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  process.env.NEXT_PUBLIC_FUNNEL_URL || "https://u.joinsahara.com",
   "http://localhost:3000",
   "http://localhost:3001",
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []), // Vite dev server for funnel
 ]);
 
 // Webhook origins that bypass CORS (they use signature verification instead)

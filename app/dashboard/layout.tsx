@@ -72,7 +72,7 @@ const coreNavItems: NavItem[] = [
     icon: <DashboardIcon className="h-4 w-4" />,
   },
   {
-    name: "Chat with Fred",
+    name: "Mentor",
     href: "/chat",
     icon: <MessageSquare className="h-4 w-4" />,
   },
@@ -92,7 +92,7 @@ const coreNavItems: NavItem[] = [
     icon: <Lightbulb className="h-4 w-4" />,
   },
   {
-    name: "Journey",
+    name: "Progress",
     href: "/dashboard/journey",
     icon: <Map className="h-4 w-4" />,
   },

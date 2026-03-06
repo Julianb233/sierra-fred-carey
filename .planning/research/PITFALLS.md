@@ -1,753 +1,541 @@
-# Domain Pitfalls: Sahara v6.0
+# Pitfalls Research -- v7.0 UX Feedback Loop
 
-**Domain:** AI-Powered Founder OS -- Content Library, Service Marketplace, Boardy Integration, Infrastructure Hardening
-**Researched:** 2026-02-18
-**Overall confidence:** HIGH (verified against codebase state, official docs, and audit reports)
-
----
-
-## Executive Summary
-
-Sahara v6.0 adds seven distinct capability areas to a mature platform (210 pages, 774/778 tests passing). Each area carries domain-specific pitfalls that compound when integrated simultaneously. The highest-risk areas are:
-
-1. **Sentry activation** -- The code is already wired (`withSentryConfig`, `sentry.client.config.ts`, `sentry.server.config.ts`, `lib/sentry.ts`) but the DSN is not set. Turning it on seems simple but has hidden build-time and runtime traps.
-2. **Twilio A2P 10DLC** -- 4-week registration timeline that must start before SMS code is written. Registration rejections are common and require specific website/privacy-policy preparation.
-3. **LiveKit voice hardening** -- Three audits (API, UI, Worker) found 2 CRITICAL, 5 HIGH, and 10 MEDIUM issues. The voice feature is structurally correct but not production-ready.
-4. **Stripe Connect for marketplace** -- Adding two-sided payments to an existing Stripe subscription setup requires careful account architecture to avoid breaking current billing.
-5. **Content library video hosting** -- Video hosting choice (Mux vs Cloudflare Stream vs YouTube embeds) has major cost and DX implications that are hard to reverse.
+**Domain:** Closed-loop user feedback systems for AI coaching SaaS (Sahara / FRED)
+**Researched:** 2026-03-04
+**Overall confidence:** MEDIUM-HIGH (domain well-understood, Sahara-specific risks extrapolated from codebase analysis)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, major delays, or production failures.
+Mistakes that cause rewrites, user churn, or FRED voice corruption.
 
 ---
 
-### Pitfall 1: Sentry DSN Activation Breaks Production Build
+### C1: FRED Voice Drift from Prompt Self-Improvement
 
-**What goes wrong:** The Sentry integration code exists but is currently inert (DSN not set). Setting the DSN without also providing `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` in the CI environment causes the production build to fail or produce builds with unresolvable source maps. The `withSentryConfig` wrapper in `next.config.mjs` (line 71) runs during `npm run build` and attempts to upload source maps. Without the auth token, the build either fails silently (source maps not uploaded, errors appear minified) or fails loudly (blocking deployment).
+**What goes wrong:** Automated prompt tuning based on feedback gradually erodes FRED's canonical voice. Fred Cary's speech patterns, philosophy ("We trade in truth, not comfort"), and mentoring cadence get averaged out toward a generic helpful-AI tone. Research shows prompt drift is "not always obvious until complaints pile up" -- by the time someone notices FRED sounds wrong, hundreds of sessions have already delivered off-brand responses.
 
-**Why it happens:** The existing code has a conditional guard (`process.env.NEXT_PUBLIC_SENTRY_DSN ? withSentryConfig(...) : nextConfig`) that makes it seem safe to "just add the DSN." But the build-time source map upload requires _additional_ env vars (`SENTRY_AUTH_TOKEN`) that are not runtime vars -- they must exist in the CI/CD build environment, not just Vercel runtime.
-
-**Warning signs:**
-- Sentry dashboard shows errors with minified stack traces (no source maps)
-- Build takes significantly longer after adding DSN (source map upload happening)
-- Vercel build logs show Sentry upload warnings/errors
-- `SENTRY_AUTH_TOKEN` added to `.env.local` but not to GitHub Secrets or Vercel Build Environment
+**Why it happens:** Feedback-driven optimization maximizes user satisfaction scores, which naturally favors agreeable, verbose, hedging language. FRED's core value is blunt truth-telling, which sometimes produces low satisfaction scores by design. An optimizer will sand down the edges that make FRED valuable.
 
 **Consequences:**
-- Minified error reports that are useless for debugging (defeats the purpose)
-- Build failures if auth token is wrong or expired
-- Source maps accidentally shipped to browser if `hideSourceMaps: true` is not working
-- Build time increases by 30-60 seconds per deployment
+- Fred Cary himself notices ("Fred isn't working" -- this already happened, per the WhatsApp PRD)
+- Founders get generic advice indistinguishable from ChatGPT
+- Loss of the canonical 9-document personality framework that defines FRED
+- Irreversible if changes compound over multiple optimization cycles
+
+**Warning signs:**
+- FRED responses getting longer on average (verbosity creep)
+- Increase in hedging phrases ("It depends", "You might want to consider")
+- Decrease in reframing behavior (the prime directive: "Reframe Before You Prescribe")
+- Fred Cary or power users saying FRED "feels different"
 
 **Prevention:**
-1. Set ALL four Sentry env vars simultaneously: `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
-2. Add `SENTRY_AUTH_TOKEN` to both Vercel Build Environment AND GitHub Actions secrets
-3. Verify source maps upload by checking Sentry dashboard "Source Maps" section after first build
-4. Test that `hideSourceMaps: true` in `next.config.mjs` (line 76) actually removes `.map` files from the production bundle
-5. Verify the `tunnelRoute: "/monitoring-tunnel"` (line 78) works -- it proxies Sentry events through your domain to avoid ad blockers, but must be tested
+1. **Immutable core prompt.** The `FRED_CAREY_SYSTEM_PROMPT` in `lib/ai/prompts.ts` and the 9 canonical documents must NEVER be modified by automated systems. Period. Treat them as read-only constants.
+2. **Layered prompt architecture.** Only tune a "supplemental guidance" layer that sits BELOW the core prompt. If supplemental guidance contradicts the core, the core wins.
+3. **Voice regression test suite.** Before any prompt change ships, run 20+ canonical test scenarios through the new prompt and validate:
+   - Uses Fred's signature phrases (check `FRED_COMMUNICATION_STYLE`)
+   - Challenges assumptions rather than agreeing
+   - Keeps responses concise (not verbose)
+   - Applies Reality Lens dimensions without being asked
+4. **Human-in-the-loop gate.** No prompt changes go live without a human reviewing 10 sample outputs. The existing A/B test system (`lib/ai/ab-testing.ts`) supports canary rollouts -- use it.
+5. **Snapshot and rollback.** Version every prompt change in the `ab_experiments` / `ab_variants` tables. If voice quality degrades, rollback to the last known-good variant within minutes.
 
-**Detection:** After enabling, trigger a test error. If the stack trace is minified in Sentry, source maps failed. If events never arrive, the DSN or tunnel route is wrong.
+**Detection:** Weekly automated "voice fidelity" check: run 10 standard scenarios, score outputs against the Operating Bible's communication style rules. Alert if score drops below threshold.
 
-**Severity:** CRITICAL -- Defeats the entire purpose of adding monitoring if stack traces are unreadable.
+**Phase mapping:** Must be addressed in Phase 1 (foundation) -- before any feedback collection begins. The guardrails must exist before the optimization loop exists.
 
-**Phase to address:** Infrastructure Hardening (first phase of v6.0)
-
-**Confidence:** HIGH -- Verified against existing codebase (`next.config.mjs`, `sentry.client.config.ts`, `sentry.server.config.ts`), [Sentry Next.js Manual Setup docs](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/), and [source map troubleshooting](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/).
+**Severity:** CRITICAL -- this is existential for Sahara's value proposition.
 
 ---
 
-### Pitfall 2: Twilio A2P 10DLC Registration Blocks SMS Launch by 4+ Weeks
+### C2: Feedback-Driven Issue Flood Without Deduplication
 
-**What goes wrong:** Teams build the SMS check-in feature, set the Twilio env vars (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID`), and discover they cannot send messages at scale because A2P 10DLC registration has not been completed. Unregistered traffic faces carrier filtering, per-message surcharges, and eventual blocking.
+**What goes wrong:** The existing WhatsApp monitor (`trigger/sahara-whatsapp-monitor.ts`) already creates Linear issues from WhatsApp messages. Adding in-product feedback creates a second source of issues. Without deduplication, the same problem generates 5-50 Linear issues from different users reporting the same bug, burying real signal in noise.
 
-**Why it happens:** SMS appears simple -- "just call the Twilio API." But US carriers require brand registration and campaign registration for Application-to-Person (A2P) traffic. This process takes 2-4 weeks minimum, with common rejections adding another 1-2 weeks.
-
-**Warning signs:**
-- SMS features planned without mentioning 10DLC in timeline
-- No privacy policy language about mobile information sharing
-- Website has placeholder content or is under construction
-- No documented opt-in/opt-out flow for SMS
-- Testing with personal phone numbers only (bypasses carrier filtering)
+**Why it happens:** The current `createLinearIssue()` function does a simple GraphQL mutation with no duplicate check. Each run processes messages independently. Adding in-product feedback means the same "voice chat cuts off on Samsung" bug could generate issues from WhatsApp monitoring, thumbs-down feedback, detailed text feedback, and Sentry error alerts -- all as separate tickets.
 
 **Consequences:**
-- 4-6 week delay to SMS feature launch
-- Messages blocked or filtered by carriers (users think feature is broken)
-- Carrier surcharges of $0.003-0.005 per unregistered message
-- Registration rejection requiring re-submission with corrected information
-- If rejected, Twilio may require a "secondary vetting" which adds $40 fee and more time
+- Linear backlog becomes unmanageable
+- Team spends more time triaging than fixing
+- Critical issues get lost among duplicates
+- "Issue created" notifications spam the team
+
+**Warning signs:**
+- Linear issue count growing faster than resolution rate
+- Multiple issues with near-identical titles
+- Team stops reading Linear notifications (alert fatigue)
+- Triage meetings taking longer than 15 minutes
 
 **Prevention:**
-1. Start A2P 10DLC registration IMMEDIATELY -- before writing a single line of SMS code
-2. Register the brand first (requires: business name, EIN/Tax ID, business address, website URL)
-3. Ensure the website has:
-   - Active content (not "coming soon")
-   - Privacy policy explicitly stating "mobile information will never be shared or sold to third parties"
-   - Terms of service
-   - Clear description of SMS messaging purpose
-4. Prepare campaign registration with:
-   - Use case: "Accountability check-ins for startup founders" (be specific)
-   - Sample messages (2-3 examples of actual check-in texts)
-   - Opt-in flow description (how users consent to receive texts)
-   - Opt-out keywords (STOP, CANCEL, UNSUBSCRIBE)
-5. Budget 4 weeks for approval in the v6.0 timeline
-6. Build SMS features in parallel with registration, using test phone numbers
+1. **Semantic deduplication before issue creation.** Before creating a Linear issue, query existing open issues and use an LLM to check if the new feedback matches an existing issue. Linear's Triage Intelligence (Business plan) can help, but do not rely on it alone.
+2. **Feedback aggregation window.** Batch feedback into 4-hour windows. Within a window, group similar feedback items, then create ONE issue with a count: "Voice cutoff on Samsung (reported by 12 users)".
+3. **Feedback-to-issue linking.** Store a `linear_issue_id` on each feedback record. When new feedback matches an existing issue, add a comment to that issue instead of creating a new one.
+4. **Severity escalation, not duplication.** If 5 users report the same thing, escalate priority on the existing issue rather than creating 5 P3 tickets.
 
-**Detection:** Check Twilio Console > Messaging > Regulatory Compliance. If brand status is not "Approved" and campaign status is not "Active," SMS will be filtered.
+**Detection:** Monitor the ratio of issues created to unique root causes. If ratio exceeds 3:1, deduplication is failing.
 
-**Severity:** CRITICAL -- Timeline blocker that cannot be accelerated. Must start immediately.
+**Phase mapping:** Phase 2 (feedback collection) must include deduplication logic. Do not ship feedback collection without it.
 
-**Phase to address:** Start registration in the first week of v6.0; build SMS features in parallel.
-
-**Confidence:** HIGH -- Verified via [Twilio A2P 10DLC Campaign Approval Requirements](https://help.twilio.com/articles/11847054539547-A2P-10DLC-Campaign-Approval-Requirements), [Twilio A2P Rejection Reasons](https://help.twilio.com/articles/15778026827291-Why-Was-My-A2P-10DLC-Campaign-Registration-Rejected-), and [Improving Approval Chances](https://www.twilio.com/en-us/blog/insights/best-practices/improving-your-chances-of-a2p10dlc-registration-approval).
+**Severity:** CRITICAL -- without this, the entire feedback system becomes a liability rather than an asset.
 
 ---
 
-### Pitfall 3: LiveKit Voice Call -- Users Hear Nothing (CRITICAL Audio Playback Bug)
+### C3: A/B Testing Prompt Quality Without Statistical Controls
 
-**What goes wrong:** The CallFredModal component (`components/dashboard/call-fred-modal.tsx`) connects to LiveKit, enables the local microphone, but has NO code to handle the remote participant's (Fred agent's) audio track. The component does not listen for `RoomEvent.TrackSubscribed`, does not create `<audio>` elements, and does not handle browser autoplay policy. Users connect to calls and hear complete silence from Fred.
+**What goes wrong:** The existing A/B testing system (`lib/ai/ab-testing.ts`) has the infrastructure for variant assignment and basic stats (request count, latency, error rate) but lacks statistical significance testing, proper sample size calculations, and guardrails against early stopping. Teams declare a winner based on a few hundred interactions, ship it, and the "winning" prompt actually performs worse at scale.
 
-**Why it happens:** The modal uses the raw `livekit-client` SDK instead of the higher-level `@livekit/components-react` (which handles audio automatically). Manual Room management requires explicit audio track handling that was not implemented.
-
-**Warning signs:**
-- Call connects (UI shows "in-call") but no audio from Fred
-- Mobile browsers particularly affected (stricter autoplay policies)
-- Agent greeting from `session.say()` never heard
-- Transcript entries appear but no audio accompanies them
+**Why it happens:** LLM outputs are high-variance. A prompt might produce great responses for founders asking about unit economics but terrible ones for pitch deck reviews. Aggregated metrics hide these failure modes. Research from Statsig confirms: "statistical significance and practical significance are different things -- a p-value of 0.001 tells you the effect is real, but Cohen's d tells you whether it's big enough to matter."
 
 **Consequences:**
-- Voice call feature is **non-functional** for all users in many browsers
-- Users pay for Pro tier feature that does not work
-- Trust collapse -- "I tried to call Fred and nothing happened"
-- Support tickets flood in
+- Ship prompts that regress quality for specific user segments
+- Oscillating prompt changes (A beats B, then B beats A on different sample)
+- Loss of confidence in the optimization process
+- Potential FRED voice corruption (see C1)
+
+**Warning signs:**
+- Experiments concluded in under 1 week
+- No sample size calculation before experiment start
+- Stats only show averages, not distributions or segment breakdowns
+- "We tested it and it's better" without confidence intervals
 
 **Prevention:**
-1. Add `RoomEvent.TrackSubscribed` handler that attaches remote audio tracks:
-   ```typescript
-   room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-     if (track.kind === Track.Kind.Audio) {
-       const audioElement = track.attach();
-       document.body.appendChild(audioElement);
-     }
-   });
-   ```
-2. Add `RoomEvent.TrackUnsubscribed` handler to clean up detached elements
-3. Handle `RoomEvent.AudioPlaybackStatusChanged` for autoplay policy
-4. Add `RoomEvent.Disconnected` handler (currently missing -- Finding #4 from UI audit)
-5. Add agent join timeout (no verification agent actually joined -- Finding #2)
-6. **Or better:** Refactor to use `@livekit/components-react` with `<LiveKitRoom>` which handles all of this automatically
+1. **Pre-registration.** Before starting any A/B test, document: hypothesis, primary metric, required sample size (power analysis), and decision criteria. Store this in the `ab_experiments` table as metadata.
+2. **Minimum sample size enforcement.** The `getVariantStats()` function should refuse to declare a winner below a configurable minimum (suggest: 500 sessions per variant for chat quality, 100 for binary metrics like thumbs-up rate).
+3. **Segmented analysis.** Break results by founder stage (beginner, pre-seed, seed, Series A+), topic (unit economics, pitch review, team building), and tier (Free, Pro, Studio). A prompt that wins overall but loses for your highest-value segment is not a winner.
+4. **Model drift guard.** The existing `getVariantStats` joins on `ai_requests` and `ai_responses`, but does not track which underlying model version was used. If Anthropic updates claude-sonnet during your test, your results are invalid. Log the exact model ID per request.
+5. **Sequential testing with alpha spending.** If you must peek at results (you will), use a sequential testing framework that adjusts for multiple looks. Otherwise, early peeking inflates false positive rates to 20-30%.
 
-**Detection:** Test a voice call in Chrome, Safari, and Mobile Safari. If Fred's voice is not heard, this bug is present.
+**Detection:** Post-experiment, check if the deployed prompt's metrics match the test period. If they diverge by more than 10%, the test was unreliable.
 
-**Severity:** CRITICAL -- Feature-breaking bug already documented in VOICE-UI-AUDIT.md Finding #1.
+**Phase mapping:** Phase 3 (analysis/optimization). The A/B infrastructure exists but needs statistical rigor before running prompt experiments.
 
-**Phase to address:** Voice Call Hardening (must be first phase of voice work).
-
-**Confidence:** HIGH -- Verified against `components/dashboard/call-fred-modal.tsx` source code and LiveKit SDK documentation. Documented as CRITICAL in `.planning/VOICE-UI-AUDIT.md`.
+**Severity:** CRITICAL -- shipping bad prompts directly degrades the product.
 
 ---
 
-### Pitfall 4: Voice Agent Worker Docker Container Cannot Start
+## High-Priority Pitfalls
 
-**What goes wrong:** The voice agent Dockerfile (`workers/voice-agent/Dockerfile`) runs `npm ci --omit=dev` which skips dev dependencies, but the CMD uses `npx tsx` which is a dev dependency. The container crashes immediately on startup.
+Mistakes that cause significant delays, user frustration, or technical debt.
 
-**Why it happens:** `tsx` is listed under `devDependencies` in `package.json`. The `--omit=dev` flag is correct for production builds of the Next.js app but breaks the voice agent worker which relies on `tsx` for TypeScript execution.
+---
 
-**Warning signs:**
-- Voice agent container exits immediately with non-zero code
-- No voice agent available to join call rooms
-- LiveKit dispatch returns success but agent never connects
-- Users sit in empty rooms waiting for Fred
+### H1: Feedback Fatigue -- Wrong Timing, Wrong Frequency
+
+**What goes wrong:** Inline feedback prompts interrupt FRED's mentoring flow. A founder is having a breakthrough conversation about their positioning strategy, and a "Rate this response" widget breaks the spell. Users either ignore all feedback requests (making data useless) or leave the platform because it feels like a survey, not a mentor.
+
+**Why it happens:** Teams optimize for feedback volume ("we need more data") rather than feedback quality. They add feedback widgets to every message or pop up modals after every session.
 
 **Consequences:**
-- Voice call feature entirely non-functional in Docker/Railway deployment
-- Cascading failure: call room created, user connected, but agent never joins
-- No audio, no transcript, no summary -- complete feature failure
+- Feedback response rate drops below 5% (industry baseline for in-product feedback)
+- Remaining feedback is biased toward highly negative experiences (see H2)
+- User satisfaction drops due to interruptions
+- FRED feels less like a mentor and more like a customer service bot
+
+**Warning signs:**
+- Feedback response rate declining week-over-week
+- Users dismissing feedback prompts within <1 second (rage-clicking away)
+- Support tickets about "too many popups"
+- Session length decreasing after feedback widgets launch
 
 **Prevention:**
-1. Either move `tsx` to `dependencies` in `package.json`, or
-2. Pre-compile TypeScript in the Dockerfile and run with `node`:
-   ```dockerfile
-   RUN npx tsc -p workers/voice-agent/tsconfig.json
-   CMD ["node", "workers/voice-agent/dist/index.js", "start"]
-   ```
-3. Also fix tsconfig.json `include` array (references `lib/voice-agent.ts` and `lib/agents/fred-agent-voice.ts` which are not copied into the Docker image)
-4. Test Docker build and runtime in CI before deploying
+1. **Session-end only for detailed feedback.** Never interrupt a FRED conversation with a feedback request. Offer a single lightweight prompt (thumbs up/down) ONLY after the user has been idle for 30+ seconds or explicitly ends the session.
+2. **Throttle per user.** Maximum one detailed feedback request per week per user. Track last feedback timestamp in user metadata.
+3. **Contextual triggers only.** Ask for feedback when it is contextually relevant:
+   - After a pitch deck review is delivered
+   - After a goal milestone is completed
+   - After an IRS score changes significantly
+   - NOT after routine chat messages
+4. **Passive signals first.** Before adding any explicit feedback widget, instrument passive signals: session duration, return rate, message count, whether user completed suggested action items. These are high-signal, zero-friction.
+5. **Progressive disclosure.** Start with thumbs up/down (0.5 seconds of user effort). Only show "Tell us more" if they click thumbs down. Never show a textarea by default.
 
-**Detection:** Run `docker build -t fred-voice . && docker run fred-voice` -- container will crash on startup if `tsx` is not available.
+**Detection:** Track feedback prompt-to-response ratio. If below 10%, you are asking too often or at the wrong time.
 
-**Severity:** CRITICAL -- Deployment blocker for voice agent. Documented as H-3 in `.planning/VOICE-WORKER-AUDIT.md`.
+**Phase mapping:** Phase 2 (feedback collection). UX design must be finalized before any widget code is written.
 
-**Phase to address:** Voice Call Hardening (immediate fix before any voice deployment).
-
-**Confidence:** HIGH -- Verified against `workers/voice-agent/Dockerfile`, `package.json` devDependencies, and Dockerfile CMD.
+**Severity:** HIGH -- directly affects user experience and data quality.
 
 ---
 
-### Pitfall 5: Room Name Format Breaks All Voice Call Tracking
+### H2: Survivorship and Negativity Bias in Feedback
 
-**What goes wrong:** The `fred/call` route creates room names as `fred-call_${userId}_${Date.now()}` (prefix first), but the LiveKit webhook handler's `extractUserIdFromRoom()` expects `${userId}_...` (userId first). The function splits on the first underscore and gets `fred-call` instead of the userId. Result: `host_user_id` is always `null`, coaching sessions are never created, call duration tracking is broken.
+**What goes wrong:** Only dissatisfied users bother to give feedback. The feedback dataset over-represents problems and under-represents successes. When you optimize based on this biased data, you make FRED less direct (because blunt advice gets thumbs-down from some users) and more hand-holdy (because confused beginners are the ones who complain).
 
-**Why it happens:** Two different developers wrote the call route and the webhook handler, and the room name format convention was not documented.
-
-**Warning signs:**
-- `video_rooms.host_user_id` column is always NULL for voice call rooms
-- `coaching_sessions` table has no voice call entries
-- Users have no record of their voice coaching sessions
-- Dashboard "recent calls" section is empty
+**Why it happens:** Satisfied users have no reason to stop and rate. They got value and moved on. Dissatisfied users are motivated to express frustration. This is a well-documented cognitive bias in UX research. Additionally, users who churned never give feedback at all (survivorship bias).
 
 **Consequences:**
-- Complete loss of call history for all users
-- No coaching session records for billing/analytics
-- Impossible to generate post-call summaries tied to user accounts
-- Silent data loss -- no error thrown, just null values
-
-**Prevention:**
-1. Change room name format to `${userId}_fred-call_${Date.now()}` so userId comes first
-2. Add integration test that verifies webhook correctly extracts userId from room name
-3. Document room name format convention in a shared constants file
-
-**Detection:** After any voice call, query `SELECT host_user_id FROM video_rooms WHERE room_name LIKE '%fred-call%'`. If all values are NULL, this bug is present.
-
-**Severity:** CRITICAL -- Silent data loss. Documented as HIGH in `.planning/VOICE-API-AUDIT.md` Findings #1 and #2.
-
-**Phase to address:** Voice Call Hardening.
-
-**Confidence:** HIGH -- Verified against `app/api/fred/call/route.ts` line 84 and `app/api/livekit/webhook/route.ts` lines 53-54, 283-289.
-
----
-
-## Major Pitfalls
-
-Mistakes that cause significant delays or architectural problems.
-
----
-
-### Pitfall 6: Stripe Connect Conflicts with Existing Stripe Subscription Setup
-
-**What goes wrong:** Adding Stripe Connect for marketplace payments to an existing Stripe subscription integration introduces account architecture complexity. The existing setup uses direct charges for subscriptions. Stripe Connect requires choosing between Standard, Express, or Custom connected accounts, and the choice affects the entire payment flow. Teams add Connect without understanding that it changes webhook payloads, introduces new event types, and requires additional KYC flows for service providers.
-
-**Why it happens:** Stripe Connect is treated as "just another Stripe feature" when it is actually a fundamentally different payment architecture. The existing webhook handler at `app/api/stripe/webhook/route.ts` handles 6 event types -- Connect adds 20+ new event types.
+- Prompt optimization regresses quality for power users (who are satisfied and silent)
+- FRED becomes increasingly cautious and hedging
+- Product decisions driven by the vocal minority
+- False signal: "users hate direct feedback" when actually 90% of users love it
 
 **Warning signs:**
-- "We'll just add Stripe Connect to the existing webhook" mentality
-- No separate webhook endpoint for Connect events
-- Marketplace payments mixed with subscription payments in the same Stripe account
-- No plan for provider onboarding flow (KYC, bank account setup)
-- Expired onboarding links not handled (they expire after 7 days)
+- Feedback sentiment is >70% negative
+- Thumbs-down rate on FRED's challenging/reframing responses is disproportionately high
+- No feedback from Pro/Studio tier users (your best customers)
+- Feedback volume correlates with bug reports, not with usage
+
+**Prevention:**
+1. **Stratified sampling.** Actively solicit feedback from users who are NOT complaining. Target: proportional representation across tiers, founder stages, and usage frequency. If 60% of active users are Pro tier, 60% of feedback requests should go to Pro users.
+2. **Separate bug reports from quality feedback.** A "this didn't work" (bug) is fundamentally different from "I didn't like this answer" (quality). Route them differently. Bug reports go to Linear. Quality feedback goes to the prompt optimization pipeline.
+3. **Implicit positive signals.** Count as positive feedback: user follows FRED's advice (takes suggested action), user returns within 24 hours, user upgrades tier, user shares a link. These are stronger signals than an explicit thumbs-up.
+4. **Weight by user value.** Feedback from a Studio-tier founder who has been on the platform for 3 months should carry more weight than feedback from a Free-tier user on their first session. Not because free users don't matter, but because experienced users have calibrated expectations.
+5. **Control group.** Always maintain a set of users who receive NO feedback prompts. Compare their behavior (retention, session length, upgrade rate) to the feedback-prompted group. If the feedback-prompted group shows worse metrics, the feedback system itself is the problem.
+
+**Detection:** Weekly bias report: compare feedback sentiment distribution to overall usage metrics (retention, session length, NPS if available). If they diverge significantly, bias is present.
+
+**Phase mapping:** Phase 2 (feedback collection design) and Phase 3 (analysis). Bias mitigation must be designed into the collection mechanism, not bolted on after.
+
+**Severity:** HIGH -- biased data leads to systematically wrong optimization decisions.
+
+---
+
+### H3: Performance Impact on the Chat Pipeline
+
+**What goes wrong:** Adding feedback collection, sentiment analysis, and real-time analytics to the existing chat pipeline introduces latency. FRED already has documented latency issues (per FRED-CHAT-LATENCY-REPORT.md). Inline feedback widgets add DOM elements, event listeners, and API calls to every message render. Feedback submission triggers Supabase writes, and if those are synchronous, they block the next FRED response.
+
+**Why it happens:** Feedback features are treated as "simple additions" that just add a button. But each button needs state management, optimistic UI, error handling, and a write path. When multiplied by every message in a conversation, the overhead compounds.
 
 **Consequences:**
-- Webhook handler becomes a 500+ line monolith trying to handle both subscriptions and marketplace
-- Connected account verification failures not caught (accounts can be "onboarded" but `charges_enabled: false`)
-- Tax reporting complexity (1099 forms for connected accounts)
-- Refund flow becomes complex (who gets refunded -- platform or provider?)
-- Existing subscription billing potentially disrupted during Connect integration
+- Chat latency increases by 50-200ms per message (noticeable)
+- Memory leaks from feedback widget event listeners in long conversations
+- Supabase connection pool exhaustion if feedback writes are not batched
+- Existing 335 lint errors and 12 test failures become harder to diagnose
+
+**Warning signs:**
+- Time-to-first-token increases after feedback feature ships
+- Lighthouse performance score drops
+- `use-fred-chat.ts` hook re-renders increase
+- Supabase connection count spikes during peak usage
 
 **Prevention:**
-1. Create a SEPARATE webhook endpoint for Connect events (`/api/stripe/connect/webhook`)
-2. Use Express accounts for service providers (simplest onboarding, Stripe handles most compliance)
-3. Always check `charges_enabled` AND `payouts_enabled` after onboarding -- redirect completion does not guarantee approval
-4. Handle expired onboarding links (re-generate and re-send)
-5. Plan the fee structure upfront: platform fee percentage, payout timing, refund responsibility
-6. Keep existing subscription webhook handler unchanged -- add Connect logic in new files
-7. Test Connect in Stripe Test Mode thoroughly before going live
+1. **Fire-and-forget for feedback writes.** Feedback submission must be asynchronous and non-blocking. Use `navigator.sendBeacon()` for browser-side or a dedicated queue. Never `await` a feedback write in the chat response path.
+2. **Lazy load feedback widgets.** Do not import feedback components in the initial chat bundle. Use `React.lazy()` or dynamic import. The thumbs-up/down icons are tiny, but the submission logic, animation, and state management are not.
+3. **Batch feedback writes.** Buffer feedback events client-side (max 10 or every 30 seconds) and write to Supabase in a single batch. This reduces connection overhead from N writes to 1.
+4. **Separate feedback table from chat tables.** Do not add columns to existing `chat_messages` or `ai_requests` tables. Create a dedicated `feedback_events` table with its own indexes. This prevents feedback queries from slowing down chat queries.
+5. **Performance budget.** Set a hard limit: feedback features must add less than 50ms to p95 chat latency and less than 20KB to the chat bundle. Measure before and after with Lighthouse CI.
+6. **Build compatibility.** The project uses `next build --webpack` (Turbopack fails). Verify that any new feedback dependencies are webpack-compatible. Test the build after adding packages.
 
-**Detection:** After marketplace provider onboarding, check `stripe.accounts.retrieve(accountId)` for `charges_enabled: true`. If false, the provider cannot receive payments.
+**Detection:** Add a latency comparison metric to the existing health monitor (`lib/ai/health-monitor.ts`): track p50/p95/p99 chat latency before and after feedback feature deployment.
 
-**Severity:** MAJOR -- Architectural decision that is hard to reverse. Wrong account type choice requires rewriting marketplace payment flow.
+**Phase mapping:** Phase 2 (implementation). Performance testing must happen before, during, and after feedback feature rollout.
 
-**Phase to address:** Service Marketplace (must decide Connect architecture before building marketplace features).
-
-**Confidence:** MEDIUM -- Verified against [Stripe Connect docs](https://docs.stripe.com/connect) and [marketplace building guide](https://docs.stripe.com/connect/end-to-end-marketplace). Specific integration with existing Sahara Stripe setup needs phase-specific research.
+**Severity:** HIGH -- FRED latency is already a known pain point. Making it worse is unacceptable.
 
 ---
 
-### Pitfall 7: Video Hosting Choice Locks In Cost Structure and DX
+### H4: WhatsApp API Compliance and Rate Limit Violations
 
-**What goes wrong:** Teams choose a video hosting provider (Mux, Cloudflare Stream, YouTube embeds) based on initial feature comparison, then discover the cost structure or DX limitations only at scale. YouTube embeds are free but destroy the premium feel and cannot track per-user progress. Cloudflare Stream is cheap but has limited analytics. Mux is developer-friendly but costs scale with minutes watched.
+**What goes wrong:** The existing WhatsApp monitor uses BrowserBase (browser automation) to scrape messages from WhatsApp Web. This is a Terms of Service violation for WhatsApp. If Meta detects it, the phone number gets banned. Additionally, if you expand to sending feedback-resolution notifications via WhatsApp, you must use the official Business API with pre-approved message templates, and you face per-portfolio rate limits.
 
-**Why it happens:** Video hosting is evaluated by feature checklist, not by cost modeling at projected scale. A content library with 50 videos watched by 1,000 users has fundamentally different economics than 500 videos watched by 50,000 users.
-
-**Warning signs:**
-- No cost projection based on expected usage
-- Choosing YouTube embeds "to save money" without considering branding/tracking loss
-- No consideration of DRM requirements (can users download/share course videos?)
-- Player customization not evaluated (branded player vs generic)
-- No progress tracking architecture (resume where you left off)
+**Why it happens:** The current implementation (`trigger/sahara-whatsapp-monitor.ts`) was built as a pragmatic shortcut -- scraping a group chat rather than integrating the official API. This works until it does not. Scaling to user-facing feedback notifications requires the official API path.
 
 **Consequences:**
-- YouTube embeds: No per-user progress tracking, no DRM, ads on videos, users can share links publicly
-- Cloudflare Stream: Limited analytics, no built-in transcription or chapter generation
-- Mux: Higher per-minute costs at scale, but best developer experience and analytics
-- Switching providers mid-flight requires re-encoding all videos and rewriting player integration
+- Phone number banned by Meta (permanent, no appeal for scraping violations)
+- Loss of the "Sahara Founders" WhatsApp group communication channel
+- Messages not delivered due to rate limiting (250 conversations/24h for new numbers, scaling to 100K after verification in Q2 2026)
+- Business portfolio pacing: Meta now batches large campaigns and can pause delivery based on feedback signals
+
+**Warning signs:**
+- WhatsApp Web session disconnects more frequently
+- QR code re-authentication required (sign Meta is suspicious)
+- Messages marked as "pending" or not delivered
+- BrowserBase session creation failures increasing
 
 **Prevention:**
-1. Model costs for Year 1: estimate number of videos, average length, expected views per month
-2. For a founder-focused platform with <10K users initially, Mux is recommended:
-   - Per-title AI encoding (optimal quality at lowest bitrate)
-   - Built-in transcript generation (useful for FRED content understanding)
-   - Detailed viewer analytics (who watched what, where they dropped off)
-   - Simple API, ready in 5 seconds
-3. If cost is the primary constraint, Cloudflare Stream is the budget option:
-   - $1/1000 minutes stored, $1/1000 minutes delivered
-   - No per-title encoding optimization
-   - Basic analytics only
-4. Do NOT use YouTube embeds for premium content -- it signals "not serious"
-5. Abstract the video player behind a component interface so switching providers later requires changing one component, not every page
+1. **Migrate to official WhatsApp Business API.** Use a BSP (Business Solution Provider) like Twilio, MessageBird, or 360dialog. The official API provides webhooks for incoming messages, eliminating the need for browser scraping.
+2. **Pre-approve message templates.** All outbound messages (feedback resolution notifications) must use Meta-approved templates. Template approval takes 24-48 hours. Plan ahead.
+3. **Respect rate limits.** New numbers start at 250 conversations/24h. As of Q2 2026, verified businesses jump directly to 100K/day. Budget accordingly for the demo to 250 founders.
+4. **Quality rating monitoring.** Meta assigns quality ratings (Green/Yellow/Red) based on user feedback on your messages. If users block or report your messages, your quality drops and limits decrease. Never send unsolicited notifications.
+5. **24-hour messaging window.** You can only send free-form messages within 24 hours of a user's last message. After that, you must use approved templates and pay per conversation.
 
-**Detection:** Calculate monthly video hosting cost = (total video minutes) x (average views per video) x (per-minute-delivered price). If this exceeds 10% of content-related revenue, the choice may not be sustainable.
+**Detection:** Track WhatsApp API response codes. Error 131056 (rate limit) and 131049 (message failed) indicate compliance issues.
 
-**Severity:** MAJOR -- Hard to reverse after content is uploaded and URLs are embedded.
+**Phase mapping:** Phase 1 (infrastructure). Migrate off BrowserBase scraping before building any feedback notification system on top of it.
 
-**Phase to address:** Content Library planning (decide before building video infrastructure).
-
-**Confidence:** MEDIUM -- Based on [Mux vs Cloudflare Stream comparison](https://www.mux.com/compare/cloudflare-stream), [Mux pricing](https://www.mux.com/pricing), and [Cloudflare Stream pricing](https://developers.cloudflare.com/stream/). Exact cost projections need Sahara-specific usage estimates.
+**Severity:** HIGH -- current approach is a ticking time bomb.
 
 ---
 
-### Pitfall 8: Two-Sided Marketplace Cold Start -- No Providers, No Value
+### H5: Admin Dashboard Becomes a Data Graveyard
 
-**What goes wrong:** The service marketplace launches with no service providers, creating a chicken-and-egg problem. Founders visit the marketplace, find nothing available, and never return. Service providers see no users and don't bother listing. The feature becomes a ghost town that actively damages platform perception.
+**What goes wrong:** The feedback admin dashboard is built, populated with charts and tables, and then nobody looks at it. Feedback accumulates without being acted on. Users who gave feedback see no changes. The team builds a "feedback insights" page that shows beautiful sentiment trends that drive zero decisions.
 
-**Why it happens:** Teams build the marketplace infrastructure (listings, search, payments) before solving supply acquisition. The marketplace code is "ready" but the marketplace is empty.
-
-**Warning signs:**
-- Marketplace development proceeds without a provider recruitment plan
-- No curated initial catalog of services
-- Launch plan assumes providers will "come organically"
-- No clear value proposition for providers (why list here vs their own website?)
-- No minimum viable catalog defined (how many providers make the marketplace feel "alive"?)
+**Why it happens:** Dashboards are built for "viewing data" rather than "making decisions." Without clear ownership, regular review cadence, and workflow integration, dashboards become read-only museums of historical data.
 
 **Consequences:**
-- Empty marketplace visible to all users (damages brand)
-- Founders lose trust: "Sahara promised expert connections but there's nothing here"
-- Wasted development effort on a feature nobody uses
-- Difficult to attract providers after users have already judged the marketplace as empty
+- Feedback system exists but produces no product improvements
+- Users stop giving feedback because nothing changes
+- Engineering effort wasted on dashboard that nobody uses
+- False sense of "we're listening to users" without actually acting
+
+**Warning signs:**
+- Dashboard page views declining after initial launch excitement
+- No Linear issues created from dashboard insights in 30+ days
+- "Action items" column in dashboard always empty
+- Team meetings never reference dashboard data
 
 **Prevention:**
-1. Define minimum viable catalog: at least 5-10 curated service providers BEFORE marketplace launch
-2. Consider a "concierge marketplace" first: users request services, Sahara team matches manually
-3. Seed with Fred Cary's network (mentors, advisors, legal/accounting professionals)
-4. Start with a waitlist for providers, onboard them 1:1 ("We'll build your first listing for you")
-5. Soft launch to Pro/Studio tier only (smaller audience, higher quality signal)
-6. Gate marketplace visibility until minimum catalog threshold is met
+1. **Workflow, not dashboard.** Instead of a "view feedback" page, build a "triage feedback" workflow. Each feedback item has a status: New > Reviewed > Actioned > Resolved > Communicated. If items stay in "New" for more than 7 days, alert the product owner.
+2. **Weekly digest email.** Send a weekly summary to the product team (already have Resend integration) with: top 5 feedback themes, sentiment trend, unresolved items count, items resolved this week. Force awareness without requiring a dashboard visit.
+3. **Link to roadmap.** Every feedback theme should link to a Linear issue or roadmap item. If a theme has no linked issue, it is flagged for triage. This closes the gap between "data collected" and "data acted on."
+4. **Kill metrics that don't drive action.** Do not show vanity metrics (total feedback count, average sentiment score). Show actionable metrics: "Top 3 unresolved complaints this week," "Features most requested by Pro/Studio users," "Feedback items that match open bugs."
+5. **Assign ownership.** One person (not "the team") owns reviewing feedback weekly. If that person is on vacation, it auto-delegates. Use a rotation if needed.
 
-**Detection:** If marketplace has fewer than 5 active providers at launch, do NOT make it visible to all users.
+**Detection:** Track the ratio of feedback items that result in a code change, prompt update, or documented decision within 14 days. If below 20%, the system is not producing value.
 
-**Severity:** MAJOR -- Reputational risk. Empty marketplaces actively harm platform perception.
+**Phase mapping:** Phase 4 (admin/close-the-loop). Design for action, not for display.
 
-**Phase to address:** Service Marketplace planning (supply-side acquisition must start weeks before code is written).
-
-**Confidence:** MEDIUM -- Based on [Reforge marketplace cold start guide](https://www.reforge.com/guides/beat-the-cold-start-problem-in-a-marketplace) and marketplace pattern analysis. Specific Sahara provider network size unknown.
+**Severity:** HIGH -- a feedback system that collects but never acts is worse than no feedback system (it wastes user goodwill).
 
 ---
 
-### Pitfall 9: Boardy API Integration -- External Dependency with Unknown Reliability
+## Medium-Priority Pitfalls
 
-**What goes wrong:** The Boardy API integration for investor matching creates a hard dependency on an external startup's API. Boardy is a relatively new company (raised $8M seed). If their API goes down, changes, rate-limits, or the company pivots, the investor matching feature breaks with no fallback.
+Mistakes that cause delays or technical debt but are recoverable.
 
-**Why it happens:** External API integrations are treated as "just another HTTP call." Teams don't plan for the API being unavailable, changing without notice, or having different rate limits than expected.
+---
 
-**Warning signs:**
-- No mock/fallback when Boardy API is unavailable
-- API key exists in `.env.example` (`BOARDY_API_KEY`) but no documentation on API contract
-- No circuit breaker or retry logic
-- Investor matching feature shows blank page when Boardy is down
-- No SLA or uptime guarantee from Boardy
+### M1: Sentiment Analysis Overconfidence on Short Text
+
+**What goes wrong:** A thumbs-down on a FRED response is unambiguous. But a text comment like "interesting" or "ok" is ambiguous. Running LLM-based sentiment analysis on 1-5 word feedback produces high-confidence scores on ambiguous input. The system reports "72% negative sentiment" when the reality is "72% of feedback was too short to classify meaningfully."
+
+**Why it happens:** Modern transformers achieve 94%+ accuracy on sentiment benchmarks, but those benchmarks use full sentences and reviews. Short, contextless feedback in a coaching product (where "tough love" is a feature) does not map to standard sentiment categories.
 
 **Consequences:**
-- Studio tier feature (Boardy Investor/Advisor Matching) becomes unreliable
-- Users paying $249/month for a feature that depends on an external startup's uptime
-- No graceful degradation -- feature either works or fails
-- API changes require emergency code updates
-- Boardy rate limits could block high-usage periods
+- Misleading sentiment dashboards
+- Optimization toward false negatives (FRED's directness classified as "negative experience")
+- Wasted engineering time building sentiment trends that are noise
 
 **Prevention:**
-1. Build the integration with a mock client that returns realistic data when `BOARDY_API_KEY` is not set (the `.env.example` already notes "uses AI mock client when absent" -- verify this works)
-2. Implement circuit breaker pattern: after 3 consecutive failures, switch to mock/cached data for 5 minutes
-3. Cache Boardy responses (investor profiles don't change every minute)
-4. Display graceful degradation: "Investor matching is temporarily unavailable. Here are your previously saved matches."
-5. Log all Boardy API calls and responses for debugging
-6. Define the API contract in a TypeScript interface and validate responses (don't trust external data shapes)
-7. Set up Sentry alerts for Boardy API error rate spikes
+1. **Classify confidence, not just sentiment.** For each feedback item, output both sentiment AND confidence. Discard or flag items where confidence < 0.7.
+2. **Context-aware analysis.** Include the FRED message that triggered the feedback in the sentiment analysis prompt. "This was hard to hear" after a Reality Lens assessment is POSITIVE feedback (FRED did its job). Without context, it reads as negative.
+3. **Three-bucket minimum.** Do not use positive/negative binary. Use: positive, negative, neutral/ambiguous, and "coaching discomfort" (a special category for when FRED's directness is working as intended but feels uncomfortable).
+4. **Thumbs up/down as primary metric.** Binary signals are unambiguous. Use them as the primary metric. Use text analysis only as a supplement, never as a replacement.
 
-**Detection:** Monitor Boardy API response time and error rate. If P95 latency exceeds 5 seconds or error rate exceeds 5%, the circuit breaker should be tripping.
+**Detection:** Sample 50 feedback items monthly. Have a human classify them. Compare to automated classification. If agreement < 80%, the automated system needs calibration.
 
-**Severity:** MAJOR -- Revenue-impacting if Studio tier's marquee feature is unreliable.
+**Phase mapping:** Phase 3 (analysis). Do not over-invest in NLP for short feedback. Binary signals first.
 
-**Phase to address:** Boardy API Integration phase.
-
-**Confidence:** MEDIUM -- Based on [Boardy AI company profile](https://www.boardy.ai/), `.env.example` configuration, and SaaS integration best practices. No direct access to Boardy API documentation to verify reliability.
+**Severity:** MEDIUM -- leads to bad analysis but does not directly harm users.
 
 ---
 
-### Pitfall 10: CI/CD Pipeline -- Every Step Uses `|| true` (Failures Are Invisible)
+### M2: Close-the-Loop Notification Spam
 
-**What goes wrong:** The current GitHub Actions pipeline (`.github/workflows/deploy.yml`) uses `|| true` on lint (line 29), type check (line 32), test (line 35), security audit (line 54), and Trivy scan (`continue-on-error: true`, line 61). This means the pipeline NEVER fails on code quality issues. Adding new features in v6.0 with this pipeline means regressions, type errors, and test failures go completely undetected.
+**What goes wrong:** Users give feedback. The team fixes things. The system sends "We fixed this!" notifications. But it sends too many, or sends them for trivial fixes, or sends them weeks later when the user has forgotten what they reported. The notification channel (email, in-app, WhatsApp) becomes noise.
 
-**Why it happens:** During rapid initial development, `|| true` was added to keep builds passing while the codebase was unstable. It was never removed after stabilization.
-
-**Warning signs:**
-- "Build passed" badge on PRs that have type errors
-- Tests failing locally but CI shows green
-- Lint errors accumulating without anyone noticing
-- Security vulnerabilities not caught until production
+**Why it happens:** "Closing the loop" is a UX best practice. Teams implement it literally: every feedback item that gets resolved triggers a notification. But users gave 3 pieces of feedback over 2 months and do not remember them individually.
 
 **Consequences:**
-- v6.0 development introduces regressions that are not caught until users report them
-- Type errors in new Stripe Connect/Boardy/LiveKit code go undetected
-- Test coverage becomes meaningless (tests can fail and nothing happens)
-- Security vulnerabilities in new dependencies are not flagged
-- False confidence from "all green" CI
+- Users unsubscribe from notifications (losing a communication channel)
+- "We fixed this" messages for things the user barely cared about feel spammy
+- WhatsApp notification limits consumed by low-value messages
+- User trust decreases if notifications feel automated/impersonal
 
 **Prevention:**
-1. Remove `|| true` from critical steps in phases:
-   - Phase 1: Remove from `npm run test` (774/778 passing, fix the 4 failures)
-   - Phase 2: Remove from `npx tsc --noEmit` (fix remaining type errors)
-   - Phase 3: Remove from `npm run lint` (fix lint issues incrementally)
-2. Add test matrix for new features (LiveKit tests, Stripe Connect tests, Boardy mock tests)
-3. Add a "voice agent Docker build" check to CI
-4. Add Sentry release tracking to the deploy step
-5. Keep security scan as `continue-on-error` for now but add Slack notification on security findings
+1. **Batch resolution updates.** Send a monthly "Here's what we improved based on your feedback" email. Not per-item. Reference 3-5 improvements. Use the existing email engagement system (`lib/email/milestones/`).
+2. **Threshold for notification.** Only notify for P1/P2 fixes or features the user explicitly requested. Do not notify for minor tweaks.
+3. **Staleness cutoff.** If feedback is older than 30 days, do not send a resolution notification. The user has moved on.
+4. **Opt-in, not opt-out.** Let users choose if they want feedback resolution updates. Default: off. Only suggest opting in after their first feedback submission.
+5. **Personal touch.** If Fred Cary himself cares about a specific piece of feedback (common in the current WhatsApp flow), a personal acknowledgment is worth more than 100 automated notifications.
 
-**Detection:** Run `npm run lint && npx tsc --noEmit && npm run test` locally. If any of these fail, the CI pipeline is hiding failures.
+**Detection:** Track notification open rates. If below 15%, you are sending too many or the wrong kind.
 
-**Severity:** MAJOR -- Invisible regressions during the largest feature expansion yet.
+**Phase mapping:** Phase 4 (close-the-loop). Build the notification system with throttling from day one.
 
-**Phase to address:** Infrastructure Hardening (CI/CD expansion) -- should be first phase of v6.0.
-
-**Confidence:** HIGH -- Verified against `.github/workflows/deploy.yml` lines 29, 32, 35, 54, 61.
+**Severity:** MEDIUM -- annoying but recoverable by adjusting frequency.
 
 ---
 
-## Moderate Pitfalls
+### M3: Privacy/GDPR Concerns with Feedback Storage and AI Analysis
 
-Mistakes that cause delays or technical debt.
+**What goes wrong:** Feedback text may contain personal information (founder names, company names, financial data). Storing it in plain text in Supabase and then sending it to Anthropic/OpenAI for sentiment analysis creates a GDPR data processing chain that requires explicit consent, data minimization, and documented legitimate interest assessments.
 
----
+**Why it happens:** Feedback is treated as "just another database field" rather than as personal data requiring protection. The EDPB's April 2025 opinion clarified that LLMs "rarely achieve anonymization standards" -- meaning feedback text processed by AI is still personal data.
 
-### Pitfall 11: Content Library Progress Tracking Architecture Mismatch
-
-**What goes wrong:** Teams build a content library (courses, videos, articles) without designing the progress tracking data model upfront. They add a `completed` boolean per content piece, then discover they need: resume position for videos, quiz scores, completion percentage, time spent, certificates, and prerequisite enforcement. Retrofitting this requires database migrations and UI rewrites.
-
-**Warning signs:**
-- Content model has only `id`, `title`, `url`, `type` fields
-- No `user_content_progress` junction table
-- Video progress stored client-side (lost on device switch)
-- No concept of "lesson" vs "module" vs "course" hierarchy
-- Completion tracking is a simple boolean
+**Consequences:**
+- GDPR violation risk (fines up to 4% of annual global turnover)
+- Users discovering their feedback is being processed by third-party AI without consent
+- Data subject access requests (DSARs) requiring you to produce all stored feedback for a user
 
 **Prevention:**
-1. Design the content hierarchy upfront: Course > Module > Lesson > Content Piece (video, article, quiz)
-2. Create `user_content_progress` table with: `user_id`, `content_id`, `progress_percent`, `video_position_seconds`, `completed_at`, `started_at`, `time_spent_seconds`
-3. Store video playback position server-side (synced on pause/close) for cross-device resume
-4. Design RLS policies for progress data from the start
-5. Plan for content gating by tier (which courses are Free vs Pro vs Studio)
-6. Consider whether content is authored in-house (CMS needed) or curated from external sources
+1. **Explicit consent at collection point.** When a user first encounters a feedback widget, show a brief notice: "Your feedback helps us improve FRED. It may be analyzed by AI to identify trends. [Learn more]". Store consent timestamp.
+2. **Data minimization.** Strip personally identifiable information before sending to AI analysis. Company names, revenue figures, and specific founder names in feedback text should be anonymized before batch processing.
+3. **Retention policy.** Auto-delete raw feedback text after 90 days. Keep only aggregated, anonymized insights. Add a Supabase cron job for cleanup.
+4. **Right to deletion.** Implement a "delete my feedback" flow in account settings. This must cascade to any derived analytics.
+5. **Processing records.** Document the feedback data flow in your Records of Processing Activities (ROPA): collection point, storage location, AI processors used, retention period, legal basis.
 
-**Detection:** If the database schema has no junction table between users and content pieces with progress fields, the architecture is insufficient.
+**Detection:** Quarterly audit: is any feedback data older than retention policy? Are all AI processing chains documented?
 
-**Severity:** MODERATE -- Fixable with migrations, but painful if content is already in production.
+**Phase mapping:** Phase 1 (foundation) for consent mechanism. Phase 2 (collection) for data handling. Phase 4 (admin) for deletion flow.
 
-**Phase to address:** Content Library.
-
-**Confidence:** MEDIUM -- Based on LMS architecture patterns and [DRM/progress tracking patterns](https://doverunner.com/blogs/integrating-drm-into-your-edtech-lms-a-guide-to-secure-online-learning/).
+**Severity:** MEDIUM -- legal risk, but Sahara's current user base is small enough that exposure is limited. Must be addressed before the Gregory alliance (80K founders).
 
 ---
 
-### Pitfall 12: Voice Agent Greeting Races with Audio Track Initialization
+### M4: Analysis Paralysis -- Collecting Everything, Acting on Nothing
 
-**What goes wrong:** In `workers/voice-agent/agent.ts` (line 114-116), `session.say()` is called immediately after `session.start()`. The TTS audio for the greeting may be generated before the WebRTC audio output track is fully negotiated, causing the greeting to be silently dropped. The first thing Fred says is never heard.
+**What goes wrong:** The feedback system collects thumbs up/down, text comments, session recordings, NPS scores, feature requests, bug reports, and sentiment analysis. The data team has 15 dashboards and 30 metrics. Nobody knows which metric to optimize. Product decisions stall because "we need more data."
 
-**Warning signs:**
-- Users report "Fred was silent at first, then started talking mid-sentence"
-- First transcript entry is the greeting, but users say they didn't hear it
-- Intermittent -- works sometimes, fails on slow connections
+**Why it happens:** It is easier to add one more data point than to make a decision. Teams confuse data collection with insight generation. The availability of AI-powered analysis makes it trivially easy to generate reports, charts, and summaries -- none of which answer the question "what should we build next?"
+
+**Consequences:**
+- Product velocity decreases
+- Feedback system costs more to maintain than the value it produces
+- Team debates metrics instead of shipping features
 
 **Prevention:**
-1. Add a short delay (500-1000ms) after `session.start()` before calling `session.say()`
-2. Or listen for `AgentSessionEventTypes.AgentStateChanged` to detect transition from `initializing` to `listening`
-3. Add a shutdown callback: `ctx.addShutdownCallback(async () => { await session.close(); })` (currently missing -- H-1)
-4. Wrap `ctx.connect()` and `ctx.waitForParticipant()` in try/catch with timeout (currently no error handling -- M-2)
+1. **One primary metric per phase.** Phase 1: feedback submission rate. Phase 2: thumbs-up ratio. Phase 3: feedback-to-action ratio. Do not add more metrics until the current one is stable.
+2. **Decision framework, not data warehouse.** For each metric, define: "If metric > X, do A. If metric < Y, do B. Otherwise, do nothing." If you cannot write this framework, you do not need the metric.
+3. **Kill unused metrics.** If a metric has not influenced a decision in 30 days, remove it from the dashboard. Storage and computation are not free.
+4. **Time-boxed analysis.** Feedback review takes maximum 1 hour per week. If it takes longer, you are collecting too much.
 
-**Detection:** Test voice calls on different network conditions. On slow connections, the greeting is more likely to be dropped.
+**Detection:** Count the number of product decisions explicitly attributed to feedback data in the last 30 days. If zero, the system is not producing value.
 
-**Severity:** MODERATE -- Bad first impression but not feature-breaking (subsequent audio works).
+**Phase mapping:** All phases. Start lean and expand only when the current data is being used.
 
-**Phase to address:** Voice Call Hardening.
-
-**Confidence:** HIGH -- Verified against `workers/voice-agent/agent.ts` and documented as H-2 in `.planning/VOICE-WORKER-AUDIT.md`.
+**Severity:** MEDIUM -- slows the team but does not harm users directly.
 
 ---
 
-### Pitfall 13: Sentry Noise Flood on Activation
+## FRED-Specific Risks
 
-**What goes wrong:** The existing `sentry.client.config.ts` (line 9) sets `tracesSampleRate: 0.1` (10% of transactions) and `replaysOnErrorSampleRate: 1.0` (100% of error sessions). For a 210-page app with known issues (4 failing tests, 90+ console.log statements), activating Sentry will immediately generate a flood of events that exhaust the Sentry quota and create alert fatigue.
+Risks unique to Sahara's architecture and FRED's persona.
 
-**Warning signs:**
-- Sentry event quota exceeded within hours of activation
-- Hundreds of `ResizeObserver loop` errors (partially filtered, line 13)
-- Network timeout errors from AI providers flooding error tracking
-- No ability to distinguish real bugs from known noise
-- Team ignores Sentry alerts because "it's always firing"
+---
+
+### F1: Existing Pre-Commit Hooks Break Feedback Integration
+
+**What goes wrong:** The project has pre-commit hooks that auto-revert changes to `dashboard/layout.tsx` and `documents/new/page.tsx`. If feedback widgets need to be added to the dashboard layout (likely) or document pages, the hooks will silently revert the changes. Engineers will commit, verify, and discover their feedback integration is missing.
+
+**Prevention:** Use the documented workaround: create adapter routes or wrapper components. For example, instead of modifying `dashboard/layout.tsx` directly, create a `dashboard/feedback-wrapper.tsx` that imports from layout and adds feedback functionality. Or update the pre-commit hooks to allow the specific changes needed.
+
+**Phase mapping:** Phase 2. Address before any UI integration work begins.
+
+---
+
+### F2: 335 Lint Errors and 12 Test Failures Create Noise
+
+**What goes wrong:** Adding feedback features generates new lint warnings and potential test failures. With 335 existing lint errors and 12 test failures, it is impossible to distinguish new issues from pre-existing ones. A feedback-related regression hides in the noise.
+
+**Prevention:** Before starting Phase 1, create a baseline snapshot of lint errors and test failures. Tag each existing issue as "pre-existing." Set up CI to fail on NEW errors only (delta checking). The existing Vitest configuration (`fileParallelism: false`) means tests run slowly -- add feedback tests to a separate test group if needed.
+
+**Phase mapping:** Phase 0 (pre-work). Baseline the current state before adding anything.
+
+---
+
+### F3: FRED Chat Latency Compounding
+
+**What goes wrong:** FRED already has documented latency issues (FRED-CHAT-LATENCY-REPORT.md). The chat pipeline uses a multi-model fallback chain (`lib/ai/fallback-chain.ts`), circuit breaker (`lib/ai/circuit-breaker.ts`), and tier-based routing (`lib/ai/tier-routing.ts`). Adding feedback collection, A/B variant resolution, and logging to this pipeline introduces additional async operations per message.
 
 **Prevention:**
-1. Start with very conservative sample rates: `tracesSampleRate: 0.01` (1%) for the first week
-2. Review and expand the `beforeSend` filter (line 12-15) -- currently only filters ResizeObserver, AbortError, and network timeout. Add filters for:
-   - Known flaky API errors that are non-critical
-   - Development-only errors that leak to production
-   - Third-party script errors (Stripe, PostHog)
-3. Set up Sentry issue grouping and alert rules BEFORE activation
-4. Create separate Sentry environments for staging vs production
-5. Configure Sentry rate limits on the project level
-6. Set up weekly Sentry triage process -- do not let issues accumulate unreviewed
+- A/B variant resolution is already cached for 5 minutes (`experimentsCache` in `ab-testing.ts`). Ensure feedback configuration uses similar caching.
+- Use the existing `fire-and-forget` pattern (documented in project architecture) for feedback writes. The project already uses this pattern for agent dispatch.
+- Never add synchronous Supabase reads to the chat hot path for feedback purposes. Pre-load feedback configuration at session start.
 
-**Detection:** Check Sentry quota usage dashboard within 24 hours of activation. If usage exceeds 50% of monthly quota in one day, sample rates are too high.
-
-**Severity:** MODERATE -- Alert fatigue kills the value of monitoring.
-
-**Phase to address:** Infrastructure Hardening -- configure BEFORE enabling in production.
-
-**Confidence:** HIGH -- Verified against `sentry.client.config.ts` and `sentry.server.config.ts` configuration.
+**Phase mapping:** Phase 2 and Phase 3. Profile the chat pipeline before and after each feedback feature addition.
 
 ---
 
-### Pitfall 14: LiveKit Webhook Missing Structured Logging
+### F4: Multi-Agent Git Conflicts
 
-**What goes wrong:** The LiveKit webhook handler (`app/api/livekit/webhook/route.ts`) is the only voice-related route that does NOT use the `withLogging()` wrapper. When voice call issues occur in production, there is no correlation ID, no structured request/response logging, and no duration tracking for webhook processing. Debugging voice call issues becomes guesswork.
+**What goes wrong:** The project has a documented history of concurrent agents writing to the same repo, causing git staging conflicts. If feedback features touch shared files (`types.ts`, `chat/route.ts`, `use-fred-chat.ts`), concurrent development will create merge conflicts.
 
-**Warning signs:**
-- "We can't figure out what happened during that call" in support tickets
-- No way to trace a call from initiation through webhook to completion
-- Duplicate webhook events creating phantom records
-- Participant records have wrong user IDs (AI agent identity detection is fragile, line 300)
+**Prevention:** Feedback features should be self-contained in new files/directories:
+- `lib/feedback/` -- all feedback logic
+- `components/feedback/` -- all feedback UI
+- `app/api/feedback/` -- all feedback API routes
+- Minimize changes to existing shared files. Use the adapter/wrapper pattern.
+
+**Phase mapping:** All phases. Establish the directory structure in Phase 1.
+
+---
+
+### F5: Feedback Loop Creates Perverse Incentives for Free Tier
+
+**What goes wrong:** Free-tier users have limited FRED interactions (5 messages, 0 days memory per MEMORY_CONFIG). They are most likely to give negative feedback because their experience is deliberately limited. If feedback-driven optimization responds to Free-tier complaints, it creates pressure to give away more for free rather than improving the paid experience.
 
 **Prevention:**
-1. Add `withLogging()` wrapper to the LiveKit webhook handler
-2. Add `withLogging()` to the LiveKit token route (also missing)
-3. Add idempotency key to `participant_joined` handler (currently inserts without upsert -- can create duplicates on retry)
-4. Fix AI agent identity detection (line 300): use specific pattern matching instead of `identity.startsWith('fred')` which could match real users named Fred
-5. Integrate all voice call logging with Sentry (once activated) for unified debugging
+- Segment all feedback by tier. Weight Pro/Studio feedback 3-5x higher for prompt optimization decisions.
+- Do not show feedback widgets to users who have not completed at least one full FRED conversation (5+ messages).
+- Frame Free-tier limitations honestly: "Upgrade to Pro for longer conversations" rather than trying to make the limited experience feel unlimited.
 
-**Detection:** After a voice call, attempt to reconstruct the full call lifecycle from logs. If you cannot, logging is insufficient.
-
-**Severity:** MODERATE -- Makes production debugging of voice calls extremely difficult.
-
-**Phase to address:** Voice Call Hardening.
-
-**Confidence:** HIGH -- Verified in `.planning/VOICE-API-AUDIT.md` Finding #5.
+**Phase mapping:** Phase 2 (collection design). Tier-aware feedback collection from day one.
 
 ---
 
-### Pitfall 15: Content Security Policy Blocks New Integrations
+## Prevention Checklist
 
-**What goes wrong:** The `next.config.mjs` has a strict Content-Security-Policy (lines 6-17) that allowlists specific domains. Adding Mux video player, Boardy API, or new external services will cause CSP violations that silently break features in the browser. Videos won't load, API calls fail, embedded content is blocked.
+Pre-flight checklist before building any feedback loop component.
 
-**Warning signs:**
-- Browser console shows CSP violation errors
-- Video player renders but shows no content
-- Boardy API calls fail in browser but work in API routes (server-side bypasses CSP)
-- New third-party widgets don't load
-
-**Prevention:**
-1. When adding Mux: add `https://stream.mux.com` and `https://*.mux.com` to `connect-src` and `media-src`
-2. When adding Cloudflare Stream: add `https://customer-*.cloudflarestream.com` to `connect-src`, `frame-src`, and `media-src`
-3. When adding Boardy: add Boardy's API domain to `connect-src`
-4. Add `media-src` directive (currently absent) for video/audio content
-5. Test every new integration in production CSP mode (not just development, which is more permissive)
-6. Consider adding a `report-uri` directive to catch CSP violations before users do
-
-**Detection:** Open browser DevTools > Console before testing any new feature. CSP violations appear as red error messages.
-
-**Severity:** MODERATE -- Silently breaks features without clear error messages to users.
-
-**Phase to address:** Each phase that adds external services.
-
-**Confidence:** HIGH -- Verified against `next.config.mjs` lines 6-17.
-
----
-
-## Minor Pitfalls
-
-Mistakes that cause annoyance but are fixable without major effort.
-
----
-
-### Pitfall 16: Marketplace Provider Onboarding Creates Two Auth Flows
-
-**What goes wrong:** The current auth system (Supabase Auth) handles founder accounts. Adding service providers to the marketplace creates a second user type that needs different onboarding, different permissions, and potentially different dashboard views. Teams bolt provider accounts onto the existing auth system without designing for two user types.
-
-**Prevention:**
-1. Design provider accounts as a role/flag on existing user accounts (not a separate auth system)
-2. Add a `user_roles` table or `role` column to handle founder vs provider distinction
-3. A user can be BOTH a founder and a provider (some founders provide services too)
-4. Provider-specific RLS policies for marketplace listings and transactions
-
-**Severity:** MINOR -- Fixable with schema additions, but messy if not planned.
-
-**Phase to address:** Service Marketplace.
-
----
-
-### Pitfall 17: Voice Call Summary Route Has No Transcript Size Limit
-
-**What goes wrong:** The `fred/call/summary` route (line 27-33) has no `.max()` constraint on the transcript array in its Zod schema. A malicious or buggy client could send thousands of transcript entries, causing an expensive LLM call that could exceed token limits or cost significant API credits.
-
-**Prevention:**
-1. Add `.max(500)` to the transcript array Zod schema
-2. Truncate transcript before sending to LLM if it exceeds token budget
-3. Track LLM cost per summary call in Sentry/analytics
-
-**Severity:** MINOR -- Unlikely in normal usage, but an abuse vector.
-
-**Phase to address:** Voice Call Hardening.
-
-**Confidence:** HIGH -- Verified in `.planning/VOICE-API-AUDIT.md` Finding #4.
-
----
-
-### Pitfall 18: In-Memory Rate Limiter and Session Store
-
-**What goes wrong:** The notification rate limiter (`lib/notifications/index.ts`, lines 93-96) and voice agent session store (`lib/voice-agent.ts`, line 66-67) use in-memory Maps. This data is lost on server restart and ineffective in multi-instance deployments (Vercel serverless).
-
-**Prevention:**
-1. Migrate to `@upstash/ratelimit` for rate limiting (Redis already configured in `.env.example`)
-2. Move voice agent sessions to Supabase table or Redis
-3. The `.env.example` already includes `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` -- use them
-
-**Severity:** MINOR -- In-memory works for low traffic but breaks at scale.
-
-**Phase to address:** Infrastructure Hardening.
-
-**Confidence:** HIGH -- Documented in `.planning/codebase/CONCERNS.md`.
-
----
-
-### Pitfall 19: Founder Tool Space -- Fundraising Bias Alienates Non-Fundraising Users
-
-**What goes wrong:** Startup tools disproportionately focus on fundraising (pitch decks, investor readiness, fundraising playbooks) because it is the most visible startup activity. But most founders are bootstrapping, and a platform that feels "only for fundraisers" loses the majority of its addressable market. The current tier naming ("Fundraising & Strategy" at $99) reinforces this bias.
-
-**Warning signs:**
-- Content library is 80%+ fundraising content
-- Marketplace providers are all fundraising-adjacent (pitch coaches, deck designers)
-- Non-fundraising founders feel the platform "isn't for them"
-- Engagement drops for bootstrapped founders after initial onboarding
-
-**Prevention:**
-1. Ensure content library has balanced categories: Operations, Growth, Product, Fundraising, Leadership, Finance
-2. Marketplace should include non-fundraising services: product development, marketing, operations, HR
-3. Dashboard messaging should adapt to founder type (bootstrapped vs fundraising)
-4. FRED's conversation flow already adapts to founder stage -- extend this to content recommendations
-5. Consider renaming "Fundraising & Strategy" tier to something more inclusive
-
-**Severity:** MINOR -- Addressable through content curation and messaging, not code changes.
-
-**Phase to address:** Content Library and Service Marketplace content strategy.
-
-**Confidence:** MEDIUM -- Based on [founder tool analysis](https://innovationlabs.harvard.edu/how-to/founder-mistakes) and startup ecosystem research.
-
----
-
-## Phase-Specific Warning Matrix
-
-| Phase | Critical Pitfalls | Major Pitfalls | Action Required |
-|-------|-------------------|----------------|-----------------|
-| **Infrastructure Hardening** | #1 Sentry build failure, #10 CI/CD invisible failures | #13 Sentry noise flood | Fix CI/CD first, then activate Sentry with conservative settings |
-| **Voice Call Hardening** | #3 No audio playback, #4 Docker crash, #5 Room name tracking | #12 Greeting race, #14 Missing logging, #17 Transcript limit | Fix all 3 CRITICAL bugs before any voice testing |
-| **Twilio SMS** | #2 A2P registration delay | -- | Start registration immediately, build code in parallel |
-| **Content Library** | -- | #7 Video hosting lock-in, #11 Progress tracking schema | Decide video host and design schema before building |
-| **Service Marketplace** | -- | #6 Stripe Connect architecture, #8 Cold start, #16 Two user types | Solve supply-side before building infrastructure |
-| **Boardy Integration** | -- | #9 External API dependency | Build with circuit breaker and mock client from day one |
-| **CSP Updates** | -- | #15 CSP blocks new integrations | Update CSP as each integration is added |
-
----
-
-## Pre-Flight Checklist for v6.0
-
-Before starting v6.0 development, verify:
-
-**Immediate (Week 1):**
-- [ ] A2P 10DLC registration submitted to Twilio
-- [ ] Sentry account created with project DSN
-- [ ] `SENTRY_AUTH_TOKEN` added to Vercel Build Environment AND GitHub Secrets
-- [ ] Video hosting provider decision made (Mux recommended)
-- [ ] Service marketplace provider recruitment started
-
-**Before Voice Work:**
-- [ ] Voice agent Docker build tested locally
-- [ ] Room name format fixed (`${userId}_fred-call_${timestamp}`)
-- [ ] Remote audio track handling added to CallFredModal
-- [ ] Agent join timeout added
-- [ ] Disconnected event handler added
-
-**Before Marketplace Work:**
-- [ ] Stripe Connect account type decided (Express recommended)
-- [ ] Separate Connect webhook endpoint planned
-- [ ] Minimum viable catalog of 5-10 providers identified
-- [ ] Provider onboarding flow designed
-
-**Before Content Library:**
-- [ ] Content hierarchy schema designed (Course > Module > Lesson)
-- [ ] `user_content_progress` table schema designed
-- [ ] CSP updated for video hosting provider
-- [ ] Content curation plan covers non-fundraising topics
-
-**Before CI/CD Changes:**
-- [ ] 4 failing tests fixed
-- [ ] `|| true` removal plan phased (tests first, then types, then lint)
-- [ ] Voice agent Docker build check added to CI
+| # | Check | Phase | Owner |
+|---|-------|-------|-------|
+| 1 | Core FRED prompt marked as immutable (read-only constant, no auto-modification) | 1 | AI Lead |
+| 2 | Voice regression test suite created (20+ scenarios) | 1 | AI Lead |
+| 3 | Baseline lint errors and test failures snapshot taken | 0 | Engineering |
+| 4 | Feedback data model designed with GDPR consent field | 1 | Backend |
+| 5 | Deduplication logic designed before feedback collection ships | 2 | Backend |
+| 6 | Feedback widget performance budget set (<50ms p95, <20KB bundle) | 2 | Frontend |
+| 7 | Tier-aware feedback sampling strategy documented | 2 | Product |
+| 8 | A/B test pre-registration template created with sample size calculator | 3 | Data |
+| 9 | WhatsApp Business API migration plan created | 1 | Infrastructure |
+| 10 | Admin dashboard designed as workflow, not report | 4 | Product |
+| 11 | Close-the-loop notification throttling rules defined | 4 | Product |
+| 12 | Feedback data retention policy documented (90 day default) | 1 | Legal/Compliance |
+| 13 | Pre-commit hook workaround documented for feedback UI files | 2 | Engineering |
+| 14 | One primary metric per phase defined | All | Product |
+| 15 | Fire-and-forget pattern confirmed for feedback writes | 2 | Backend |
 
 ---
 
 ## Confidence Assessment
 
-| Pitfall Category | Confidence | Reason |
-|------------------|------------|--------|
-| Sentry activation (#1, #13) | HIGH | Verified against existing code and Sentry docs |
-| Twilio A2P (#2) | HIGH | Verified via official Twilio documentation |
-| LiveKit voice bugs (#3, #4, #5, #12, #14, #17) | HIGH | Verified by three audit reports against source code |
-| Stripe Connect (#6) | MEDIUM | Stripe docs verified; specific Sahara integration needs deeper research |
-| Video hosting (#7) | MEDIUM | Comparison verified; cost projections need Sahara-specific usage data |
-| Marketplace cold start (#8) | MEDIUM | Pattern well-documented; Sahara provider network unknown |
-| Boardy API (#9) | MEDIUM | External dependency with limited public documentation |
-| CI/CD (#10) | HIGH | Verified against `.github/workflows/deploy.yml` |
-| Content progress (#11) | MEDIUM | LMS patterns well-documented; specific Sahara needs TBD |
-| CSP (#15) | HIGH | Verified against `next.config.mjs` |
-| Founder tool bias (#19) | MEDIUM | Industry pattern; specific Sahara user data needed to validate |
+| Area | Confidence | Notes |
+|------|------------|-------|
+| FRED voice drift (C1) | HIGH | Based on direct codebase analysis of `prompts.ts` and Operating Bible, plus research on prompt drift |
+| Issue deduplication (C2) | HIGH | Based on analysis of existing `sahara-whatsapp-monitor.ts` which has no dedup logic |
+| A/B testing stats (C3) | HIGH | Based on analysis of existing `ab-testing.ts` code which lacks statistical significance testing |
+| Feedback fatigue (H1) | MEDIUM | UX best practices well-documented; Sahara-specific timing depends on user behavior data we don't have |
+| Feedback bias (H2) | MEDIUM | Well-studied phenomenon; specific impact on FRED's coaching style is extrapolated |
+| Performance impact (H3) | HIGH | FRED latency issues already documented; chat pipeline analyzed in detail |
+| WhatsApp compliance (H4) | HIGH | Current BrowserBase approach confirmed as ToS violation; Meta rate limit changes verified for Q2 2026 |
+| Admin data graveyard (H5) | MEDIUM | Common industry pattern; specific risk for Sahara is extrapolated |
+| Sentiment accuracy (M1) | MEDIUM | Research confirms short text limitations; Sahara-specific "coaching discomfort" category is novel |
+| GDPR (M3) | MEDIUM | EDPB 2025 opinion verified; specific Sahara exposure depends on user geography |
+| Sahara-specific risks (F1-F5) | HIGH | Based on direct codebase analysis and documented project history |
 
 ---
 
 ## Sources
 
-### Official Documentation
-- [Sentry Next.js Manual Setup](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/)
-- [Sentry Source Maps Troubleshooting](https://docs.sentry.io/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/)
-- [Twilio A2P 10DLC Campaign Approval Requirements](https://help.twilio.com/articles/11847054539547-A2P-10DLC-Campaign-Approval-Requirements)
-- [Twilio A2P 10DLC Registration Rejection Reasons](https://help.twilio.com/articles/15778026827291-Why-Was-My-A2P-10DLC-Campaign-Registration-Rejected-)
-- [Twilio Improving A2P Approval Chances](https://www.twilio.com/en-us/blog/insights/best-practices/improving-your-chances-of-a2p10dlc-registration-approval)
-- [Stripe Connect Documentation](https://docs.stripe.com/connect)
-- [Stripe Connect End-to-End Marketplace](https://docs.stripe.com/connect/end-to-end-marketplace)
-- [Mux vs Cloudflare Stream Comparison](https://www.mux.com/compare/cloudflare-stream)
+**Prompt drift and regression:**
+- [Statsig: Prompt Regression Testing](https://www.statsig.com/perspectives/slug-prompt-regression-testing)
+- [Agenta: Prompt Drift Detection](https://agenta.ai/blog/prompt-drift)
+- [Orq: Model vs Data Drift in LLMs](https://orq.ai/blog/model-vs-data-drift)
 
-### Codebase Audits
-- `.planning/VOICE-API-AUDIT.md` -- 13 findings across 4 voice API routes
-- `.planning/VOICE-UI-AUDIT.md` -- 9 findings in CallFredModal component
-- `.planning/VOICE-WORKER-AUDIT.md` -- 10 findings in voice agent worker
-- `.planning/codebase/CONCERNS.md` -- Known tech debt and security issues
+**A/B testing LLMs:**
+- [Statsig: When Statistical Significance Misleads](https://www.statsig.com/perspectives/abtesting-llms-misleading)
+- [Braintrust: A/B Testing LLM Prompts](https://www.braintrust.dev/articles/ab-testing-llm-prompts)
+- [Latitude: A/B Testing in LLM Deployment](https://latitude-blog.ghost.io/blog/ab-testing-in-llm-deployment-ultimate-guide/)
 
-### Industry Research
-- [Hamming AI: Debug WebRTC Voice Agents](https://hamming.ai/resources/debug-webrtc-voice-agents-troubleshooting-guide)
-- [Hamming AI: Testing LiveKit Voice Agents](https://hamming.ai/resources/testing-livekit-voice-agents-complete-guide)
-- [Reforge: Beat the Cold Start Problem](https://www.reforge.com/guides/beat-the-cold-start-problem-in-a-marketplace)
-- [A2P 10DLC Registration Complete Guide](https://www.notificationapi.com/blog/a2p-10dlc-registration-the-complete-developer-s-guide-2025)
-- [DRM Integration in EdTech LMS](https://doverunner.com/blogs/integrating-drm-into-your-edtech-lms-a-guide-to-secure-online-learning/)
-- [Harvard Innovation Labs: Founder Mistakes](https://innovationlabs.harvard.edu/how-to/founder-mistakes)
-- [CI/CD Pipeline Architecture Guide](https://logiciel.io/blog/cicd-pipeline-architecture-guide)
+**WhatsApp API compliance:**
+- [Chatarmin: WhatsApp Messaging Limits 2026](https://chatarmin.com/en/blog/whats-app-messaging-limits)
+- [Sanuker: WhatsApp 2026 Updates](https://sanuker.com/whatsapp-api-2026_updates-pacing-limits-usernames/)
+- [GMCSCO: WhatsApp API Compliance 2026](https://gmcsco.com/your-simple-guide-to-whatsapp-api-compliance-2026/)
 
----
+**GDPR and AI:**
+- [SecurePrivacy: AI GDPR Compliance Challenges 2025](https://secureprivacy.ai/blog/ai-gdpr-compliance-challenges-2025)
+- [Orrick: EDPB Opinion on AI and GDPR](https://www.orrick.com/en/Insights/2025/03/The-European-Data-Protection-Board-Shares-Opinion-on-How-to-Use-AI-in-Compliance-with-GDPR)
 
-*Research completed: 2026-02-18*
-*19 pitfalls identified: 5 CRITICAL, 5 MAJOR, 5 MODERATE, 4 MINOR*
-*Primary sources: Codebase audits (VOICE-API-AUDIT, VOICE-UI-AUDIT, VOICE-WORKER-AUDIT), official documentation (Sentry, Twilio, Stripe, LiveKit), web research*
+**Feedback UX:**
+- [Qualaroo: Customer Feedback Strategies for SaaS 2026](https://qualaroo.com/blog/customer-feedback-saas/)
+- [Thematic: Customer Feedback Loop Guide](https://getthematic.com/insights/customer-feedback-loop-guide)
+
+**Linear triage:**
+- [Linear: Triage Intelligence](https://linear.app/docs/triage-intelligence)
+- [Linear: Product Intelligence](https://linear.app/changelog/2025-08-14-product-intelligence-technology-preview)
+
+**Chatbot UX patterns:**
+- [Groto: AI Chatbot UX 2026](https://www.letsgroto.com/blog/ux-best-practices-for-ai-chatbots)
+- [AI UX Patterns](https://aiuxpatterns.com/)

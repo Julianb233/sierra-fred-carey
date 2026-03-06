@@ -7,6 +7,40 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Mock the crypto module (not available in jsdom)
+// vi.mock is hoisted, so the factory must be self-contained
+vi.mock("crypto", () => {
+  function fakeCreateHash(_algorithm: string) {
+    let _data = "";
+    return {
+      update(data: string) {
+        _data = data;
+        return {
+          digest(_encoding: string) {
+            // Simple deterministic hash for testing
+            let hash = 0;
+            for (let i = 0; i < _data.length; i++) {
+              const char = _data.charCodeAt(i);
+              hash = ((hash << 5) - hash) + char;
+              hash |= 0;
+            }
+            return Math.abs(hash).toString(16).padStart(32, "0");
+          },
+        };
+      },
+    };
+  }
+  return {
+    default: { createHash: fakeCreateHash },
+    createHash: fakeCreateHash,
+  };
+});
+
+// Track upsert calls for dedup verification
+let lastUpsertPayload: any = null;
+let lastUpsertOptions: any = null;
+let upsertCallCount = 0;
+
 // Helper to create a chainable mock that supports any method order
 function createChainableMock(singleResult: any, listResult: any): any {
   const handler = {
@@ -26,6 +60,30 @@ function createChainableMock(singleResult: any, listResult: any): any {
   return new Proxy({}, handler);
 }
 
+// Helper to create an episodic chainable mock that captures upsert calls
+function createEpisodicChainableMock(singleResult: any, listResult: any): any {
+  const handler = {
+    get(_target: any, prop: string): any {
+      if (prop === "single") {
+        return () => Promise.resolve(singleResult);
+      }
+      if (prop === "then") {
+        return (resolve: any) => resolve(listResult);
+      }
+      if (prop === "upsert") {
+        return (payload: any, options: any) => {
+          lastUpsertPayload = payload;
+          lastUpsertOptions = options;
+          upsertCallCount++;
+          return new Proxy({}, handler);
+        };
+      }
+      return (..._args: any[]) => new Proxy({}, handler);
+    },
+  };
+  return new Proxy({}, handler);
+}
+
 // Mock the Supabase client
 vi.mock("@/lib/supabase/server", () => ({
   createServiceClient: vi.fn(() => ({
@@ -37,6 +95,7 @@ vi.mock("@/lib/supabase/server", () => ({
           session_id: "session-456",
           event_type: "conversation",
           content: { message: "test" },
+          content_hash: "00000000000000000000000000abcdef",
           importance_score: 0.5,
           created_at: new Date().toISOString(),
           metadata: {},
@@ -105,6 +164,9 @@ vi.mock("@/lib/supabase/server", () => ({
         listData = [decisionResult.data];
       }
 
+      if (tableName === "fred_episodic_memory") {
+        return createEpisodicChainableMock(singleResult, { data: listData, error: null });
+      }
       return createChainableMock(singleResult, { data: listData, error: null });
     }),
     rpc: vi.fn(() =>
@@ -255,6 +317,9 @@ describe("FRED Memory Types", () => {
 describe("Episodic Memory Operations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    lastUpsertPayload = null;
+    lastUpsertOptions = null;
+    upsertCallCount = 0;
   });
 
   describe("storeEpisode", () => {
@@ -285,6 +350,81 @@ describe("Episodic Memory Operations", () => {
       );
 
       expect(result).toBeDefined();
+    });
+
+    it("computes and includes content_hash in the upsert payload", async () => {
+      await storeEpisode(
+        "user-123",
+        "session-456",
+        "conversation",
+        { message: "test content" }
+      );
+
+      expect(lastUpsertPayload).toBeDefined();
+      expect(lastUpsertPayload.content_hash).toBeDefined();
+      expect(typeof lastUpsertPayload.content_hash).toBe("string");
+      expect(lastUpsertPayload.content_hash.length).toBeGreaterThan(0);
+    });
+
+    it("produces deterministic hash for the same content", async () => {
+      const content = { message: "hello world" };
+
+      await storeEpisode("user-123", "session-456", "conversation", content);
+      const hash1 = lastUpsertPayload.content_hash;
+
+      await storeEpisode("user-123", "session-456", "conversation", content);
+      const hash2 = lastUpsertPayload.content_hash;
+
+      expect(hash1).toBe(hash2);
+    });
+
+    it("produces different hashes for different content", async () => {
+      await storeEpisode("user-123", "session-456", "conversation", { message: "hello" });
+      const hash1 = lastUpsertPayload.content_hash;
+
+      await storeEpisode("user-123", "session-456", "conversation", { message: "world" });
+      const hash2 = lastUpsertPayload.content_hash;
+
+      expect(hash1).not.toBe(hash2);
+    });
+
+    it("uses upsert with onConflict for deduplication", async () => {
+      await storeEpisode(
+        "user-123",
+        "session-456",
+        "conversation",
+        { message: "test" }
+      );
+
+      expect(lastUpsertOptions).toBeDefined();
+      expect(lastUpsertOptions.onConflict).toBe("user_id,session_id,event_type,content_hash");
+      expect(lastUpsertOptions.ignoreDuplicates).toBe(true);
+    });
+
+    it("with identical content in same session returns existing episode (no duplicate)", async () => {
+      const content = { message: "duplicate test" };
+
+      const result1 = await storeEpisode("user-123", "session-456", "conversation", content);
+      const result2 = await storeEpisode("user-123", "session-456", "conversation", content);
+
+      // Both calls succeed and return an episode (mock returns same data)
+      expect(result1).toBeDefined();
+      expect(result2).toBeDefined();
+      // Both used upsert with ignoreDuplicates, so DB handles dedup
+      expect(upsertCallCount).toBe(2);
+      expect(lastUpsertOptions.ignoreDuplicates).toBe(true);
+    });
+
+    it("with different content in same session creates separate episodes", async () => {
+      await storeEpisode("user-123", "session-456", "conversation", { message: "first" });
+      const hash1 = lastUpsertPayload.content_hash;
+
+      await storeEpisode("user-123", "session-456", "conversation", { message: "second" });
+      const hash2 = lastUpsertPayload.content_hash;
+
+      // Different content → different hashes → no conflict → separate rows
+      expect(hash1).not.toBe(hash2);
+      expect(upsertCallCount).toBe(2);
     });
   });
 
