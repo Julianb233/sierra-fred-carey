@@ -1,58 +1,74 @@
-export interface FeedbackSignal {
+/**
+ * Feedback Collection Types
+ *
+ * Phase 72-01: Core type definitions for the FRED chat feedback system.
+ * Thumbs up/down on assistant messages with optional free-text comments.
+ */
+
+// ---------------------------------------------------------------------------
+// Feedback signal
+// ---------------------------------------------------------------------------
+
+/** The binary feedback signal a user can submit */
+export type FeedbackSignal = "thumbs_up" | "thumbs_down"
+
+/** Where the feedback was collected from */
+export type FeedbackSource = "chat" | "voice" | "inline"
+
+// ---------------------------------------------------------------------------
+// Feedback record (matches future Supabase table shape)
+// ---------------------------------------------------------------------------
+
+export interface FeedbackRecord {
+  /** Unique feedback ID (UUID) */
   id: string
+  /** User who submitted the feedback */
   user_id: string
-  session_id: string | null
-  message_id: string | null
-  channel: 'chat' | 'voice' | 'sms' | 'whatsapp'
-  signal_type: 'thumbs_up' | 'thumbs_down' | 'sentiment' | 'implicit'
-  rating: -1 | 0 | 1 | null
-  category: 'irrelevant' | 'incorrect' | 'too_vague' | 'too_long' | 'wrong_tone' | 'coaching_discomfort' | 'helpful' | 'other' | null
-  comment: string | null
-  sentiment_score: number | null
-  sentiment_confidence: number | null
-  user_tier: 'free' | 'pro' | 'studio'
-  weight: number
-  consent_given: boolean
-  expires_at: string | null
-  metadata: Record<string, unknown>
+  /** The FRED message ID being rated */
+  message_id: string
+  /** Chat session ID for context grouping */
+  session_id: string
+  /** The binary signal */
+  signal: FeedbackSignal
+  /** Optional free-text comment (max 500 chars) */
+  comment?: string
+  /** Source of the feedback interaction */
+  source: FeedbackSource
+  /** ISO timestamp when feedback was submitted */
   created_at: string
 }
 
-export interface FeedbackSession {
-  id: string
-  user_id: string
-  channel: 'chat' | 'voice' | 'sms' | 'whatsapp'
-  started_at: string
-  ended_at: string | null
-  message_count: number
-  sentiment_avg: number | null
-  sentiment_trend: 'improving' | 'stable' | 'degrading' | 'spike_negative' | null
-  flagged: boolean
-  flag_reason: string | null
-  metadata: Record<string, unknown>
-  created_at: string
-  updated_at: string
+// ---------------------------------------------------------------------------
+// API request / response
+// ---------------------------------------------------------------------------
+
+export interface SubmitFeedbackRequest {
+  message_id: string
+  session_id: string
+  signal: FeedbackSignal
+  comment?: string
+  source?: FeedbackSource
 }
 
-export interface FeedbackInsight {
-  id: string
-  insight_type: 'pattern' | 'cluster' | 'trend' | 'anomaly'
-  title: string
-  description: string | null
-  category: string | null
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  signal_count: number
-  signal_ids: string[]
-  status: 'new' | 'reviewed' | 'actioned' | 'resolved' | 'communicated'
-  linear_issue_id: string | null
-  actioned_at: string | null
-  resolved_at: string | null
-  metadata: Record<string, unknown>
-  created_at: string
-  updated_at: string
+export interface SubmitFeedbackResponse {
+  success: boolean
+  id?: string
+  error?: string
 }
 
-// Insert types (omit server-generated fields)
-export type FeedbackSignalInsert = Omit<FeedbackSignal, 'id' | 'created_at'>
-export type FeedbackSessionInsert = Omit<FeedbackSession, 'id' | 'created_at' | 'updated_at'>
-export type FeedbackInsightInsert = Omit<FeedbackInsight, 'id' | 'created_at' | 'updated_at'>
+// ---------------------------------------------------------------------------
+// Client-side feedback state per message
+// ---------------------------------------------------------------------------
+
+export interface MessageFeedbackState {
+  /** Current signal (null = no feedback yet) */
+  signal: FeedbackSignal | null
+  /** Whether the comment form is open */
+  isCommentOpen: boolean
+  /** The comment text being drafted */
+  comment: string
+  /** Whether a submission is in flight */
+  isSubmitting: boolean
+  /** Whether feedback has been successfully submitted */
+  isSubmitted: boolean
+}
