@@ -40,6 +40,26 @@ export async function getFeedbackSignalsByUser(userId: string, limit = 50) {
   return data;
 }
 
+export async function getFeedbackSignalsBySession(
+  sessionId: string,
+  signalType?: string,
+  limit = 200
+) {
+  const supabase = createServiceClient();
+  let query = supabase
+    .from("feedback_signals")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (signalType) {
+    query = query.eq("signal_type", signalType);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
 // ============================================================================
 // Sessions
 // ============================================================================
