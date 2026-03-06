@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -46,6 +47,20 @@ interface Filters {
   userId: string;
 }
 
+interface SessionListItem {
+  id: string;
+  user_id: string;
+  channel: string;
+  started_at: string;
+  message_count: number;
+  sentiment_trend: string | null;
+  flagged: boolean;
+  flag_reason: string | null;
+  signal_count: number;
+}
+
+type ActiveTab = "signals" | "sessions";
+
 const DEFAULT_FILTERS: Filters = {
   dateFrom: "",
   dateTo: "",
@@ -69,6 +84,9 @@ export default function AdminFeedbackPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingSignals, setLoadingSignals] = useState(true);
+  const [sessions, setSessions] = useState<SessionListItem[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("signals");
   const [error, setError] = useState<string | null>(null);
 
   // Fetch stats
@@ -119,6 +137,21 @@ export default function AdminFeedbackPage() {
     }
   }, [filters, page, limit]);
 
+  // Fetch sessions
+  const fetchSessions = useCallback(async () => {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch("/api/admin/feedback/sessions");
+      if (!res.ok) throw new Error(`Sessions fetch failed: ${res.status}`);
+      const data = await res.json();
+      setSessions(data.sessions ?? []);
+    } catch (err) {
+      console.error("[feedback] Sessions error:", err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
@@ -126,6 +159,12 @@ export default function AdminFeedbackPage() {
   useEffect(() => {
     fetchSignals();
   }, [fetchSignals]);
+
+  useEffect(() => {
+    if (activeTab === "sessions" && sessions.length === 0) {
+      fetchSessions();
+    }
+  }, [activeTab, sessions.length, fetchSessions]);
 
   const handleApplyFilters = () => {
     setPage(1);
@@ -136,20 +175,6 @@ export default function AdminFeedbackPage() {
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setPage(1);
-  };
-
-  const handleExportCsv = () => {
-    const params = new URLSearchParams();
-    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters.channel) params.set("channel", filters.channel);
-    if (filters.rating) params.set("rating", filters.rating);
-    if (filters.category) params.set("category", filters.category);
-    if (filters.tier) params.set("tier", filters.tier);
-    if (filters.userId) params.set("userId", filters.userId);
-    const qs = params.toString();
-    const url = `/api/admin/feedback/export${qs ? `?${qs}` : ""}`;
-    window.open(url, "_blank");
   };
 
   const updateFilter = (key: keyof Filters, value: string) => {
@@ -403,117 +428,236 @@ export default function AdminFeedbackPage() {
               <Button variant="outline" onClick={handleClearFilters}>
                 Clear
               </Button>
-              <Button variant="outline" onClick={handleExportCsv}>
-                Export CSV
-              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Feedback Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Feedback Signals</CardTitle>
-          <CardDescription>
-            {total} signal{total !== 1 ? "s" : ""} found
-            {total > 0 && ` (page ${page} of ${totalPages})`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loadingSignals ? (
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : signals.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
-              No feedback signals found. Adjust filters or wait for data to arrive.
-            </p>
-          ) : (
-            <>
+      {/* Tab Toggle */}
+      <div className="flex gap-2">
+        <Button
+          variant={activeTab === "signals" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveTab("signals")}
+          className={activeTab === "signals" ? "bg-[#ff6a1a] hover:bg-[#e55e17] text-white" : ""}
+        >
+          Signals
+        </Button>
+        <Button
+          variant={activeTab === "sessions" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveTab("sessions")}
+          className={activeTab === "sessions" ? "bg-[#ff6a1a] hover:bg-[#e55e17] text-white" : ""}
+        >
+          Sessions
+        </Button>
+      </div>
+
+      {/* Feedback Signals Table */}
+      {activeTab === "signals" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Feedback Signals</CardTitle>
+            <CardDescription>
+              {total} signal{total !== 1 ? "s" : ""} found
+              {total > 0 && ` (page ${page} of ${totalPages})`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingSignals ? (
+              <div className="space-y-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : signals.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
+                No feedback signals found. Adjust filters or wait for data to arrive.
+              </p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">Date</TableHead>
+                        <TableHead>Channel</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Tier</TableHead>
+                        <TableHead>Sentiment</TableHead>
+                        <TableHead>Comment</TableHead>
+                        <TableHead>User</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {signals.map((signal) => {
+                        const hasSession = !!signal.session_id;
+                        const row = (
+                          <TableRow
+                            key={signal.id}
+                            className={hasSession ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" : ""}
+                          >
+                            <TableCell className="text-xs font-mono whitespace-nowrap">
+                              {new Date(signal.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-xs">{signal.channel}</TableCell>
+                            <TableCell className="text-xs">{signal.signal_type}</TableCell>
+                            <TableCell>
+                              <RatingCell rating={signal.rating} />
+                            </TableCell>
+                            <TableCell>
+                              <CategoryCell category={signal.category} />
+                            </TableCell>
+                            <TableCell>
+                              <TierBadge tier={signal.user_tier} />
+                            </TableCell>
+                            <TableCell>
+                              <SentimentCell
+                                score={signal.sentiment_score}
+                                metadata={signal.metadata}
+                              />
+                            </TableCell>
+                            <TableCell className="text-xs max-w-[200px] truncate">
+                              {signal.comment || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs font-mono">
+                              {signal.user_id?.slice(0, 8) || "-"}
+                            </TableCell>
+                          </TableRow>
+                        );
+
+                        if (hasSession) {
+                          return (
+                            <Link
+                              key={signal.id}
+                              href={`/admin/feedback/${signal.session_id}`}
+                              className="contents"
+                            >
+                              {row}
+                            </Link>
+                          );
+                        }
+                        return row;
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Showing {(page - 1) * limit + 1}-
+                      {Math.min(page * limit, total)} of {total}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Sessions List */}
+      {activeTab === "sessions" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Feedback Sessions</CardTitle>
+            <CardDescription>
+              Sessions with feedback signals -- click to drill down
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingSessions ? (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
+                No feedback sessions found.
+              </p>
+            ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="whitespace-nowrap">Date</TableHead>
-                      <TableHead>Channel</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Tier</TableHead>
-                      <TableHead>Sentiment</TableHead>
-                      <TableHead>Comment</TableHead>
+                      <TableHead>Session</TableHead>
                       <TableHead>User</TableHead>
+                      <TableHead>Channel</TableHead>
+                      <TableHead>Messages</TableHead>
+                      <TableHead>Signals</TableHead>
+                      <TableHead>Trend</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {signals.map((signal) => (
-                      <TableRow key={signal.id}>
-                        <TableCell className="text-xs font-mono whitespace-nowrap">
-                          {new Date(signal.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-xs">{signal.channel}</TableCell>
-                        <TableCell className="text-xs">{signal.signal_type}</TableCell>
-                        <TableCell>
-                          <RatingCell rating={signal.rating} />
-                        </TableCell>
-                        <TableCell>
-                          <CategoryCell category={signal.category} />
-                        </TableCell>
-                        <TableCell>
-                          <TierBadge tier={signal.user_tier} />
-                        </TableCell>
-                        <TableCell>
-                          <SentimentCell
-                            score={signal.sentiment_score}
-                            metadata={signal.metadata}
-                          />
-                        </TableCell>
-                        <TableCell className="text-xs max-w-[200px] truncate">
-                          {signal.comment || "-"}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono">
-                          {signal.user_id?.slice(0, 8) || "-"}
-                        </TableCell>
-                      </TableRow>
+                    {sessions.map((session) => (
+                      <Link
+                        key={session.id}
+                        href={`/admin/feedback/${session.id}`}
+                        className="contents"
+                      >
+                        <TableRow className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 ${session.flagged ? "border-l-4 border-l-red-500" : ""}`}>
+                          <TableCell className="text-xs font-mono">
+                            {session.id.slice(0, 8)}...
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {session.user_id?.slice(0, 8) || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">{session.channel}</TableCell>
+                          <TableCell className="text-xs">{session.message_count}</TableCell>
+                          <TableCell className="text-xs">{session.signal_count}</TableCell>
+                          <TableCell>
+                            <TrendBadge trend={session.sentiment_trend} />
+                          </TableCell>
+                          <TableCell>
+                            {session.flagged ? (
+                              <Badge
+                                variant="destructive"
+                                title={session.flag_reason || "Flagged"}
+                              >
+                                Flagged
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-gray-400">OK</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono whitespace-nowrap">
+                            {new Date(session.started_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      </Link>
                     ))}
                   </TableBody>
                 </Table>
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Showing {(page - 1) * limit + 1}-
-                    {Math.min(page * limit, total)} of {total}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Category Distribution */}
       {stats &&
@@ -618,6 +762,30 @@ function TierBadge({ tier }: { tier: string }) {
     >
       {tier}
     </span>
+  );
+}
+
+function TrendBadge({ trend }: { trend: string | null }) {
+  if (!trend) return <span className="text-gray-400 text-xs">-</span>;
+
+  const trendColors: Record<string, string> = {
+    improving:
+      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    stable:
+      "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    degrading:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+    spike_negative:
+      "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  };
+
+  return (
+    <Badge
+      variant="outline"
+      className={`text-xs ${trendColors[trend] || trendColors.stable}`}
+    >
+      {trend.replace(/_/g, " ")}
+    </Badge>
   );
 }
 

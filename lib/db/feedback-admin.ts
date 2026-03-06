@@ -7,6 +7,7 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 import type { FeedbackSignal, FeedbackSession } from "@/lib/feedback/types";
+import { INSIGHT_STATUSES } from "@/lib/feedback/constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -188,48 +189,162 @@ export async function getFeedbackStats(
 }
 
 // ---------------------------------------------------------------------------
-// Query: Digest summary for weekly email
+// Query: Session detail with messages and feedback signals
 // ---------------------------------------------------------------------------
 
-export interface DigestSummary {
-  stats: FeedbackStats;
-  flaggedSessions: FeedbackSession[];
-  topCategories: Array<{ category: string; count: number }>;
-  period: { from: string; to: string };
+export interface SessionDetailResult {
+  session: FeedbackSession;
+  signals: FeedbackSignal[];
+  messages: Array<{ role: string; content: string; created_at: string }>;
 }
 
-export async function getDigestSummary(daysBack: number = 7): Promise<DigestSummary> {
-  const now = new Date();
-  const dateFrom = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
-
-  const fromStr = dateFrom.toISOString().slice(0, 10);
-  const toStr = now.toISOString().slice(0, 10);
-
-  // Get aggregate stats for the period
-  const stats = await getFeedbackStats(fromStr, toStr);
-
-  // Query flagged sessions from the period
+export async function getSessionDetail(
+  sessionId: string
+): Promise<SessionDetailResult | null> {
   const supabase = createServiceClient();
-  const { data: flaggedData } = await supabase
+
+  // Fetch the session row
+  const { data: session, error: sessionErr } = await supabase
     .from("feedback_sessions")
     .select("*")
-    .eq("flagged", true)
-    .gte("created_at", dateFrom.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(20);
+    .eq("id", sessionId)
+    .single();
 
-  const flaggedSessions = (flaggedData ?? []) as FeedbackSession[];
+  if (sessionErr || !session) {
+    console.error("[feedback-admin] Session not found:", sessionErr?.message);
+    return null;
+  }
 
-  // Compute top 5 categories
-  const topCategories = Object.entries(stats.categoryDistribution)
-    .map(([category, count]) => ({ category, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  // Fetch signals for this session
+  const { data: signals, error: signalsErr } = await supabase
+    .from("feedback_signals")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true });
+
+  if (signalsErr) {
+    console.error("[feedback-admin] Signals query failed:", signalsErr.message);
+  }
+
+  // Fetch conversation messages from episodic memory
+  const { data: messages, error: messagesErr } = await supabase
+    .from("fred_episodic_memory")
+    .select("role, content, created_at")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true });
+
+  if (messagesErr) {
+    console.error(
+      "[feedback-admin] Messages query failed:",
+      messagesErr.message
+    );
+  }
 
   return {
-    stats,
-    flaggedSessions,
-    topCategories,
-    period: { from: fromStr, to: toStr },
+    session: session as FeedbackSession,
+    signals: (signals ?? []) as FeedbackSignal[],
+    messages: (messages ?? []) as Array<{
+      role: string;
+      content: string;
+      created_at: string;
+    }>,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Mutation: Update triage status on signals or insights
+// ---------------------------------------------------------------------------
+
+export async function updateTriageStatus(
+  id: string,
+  table: "feedback_signals" | "feedback_insights",
+  newStatus: string
+) {
+  // Validate status
+  if (!INSIGHT_STATUSES.includes(newStatus as (typeof INSIGHT_STATUSES)[number])) {
+    throw new Error(
+      `Invalid status "${newStatus}". Must be one of: ${INSIGHT_STATUSES.join(", ")}`
+    );
+  }
+
+  const supabase = createServiceClient();
+
+  const updates: Record<string, unknown> = { status: newStatus };
+  if (newStatus === "actioned") {
+    updates.actioned_at = new Date().toISOString();
+  }
+  if (newStatus === "resolved") {
+    updates.resolved_at = new Date().toISOString();
+  }
+
+  const { data, error } = await supabase
+    .from(table)
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[feedback-admin] Triage update failed:", error.message);
+    throw error;
+  }
+
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Query: Sessions list with signal counts (for sessions tab)
+// ---------------------------------------------------------------------------
+
+export interface SessionWithCounts extends FeedbackSession {
+  signal_count: number;
+}
+
+export async function getSessionsWithFeedback(
+  limit = 50
+): Promise<SessionWithCounts[]> {
+  const supabase = createServiceClient();
+
+  // Fetch sessions ordered by recency
+  const { data: sessions, error: sessionsErr } = await supabase
+    .from("feedback_sessions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (sessionsErr) {
+    console.error(
+      "[feedback-admin] Sessions query failed:",
+      sessionsErr.message
+    );
+    return [];
+  }
+
+  if (!sessions || sessions.length === 0) return [];
+
+  // Fetch signal counts per session
+  const sessionIds = sessions.map((s) => s.id);
+  const { data: signalCounts, error: countErr } = await supabase
+    .from("feedback_signals")
+    .select("session_id")
+    .in("session_id", sessionIds);
+
+  if (countErr) {
+    console.error(
+      "[feedback-admin] Signal counts query failed:",
+      countErr.message
+    );
+  }
+
+  // Build count map
+  const countMap: Record<string, number> = {};
+  for (const row of signalCounts ?? []) {
+    const sid = (row as { session_id: string }).session_id;
+    countMap[sid] = (countMap[sid] || 0) + 1;
+  }
+
+  return (sessions as FeedbackSession[]).map((session) => ({
+    ...session,
+    signal_count: countMap[session.id] || 0,
+  }));
 }
