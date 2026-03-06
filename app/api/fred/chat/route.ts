@@ -40,6 +40,10 @@ import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
 import { logJourneyEventAsync } from "@/lib/db/journey-events";
+import { extractSentiment } from "@/lib/feedback/sentiment";
+import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
+import { insertFeedbackSignal } from "@/lib/db/feedback";
+import { TIER_WEIGHTS } from "@/lib/feedback/constants";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -763,6 +767,33 @@ async function handlePost(req: NextRequest) {
         console.warn("[FRED Chat] Next steps extraction failed:", err)
       );
 
+      // Phase 73: Fire-and-forget sentiment extraction
+      (async () => {
+        try {
+          const sentiment = await extractSentiment(message, result.response.content);
+          await insertFeedbackSignal({
+            user_id: userId,
+            session_id: effectiveSessionId,
+            message_id: null,
+            channel: 'chat',
+            signal_type: 'sentiment',
+            rating: null,
+            category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+            comment: null,
+            sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+            sentiment_confidence: sentiment.confidence,
+            user_tier: tierName as 'free' | 'pro' | 'studio',
+            weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+            consent_given: true,
+            expires_at: null,
+            metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+          });
+          await aggregateSessionSentiment(effectiveSessionId, userId);
+        } catch (err) {
+          console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+        }
+      })();
+
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
         enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
@@ -1055,6 +1086,33 @@ async function handlePost(req: NextRequest) {
             extractAndStoreNextSteps(userId, response.content, new Date().toISOString()).catch(err =>
               console.warn("[FRED Chat] Next steps extraction failed:", err)
             );
+
+            // Phase 73: Fire-and-forget sentiment extraction
+            (async () => {
+              try {
+                const sentiment = await extractSentiment(message, response.content);
+                await insertFeedbackSignal({
+                  user_id: userId,
+                  session_id: effectiveSessionId,
+                  message_id: null,
+                  channel: 'chat',
+                  signal_type: 'sentiment',
+                  rating: null,
+                  category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+                  comment: null,
+                  sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+                  sentiment_confidence: sentiment.confidence,
+                  user_tier: tierName as 'free' | 'pro' | 'studio',
+                  weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+                  consent_given: true,
+                  expires_at: null,
+                  metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+                });
+                await aggregateSessionSentiment(effectiveSessionId, userId);
+              } catch (err) {
+                console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+              }
+            })();
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {
