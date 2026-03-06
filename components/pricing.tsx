@@ -80,7 +80,7 @@ export default function Pricing() {
         "Virtual Team: Founder Ops Agent",
         "Virtual Team: Fundraise Ops Agent",
         "Virtual Team: Growth Ops Agent",
-        "Virtual Team: Inbox Ops Agent",
+        "Virtual Team: Inbox Ops Agent (Coming Soon)",
         "Priority compute & deeper memory",
       ],
     },
