@@ -1,7 +1,9 @@
 import { defineAgent, voice } from '@livekit/agents';
-import { STT, LLM, TTS } from '@livekit/agents-plugin-openai';
+import * as openai from '@livekit/agents-plugin-openai';
+import * as silero from '@livekit/agents-plugin-silero';
+import * as elevenlabs from '@livekit/agents-plugin-elevenlabs';
 import { FRED_BIO, FRED_COMMUNICATION_STYLE, FRED_COMPANIES, SAHARA_MESSAGING, } from '../../lib/fred-brain';
-const { Agent: VoiceAgent, AgentSession, AgentSessionEventTypes } = voice;
+const { Agent: BaseAgent, AgentSession, AgentSessionEventTypes } = voice;
 /**
  * Build Fred Cary's voice-optimized system prompt.
  * Kept concise for voice — 2-3 sentence responses max.
@@ -34,11 +36,19 @@ Voice style:
 
 Never refer to yourself as an "AI assistant" or "A Startup Biz." You are Fred Cary, co-founder of Sahara.`;
 }
+/**
+ * Fred Cary voice agent — extends voice.Agent with Fred's persona.
+ */
+class FredAgent extends BaseAgent {
+    constructor() {
+        super({ instructions: buildFredVoicePrompt() });
+    }
+}
 export default defineAgent({
+    prewarm: async (proc) => {
+        proc.userData.vad = await silero.VAD.load();
+    },
     entry: async (ctx) => {
-        await ctx.connect();
-        const participant = await ctx.waitForParticipant();
-        console.log(`[Fred Voice Agent] Participant joined: ${participant.identity}`);
         const encoder = new TextEncoder();
         function publishTranscript(speaker, text) {
             const data = encoder.encode(JSON.stringify({
@@ -51,16 +61,15 @@ export default defineAgent({
                 topic: 'transcript',
             });
         }
-        const stt = new STT({ model: 'whisper-1' });
-        const llm = new LLM({ model: 'gpt-4o', temperature: 0.7 });
-        const tts = new TTS({ model: 'tts-1', voice: 'alloy' });
-        const agent = new VoiceAgent({
-            instructions: buildFredVoicePrompt(),
+        const stt = new openai.STT({ model: 'whisper-1' });
+        const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
+        const tts = new elevenlabs.TTS({ voiceId: 'fpxks3eObfRI1jkeCD2k' });
+        const session = new AgentSession({
+            vad: ctx.proc.userData.vad,
             stt,
             llm,
             tts,
         });
-        const session = new AgentSession({ stt, llm, tts });
         session.on(AgentSessionEventTypes.UserInputTranscribed, (ev) => {
             if (ev.isFinal) {
                 console.log(`[User] ${ev.transcript}`);
@@ -82,11 +91,24 @@ export default defineAgent({
         session.on(AgentSessionEventTypes.Close, (ev) => {
             console.log(`[Fred Voice Agent] Session closed: ${ev.reason}`);
         });
+        ctx.addShutdownCallback(async () => {
+            console.log('[Fred Voice Agent] Shutting down, closing session...');
+            await session.close();
+        });
         await session.start({
-            agent,
+            agent: new FredAgent(),
             room: ctx.room,
         });
-        // Send Fred's greeting
-        session.say("Hey, Fred Cary here. What's on your mind? Let's get into it.");
+        try {
+            await ctx.connect();
+        }
+        catch (connectErr) {
+            console.error('[Fred Voice Agent] Failed to connect to room:', connectErr);
+            return;
+        }
+        console.log('[Fred Voice Agent] Connected, sending greeting...');
+        session.generateReply({
+            instructions: "Greet the user warmly as Fred Cary. Say something like: Hey, Fred Cary here. What's on your mind? Let's get into it.",
+        });
     },
 });
