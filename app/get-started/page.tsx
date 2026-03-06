@@ -205,14 +205,31 @@ const OnboardingPage = () => {
     }
   }, [currentStep, router]);
 
+  // Track onboarding started on mount
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.ONBOARDING.STARTED, { totalSteps: 3 });
+  }, []);
+
   const handleStageSelect = (stage: Stage) => {
     setSelectedStage(stage);
+    trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, {
+      step: "stage_selection",
+      stepIndex: 1,
+      totalSteps: 3,
+      stage,
+    });
     // Auto-advance after short delay for smooth UX
     setTimeout(() => setCurrentStep(2), 300);
   };
 
   const handleChallengeSelect = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
+    trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, {
+      step: "challenge_selection",
+      stepIndex: 2,
+      totalSteps: 3,
+      challenge,
+    });
     // Auto-advance after short delay
     setTimeout(() => setCurrentStep(3), 300);
   };
@@ -269,8 +286,17 @@ const OnboardingPage = () => {
         throw new Error(data.error || "Something went wrong");
       }
 
-      // Track successful signup
+      // Track successful signup and onboarding completion
       trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email" });
+      trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, {
+        step: "account_creation",
+        stepIndex: 3,
+        totalSteps: 3,
+      });
+      trackEvent(ANALYTICS_EVENTS.ONBOARDING.COMPLETED, {
+        stage: selectedStage,
+        challenge: selectedChallenge,
+      });
       // Clear persisted wizard state
       localStorage.removeItem(WIZARD_STORAGE_KEY);
       // Show the wink!
