@@ -300,6 +300,56 @@ export interface SessionWithCounts extends FeedbackSession {
   signal_count: number;
 }
 
+// ---------------------------------------------------------------------------
+// Query: Digest summary for weekly email
+// ---------------------------------------------------------------------------
+
+export interface DigestSummary {
+  stats: FeedbackStats;
+  flaggedSessions: FeedbackSession[];
+  topCategories: Array<{ category: string; count: number }>;
+  period: { from: string; to: string };
+}
+
+export async function getDigestSummary(
+  daysBack = 7
+): Promise<DigestSummary> {
+  const dateTo = new Date();
+  const dateFrom = new Date();
+  dateFrom.setDate(dateFrom.getDate() - daysBack);
+
+  const from = dateFrom.toISOString().slice(0, 10);
+  const to = dateTo.toISOString().slice(0, 10);
+
+  const stats = await getFeedbackStats(from, to);
+
+  // Flagged sessions from the period
+  const supabase = createServiceClient();
+  const { data: flagged } = await supabase
+    .from("feedback_sessions")
+    .select("*")
+    .eq("flagged", true)
+    .gte("created_at", from)
+    .order("created_at", { ascending: false });
+
+  // Top 5 categories
+  const topCategories = Object.entries(stats.categoryDistribution)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  return {
+    stats,
+    flaggedSessions: (flagged ?? []) as FeedbackSession[],
+    topCategories,
+    period: { from, to },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Query: Sessions list with signal counts (for sessions tab)
+// ---------------------------------------------------------------------------
+
 export async function getSessionsWithFeedback(
   limit = 50
 ): Promise<SessionWithCounts[]> {

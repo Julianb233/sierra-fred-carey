@@ -428,6 +428,22 @@ export default function AdminFeedbackPage() {
               <Button variant="outline" onClick={handleClearFilters}>
                 Clear
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+                  if (filters.dateTo) params.set("dateTo", filters.dateTo);
+                  if (filters.channel) params.set("channel", filters.channel);
+                  if (filters.rating) params.set("rating", filters.rating);
+                  if (filters.category) params.set("category", filters.category);
+                  if (filters.tier) params.set("tier", filters.tier);
+                  if (filters.userId) params.set("userId", filters.userId);
+                  window.open(`/api/admin/feedback/export?${params.toString()}`, "_blank");
+                }}
+              >
+                Export CSV
+              </Button>
             </div>
           </div>
         </CardContent>
