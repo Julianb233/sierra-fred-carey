@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkles, Brain, Clock, Users, ArrowRight, Check as CheckIcon } from "lucide-react";
 import NightModeParticles from "@/components/effects/NightModeParticles";
 import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
@@ -224,6 +225,23 @@ export default function Hero() {
               <div className="grid lg:grid-cols-2 gap-12">
                 {/* Left side - Text */}
                 <div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.25 }}
+                    className="mb-4"
+                  >
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-[#ff6a1a]/30 ring-4 ring-[#ff6a1a]/10 shadow-lg shadow-[#ff6a1a]/20">
+                      <Image
+                        src="/fred-cary.jpg"
+                        alt="Fred Cary"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </motion.div>
+
                   <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
