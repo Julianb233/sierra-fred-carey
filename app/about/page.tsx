@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import Image from "next/image";
 import {
   RocketIcon,
   LightningBoltIcon,
@@ -97,6 +98,29 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
             className="text-center space-y-6"
           >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="mb-2"
+            >
+              <div className="relative inline-block">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-[#ff6a1a]/30 ring-4 ring-[#ff6a1a]/10 shadow-2xl shadow-[#ff6a1a]/20">
+                  <Image
+                    src="/fred-cary.jpg"
+                    alt="Fred Cary — Founder of Sahara"
+                    width={160}
+                    height={160}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#ff6a1a] flex items-center justify-center ring-4 ring-white dark:ring-gray-950">
+                  <CheckCircledIcon className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </motion.div>
+
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -356,9 +380,18 @@ export default function AboutPage() {
                   &ldquo;Every founder deserves access to the decision-making frameworks that
                   billion-dollar companies use - not just the privileged few.&rdquo;
                 </p>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  — Fred Cary, Founder
-                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <Image
+                    src="/fred-cary.jpg"
+                    alt="Fred Cary"
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-[#ff6a1a]/30"
+                  />
+                  <p className="text-lg text-gray-600 dark:text-gray-400">
+                    — Fred Cary, Founder
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
