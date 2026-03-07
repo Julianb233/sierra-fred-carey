@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -267,7 +267,7 @@ export function ChatMessage({
       </div>
     </motion.div>
   );
-});
+}
 
 function formatTimestamp(date: Date): string {
   const now = new Date();

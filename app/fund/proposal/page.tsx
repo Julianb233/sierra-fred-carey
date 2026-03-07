@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import Image from "next/image";
+
 import Footer from "@/components/footer";
 import {
   Building2,
@@ -266,18 +266,13 @@ export default function FundProposalPage() {
             FUND OPERATIONS PROPOSAL
           </span>
 
-          {/* Tory's image from ToryBiz.com */}
+          {/* Tory's avatar */}
           <div className="flex justify-center mb-8">
             <div className="relative">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#ff6a1a] to-amber-500 p-1 shadow-xl shadow-[#ff6a1a]/20">
-                <Image
-                  src="https://www.torybiz.com/tory/ad-agency/img/slider-img.jpg"
-                  alt="Tory R Zweigle"
-                  width={128}
-                  height={128}
-                  className="rounded-full object-cover w-full h-full"
-                  unoptimized
-                />
+                <div className="rounded-full w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-white">TZ</span>
+                </div>
               </div>
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-[#ff6a1a] flex items-center justify-center shadow-lg">
                 <Building2 className="h-5 w-5 text-white" />
