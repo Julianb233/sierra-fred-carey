@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon } from "lucide-react";
 import { ExperimentFeedbackCard } from "@/components/admin/experiment-feedback-card";
-import type { PreRegistration } from "@/lib/feedback/pre-registration";
+import type { PreRegistration } from "@/lib/feedback/pre-registration-shared";
 
 interface ABTest {
   id: string;

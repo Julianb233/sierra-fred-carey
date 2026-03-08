@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { PreRegistrationForm } from "@/components/admin/pre-registration-form"
 import { toast } from "sonner"
-import type { PreRegistration } from "@/lib/feedback/pre-registration"
+import type { PreRegistration } from "@/lib/feedback/pre-registration-shared"
 
 export default function NewExperimentPage() {
   const router = useRouter()

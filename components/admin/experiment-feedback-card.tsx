@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUpIcon, AlertTriangleIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { PreRegistration } from "@/lib/feedback/pre-registration"
+import type { PreRegistration } from "@/lib/feedback/pre-registration-shared"
 
 interface VariantData {
   variantName: string

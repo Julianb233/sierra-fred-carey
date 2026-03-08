@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlusIcon, XIcon } from "lucide-react"
-import type { PreRegistration, PreRegistrationMetric } from "@/lib/feedback/pre-registration"
-import { PRESET_METRICS, validatePreRegistration } from "@/lib/feedback/pre-registration"
+import type { PreRegistration, PreRegistrationMetric } from "@/lib/feedback/pre-registration-shared"
+import { PRESET_METRICS, validatePreRegistration } from "@/lib/feedback/pre-registration-shared"
 
 interface PreRegistrationFormProps {
   onSubmit: (data: {
