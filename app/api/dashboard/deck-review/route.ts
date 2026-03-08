@@ -15,6 +15,13 @@ import { logger } from "@/lib/logger"
  *
  * Requires Pro+ tier.
  */
+export async function GET() {
+  return NextResponse.json(
+    { success: false, error: "Method not allowed. Use POST with a PDF file." },
+    { status: 405 }
+  )
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Auth + tier check
