@@ -236,11 +236,15 @@ export async function deleteExpiredFeedback() {
     .lt("expires_at", new Date().toISOString())
     .not("expires_at", "is", null);
   if (error) throw error;
+
+  // Also clean up expired audit log entries
+  const { deleteExpiredAuditLogs } = await import("@/lib/db/audit-log");
+  await deleteExpiredAuditLogs();
 }
 
 export async function deleteFeedbackForUser(userId: string) {
   const supabase = createServiceClient();
-  // Cascade: signals first, then sessions
+  // Cascade: signals first, then sessions, then audit logs
   const { error: sigErr } = await supabase
     .from("feedback_signals")
     .delete()
@@ -251,6 +255,10 @@ export async function deleteFeedbackForUser(userId: string) {
     .delete()
     .eq("user_id", userId);
   if (sesErr) throw sesErr;
+
+  // Also delete audit logs for this user
+  const { deleteAuditLogsForUser } = await import("@/lib/db/audit-log");
+  await deleteAuditLogsForUser(userId);
 }
 
 // ============================================================================

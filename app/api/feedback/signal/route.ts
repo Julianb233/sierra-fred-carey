@@ -50,13 +50,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const { message_id, signal_type, rating, category, comment, session_id } = body as {
+  const {
+    message_id, signal_type, rating, category, comment, session_id,
+    detected_topic, oases_stage, model_used, response_latency_ms, page_context,
+  } = body as {
     message_id?: string
     signal_type?: string
     rating?: number
     category?: string | null
     comment?: string | null
     session_id?: string | null
+    detected_topic?: string | null
+    oases_stage?: string | null
+    model_used?: string | null
+    response_latency_ms?: number | null
+    page_context?: string | null
   }
 
   // Validate required fields
@@ -144,7 +152,13 @@ export async function POST(req: NextRequest) {
     weight: weight,
     consent_given: true,
     expires_at: calculateExpiryDate(),
-    metadata: {},
+    metadata: {
+      ...(detected_topic ? { detected_topic } : {}),
+      ...(oases_stage ? { oases_stage } : {}),
+      ...(model_used ? { model_used } : {}),
+      ...(response_latency_ms ? { response_latency_ms } : {}),
+      ...(page_context ? { page_context } : {}),
+    },
   }
 
   // 7. Apply consent (defensive — stamps consent_given and expires_at)

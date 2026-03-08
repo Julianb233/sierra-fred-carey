@@ -101,6 +101,18 @@ export default async function AdminLayout({
             >
               Testing
             </Link>
+            <Link
+              href="/admin/prompt-patches"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              RLHF
+            </Link>
+            <Link
+              href="/admin/audit-log"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Audit Log
+            </Link>
           </div>
         </div>
       </nav>
