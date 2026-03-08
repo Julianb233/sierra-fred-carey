@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 77 — Guided Venture Journey Onboarding (Wave 1)
-Plan: 02 of 2 (awaiting human verification)
-Status: Phase 77 Plan 02 at checkpoint — awaiting end-to-end verification
-Last activity: 2026-03-08 — Completed 77-02-PLAN.md Task 1 (Signup flow wiring + middleware)
+Phase: 78 — Oases Stage Visualization & Gating (Wave 1)
+Plan: 01 of 1 (complete)
+Status: Phase 78 Plan 01 complete
+Last activity: 2026-03-08 — Completed 78-01-PLAN.md (Oases data layer)
 
-Progress: [##............] 2/14 phases
+Progress: [###...........] 3/14 phases
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -57,6 +57,10 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Stage normalization via keyword matching — simple, no AI call needed
 - FeatureLock extended with `requiredStage` prop — reuses existing tier-gating pattern
 - All FRED prompts get founder context via middleware — centralized injection
+- OasesStage as string literal union (not enum) — JSON serialization compatible
+- 14 total journey steps across 5 stages (3+3+3+3+2)
+- Route gating by stage index — current or earlier stage routes accessible
+- User-scoped Supabase client for progress queries (RLS-based security)
 
 ### Blockers/Concerns
 
@@ -69,7 +73,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:01Z
-Stopped at: Completed 77-02-PLAN.md Task 1 (signup flow wiring). Awaiting human verification at Task 2 checkpoint.
-Resume file: .planning/phases/77-guided-venture-journey-onboarding/77-02-SUMMARY.md
+Last session: 2026-03-08T10:03Z
+Stopped at: Completed 78-01-PLAN.md (Oases data layer). Next: remaining Wave 1 phases (79) or Wave 2 phases (80, 81, 82).
+Resume file: .planning/phases/78-oases-stage-visualization-gating/78-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
