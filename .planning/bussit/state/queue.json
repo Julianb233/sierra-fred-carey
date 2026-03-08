@@ -19,7 +19,8 @@
       "phase": 72,
       "plan": "02",
       "type": "build",
-      "status": "pending",
+      "status": "done",
+      "worker": "worker-auto-v7-1",
       "deps": ["72-01-b"],
       "complexity": 5,
       "complexityLevel": "moderate",
@@ -54,11 +55,12 @@
       "phase": 75,
       "plan": "all",
       "type": "plan",
-      "status": "pending",
+      "status": "done",
       "deps": ["72-02-b", "74-b"],
       "complexity": 4,
       "complexityLevel": "simple",
-      "wave": 3
+      "wave": 3,
+      "worker": "worker-auto-v11-3"
     },
     {
       "id": "75-b",
