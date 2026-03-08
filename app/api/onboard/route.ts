@@ -226,8 +226,11 @@ export async function POST(request: NextRequest) {
 
       userId = authData.user.id;
 
-      // Create profile record
-      const { error: profileError } = await supabase.from("profiles").upsert({
+      // Create profile record using service client (bypasses RLS)
+      // The newly signed-up user doesn't have an active session yet,
+      // so the user-scoped client cannot insert into profiles via RLS.
+      const supabaseAdmin = createServiceClient();
+      const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
         id: userId,
         email: email.toLowerCase(),
         name: userName,
@@ -243,7 +246,7 @@ export async function POST(request: NextRequest) {
       if (profileError) {
         console.error("[onboard] Profile creation error, retrying:", profileError);
         // Retry once
-        const { error: retryError } = await supabase.from("profiles").upsert({
+        const { error: retryError } = await supabaseAdmin.from("profiles").upsert({
           id: userId,
           email: email.toLowerCase(),
           name: userName,
@@ -259,7 +262,6 @@ export async function POST(request: NextRequest) {
           console.error("[onboard] Profile creation retry failed:", retryError);
           // Clean up orphaned auth user to avoid inconsistent state
           try {
-            const supabaseAdmin = createServiceClient();
             await supabaseAdmin.auth.admin.deleteUser(userId);
             logger.log("[onboard] Cleaned up orphaned auth user:", userId);
           } catch (cleanupErr) {
