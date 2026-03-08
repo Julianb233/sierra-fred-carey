@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 77 — Guided Venture Journey Onboarding (Wave 1)
-Plan: 01 of 1 (complete)
-Status: Phase 77 Plan 01 complete
-Last activity: 2026-03-08 — Completed 77-01-PLAN.md (Welcome screen + intake form)
+Plan: 02 of 2 (awaiting human verification)
+Status: Phase 77 Plan 02 at checkpoint — awaiting end-to-end verification
+Last activity: 2026-03-08 — Completed 77-02-PLAN.md Task 1 (Signup flow wiring + middleware)
 
-Progress: [#.............] 1/14 phases
+Progress: [##............] 2/14 phases
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -51,6 +51,8 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - $99/month target price — affordable alternative to expensive consultants
 - `oases_stage` column on `profiles` table — single source of truth
 - `journey_welcomed` boolean on profiles — show-once control for welcome screen
+- Middleware DB query for journey_welcomed check — indexed, ~5-10ms overhead on protected routes
+- Dynamic import of Supabase client in middleware — only loads when needed
 - Free-text intake (no dropdowns) — understand founders in their own words
 - Stage normalization via keyword matching — simple, no AI call needed
 - FeatureLock extended with `requiredStage` prop — reuses existing tier-gating pattern
@@ -67,7 +69,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T09:59Z
-Stopped at: Completed 77-01-PLAN.md (Welcome screen + intake form). Next: remaining Phase 77 plans or parallel Wave 1 phases (78, 79)
-Resume file: .planning/phases/77-guided-venture-journey-onboarding/77-01-SUMMARY.md
+Last session: 2026-03-08T10:01Z
+Stopped at: Completed 77-02-PLAN.md Task 1 (signup flow wiring). Awaiting human verification at Task 2 checkpoint.
+Resume file: .planning/phases/77-guided-venture-journey-onboarding/77-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
