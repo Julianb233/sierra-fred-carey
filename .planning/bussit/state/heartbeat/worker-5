@@ -1,1 +1,1 @@
-{"worker":"worker-5","task":"82-02-b","timestamp":"2026-03-08T10:38:29Z","status":"executing"}
+{"worker":"worker-5","task":"none","timestamp":"2026-03-08T10:41:25Z","status":"idle","reason":"no unblocked pending tasks available"}
