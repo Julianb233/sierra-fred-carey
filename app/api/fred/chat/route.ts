@@ -51,6 +51,7 @@ import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/in
 import { logSentimentSignal } from "@/lib/db/sentiment-log";
 import { validateStageAccess } from "@/lib/oases/stage-validator";
 import type { OasesStage } from "@/types/oases";
+import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -366,6 +367,7 @@ function detectDownstreamRequestQuick(message: string): string | null {
 
 async function handlePost(req: NextRequest) {
   const startTime = Date.now();
+  const traceId = crypto.randomUUID();
 
   try {
     // Require authentication
@@ -857,8 +859,39 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
         console.warn("[FRED Chat] Next steps extraction failed:", err)
       );
 
+      // Fire-and-forget: FRED audit log entry (non-streaming)
+      createAuditEntry({
+        traceId,
+        userId,
+        sessionId: effectiveSessionId,
+        userMessage: message,
+        detectedTopic: result.context.validatedInput?.topic || null,
+        topicConfidence: result.context.validatedInput?.confidence || null,
+        detectedIntent: result.context.validatedInput?.intent || null,
+        activeFramework: activeMode || "founder-os",
+        activeMode: activeMode || null,
+        modelUsed: _modelProviderKey,
+        promptVersion: "v1.1.0",
+        tier: tierName,
+        oasesStage: currentOasesStage || null,
+        startupProcessStep: conversationState?.currentStep || null,
+        isFirstConversation: isNewSession,
+        hasPersistentMemory,
+        pageContext: pageContext || null,
+        fredResponse: result.response.content,
+        responseAction: result.response.action || null,
+        responseConfidence: result.response.confidence || null,
+        latencyMs,
+        realityLensScore: rlAssessmentResult?.overall_score || null,
+        irsScore: irsResult?.overall || null,
+        wellnessAlertTriggered: result.context.validatedInput?.burnoutSignals?.detected || false,
+        channel: "chat",
+        redFlags: result.context.synthesis?.redFlags || [],
+        metadata: { intent: result.context.validatedInput?.intent, stream: false },
+      }).catch(() => {});
+
       // Phase 73: Fire-and-forget sentiment extraction
-      (async () => {
+      ;(async () => {
         try {
           const sentiment = await extractSentiment(message, result.response.content);
           await insertFeedbackSignal({
@@ -879,6 +912,12 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
             metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
           });
           await aggregateSessionSentiment(effectiveSessionId, userId);
+          // Update audit log with sentiment data
+          updateAuditSentiment(traceId, {
+            label: sentiment.label,
+            confidence: sentiment.confidence,
+            coachingDiscomfort: sentiment.isCoachingDiscomfort,
+          }).catch(() => {})
         } catch (err) {
           console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
         }
@@ -944,6 +983,7 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
             }
           : null,
         meta: {
+          traceId,
           latencyMs,
           finalState: result.finalState,
           tier: tierName,
@@ -1105,6 +1145,7 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
             send("response", {
               ...response,
               meta: {
+                traceId,
                 latencyMs,
                 finalState: update.state,
                 tier: tierName,
@@ -1195,8 +1236,39 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
               console.warn("[FRED Chat] Next steps extraction failed:", err)
             );
 
+            // Fire-and-forget: FRED audit log entry (streaming)
+            createAuditEntry({
+              traceId,
+              userId,
+              sessionId: effectiveSessionId,
+              userMessage: message,
+              detectedTopic: update.context.validatedInput?.topic || null,
+              topicConfidence: update.context.validatedInput?.confidence || null,
+              detectedIntent: update.context.validatedInput?.intent || null,
+              activeFramework: activeMode || "founder-os",
+              activeMode: activeMode || null,
+              modelUsed: _modelProviderKey,
+              promptVersion: "v1.1.0",
+              tier: tierName,
+              oasesStage: currentOasesStage || null,
+              startupProcessStep: conversationState?.currentStep || null,
+              isFirstConversation: isNewSession,
+              hasPersistentMemory,
+              pageContext: pageContext || null,
+              fredResponse: response.content,
+              responseAction: response.action || null,
+              responseConfidence: response.confidence || null,
+              latencyMs,
+              realityLensScore: rlAssessmentResult?.overall_score || null,
+              irsScore: irsResult?.overall || null,
+              wellnessAlertTriggered: update.context.validatedInput?.burnoutSignals?.detected || false,
+              channel: "chat",
+              redFlags: update.context.synthesis?.redFlags || [],
+              metadata: { intent: update.context.validatedInput?.intent, stream: true },
+            }).catch(() => {});
+
             // Phase 73: Fire-and-forget sentiment extraction
-            (async () => {
+            ;(async () => {
               try {
                 const sentiment = await extractSentiment(message, response.content);
                 await insertFeedbackSignal({
@@ -1217,6 +1289,12 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
                   metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
                 });
                 await aggregateSessionSentiment(effectiveSessionId, userId);
+                // Update audit log with sentiment data
+                updateAuditSentiment(traceId, {
+                  label: sentiment.label,
+                  confidence: sentiment.confidence,
+                  coachingDiscomfort: sentiment.isCoachingDiscomfort,
+                }).catch(() => {})
               } catch (err) {
                 console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
               }

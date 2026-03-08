@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import type { SubmitFeedbackRequest, SubmitFeedbackResponse } from "@/lib/feedback/types"
 import { MAX_COMMENT_LENGTH } from "@/lib/feedback/constants"
+import { updateAuditFeedback } from "@/lib/audit/fred-audit"
 
 /**
  * POST /api/feedback
@@ -78,6 +79,16 @@ export async function POST(request: NextRequest) {
         { success: false, error: "Failed to save feedback" },
         { status: 500 }
       )
+    }
+
+    // Fire-and-forget: update audit log if traceId is present
+    const traceId = (body as unknown as Record<string, unknown>).trace_id as string | undefined
+    if (traceId) {
+      updateAuditFeedback(traceId, {
+        rating: body.signal === "thumbs_up" ? 1 : -1,
+        category: body.category || null,
+        comment: comment || null,
+      }).catch(() => {})
     }
 
     return NextResponse.json<SubmitFeedbackResponse>({
