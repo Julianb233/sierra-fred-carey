@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 78 — Oases Stage Visualization & Gating (Wave 1)
-Plan: 01 of 1 (complete)
-Status: Phase 78 Plan 01 complete
-Last activity: 2026-03-08 — Completed 78-01-PLAN.md (Oases data layer)
+Plan: 02 of 2 (awaiting checkpoint verification)
+Status: Phase 78 Plan 02 tasks complete, checkpoint pending
+Last activity: 2026-03-08 — Completed 78-02-PLAN.md tasks (Oases visualization UI)
 
-Progress: [###...........] 3/14 phases
+Progress: [####..........] 4/14 phases
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -61,6 +61,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - 14 total journey steps across 5 stages (3+3+3+3+2)
 - Route gating by stage index — current or earlier stage routes accessible
 - User-scoped Supabase client for progress queries (RLS-based security)
+- Stage-blocked FeatureLock takes priority over tier-blocked (more actionable)
+- OasesVisualizer is self-contained (fetches own data via hook, no prop drilling)
+- StageDetailModal advance triggers page reload for fresh state
 
 ### Blockers/Concerns
 
@@ -73,7 +76,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:03Z
-Stopped at: Completed 78-01-PLAN.md (Oases data layer). Next: remaining Wave 1 phases (79) or Wave 2 phases (80, 81, 82).
-Resume file: .planning/phases/78-oases-stage-visualization-gating/78-01-SUMMARY.md
+Last session: 2026-03-08T10:10Z
+Stopped at: Completed 78-02-PLAN.md tasks (Oases visualization UI). Checkpoint pending user visual verification.
+Resume file: .planning/phases/78-oases-stage-visualization-gating/78-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
