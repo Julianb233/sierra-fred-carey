@@ -10,7 +10,7 @@ import { requireAdminRequest } from "@/lib/auth/admin";
 import { getSessionsWithFeedback } from "@/lib/db/feedback-admin";
 
 export async function GET(request: NextRequest) {
-  const denied = requireAdminRequest(request);
+  const denied = await requireAdminRequest(request);
   if (denied) return denied;
 
   try {

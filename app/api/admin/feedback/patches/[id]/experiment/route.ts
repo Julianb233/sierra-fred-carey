@@ -17,7 +17,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {

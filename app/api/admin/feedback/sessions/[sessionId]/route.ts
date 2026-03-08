@@ -13,7 +13,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const denied = requireAdminRequest(request);
+  const denied = await requireAdminRequest(request);
   if (denied) return denied;
 
   const { sessionId } = await params;

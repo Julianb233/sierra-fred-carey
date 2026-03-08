@@ -17,7 +17,7 @@ interface TriageRequestBody {
 }
 
 export async function PATCH(request: NextRequest) {
-  const denied = requireAdminRequest(request);
+  const denied = await requireAdminRequest(request);
   if (denied) return denied;
 
   try {

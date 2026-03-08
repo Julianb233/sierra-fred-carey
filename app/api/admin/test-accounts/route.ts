@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic"
 // ---------------------------------------------------------------------------
 
 export async function GET(request: NextRequest) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 // ---------------------------------------------------------------------------
 
 export async function DELETE(request: NextRequest) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {

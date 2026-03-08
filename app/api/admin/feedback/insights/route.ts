@@ -12,7 +12,7 @@ import { getTopInsightsThisWeek } from "@/lib/db/feedback-admin"
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {

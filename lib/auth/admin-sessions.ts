@@ -1,100 +1,84 @@
 /**
  * Admin Session Token Management
  *
- * In-memory session store for admin authentication.
- * Session tokens replace raw admin keys in cookies for improved security:
- * - Tokens are random UUIDs with no relation to the secret key
- * - Sessions expire after 24 hours
- * - Sessions can be individually revoked on logout
- * - Expired sessions are cleaned up automatically on each createSession call
+ * Uses signed JWTs for admin sessions. Stateless — works across
+ * Vercel serverless Lambda invocations with no server-side store.
  *
- * In-memory store is acceptable because:
- * - Admin sessions are rare (few admins, infrequent login)
- * - Session loss on cold start = admin re-authenticates (low impact)
- * - For multi-instance deployments, migrate to Redis/Vercel KV later
+ * The session token IS the JWT, signed with ADMIN_SECRET_KEY.
+ * No in-memory Map, no Redis, no database needed.
  */
 
-import { randomUUID } from "crypto";
+import { SignJWT, jwtVerify } from "jose"
 
 // ============================================================================
-// Types
+// Config
 // ============================================================================
 
-interface AdminSession {
-  createdAt: number;
-  expiresAt: number;
+const SESSION_TTL = "24h"
+const ISSUER = "sahara-admin"
+const AUDIENCE = "sahara-admin-panel"
+
+function getSigningKey(): Uint8Array {
+  const key = process.env.ADMIN_SECRET_KEY
+  if (!key) throw new Error("ADMIN_SECRET_KEY not configured")
+  return new TextEncoder().encode(key)
 }
-
-// ============================================================================
-// Session Store
-// ============================================================================
-
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-const sessions = new Map<string, AdminSession>();
 
 // ============================================================================
 // Public API
 // ============================================================================
 
 /**
- * Create a new admin session token.
- * Automatically cleans expired sessions on each call.
+ * Create a new admin session token (signed JWT).
  */
-export function createAdminSession(): string {
-  return createSession();
+export async function createAdminSession(): Promise<string> {
+  return createSession()
 }
 
-export function createSession(): string {
-  cleanExpiredSessions();
+export async function createSession(): Promise<string> {
+  const token = await new SignJWT({ role: "admin" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setIssuer(ISSUER)
+    .setAudience(AUDIENCE)
+    .setExpirationTime(SESSION_TTL)
+    .sign(getSigningKey())
 
-  const token = randomUUID();
-  const now = Date.now();
-
-  sessions.set(token, {
-    createdAt: now,
-    expiresAt: now + SESSION_TTL_MS,
-  });
-
-  return token;
+  return token
 }
 
 /**
  * Validate an admin session token.
- * Returns true if the token exists and has not expired.
+ * Returns true if the JWT is valid and not expired.
  */
-export const verifyAdminSession = validateSession;
+export const verifyAdminSession = validateSession
 
-export function validateSession(token: string): boolean {
-  const session = sessions.get(token);
-  if (!session) return false;
-
-  if (Date.now() > session.expiresAt) {
-    // Lazily remove expired session on access
-    sessions.delete(token);
-    return false;
+export async function validateSession(token: string): Promise<boolean> {
+  try {
+    await jwtVerify(token, getSigningKey(), {
+      issuer: ISSUER,
+      audience: AUDIENCE,
+    })
+    return true
+  } catch {
+    return false
   }
-
-  return true;
 }
 
 /**
- * Revoke an admin session token (e.g., on logout).
+ * Revoke an admin session token.
+ * With stateless JWTs, revocation is a no-op — the token simply expires.
+ * The caller should clear the cookie.
  */
-export const revokeAdminSession = revokeSession;
+export const revokeAdminSession = revokeSession
 
-export function revokeSession(token: string): void {
-  sessions.delete(token);
+export function revokeSession(_token: string): void {
+  // Stateless JWT — revocation handled by clearing the cookie on the client
 }
 
 /**
- * Remove all expired sessions from the store.
+ * No-op for backwards compatibility.
  */
 export function cleanExpiredSessions(): void {
-  const now = Date.now();
-  for (const [token, session] of sessions.entries()) {
-    if (now > session.expiresAt) {
-      sessions.delete(token);
-    }
-  }
+  // Stateless JWTs expire on their own
 }

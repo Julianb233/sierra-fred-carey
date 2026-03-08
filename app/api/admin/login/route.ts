@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Create a session token instead of storing the raw admin key
     // The session token is a random UUID that maps to an in-memory session
-    const sessionToken = createAdminSession();
+    const sessionToken = await createAdminSession();
     const cookieStore = await cookies();
     cookieStore.set("adminSession", sessionToken, {
       httpOnly: true,

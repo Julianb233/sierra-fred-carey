@@ -54,7 +54,7 @@ const CSV_HEADER =
 
 export async function GET(request: NextRequest) {
   // Admin-only guard
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {

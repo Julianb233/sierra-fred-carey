@@ -35,10 +35,10 @@ function safeCompare(a: string, b: string): boolean {
  * 1. First checks for `adminSession` cookie and validates via session store
  * 2. Falls back to `x-admin-key` header against ADMIN_SECRET_KEY (for API/CLI usage)
  */
-export function isAdminRequest(request: NextRequest): boolean {
+export async function isAdminRequest(request: NextRequest): Promise<boolean> {
   // 1. Check adminSession cookie from the request
   const sessionToken = request.cookies.get("adminSession")?.value;
-  if (sessionToken && verifyAdminSession(sessionToken)) {
+  if (sessionToken && await verifyAdminSession(sessionToken)) {
     return true;
   }
 
@@ -59,7 +59,7 @@ export async function isAdminSession(): Promise<boolean> {
 
   // Check adminSession token
   const sessionToken = cookieStore.get("adminSession")?.value;
-  if (sessionToken && verifyAdminSession(sessionToken)) return true;
+  if (sessionToken && await verifyAdminSession(sessionToken)) return true;
 
   return false;
 }
@@ -70,7 +70,7 @@ export async function isAdminSession(): Promise<boolean> {
  */
 export async function isAdminAny(request: NextRequest): Promise<boolean> {
   // isAdminRequest already checks both cookie and header
-  if (isAdminRequest(request)) return true;
+  if (await isAdminRequest(request)) return true;
   // Also check via Next.js cookies() API for server component contexts
   return isAdminSession();
 }
@@ -79,8 +79,8 @@ export async function isAdminAny(request: NextRequest): Promise<boolean> {
  * Guard for API routes - returns 401 response if not admin.
  * Usage: const denied = requireAdminRequest(request); if (denied) return denied;
  */
-export function requireAdminRequest(request: NextRequest): NextResponse | null {
-  if (!isAdminRequest(request)) {
+export async function requireAdminRequest(request: NextRequest): Promise<NextResponse | null> {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;

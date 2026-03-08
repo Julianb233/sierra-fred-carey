@@ -30,7 +30,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {
@@ -53,7 +53,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = requireAdminRequest(request)
+  const denied = await requireAdminRequest(request)
   if (denied) return denied
 
   try {
