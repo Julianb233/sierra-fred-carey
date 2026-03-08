@@ -85,6 +85,26 @@ export default function ChatPage() {
     }
   }, []);
 
+  // Keyboard shortcut: press V to open voice overlay (when not typing)
+  useEffect(() => {
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "v" || e.key === "V") {
+        e.preventDefault();
+        setVoiceOverlayOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   // Auto-collapse side panel on mobile
   useEffect(() => {
     if (isMobile && sidePanelOpen) {
@@ -195,7 +215,8 @@ export default function ChatPage() {
             size="sm"
             onClick={handleVoiceClick}
             className="gap-1 text-[#ff6a1a] hover:text-[#ea580c] hover:bg-[#ff6a1a]/10 px-2"
-            aria-label="Voice input"
+            aria-label="Voice input (press V)"
+            title="Voice input (V)"
           >
             <Mic className="h-4 w-4" />
             <span className="hidden sm:inline text-xs font-medium">Voice</span>

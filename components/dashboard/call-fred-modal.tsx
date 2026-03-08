@@ -233,6 +233,7 @@ export function CallFredModal({
   const agentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMutedRef = useRef(false);
   const samsungWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioElementsRef = useRef<HTMLAudioElement[]>([]);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
@@ -253,7 +254,7 @@ export function CallFredModal({
     }
   }, [seconds, callState, maxDuration]);
 
-  // Clean up LiveKit room and timers on unmount
+  // Clean up LiveKit room, audio elements, and timers on unmount
   useEffect(() => {
     return () => {
       if (agentTimeoutRef.current) {
@@ -268,6 +269,13 @@ export function CallFredModal({
         roomRef.current.disconnect();
         roomRef.current = null;
       }
+      // Remove any leaked audio elements from the DOM
+      for (const el of audioElementsRef.current) {
+        el.pause();
+        el.srcObject = null;
+        el.remove();
+      }
+      audioElementsRef.current = [];
     };
   }, []);
 
@@ -332,6 +340,7 @@ export function CallFredModal({
             audioEl.setAttribute("playsinline", "true");
             audioEl.setAttribute("autoplay", "true");
             document.body.appendChild(audioEl);
+            audioElementsRef.current.push(audioEl);
             console.log('[CallFred] Audio element attached, paused:', audioEl.paused);
             // Force play in case autoplay is blocked
             audioEl.play().catch((e) => {

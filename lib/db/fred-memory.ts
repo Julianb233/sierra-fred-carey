@@ -7,6 +7,7 @@
  * - Procedural Memory: Decision frameworks, action templates
  */
 
+import { createHash } from "crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { MEMORY_CONFIG, type MemoryTier } from "@/lib/constants";
 
@@ -153,22 +154,48 @@ export async function storeEpisode(
 ): Promise<EpisodicMemory> {
   const supabase = createServiceClient();
 
+  // Compute content hash for deduplication
+  const contentHash = createHash("md5")
+    .update(JSON.stringify(content))
+    .digest("hex");
+
   const { data, error } = await supabase
     .from("fred_episodic_memory")
-    .insert({
-      user_id: userId,
-      session_id: sessionId,
-      event_type: eventType,
-      content,
-      channel: options.channel ?? "chat",
-      embedding: options.embedding,
-      importance_score: options.importanceScore ?? 0.5,
-      metadata: options.metadata ?? {},
-    })
+    .upsert(
+      {
+        user_id: userId,
+        session_id: sessionId,
+        event_type: eventType,
+        content,
+        content_hash: contentHash,
+        channel: options.channel ?? "chat",
+        embedding: options.embedding,
+        importance_score: options.importanceScore ?? 0.5,
+        metadata: options.metadata ?? {},
+      },
+      {
+        onConflict: "user_id,session_id,event_type,content_hash",
+        ignoreDuplicates: true,
+      }
+    )
     .select()
     .single();
 
   if (error) {
+    // If the upsert returned no rows (duplicate ignored), fetch the existing one
+    if (error.code === "PGRST116") {
+      const { data: existing } = await supabase
+        .from("fred_episodic_memory")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("session_id", sessionId)
+        .eq("event_type", eventType)
+        .eq("content_hash", contentHash)
+        .single();
+      if (existing) {
+        return transformEpisodicRow(existing);
+      }
+    }
     console.error("[FRED Memory] Error storing episode:", error);
     throw error;
   }

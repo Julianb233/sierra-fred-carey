@@ -3,11 +3,13 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { TwitterLogoIcon, LinkedInLogoIcon, RocketIcon } from "@radix-ui/react-icons";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const pathname = usePathname();
 
   const socialLinks = [
     {
@@ -77,6 +79,17 @@ const Footer = () => {
                   key={link.name}
                   href={link.href}
                   className="text-sm text-gray-600 dark:text-gray-400 hover:text-[#ff6a1a] transition-colors"
+                  onClick={(e) => {
+                    // If already on home page and link has a hash, scroll to section
+                    if (pathname === "/" && link.href.includes("#")) {
+                      const hash = link.href.split("#")[1];
+                      if (hash) {
+                        e.preventDefault();
+                        const el = document.getElementById(hash);
+                        el?.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }
+                  }}
                 >
                   {link.name}
                 </Link>

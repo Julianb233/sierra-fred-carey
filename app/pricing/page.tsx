@@ -80,7 +80,7 @@ export default function PricingPage() {
         { name: "Founder Ops Agent", included: true },
         { name: "Fundraise Ops Agent", included: true },
         { name: "Growth Ops Agent", included: true },
-        { name: "Inbox Ops Agent", included: true },
+        { name: "Inbox Ops Agent (Coming Soon)", included: true },
         { name: "Higher Usage Limits", included: true },
         { name: "Priority Compute", included: true },
         { name: "Deeper Memory Persistence", included: true },
