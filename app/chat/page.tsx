@@ -331,7 +331,11 @@ export default function ChatPage() {
       />
 
       {/* Call Fred Modal — now available to all tiers */}
-      <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
+      <CallFredModal
+        open={callModalOpen}
+        onOpenChange={setCallModalOpen}
+        onCallEnd={(summary) => setLastCallSummary(summary)}
+      />
     </div>
   );
 }
