@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 79 — Active Founder Memory Layer (Wave 1) COMPLETE
-Plan: 02 of 2 (complete)
-Status: Phase 79 complete
-Last activity: 2026-03-08 — Completed 79-02-PLAN.md (Wire memory into chat pipeline)
+Phase: 81 — Reality Lens First Interaction (Wave 2)
+Plan: 01 of 2 (complete)
+Status: 81-01 complete, 81-02 pending
+Last activity: 2026-03-08 — Completed 81-01-PLAN.md (Quick Reality Lens backend)
 
-Progress: [######........] 6/14 phases
+Progress: [########......] 8/14 phases (Wave 2 in progress)
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -70,6 +70,10 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - persistMemoryUpdates tier-gated: profile columns for all tiers, semantic facts for Pro+ only [79-02]
 - buildContextBlock deprecated in favor of formatMemoryBlock from active-memory.ts [79-02]
 - FRED_CORE_PROMPT v1.1.0: mandatory founder-specific referencing + co-founder as 7th Business Fundamental [79-02]
+- mapScoreToStage uses string params (customerValidation, prototypeStage) not booleans -- more expressive [81-01]
+- QuickAssessmentResult includes verdictLabel for UI display [81-01]
+- quickAssessIdea has full heuristic fallback when LLM fails -- first-time UX must never error [81-01]
+- reality_lens_complete partial index for efficient "who hasn't completed" queries [81-01]
 
 ### Blockers/Concerns
 
@@ -82,7 +86,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:30Z
-Stopped at: Completed 79-02-PLAN.md (Wire memory into chat pipeline). Phase 79 complete. Next: Wave 2 phases (80, 81, 82).
-Resume file: .planning/phases/79-active-founder-memory-layer/79-02-SUMMARY.md
+Last session: 2026-03-08T10:35Z
+Stopped at: Completed 81-01-PLAN.md (Quick Reality Lens backend). Next: 81-02 (frontend wizard).
+Resume file: .planning/phases/81-reality-lens-first-interaction/81-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
