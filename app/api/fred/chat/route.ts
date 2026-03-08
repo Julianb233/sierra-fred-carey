@@ -30,7 +30,7 @@ import { withLogging } from "@/lib/api/with-logging";
 import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
-import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
+import { extractAndStoreNextSteps, getNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
@@ -451,7 +451,7 @@ async function handlePost(req: NextRequest) {
       return null as ConversationState | null;
     });
 
-    const [founderContextResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult] = await Promise.all([
+    const [founderContextResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult, outstandingStepsResult] = await Promise.all([
       buildFounderContextWithFacts(userId, hasPersistentMemory, conversationStateResult).catch((error) => {
         console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
         return { context: "", facts: [] };
@@ -504,6 +504,8 @@ async function handlePost(req: NextRequest) {
           return null;
         }
       })(),
+      // Pre-fetch outstanding next steps for accountability injection
+      getNextSteps(userId).catch(() => ({ critical: [], important: [], optional: [] })),
     ]);
 
     // Destructure founder context result — facts are passed to the machine
@@ -703,8 +705,28 @@ async function handlePost(req: NextRequest) {
       console.warn("[Mindset Monitor] Stress detection failed (non-blocking):", err)
     }
 
+    // Build accountability block from outstanding next steps
+    let accountabilityBlock = "";
+    const steps = outstandingStepsResult;
+    const pendingSteps = [...steps.critical, ...steps.important].filter(s => !s.completed);
+    if (pendingSteps.length > 0) {
+      const stepLines = pendingSteps.slice(0, 5).map((s, i) => {
+        const age = s.sourceConversationDate
+          ? Math.floor((Date.now() - new Date(s.sourceConversationDate).getTime()) / 86400000)
+          : null;
+        const ageLabel = age !== null && age > 0 ? ` (${age}d ago)` : "";
+        return `${i + 1}. [${s.priority.toUpperCase()}] ${s.description}${ageLabel}`;
+      });
+      accountabilityBlock = `## FOUNDER ACCOUNTABILITY — Outstanding Action Items
+
+The founder has these unfinished commitments from previous conversations:
+${stepLines.join("\n")}
+
+INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go?" or "Did you get a chance to Y?" — but don't force it. If they completed something, celebrate it. If they're stuck, offer help. This is mentor-level accountability, not nagging.`;
+    }
+
     // Assemble full system prompt context
-    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
+    // Order: founderContext + stepGuidance + accountability + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
     // Phase 80: Stage-gate pre-validation
     const stageValidation = validateStageAccess(message, currentOasesStage)
     let stageRedirectBlock = ""
@@ -725,6 +747,7 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
       stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       founderContext,
       stepGuidanceBlock,
+      accountabilityBlock, // Outstanding action items from past conversations
       rlStatusBlock,
       rlGateBlock,
       frameworkBlock,

@@ -15,6 +15,7 @@ import { getModelForTier } from "@/lib/ai/tier-routing"
 import { getUserTier } from "@/lib/api/tier-middleware"
 import { retrieveRecentEpisodes } from "@/lib/db/fred-memory"
 import { logJourneyEventAsync } from "@/lib/db/journey-events"
+import { getNextSteps } from "@/lib/next-steps/next-steps-service"
 import type { DailyAgenda, DailyTask } from "./types"
 
 // ============================================================================
@@ -63,11 +64,12 @@ export async function generateDailyAgenda(userId: string): Promise<DailyAgenda> 
     return transformToAgenda(existing)
   }
 
-  // Load founder context
-  const [profile, recentEpisodes, tier] = await Promise.all([
+  // Load founder context + outstanding commitments
+  const [profile, recentEpisodes, tier, outstandingSteps] = await Promise.all([
     loadFounderProfile(userId),
     loadRecentChatContext(userId),
     getUserTier(userId),
+    getNextSteps(userId).catch(() => ({ critical: [], important: [], optional: [] })),
   ])
 
   const providerKey = getModelForTier(String(tier), "structured")
@@ -101,6 +103,15 @@ export async function generateDailyAgenda(userId: string): Promise<DailyAgenda> 
     }
   }
 
+  // Include outstanding action items for accountability-aware task generation
+  const pendingActions = [...outstandingSteps.critical, ...outstandingSteps.important].filter(s => !s.completed)
+  if (pendingActions.length > 0) {
+    contextParts.push("\nOutstanding commitments from previous FRED conversations (incomplete):")
+    for (const step of pendingActions.slice(0, 5)) {
+      contextParts.push(`- [${step.priority}] ${step.description}`)
+    }
+  }
+
   const systemPrompt = `You are Fred Cary, an experienced serial entrepreneur and mentor generating today's 3 most impactful tasks for a startup founder.
 
 RULES:
@@ -112,7 +123,9 @@ RULES:
 - If they're in early stages (Clarity, Blueprint), focus on validation and research
 - If they're in later stages (Build, Launch, Scale), focus on execution and metrics
 - Be prescriptive: "Interview 2 potential customers about X" not "Think about customer validation"
-- Each task description should explain WHY it matters for their specific situation`
+- Each task description should explain WHY it matters for their specific situation
+- If the founder has outstanding commitments from previous conversations, incorporate the most critical ones into today's tasks rather than generating entirely new work
+- Hold them accountable: if they committed to doing something, make it today's must-do`
 
   try {
     const result = await generateObject({
