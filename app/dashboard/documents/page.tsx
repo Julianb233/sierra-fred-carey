@@ -15,6 +15,7 @@ import {
   type DocumentFolder,
 } from "@/components/dashboard/document-card";
 import { DocumentUpload } from "@/components/dashboard/document-upload";
+import { DeckUploadReview } from "@/components/dashboard/deck-upload-review";
 import { DocumentViewDialog } from "@/components/dashboard/document-view-dialog";
 
 // ============================================================================
@@ -274,6 +275,13 @@ function DocumentsContent() {
 
         {FOLDERS.map((folder) => (
           <TabsContent key={folder.key} value={folder.key}>
+            {folder.key === "decks" && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Score Your Pitch Deck</h3>
+                <p className="text-sm text-muted-foreground mb-4">Upload a PDF pitch deck and get Fred&apos;s investor-perspective scorecard.</p>
+                <DeckUploadReview />
+              </div>
+            )}
             <div className="mt-4">
               {filteredDocuments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

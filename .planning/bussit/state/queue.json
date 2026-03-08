@@ -184,8 +184,8 @@
       "phase": 87,
       "plan": "01",
       "type": "build",
-      "status": "claimed",
-      "claimedBy": "worker-5",
+      "status": "done",
+      "claimedBy": "worker-4",
       "deps": [
         "83-01-b"
       ],
