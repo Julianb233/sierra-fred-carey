@@ -12,6 +12,7 @@ import {
   formatChatForPreamble,
   type ChatMessage,
 } from "@/lib/voice/chat-context-loader"
+import { storeChannelEntry } from "@/lib/channels/conversation-context"
 
 // ============================================================================
 // Types
@@ -22,6 +23,12 @@ export interface ChatVoiceContext {
   preambleBlock: string
   /** Short description of the last discussed topic (for UI display) */
   lastTopic: string | null
+}
+
+export interface VoiceTranscriptEntry {
+  speaker: "user" | "fred"
+  text: string
+  timestamp: string
 }
 
 // ============================================================================
@@ -49,6 +56,65 @@ export async function getChatContextForVoice(
   } catch (err) {
     console.warn("[Chat-Voice Bridge] Failed to load chat context:", err)
     return { preambleBlock: "", lastTopic: null }
+  }
+}
+
+/**
+ * Inject a voice call transcript into chat history via the conversation context layer.
+ *
+ * Stores each transcript entry as an episodic memory record with channel='voice',
+ * then appends a summary entry so that subsequent text chats see what was discussed.
+ *
+ * Non-throwing: logs warnings on failure, never propagates errors.
+ */
+export async function injectVoiceTranscriptToChat(
+  userId: string,
+  roomName: string,
+  transcript: VoiceTranscriptEntry[]
+): Promise<void> {
+  try {
+    const sessionId = `voice-${roomName}`
+
+    // Store individual transcript entries
+    for (const entry of transcript) {
+      const role = entry.speaker === "fred" ? "assistant" : "user"
+      await storeChannelEntry(userId, sessionId, "voice", role, entry.text, {
+        roomName,
+        voiceTimestamp: entry.timestamp,
+      })
+    }
+
+    // Build a brief summary from user and assistant messages
+    const userMessages = transcript
+      .filter((e) => e.speaker === "user")
+      .map((e) => e.text)
+      .join(" ")
+    const userSummary =
+      userMessages.slice(0, 200) + (userMessages.length > 200 ? "..." : "")
+
+    const assistantMessages = transcript
+      .filter((e) => e.speaker === "fred")
+      .map((e) => e.text)
+      .join(" ")
+    const assistantSummary =
+      assistantMessages.slice(0, 200) +
+      (assistantMessages.length > 200 ? "..." : "")
+
+    const summaryContent = `[Voice Call Summary] You called and discussed: ${userSummary}. FRED covered: ${assistantSummary}`
+
+    await storeChannelEntry(
+      userId,
+      sessionId,
+      "voice",
+      "assistant",
+      summaryContent,
+      {
+        type: "voice_summary",
+        roomName,
+      }
+    )
+  } catch (err) {
+    console.warn("[Chat-Voice Bridge] Failed to inject voice transcript:", err)
   }
 }
 

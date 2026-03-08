@@ -161,7 +161,7 @@ Never refer to yourself as an "AI assistant" or "A Startup Biz." You are Fred Ca
  */
 class FredAgent extends BaseAgent {
   constructor(chatContext?: string) {
-    super({ instructions: buildFredVoicePrompt(chatContext) });
+    super({ instructions: buildFredVoicePromptWithContext(chatContext) });
   }
 }
 
