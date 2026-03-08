@@ -11,6 +11,7 @@ import type {
   FeedbackSignalInsert,
   FeedbackSessionInsert,
   FeedbackInsightInsert,
+  FeedbackInsight,
 } from "@/lib/feedback";
 
 // ============================================================================
@@ -113,6 +114,117 @@ export async function getInsightsByStatus(status: string, limit = 50) {
 }
 
 // ============================================================================
+// Clustering & Intelligence (Phase 74)
+// ============================================================================
+
+export async function getUnprocessedSignals(limit = 500) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_signals")
+    .select("*")
+    .eq("processing_status", "new")
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function markSignalsProcessed(ids: string[]) {
+  if (ids.length === 0) return;
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("feedback_signals")
+    .update({ processing_status: "processed" })
+    .in("id", ids);
+  if (error) throw error;
+}
+
+export async function findInsightByHash(
+  hash: string,
+  windowHours = 4
+): Promise<FeedbackInsight | null> {
+  const supabase = createServiceClient();
+  const cutoff = new Date(
+    Date.now() - windowHours * 60 * 60 * 1000
+  ).toISOString();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .eq("cluster_embedding_hash", hash)
+    .gte("created_at", cutoff)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function upsertInsightWithSignals(
+  insight: FeedbackInsightInsert & {
+    cluster_embedding_hash: string;
+    source_window_start: string;
+    source_window_end: string;
+  }
+) {
+  const supabase = createServiceClient();
+
+  // Check for existing insight with same hash within window
+  const existing = await findInsightByHash(
+    insight.cluster_embedding_hash,
+    4
+  );
+
+  if (existing) {
+    // Merge: append signal_ids and update count
+    const mergedIds = [
+      ...new Set([...existing.signal_ids, ...insight.signal_ids]),
+    ];
+    const { data, error } = await supabase
+      .from("feedback_insights")
+      .update({
+        signal_ids: mergedIds,
+        signal_count: mergedIds.length,
+        severity: compareSeverity(existing.severity, insight.severity),
+        source_window_end: insight.source_window_end,
+        metadata: {
+          ...((existing.metadata as Record<string, unknown>) || {}),
+          lastMergedAt: new Date().toISOString(),
+        },
+      })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return { data, merged: true };
+  }
+
+  // Insert new insight
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .insert(insight)
+    .select()
+    .single();
+  if (error) throw error;
+  return { data, merged: false };
+}
+
+/** Return the higher of two severity levels */
+function compareSeverity(
+  a: string,
+  b: string
+): "low" | "medium" | "high" | "critical" {
+  const order: Record<string, number> = {
+    low: 1,
+    medium: 2,
+    high: 3,
+    critical: 4,
+  };
+  return (order[a] || 0) >= (order[b] || 0)
+    ? (a as "low" | "medium" | "high" | "critical")
+    : (b as "low" | "medium" | "high" | "critical");
+}
+
+// ============================================================================
 // GDPR Retention
 // ============================================================================
 
@@ -139,4 +251,53 @@ export async function deleteFeedbackForUser(userId: string) {
     .delete()
     .eq("user_id", userId);
   if (sesErr) throw sesErr;
+}
+
+// ============================================================================
+// Pattern Detection queries (Phase 74-01)
+// ============================================================================
+
+export async function getRecentNegativeSignals(since: string, limit = 500) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_signals")
+    .select("*")
+    .gte("created_at", since)
+    .or("rating.eq.-1,sentiment_score.lt.-0.3")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function getOpenInsights(limit = 100) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .in("status", ["new", "reviewed", "actioned"])
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function updateInsightSignals(
+  insightId: string,
+  newSignalIds: string[],
+  newCount: number
+) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .update({
+      signal_ids: newSignalIds,
+      signal_count: newCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", insightId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }

@@ -57,6 +57,18 @@ export type FeedbackSignalInsert = Omit<FeedbackSignal, 'id' | 'created_at'>
 export type FeedbackSessionInsert = Omit<FeedbackSession, 'id' | 'created_at' | 'updated_at'>
 export type FeedbackInsightInsert = Omit<FeedbackInsight, 'id' | 'created_at' | 'updated_at'>
 
+// Clustering types (Phase 74)
+export interface FeedbackCluster {
+  theme: string
+  description: string
+  category: string | null
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  signalIds: string[]
+  signalCount: number
+  weightedCount: number
+  hash: string
+}
+
 // Client-side types used by hooks and components
 export type FeedbackSource = 'chat' | 'voice' | 'sms' | 'whatsapp'
 
