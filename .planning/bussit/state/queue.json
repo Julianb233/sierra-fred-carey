@@ -1,244 +1,97 @@
 {
-  "v": 10,
-  "batch": "auto-v9-20260308",
+  "v": 11,
+  "batch": "auto-v11-20260308",
   "tasks": [
     {
-      "id": "78-01-b",
-      "phase": 78,
+      "id": "72-01-b",
+      "phase": 72,
       "plan": "01",
       "type": "build",
       "status": "done",
+      "worker": "worker-auto-v7-1",
       "deps": [],
       "complexity": 5,
+      "complexityLevel": "moderate",
       "wave": 1
     },
     {
-      "id": "78-02-b",
-      "phase": 78,
+      "id": "72-02-b",
+      "phase": 72,
       "plan": "02",
       "type": "build",
-      "status": "done",
-      "deps": [
-        "78-01-b"
-      ],
-      "complexity": 6,
-      "wave": 1
+      "status": "pending",
+      "deps": ["72-01-b"],
+      "complexity": 5,
+      "complexityLevel": "moderate",
+      "wave": 2
     },
     {
-      "id": "79-01-b",
-      "phase": 79,
-      "plan": "01",
-      "type": "build",
+      "id": "74-p",
+      "phase": 74,
+      "plan": "all",
+      "type": "plan",
       "status": "done",
       "deps": [],
-      "complexity": 5,
-      "wave": 1
-    },
-    {
-      "id": "79-02-b",
-      "phase": 79,
-      "plan": "02",
-      "type": "build",
-      "status": "done",
-      "deps": [
-        "79-01-b"
-      ],
-      "complexity": 5,
-      "wave": 1
-    },
-    {
-      "id": "80-01-b",
-      "phase": 80,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "deps": [],
-      "complexity": 6,
-      "wave": 2,
-      "planFile": ".planning/phases/80-structured-stage-gate-enforcement/80-01-PLAN.md"
-    },
-    {
-      "id": "80-02-b",
-      "phase": 80,
-      "plan": "02",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-5",
-      "deps": [
-        "80-01-b"
-      ],
-      "complexity": 6,
-      "wave": 2,
-      "planFile": ".planning/phases/80-structured-stage-gate-enforcement/80-02-PLAN.md"
-    },
-    {
-      "id": "81-01-b",
-      "phase": 81,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-4",
-      "deps": [],
-      "complexity": 5,
-      "wave": 2,
-      "planFile": ".planning/phases/81-reality-lens-first-interaction/81-01-PLAN.md",
-      "note": "Verified complete - artifacts committed in previous session"
-    },
-    {
-      "id": "81-02-b",
-      "phase": 81,
-      "plan": "02",
-      "type": "build",
-      "status": "done",
-      "deps": [
-        "81-01-b"
-      ],
-      "complexity": 5,
-      "wave": 2,
-      "planFile": ".planning/phases/81-reality-lens-first-interaction/81-02-PLAN.md",
-      "claimedBy": "worker-2"
-    },
-    {
-      "id": "82-01-b",
-      "phase": 82,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "deps": [],
-      "complexity": 6,
-      "wave": 2,
-      "planFile": ".planning/phases/82-chat-voice-continuity/82-01-PLAN.md"
-    },
-    {
-      "id": "82-02-b",
-      "phase": 82,
-      "plan": "02",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-5",
-      "deps": [
-        "82-01-b"
-      ],
-      "complexity": 6,
-      "wave": 2,
-      "planFile": ".planning/phases/82-chat-voice-continuity/82-02-PLAN.md"
-    },
-    {
-      "id": "83-01-b",
-      "phase": 83,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-4",
-      "deps": [
-        "80-02-b"
-      ],
-      "complexity": 5,
-      "wave": 3,
-      "planFile": ".planning/phases/83-founder-mindset-monitor/PLAN.md"
-    },
-    {
-      "id": "84-01-b",
-      "phase": 84,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-2",
-      "deps": [
-        "80-02-b"
-      ],
-      "complexity": 5,
-      "wave": 3,
-      "planFile": ".planning/phases/84-daily-mentor-guidance/PLAN.md"
-    },
-    {
-      "id": "85-01-b",
-      "phase": 85,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-1",
-      "deps": [
-        "80-02-b"
-      ],
-      "complexity": 6,
-      "wave": 3,
-      "planFile": ".planning/phases/85-journey-gated-fund-matching/PLAN.md"
-    },
-    {
-      "id": "86-01-b",
-      "phase": 86,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-2",
-      "deps": [
-        "83-01-b"
-      ],
       "complexity": 4,
-      "wave": 4,
-      "planFile": ".planning/phases/86-fred-conciseness/PLAN.md"
+      "complexityLevel": "simple",
+      "wave": 1,
+      "worker": "worker-auto-v7-2"
     },
     {
-      "id": "87-01-b",
-      "phase": 87,
-      "plan": "01",
+      "id": "74-b",
+      "phase": 74,
+      "plan": "all",
       "type": "build",
-      "status": "done",
-      "claimedBy": "worker-4",
-      "deps": [
-        "83-01-b"
-      ],
+      "status": "claimed",
+      "deps": ["74-p"],
       "complexity": 6,
-      "wave": 4,
-      "planFile": ".planning/phases/87-pitch-deck-scoring/PLAN.md"
+      "complexityLevel": "moderate",
+      "wave": 2,
+      "worker": "worker-auto-v7-2"
     },
     {
-      "id": "88-01-b",
-      "phase": 88,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-2",
-      "deps": [
-        "84-01-b"
-      ],
-      "complexity": 5,
-      "wave": 4,
-      "planFile": ".planning/phases/88-event-launch-kit/PLAN.md"
+      "id": "75-p",
+      "phase": 75,
+      "plan": "all",
+      "type": "plan",
+      "status": "pending",
+      "deps": ["72-02-b", "74-b"],
+      "complexity": 4,
+      "complexityLevel": "simple",
+      "wave": 3
     },
     {
-      "id": "89-01-b",
-      "phase": 89,
-      "plan": "01",
+      "id": "75-b",
+      "phase": 75,
+      "plan": "all",
       "type": "build",
-      "status": "done",
-      "claimedBy": "worker-5",
-      "deps": [
-        "85-01-b"
-      ],
-      "complexity": 5,
-      "wave": 4,
-      "planFile": ".planning/phases/89-boardy-polish/PLAN.md"
+      "status": "pending",
+      "deps": ["75-p"],
+      "complexity": 7,
+      "complexityLevel": "complex",
+      "wave": 4
     },
     {
-      "id": "90-01-b",
-      "phase": 90,
-      "plan": "01",
-      "type": "build",
-      "status": "done",
-      "claimedBy": "worker-7",
-      "deps": [
-        "86-01-b",
-        "87-01-b",
-        "88-01-b",
-        "89-01-b"
-      ],
+      "id": "76-p",
+      "phase": 76,
+      "plan": "all",
+      "type": "plan",
+      "status": "pending",
+      "deps": ["74-b", "75-b"],
       "complexity": 5,
-      "wave": 5,
-      "planFile": ".planning/phases/90-user-testing-loop/PLAN.md",
-      "note": "Verified and finalized by worker-7. All artifacts present and type-checked."
+      "complexityLevel": "moderate",
+      "wave": 5
+    },
+    {
+      "id": "76-b",
+      "phase": 76,
+      "plan": "all",
+      "type": "build",
+      "status": "pending",
+      "deps": ["76-p"],
+      "complexity": 8,
+      "complexityLevel": "complex",
+      "wave": 6
     }
-  ],
-  "lastUpdated": "2026-03-08T20:00:00Z"
+  ]
 }

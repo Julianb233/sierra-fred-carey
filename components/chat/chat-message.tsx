@@ -5,11 +5,8 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
-import type { MessageFeedbackState } from "@/lib/feedback/types";
-
-type FeedbackSignalValue = 'thumbs_up' | 'thumbs_down'
 import { RedFlagBadge } from "./red-flag-badge";
-import { ThumbsWidget } from "./thumbs-widget";
+import { ThumbsWidget } from "@/components/feedback/thumbs-widget";
 import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
 import { CourseCardInline } from "@/components/content/course-card-inline";
@@ -64,16 +61,8 @@ interface ChatMessageProps {
   risks?: RedFlag[];
   /** When true, show the TTS playback button on assistant messages. Requires Pro+. */
   showTts?: boolean;
-  /** Feedback state for this message (only relevant for assistant messages) */
-  feedbackState?: MessageFeedbackState;
-  /** Callback when user clicks thumbs up/down */
-  onFeedbackSignal?: (messageId: string, signal: FeedbackSignalValue) => void;
-  /** Callback to toggle comment form */
-  onFeedbackToggleComment?: (messageId: string) => void;
-  /** Callback when comment text changes */
-  onFeedbackCommentChange?: (messageId: string, comment: string) => void;
-  /** Callback to submit comment */
-  onFeedbackSubmitComment?: (messageId: string) => void;
+  /** Number of user messages in the session — used for feedback widget gate */
+  messageCount?: number;
 }
 
 export function ChatMessage({
@@ -81,11 +70,7 @@ export function ChatMessage({
   index,
   risks,
   showTts,
-  feedbackState,
-  onFeedbackSignal,
-  onFeedbackToggleComment,
-  onFeedbackCommentChange,
-  onFeedbackSubmitComment,
+  messageCount,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
 
@@ -250,15 +235,11 @@ export function ChatMessage({
             <TtsButton text={message.content} />
           )}
 
-          {/* Thumbs feedback -- assistant messages only, after streaming completes */}
-          {!isUser && !message.isStreaming && feedbackState && onFeedbackSignal && (
+          {/* Thumbs feedback -- assistant messages only, after streaming completes, not on greeting */}
+          {!isUser && !message.isStreaming && message.id !== "greeting" && (
             <ThumbsWidget
               messageId={message.id}
-              state={feedbackState}
-              onSignal={onFeedbackSignal}
-              onToggleComment={onFeedbackToggleComment || (() => {})}
-              onCommentChange={onFeedbackCommentChange || (() => {})}
-              onSubmitComment={onFeedbackSubmitComment || (() => {})}
+              messageCount={messageCount ?? 0}
             />
           )}
 

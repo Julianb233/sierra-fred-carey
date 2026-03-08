@@ -8,13 +8,10 @@ import { TypingIndicator } from "./typing-indicator";
 import { CognitiveStepIndicator } from "./cognitive-state-indicator";
 import { FloatingOrbs } from "@/components/premium/GradientBg";
 import { useFredChat } from "@/lib/hooks/use-fred-chat";
-import { useFeedback } from "@/hooks/use-feedback";
 import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from "@/lib/fred-brain";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
-import { FEEDBACK_TOASTS } from "@/lib/feedback/constants";
-import { toast } from "sonner";
 
 // ============================================================================
 // Suggestion chips — page-aware quick-start prompts
@@ -109,23 +106,10 @@ function buildFredGreeting(): Message {
 }
 
 export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing, sessionId } = useFredChat({ pageContext });
+  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Feedback hook — tracks thumbs up/down state per assistant message
-  const {
-    getFeedbackState,
-    submitSignal,
-    toggleComment,
-    setComment: setFeedbackComment,
-    submitComment,
-  } = useFeedback({
-    sessionId,
-    source: "chat",
-    onSuccess: () => toast.success(FEEDBACK_TOASTS.SUCCESS),
-    onError: (_id, err) => toast.error(err || FEEDBACK_TOASTS.ERROR),
-  });
   const [greeting] = useState<Message>(() => buildFredGreeting());
   const sessionTrackedRef = useRef(false);
   const initialMessageSentRef = useRef(false);
@@ -143,6 +127,12 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
     }));
     return [greeting, ...mapped];
   }, [fredMessages, greeting]);
+
+  // Count user messages — used for feedback widget gate (show after 5+ user messages)
+  const userMessageCount = useMemo(
+    () => fredMessages.filter((m) => m.role === "user").length,
+    [fredMessages]
+  );
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -204,11 +194,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
               message={message}
               index={index}
               showTts={message.role === "assistant" && message.content.length > 20}
-              feedbackState={message.role === "assistant" ? getFeedbackState(message.id) : undefined}
-              onFeedbackSignal={submitSignal}
-              onFeedbackToggleComment={toggleComment}
-              onFeedbackCommentChange={setFeedbackComment}
-              onFeedbackSubmitComment={submitComment}
+              messageCount={userMessageCount}
             />
           ))}
           {isProcessing && <TypingIndicator key="typing" />}
