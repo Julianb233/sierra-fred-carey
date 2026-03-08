@@ -45,6 +45,12 @@ import { extractSentiment } from "@/lib/feedback/sentiment";
 import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
 import { insertFeedbackSignal } from "@/lib/db/feedback";
 import { TIER_WEIGHTS } from "@/lib/feedback/constants";
+import { extractSentimentFromText } from "@/lib/feedback/sentiment";
+import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "@/lib/sentiment/stress-detector";
+import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
+import { logSentimentSignal } from "@/lib/db/sentiment-log";
+import { validateStageAccess } from "@/lib/oases/stage-validator";
+import type { OasesStage } from "@/types/oases";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
