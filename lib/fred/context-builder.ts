@@ -26,6 +26,7 @@ export interface FounderProfile {
   name: string | null;
   stage: string | null;
   industry: string | null;
+  coFounder: string | null;
   revenueRange: string | null;
   teamSize: number | null;
   fundingHistory: string | null;
@@ -53,7 +54,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("name, stage, industry, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
+    .select("name, stage, industry, co_founder, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
     .eq("id", userId)
     .single();
 
@@ -62,6 +63,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
       name: null,
       stage: null,
       industry: null,
+      coFounder: null,
       revenueRange: null,
       teamSize: null,
       fundingHistory: null,
@@ -75,6 +77,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
     name: data.name ?? null,
     stage: data.stage ?? null,
     industry: data.industry ?? null,
+    coFounder: data.co_founder ?? null,
     revenueRange: data.revenue_range ?? null,
     teamSize: data.team_size ?? null,
     fundingHistory: data.funding_history ?? null,

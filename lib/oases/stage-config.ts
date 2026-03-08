@@ -40,7 +40,7 @@ export const STAGE_CONFIG: StageConfig[] = [
         threshold: 1,
       },
     ],
-    unlockedFeatures: ["chat", "reality-lens", "dashboard", "settings"],
+    unlockedFeatures: ["chat", "reality-lens", "dashboard", "wellbeing", "settings"],
     gatedRoutes: [],
   },
   {
@@ -75,8 +75,8 @@ export const STAGE_CONFIG: StageConfig[] = [
         completionCheck: "manual",
       },
     ],
-    unlockedFeatures: ["positioning", "insights"],
-    gatedRoutes: ["/dashboard/positioning", "/dashboard/insights"],
+    unlockedFeatures: ["positioning", "insights", "coaching", "next-steps"],
+    gatedRoutes: ["/dashboard/positioning", "/dashboard/insights", "/dashboard/coaching", "/dashboard/next-steps"],
   },
   {
     id: "build",
@@ -109,11 +109,12 @@ export const STAGE_CONFIG: StageConfig[] = [
         completionCheck: "investor_readiness_scored",
       },
     ],
-    unlockedFeatures: ["strategy", "pitch-deck", "investor-readiness"],
+    unlockedFeatures: ["strategy", "documents", "pitch-deck", "readiness"],
     gatedRoutes: [
       "/dashboard/strategy",
+      "/dashboard/documents",
       "/dashboard/pitch-deck",
-      "/dashboard/investor-readiness",
+      "/dashboard/readiness",
     ],
   },
   {
@@ -149,8 +150,8 @@ export const STAGE_CONFIG: StageConfig[] = [
         completionCheck: "manual",
       },
     ],
-    unlockedFeatures: ["investor-lens", "investor-readiness"],
-    gatedRoutes: ["/dashboard/investor-lens"],
+    unlockedFeatures: ["investor-lens", "investor-targeting", "investor-readiness", "investor-evaluation"],
+    gatedRoutes: ["/dashboard/investor-lens", "/dashboard/investor-targeting", "/dashboard/investor-readiness", "/dashboard/investor-evaluation"],
   },
   {
     id: "grow",
@@ -176,8 +177,8 @@ export const STAGE_CONFIG: StageConfig[] = [
         completionCheck: "boardy_ready",
       },
     ],
-    unlockedFeatures: ["boardy", "agents", "communities"],
-    gatedRoutes: ["/dashboard/boardy", "/dashboard/agents"],
+    unlockedFeatures: ["boardy", "agents", "communities", "marketplace"],
+    gatedRoutes: ["/dashboard/boardy", "/dashboard/agents", "/dashboard/communities", "/dashboard/marketplace"],
   },
 ]
 

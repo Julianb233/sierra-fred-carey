@@ -26,6 +26,7 @@ import {
   buildExtractionInput,
   parseExtractionResult,
 } from "@/lib/ai/memory-extraction-prompt"
+import type { MemoryConfidence } from "@/lib/fred/founder-context-types"
 
 // ============================================================================
 // Memory Builder
@@ -413,6 +414,34 @@ export async function persistMemoryUpdates(
       error
     )
   }
+}
+
+// ============================================================================
+// Plan 79-01 Required Exports (aliases + computeConfidence)
+// ============================================================================
+
+/**
+ * Alias for buildActiveFounderMemory to satisfy plan 79-01 artifact contract.
+ * @see buildActiveFounderMemory
+ */
+export const buildActiveFounderContext = buildActiveFounderMemory
+
+/**
+ * Compute a categorical confidence level based on when a field was last updated.
+ * - No value -> "unknown"
+ * - Updated < 7 days ago -> "high"
+ * - Updated 7-30 days ago -> "medium"
+ * - Updated > 30 days ago -> "low"
+ *
+ * Exported for testing as required by the plan spec.
+ */
+export function computeConfidence(lastUpdated: Date | null): MemoryConfidence {
+  if (!lastUpdated) return "unknown"
+  const ageMs = Date.now() - lastUpdated.getTime()
+  const ageDays = ageMs / (24 * 60 * 60 * 1000)
+  if (ageDays < 7) return "high"
+  if (ageDays <= 30) return "medium"
+  return "low"
 }
 
 // ============================================================================
