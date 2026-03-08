@@ -197,7 +197,7 @@ const OnboardingPage = () => {
       // Redirect after celebration — router.refresh() syncs auth state
       // so subsequent navigations (e.g. dashboard → chat) maintain session
       const timeout = setTimeout(() => {
-        router.push("/dashboard?welcome=true");
+        router.push("/welcome");
         router.refresh();
       }, 2500);
 
@@ -626,7 +626,7 @@ const OnboardingPage = () => {
                     className="flex items-center justify-center gap-2 text-[#ff6a1a]"
                   >
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Preparing your dashboard...</span>
+                    <span className="text-sm">Preparing your journey...</span>
                   </motion.div>
                 </motion.div>
               )}
