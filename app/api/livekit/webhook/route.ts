@@ -152,6 +152,11 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // Phase 82: Voice transcript injection into chat history is handled
+        // client-side via POST /api/fred/call/transcript. The client receives
+        // real-time transcript data through LiveKit's data channel during the
+        // call, then POSTs the collected transcript when the call ends.
+
         // Finalize coaching_sessions if applicable
         if (roomName.includes('fred-call')) {
           const { error: sessionError } = await supabase
