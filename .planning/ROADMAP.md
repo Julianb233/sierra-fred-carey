@@ -93,10 +93,10 @@
 **Requirements:** REQ-A1, REQ-A2, REQ-A3, REQ-A4
 
 **Success criteria:**
-- [ ] `getVariantStats()` returns thumbs ratio, sentiment score, and session completion per variant
-- [ ] Significance testing enforces minimum 500 sessions/variant; uses chi-squared for binary, t-test for continuous
-- [ ] Pre-registration template captures hypothesis, metrics, sample size before experiment starts
-- [ ] Admin dashboard shows experiment results with feedback metrics; winning variants auto-flagged
+- [x] `getVariantStats()` returns thumbs ratio, sentiment score, and session completion per variant
+- [x] Significance testing enforces minimum 500 sessions/variant; uses chi-squared for binary, t-test for continuous
+- [x] Pre-registration template captures hypothesis, metrics, sample size before experiment starts
+- [x] Admin dashboard shows experiment results with feedback metrics; winning variants auto-flagged
 
 **Research needed:** Yes — statistical significance thresholds for Sahara's user base
 **Estimated plans:** 2
@@ -153,10 +153,10 @@
 | REQ-I2 | 74 | Complete |
 | REQ-I3 | 74 | Complete |
 | REQ-I4 | 74 | Complete |
-| REQ-A1 | 75 | Pending |
-| REQ-A2 | 75 | Pending |
-| REQ-A3 | 75 | Pending |
-| REQ-A4 | 75 | Pending |
+| REQ-A1 | 75 | Complete |
+| REQ-A2 | 75 | Complete |
+| REQ-A3 | 75 | Complete |
+| REQ-A4 | 75 | Complete |
 | REQ-R1 | 76 | Pending |
 | REQ-R2 | 76 | Pending |
 | REQ-R3 | 76 | Pending |

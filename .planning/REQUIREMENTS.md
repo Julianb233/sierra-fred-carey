@@ -53,10 +53,10 @@
 
 ### A/B Testing Integration (4)
 
-- [ ] **REQ-A1:** Extend `getVariantStats()` with feedback metrics — thumbs-up ratio, average sentiment score, session completion rate per variant
-- [ ] **REQ-A2:** Statistical significance testing — chi-squared for binary feedback, t-test for sentiment; minimum 500 sessions/variant before declaring winner
-- [ ] **REQ-A3:** Experiment pre-registration template — hypothesis, metrics, sample size, duration before starting
-- [ ] **REQ-A4:** Admin dashboard: experiment results with feedback-aware metrics, auto-flag winning variants
+- [x] **REQ-A1:** Extend `getVariantStats()` with feedback metrics — thumbs-up ratio, average sentiment score, session completion rate per variant
+- [x] **REQ-A2:** Statistical significance testing — chi-squared for binary feedback, t-test for sentiment; minimum 500 sessions/variant before declaring winner
+- [x] **REQ-A3:** Experiment pre-registration template — hypothesis, metrics, sample size, duration before starting
+- [x] **REQ-A4:** Admin dashboard: experiment results with feedback-aware metrics, auto-flag winning variants
 
 ### FRED Self-Improvement / RLHF-Lite (5)
 
