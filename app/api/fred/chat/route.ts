@@ -510,6 +510,8 @@ async function handlePost(req: NextRequest) {
     // to avoid a duplicate getAllUserFacts DB call in loadMemoryActor
     const founderContext = founderContextResult.context;
     const preloadedFacts = founderContextResult.facts;
+    // Phase 80: Extract Oases stage from founder context for stage-gate validation
+    const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
 
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
@@ -662,9 +664,65 @@ async function handlePost(req: NextRequest) {
     // Build page navigation context block (only when chatting from an overlay, not the full /chat page)
     const pageContextBlock = pageContext ? buildPageContextBlock(pageContext) : "";
 
+    // Phase 83: Founder Mindset Monitor — pre-response stress detection
+    // Uses heuristic (sync) sentiment for speed, DB query for recent signals is lightweight.
+    let wellbeingBlock = ""
+    try {
+      const quickSentiment = extractSentimentFromText(message)
+      const stressSignal = await detectStressPattern(userId, quickSentiment)
+
+      // Log current sentiment signal (fire-and-forget)
+      const messageTopics = extractTopicsFromMessage(message)
+      void logSentimentSignal({
+        user_id: userId,
+        label: quickSentiment.label,
+        confidence: quickSentiment.confidence,
+        stress_level: stressSignal.score,
+        topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+      })
+
+      // Check if FRED should proactively intervene
+      if (await shouldIntervene(stressSignal, userId)) {
+        const founderName = context?.startupName || "founder"
+        const intervention = generateIntervention(stressSignal, founderName)
+        wellbeingBlock = buildInterventionBlock(intervention)
+
+        // Mark intervention was triggered
+        void logSentimentSignal({
+          user_id: userId,
+          label: quickSentiment.label,
+          confidence: quickSentiment.confidence,
+          stress_level: stressSignal.score,
+          topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+          intervention_triggered: true,
+        })
+
+        console.log(`[Mindset Monitor] Intervention triggered for user ${userId.slice(0, 8)}... (level: ${stressSignal.level}, trend: ${stressSignal.trend})`)
+      }
+    } catch (err) {
+      console.warn("[Mindset Monitor] Stress detection failed (non-blocking):", err)
+    }
+
     // Assemble full system prompt context
     // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
+    // Phase 80: Stage-gate pre-validation
+    const stageValidation = validateStageAccess(message, currentOasesStage)
+    let stageRedirectBlock = ""
+    if (\!stageValidation.allowed && stageValidation.redirectMessage) {
+      stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)
+
+The founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.
+
+**Your response MUST redirect them.** Use this language (adapt naturally to context):
+"${stageValidation.redirectMessage}"
+
+${stageValidation.currentStageGuidance ? `Then guide them toward: ${stageValidation.currentStageGuidance}` : ""}
+
+Do NOT answer their original question about ${stageValidation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
+    }
+
     let fullContext = [
+      stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       founderContext,
       stepGuidanceBlock,
       rlStatusBlock,
@@ -674,6 +732,7 @@ async function handlePost(req: NextRequest) {
       irsBlock,
       deckProtocolBlock,
       deckReviewReadyBlock,
+      wellbeingBlock,
       pageContextBlock,
     ].filter(Boolean).join("\n\n");
 
@@ -682,11 +741,12 @@ async function handlePost(req: NextRequest) {
     const contextTokens = estimateTokens(fullContext);
     if (contextTokens > 100_000) {
       // Truncation priority (keep most important first):
-      // 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
+      // 0. stageRedirectBlock, 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
       // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
       // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
       // Drop least critical blocks first (reverse priority)
       const blocksInPriority = [
+        { name: "stageRedirectBlock", value: stageRedirectBlock },
         { name: "founderContext", value: founderContext },
         { name: "frameworkBlock", value: frameworkBlock },
         { name: "stepGuidanceBlock", value: stepGuidanceBlock },
