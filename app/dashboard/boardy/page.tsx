@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
+import { useOasesProgress } from "@/hooks/use-oases-progress";
 import { UserTier } from "@/lib/constants";
 import { MatchList } from "@/components/boardy/match-list";
 import { BoardyConnect } from "@/components/boardy/boardy-connect";
@@ -34,6 +35,7 @@ type FilterTab = "all" | "investors" | "advisors" | "active" | "declined";
 export default function BoardyPage() {
   // Tier check
   const { tier: userTier, isLoading: isTierLoading } = useUserTier();
+  const { progress } = useOasesProgress();
 
   // State
   const [matches, setMatches] = useState<BoardyMatch[]>([]);
@@ -250,8 +252,11 @@ export default function BoardyPage() {
       <FeatureLock
         requiredTier={UserTier.STUDIO}
         currentTier={userTier}
+        requiredStage="grow"
+        currentStage={progress?.currentStage}
+        journeyPercentage={progress?.journeyPercentage}
         featureName="Investor & Advisor Matching"
-        description="Get AI-powered investor and advisor matches with a Studio tier subscription."
+        description="Complete your venture journey first to unlock fund matching."
       >
         {/* Boardy Connect Card */}
         {deepLink && <BoardyConnect deepLink={deepLink} />}

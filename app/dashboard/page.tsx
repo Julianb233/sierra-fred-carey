@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MobileHome } from "@/components/mobile/mobile-home";
 import { GoalRoadmap } from "@/components/dashboard/goal-roadmap";
+import { OasesVisualizer } from "@/components/oases/oases-visualizer";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
@@ -161,6 +162,10 @@ function DashboardContent() {
           onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
           hasHadConversations={false}
         />
+        {/* Oases Venture Journey */}
+        <FadeIn delay={0.05}>
+          <OasesVisualizer />
+        </FadeIn>
         <GetStartedWithFred />
         <GoalRoadmap />
         <WelcomeModal
@@ -182,6 +187,11 @@ function DashboardContent() {
         onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
         hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
       />
+
+      {/* Oases Venture Journey */}
+      <FadeIn delay={0.05}>
+        <OasesVisualizer />
+      </FadeIn>
 
       {/* Get Started checklist — only shows until core steps complete */}
       <FadeIn>
