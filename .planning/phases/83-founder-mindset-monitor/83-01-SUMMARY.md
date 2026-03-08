@@ -1,88 +1,57 @@
----
-phase: 83-founder-mindset-monitor
-plan: 01
-subsystem: sentiment-monitoring
-tags: [sentiment, stress-detection, wellbeing, intervention, chat-pipeline]
-dependency-graph:
-  requires: [79, 80-02]
-  provides:
-    - Rolling window stress pattern detection from sentiment signals
-    - Proactive intervention engine with natural empathy prompts
-    - Sentiment signal persistence (sentiment_signals table)
-    - Chat pipeline integration (fire-and-forget stress check)
-  affects:
-    - 86-01 (fred-conciseness builds on prompt architecture)
-    - 87-01 (pitch-deck-scoring may reference stress state)
-tech-stack:
-  added: []
-  patterns:
-    - "Exponential decay weighted rolling window"
-    - "Fire-and-forget sentiment logging"
-    - "System prompt injection for natural intervention"
-    - "Cooldown-gated intervention (no spam)"
-key-files:
-  created:
-    - lib/sentiment/stress-detector.ts
-    - lib/sentiment/intervention-engine.ts
-    - lib/db/sentiment-log.ts
-    - supabase/migrations/20260308_sentiment_signals.sql
-    - lib/sentiment/__tests__/stress-detector.test.ts
-  modified:
-    - app/api/fred/chat/route.ts (integrated stress detection + intervention)
-decisions:
-  - id: "83-01-d1"
-    decision: "Stress detection runs BEFORE the LLM call to inject intervention into system prompt"
-    reason: "Intervention must modify FRED's response behavior, not just log"
-  - id: "83-01-d2"
-    decision: "Cooldown of 3 messages between interventions"
-    reason: "Prevents FRED from asking about wellbeing every message"
-  - id: "83-01-d3"
-    decision: "No LLM used for stress detection -- simple math and keyword extraction"
-    reason: "Speed is critical; runs inline before every chat response"
-metrics:
-  duration: "pre-existing implementation"
-  completed: "2026-03-08"
----
+# Phase 83: Founder Mindset Monitor — Summary
 
-# Phase 83 Plan 01: Founder Mindset Monitor Summary
+## What was built
 
-**One-liner:** Real-time sentiment monitoring with rolling window stress detection, proactive FRED interventions, and cooldown-gated wellbeing suggestions.
+A real-time sentiment monitoring system that detects founder stress and frustration from conversation patterns and triggers proactive FRED interventions. The system runs as a background pipeline in the chat flow, never blocking the user-facing response.
 
-## What Was Built
+## Artifacts created
 
-### 1. Stress Detector (`lib/sentiment/stress-detector.ts`)
-- `StressLevel` type: low | moderate | high | critical
-- `StressSignal` interface: level, score, trend, dominantEmotion, topics
-- `detectStressPattern(userId, currentSentiment)` -- fetches last 10 signals, computes weighted score with exponential decay, determines trend
-- `shouldIntervene(signal, userId)` -- gates interventions: high+worsening/stable or critical, with 3-message cooldown
-- `extractTopicsFromMessage(message)` -- keyword-based topic extraction (fundraising, product, team, burnout, etc.)
-- 21 unit tests passing
+| File | Purpose |
+|------|---------|
+| `lib/sentiment/stress-detector.ts` | Rolling window stress pattern detection with exponential decay weighting |
+| `lib/sentiment/intervention-engine.ts` | Generates contextual FRED prompt injection blocks for stress intervention |
+| `lib/db/sentiment-log.ts` | Persistence layer for sentiment signals with fire-and-forget insert/query |
+| `supabase/migrations/20260308_sentiment_signals.sql` | Creates `sentiment_signals` table with RLS policies |
+| `lib/sentiment/__tests__/stress-detector.test.ts` | 18 unit tests covering detection, intervention gating, and topic extraction |
 
-### 2. Intervention Engine (`lib/sentiment/intervention-engine.ts`)
-- `generateIntervention(signal, founderName)` -- generates empathetic prompt text by stress level
-  - Critical: suggests wellbeing check-in with link to /dashboard/wellbeing
-  - High: acknowledges frustration, offers reframe
-- `buildInterventionBlock(intervention)` -- wraps in [FOUNDER WELLBEING CONTEXT] block
-- Naturalness guard: never reveals monitoring system
+## Artifacts modified
 
-### 3. Sentiment Log (`lib/db/sentiment-log.ts`)
-- `logSentimentSignal(signal)` -- fire-and-forget insert using service client
-- `getRecentSentimentSignals(userId, count)` -- returns last N signals (default 5)
-- `wasInterventionTriggeredRecently(userId, withinMessages)` -- cooldown check
+| File | Changes |
+|------|---------|
+| `app/api/fred/chat/route.ts` | Added Phase 83 imports, pre-response stress detection block, wellbeingBlock injection into system prompt |
+| `lib/ai/prompts.ts` | Added `buildWellbeingInterventionBlock()` (already present from parallel work) |
 
-### 4. DB Migration (`supabase/migrations/20260308_sentiment_signals.sql`)
-- `sentiment_signals` table with user_id, label, confidence, stress_level, topics, intervention_triggered
-- Index on (user_id, created_at DESC) for efficient window queries
-- RLS: users read own, service inserts
+## How it works
 
-### 5. Chat Pipeline Integration (`app/api/fred/chat/route.ts`)
-- Imports and calls stress detection after sentiment extraction
-- Injects intervention block into system prompt when shouldIntervene returns true
-- Fire-and-forget logging of sentiment signals
-- No latency impact on normal responses
+1. **Pre-response heuristic sentiment** — Before the LLM call, `extractSentimentFromText()` (sync, keyword-based) quickly classifies the user's message.
 
-## Verification
+2. **Rolling window stress detection** — `detectStressPattern()` fetches the last 10 sentiment signals from DB, computes a weighted stress score using exponential decay (recent messages weighted higher), and determines level (low/moderate/high/critical) and trend (improving/stable/worsening).
 
-- `npx vitest run lib/sentiment/__tests__/stress-detector.test.ts` -- 21 tests pass
-- All imports and function calls verified in chat route
-- Migration SQL syntactically valid
+3. **Intervention gating** — `shouldIntervene()` returns true only when:
+   - Level is `critical` (regardless of trend), or
+   - Level is `high` AND trend is `worsening` or `stable`
+   - AND no intervention was triggered in the last 3 messages (cooldown)
+
+4. **Prompt injection** — When intervention is triggered, `generateIntervention()` produces a context-aware prompt block that is injected into the system prompt as `[FOUNDER WELLBEING CONTEXT]`. FRED responds naturally with empathy, never revealing the monitoring system.
+
+5. **Fire-and-forget logging** — Sentiment signals are logged to `sentiment_signals` table asynchronously, with stress level, topics, and intervention flag.
+
+## Stress scoring
+
+| Label | Score | Level thresholds |
+|-------|-------|-----------------|
+| frustrated | 1.0 | < 0.2 = low |
+| negative | 0.6 | < 0.5 = moderate |
+| neutral | 0.1 | < 0.7 = high |
+| positive | -0.2 | >= 0.7 = critical |
+
+Scores use exponential decay weighting: oldest signal = 0.5 weight, newest = 1.0 weight.
+
+## Topic detection
+
+Simple keyword matching (no LLM) covers: fundraising, product, team, revenue, burnout, competition, legal, personal.
+
+## Test results
+
+- 18 unit tests: ALL PASSING
+- TypeScript compilation: CLEAN (no errors in Phase 83 files)
