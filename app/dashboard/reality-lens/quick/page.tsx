@@ -25,7 +25,7 @@ import {
   QUICK_QUESTIONS,
   type QuickAnswers,
   type QuickQuestion,
-} from "@/lib/fred/reality-lens-quick"
+} from "@/lib/fred/reality-lens-quick-shared"
 
 // ============================================================================
 // Types & Constants
