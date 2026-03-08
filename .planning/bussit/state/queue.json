@@ -89,7 +89,7 @@
       "plan": "all",
       "type": "plan",
       "status": "done",
-      "worker": "worker-auto-v7-1",
+      "worker": "worker-auto-v12-3",
       "deps": [
         "74-b",
         "75-b"
@@ -103,7 +103,8 @@
       "phase": 76,
       "plan": "all",
       "type": "build",
-      "status": "pending",
+      "status": "done",
+      "worker": "worker-auto-v12-3",
       "deps": [
         "76-p"
       ],
