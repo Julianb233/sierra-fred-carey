@@ -58,10 +58,28 @@
 - `npm run test -- --run lib/fred/__tests__/reality-lens-quick.test.ts` -- All 21 tests pass
 - All files committed and type-safe
 
+## Deviations from Plan
+
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] Client/server import chain break**
+- **Found during:** Task 2 verification (build step)
+- **Issue:** The client page imported from `reality-lens-quick.ts` which imported `generateStructuredReliable` from `@/lib/ai`, pulling in server-only `next/headers` via the Supabase server client. Webpack errored: "You're importing a component that needs next/headers."
+- **Fix:** Created `lib/fred/reality-lens-quick-shared.ts` with client-safe types and questions. Updated client page to import from shared module. Server module re-exports from shared.
+- **Files modified:** `lib/fred/reality-lens-quick-shared.ts` (new), `lib/fred/reality-lens-quick.ts`, `app/dashboard/reality-lens/quick/page.tsx`
+- **Commit:** `e69098f`
+
+**2. [Rule 1 - Bug] OasesStage imported from canonical location**
+- **Found during:** Task 1 review
+- **Issue:** `reality-lens-state.ts` imported `OasesStage` from `reality-lens-quick.ts` (which duplicated the type) instead of `@/types/oases` (canonical source).
+- **Fix:** Changed import to use `@/types/oases`.
+- **Files modified:** `lib/db/reality-lens-state.ts`
+
 ## Commits
 
-1. `a96d93f` -- feat(81-01): add Quick Reality Lens backend
+1. `44c0549` -- feat(81-01): quick reality lens backend
 2. `9e6695b` -- feat(81-01): quick reality lens wizard UI page
+3. `e69098f` -- fix(81-01): split client-safe types from server assessment logic
 
 ## Artifacts Checklist
 
