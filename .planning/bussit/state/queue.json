@@ -185,7 +185,7 @@
       "plan": "01",
       "type": "build",
       "status": "claimed",
-      "claimedBy": "worker-4",
+      "claimedBy": "worker-5",
       "deps": [
         "83-01-b"
       ],
