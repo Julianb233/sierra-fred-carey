@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 77 — Guided Venture Journey Onboarding (Wave 1)
-Plan: Not started (run /gsd:plan-phase 77)
-Status: Roadmap created, ready for planning
-Last activity: 2026-03-08 — v8.0 roadmap created (14 phases, 24 plans, 5 waves)
+Plan: 01 of 1 (complete)
+Status: Phase 77 Plan 01 complete
+Last activity: 2026-03-08 — Completed 77-01-PLAN.md (Welcome screen + intake form)
 
-Progress: [..............] 0/14 phases
+Progress: [#.............] 1/14 phases
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -50,6 +50,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Launch with Alex's version first — joinsahara.com goes live; Julian's full version follows
 - $99/month target price — affordable alternative to expensive consultants
 - `oases_stage` column on `profiles` table — single source of truth
+- `journey_welcomed` boolean on profiles — show-once control for welcome screen
+- Free-text intake (no dropdowns) — understand founders in their own words
+- Stage normalization via keyword matching — simple, no AI call needed
 - FeatureLock extended with `requiredStage` prop — reuses existing tier-gating pattern
 - All FRED prompts get founder context via middleware — centralized injection
 
@@ -64,7 +67,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08
-Stopped at: WhatsApp chat export ingested. PROJECT.md + meeting notes updated with Fred's 7 FRED brain enhancements, ElevenLabs credentials, team contacts, and known issues. Next: /gsd:plan-phase 77 (Guided Venture Journey Onboarding)
-Resume file: .planning/milestones/v8.0-go-live/ROADMAP.md
+Last session: 2026-03-08T09:59Z
+Stopped at: Completed 77-01-PLAN.md (Welcome screen + intake form). Next: remaining Phase 77 plans or parallel Wave 1 phases (78, 79)
+Resume file: .planning/phases/77-guided-venture-journey-onboarding/77-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
