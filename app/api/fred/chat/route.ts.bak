@@ -1,0 +1,1272 @@
+/**
+ * FRED Chat API Endpoint
+ * Phase 21: Tier-based model routing and memory gating
+ * Phase 28-02: Push notification triggers for red flags and wellbeing alerts
+ *
+ * POST /api/fred/chat
+ * Interactive chat with FRED using streaming responses.
+ * Returns Server-Sent Events (SSE) with real-time updates.
+ *
+ * Tier behavior:
+ * - Free:   session-only memory, fast model (GPT-4o-mini)
+ * - Pro:    persistent 30-day memory, primary model (GPT-4o)
+ * - Studio: persistent 90-day memory, primary model (GPT-4o), higher token limit
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireAuth } from "@/lib/auth";
+import { createFredService } from "@/lib/fred/service";
+import { storeEpisode, enforceRetentionLimits } from "@/lib/db/fred-memory";
+import { checkRateLimitForUser, RATE_LIMIT_TIERS } from "@/lib/api/rate-limit";
+import { getUserTier } from "@/lib/api/tier-middleware";
+import { UserTier, TIER_NAMES, type MemoryTier } from "@/lib/constants";
+import { getModelForTier } from "@/lib/ai/tier-routing";
+import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
+import { extractProfileEnrichment } from "@/lib/fred/enrichment/extractor";
+import { createServiceClient } from "@/lib/supabase/server";
+import { createRedFlag } from "@/lib/db/red-flags";
+import { withLogging } from "@/lib/api/with-logging";
+import { notifyRedFlag, notifyWellbeingAlert } from "@/lib/push/triggers";
+import { serverTrack } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
+import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
+import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
+import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
+import type { ConversationState } from "@/lib/db/conversation-state";
+import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
+import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
+import type { ConversationStateContext } from "@/lib/fred/types";
+import { estimateTokens } from "@/lib/ai/context-manager";
+import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
+import { extractSentiment } from "@/lib/feedback/sentiment";
+import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
+import { insertFeedbackSignal } from "@/lib/db/feedback";
+import { TIER_WEIGHTS } from "@/lib/feedback/constants";
+import { extractSentimentFromText } from "@/lib/feedback/sentiment";
+import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "@/lib/sentiment/stress-detector";
+import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
+import { logSentimentSignal } from "@/lib/db/sentiment-log";
+import { validateStageAccess } from "@/lib/oases/stage-validator";
+import type { OasesStage } from "@/types/oases";
+
+export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
+
+/** Map numeric UserTier enum to rate-limit tier key */
+const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
+  [UserTier.FREE]: "free",
+  [UserTier.PRO]: "pro",
+  [UserTier.STUDIO]: "studio",
+};
+
+// ============================================================================
+// Request Schema
+// ============================================================================
+
+const chatRequestSchema = z.object({
+  message: z.string().min(1, "Message is required").max(10000),
+  context: z
+    .object({
+      startupName: z.string().optional(),
+      stage: z.string().optional(),
+      industry: z.string().optional(),
+      goals: z.array(z.string()).optional(),
+    })
+    .optional(),
+  sessionId: z.string().uuid().optional(),
+  stream: z.boolean().default(true),
+  storeInMemory: z.boolean().default(true),
+  /** Current page path so FRED can provide navigation-aware guidance */
+  pageContext: z.string().max(200).optional(),
+});
+
+// ============================================================================
+// Platform Navigation Map
+// Maps URL paths to human-readable descriptions and navigation hints
+// ============================================================================
+
+const PLATFORM_PAGES: Record<string, { label: string; description: string }> = {
+  "/dashboard": {
+    label: "Main Dashboard",
+    description: "Overview of all your startup metrics, progress, and key actions",
+  },
+  "/dashboard/startup-process": {
+    label: "9-Step Startup Process",
+    description: "The structured 9-step journey from idea to funded company",
+  },
+  "/dashboard/reality-lens": {
+    label: "Reality Lens",
+    description: "Validate your idea across 5 dimensions: Feasibility, Economics, Demand, Distribution, and Timing",
+  },
+  "/dashboard/investor-readiness": {
+    label: "Investor Readiness Score (IRS)",
+    description: "See how investor-ready you are across all key dimensions",
+  },
+  "/dashboard/pitch-deck": {
+    label: "Pitch Deck Review",
+    description: "Upload and get your pitch deck reviewed across 11 dimensions",
+  },
+  "/dashboard/strategy": {
+    label: "Strategy & Positioning",
+    description: "Define and refine your market position and go-to-market strategy",
+  },
+  "/dashboard/wellbeing": {
+    label: "Wellbeing & Stress Tracker",
+    description: "Monitor founder stress levels and mental health with wellbeing quizzes",
+  },
+  "/dashboard/next-steps": {
+    label: "Next Steps & Action Items",
+    description: "Your prioritized action list — the things you should be working on right now",
+  },
+  "/dashboard/journey": {
+    label: "Founder Journey",
+    description: "Track your progress through the full founder journey",
+  },
+  "/dashboard/coaching": {
+    label: "Coaching Sessions",
+    description: "Book and review one-on-one coaching sessions with Fred",
+  },
+  "/dashboard/insights": {
+    label: "AI Insights",
+    description: "AI-generated insights and patterns from your conversations with Fred",
+  },
+  "/dashboard/ai-insights": {
+    label: "AI Insights",
+    description: "AI-generated insights and patterns from your conversations with Fred",
+  },
+  "/dashboard/investor-lens": {
+    label: "Investor Lens",
+    description: "See your startup through an investor's eyes",
+  },
+  "/dashboard/investor-targeting": {
+    label: "Investor Targeting",
+    description: "Find and target the right investors for your startup",
+  },
+  "/dashboard/documents": {
+    label: "Documents",
+    description: "Upload and manage your startup documents, decks, and reports",
+  },
+  "/dashboard/memory": {
+    label: "Fred's Memory",
+    description: "Review what Fred knows about you and your startup",
+  },
+  "/dashboard/analytics": {
+    label: "Analytics",
+    description: "Track usage, engagement, and platform activity",
+  },
+  "/dashboard/settings": {
+    label: "Settings",
+    description: "Manage your account, notifications, and subscription",
+  },
+};
+
+/**
+ * Build a system prompt block telling FRED which page the user is on
+ * and what other platform features they can be directed to.
+ */
+function buildPageContextBlock(pageContext: string): string {
+  const currentPage =
+    PLATFORM_PAGES[pageContext] ??
+    Object.entries(PLATFORM_PAGES)
+      .filter(([path]) => pageContext.startsWith(path) && path !== "/dashboard")
+      .sort((a, b) => b[0].length - a[0].length)[0]?.[1] ??
+    null;
+
+  const currentPageInfo = currentPage
+    ? `The user is currently on the **${currentPage.label}** page (${currentPage.description}).`
+    : `The user is browsing the platform at path: ${pageContext}.`;
+
+  const navOptions = Object.entries(PLATFORM_PAGES)
+    .filter(([path]) => path !== pageContext && !pageContext.startsWith(path + "/"))
+    .map(([, page]) => `- **${page.label}**: ${page.description}`)
+    .join("\n");
+
+  return `## Platform Navigation Context
+${currentPageInfo}
+
+You can help the user navigate to other parts of the platform by mentioning them by name. When relevant, proactively suggest specific pages that would help them. Available platform features:
+${navOptions}
+
+When suggesting navigation, say things like "Head over to your **Wellbeing Tracker**" or "Check out the **Reality Lens** to validate that" rather than giving raw URLs. Keep suggestions natural and only recommend features that are genuinely relevant to what the user is asking.`;
+}
+
+// ============================================================================
+// SSE Helper
+// ============================================================================
+
+function createSSEStream() {
+  const encoder = new TextEncoder();
+  let controller: ReadableStreamDefaultController<Uint8Array>;
+  let closed = false;
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
+    },
+    cancel() {
+      // Client disconnected — mark as closed so send/close don't throw
+      closed = true;
+    },
+  });
+
+  const send = (event: string, data: unknown) => {
+    if (closed) return;
+    try {
+      const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+      controller.enqueue(encoder.encode(message));
+    } catch {
+      // Stream already closed or errored (client disconnected) — ignore
+      closed = true;
+    }
+  };
+
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    try {
+      controller.close();
+    } catch {
+      // Already closed — ignore
+    }
+  };
+
+  return { stream, send, close };
+}
+
+// ============================================================================
+// Enrichment Helper (fire-and-forget)
+// ============================================================================
+
+/**
+ * Run enrichment extraction on conversation messages and persist any new data
+ * to the profiles table. This is best-effort; errors are logged but never thrown.
+ */
+function fireEnrichment(
+  userId: string,
+  messages: Array<{ role: string; content: string }>
+): void {
+  // Fire-and-forget: do NOT await
+  (async () => {
+    try {
+      const enrichment = extractProfileEnrichment(messages);
+      if (!enrichment) return;
+
+      const supabase = createServiceClient();
+
+      // Fetch current profile to avoid overwriting existing data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("industry, enrichment_data")
+        .eq("id", userId)
+        .single();
+
+      // Build update payload -- only fill in fields that are currently empty
+      const updates: Record<string, unknown> = {};
+
+      if (enrichment.industry && !profile?.industry) {
+        updates.industry = enrichment.industry;
+      }
+
+      // Merge enrichment data into existing enrichment_data JSONB column
+      const existingData = (profile?.enrichment_data as Record<string, unknown>) || {};
+      const newData: Record<string, unknown> = { ...existingData };
+      let hasNewData = false;
+
+      if (enrichment.revenueHint && !existingData.revenueHint) {
+        newData.revenueHint = enrichment.revenueHint;
+        hasNewData = true;
+      }
+      if (enrichment.teamSizeHint && !existingData.teamSizeHint) {
+        newData.teamSizeHint = enrichment.teamSizeHint;
+        hasNewData = true;
+      }
+      if (enrichment.fundingHint && !existingData.fundingHint) {
+        newData.fundingHint = enrichment.fundingHint;
+        hasNewData = true;
+      }
+      if (enrichment.challenges && enrichment.challenges.length > 0) {
+        const prev = (existingData.challenges as string[]) || [];
+        const merged = [...new Set([...prev, ...enrichment.challenges])];
+        if (merged.length > prev.length) {
+          newData.challenges = merged;
+          hasNewData = true;
+        }
+      }
+      if (enrichment.competitorsMentioned && enrichment.competitorsMentioned.length > 0) {
+        const prev = (existingData.competitorsMentioned as string[]) || [];
+        const merged = [...new Set([...prev, ...enrichment.competitorsMentioned])];
+        if (merged.length > prev.length) {
+          newData.competitorsMentioned = merged;
+          hasNewData = true;
+        }
+      }
+      if (enrichment.metricsShared && Object.keys(enrichment.metricsShared).length > 0) {
+        const prev = (existingData.metricsShared as Record<string, string>) || {};
+        const merged = { ...prev, ...enrichment.metricsShared };
+        if (Object.keys(merged).length > Object.keys(prev).length) {
+          newData.metricsShared = merged;
+          hasNewData = true;
+        }
+      }
+
+      if (hasNewData) {
+        updates.enrichment_data = newData;
+      }
+
+      // Only update if there's something new
+      if (Object.keys(updates).length > 0) {
+        updates.enriched_at = new Date().toISOString();
+        updates.enrichment_source = "conversation";
+
+        await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("id", userId);
+      }
+    } catch (error) {
+      console.warn("[FRED Chat] Enrichment extraction failed (non-blocking):", error);
+    }
+  })();
+}
+
+// ============================================================================
+// Phase 37: Quick Downstream Request Detection (pre-machine, regex-only)
+// ============================================================================
+
+/** Request verbs indicating founder wants ACTION, not information */
+const QUICK_REQUEST_VERBS = /\b(help|build|create|make|write|review|prepare|start|plan|need|want|should\s*i|how\s*(do\s*i|to|can\s*i)|ready\s*to|let'?s|work\s*on|get\s*(started|ready))\b/;
+
+/**
+ * Quick downstream request detection for pre-machine prompt assembly.
+ * Requires BOTH a domain keyword AND a request verb.
+ * "What is a pitch deck?" -> no match (no request verb)
+ * "Help me build a pitch deck" -> match (has "help" + "build" + "pitch deck")
+ */
+function detectDownstreamRequestQuick(message: string): string | null {
+  const lowerMessage = message.toLowerCase();
+
+  // Gate 1: Must have a request/action verb
+  if (!QUICK_REQUEST_VERBS.test(lowerMessage)) return null;
+
+  // Gate 2: Match domain keyword
+  if (/\b(pitch\s*deck|investor\s*deck|deck\s*review)\b/.test(lowerMessage)) return "pitch_deck";
+  if (/\b(fundrais\w*|raise.*capital|valuation|term\s*sheet)\b/.test(lowerMessage)) return "fundraising";
+  if (/\b(hir\w+|recruit\w*|first\s*hire)\b/.test(lowerMessage)) return "hiring";
+  if (/\b(patent|ip\s*protect\w*)\b/.test(lowerMessage)) return "patents";
+  if (/\b(scal\w+|series\s*[a-c])\b/.test(lowerMessage)) return "scaling";
+  if (/\b(marketing\s*campaign|ad\s*spend|paid\s*ads)\b/.test(lowerMessage)) return "marketing_campaign";
+  return null;
+}
+
+// ============================================================================
+// Route Handler
+// ============================================================================
+
+async function handlePost(req: NextRequest) {
+  const startTime = Date.now();
+
+  try {
+    // Require authentication
+    const userId = await requireAuth();
+
+    // Check rate limit using actual user tier
+    const userTier = await getUserTier(userId);
+    const rateLimitKey = TIER_TO_RATE_KEY[userTier] ?? "free";
+    const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, rateLimitKey);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
+    // Resolve tier name for model routing and memory gating (Phase 21)
+    const tierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+
+    // Phase 59: Tag Sentry errors with user context
+    setUserContext(userId, tierName);
+    const _modelProviderKey = getModelForTier(tierName, "chat");
+
+    // Determine if this tier gets persistent memory (Pro+ only)
+    const hasPersistentMemory = userTier >= UserTier.PRO;
+
+    // Parse and validate request body
+    const body = await req.json();
+    const parsed = chatRequestSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid request",
+          details: parsed.error.issues.map((i) => ({
+            field: i.path.join("."),
+            message: i.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { message: rawMessage, context, sessionId, stream, storeInMemory, pageContext } = parsed.data;
+
+    // Prompt injection guard
+    const injectionCheck = detectInjectionAttempt(rawMessage);
+    if (injectionCheck.isInjection) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Your message could not be processed. Please rephrase and try again.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const message = sanitizeUserInput(rawMessage);
+    const isNewSession = !sessionId;
+    const effectiveSessionId = sessionId || crypto.randomUUID();
+
+    // Analytics: track chat events (server-side, fire-and-forget)
+    serverTrack(userId, ANALYTICS_EVENTS.CHAT.MESSAGE_SENT, { tier: tierName, messageLength: message.length });
+    if (isNewSession) {
+      serverTrack(userId, ANALYTICS_EVENTS.CHAT.SESSION_STARTED, { tier: tierName });
+    }
+
+    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only.
+    // INTENTIONAL DESIGN: Free-tier users do NOT get entries in fred_episodic_memory.
+    // Their conversations are not stored across sessions — this is a core product
+    // differentiator between Free and Pro tiers. Free users still benefit from
+    // session-scoped context (within a single request) via loadMemoryActor, but
+    // nothing is written to the DB. For re-engagement tracking, all tiers DO get
+    // journey_events rows (see the fire-and-forget insert near the "done" SSE event
+    // below) so email campaigns have activity data without exposing conversation content.
+    // To change this behaviour, update hasPersistentMemory above.
+    const shouldPersistMemory = storeInMemory && hasPersistentMemory;
+
+    // ── Parallel context loading ─────────────────────────────────────
+    // Fetch conversation state first (single fast query) so it can be
+    // threaded into buildFounderContextWithFacts, eliminating a duplicate
+    // fred_conversation_state DB read inside the context builder.
+    const conversationStateResult = await getOrCreateConversationState(userId).catch((error) => {
+      console.warn("[FRED Chat] Failed to load conversation state (non-blocking):", error);
+      return null as ConversationState | null;
+    });
+
+    const [founderContextResult, rlGateResult, persistedModeResult, deckCheckResult, irsResult, rlAssessmentResult] = await Promise.all([
+      buildFounderContextWithFacts(userId, hasPersistentMemory, conversationStateResult).catch((error) => {
+        console.warn("[FRED Chat] Failed to build founder context (non-blocking):", error);
+        return { context: "", facts: [] };
+      }),
+      getRealityLensGate(userId).catch((error) => {
+        console.warn("[FRED Chat] Failed to load Reality Lens gate (non-blocking):", error);
+        return null;
+      }),
+      getActiveMode(userId).catch((error) => {
+        console.warn("[FRED Chat] Failed to load diagnostic mode (non-blocking):", error);
+        return null;
+      }),
+      // Check if the user has uploaded a pitch deck (document_repository.folder='decks')
+      (async () => {
+        try {
+          const supabase = createServiceClient();
+          const { count } = await supabase
+            .from("document_repository")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("folder", "decks");
+          return (count ?? 0) > 0;
+        } catch {
+          return false;
+        }
+      })(),
+      // Pre-fetch IRS data in parallel (used in investor-readiness mode)
+      (async () => {
+        try {
+          const { getLatestIRS } = await import("@/lib/fred/irs/db");
+          const supabaseService = createServiceClient();
+          return await getLatestIRS(supabaseService, userId);
+        } catch {
+          return null;
+        }
+      })(),
+      // Pre-fetch latest Reality Lens assessment (GATE-01: gate downstream work)
+      (async () => {
+        try {
+          const supabase = createServiceClient();
+          const { data } = await supabase
+            .from("reality_lens_analyses")
+            .select("overall_score, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+          return data as { overall_score: number; created_at: string } | null;
+        } catch {
+          return null;
+        }
+      })(),
+    ]);
+
+    // Destructure founder context result — facts are passed to the machine
+    // to avoid a duplicate getAllUserFacts DB call in loadMemoryActor
+    const founderContext = founderContextResult.context;
+    const preloadedFacts = founderContextResult.facts;
+    // Phase 80: Extract Oases stage from founder context for stage-gate validation
+    const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
+
+    // Phase 36: Conversation state
+    const conversationState = conversationStateResult;
+    let stepGuidanceBlock = "";
+    if (conversationState) {
+      stepGuidanceBlock = buildStepGuidanceBlock(
+        conversationState.currentStep,
+        conversationState.stepStatuses,
+        conversationState.currentBlockers
+      );
+    }
+
+    // Phase 37 + GATE-01/02/03: Reality Lens gate
+    // When no gate exists in conversation state, use a default gate (all not_assessed)
+    // so downstream requests are still blocked until the founder runs Reality Lens.
+    let rlGateBlock = "";
+    let rlStatusBlock = "";
+
+    // Build Reality Lens status block from actual assessment data
+    if (rlAssessmentResult) {
+      const score = rlAssessmentResult.overall_score;
+      if (score < 60) {
+        rlStatusBlock = `Reality Lens: COMPLETED (Score: ${score}/100). Foundation is WEAK. Be direct: do not let the founder skip ahead to tactical work until upstream gaps are addressed. If they request pitch decks, fundraising, hiring, scaling, or patents, redirect to strengthening fundamentals first.`;
+      } else {
+        rlStatusBlock = `Reality Lens: COMPLETED (Score: ${score}/100). Foundation assessed — tactical advice unlocked.`;
+      }
+    } else {
+      rlStatusBlock = `Reality Lens: NOT COMPLETED. The founder has not run a Reality Lens assessment. If they ask about pitch decks, investor outreach, hiring plans, scaling, patents, or fundraising strategy, redirect them: "Before we work on that, we need to establish whether your idea foundation is solid. Head over to your **Reality Lens** to run the assessment — it takes 5 minutes and will give us a clear picture."`;
+    }
+
+    // Use the conversation-state gate if available, otherwise default gate (all not_assessed)
+    const effectiveGate = rlGateResult ?? {
+      feasibility: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      economics: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      demand: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      distribution: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+      timing: { status: "not_assessed" as const, blockers: [], lastAssessedAt: null },
+    };
+
+    const downstreamRequest = detectDownstreamRequestQuick(message);
+    if (downstreamRequest) {
+      const gateStatus = checkGateStatus(effectiveGate, downstreamRequest);
+      if (!gateStatus.gateOpen) {
+        const counts = (persistedModeResult?.modeContext as ({ gateRedirectCounts?: Record<string, number> } | null | undefined))?.gateRedirectCounts ?? {};
+        const redirectCount = counts[downstreamRequest] ?? 0;
+        rlGateBlock = buildRealityLensGateBlock(
+          downstreamRequest,
+          gateStatus.weakDimensions,
+          gateStatus.unassessedDimensions,
+          redirectCount
+        );
+        // Async increment in background (fire-and-forget)
+        incrementGateRedirect(userId, downstreamRequest).catch(err =>
+          console.warn("[FRED Chat] Failed to increment gate redirect:", err)
+        );
+      }
+    }
+
+    // Phase 38: Diagnostic mode (reuse persistedModeResult — no duplicate call)
+    let activeMode: DiagnosticMode = "founder-os";
+    let frameworkBlock = "";
+    let modeTransitionBlock = "";
+    let modeTransitioned = false;
+
+    if (persistedModeResult) {
+      activeMode = persistedModeResult.activeMode;
+      const modeContext = persistedModeResult.modeContext;
+
+      const hasUploadedDeck = deckCheckResult;
+      const transition = determineModeTransition(
+        message,
+        activeMode,
+        modeContext,
+        hasUploadedDeck
+      );
+
+      if (transition.transitioned) {
+        activeMode = transition.newMode;
+        modeTransitioned = true;
+      }
+
+      frameworkBlock = buildFrameworkInjectionBlock(activeMode);
+
+      if (transition.needsIntroduction && transition.framework) {
+        modeTransitionBlock = buildModeTransitionBlock(transition.framework, "enter");
+      } else if (transition.transitioned && transition.direction === "exit" && transition.framework) {
+        modeTransitionBlock = buildModeTransitionBlock(transition.framework, "exit");
+      }
+
+      // Persist mode + introduction sequentially to avoid race conditions
+      // (both write to mode_context on the same row)
+      try {
+        await updateActiveMode(userId, activeMode, transition.updatedModeContext);
+        if (transition.needsIntroduction && transition.framework) {
+          await markIntroductionDelivered(userId, transition.framework, transition.detectedSignals.join(","));
+        }
+      } catch (err) {
+        console.warn("[FRED Chat] Failed to persist conversation state updates (non-blocking):", err);
+      }
+    }
+
+    // Phase 39: IRS + deck blocks (reuse persistedModeResult — no duplicate getActiveMode call)
+    let irsBlock = "";
+    let deckProtocolBlock = "";
+    let deckReviewReadyBlock = "";
+
+    if (activeMode === "investor-readiness" && persistedModeResult) {
+      try {
+        const latestIRS = irsResult; // Use pre-fetched result from parallel Promise.all
+
+        const founderStage = conversationState?.founderSnapshot?.stage
+          || conversationState?.diagnosticTags?.stage
+          || "seed";
+
+        irsBlock = buildIRSPromptBlock(latestIRS, founderStage);
+
+        // Reuse persistedModeResult instead of duplicate getActiveMode call
+        const formalAssessments = persistedModeResult.modeContext.formalAssessments;
+        deckProtocolBlock = buildDeckProtocolBlock(formalAssessments, deckCheckResult, founderStage);
+
+        // Use effectiveGate (falls back to default all-not_assessed gate)
+        const deckGateStatus = checkGateStatus(effectiveGate, "pitch_deck");
+        const rlGateOpenForDeck = deckGateStatus.gateOpen;
+
+        deckReviewReadyBlock = buildDeckReviewReadyBlock(
+          rlGateOpenForDeck,
+          formalAssessments.verdictIssued,
+          deckCheckResult
+        );
+      } catch (error) {
+        console.warn("[FRED Chat] Failed to load IRS/deck blocks (non-blocking):", error);
+      }
+    }
+
+    // Phase 36+38: Build conversation state context for the machine
+    const stateContext: ConversationStateContext | null = conversationState
+      ? {
+          currentStep: conversationState.currentStep,
+          stepStatuses: conversationState.stepStatuses,
+          processStatus: conversationState.processStatus,
+          currentBlockers: conversationState.currentBlockers,
+          diagnosticTags: conversationState.diagnosticTags as Record<string, string>,
+          founderSnapshot: conversationState.founderSnapshot as Record<string, unknown>,
+          progressContext: stepGuidanceBlock,
+          activeMode,
+          modeTransitioned,
+        }
+      : null;
+
+    // Build page navigation context block (only when chatting from an overlay, not the full /chat page)
+    const pageContextBlock = pageContext ? buildPageContextBlock(pageContext) : "";
+
+    // Phase 83: Founder Mindset Monitor — pre-response stress detection
+    // Uses heuristic (sync) sentiment for speed, DB query for recent signals is lightweight.
+    let wellbeingBlock = ""
+    try {
+      const quickSentiment = extractSentimentFromText(message)
+      const stressSignal = await detectStressPattern(userId, quickSentiment)
+
+      // Log current sentiment signal (fire-and-forget)
+      const messageTopics = extractTopicsFromMessage(message)
+      void logSentimentSignal({
+        user_id: userId,
+        label: quickSentiment.label,
+        confidence: quickSentiment.confidence,
+        stress_level: stressSignal.score,
+        topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+      })
+
+      // Check if FRED should proactively intervene
+      if (await shouldIntervene(stressSignal, userId)) {
+        const founderName = context?.startupName || "founder"
+        const intervention = generateIntervention(stressSignal, founderName)
+        wellbeingBlock = buildInterventionBlock(intervention)
+
+        // Mark intervention was triggered
+        void logSentimentSignal({
+          user_id: userId,
+          label: quickSentiment.label,
+          confidence: quickSentiment.confidence,
+          stress_level: stressSignal.score,
+          topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+          intervention_triggered: true,
+        })
+
+        console.log(`[Mindset Monitor] Intervention triggered for user ${userId.slice(0, 8)}... (level: ${stressSignal.level}, trend: ${stressSignal.trend})`)
+      }
+    } catch (err) {
+      console.warn("[Mindset Monitor] Stress detection failed (non-blocking):", err)
+    }
+
+    // Assemble full system prompt context
+    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
+    // Phase 80: Stage-gate pre-validation
+    const stageValidation = validateStageAccess(message, currentOasesStage)
+    let stageRedirectBlock = ""
+    if (\!stageValidation.allowed && stageValidation.redirectMessage) {
+      stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)
+
+The founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.
+
+**Your response MUST redirect them.** Use this language (adapt naturally to context):
+"${stageValidation.redirectMessage}"
+
+${stageValidation.currentStageGuidance ? `Then guide them toward: ${stageValidation.currentStageGuidance}` : ""}
+
+Do NOT answer their original question about ${stageValidation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
+    }
+
+    let fullContext = [
+      stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
+      founderContext,
+      stepGuidanceBlock,
+      rlStatusBlock,
+      rlGateBlock,
+      frameworkBlock,
+      modeTransitionBlock,
+      irsBlock,
+      deckProtocolBlock,
+      deckReviewReadyBlock,
+      wellbeingBlock,
+      pageContextBlock,
+    ].filter(Boolean).join("\n\n");
+
+    // Phase 63-03: Context window management — ensure fullContext fits within token budget
+    // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt
+    const contextTokens = estimateTokens(fullContext);
+    if (contextTokens > 100_000) {
+      // Truncation priority (keep most important first):
+      // 0. stageRedirectBlock, 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
+      // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
+      // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
+      // Drop least critical blocks first (reverse priority)
+      const blocksInPriority = [
+        { name: "stageRedirectBlock", value: stageRedirectBlock },
+        { name: "founderContext", value: founderContext },
+        { name: "frameworkBlock", value: frameworkBlock },
+        { name: "stepGuidanceBlock", value: stepGuidanceBlock },
+        { name: "rlStatusBlock", value: rlStatusBlock },
+        { name: "rlGateBlock", value: rlGateBlock },
+        { name: "modeTransitionBlock", value: modeTransitionBlock },
+        { name: "irsBlock", value: irsBlock },
+        { name: "deckProtocolBlock", value: deckProtocolBlock },
+        { name: "deckReviewReadyBlock", value: deckReviewReadyBlock },
+      ].filter((b) => Boolean(b.value));
+
+      // Drop blocks from lowest priority until under budget
+      const truncatedBlocks = [...blocksInPriority];
+      while (truncatedBlocks.length > 1) {
+        const candidate = truncatedBlocks.map((b) => b.value).join("\n\n");
+        if (estimateTokens(candidate) <= 100_000) break;
+        truncatedBlocks.pop(); // Remove lowest priority block
+      }
+
+      fullContext = truncatedBlocks.map((b) => b.value).join("\n\n");
+
+      // If still over budget (founderContext alone is too large), truncate it
+      if (estimateTokens(fullContext) > 100_000) {
+        const maxChars = 100_000 * 4; // ~4 chars per token
+        fullContext = fullContext.substring(0, maxChars);
+      }
+
+      const truncatedTokens = estimateTokens(fullContext);
+      console.warn(
+        `[FRED Chat] Context truncated: ${contextTokens} tokens -> ${truncatedTokens} tokens`
+      );
+    }
+
+    // Non-streaming response
+    if (!stream) {
+      // Create FRED service — no token streaming needed for buffered response
+      const fredService = createFredService({
+        userId,
+        sessionId: effectiveSessionId,
+        enableObservability: true,
+        founderContext: fullContext,
+        conversationState: stateContext,
+        preloadedFacts,
+        tier: tierName,
+      });
+
+      addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: false });
+      const result = await withSentrySpan("ai.chat.completion", "ai.run", async () =>
+        fredService.process({
+          message,
+          timestamp: new Date(),
+          context,
+        })
+      );
+
+      const latencyMs = Date.now() - startTime;
+
+      // Store in episodic memory only for Pro+ tiers (Phase 21)
+      if (shouldPersistMemory) {
+        try {
+          await storeEpisode(userId, effectiveSessionId, "conversation", {
+            role: "user",
+            content: message,
+            context,
+          });
+          await storeEpisode(userId, effectiveSessionId, "conversation", {
+            role: "assistant",
+            content: result.response.content,
+            action: result.response.action,
+            confidence: result.response.confidence,
+          });
+        } catch (error) {
+          console.warn("[FRED Chat] Failed to store in memory:", error);
+        }
+      }
+
+      // Phase 18-02: Fire-and-forget enrichment extraction
+      fireEnrichment(userId, [
+        { role: "user", content: message },
+        { role: "assistant", content: result.response.content },
+      ]);
+
+      // Phase 43: Fire-and-forget next steps extraction
+      extractAndStoreNextSteps(userId, result.response.content, new Date().toISOString()).catch(err =>
+        console.warn("[FRED Chat] Next steps extraction failed:", err)
+      );
+
+      // Phase 73: Fire-and-forget sentiment extraction
+      (async () => {
+        try {
+          const sentiment = await extractSentiment(message, result.response.content);
+          await insertFeedbackSignal({
+            user_id: userId,
+            session_id: effectiveSessionId,
+            message_id: null,
+            channel: 'chat',
+            signal_type: 'sentiment',
+            rating: null,
+            category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+            comment: null,
+            sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+            sentiment_confidence: sentiment.confidence,
+            user_tier: tierName as 'free' | 'pro' | 'studio',
+            weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+            consent_given: true,
+            expires_at: null,
+            metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+          });
+          await aggregateSessionSentiment(effectiveSessionId, userId);
+        } catch (err) {
+          console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+        }
+      })();
+
+      // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
+      if (shouldPersistMemory) {
+        ;(async () => {
+          try {
+            const updates = await extractMemoryUpdates(
+              message,
+              result.response.content
+            )
+            if (updates.length > 0) {
+              await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+              console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
+            }
+          } catch (error) {
+            console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+          }
+        })()
+      }
+
+      // Phase 32-02: Fire-and-forget retention enforcement
+      if (shouldPersistMemory) {
+        enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
+          console.warn("[FRED Chat] Retention enforcement failed:", err)
+        );
+      }
+
+      // Phase 28-02: Fire-and-forget push for wellbeing alerts (non-streaming)
+      if (result.context.validatedInput?.burnoutSignals?.detected) {
+        const burnout = result.context.validatedInput.burnoutSignals;
+        notifyWellbeingAlert(userId, {
+          type: "burnout",
+          message: burnout.recommendation || "FRED detected signs of burnout. Take a moment to check in.",
+          severity: burnout.stressLevel > 70 ? "high" : burnout.stressLevel > 40 ? "medium" : "low",
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        sessionId: effectiveSessionId,
+        response: {
+          content: result.response.content,
+          action: result.response.action,
+          confidence: result.response.confidence,
+          requiresApproval: result.response.requiresApproval,
+          reasoning: result.response.reasoning,
+        },
+        analysis: {
+          intent: result.context.validatedInput?.intent || "unknown",
+          topic: result.context.validatedInput?.topic || null,
+          confidence: result.context.validatedInput?.confidence || 0,
+        },
+        wellbeing: result.context.validatedInput?.burnoutSignals?.detected
+          ? { signals: result.context.validatedInput.burnoutSignals }
+          : null,
+        synthesis: result.context.synthesis
+          ? {
+              recommendation: result.context.synthesis.recommendation,
+              confidence: result.context.synthesis.confidence,
+            }
+          : null,
+        meta: {
+          latencyMs,
+          finalState: result.finalState,
+          tier: tierName,
+          persistentMemory: hasPersistentMemory,
+        },
+      });
+    }
+
+    // Streaming response
+    addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: true });
+    const { stream: sseStream, send, close } = createSSEStream();
+
+    // Create FRED service with token streaming — onToken fires SSE token events
+    const fredService = createFredService({
+      userId,
+      sessionId: effectiveSessionId,
+      enableObservability: true,
+      founderContext: fullContext,
+      conversationState: stateContext,
+      preloadedFacts,
+      tier: tierName,
+      onToken: (chunk: string) => send("token", { text: chunk }),
+    });
+
+    // Process in background
+    (async () => {
+      // US-029: AbortController with 55s timeout (5s buffer before Vercel's 60s maxDuration)
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 55_000);
+
+      try {
+        // Send initial connection event
+        send("connected", {
+          sessionId: effectiveSessionId,
+          timestamp: new Date().toISOString(),
+          tier: tierName,
+        });
+
+        // Store user message in memory (Pro+ only, Phase 21)
+        // Fire-and-forget: don't block processStream start on this DB write
+        if (shouldPersistMemory) {
+          storeEpisode(userId, effectiveSessionId, "conversation", {
+            role: "user",
+            content: message,
+            context,
+          }).catch(err => console.warn("[FRED Chat] Failed to store user message:", err));
+        }
+
+        // Stream state updates
+        let lastState = "";
+        for await (const update of fredService.processStream({
+          message,
+          timestamp: new Date(),
+          context,
+        })) {
+          // US-029: Check if timeout fired during streaming
+          if (abortController.signal.aborted) {
+            send("error", { type: "error", error: "Request timed out. Please try again." });
+            break;
+          }
+
+          // Only send if state changed
+          if (update.state !== lastState) {
+            send("state", {
+              state: update.state,
+              isComplete: update.isComplete,
+              timestamp: new Date().toISOString(),
+            });
+            lastState = update.state;
+          }
+
+          // Send partial context updates
+          if (update.context.validatedInput && !update.isComplete) {
+            send("analysis", {
+              intent: update.context.validatedInput.intent,
+              topic: update.context.validatedInput.topic || null,
+              confidence: update.context.validatedInput.confidence,
+              entities: update.context.validatedInput.entities,
+            });
+
+            // Emit wellbeing event when burnout signals detected (Phase 17)
+            if (update.context.validatedInput.burnoutSignals?.detected) {
+              send("wellbeing", {
+                type: "wellbeing",
+                signals: update.context.validatedInput.burnoutSignals,
+              });
+
+              // Phase 28-02: Fire-and-forget push for wellbeing alerts
+              notifyWellbeingAlert(userId, {
+                type: "burnout",
+                message: update.context.validatedInput.burnoutSignals.recommendation || "FRED detected signs of burnout. Take a moment to check in.",
+                severity: update.context.validatedInput.burnoutSignals.stressLevel > 70 ? "high" : update.context.validatedInput.burnoutSignals.stressLevel > 40 ? "medium" : "low",
+              });
+            }
+          }
+
+          if (update.context.mentalModels.length > 0 && !update.isComplete) {
+            send("models", {
+              models: update.context.mentalModels.map((m) => ({
+                model: m.model,
+                relevance: m.relevance,
+                confidence: m.confidence,
+              })),
+            });
+          }
+
+          if (update.context.synthesis && !update.isComplete) {
+            send("synthesis", {
+              recommendation: update.context.synthesis.recommendation,
+              confidence: update.context.synthesis.confidence,
+              reasoning: update.context.synthesis.reasoning,
+            });
+          }
+
+          // Persist and emit red flags if detected during synthesis
+          if (update.context.synthesis?.redFlags && update.context.synthesis.redFlags.length > 0) {
+            try {
+              const results = await Promise.all(
+                update.context.synthesis.redFlags.map((flag) =>
+                  createRedFlag({
+                    ...flag,
+                    userId,
+                    status: flag.status || "active",
+                  })
+                )
+              );
+              // Filter out nulls (duplicates silently skipped by ON CONFLICT DO NOTHING)
+              const persistedFlags = results.filter((f): f is NonNullable<typeof f> => f !== null);
+              if (persistedFlags.length > 0) {
+                send("red_flag", { type: "red_flag", flags: persistedFlags });
+              }
+
+              // Phase 28-02: Fire-and-forget push for each red flag
+              for (const flag of persistedFlags) {
+                notifyRedFlag(userId, {
+                  id: flag.id,
+                  category: flag.category || "general",
+                  title: flag.title || flag.description || "New red flag detected",
+                  severity: flag.severity || "medium",
+                });
+              }
+            } catch (rfError) {
+              console.warn("[FRED Chat] Failed to persist red flags:", rfError);
+            }
+          }
+
+          // Send final response
+          if (update.isComplete) {
+            const latencyMs = Date.now() - startTime;
+
+            const response = {
+              content: update.context.decision?.content || "I wasn't able to fully process that. Could you try rephrasing or sending your message again?",
+              action: update.context.decision?.action || "defer",
+              confidence: update.context.decision?.confidence || 0,
+              requiresApproval: update.context.decision?.requiresHumanApproval || false,
+              reasoning: update.context.decision?.reasoning,
+            };
+
+            send("response", {
+              ...response,
+              meta: {
+                latencyMs,
+                finalState: update.state,
+                tier: tierName,
+                persistentMemory: hasPersistentMemory,
+              },
+            });
+
+            // Store assistant response in memory (Pro+ only, Phase 21)
+            if (shouldPersistMemory) {
+              try {
+                await storeEpisode(userId, effectiveSessionId, "conversation", {
+                  role: "assistant",
+                  content: response.content,
+                  action: response.action,
+                  confidence: response.confidence,
+                });
+              } catch (error) {
+                console.warn("[FRED Chat] Failed to store assistant response:", error);
+              }
+            }
+
+            send("done", {
+              sessionId: effectiveSessionId,
+              latencyMs,
+            });
+
+            // Fire-and-forget: log journey event after each completed FRED interaction.
+            // This populates the journey_events table so the Journey Dashboard, re-engagement
+            // emails, and digest emails have activity data to work with.
+            {
+              const intent = update.context.validatedInput?.intent ?? "unknown";
+              const step = update.context.conversationState?.currentStep ?? null;
+              const eventType = intent === "decision_request" ? "decision_made"
+                : intent === "question" ? "step_completed"
+                : "message_sent";
+              logJourneyEventAsync({
+                userId,
+                eventType,
+                eventData: {
+                  intent,
+                  latency_ms: latencyMs,
+                  tier: tierName,
+                  step,
+                },
+              });
+            }
+
+            // Fire-and-forget: restore latency observability after streaming completion
+            (async () => {
+              try {
+                const supabase = createServiceClient();
+                await supabase.from("ai_requests").insert({
+                  user_id: userId,
+                  analyzer: "fred_chat",
+                  model: _modelProviderKey,
+                  user_prompt: message.slice(0, 2000),
+                  input_data: {
+                    latency_ms: latencyMs,
+                    tier: tierName,
+                    intent: update.context.validatedInput?.intent ?? "unknown",
+                    stream: true,
+                  },
+                  created_at: new Date().toISOString(),
+                });
+              } catch {
+                // Table may not exist or schema mismatch — log structured data instead
+                console.log(JSON.stringify({
+                  event: "fred_chat_complete",
+                  userId,
+                  latencyMs,
+                  model: _modelProviderKey,
+                  tier: tierName,
+                  intent: update.context.validatedInput?.intent ?? "unknown",
+                  streaming: true,
+                  timestamp: new Date().toISOString(),
+                }));
+              }
+            })();
+
+            // Phase 18-02: Fire-and-forget enrichment extraction
+            fireEnrichment(userId, [
+              { role: "user", content: message },
+              { role: "assistant", content: response.content },
+            ]);
+
+            // Phase 43: Fire-and-forget next steps extraction
+            extractAndStoreNextSteps(userId, response.content, new Date().toISOString()).catch(err =>
+              console.warn("[FRED Chat] Next steps extraction failed:", err)
+            );
+
+            // Phase 73: Fire-and-forget sentiment extraction
+            (async () => {
+              try {
+                const sentiment = await extractSentiment(message, response.content);
+                await insertFeedbackSignal({
+                  user_id: userId,
+                  session_id: effectiveSessionId,
+                  message_id: null,
+                  channel: 'chat',
+                  signal_type: 'sentiment',
+                  rating: null,
+                  category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+                  comment: null,
+                  sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+                  sentiment_confidence: sentiment.confidence,
+                  user_tier: tierName as 'free' | 'pro' | 'studio',
+                  weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+                  consent_given: true,
+                  expires_at: null,
+                  metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+                });
+                await aggregateSessionSentiment(effectiveSessionId, userId);
+              } catch (err) {
+                console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+              }
+            })();
+
+            // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
+            if (shouldPersistMemory) {
+              ;(async () => {
+                try {
+                  const updates = await extractMemoryUpdates(
+                    message,
+                    response.content
+                  )
+                  if (updates.length > 0) {
+                    await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+                    console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
+                  }
+                } catch (error) {
+                  console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+                }
+              })()
+            }
+
+            // Phase 32-02: Fire-and-forget retention enforcement
+            if (shouldPersistMemory) {
+              enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
+                console.warn("[FRED Chat] Retention enforcement failed:", err)
+              );
+            }
+          }
+        }
+      } catch (error) {
+        // US-029: Distinguish timeout aborts from other errors
+        if (abortController.signal.aborted) {
+          console.warn("[FredChat] Streaming timed out after 55s", { userId });
+          send("error", { type: "error", error: "Request timed out. Please try again." });
+        } else {
+          console.error("[FredChat] Streaming error:", error);
+          captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
+          send("error", {
+            message: "An error occurred while processing your request",
+          });
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        close();
+      }
+    })();
+
+    return new Response(sseStream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
+
+    console.error("[FredChat] Error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat" });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// Phase 25-02: Wrap with structured logging
+export const POST = withLogging(handlePost as (request: Request, context?: unknown) => Promise<Response>);

@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger"
  * List prompt patches with optional status filter.
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
   }
 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
  * Create a manual prompt patch.
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
   }
 

@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch all escalation rules for a config
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new escalation rule
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update escalation rule
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -151,7 +151,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete escalation rule
 export async function DELETE(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

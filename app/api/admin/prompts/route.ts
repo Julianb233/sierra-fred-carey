@@ -13,7 +13,7 @@ import { logger } from "@/lib/logger";
  * - active_only: Show only active prompts (default: false)
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
  * Automatically increments version based on existing prompts with same name
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
  * When activating, automatically deactivates other versions of same name
  */
 export async function PATCH(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

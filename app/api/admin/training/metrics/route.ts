@@ -26,7 +26,7 @@ async function safeQuery<T = Record<string, unknown>>(query: Promise<T[]>, fallb
  * - analyzer: filter by specific analyzer type
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
  * with the existing schema (no separate training_metrics table).
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

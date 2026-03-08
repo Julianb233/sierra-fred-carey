@@ -29,7 +29,7 @@ async function safeQuery<T = Record<string, unknown>>(query: Promise<T[]>, fallb
  * - hasError: "true" to show only errored requests, "false" for successful only
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

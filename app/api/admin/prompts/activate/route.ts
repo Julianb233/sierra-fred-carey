@@ -11,7 +11,7 @@ import { logger } from "@/lib/logger";
  * When activating, automatically deactivates other versions of same name
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }

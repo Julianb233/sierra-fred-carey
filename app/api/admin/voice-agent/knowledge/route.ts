@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch knowledge base entries
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new knowledge base entry
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update knowledge base entry
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete knowledge base entry
 export async function DELETE(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {

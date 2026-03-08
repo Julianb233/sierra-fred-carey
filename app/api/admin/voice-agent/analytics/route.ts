@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch voice agent analytics
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Record call analytics (called by voice agent after call ends)
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

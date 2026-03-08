@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/auth/admin";
 
 // GET - Fetch voice agent configuration
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -75,7 +75,7 @@ Voice style:
 
 // PUT - Update voice agent configuration
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -144,7 +144,7 @@ export async function PUT(request: NextRequest) {
 
 // POST - Create new voice agent configuration
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {

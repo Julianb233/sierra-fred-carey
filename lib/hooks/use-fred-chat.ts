@@ -260,8 +260,18 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     }
   }, [synthesis, onSynthesis]);
 
+  // Guard against rapid-fire duplicate submissions
+  const sendingRef = useRef(false);
+
   // Send message with streaming
   const sendMessage = useCallback(async (content: string) => {
+    // Prevent rapid-fire: if we're already processing a send, ignore
+    if (sendingRef.current) {
+      console.warn("[useFredChat] Ignoring rapid-fire duplicate send");
+      return;
+    }
+    sendingRef.current = true;
+
     // Abort any in-flight request before starting a new one
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -637,6 +647,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       }
     } finally {
       abortControllerRef.current = null;
+      sendingRef.current = false;
     }
   }, [context, storeInMemory, pageContext]);
 

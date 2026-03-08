@@ -15,7 +15,7 @@ import { logger } from "@/lib/logger";
  * Returns a preview of how the prompt would be rendered with test data
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
