@@ -1,9 +1,10 @@
 import { test as base, expect, type Page } from "@playwright/test";
 
 export const test = base.extend<{ authenticatedPage: Page }>({
-  authenticatedPage: async ({ page }, provide) => {
+  authenticatedPage: async ({ page }, provide, testInfo) => {
     if (!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD) {
-      base.skip(true, "E2E_TEST_EMAIL / E2E_TEST_PASSWORD not set — skipping authenticated test");
+      testInfo.skip(true, "E2E_TEST_EMAIL / E2E_TEST_PASSWORD not set — skipping authenticated test");
+      return;
     }
     await page.goto("/login");
     await page.fill(

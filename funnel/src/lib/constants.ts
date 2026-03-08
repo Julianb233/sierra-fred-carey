@@ -122,7 +122,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'What can I do on the full platform?',
-    answer: 'The full Sahara platform at joinsahara.com includes: AI investor readiness scoring, automated pitch deck review, virtual team agents (CTO, CMO, CFO), the Reality Lens validation framework, weekly coaching check-ins, and Boardy investor matching.',
+    answer: 'The full Sahara platform at joinsahara.com includes: AI investor readiness scoring, automated pitch deck review, virtual team agents (Founder Ops, Fundraising, Growth), the Reality Lens validation framework, weekly coaching check-ins, and Boardy investor matching.',
   },
   {
     question: 'Will my data transfer to the full platform?',
