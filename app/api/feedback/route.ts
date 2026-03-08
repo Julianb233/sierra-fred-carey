@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
       id: data?.id,
     })
   } catch (err) {
-    // requireAuth throws NextResponse on 401 -- re-throw as-is
-    if (err instanceof NextResponse) throw err
+    // requireAuth throws NextResponse on 401 -- return it directly
+    if (err instanceof NextResponse) return err
 
     console.error("[feedback] Unexpected error:", err)
     return NextResponse.json<SubmitFeedbackResponse>(
