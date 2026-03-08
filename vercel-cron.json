@@ -3,6 +3,30 @@
     {
       "path": "/api/monitoring/auto-promotion/check",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/daily-guidance",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/weekly-checkin",
+      "schedule": "0 14 * * 1"
+    },
+    {
+      "path": "/api/cron/feedback-digest",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/re-engagement",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/next-steps-reminders",
+      "schedule": "0 15 * * *"
     }
   ]
 }

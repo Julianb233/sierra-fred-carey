@@ -183,3 +183,42 @@ export function notifyInboxMessage(userId: string, message: InboxMessageData): v
     }
   })();
 }
+
+// ---------- Overdue Next Steps ----------
+
+export interface OverdueStepData {
+  count: number;
+  topDescription: string;
+  topPriority: "critical" | "important" | "optional";
+}
+
+/**
+ * Notify the user about overdue next steps.
+ * Fire-and-forget — never throws.
+ * Deep link: /dashboard (next steps widget)
+ */
+export function notifyOverdueStep(userId: string, data: OverdueStepData): void {
+  void (async () => {
+    try {
+      const enabled = await isCategoryEnabled(userId, "accountability");
+      if (!enabled) return;
+
+      const body = data.count === 1
+        ? `Overdue: ${data.topDescription}`
+        : `${data.count} overdue action items — top: ${data.topDescription}`;
+
+      const payload: PushPayload = {
+        title: "Action Items Need Attention",
+        body,
+        url: "/dashboard",
+        tag: "overdue-steps",
+        data: { type: "overdue_steps", count: data.count, priority: data.topPriority },
+      };
+
+      const result = await sendPushToUser(userId, payload);
+      await logNotificationDelivery(userId, "accountability", payload, result);
+    } catch {
+      // Intentionally swallowed — push delivery is best-effort
+    }
+  })();
+}

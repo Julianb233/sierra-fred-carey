@@ -24,7 +24,8 @@ export type PushCategory =
   | "wellbeing_alerts"
   | "agent_completions"
   | "inbox_messages"
-  | "weekly_digest";
+  | "weekly_digest"
+  | "accountability";
 
 export interface PushCategoryConfig {
   enabled: boolean;
@@ -61,6 +62,11 @@ export const PUSH_CATEGORY_DEFAULTS: PushPreferences = {
     enabled: true,
     label: "Weekly Digest",
     description: "Receive a weekly summary of your startup activity",
+  },
+  accountability: {
+    enabled: true,
+    label: "Action Item Reminders",
+    description: "Get nudged when action items from FRED conversations are overdue",
   },
 };
 

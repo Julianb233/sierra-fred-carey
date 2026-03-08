@@ -24,6 +24,9 @@ export interface NextStep {
   completed: boolean;
   completedAt: string | null;
   dismissed: boolean;
+  dueDate: string | null;
+  reminderSent: boolean;
+  isOverdue: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +37,7 @@ export interface NextStepInsert {
   whyItMatters?: string;
   priority?: StepPriority;
   sourceConversationDate?: string;
+  dueDate?: string;
 }
 
 export interface GroupedNextSteps {
@@ -199,6 +203,7 @@ export async function extractAndStoreNextSteps(
     why_it_matters: step.whyItMatters || null,
     priority: prioritizeStep(index, newSteps.length),
     source_conversation_date: sourceConversationDate,
+    due_date: step.dueDate || computeDefaultDueDate(prioritizeStep(index, newSteps.length)),
     completed: false,
     dismissed: false,
   }));
@@ -227,16 +232,67 @@ export async function extractAndStoreNextSteps(
  * Also attempts to extract "why it matters" if the action item
  * contains a dash or colon separator (e.g., "Do X -- this will help...")
  */
+/**
+ * Compute a default due date based on priority.
+ * Critical = 3 days, Important = 5 days, Optional = 7 days.
+ * Follows Operating Bible: all actions max 7-day timeframe.
+ */
+function computeDefaultDueDate(priority: StepPriority): string {
+  const days = priority === "critical" ? 3 : priority === "important" ? 5 : 7;
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString();
+}
+
+/**
+ * Get overdue next steps for a user (due_date passed, not completed).
+ */
+export async function getOverdueSteps(userId: string): Promise<NextStep[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("next_steps")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("completed", false)
+    .eq("dismissed", false)
+    .not("due_date", "is", null)
+    .lt("due_date", new Date().toISOString())
+    .order("due_date", { ascending: true });
+
+  if (error) {
+    console.error("[NextSteps] Failed to fetch overdue:", error);
+    return [];
+  }
+
+  return (data || []).map(mapRow);
+}
+
+/**
+ * Mark reminder as sent for overdue step (prevents duplicate nudges).
+ */
+export async function markReminderSent(
+  userId: string,
+  stepId: string
+): Promise<void> {
+  const supabase = createServiceClient();
+  await supabase
+    .from("next_steps")
+    .update({ reminder_sent: true })
+    .eq("id", stepId)
+    .eq("user_id", userId);
+}
+
 function extractNextActions(
   text: string
-): Array<{ description: string; whyItMatters: string | null }> {
+): Array<{ description: string; whyItMatters: string | null; dueDate: string | null }> {
   const marker = /\*?\*?Next 3 [Aa]ctions:?\*?\*?\s*\n/i;
   const match = text.match(marker);
   if (!match || match.index === undefined) return [];
 
   const afterMarker = text.slice(match.index + match[0].length);
   const lines = afterMarker.split("\n");
-  const actions: Array<{ description: string; whyItMatters: string | null }> =
+  const actions: Array<{ description: string; whyItMatters: string | null; dueDate: string | null }> =
     [];
 
   for (const line of lines) {
@@ -260,9 +316,10 @@ function extractNextActions(
         actions.push({
           description: separatorMatch[1].trim(),
           whyItMatters: separatorMatch[2].trim(),
+          dueDate: null,
         });
       } else {
-        actions.push({ description: fullText, whyItMatters: null });
+        actions.push({ description: fullText, whyItMatters: null, dueDate: null });
       }
 
       if (actions.length >= 3) break;
@@ -293,6 +350,10 @@ function prioritizeStep(index: number, _total: number): StepPriority {
 // ============================================================================
 
 function mapRow(row: Record<string, unknown>): NextStep {
+  const dueDate = (row.due_date as string) || null;
+  const completed = (row.completed as boolean) || false;
+  const isOverdue = !completed && !!dueDate && new Date(dueDate) < new Date();
+
   return {
     id: row.id as string,
     userId: row.user_id as string,
@@ -300,9 +361,12 @@ function mapRow(row: Record<string, unknown>): NextStep {
     whyItMatters: (row.why_it_matters as string) || null,
     priority: (row.priority as StepPriority) || "optional",
     sourceConversationDate: (row.source_conversation_date as string) || null,
-    completed: (row.completed as boolean) || false,
+    completed,
     completedAt: (row.completed_at as string) || null,
     dismissed: (row.dismissed as boolean) || false,
+    dueDate,
+    reminderSent: (row.reminder_sent as boolean) || false,
+    isOverdue,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

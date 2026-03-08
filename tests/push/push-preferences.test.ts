@@ -72,8 +72,8 @@ describe("Push Notification Preferences", () => {
   // ---------- PUSH_CATEGORY_DEFAULTS ----------
 
   describe("PUSH_CATEGORY_DEFAULTS", () => {
-    it("should define all five categories", () => {
-      expect(PUSH_CATEGORIES).toHaveLength(5);
+    it("should define all six categories", () => {
+      expect(PUSH_CATEGORIES).toHaveLength(6);
       expect(PUSH_CATEGORIES).toEqual(
         expect.arrayContaining([
           "red_flags",
@@ -81,6 +81,7 @@ describe("Push Notification Preferences", () => {
           "agent_completions",
           "inbox_messages",
           "weekly_digest",
+          "accountability",
         ]),
       );
     });

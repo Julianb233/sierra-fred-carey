@@ -16,7 +16,15 @@ export async function POST(request: NextRequest) {
     const userId = await requireAuth()
     const supabase = await createClient()
 
-    const body: SubmitFeedbackRequest = await request.json()
+    let body: SubmitFeedbackRequest
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json<SubmitFeedbackResponse>(
+        { success: false, error: "Invalid or empty JSON body" },
+        { status: 400 }
+      )
+    }
 
     // Validate required fields
     if (!body.message_id || !body.session_id || !body.signal) {

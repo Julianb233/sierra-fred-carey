@@ -227,7 +227,6 @@ async function extractWhatsAppMessages(
     const stagehand = new Stagehand({
       browserbaseSessionID: sessionId,
       env: "BROWSERBASE",
-      enableCaching: false,
       modelName: "google/gemini-2.0-flash",
       modelClientOptions: {
         apiKey: process.env.GEMINI_API_KEY,
@@ -237,49 +236,29 @@ async function extractWhatsAppMessages(
     await stagehand.init();
 
     // Navigate to WhatsApp Web
-    await stagehand.page.goto("https://web.whatsapp.com", {
-      waitUntil: "networkidle",
-      timeout: 30000,
-    });
+    await stagehand.navigate("https://web.whatsapp.com");
 
     // Wait for WhatsApp to load (either QR or chat list)
-    await stagehand.page.waitForTimeout(5000);
+    await new Promise((r) => setTimeout(r, 5000));
 
     // Search for the group
-    await stagehand.act({
-      action: `Click the search box and type "${WHATSAPP_GROUP_NAME}"`,
-    });
+    await stagehand.act(
+      `Click the search box and type "${WHATSAPP_GROUP_NAME}"`
+    );
 
-    await stagehand.page.waitForTimeout(2000);
+    await new Promise((r) => setTimeout(r, 2000));
 
     // Click on the group
-    await stagehand.act({
-      action: `Click on the "${WHATSAPP_GROUP_NAME}" group chat in the search results`,
-    });
+    await stagehand.act(
+      `Click on the "${WHATSAPP_GROUP_NAME}" group chat in the search results`
+    );
 
-    await stagehand.page.waitForTimeout(3000);
+    await new Promise((r) => setTimeout(r, 3000));
 
     // Extract messages
-    const extraction = await stagehand.extract({
-      instruction: `Extract ALL chat messages visible on this page from the "${WHATSAPP_GROUP_NAME}" group. For each message, extract: the sender name, the timestamp, and the full message text. Also note any images or photos mentioned. Return everything in chronological order.`,
-      schema: {
-        type: "object",
-        properties: {
-          messages: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                sender: { type: "string" },
-                timestamp: { type: "string" },
-                text: { type: "string" },
-                media: { type: "string" },
-              },
-            },
-          },
-        },
-      },
-    });
+    const extraction = await stagehand.extract(
+      `Extract ALL chat messages visible on this page from the "${WHATSAPP_GROUP_NAME}" group. For each message, extract: the sender name, the timestamp, and the full message text. Also note any images or photos mentioned. Return everything in chronological order.`
+    );
 
     await stagehand.close();
 
