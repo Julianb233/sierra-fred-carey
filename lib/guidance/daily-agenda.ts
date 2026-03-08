@@ -70,7 +70,7 @@ export async function generateDailyAgenda(userId: string): Promise<DailyAgenda> 
     getUserTier(userId),
   ])
 
-  const providerKey = getModelForTier(tier, "structured")
+  const providerKey = getModelForTier(String(tier), "structured")
   const model = getModel(providerKey)
 
   const founderName = profile.name || "Founder"
