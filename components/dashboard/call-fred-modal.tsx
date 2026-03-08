@@ -579,6 +579,19 @@ export function CallFredModal({
       console.warn("[CallFred] Failed to generate summary:", err);
     }
 
+    // Phase 82: Inject voice transcript into chat history for continuity
+    if (transcriptEntries.length > 0) {
+      try {
+        await fetch("/api/voice/transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript: transcriptEntries }),
+        });
+      } catch (err) {
+        console.warn("[CallFred] Failed to inject transcript to chat:", err);
+      }
+    }
+
     setCallState("ended");
   };
 

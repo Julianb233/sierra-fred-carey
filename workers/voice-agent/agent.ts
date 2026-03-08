@@ -56,10 +56,10 @@ async function fetchChatContext(userId: string): Promise<VoiceContextResponse | 
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return {
-      preamble: data.preamble || '',
-      lastTopic: data.lastTopic || null,
+      preamble: (data.preamble as string) || '',
+      lastTopic: (data.lastTopic as string) || null,
     };
   } catch (error) {
     console.warn('[Fred Voice Agent] Failed to fetch chat context (non-blocking):', error);
@@ -98,8 +98,8 @@ async function postTranscript(
     if (!response.ok) {
       console.warn(`[Fred Voice Agent] Transcript post returned ${response.status}`);
     } else {
-      const data = await response.json();
-      console.log('[Fred Voice Agent] Transcript injected, summary:', data.summary?.slice(0, 100));
+      const data = (await response.json()) as Record<string, unknown>;
+      console.log('[Fred Voice Agent] Transcript injected, summary:', ((data.summary as string) || '').slice(0, 100));
     }
   } catch (error) {
     console.warn('[Fred Voice Agent] Failed to post transcript (non-blocking):', error);
@@ -213,20 +213,39 @@ export default defineAgent({
       transcriptLog.push({ speaker, text, timestamp });
     }
 
-    // Phase 82: Fetch chat context for voice preamble
+    // Phase 82: Load chat context for voice preamble
+    // Priority: dispatch metadata (set by call API) > API fetch fallback
     const userId = extractUserId(ctx);
     let chatContextPreamble: string | undefined;
+    let hasChatContext = false;
 
-    if (userId) {
-      console.log(`[Fred Voice Agent] Fetching chat context for user: ${userId}`);
+    // Try dispatch metadata first (chatContext was injected by call API)
+    try {
+      const metadata = ctx.room.metadata;
+      if (metadata) {
+        const parsed = JSON.parse(metadata);
+        if (parsed.chatContext && parsed.chatContext.length > 0) {
+          chatContextPreamble = parsed.chatContext;
+          hasChatContext = true;
+          console.log(`[Fred Voice Agent] Chat context loaded from dispatch metadata (${chatContextPreamble!.length} chars)`);
+        }
+      }
+    } catch {
+      // Metadata not available or not JSON
+    }
+
+    // Fallback: fetch context from API if not in metadata
+    if (!hasChatContext && userId) {
+      console.log(`[Fred Voice Agent] Fetching chat context via API for user: ${userId}`);
       const context = await fetchChatContext(userId);
       if (context?.preamble) {
         chatContextPreamble = context.preamble;
-        console.log(`[Fred Voice Agent] Chat context loaded, last topic: ${context.lastTopic || 'none'}`);
+        hasChatContext = true;
+        console.log(`[Fred Voice Agent] Chat context loaded via API, last topic: ${context.lastTopic || 'none'}`);
       } else {
         console.log('[Fred Voice Agent] No chat context available (new user or no prior chats)');
       }
-    } else {
+    } else if (!userId) {
       console.log('[Fred Voice Agent] No user ID available, skipping context fetch');
     }
 
@@ -291,8 +310,12 @@ export default defineAgent({
 
     console.log('[Fred Voice Agent] Connected, sending greeting...');
 
+    const greetingInstructions = hasChatContext
+      ? "Greet the user warmly as Fred Cary. Reference that you were just chatting and pick up the conversation naturally. Say something like: Hey, I see we were just talking about some things in chat. Let's keep going -- what else is on your mind?"
+      : "Greet the user warmly as Fred Cary. Say something like: Hey, Fred Cary here. What's on your mind? Let's get into it.";
+
     session.generateReply({
-      instructions: "Greet the user warmly as Fred Cary. Say something like: Hey, Fred Cary here. What's on your mind? Let's get into it.",
+      instructions: greetingInstructions,
     });
   },
 });
