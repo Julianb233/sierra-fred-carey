@@ -24,7 +24,8 @@ Progress: [##############] 14/14 phases COMPLETE
 - Wave 5 (Post-Launch): Phase 90 — COMPLETE
 
 ### Carried:
-- v7.0 Phases 74-76 (Feedback Intelligence): deferred — go-live takes priority
+- v7.0 Phase 74 (Intelligence & Pattern Detection): COMPLETE
+- v7.0 Phases 75-76 (A/B Testing + RLHF-Lite): deferred — go-live takes priority
 - v6.0 Phase 66 Plan 04 (Mux admin routes): blocked pending Mux credentials
 - v6.0 Phase 70 (Boardy API): blocked pending partnership and API credentials
 
@@ -33,7 +34,7 @@ Progress: [##############] 14/14 phases COMPLETE
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
 - v6.0: 10 phases complete (59-69), 2 blocked (Mux credentials, Boardy API)
-- v7.0: 3 phases complete (71-73), 3 deferred (74-76)
+- v7.0: 4 phases complete (71-74), 2 deferred (75-76)
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 221 pages compiling
 

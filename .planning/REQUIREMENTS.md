@@ -46,10 +46,10 @@
 
 ### Intelligence & Pattern Detection (4)
 
-- [ ] **REQ-I1:** Trigger.dev daily job for AI-powered feedback categorization — cluster by theme, identify recurring patterns, rank by frequency × severity
-- [ ] **REQ-I2:** Deduplication logic — semantic matching + 4-hour aggregation windows before Linear issue creation; severity escalation not duplication
-- [ ] **REQ-I3:** "Top Issues This Week" with drill-down in admin dashboard
-- [ ] **REQ-I4:** Linear auto-triage — create issues from feedback clusters with Browserbase replay links as proof; link to existing issues when duplicate detected
+- [x] **REQ-I1:** Trigger.dev daily job for AI-powered feedback categorization — cluster by theme, identify recurring patterns, rank by frequency × severity
+- [x] **REQ-I2:** Deduplication logic — semantic matching + 4-hour aggregation windows before Linear issue creation; severity escalation not duplication
+- [x] **REQ-I3:** "Top Issues This Week" with drill-down in admin dashboard
+- [x] **REQ-I4:** Linear auto-triage — create issues from feedback clusters with Browserbase replay links as proof; link to existing issues when duplicate detected
 
 ### A/B Testing Integration (4)
 

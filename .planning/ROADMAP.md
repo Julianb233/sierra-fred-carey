@@ -77,10 +77,10 @@
 **Requirements:** REQ-I1, REQ-I2, REQ-I3, REQ-I4
 
 **Success criteria:**
-- [ ] Trigger.dev daily job runs, clusters feedback by theme, writes to `feedback_insights`
-- [ ] Deduplication prevents duplicate Linear issues (semantic matching + 4-hour windows)
-- [ ] "Top Issues This Week" section in admin dashboard with drill-down to source feedback
-- [ ] Linear issues auto-created from feedback clusters with correct labels, severity, and links
+- [x] Trigger.dev daily job runs, clusters feedback by theme, writes to `feedback_insights`
+- [x] Deduplication prevents duplicate Linear issues (semantic matching + 4-hour windows)
+- [x] "Top Issues This Week" section in admin dashboard with drill-down to source feedback
+- [x] Linear issues auto-created from feedback clusters with correct labels, severity, and links
 
 **Research needed:** Light — optimal aggregation windows for Sahara's user volume
 **Estimated plans:** 2
@@ -149,10 +149,10 @@
 | REQ-S2 | 73 | Pending |
 | REQ-S3 | 73 | Pending |
 | REQ-S4 | 73 | Pending |
-| REQ-I1 | 74 | Pending |
-| REQ-I2 | 74 | Pending |
-| REQ-I3 | 74 | Pending |
-| REQ-I4 | 74 | Pending |
+| REQ-I1 | 74 | Complete |
+| REQ-I2 | 74 | Complete |
+| REQ-I3 | 74 | Complete |
+| REQ-I4 | 74 | Complete |
 | REQ-A1 | 75 | Pending |
 | REQ-A2 | 75 | Pending |
 | REQ-A3 | 75 | Pending |
