@@ -17,6 +17,8 @@ import type { SemanticMemory } from "@/lib/db/fred-memory";
 import { STEP_TITLES, type StepNumber } from "@/types/startup-process";
 import { buildActiveFounderMemory, formatMemoryBlock } from "@/lib/fred/active-memory";
 import type { FounderMemory } from "@/lib/fred/founder-memory-types";
+import { buildStageGatePromptBlock } from "@/lib/oases/stage-validator";
+import type { OasesStage } from "@/types/oases";
 
 // ============================================================================
 // Types
@@ -540,7 +542,7 @@ export async function buildFounderContextWithFacts(
   userId: string,
   hasPersistentMemory: boolean,
   preloadedConversationState?: { id: string } | null
-): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }>; memory?: FounderMemory }> {
+): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }>; memory?: FounderMemory; oasesStage: OasesStage }> {
   try {
     const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, activeMemory] = await Promise.all([
       loadFounderProfile(userId),
@@ -596,6 +598,9 @@ export async function buildFounderContextWithFacts(
       context += "\n- Once you learn their funding stage, a personalized goal roadmap will be generated on their dashboard. Mention it naturally once you know their stage.";
     }
 
+    // Phase 80: Extract current Oases stage from active memory
+    const currentOasesStage = (activeMemory.oases_stage?.value as OasesStage) || "clarity"
+
     // Wire startup_processes dashboard data into FRED's context
     if (startupProcess) {
       const stepTitle = STEP_TITLES[startupProcess.currentStep] || `Step ${startupProcess.currentStep}`;
@@ -615,6 +620,12 @@ export async function buildFounderContextWithFacts(
       context += "\n\n" + lines.join("\n");
     }
 
+    // Phase 80: Stage-gate enforcement — tell FRED which topics are allowed
+    const stageGateBlock = buildStageGatePromptBlock(currentOasesStage)
+    if (stageGateBlock) {
+      context += "\n\n" + stageGateBlock
+    }
+
     // Phase 42: Append cross-channel context (SMS, voice, chat history)
     if (channelContext) {
       context += "\n\n" + channelContext;
@@ -625,10 +636,10 @@ export async function buildFounderContextWithFacts(
       context += "\n\n" + redFlagsContext;
     }
 
-    return { context, facts, memory: activeMemory };
+    return { context, facts, memory: activeMemory, oasesStage: currentOasesStage };
   } catch (error) {
     console.warn("[FRED Context] Failed to build founder context (non-blocking):", error);
-    return { context: "", facts: [] };
+    return { context: "", facts: [], oasesStage: "clarity" as OasesStage };
   }
 }
 
