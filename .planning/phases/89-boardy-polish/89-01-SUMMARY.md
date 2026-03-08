@@ -1,56 +1,62 @@
-# Phase 89: Boardy Polish — Summary
+# Phase 89: Boardy Polish -- Summary
 
-## Status: COMPLETE
+**Status:** COMPLETE
+**Date:** 2026-03-08
 
-## What was built
+## What Was Built
 
 ### Task 1: Journey Celebration Banner + Intro Preparation Components
 
-1. **`lib/boardy/intro-templates.ts`** — Template generators:
-   - `generateCallScript(match)` produces structured call scripts with opening, pitch, key points, questions, and closing -- personalized for investor vs advisor match types
-   - `generateEmailTemplate(match)` produces concise fill-in-the-blank emails under 150 words -- tailored to investor/advisor context
-   - Both support optional `focus` field from match metadata for additional personalization
+1. **`lib/boardy/intro-templates.ts`** -- Template generators
+   - `generateCallScript(match)` returns a structured call script with opening, pitch section, key points, questions, and closing. Personalized for investor vs advisor matches.
+   - `generateEmailTemplate(match)` returns a fill-in-the-blank email template under 150 words. Personalized with match name, type, and focus area.
 
-2. **`components/boardy/journey-celebration.tsx`** — Celebration banner:
-   - Full-width orange gradient banner (#ff6a1a to #ff8c42)
-   - PartyPopper icon, congratulatory heading and subtext
-   - Dismiss X button in top-right corner
+2. **`components/boardy/journey-celebration.tsx`** -- Celebration banner
+   - Full-width banner with Sahara orange gradient (from-[#ff6a1a] to-[#ff8c42])
+   - "Congratulations! You've completed the Venture Journey" heading
+   - Dismissible via X button
+   - localStorage persistence (`sahara_journey_celebration_dismissed`)
    - Framer Motion slide-down + fade-in entrance animation
-   - Dismissal stored in localStorage (`sahara_journey_celebration_dismissed`)
-   - Only shows once per user
 
-3. **`components/boardy/intro-prep-card.tsx`** — Intro preparation card:
+3. **`components/boardy/intro-prep-card.tsx`** -- Per-match intro prep
+   - Only renders for `connected` or `intro_sent` matches
    - Expandable card (collapsed by default) titled "Prepare for This Intro"
    - Two tabs: Call Script and Email Template
-   - Content rendered in formatted pre block with copy-to-clipboard button
-   - Uses navigator.clipboard.writeText with Sonner toast feedback
-   - Only renders for matches with status "connected" or "intro_sent"
+   - Content rendered from `generateCallScript` / `generateEmailTemplate`
+   - Copy-to-clipboard button using `navigator.clipboard.writeText`
+   - Toast notification via Sonner on copy success/failure
 
-4. **`app/dashboard/boardy/page.tsx`** — Page integration:
-   - Imports JourneyCelebration and IntroPrepCard components
-   - Shows celebration banner when journey is 100% complete (checks localStorage)
-   - Connected/intro_sent matches show intro prep section with cards
-   - Banner is dismissible via state + localStorage
+4. **`app/dashboard/boardy/page.tsx`** -- Modified
+   - Added `showCelebration` state with useEffect checking journey progress
+   - JourneyCelebration banner renders above match list when journey = 100%
+   - IntroPrepCard renders for each connected/intro_sent match after the match list
+   - Existing functionality preserved (dual gating, CelebrationMilestone, etc.)
 
 ### Task 2: FRED Chat Match Awareness
 
-5. **`lib/ai/prompt-layers.ts`** — Added `BOARDY MATCH AWARENESS` section after FRAMEWORKS:
-   - Rules for when FRED should reference investor/advisor matches
-   - Only in fundraising, pitch prep, or networking conversations
-   - Offers practical prep help (intro emails, pitch practice)
-   - Never fabricates match details
-   - Gracefully handles absence of match data
+1. **`lib/ai/prompt-layers.ts`** -- Added BOARDY MATCH AWARENESS section
+   - Placed after FRAMEWORKS, before STANDARD PROTOCOLS in core prompt
+   - Rules for referencing matches: only in fundraising/networking context
+   - Practical prep offers: draft intro emails, practice pitch
+   - Guard: no fabrication, no unprompted mentions, fail gracefully when no match data
 
 ## Verification
-- `npx tsc --noEmit` passes for all Phase 89 files (0 errors)
-- All components follow existing patterns (shadcn/ui, Framer Motion, Sonner toasts)
-- Copy-to-clipboard implemented with proper fallback handling
-- localStorage persistence for banner dismissal
 
-## Key patterns used
-- Framer Motion `AnimatePresence` for expandable cards and banner entrance
-- `navigator.clipboard.writeText` for copy-to-clipboard
-- Sonner `toast` for feedback notifications
-- `cn()` utility for conditional classNames
-- localStorage for persistent UI state
-- Object.freeze prompt immutability pattern preserved
+- `npx tsc --noEmit` -- no new errors (only pre-existing feedback/chat route errors)
+- `npm run test -- --run lib/ai/__tests__/prompts.test.ts` -- 45 tests PASSED
+- `npm run test -- --run lib/journey/__tests__/completion.test.ts` -- 10 tests PASSED
+- `grep -c "BOARDY MATCH AWARENESS" lib/ai/prompt-layers.ts` returns 1
+- `grep -c "JourneyCelebration" app/dashboard/boardy/page.tsx` returns 2+ (import + use)
+- `grep -c "IntroPrepCard" app/dashboard/boardy/page.tsx` returns 2+ (import + use)
+- `grep -c "generateCallScript" lib/boardy/intro-templates.ts` returns 1+
+- `grep -c "generateEmailTemplate" lib/boardy/intro-templates.ts` returns 1+
+
+## Files Modified/Created
+
+| File | Action |
+|------|--------|
+| `lib/boardy/intro-templates.ts` | Created |
+| `components/boardy/journey-celebration.tsx` | Created |
+| `components/boardy/intro-prep-card.tsx` | Created |
+| `app/dashboard/boardy/page.tsx` | Modified (celebration banner + intro prep cards) |
+| `lib/ai/prompt-layers.ts` | Modified (BOARDY MATCH AWARENESS section) |

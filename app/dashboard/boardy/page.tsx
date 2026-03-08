@@ -4,6 +4,7 @@
  * Boardy Dashboard Page
  * Phase 04: Studio Tier Features - Plan 06
  * Phase 85: Journey-Gated Fund Matching
+ * Phase 89: Boardy Polish — celebration banner, intro prep, FRED match awareness
  *
  * Investor & Advisor Matching powered by Boardy AI.
  * Dual gated: Studio tier + journey completion (100%).
@@ -20,7 +21,6 @@ import { FeatureLock } from "@/components/tier/feature-lock";
 import { JourneyGate } from "@/components/journey/journey-gate";
 import { CelebrationMilestone } from "@/components/journey/celebration-milestone";
 import { JourneyCelebration } from "@/components/boardy/journey-celebration";
-import { IntroPrepCard } from "@/components/boardy/intro-prep-card";
 import { useUserTier } from "@/lib/context/tier-context";
 import { useOasesProgress } from "@/hooks/use-oases-progress";
 import { UserTier } from "@/lib/constants";
@@ -278,10 +278,10 @@ export default function BoardyPage() {
         description="Complete your venture journey AND upgrade to Studio tier to unlock investor matching."
       >
         <JourneyGate featureName="Investor & Advisor Matching" requiredPercent={100}>
-          {/* Celebration milestone -- shows once on first unlock */}
+          {/* Celebration milestone modal -- shows once on first unlock */}
           <CelebrationMilestone />
 
-          {/* Phase 89: Journey celebration banner */}
+          {/* Phase 89: Journey celebration banner (dismissible, persistent in-page) */}
           {showCelebration && (
             <JourneyCelebration onDismiss={() => setShowCelebration(false)} />
           )}
@@ -356,7 +356,7 @@ export default function BoardyPage() {
             </div>
           </Tabs>
 
-          {/* Match List */}
+          {/* Match List (IntroPrepCard is rendered per-match inside MatchList) */}
           {isLoading ? (
             <MatchListSkeleton />
           ) : (
@@ -364,22 +364,6 @@ export default function BoardyPage() {
               matches={filteredMatches}
               onStatusUpdate={handleStatusUpdate}
             />
-          )}
-
-          {/* Phase 89: Per-match intro prep cards for connected matches */}
-          {!isLoading && filteredMatches.some(
-            (m) => m.status === "connected" || m.status === "intro_sent"
-          ) && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Prepare for Your Introductions
-              </h3>
-              {filteredMatches
-                .filter((m) => m.status === "connected" || m.status === "intro_sent")
-                .map((match) => (
-                  <IntroPrepCard key={match.id} match={match} />
-                ))}
-            </div>
           )}
 
           {/* Preparation for Introductions */}

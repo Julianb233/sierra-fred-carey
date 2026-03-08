@@ -29,6 +29,7 @@ import type {
   BoardyMatchStatus,
   BoardyMatchType,
 } from "@/lib/boardy/types";
+import { IntroPrepCard } from "@/components/boardy/intro-prep-card";
 
 // ============================================================================
 // Props
@@ -261,6 +262,9 @@ function MatchCard({
               </div>
             )}
           </div>
+
+          {/* Intro Preparation — shown for connected/intro_sent matches */}
+          <IntroPrepCard match={match} />
         </CardContent>
       </Card>
     </motion.div>
