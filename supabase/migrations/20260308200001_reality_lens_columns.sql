@@ -5,6 +5,9 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS reality_lens_complete BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS reality_lens_score INTEGER;
 
+-- oases_stage may already exist from Phase 78; add if not present
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS oases_stage TEXT DEFAULT 'clarity';
+
 -- Index for quick lookup of users who haven't completed reality lens
 CREATE INDEX IF NOT EXISTS idx_profiles_reality_lens_complete
   ON profiles(reality_lens_complete) WHERE reality_lens_complete = false;
