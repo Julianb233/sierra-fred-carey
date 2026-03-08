@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
-import type { MessageFeedbackState, FeedbackSignal } from "@/lib/feedback/types";
+import type { MessageFeedbackState } from "@/lib/feedback/types";
+
+type FeedbackSignalValue = 'thumbs_up' | 'thumbs_down'
 import { RedFlagBadge } from "./red-flag-badge";
 import { ThumbsWidget } from "./thumbs-widget";
 import { TtsButton } from "./tts-button";
@@ -65,7 +67,7 @@ interface ChatMessageProps {
   /** Feedback state for this message (only relevant for assistant messages) */
   feedbackState?: MessageFeedbackState;
   /** Callback when user clicks thumbs up/down */
-  onFeedbackSignal?: (messageId: string, signal: FeedbackSignal) => void;
+  onFeedbackSignal?: (messageId: string, signal: FeedbackSignalValue) => void;
   /** Callback to toggle comment form */
   onFeedbackToggleComment?: (messageId: string) => void;
   /** Callback when comment text changes */

@@ -56,3 +56,29 @@ export interface FeedbackInsight {
 export type FeedbackSignalInsert = Omit<FeedbackSignal, 'id' | 'created_at'>
 export type FeedbackSessionInsert = Omit<FeedbackSession, 'id' | 'created_at' | 'updated_at'>
 export type FeedbackInsightInsert = Omit<FeedbackInsight, 'id' | 'created_at' | 'updated_at'>
+
+// Client-side types used by hooks and components
+export type FeedbackSource = 'chat' | 'voice' | 'sms' | 'whatsapp'
+
+export interface MessageFeedbackState {
+  signal: FeedbackSignal['signal_type'] | null
+  isCommentOpen: boolean
+  comment: string
+  isSubmitting: boolean
+  isSubmitted: boolean
+}
+
+export interface SubmitFeedbackRequest {
+  message_id: string
+  session_id: string
+  signal: FeedbackSignal['signal_type']
+  comment?: string
+  category?: string
+  source?: FeedbackSource
+}
+
+export interface SubmitFeedbackResponse {
+  success: boolean
+  id?: string
+  error?: string
+}

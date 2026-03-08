@@ -4,7 +4,9 @@ import { useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ThumbsUp, ThumbsDown, MessageSquare, Send, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { FeedbackSignal, MessageFeedbackState } from "@/lib/feedback/types"
+import type { MessageFeedbackState } from "@/lib/feedback/types"
+
+type FeedbackSignalType = 'thumbs_up' | 'thumbs_down'
 import { MAX_COMMENT_LENGTH, COMMENT_PLACEHOLDERS } from "@/lib/feedback/constants"
 
 // ---------------------------------------------------------------------------
@@ -17,7 +19,7 @@ interface ThumbsWidgetProps {
   /** Current feedback state for this message */
   state: MessageFeedbackState
   /** Called when user clicks thumbs up or thumbs down */
-  onSignal: (messageId: string, signal: FeedbackSignal) => void
+  onSignal: (messageId: string, signal: FeedbackSignalType) => void
   /** Called to toggle the comment form */
   onToggleComment: (messageId: string) => void
   /** Called when comment text changes */
@@ -185,7 +187,7 @@ export function ThumbsWidget({
                 value={comment}
                 onChange={handleCommentChange}
                 onKeyDown={handleKeyDown}
-                placeholder={COMMENT_PLACEHOLDERS[signal]}
+                placeholder={signal === 'thumbs_down' ? COMMENT_PLACEHOLDERS[0] : COMMENT_PLACEHOLDERS[1]}
                 maxLength={MAX_COMMENT_LENGTH}
                 rows={2}
                 disabled={isSubmitting}

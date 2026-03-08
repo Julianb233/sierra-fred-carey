@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useRef } from "react"
 import type {
-  FeedbackSignal,
   FeedbackSource,
   MessageFeedbackState,
   SubmitFeedbackRequest,
   SubmitFeedbackResponse,
 } from "@/lib/feedback/types"
+
+type FeedbackSignalValue = 'thumbs_up' | 'thumbs_down'
 import {
   MAX_COMMENT_LENGTH,
   FEEDBACK_API_ENDPOINT,
@@ -26,7 +27,7 @@ export interface UseFeedbackOptions {
   /** Source surface where feedback is collected */
   source?: FeedbackSource
   /** Callback fired after successful submission */
-  onSuccess?: (messageId: string, signal: FeedbackSignal) => void
+  onSuccess?: (messageId: string, signal: FeedbackSignalValue) => void
   /** Callback fired on submission error */
   onError?: (messageId: string, error: string) => void
 }
@@ -39,7 +40,7 @@ export interface UseFeedbackReturn {
   /** Get the current feedback state for a message */
   getFeedbackState: (messageId: string) => MessageFeedbackState
   /** Submit a thumbs signal for a message */
-  submitSignal: (messageId: string, signal: FeedbackSignal) => Promise<void>
+  submitSignal: (messageId: string, signal: FeedbackSignalValue) => Promise<void>
   /** Toggle the comment form open/closed for a message */
   toggleComment: (messageId: string) => void
   /** Update the draft comment text for a message */
@@ -99,7 +100,7 @@ export function useFeedback(options: UseFeedbackOptions): UseFeedbackReturn {
   // ---------------------------------------------------------------------------
 
   const submitSignal = useCallback(
-    async (messageId: string, signal: FeedbackSignal) => {
+    async (messageId: string, signal: FeedbackSignalValue) => {
       const current = stateMap[messageId] || DEFAULT_STATE
 
       // If same signal already submitted, ignore (no toggling off)
