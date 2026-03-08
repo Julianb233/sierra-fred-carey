@@ -6,6 +6,7 @@ import { ThumbsUp, ThumbsDown, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MIN_MESSAGES_FOR_FEEDBACK } from "@/lib/feedback/constants"
 import { FeedbackExpansion } from "./feedback-expansion"
+import { FeedbackConsentBanner } from "./consent-banner"
 
 interface ThumbsWidgetProps {
   /** The message ID this widget controls feedback for */
@@ -21,9 +22,28 @@ export function ThumbsWidget({ messageId, messageCount }: ThumbsWidgetProps) {
   const [comment, setComment] = useState("")
   const [submitted, setSubmitted] = useState(false)
   const [showThanks, setShowThanks] = useState(false)
+  const [consentStatus, setConsentStatus] = useState<"loading" | "granted" | "denied" | "unknown">("loading")
+  const [showConsentPrompt, setShowConsentPrompt] = useState(false)
 
   // Gate: hide widget if not enough messages
   const canShowWidget = messageCount >= MIN_MESSAGES_FOR_FEEDBACK
+
+  // Check consent status on mount
+  useEffect(() => {
+    if (!canShowWidget) return
+    fetch("/api/feedback/consent")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.consent === true) {
+          setConsentStatus("granted")
+        } else {
+          setConsentStatus("unknown")
+        }
+      })
+      .catch(() => {
+        setConsentStatus("unknown")
+      })
+  }, [canShowWidget])
 
   // Auto-hide "Thanks!" after 2 seconds
   useEffect(() => {
@@ -54,23 +74,43 @@ export function ThumbsWidget({ messageId, messageCount }: ThumbsWidgetProps) {
 
   const handleThumbsUp = useCallback(() => {
     if (submitted) return
+    if (consentStatus !== "granted") {
+      setShowConsentPrompt(true)
+      return
+    }
     setRating("up")
     setExpanded(true)
-    // Fire immediate signal (rating only)
     fireSignal("up")
-  }, [submitted, fireSignal])
+  }, [submitted, consentStatus, fireSignal])
 
   const handleThumbsDown = useCallback(() => {
     if (submitted) return
+    if (consentStatus !== "granted") {
+      setShowConsentPrompt(true)
+      return
+    }
     setRating("down")
     setExpanded(true)
-    // Fire immediate signal (rating only)
     fireSignal("down")
-  }, [submitted, fireSignal])
+  }, [submitted, consentStatus, fireSignal])
+
+  const handleConsent = useCallback((agreed: boolean) => {
+    fetch("/api/feedback/consent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consent: agreed }),
+    }).catch(console.error)
+
+    if (agreed) {
+      setConsentStatus("granted")
+    } else {
+      setConsentStatus("denied")
+    }
+    setShowConsentPrompt(false)
+  }, [])
 
   const handleSubmit = useCallback(() => {
     if (!rating) return
-    // Fire detailed signal with category + comment
     fireSignal(rating, category, comment.trim() || undefined)
     setSubmitted(true)
     setExpanded(false)
@@ -79,13 +119,13 @@ export function ThumbsWidget({ messageId, messageCount }: ThumbsWidgetProps) {
 
   const handleDismiss = useCallback(() => {
     setExpanded(false)
-    // The basic signal was already sent on thumbs click
-    // Mark as submitted so the widget locks
     setSubmitted(true)
     setShowThanks(true)
   }, [])
 
   if (!canShowWidget) return null
+  if (consentStatus === "loading") return null
+  if (consentStatus === "denied") return null
 
   return (
     <motion.div
@@ -94,6 +134,21 @@ export function ThumbsWidget({ messageId, messageCount }: ThumbsWidgetProps) {
       transition={{ duration: 0.3 }}
       className="flex flex-col"
     >
+      {/* Consent prompt — shown when user clicks thumbs without consent */}
+      <AnimatePresence>
+        {showConsentPrompt && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mb-1 overflow-hidden"
+          >
+            <FeedbackConsentBanner onConsent={handleConsent} compact />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Thumbs row */}
       <div className="flex items-center gap-0.5">
         {!submitted ? (

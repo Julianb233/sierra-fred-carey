@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { NotificationSettings } from "@/components/settings/NotificationSettings"
 import { VoiceSettings } from "@/components/settings/voice-settings"
 import { ConsentSettings } from "@/components/settings/ConsentSettings"
+import { FeedbackConsentBanner } from "@/components/feedback/consent-banner"
 import { useTier } from "@/lib/context/tier-context"
 import { createClient } from "@/lib/supabase/client"
 import { UserTier, TIER_FEATURES } from "@/lib/constants"
@@ -453,6 +454,9 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Feedback Data Consent */}
+      <FeedbackConsentBanner onConsent={() => {}} />
 
       {/* Community Data Sharing Consent */}
       <ConsentSettings />
