@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,8 @@ interface ApiResponse {
 
 export default function RealityLensPage() {
   useEffect(() => { localStorage.setItem("sahara_features_explored", "true"); }, []);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [idea, setIdea] = useState("");
   const [stage, setStage] = useState<string>("");
   const [market, setMarket] = useState("");
@@ -108,6 +111,33 @@ export default function RealityLensPage() {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [expandedHistory, setExpandedHistory] = useState<number | null>(null);
+  const [showQuickCheckBanner, setShowQuickCheckBanner] = useState(false);
+
+  // Redirect first-time users to the quick assessment
+  useEffect(() => {
+    if (searchParams.get("first") === "true") {
+      router.replace("/dashboard/reality-lens/quick?first=true");
+    }
+  }, [searchParams, router]);
+
+  // Check if user has completed quick check -- show banner if not
+  useEffect(() => {
+    const dismissed = typeof window !== "undefined" &&
+      localStorage.getItem("sahara_quick_check_banner_dismissed") === "true";
+    if (dismissed) return;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/fred/reality-lens/quick");
+        const data = await res.json();
+        if (data.success && !data.data?.complete) {
+          setShowQuickCheckBanner(true);
+        }
+      } catch {
+        // Non-blocking
+      }
+    })();
+  }, []);
 
   // Fetch history on mount
   useEffect(() => {
@@ -275,6 +305,37 @@ export default function RealityLensPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
+      {/* Quick Check Banner */}
+      {showQuickCheckBanner && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-[#ff6a1a]/10 border border-[#ff6a1a]/20">
+          <div className="flex items-center gap-3">
+            <InfoCircledIcon className="w-5 h-5 text-[#ff6a1a] flex-shrink-0" />
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="font-medium">New here?</span> Take the 2-minute Quick Reality Check first to find your starting point.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              size="sm"
+              onClick={() => router.push("/dashboard/reality-lens/quick")}
+              className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+            >
+              Take Quick Check
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setShowQuickCheckBanner(false);
+                localStorage.setItem("sahara_quick_check_banner_dismissed", "true");
+              }}
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-2">
