@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { logger } from "@/lib/logger";
+import { getExperimentFeedbackComparison } from "@/lib/feedback/experiment-metrics";
 
 /**
  * GET /api/admin/ab-tests/[id]
@@ -23,7 +24,7 @@ export async function GET(
 
     logger.log(`[Admin A/B Test GET] Fetching experiment ${experimentId}`);
 
-    // Get experiment
+    // Get experiment (including metadata for pre-registration)
     const experimentResult = await sql`
       SELECT
         id,
@@ -33,7 +34,8 @@ export async function GET(
         end_date as "endDate",
         is_active as "isActive",
         created_at as "createdAt",
-        created_by as "createdBy"
+        created_by as "createdBy",
+        COALESCE(metadata, '{}') as metadata
       FROM ab_experiments
       WHERE id = ${experimentId}
     `;
@@ -113,11 +115,28 @@ export async function GET(
       })
     );
 
+    // Get feedback comparison for full analysis
+    let feedbackComparison = null;
+    try {
+      feedbackComparison = await getExperimentFeedbackComparison(String(experiment.name));
+    } catch {
+      // Non-critical: feedback metrics are additive
+    }
+
     return NextResponse.json({
       success: true,
       experiment: {
         ...experiment,
+        preRegistration: (experiment.metadata as Record<string, unknown>)?.preRegistration ?? null,
         variants: variantsWithPrompts,
+        feedbackComparison: feedbackComparison ? {
+          thumbsSignificance: feedbackComparison.thumbsSignificance,
+          sentimentSignificance: feedbackComparison.sentimentSignificance,
+          sessionCompletionSignificance: feedbackComparison.sessionCompletionSignificance,
+          feedbackWinner: feedbackComparison.feedbackWinner,
+          winnerConfidence: feedbackComparison.winnerConfidence,
+          variants: feedbackComparison.variants,
+        } : null,
       },
     });
   } catch (error) {

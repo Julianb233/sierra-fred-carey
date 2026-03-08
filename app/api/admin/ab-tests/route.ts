@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { isAdminRequest } from "@/lib/auth/admin";
 import { logger } from "@/lib/logger";
+import { getExperimentFeedbackComparison } from "@/lib/feedback/experiment-metrics";
+import { validatePreRegistration, createPreRegisteredExperiment } from "@/lib/feedback/pre-registration";
+import type { PreRegistration } from "@/lib/feedback/pre-registration";
 
 /**
  * GET /api/admin/ab-tests
@@ -18,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     logger.log("[Admin A/B Tests GET] Fetching all experiments");
 
-    // Get all experiments
+    // Get all experiments (including metadata for pre-registration)
     const experiments = await sql`
       SELECT
         id,
@@ -28,9 +31,11 @@ export async function GET(request: NextRequest) {
         end_date as "endDate",
         is_active as "isActive",
         created_at as "createdAt",
-        created_by as "createdBy"
+        created_by as "createdBy",
+        COALESCE(metadata, '{}') as metadata
       FROM ab_experiments
       ORDER BY created_at DESC
+      LIMIT 50
     `;
 
     // Get variants for each experiment with metrics
@@ -64,9 +69,26 @@ export async function GET(request: NextRequest) {
           errorRate: parseFloat(String(variant.errorRate)) || null,
         }));
 
+        // Get feedback comparison for active experiments
+        let feedbackComparison = null;
+        if (experiment.isActive) {
+          try {
+            feedbackComparison = await getExperimentFeedbackComparison(String(experiment.name));
+          } catch {
+            // Non-critical: feedback metrics are additive
+          }
+        }
+
         return {
           ...experiment,
+          preRegistration: (experiment.metadata as Record<string, unknown>)?.preRegistration ?? null,
           variants: variantsWithMetrics,
+          feedbackComparison: feedbackComparison ? {
+            thumbsSignificant: feedbackComparison.thumbsSignificance?.significant ?? false,
+            sentimentSignificant: feedbackComparison.sentimentSignificance?.significant ?? false,
+            sessionCompletionSignificant: feedbackComparison.sessionCompletionSignificance?.significant ?? false,
+            feedbackWinner: feedbackComparison.feedbackWinner,
+          } : null,
         };
       })
     );
@@ -105,6 +127,49 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    // New pre-registration flow
+    if (body.preRegistration) {
+      const { name, description, variants, preRegistration } = body as {
+        name: string
+        description: string
+        variants: Array<{ variantName: string; promptId?: string; configOverrides?: Record<string, unknown>; trafficPercentage: number }>
+        preRegistration: PreRegistration
+      }
+
+      if (!name) {
+        return NextResponse.json({ success: false, error: "name is required" }, { status: 400 });
+      }
+
+      // Validate pre-registration
+      const validation = validatePreRegistration(preRegistration);
+      if (!validation.valid) {
+        return NextResponse.json({ success: false, errors: validation.errors }, { status: 400 });
+      }
+
+      const userId = request.headers.get("x-user-id") || "admin";
+
+      const experimentId = await createPreRegisteredExperiment({
+        name,
+        description: description || "",
+        variants: variants || [
+          { variantName: "control", trafficPercentage: 50 },
+          { variantName: "treatment", trafficPercentage: 50 },
+        ],
+        preRegistration: {
+          ...preRegistration,
+          registeredAt: new Date().toISOString(),
+          registeredBy: userId,
+        },
+        userId,
+      });
+
+      logger.log(`[Admin A/B Tests POST] Created pre-registered experiment ${experimentId}`);
+
+      return NextResponse.json({ success: true, id: experimentId }, { status: 201 });
+    }
+
+    // Legacy flow (backward compatible)
     const {
       experimentName,
       description = null,
