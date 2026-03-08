@@ -32,6 +32,7 @@ import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
+import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
@@ -794,6 +795,21 @@ async function handlePost(req: NextRequest) {
         }
       })();
 
+      // Phase 79: Fire-and-forget active founder memory extraction
+      ;(async () => {
+        try {
+          const updates = await extractMemoryUpdates(
+            message,
+            result.response.content
+          )
+          if (updates.length > 0) {
+            await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+          }
+        } catch (error) {
+          console.warn('[FRED Chat] Memory extraction failed (non-blocking):', error)
+        }
+      })()
+
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
         enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
@@ -1113,6 +1129,21 @@ async function handlePost(req: NextRequest) {
                 console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
               }
             })();
+
+            // Phase 79: Fire-and-forget active founder memory extraction
+            ;(async () => {
+              try {
+                const updates = await extractMemoryUpdates(
+                  message,
+                  response.content
+                )
+                if (updates.length > 0) {
+                  await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+                }
+              } catch (error) {
+                console.warn('[FRED Chat] Memory extraction failed (non-blocking):', error)
+              }
+            })()
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {

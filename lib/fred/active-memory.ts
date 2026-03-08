@@ -343,17 +343,23 @@ const SEMANTIC_MAP: Partial<
  * Persist extracted memory updates to both the profiles table and semantic
  * memory. Designed to be called fire-and-forget (non-blocking after chat
  * response). Never throws -- logs warnings on failure.
+ *
+ * @param userId - Authenticated user ID
+ * @param updates - Extracted memory updates from conversation
+ * @param hasPersistentMemory - Whether to store semantic facts (Pro+ only).
+ *   Profile column updates always run for ALL tiers.
  */
 export async function persistMemoryUpdates(
   userId: string,
-  updates: MemoryUpdate[]
+  updates: MemoryUpdate[],
+  hasPersistentMemory: boolean = true
 ): Promise<void> {
   if (updates.length === 0) return
 
   try {
     const supabase = createServiceClient()
 
-    // Batch profile column updates
+    // Batch profile column updates -- runs for ALL tiers
     const profileUpdates: Record<string, string> = {}
     for (const update of updates) {
       const column =
@@ -378,24 +384,26 @@ export async function persistMemoryUpdates(
       }
     }
 
-    // Store semantic memory facts
-    const { storeFact } = await import("@/lib/db/fred-memory")
-    for (const update of updates) {
-      const mapping =
-        SEMANTIC_MAP[update.field as CoreMemoryFieldKey]
-      if (mapping) {
-        try {
-          await storeFact(userId, mapping.category, mapping.key, {
-            value: update.value,
-          }, {
-            confidence: update.confidence,
-            source: "conversation",
-          })
-        } catch (factError) {
-          console.warn(
-            `[Active Memory] Failed to store fact ${update.field}:`,
-            factError
-          )
+    // Store semantic memory facts -- only for Pro+ tiers
+    if (hasPersistentMemory) {
+      const { storeFact } = await import("@/lib/db/fred-memory")
+      for (const update of updates) {
+        const mapping =
+          SEMANTIC_MAP[update.field as CoreMemoryFieldKey]
+        if (mapping) {
+          try {
+            await storeFact(userId, mapping.category, mapping.key, {
+              value: update.value,
+            }, {
+              confidence: update.confidence,
+              source: "conversation",
+            })
+          } catch (factError) {
+            console.warn(
+              `[Active Memory] Failed to store fact ${update.field}:`,
+              factError
+            )
+          }
         }
       }
     }
