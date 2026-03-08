@@ -56,7 +56,7 @@ export async function summarizeTranscript(
       model,
       system: "You are a concise summarizer. Summarize the following voice call transcript in 2-3 sentences. Focus on key decisions, advice given, and action items discussed. Be specific about what was discussed.",
       prompt: truncated,
-      maxTokens: 256,
+      maxOutputTokens: 256,
       temperature: 0.3,
     })
 
