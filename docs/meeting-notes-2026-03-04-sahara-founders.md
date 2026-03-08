@@ -140,6 +140,51 @@ The team needs a systematic user testing feedback loop:
 
 ---
 
+## Fred's 7 FRED Brain Enhancements (WhatsApp, March 7, 4:28-4:53 PM)
+
+Fred posted these enhancements to the WhatsApp group and said Alex should "cut and paste" them and "these should be added to the brain":
+
+1. **Founder Wellbeing** — Normalize insecurity/burnout, reduce to controllable actions, offer practical exits, be steady not therapeutic
+2. **Answer Completeness Rule** — Complete answer in one response, no drip-feeding, no "would you like to know..."
+3. **Question Discipline Rule** — Only ask when decision-critical, max 3 questions, no curiosity questions, state assumptions and proceed
+4. **Compression Rule (Fred Voice)** — High signal, clear headers, short paragraphs, bullet points, plain language, no repetition
+5. **Founder Pattern Recognition** — Detect: Idea Without Customer, Tech First, Everyone Is Customer, Distribution Fantasy, Premature Fundraising, Feature Not Business, Consulting Disguised as Startup, Vanity Traction, Overbuilt Product
+6. **Reality Check Trigger** — Detect delusion signals, challenge calmly, translate to testable hypothesis, recommend smallest experiment
+7. **Decision Framework Library** — 10 structured tests: Problem, Customer, Wedge, Distribution, Build vs Validate, Fundraising, Focus, Founder Edge, Timing, Scalability
+8. **Traction Coaching Mode** — 0→10→100 customer stages: founder-led outreach → repeatable acquisition → retention/PMF
+
+---
+
+## ElevenLabs Voice Credentials (WhatsApp, Feb 27-28)
+
+- **Voice name**: "Fred Sahara" (in ElevenLabs account)
+- **Voice ID**: `uxq5gLBpu73uF1Aqzb2t`
+- **API Key**: `sk_debc2a467e21c7458e596a6fb06e83d0db6410b9ca5c9f2e`
+- **Note**: Voice needs re-authentication — Fred should record via https://elevenlabs.io/app/voice-lab?action=edit
+
+---
+
+## Known Issues (WhatsApp)
+
+- **deck.joinsahara.com broken images** — Fred reported Mar 6, "still not working" Mar 7 morning
+- **you.joinsahara.com** — Alex's lite version for interim launch
+- **Voice cuts off** — Fred reported voice cuts after a few words (Feb 28), Alex said Samsung devices are finnicky
+- **Scoring without data** — Fred noticed scoring shows before user has input data (Feb 28)
+
+---
+
+## Team Contact Info (from WhatsApp screenshot, Mar 7)
+
+| Name | Email | Role |
+|------|-------|------|
+| Fred Cary | fred@fredcary.com (760-651-2570) | CEO/Product Owner |
+| Julian Bradley | julianb233@gmail.com | Developer |
+| Alex LaTorre | alex@buildifyhq.com | Developer (joins.com version) |
+| Ira Hayes | ira@marxed.com | AI/Operations |
+| William Hood | williamlhood@gmail.com | Advisor |
+
+---
+
 ## Key Decisions Made
 1. Launch with Alex's version first; Julian's full version follows
 2. NO payment integration until Julian's full version is ready
@@ -148,3 +193,5 @@ The team needs a systematic user testing feedback loop:
 5. "Oases" milestone naming convention (Sahara-themed)
 6. Two-week free trial for event attendees (when ready)
 7. $99/month target price point
+8. Pre-seed/seed focus only — not serving Series A+ yet (Fred, Mar 1)
+9. Fred's 7 brain enhancements must be incorporated into FRED prompts (Fred, Mar 7)

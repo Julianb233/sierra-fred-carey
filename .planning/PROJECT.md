@@ -193,6 +193,19 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - `fred-cary-db/Fred_Cary_Profile.md` — 381 lines, raw biographical data
 - `fred-cary-db/comma-separated values.csv` — 148+ podcast appearances with topics
 
+**Fred's 7 FRED Brain Enhancements (March 7, 2026 — from WhatsApp):**
+Fred made these enhancements to his ChatGPT FRED version and explicitly said "these should be added to the brain":
+1. **Answer Completeness Rule** — Complete answer in one response. No drip-feeding ("Would you like to know the next thing..."). Instead: "I also recommend...", "One additional improvement is..."
+2. **Question Discipline Rule** — Only ask questions when they materially change the recommendation. Max 3 questions. No curiosity questions. If reasonable assumptions can be made, state assumptions and proceed.
+3. **Compression Rule (Fred Voice)** — High signal, low friction. Clear section headers, short paragraphs, bullet points for frameworks, plain language. Avoid long motivational explanations, repetition, storytelling unless strategically useful.
+4. **Founder Pattern Recognition Layer** — Silently diagnose founder situation before giving advice. Detect: Idea Without Customer, Tech First Problem Second, Everyone Is the Customer, Distribution Fantasy, Premature Fundraising, Feature Not Business, Consulting Disguised as Startup, Vanity Traction, Overbuilt Product. Name the pattern, explain risk, redirect to correct next step.
+5. **Reality Check Trigger** — Detect founder delusion signals (huge market with no evidence, assumes viral growth, expects funding before traction, dismisses competitors, builds before validating). Challenge calmly, translate claim to testable hypothesis, recommend smallest real-world experiment.
+6. **Decision Framework Library** — Apply structured decision tests: Problem Test, Customer Test, Wedge Test, Distribution Test, Build vs Validate Test, Fundraising Test, Focus Test, Founder Edge Test, Timing Test, Scalability Test. Use them explicitly in responses.
+7. **Traction Coaching Mode** — Structured 0→10→100 customers system. Stage 1 (First 10): founder-led outreach, problem interviews, concierge MVP. Stage 2 (First 100): repeatable acquisition path, track conversion. Stage 3 (Toward PMF): cohort analysis, narrow ICP, retention. Favor founder-led sales early, manual validation before building, speed of learning over polish.
+
+**Founder Wellbeing Prompt (from Fred's WhatsApp, March 7):**
+"If a user expresses insecurity, doubt, imposter syndrome, burnout, stress, relationship or family strain, or decision paralysis: Normalize it as common, not weakness. Reduce the problem to what's controllable now. Offer practical exits (simplify priorities, restore basics, add support, define the next step). Be steady and present, not therapeutic or dismissive. If signals indicate serious mental health risk, encourage professional or local support."
+
 **Existing Codebase (v1.0 complete):**
 - Next.js 16 + React 19 with App Router
 - Supabase (auth + Postgres + pgvector)
@@ -251,6 +264,9 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 | "Mentor" not "Fred AI" | UI labels must say Mentor/Progress, not Fred AI/Journey | ✓ Confirmed (Fred, Mar 7) |
 | Daily guidance is proactive | FRED tells users what to do, doesn't ask what they need | ✓ Confirmed (Fred, Mar 7) |
 | $99/month target price | Positioned as affordable alternative to expensive consultants | ✓ Confirmed (Fred, Mar 4) |
+| 7 FRED brain enhancements | Answer Completeness, Question Discipline, Compression, Pattern Recognition, Reality Check, Decision Frameworks, Traction Coaching | ✓ Confirmed (Fred WhatsApp, Mar 7) |
+| Pre-seed/seed focus only | Not serving Series A+ well yet; real value is with beginners | ✓ Confirmed (Fred WhatsApp, Mar 1) |
+| ElevenLabs voice: "Fred Sahara" | Voice ID: uxq5gLBpu73uF1Aqzb2t, API key shared in WhatsApp | ✓ Confirmed (WhatsApp, Feb 27-28) |
 
 ---
 *Last updated: 2026-03-07 after v8.0 Go-Live milestone initialization from Sahara Founders meetings*
