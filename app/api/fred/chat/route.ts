@@ -32,8 +32,6 @@ import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
-import { validateStageAccess } from "@/lib/oases/stage-validator";
-import type { OasesStage } from "@/types/oases";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
@@ -506,8 +504,6 @@ async function handlePost(req: NextRequest) {
     // to avoid a duplicate getAllUserFacts DB call in loadMemoryActor
     const founderContext = founderContextResult.context;
     const preloadedFacts = founderContextResult.facts;
-    // Phase 80: Extract Oases stage from founder context for stage-gate validation
-    const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
 
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
@@ -661,18 +657,8 @@ async function handlePost(req: NextRequest) {
     const pageContextBlock = pageContext ? buildPageContextBlock(pageContext) : "";
 
     // Assemble full system prompt context
-    // Phase 80: Stage-gate pre-validation
-    // Check if the user's message targets a later stage topic.
-    // If so, prepend a redirect hint to the fullContext so FRED prioritizes the redirect.
-    const stageValidation = validateStageAccess(message, currentOasesStage)
-    let stageRedirectBlock = ""
-    if (!stageValidation.allowed && stageValidation.redirectMessage) {
-      stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)\n\nThe founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.\n\n**Your response MUST redirect them.** Use this language (adapt naturally to context):\n"${stageValidation.redirectMessage}"\n\n${stageValidation.currentStageGuidance ? `Then guide them toward: ${stageValidation.currentStageGuidance}` : ""}\n\nDo NOT answer their original question about ${stageValidation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
-    }
-
-    // Order: stageRedirect (highest priority) + founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
+    // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
     let fullContext = [
-      stageRedirectBlock,
       founderContext,
       stepGuidanceBlock,
       rlStatusBlock,
@@ -690,12 +676,11 @@ async function handlePost(req: NextRequest) {
     const contextTokens = estimateTokens(fullContext);
     if (contextTokens > 100_000) {
       // Truncation priority (keep most important first):
-      // 0. stageRedirectBlock, 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
+      // 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
       // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
       // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
       // Drop least critical blocks first (reverse priority)
       const blocksInPriority = [
-        { name: "stageRedirectBlock", value: stageRedirectBlock },
         { name: "founderContext", value: founderContext },
         { name: "frameworkBlock", value: frameworkBlock },
         { name: "stepGuidanceBlock", value: stepGuidanceBlock },
@@ -1135,38 +1120,21 @@ async function handlePost(req: NextRequest) {
                   sentiment_confidence: sentiment.confidence,
                   user_tier: tierName as 'free' | 'pro' | 'studio',
                   weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
-            // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
-            if (shouldPersistMemory) {
-              ;(async () => {
-                try {
-                  const updates = await extractMemoryUpdates(
-                    message,
-                    response.content
-                  )
-                  if (updates.length > 0) {
-                    await persistMemoryUpdates(userId, updates, hasPersistentMemory)
-                    console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
-                  }
-                } catch (error) {
-                  console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
-                }
-              })()
-            }
+                  consent_given: true,
+                  expires_at: null,
+                  metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+                });
+                await aggregateSessionSentiment(effectiveSessionId, userId);
+              } catch (err) {
+                console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+              }
+            })();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            // Phase 79: Fire-and-forget active founder memory extraction
+            ;(async () => {
+              try {
+                const updates = await extractMemoryUpdates(
+                  message,
                   response.content
                 )
                 if (updates.length > 0) {
