@@ -5,20 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v7.0 Feedback Loop — Phase 73 complete, Phase 74 next
+**Current focus:** v8.0 Go-Live: Guided Venture Journey — Preparing for Palo Alto launch to 200 founders
 
 ## Current Position
 
-Phase: 73 of 76 (Admin Dashboard & Sentiment)
-Plan: 04 of 4 complete
-Status: Complete
-Last activity: 2026-03-06 — Phase 73 all 4 plans verified and summarized
+Phase: Not started (run /gsd:create-roadmap)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-07 — Milestone v8.0 started from Sahara Founders meeting notes (March 4 & 7)
 
-Progress: [########################______] 80% (8/12 v6.0 phases) + v7.0 phases 71-73 complete
+Progress: v7.0 phases 71-73 complete, v7.0 phases 74-76 deferred for go-live priority
 
-### Carried from v6.0:
-- Phase 66 Plan 04 (Mux admin routes): blocked pending Mux credentials
-- Phase 70 (Boardy API): blocked pending partnership and API credentials
+### Carried:
+- v7.0 Phases 74-76 (Feedback Intelligence): deferred — go-live takes priority
+- v6.0 Phase 66 Plan 04 (Mux admin routes): blocked pending Mux credentials
+- v6.0 Phase 70 (Boardy API): blocked pending partnership and API credentials
 
 ## Performance Metrics
 
