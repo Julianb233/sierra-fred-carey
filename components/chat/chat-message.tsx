@@ -235,8 +235,8 @@ export function ChatMessage({
             <TtsButton text={message.content} />
           )}
 
-          {/* Thumbs feedback -- assistant messages only, after streaming completes, not on greeting */}
-          {!isUser && !message.isStreaming && message.id !== "greeting" && (
+          {/* Thumbs feedback -- assistant messages only, after streaming completes, not on greeting or error fallbacks */}
+          {!isUser && !message.isStreaming && message.id !== "greeting" && !isErrorFallback(message.content) && (
             <ThumbsWidget
               messageId={message.id}
               messageCount={messageCount ?? 0}
@@ -250,6 +250,17 @@ export function ChatMessage({
       </div>
     </motion.div>
   );
+}
+
+/** Detect error/fallback responses that shouldn't receive feedback thumbs */
+function isErrorFallback(content: string): boolean {
+  const errorPatterns = [
+    "I'm having trouble processing",
+    "Request timed out",
+    "could not be processed",
+    "Please try again",
+  ]
+  return errorPatterns.some((p) => content.includes(p))
 }
 
 function formatTimestamp(date: Date): string {
