@@ -156,7 +156,8 @@
       "phase": 85,
       "plan": "01",
       "type": "build",
-      "status": "pending",
+      "status": "claimed",
+      "claimedBy": "worker-1",
       "deps": [
         "80-02-b"
       ],
