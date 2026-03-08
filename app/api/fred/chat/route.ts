@@ -708,7 +708,7 @@ async function handlePost(req: NextRequest) {
     // Phase 80: Stage-gate pre-validation
     const stageValidation = validateStageAccess(message, currentOasesStage)
     let stageRedirectBlock = ""
-    if (\!stageValidation.allowed && stageValidation.redirectMessage) {
+    if (!stageValidation.allowed && stageValidation.redirectMessage) {
       stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)
 
 The founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.
