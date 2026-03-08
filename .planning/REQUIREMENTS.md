@@ -60,18 +60,18 @@
 
 ### FRED Self-Improvement / RLHF-Lite (5)
 
-- [ ] **REQ-R1:** Feedback-weighted few-shot examples — thumbs-up responses become positive examples; thumbs-down become "avoid this" negative examples in prompt library
-- [ ] **REQ-R2:** Category-driven prompt patches — when pattern detection identifies recurring complaint, generate supplemental prompt instructions for that coaching topic
-- [ ] **REQ-R3:** Prompt version control — store versions in extended `ab_experiments` schema; each patch creates new version; full traceability to source feedback
-- [ ] **REQ-R4:** Human-in-the-loop gate — prompt patches proposed in admin dashboard; admin reviews, approves, and triggers A/B test; no auto-deployment ever
-- [ ] **REQ-R5:** Feedback loop closure validation — after deploying a prompt patch, track whether thumbs-up ratio improves for that topic over 2-week window
+- [x] **REQ-R1:** Feedback-weighted few-shot examples — thumbs-up responses become positive examples; thumbs-down become "avoid this" negative examples in prompt library
+- [x] **REQ-R2:** Category-driven prompt patches — when pattern detection identifies recurring complaint, generate supplemental prompt instructions for that coaching topic
+- [x] **REQ-R3:** Prompt version control — store versions in extended `ab_experiments` schema; each patch creates new version; full traceability to source feedback
+- [x] **REQ-R4:** Human-in-the-loop gate — prompt patches proposed in admin dashboard; admin reviews, approves, and triggers A/B test; no auto-deployment ever
+- [x] **REQ-R5:** Feedback loop closure validation — after deploying a prompt patch, track whether thumbs-up ratio improves for that topic over 2-week window
 
-### Close-the-Loop (4) -- DEFERRED to late v7.0 or v7.1
+### Close-the-Loop (4)
 
-- [ ] **REQ-L1:** Track which feedback signals contributed to which prompt patches or bug fixes
-- [ ] **REQ-L2:** Monthly digest notification — "Here's what we improved based on your feedback" via email (Resend)
-- [ ] **REQ-L3:** Staleness cutoff — only notify about improvements from last 30 days; severity threshold (skip trivial fixes)
-- [ ] **REQ-L4:** Opt-in notifications — respect existing notification preferences; never spam
+- [x] **REQ-L1:** Track which feedback signals contributed to which prompt patches or bug fixes
+- [x] **REQ-L2:** Monthly digest notification — "Here's what we improved based on your feedback" via email (Resend)
+- [x] **REQ-L3:** Staleness cutoff — only notify about improvements from last 30 days; severity threshold (skip trivial fixes)
+- [x] **REQ-L4:** Opt-in notifications — respect existing notification preferences; never spam
 
 ---
 

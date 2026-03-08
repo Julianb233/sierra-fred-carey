@@ -26,7 +26,7 @@ Progress: [##############] 14/14 phases COMPLETE
 ### Carried:
 - v7.0 Phase 74 (Intelligence & Pattern Detection): COMPLETE
 - v7.0 Phase 75 (A/B Testing + Feedback Metrics): COMPLETE
-- v7.0 Phase 76 (RLHF-Lite): deferred
+- v7.0 Phase 76 (RLHF-Lite + Close-the-Loop): COMPLETE
 - v6.0 Phase 66 Plan 04 (Mux admin routes): blocked pending Mux credentials
 - v6.0 Phase 70 (Boardy API): blocked pending partnership and API credentials
 
@@ -35,7 +35,7 @@ Progress: [##############] 14/14 phases COMPLETE
 **Velocity:**
 - v1.0-v5.0: 58 phases shipped across 5 milestones
 - v6.0: 10 phases complete (59-69), 2 blocked (Mux credentials, Boardy API)
-- v7.0: 5 phases complete (71-75), 1 deferred (76)
+- v7.0: 6 phases complete (71-76), 0 deferred
 - Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
 - Build: 221 pages compiling
 
