@@ -1,6 +1,6 @@
 {
-  "v": 11,
-  "batch": "auto-v11-20260308",
+  "v": 14,
+  "batch": "auto-v12-20260308",
   "tasks": [
     {
       "id": "72-01-b",
@@ -21,7 +21,9 @@
       "type": "build",
       "status": "done",
       "worker": "worker-auto-v7-1",
-      "deps": ["72-01-b"],
+      "deps": [
+        "72-01-b"
+      ],
       "complexity": 5,
       "complexityLevel": "moderate",
       "wave": 2
@@ -43,12 +45,14 @@
       "phase": 74,
       "plan": "all",
       "type": "build",
-      "status": "claimed",
-      "deps": ["74-p"],
+      "status": "done",
+      "worker": "worker-auto-v12-1",
+      "deps": [
+        "74-p"
+      ],
       "complexity": 6,
       "complexityLevel": "moderate",
-      "wave": 2,
-      "worker": "worker-auto-v7-2"
+      "wave": 2
     },
     {
       "id": "75-p",
@@ -56,7 +60,10 @@
       "plan": "all",
       "type": "plan",
       "status": "done",
-      "deps": ["72-02-b", "74-b"],
+      "deps": [
+        "72-02-b",
+        "74-b"
+      ],
       "complexity": 4,
       "complexityLevel": "simple",
       "wave": 3,
@@ -67,8 +74,11 @@
       "phase": 75,
       "plan": "all",
       "type": "build",
-      "status": "pending",
-      "deps": ["75-p"],
+      "status": "claimed",
+      "worker": "worker-auto-v7-1",
+      "deps": [
+        "75-p"
+      ],
       "complexity": 7,
       "complexityLevel": "complex",
       "wave": 4
@@ -79,7 +89,10 @@
       "plan": "all",
       "type": "plan",
       "status": "pending",
-      "deps": ["74-b", "75-b"],
+      "deps": [
+        "74-b",
+        "75-b"
+      ],
       "complexity": 5,
       "complexityLevel": "moderate",
       "wave": 5
@@ -90,7 +103,9 @@
       "plan": "all",
       "type": "build",
       "status": "pending",
-      "deps": ["76-p"],
+      "deps": [
+        "76-p"
+      ],
       "complexity": 8,
       "complexityLevel": "complex",
       "wave": 6
