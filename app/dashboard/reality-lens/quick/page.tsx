@@ -1,38 +1,43 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+} from "@/components/ui/select"
+import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
+import {
+  RocketIcon,
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+} from "@radix-ui/react-icons"
 import {
   QUICK_QUESTIONS,
   type QuickAnswers,
   type QuickQuestion,
-} from "@/lib/fred/reality-lens-quick";
+} from "@/lib/fred/reality-lens-quick"
 
 // ============================================================================
-// Types
+// Types & Constants
 // ============================================================================
 
 interface QuickAssessmentResult {
-  overallScore: number;
-  stage: string;
-  gaps: string[];
-  strengths: string[];
-  nextAction: string;
-  verdictLabel: string;
+  overallScore: number
+  stage: string
+  gaps: string[]
+  strengths: string[]
+  nextAction: string
+  verdictLabel: string
 }
 
 const STAGE_LABELS: Record<string, string> = {
@@ -41,7 +46,7 @@ const STAGE_LABELS: Record<string, string> = {
   build: "Build",
   launch: "Launch",
   grow: "Grow",
-};
+}
 
 const STAGE_DESCRIPTIONS: Record<string, string> = {
   clarity:
@@ -53,153 +58,166 @@ const STAGE_DESCRIPTIONS: Record<string, string> = {
   launch:
     "Go to market, acquire your first customers, and start generating revenue.",
   grow: "Scale your operations, optimize unit economics, and raise funding.",
-};
+}
+
+/** Stage badge colors matching stage-config.ts color assignments */
+const STAGE_BADGE_COLORS: Record<string, string> = {
+  clarity:
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  validation:
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  build:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  launch:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  grow: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+}
 
 const LOADING_MESSAGES = [
   "Evaluating your idea...",
   "Analyzing market fit...",
-  "Assessing readiness...",
-  "Mapping your journey stage...",
-  "Generating insights...",
-];
+  "Checking readiness...",
+  "Identifying gaps...",
+]
 
 // ============================================================================
-// Component
+// Inner Component (uses useSearchParams -- requires Suspense boundary)
 // ============================================================================
 
-export default function QuickRealityLensPage() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
-  const [result, setResult] = useState<QuickAssessmentResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
-  const [checkingStatus, setCheckingStatus] = useState(true);
+function QuickRealityLensInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const isFirstTime = searchParams.get("first") === "true"
+
+  // step: -1 = intro (first-time only), 0-5 = questions
+  const [currentStep, setCurrentStep] = useState(isFirstTime ? -1 : 0)
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
+  const [result, setResult] = useState<QuickAssessmentResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [direction, setDirection] = useState(1) // 1 = forward, -1 = back
+  const [checkingStatus, setCheckingStatus] = useState(true)
 
   // Check if user already completed reality lens
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
-        const res = await fetch("/api/fred/reality-lens/quick");
-        const data = await res.json();
+        const res = await fetch("/api/fred/reality-lens/quick")
+        const data = await res.json()
         if (data.success && data.data?.complete) {
-          toast.info("You've already completed your reality check.");
-          router.push("/dashboard");
-          return;
+          toast.info("You've already completed your reality check.")
+          router.replace("/dashboard")
+          return
         }
       } catch {
         // Non-blocking -- continue with assessment
       }
-      setCheckingStatus(false);
-    })();
-  }, [router]);
+      setCheckingStatus(false)
+    })()
+  }, [router])
 
   // Cycle loading messages
   useEffect(() => {
-    if (!submitting) return;
+    if (!submitting) return
     const interval = setInterval(() => {
-      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [submitting]);
+      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [submitting])
 
-  const totalQuestions = QUICK_QUESTIONS.length;
+  const totalQuestions = QUICK_QUESTIONS.length
   const currentQuestion: QuickQuestion | undefined =
-    QUICK_QUESTIONS[currentStep];
-  const isLastQuestion = currentStep === totalQuestions - 1;
-  const showResults = result !== null;
+    currentStep >= 0 ? QUICK_QUESTIONS[currentStep] : undefined
+  const isLastQuestion = currentStep === totalQuestions - 1
+  const showResults = result !== null
 
   const currentAnswer = currentQuestion
     ? answers[currentQuestion.id] || ""
-    : "";
+    : ""
 
-  const canProceed = currentAnswer.trim().length > 0;
+  // For text questions, require min 10 chars; for select, just non-empty
+  const canProceed =
+    currentQuestion?.type === "text"
+      ? currentAnswer.trim().length >= 10
+      : currentAnswer.trim().length > 0
 
   const handleNext = useCallback(() => {
-    if (!canProceed) return;
-    if (isLastQuestion) return;
-    setDirection(1);
-    setCurrentStep((prev) => prev + 1);
-  }, [canProceed, isLastQuestion]);
+    if (currentStep === -1) {
+      // Advance from intro to first question
+      setDirection(1)
+      setCurrentStep(0)
+      return
+    }
+    if (!canProceed || isLastQuestion) return
+    setDirection(1)
+    setCurrentStep((prev) => prev + 1)
+  }, [canProceed, isLastQuestion, currentStep])
 
   const handleBack = useCallback(() => {
-    if (currentStep === 0) return;
-    setDirection(-1);
-    setCurrentStep((prev) => prev - 1);
-  }, [currentStep]);
+    if (currentStep <= 0) return
+    setDirection(-1)
+    setCurrentStep((prev) => prev - 1)
+  }, [currentStep])
 
   const handleSubmit = async () => {
-    if (!canProceed) return;
-    setSubmitting(true);
-    setError(null);
-    setLoadingMessageIndex(0);
+    if (!canProceed) return
+    setSubmitting(true)
+    setError(null)
+    setLoadingMessageIndex(0)
 
     const payload: QuickAnswers = {
       idea: answers.idea || "",
       targetCustomer: answers.targetCustomer || "",
-      revenueModel: (answers.revenueModel as QuickAnswers["revenueModel"]) || "other",
+      revenueModel:
+        (answers.revenueModel as QuickAnswers["revenueModel"]) || "other",
       customerValidation:
-        (answers.customerValidation as QuickAnswers["customerValidation"]) || "none",
+        (answers.customerValidation as QuickAnswers["customerValidation"]) ||
+        "none",
       prototypeStage:
-        (answers.prototypeStage as QuickAnswers["prototypeStage"]) || "idea-only",
+        (answers.prototypeStage as QuickAnswers["prototypeStage"]) ||
+        "idea-only",
       biggestChallenge: answers.biggestChallenge || "",
-    };
+    }
 
     try {
       const res = await fetch("/api/fred/reality-lens/quick", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: payload }),
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (!res.ok || !data.success) {
         const msg =
           typeof data.error === "object"
             ? data.error.message
-            : data.error || "Assessment failed";
-        throw new Error(msg);
+            : data.error || "Assessment failed"
+        throw new Error(msg)
       }
 
-      setResult(data.data);
+      setResult(data.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Assessment failed");
+      setError(err instanceof Error ? err.message : "Assessment failed")
+      // Go back to last question so user can retry
+      setSubmitting(false)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const getScoreColor = (score: number) => {
-    if (score >= 75) return "text-green-500";
-    if (score >= 50) return "text-amber-500";
-    return "text-red-500";
-  };
+    if (score >= 75) return "text-green-500"
+    if (score >= 50) return "text-amber-500"
+    return "text-red-500"
+  }
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 75) return "bg-green-500/10 border-green-500/30";
-    if (score >= 50) return "bg-amber-500/10 border-amber-500/30";
-    return "bg-red-500/10 border-red-500/30";
-  };
-
-  const getStageBadgeColor = (stage: string) => {
-    switch (stage) {
-      case "clarity":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "validation":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
-      case "build":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
-      case "launch":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case "grow":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    }
-  };
+    if (score >= 75) return "bg-green-500/10 border-green-500/30"
+    if (score >= 50) return "bg-amber-500/10 border-amber-500/30"
+    return "bg-red-500/10 border-red-500/30"
+  }
 
   // Show nothing while checking status
   if (checkingStatus) {
@@ -210,7 +228,7 @@ export default function QuickRealityLensPage() {
           <p className="text-sm text-gray-500">Loading...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // -----------------------------------------------------------------------
@@ -218,7 +236,7 @@ export default function QuickRealityLensPage() {
   // -----------------------------------------------------------------------
   if (showResults && result) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6 py-8">
+      <div className="max-w-2xl mx-auto space-y-6 py-8 px-4">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -241,20 +259,26 @@ export default function QuickRealityLensPage() {
           >
             {result.overallScore}
           </p>
-          <Badge className={`text-base px-4 py-1 ${getStageBadgeColor(result.stage)}`}>
-            You&apos;re starting at: {STAGE_LABELS[result.stage] || result.stage}
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">
+            {result.verdictLabel}
+          </p>
+          <Badge
+            className={`text-base px-4 py-1 ${STAGE_BADGE_COLORS[result.stage] || "bg-gray-100 text-gray-800"}`}
+          >
+            Your starting point:{" "}
+            {STAGE_LABELS[result.stage] || result.stage}
           </Badge>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
             {STAGE_DESCRIPTIONS[result.stage] || ""}
           </p>
         </Card>
 
-        {/* Gaps */}
+        {/* Gaps -- orange-tinted "spook them" card */}
         {result.gaps.length > 0 && (
-          <Card className="p-6">
+          <Card className="p-6 bg-gradient-to-br from-orange-50 to-red-50/50 dark:from-orange-950/20 dark:to-red-950/10 border-orange-200/50 dark:border-orange-800/30">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              Here&apos;s what you need to figure out
+              <ExclamationTriangleIcon className="h-5 w-5 text-orange-500" />
+              What you need to figure out before investors will listen
             </h3>
             <ul className="space-y-2">
               {result.gaps.map((gap, i) => (
@@ -262,7 +286,7 @@ export default function QuickRealityLensPage() {
                   key={i}
                   className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">
+                  <span className="text-orange-500 mt-0.5 flex-shrink-0">
                     &#x2022;
                   </span>
                   <span>{gap}</span>
@@ -272,11 +296,11 @@ export default function QuickRealityLensPage() {
           </Card>
         )}
 
-        {/* Strengths */}
+        {/* Strengths -- green-tinted card */}
         {result.strengths.length > 0 && (
-          <Card className="p-6">
+          <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/10 border-green-200/50 dark:border-green-800/30">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <CheckCircledIcon className="h-5 w-5 text-green-500" />
               What&apos;s working for you
             </h3>
             <ul className="space-y-2">
@@ -312,11 +336,11 @@ export default function QuickRealityLensPage() {
             onClick={() => router.push("/dashboard")}
             className="flex-1 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
           >
-            Continue to Dashboard
+            Continue to Your Journey
           </Button>
           <Button
             size="lg"
-            variant="outline"
+            variant="ghost"
             onClick={() => router.push("/dashboard/reality-lens")}
             className="flex-1"
           >
@@ -324,7 +348,7 @@ export default function QuickRealityLensPage() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   // -----------------------------------------------------------------------
@@ -350,17 +374,55 @@ export default function QuickRealityLensPage() {
               {LOADING_MESSAGES[loadingMessageIndex]}
             </motion.p>
           </AnimatePresence>
-          <p className="text-sm text-gray-500">This usually takes 10-15 seconds</p>
+          <p className="text-sm text-gray-500">
+            This usually takes 10-15 seconds
+          </p>
         </div>
       </div>
-    );
+    )
   }
 
   // -----------------------------------------------------------------------
-  // Question Flow
+  // Intro Screen (first-time users only, step === -1)
+  // -----------------------------------------------------------------------
+  if (currentStep === -1) {
+    return (
+      <div className="max-w-2xl mx-auto flex items-center justify-center min-h-[60vh] px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center space-y-6"
+        >
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#ff6a1a] to-orange-400 flex items-center justify-center mx-auto shadow-lg shadow-[#ff6a1a]/25">
+            <RocketIcon className="h-10 w-10 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+              Quick Reality Check
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+              Before we start your journey, let&apos;s understand where you are.
+              This takes about 2 minutes.
+            </p>
+          </div>
+          <Button
+            size="lg"
+            onClick={handleNext}
+            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 px-8"
+          >
+            Let&apos;s Go
+          </Button>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // -----------------------------------------------------------------------
+  // Question Flow (steps 0-5)
   // -----------------------------------------------------------------------
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-8">
+    <div className="max-w-2xl mx-auto space-y-6 py-8 px-4">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -404,19 +466,28 @@ export default function QuickRealityLensPage() {
               </label>
 
               {currentQuestion.type === "text" ? (
-                <Textarea
-                  value={currentAnswer}
-                  onChange={(e) =>
-                    setAnswers((prev) => ({
-                      ...prev,
-                      [currentQuestion.id]: e.target.value,
-                    }))
-                  }
-                  placeholder={currentQuestion.placeholder}
-                  rows={4}
-                  className="resize-none"
-                  autoFocus
-                />
+                <div className="space-y-2">
+                  <Textarea
+                    value={currentAnswer}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: e.target.value,
+                      }))
+                    }
+                    placeholder={currentQuestion.placeholder}
+                    rows={4}
+                    className="resize-none"
+                    autoFocus
+                  />
+                  {currentAnswer.length > 0 &&
+                    currentAnswer.trim().length < 10 && (
+                      <p className="text-xs text-gray-500">
+                        Please write at least 10 characters (
+                        {currentAnswer.trim().length}/10)
+                      </p>
+                    )}
+                </div>
               ) : (
                 <Select
                   value={currentAnswer}
@@ -469,6 +540,7 @@ export default function QuickRealityLensPage() {
             disabled={!canProceed}
             className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
           >
+            <RocketIcon className="mr-2 h-4 w-4" />
             Analyze My Idea
           </Button>
         ) : (
@@ -483,5 +555,26 @@ export default function QuickRealityLensPage() {
         )}
       </div>
     </div>
-  );
+  )
+}
+
+// ============================================================================
+// Page Component (wraps inner with Suspense for useSearchParams)
+// ============================================================================
+
+export default function QuickRealityLensPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="h-8 w-8 border-2 border-[#ff6a1a] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-gray-500">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <QuickRealityLensInner />
+    </Suspense>
+  )
 }
