@@ -124,19 +124,14 @@ export default function PricingPage() {
 
       {/* Hero */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-24 md:px-8">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
+        <div
           className="text-center max-w-3xl mx-auto"
         >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <span
             className="inline-block text-sm font-semibold tracking-wider text-[#ff6a1a] bg-[#ff6a1a]/10 px-4 py-2 rounded-full border border-[#ff6a1a]/20 mb-6"
           >
             PRICING
-          </motion.span>
+          </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900 dark:text-white">
             Simple, <span className="text-[#ff6a1a]">Transparent</span> Pricing
           </h1>
@@ -147,7 +142,7 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500 dark:text-gray-500 italic">
             Pricing is about access to judgment, leverage, and continuity.
           </p>
-        </motion.div>
+        </div>
       </section>
 
       {/* Pricing Cards */}
@@ -156,9 +151,9 @@ export default function PricingPage() {
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
               className={`relative ${plan.popular ? "md:-mt-8 md:mb-8" : ""}`}
             >
               <motion.div
@@ -180,15 +175,13 @@ export default function PricingPage() {
                   )}
 
                   {plan.popular && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                    <div
                       className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20"
                     >
                       <span className="bg-[#ff6a1a] text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg shadow-[#ff6a1a]/25">
                         Most Popular
                       </span>
-                    </motion.div>
+                    </div>
                   )}
 
                   {/* Animated border gradient for popular */}
