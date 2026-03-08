@@ -249,6 +249,71 @@ export interface ClusteringResult {
  * 5. If new: insert as feedback_insight with computed severity
  * 6. Return summary counts
  */
+/**
+ * Compute severity from tier-weighted impact (Phase 74-01 plan spec).
+ * Uses TIER_WEIGHTS: free=1, pro=3, studio=5.
+ */
+export function computeClusterSeverity(
+  signals: FeedbackSignal[]
+): "low" | "medium" | "high" | "critical" {
+  const weightedImpact = signals.reduce(
+    (sum, s) => sum + (TIER_WEIGHTS[s.user_tier as keyof typeof TIER_WEIGHTS] ?? 1),
+    0
+  )
+  const count = signals.length
+  if (weightedImpact >= 15 || count >= 10) return "critical"
+  if (weightedImpact >= 8 || count >= 5) return "high"
+  if (weightedImpact >= 3 || count >= 3) return "medium"
+  return "low"
+}
+
+/**
+ * Find a duplicate open insight via two-pass dedup:
+ * 1. Category + 4-hour time window
+ * 2. Title word-overlap (Jaccard > 0.5) within 24 hours
+ */
+export function findDuplicateInsight(
+  clusterTheme: string,
+  clusterCategory: string | null,
+  openInsights: Array<{ title: string; category: string | null; created_at: string }>
+): (typeof openInsights)[number] | null {
+  const now = Date.now()
+  const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
+
+  // Pass 1: Category + 4-hour time window
+  if (clusterCategory) {
+    for (const insight of openInsights) {
+      if (
+        insight.category === clusterCategory &&
+        now - new Date(insight.created_at).getTime() < FOUR_HOURS_MS
+      ) {
+        return insight
+      }
+    }
+  }
+
+  // Pass 2: Title word-overlap (Jaccard > 0.5) within 24 hours
+  for (const insight of openInsights) {
+    if (now - new Date(insight.created_at).getTime() < TWENTY_FOUR_HOURS_MS) {
+      const similarity = jaccardSimilarity(clusterTheme, insight.title)
+      if (similarity > 0.5) {
+        return insight
+      }
+    }
+  }
+
+  return null
+}
+
+function jaccardSimilarity(a: string, b: string): number {
+  const setA = new Set(a.toLowerCase().split(/\W+/).filter(Boolean))
+  const setB = new Set(b.toLowerCase().split(/\W+/).filter(Boolean))
+  const intersection = new Set([...setA].filter((x) => setB.has(x)))
+  const union = new Set([...setA, ...setB])
+  return union.size > 0 ? intersection.size / union.size : 0
+}
+
 export async function runClusteringPipeline(
   since: string
 ): Promise<ClusteringResult> {
@@ -294,10 +359,6 @@ export async function runClusteringPipeline(
         const mergedIds = [
           ...new Set([...existing.signal_ids, ...cluster.signalIds]),
         ]
-        const { upsertInsightWithSignals: upsert } = await import(
-          "@/lib/db/feedback"
-        )
-        // Use updateInsightSignals for merge
         const { updateInsightSignals } = await import("@/lib/db/feedback")
         await updateInsightSignals(existing.id, mergedIds, mergedIds.length)
         result.clustersDeduped++

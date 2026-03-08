@@ -398,3 +398,28 @@ export async function getSessionsWithFeedback(
     signal_count: countMap[session.id] || 0,
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Query: Top insights this week (Phase 74-01)
+// ---------------------------------------------------------------------------
+
+export async function getTopInsightsThisWeek(limit = 10) {
+  const supabase = createServiceClient();
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("id, title, description, category, severity, signal_count, status, linear_issue_id, created_at")
+    .gte("created_at", weekAgo.toISOString())
+    .in("status", ["new", "reviewed", "actioned"])
+    .order("signal_count", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[feedback-admin] Top insights query failed:", error.message);
+    return [];
+  }
+
+  return data ?? [];
+}

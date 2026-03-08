@@ -59,6 +59,18 @@ interface SessionListItem {
   signal_count: number;
 }
 
+interface TopInsight {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  severity: string;
+  signal_count: number;
+  status: string;
+  linear_issue_id: string | null;
+  created_at: string;
+}
+
 type ActiveTab = "signals" | "sessions";
 
 const DEFAULT_FILTERS: Filters = {
@@ -88,6 +100,9 @@ export default function AdminFeedbackPage() {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("signals");
   const [error, setError] = useState<string | null>(null);
+  const [insights, setInsights] = useState<TopInsight[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [creatingLinear, setCreatingLinear] = useState<string | null>(null);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
@@ -137,6 +152,47 @@ export default function AdminFeedbackPage() {
     }
   }, [filters, page, limit]);
 
+  // Fetch insights (Top Issues This Week)
+  const fetchInsights = useCallback(async () => {
+    setLoadingInsights(true);
+    try {
+      const res = await fetch("/api/admin/feedback/insights?limit=10");
+      if (!res.ok) throw new Error(`Insights fetch failed: ${res.status}`);
+      const data = await res.json();
+      setInsights(data.insights ?? []);
+    } catch (err) {
+      console.error("[feedback] Insights error:", err);
+    } finally {
+      setLoadingInsights(false);
+    }
+  }, []);
+
+  // Create Linear issue from insight
+  const handleCreateLinear = async (insightId: string) => {
+    setCreatingLinear(insightId);
+    try {
+      const res = await fetch(`/api/admin/feedback/insights/${insightId}/linear`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInsights((prev) =>
+          prev.map((i) =>
+            i.id === insightId
+              ? { ...i, linear_issue_id: data.identifier, status: "actioned" }
+              : i
+          )
+        );
+      } else {
+        console.error("Linear creation failed:", data.error);
+      }
+    } catch (err) {
+      console.error("[feedback] Linear creation error:", err);
+    } finally {
+      setCreatingLinear(null);
+    }
+  };
+
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
     setLoadingSessions(true);
@@ -159,6 +215,10 @@ export default function AdminFeedbackPage() {
   useEffect(() => {
     fetchSignals();
   }, [fetchSignals]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
 
   useEffect(() => {
     if (activeTab === "sessions" && sessions.length === 0) {
@@ -298,6 +358,109 @@ export default function AdminFeedbackPage() {
           </Card>
         </div>
       ) : null}
+
+      {/* Top Issues This Week */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Issues This Week</CardTitle>
+          <CardDescription>
+            AI-detected feedback patterns ranked by frequency
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingInsights ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : insights.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+              No feedback patterns detected this week.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Issue</TableHead>
+                    <TableHead>Severity</TableHead>
+                    <TableHead>Signals</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Linear</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {insights.map((insight) => (
+                    <TableRow key={insight.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium text-sm text-gray-900 dark:text-white">
+                            {insight.title}
+                          </div>
+                          {insight.description && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-[300px] truncate">
+                              {insight.description}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <SeverityBadge severity={insight.severity} />
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-semibold text-[#ff6a1a]">
+                          {insight.signal_count}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <CategoryCell category={insight.category} />
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {insight.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {insight.linear_issue_id ? (
+                          <a
+                            href={`https://linear.app/ai-acrobatics/issue/${insight.linear_issue_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#ff6a1a] hover:underline font-mono"
+                          >
+                            {insight.linear_issue_id}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-gray-400">--</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {!insight.linear_issue_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            disabled={creatingLinear === insight.id}
+                            onClick={() => handleCreateLinear(insight.id)}
+                          >
+                            {creatingLinear === insight.id ? "Creating..." : "Create Linear Issue"}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters Bar */}
       <Card>
@@ -802,6 +965,22 @@ function TrendBadge({ trend }: { trend: string | null }) {
     >
       {trend.replace(/_/g, " ")}
     </Badge>
+  );
+}
+
+function SeverityBadge({ severity }: { severity: string }) {
+  const colors: Record<string, string> = {
+    critical: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    high: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+    medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+    low: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  };
+  return (
+    <span
+      className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${colors[severity] || colors.low}`}
+    >
+      {severity}
+    </span>
   );
 }
 
