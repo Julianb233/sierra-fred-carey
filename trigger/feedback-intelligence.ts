@@ -138,7 +138,7 @@ export const feedbackIntelligenceJob = schedules.task({
       await markSignalsProcessed(allIds);
       result.signalsProcessed = allIds.length;
 
-      logger.log("Feedback intelligence job complete", result);
+      logger.log("Feedback intelligence job complete", result as unknown as Record<string, unknown>);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logger.error(`Feedback intelligence job failed: ${msg}`);
