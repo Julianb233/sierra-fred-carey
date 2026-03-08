@@ -24,6 +24,7 @@ import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { withLogging } from "@/lib/api/with-logging";
+import { getChatContextForVoice } from "@/lib/fred/chat-voice-bridge";
 
 /** Agent name must match the agentName in workers/voice-agent/index.ts */
 const FRED_AGENT_NAME = "fred-cary-voice";

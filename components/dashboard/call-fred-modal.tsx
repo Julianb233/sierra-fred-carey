@@ -28,6 +28,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LastDiscussed } from "@/components/voice/last-discussed";
 
 // ============================================================================
 // Samsung / Android WebRTC Compatibility
@@ -640,6 +641,7 @@ export function CallFredModal({
           {/* Idle State */}
           {callState === "idle" && (
             <div className="space-y-4">
+              <LastDiscussed className="mb-1" />
               <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                 Talk through your biggest decision with Fred. After the call,
                 you will get a transcript, summary, and your Next 3 Actions.

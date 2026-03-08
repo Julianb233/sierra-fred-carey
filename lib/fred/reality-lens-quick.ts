@@ -179,27 +179,22 @@ export function mapScoreToStage(
     return "launch";
   }
 
-  // Good score + prototype -> build
-  if (score >= 60 && score < 80 && hasPrototype) {
+  // Good score + prototype -> build (includes score >= 80 without paying customers)
+  if (score >= 60 && hasPrototype) {
     return "build";
   }
 
-  // Mid score OR informal conversations -> validation
+  // Mid score -> validation
   if (score >= 30 && score < 60) {
     return "validation";
   }
 
-  // Low score OR no customers AND no prototype -> clarity
-  if (score < 30 || (!hasCustomers && !hasPrototype)) {
-    return "clarity";
-  }
-
-  // Score >= 80 but no paying customers, or >= 60 but no prototype
-  // These users are still in validation or build territory
+  // Score >= 60 but no prototype -> validation (has ideas but needs to build)
   if (score >= 60 && !hasPrototype) {
     return "validation";
   }
 
+  // Low score OR no signals -> clarity
   return "clarity";
 }
 
