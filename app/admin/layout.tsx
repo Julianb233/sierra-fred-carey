@@ -95,6 +95,12 @@ export default async function AdminLayout({
             >
               Feedback
             </Link>
+            <Link
+              href="/admin/testing"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Testing
+            </Link>
           </div>
         </div>
       </nav>
