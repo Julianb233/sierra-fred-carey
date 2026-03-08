@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     const result = await queryAuditLogAdmin(filters)
 
     const rows = result.data.map((row) =>
-      CSV_HEADERS.map((h) => escapeCSV((row as Record<string, unknown>)[h])).join(",")
+      CSV_HEADERS.map((h) => escapeCSV((row as unknown as Record<string, unknown>)[h])).join(",")
     )
 
     const csv = [CSV_HEADERS.join(","), ...rows].join("\n")

@@ -423,7 +423,7 @@ export function PatchApprovalQueue() {
                 {/* Generation metadata */}
                 {selectedPatch.metadata && (
                   <div className="space-y-2 text-sm">
-                    {(selectedPatch.metadata as Record<string, unknown>)?.rationale && (
+                    {!!(selectedPatch.metadata as Record<string, unknown>)?.rationale && (
                       <div>
                         <span className="font-medium text-gray-600 dark:text-gray-400">
                           Rationale:
@@ -433,7 +433,7 @@ export function PatchApprovalQueue() {
                         </p>
                       </div>
                     )}
-                    {(selectedPatch.metadata as Record<string, unknown>)?.confidence && (
+                    {!!(selectedPatch.metadata as Record<string, unknown>)?.confidence && (
                       <div>
                         <span className="font-medium text-gray-600 dark:text-gray-400">
                           Confidence:
@@ -443,7 +443,7 @@ export function PatchApprovalQueue() {
                         </Badge>
                       </div>
                     )}
-                    {(selectedPatch.metadata as Record<string, unknown>)?.signal_count && (
+                    {!!(selectedPatch.metadata as Record<string, unknown>)?.signal_count && (
                       <div>
                         <span className="font-medium text-gray-600 dark:text-gray-400">
                           Signal count:

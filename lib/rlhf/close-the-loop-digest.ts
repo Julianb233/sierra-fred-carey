@@ -191,6 +191,11 @@ export async function sendFeedbackDigest(): Promise<{
       const html = buildDigestEmailHtml(user.firstName, improvements, unsubscribeUrl)
 
       const resend = getResend()
+      if (!resend) {
+        logger.log(`[digest] Resend not configured, skipping ${user.email}`)
+        results.skipped++
+        continue
+      }
       const { error } = await resend.emails.send({
         from: "FRED at Sahara <fred@joinsahara.com>",
         to: user.email,

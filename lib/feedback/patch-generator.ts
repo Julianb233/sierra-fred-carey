@@ -61,7 +61,7 @@ Return ONLY the instruction text, no explanations or metadata.`
     const result = await generateText({
       model,
       prompt,
-      maxTokens: 300,
+      maxOutputTokens: 300,
       temperature: 0.3,
     })
 
