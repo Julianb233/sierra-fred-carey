@@ -5,52 +5,54 @@
  * Oases stage placement. This is the first substantive interaction after
  * onboarding -- fast, focused, and immediately actionable.
  *
- * Phase 81: Reality Lens First
+ * Phase 81: Reality Lens First Interaction
  */
 
-import { z } from "zod";
-import { generateStructuredReliable } from "@/lib/ai";
+import { z } from "zod"
+import { generateStructuredReliable } from "@/lib/ai"
 import {
   FRED_IDENTITY,
   FRED_COMMUNICATION_STYLE,
   getExperienceStatement,
-} from "@/lib/fred-brain";
-import type { OasesStage } from "@/types/oases";
+} from "@/lib/fred-brain"
+import type { OasesStage } from "@/types/oases"
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type CustomerValidation =
-  | "no"
-  | "informal"
-  | "10+interviews"
-  | "paying-customers";
-
-export type PrototypeStatus = "idea-only" | "mockups" | "mvp" | "launched";
-
-export type RevenueModel =
-  | "subscription"
-  | "marketplace"
-  | "services"
-  | "ads"
-  | "other";
-
 export interface QuickAnswers {
-  ideaDescription: string;
-  targetCustomer: string;
-  revenueModel: RevenueModel;
-  customerValidation: CustomerValidation;
-  prototypeStatus: PrototypeStatus;
-  biggestChallenge: string;
+  /** Q1: "Describe your startup idea in 2-3 sentences" */
+  idea: string
+  /** Q2: "Who is your target customer?" */
+  targetCustomer: string
+  /** Q3: "How will you make money?" */
+  revenueModel: "subscription" | "marketplace" | "services" | "ads" | "other"
+  /** Q4: "Have you talked to potential customers?" */
+  customerValidation:
+    | "none"
+    | "informal"
+    | "interviews-10plus"
+    | "paying-customers"
+  /** Q5: "Do you have a working prototype?" */
+  prototypeStage: "idea-only" | "mockups" | "mvp" | "launched"
+  /** Q6: "What is your biggest challenge right now?" */
+  biggestChallenge: string
 }
 
 export interface QuickAssessmentResult {
-  overallScore: number;
-  stage: OasesStage;
-  gaps: string[];
-  strengths: string[];
-  nextAction: string;
+  /** Overall readiness score 0-100 */
+  overallScore: number
+  /** Mapped Oases stage */
+  stage: OasesStage
+  /** 3-5 items: areas the founder needs to figure out */
+  gaps: string[]
+  /** 2-3 items: what is working for the founder */
+  strengths: string[]
+  /** Single recommended next step */
+  nextAction: string
+  /** Human-readable verdict, e.g. "Early Stage - Focus on Clarity" */
+  verdictLabel: string
 }
 
 // ============================================================================
@@ -58,16 +60,16 @@ export interface QuickAssessmentResult {
 // ============================================================================
 
 export interface QuickQuestion {
-  id: keyof QuickAnswers;
-  question: string;
-  type: "text" | "select";
-  placeholder?: string;
-  options?: { value: string; label: string }[];
+  id: keyof QuickAnswers
+  question: string
+  type: "text" | "select"
+  placeholder?: string
+  options?: { value: string; label: string }[]
 }
 
 export const QUICK_QUESTIONS: QuickQuestion[] = [
   {
-    id: "ideaDescription",
+    id: "idea",
     question: "Describe your startup idea in 2-3 sentences",
     type: "text",
     placeholder:
@@ -97,14 +99,14 @@ export const QUICK_QUESTIONS: QuickQuestion[] = [
     question: "Have you talked to potential customers?",
     type: "select",
     options: [
-      { value: "no", label: "Not yet" },
+      { value: "none", label: "Not yet" },
       { value: "informal", label: "Informal conversations" },
-      { value: "10+interviews", label: "10+ structured interviews" },
+      { value: "interviews-10plus", label: "10+ structured interviews" },
       { value: "paying-customers", label: "Already have paying customers" },
     ],
   },
   {
-    id: "prototypeStatus",
+    id: "prototypeStage",
     question: "Do you have a working prototype?",
     type: "select",
     options: [
@@ -121,20 +123,20 @@ export const QUICK_QUESTIONS: QuickQuestion[] = [
     placeholder:
       "What's the one thing keeping you up at night about this venture?",
   },
-];
+]
 
 // ============================================================================
 // Validation Schema
 // ============================================================================
 
 export const QuickAnswersSchema = z.object({
-  ideaDescription: z
+  idea: z
     .string()
     .min(10, "Please describe your idea in at least 10 characters")
     .max(2000),
   targetCustomer: z
     .string()
-    .min(5, "Please describe your target customer")
+    .min(10, "Please describe your target customer in at least 10 characters")
     .max(1000),
   revenueModel: z.enum([
     "subscription",
@@ -144,17 +146,17 @@ export const QuickAnswersSchema = z.object({
     "other",
   ]),
   customerValidation: z.enum([
-    "no",
+    "none",
     "informal",
-    "10+interviews",
+    "interviews-10plus",
     "paying-customers",
   ]),
-  prototypeStatus: z.enum(["idea-only", "mockups", "mvp", "launched"]),
+  prototypeStage: z.enum(["idea-only", "mockups", "mvp", "launched"]),
   biggestChallenge: z
     .string()
     .min(5, "Please describe your biggest challenge")
     .max(1000),
-});
+})
 
 // ============================================================================
 // Stage Mapping Logic
@@ -163,46 +165,75 @@ export const QuickAnswersSchema = z.object({
 /**
  * Maps a score + validation signals to an Oases stage.
  *
- * - score < 30 OR (no customers AND no prototype) -> clarity
- * - score 30-59 OR has informal conversations -> validation
- * - score 60-79 AND has prototype -> build
- * - score >= 80 AND has paying customers -> launch
- * - Default: clarity
+ * Rules (evaluated in priority order):
+ * 1. No customers AND idea-only -> clarity (regardless of score)
+ * 2. Score < 30 -> clarity
+ * 3. Score >= 80 AND paying customers -> launch
+ * 4. Score 60-79 AND mvp/launched -> build
+ * 5. Score 30-59 -> validation
+ * 6. Informal validation -> validation
+ * 7. Default fallback -> clarity
+ *
+ * Never returns "grow" -- users earn that by completing all stages.
  */
 export function mapScoreToStage(
   score: number,
-  hasCustomers: boolean,
-  hasPrototype: boolean
+  customerValidation: string,
+  prototypeStage: string
 ): OasesStage {
-  // High score + paying customers -> launch
-  if (score >= 80 && hasCustomers) {
-    return "launch";
+  // High score but no validation AND no prototype = still clarity
+  if (customerValidation === "none" && prototypeStage === "idea-only") {
+    return "clarity"
   }
 
-  // Good score + prototype -> build (includes score >= 80 without paying customers)
-  if (score >= 60 && hasPrototype) {
-    return "build";
+  if (score < 30) {
+    return "clarity"
+  }
+
+  // High score + paying customers -> launch
+  if (score >= 80 && customerValidation === "paying-customers") {
+    return "launch"
+  }
+
+  // Good score + prototype -> build
+  if (
+    score >= 60 &&
+    score < 80 &&
+    (prototypeStage === "mvp" || prototypeStage === "launched")
+  ) {
+    return "build"
   }
 
   // Mid score -> validation
   if (score >= 30 && score < 60) {
-    return "validation";
+    return "validation"
   }
 
-  // Score >= 60 but no prototype -> validation (has ideas but needs to build)
-  if (score >= 60 && !hasPrototype) {
-    return "validation";
+  // Score >= 60 but no mvp/launched -> validation (or >= 80 without paying customers)
+  if (customerValidation === "informal") {
+    return "validation"
   }
 
-  // Low score OR no signals -> clarity
-  return "clarity";
+  // Score >= 60 with mvp/launched but >= 80 without paying customers -> build
+  if (prototypeStage === "mvp" || prototypeStage === "launched") {
+    return "build"
+  }
+
+  // Score >= 60 with interviews but no prototype -> validation
+  if (customerValidation === "interviews-10plus") {
+    return "validation"
+  }
+
+  // Default fallback
+  return "clarity"
 }
 
 // ============================================================================
 // AI Assessment
 // ============================================================================
 
-const QuickAssessmentSchema = z.object({
+/** Zod schema for LLM structured output (stage computed separately) */
+const QuickAssessmentLLMSchema = z.object({
   overallScore: z
     .number()
     .min(0)
@@ -212,16 +243,21 @@ const QuickAssessmentSchema = z.object({
     .array(z.string())
     .min(1)
     .max(5)
-    .describe("Key gaps or weaknesses the founder needs to address"),
+    .describe("3-5 key gaps or weaknesses the founder needs to address"),
   strengths: z
     .array(z.string())
     .min(1)
-    .max(5)
-    .describe("Key strengths or positive signals"),
+    .max(3)
+    .describe("2-3 key strengths or positive signals"),
   nextAction: z
     .string()
     .describe("Single most important next step for this founder"),
-});
+  verdictLabel: z
+    .string()
+    .describe(
+      'Human-readable verdict label, e.g. "Early Stage - Focus on Clarity"'
+    ),
+})
 
 /**
  * Run AI-powered quick assessment on the 6 answers.
@@ -243,46 +279,41 @@ Scoring guide:
 - 30-49: Some foundation but significant work needed
 - 50-69: Reasonable foundation, clear path forward with effort
 - 70-84: Strong foundation, ready to execute
-- 85-100: Exceptional readiness (rare -- requires paying customers + working product)`;
+- 85-100: Exceptional readiness (rare -- requires paying customers + working product)`
 
   const userPrompt = `Evaluate this startup idea based on the founder's answers:
 
-1. IDEA: ${answers.ideaDescription}
+1. IDEA: ${answers.idea}
 2. TARGET CUSTOMER: ${answers.targetCustomer}
 3. REVENUE MODEL: ${answers.revenueModel}
 4. CUSTOMER VALIDATION: ${answers.customerValidation}
-5. PROTOTYPE STATUS: ${answers.prototypeStatus}
+5. PROTOTYPE STAGE: ${answers.prototypeStage}
 6. BIGGEST CHALLENGE: ${answers.biggestChallenge}
 
 Provide:
 - An overall readiness score (0-100)
-- 2-4 specific gaps they need to address
-- 2-4 strengths or positive signals you see
-- One clear, actionable next step they should take immediately`;
+- 2-5 specific gaps they need to address
+- 2-3 strengths or positive signals you see
+- One clear, actionable next step they should take immediately
+- A concise verdict label (e.g. "Early Stage - Focus on Clarity")`
 
   try {
     const result = await generateStructuredReliable(
       userPrompt,
-      QuickAssessmentSchema,
+      QuickAssessmentLLMSchema,
       {
         system: systemPrompt,
         temperature: 0.3,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 500,
       }
-    );
+    )
 
-    const assessment = result.object;
-    const hasCustomers =
-      answers.customerValidation === "paying-customers";
-    const hasPrototype =
-      answers.prototypeStatus === "mvp" ||
-      answers.prototypeStatus === "launched";
-
+    const assessment = result.object
     const stage = mapScoreToStage(
       assessment.overallScore,
-      hasCustomers,
-      hasPrototype
-    );
+      answers.customerValidation,
+      answers.prototypeStage
+    )
 
     return {
       overallScore: assessment.overallScore,
@@ -290,11 +321,12 @@ Provide:
       gaps: assessment.gaps,
       strengths: assessment.strengths,
       nextAction: assessment.nextAction,
-    };
+      verdictLabel: assessment.verdictLabel,
+    }
   } catch (error) {
-    console.error("[Quick Reality Lens] AI assessment failed:", error);
+    console.error("[Quick Reality Lens] AI assessment failed:", error)
     // Return heuristic fallback
-    return getHeuristicAssessment(answers);
+    return getHeuristicAssessment(answers)
   }
 }
 
@@ -305,52 +337,68 @@ Provide:
 function getHeuristicAssessment(
   answers: QuickAnswers
 ): QuickAssessmentResult {
-  let score = 30; // Base score
+  let score = 30 // Base score
 
   // Customer validation signals
-  if (answers.customerValidation === "paying-customers") score += 30;
-  else if (answers.customerValidation === "10+interviews") score += 20;
-  else if (answers.customerValidation === "informal") score += 10;
+  if (answers.customerValidation === "paying-customers") score += 30
+  else if (answers.customerValidation === "interviews-10plus") score += 20
+  else if (answers.customerValidation === "informal") score += 10
 
   // Prototype signals
-  if (answers.prototypeStatus === "launched") score += 20;
-  else if (answers.prototypeStatus === "mvp") score += 15;
-  else if (answers.prototypeStatus === "mockups") score += 5;
+  if (answers.prototypeStage === "launched") score += 20
+  else if (answers.prototypeStage === "mvp") score += 15
+  else if (answers.prototypeStage === "mockups") score += 5
 
   // Revenue model clarity
-  if (answers.revenueModel !== "other") score += 5;
+  if (answers.revenueModel !== "other") score += 5
 
   // Idea description quality (length as proxy)
-  if (answers.ideaDescription.length > 100) score += 5;
+  if (answers.idea.length > 100) score += 5
 
-  score = Math.min(100, Math.max(0, score));
+  score = Math.min(100, Math.max(0, score))
 
-  const hasCustomers = answers.customerValidation === "paying-customers";
-  const hasPrototype =
-    answers.prototypeStatus === "mvp" ||
-    answers.prototypeStatus === "launched";
+  const stage = mapScoreToStage(
+    score,
+    answers.customerValidation,
+    answers.prototypeStage
+  )
 
-  const stage = mapScoreToStage(score, hasCustomers, hasPrototype);
+  const gaps: string[] = []
+  const strengths: string[] = []
 
-  const gaps: string[] = [];
-  const strengths: string[] = [];
-
-  if (answers.customerValidation === "no")
-    gaps.push("No customer validation -- talk to potential customers before building");
-  if (answers.prototypeStatus === "idea-only")
-    gaps.push("No prototype yet -- start with a simple mockup or landing page");
+  if (answers.customerValidation === "none")
+    gaps.push(
+      "No customer validation -- talk to potential customers before building"
+    )
+  if (answers.prototypeStage === "idea-only")
+    gaps.push(
+      "No prototype yet -- start with a simple mockup or landing page"
+    )
   if (answers.revenueModel === "other")
-    gaps.push("Revenue model unclear -- define how you will make money");
+    gaps.push("Revenue model unclear -- define how you will make money")
 
   if (answers.customerValidation === "paying-customers")
-    strengths.push("Already have paying customers -- strong validation signal");
-  if (answers.prototypeStatus === "launched")
-    strengths.push("Product is live -- real market feedback available");
-  if (answers.ideaDescription.length > 100)
-    strengths.push("Clear idea articulation -- good foundation for pitching");
+    strengths.push(
+      "Already have paying customers -- strong validation signal"
+    )
+  if (answers.prototypeStage === "launched")
+    strengths.push("Product is live -- real market feedback available")
+  if (answers.idea.length > 100)
+    strengths.push(
+      "Clear idea articulation -- good foundation for pitching"
+    )
 
-  if (gaps.length === 0) gaps.push("Consider deepening customer research");
-  if (strengths.length === 0) strengths.push("Taking the first step by assessing your idea");
+  if (gaps.length === 0) gaps.push("Consider deepening customer research")
+  if (strengths.length === 0)
+    strengths.push("Taking the first step by assessing your idea")
+
+  const verdictLabels: Record<OasesStage, string> = {
+    clarity: "Early Stage - Focus on Clarity",
+    validation: "Foundation Set - Time to Validate",
+    build: "Validated - Ready to Build",
+    launch: "Strong Foundation - Prepare to Launch",
+    grow: "Launched - Focus on Growth",
+  }
 
   return {
     overallScore: score,
@@ -361,9 +409,10 @@ function getHeuristicAssessment(
       stage === "clarity"
         ? "Talk to 5 potential customers this week about the problem you're solving"
         : stage === "validation"
-        ? "Run a simple experiment to test your core assumption"
-        : stage === "build"
-        ? "Set up metrics to track your key engagement and retention numbers"
-        : "Focus on your unit economics and prepare for your first funding conversation",
-  };
+          ? "Run a simple experiment to test your core assumption"
+          : stage === "build"
+            ? "Set up metrics to track your key engagement and retention numbers"
+            : "Focus on your unit economics and prepare for your first funding conversation",
+    verdictLabel: verdictLabels[stage],
+  }
 }

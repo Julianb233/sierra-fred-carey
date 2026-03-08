@@ -1,125 +1,146 @@
 /**
  * Unit tests for Quick Reality Lens -- mapScoreToStage
  *
- * Phase 81: Reality Lens First
+ * Phase 81: Reality Lens First Interaction
+ *
+ * Tests the stage mapping logic with string-based customerValidation
+ * and prototypeStage params (matching QuickAnswers field values).
  */
 
-import { describe, it, expect } from "vitest";
-import { mapScoreToStage } from "../reality-lens-quick";
+import { describe, it, expect } from "vitest"
+import { mapScoreToStage, QUICK_QUESTIONS } from "../reality-lens-quick"
 
 describe("mapScoreToStage", () => {
   // -----------------------------------------------------------------------
-  // Clarity stage (score < 30 OR no customers AND no prototype)
+  // Clarity stage
   // -----------------------------------------------------------------------
   describe("clarity stage", () => {
-    it("returns clarity for very low score", () => {
-      expect(mapScoreToStage(10, false, false)).toBe("clarity");
-    });
-
-    it("returns clarity for score < 30 even with customers", () => {
-      expect(mapScoreToStage(25, true, true)).toBe("clarity");
-    });
-
-    it("returns clarity for score 29 (boundary)", () => {
-      expect(mapScoreToStage(29, false, false)).toBe("clarity");
-    });
-
-    it("returns clarity when no customers AND no prototype with high score", () => {
-      // Score >= 60 but no customers and no prototype -> falls through to clarity
-      expect(mapScoreToStage(75, false, false)).toBe("clarity");
-    });
+    it("returns clarity for low score, no customers, idea-only", () => {
+      expect(mapScoreToStage(15, "none", "idea-only")).toBe("clarity")
+    })
 
     it("returns clarity for score 0", () => {
-      expect(mapScoreToStage(0, false, false)).toBe("clarity");
-    });
-  });
+      expect(mapScoreToStage(0, "none", "idea-only")).toBe("clarity")
+    })
+
+    it("returns clarity for score 29 (boundary)", () => {
+      expect(mapScoreToStage(29, "informal", "mockups")).toBe("clarity")
+    })
+
+    it("returns clarity for high score but no validation AND idea-only", () => {
+      // score 90, none, idea-only -> clarity (validation override)
+      expect(mapScoreToStage(90, "none", "idea-only")).toBe("clarity")
+    })
+  })
 
   // -----------------------------------------------------------------------
-  // Validation stage (score 30-59 OR has informal conversations)
+  // Validation stage
   // -----------------------------------------------------------------------
   describe("validation stage", () => {
+    it("returns validation for score 45, informal, mockups", () => {
+      expect(mapScoreToStage(45, "informal", "mockups")).toBe("validation")
+    })
+
     it("returns validation for score 30 (lower boundary)", () => {
-      expect(mapScoreToStage(30, false, true)).toBe("validation");
-    });
+      expect(mapScoreToStage(30, "none", "mockups")).toBe("validation")
+    })
 
     it("returns validation for score 59 (upper boundary)", () => {
-      expect(mapScoreToStage(59, false, true)).toBe("validation");
-    });
+      expect(mapScoreToStage(59, "interviews-10plus", "mvp")).toBe(
+        "validation"
+      )
+    })
 
-    it("returns validation for mid-range score with prototype but no customers", () => {
-      expect(mapScoreToStage(45, false, true)).toBe("validation");
-    });
-
-    it("returns validation for score >= 60 with no prototype", () => {
-      expect(mapScoreToStage(70, false, false)).toBe("clarity");
-      // No prototype AND no customers -> clarity (overrides mid-score)
-    });
-
-    it("returns validation for high score without prototype but with customers", () => {
-      expect(mapScoreToStage(65, true, false)).toBe("validation");
-    });
-  });
+    it("returns validation for score 50, paying-customers, idea-only", () => {
+      // Score range 30-59 wins regardless of validation level
+      expect(mapScoreToStage(50, "paying-customers", "idea-only")).toBe(
+        "validation"
+      )
+    })
+  })
 
   // -----------------------------------------------------------------------
-  // Build stage (score 60-79 AND has prototype)
+  // Build stage
   // -----------------------------------------------------------------------
   describe("build stage", () => {
-    it("returns build for score 60 with prototype", () => {
-      expect(mapScoreToStage(60, false, true)).toBe("build");
-    });
+    it("returns build for score 70, interviews, mvp", () => {
+      expect(mapScoreToStage(70, "interviews-10plus", "mvp")).toBe("build")
+    })
 
-    it("returns build for score 79 with prototype", () => {
-      expect(mapScoreToStage(79, false, true)).toBe("build");
-    });
+    it("returns build for score 60 with mvp", () => {
+      expect(mapScoreToStage(60, "informal", "mvp")).toBe("build")
+    })
 
-    it("returns build for score 65 with prototype and customers", () => {
-      expect(mapScoreToStage(65, true, true)).toBe("build");
-    });
-  });
+    it("returns build for score 79 with launched", () => {
+      expect(mapScoreToStage(79, "informal", "launched")).toBe("build")
+    })
+
+    it("returns build for score 80+ with mvp but not paying customers", () => {
+      expect(mapScoreToStage(85, "interviews-10plus", "mvp")).toBe("build")
+    })
+  })
 
   // -----------------------------------------------------------------------
-  // Launch stage (score >= 80 AND has paying customers)
+  // Launch stage
   // -----------------------------------------------------------------------
   describe("launch stage", () => {
-    it("returns launch for score 80 with paying customers", () => {
-      expect(mapScoreToStage(80, true, true)).toBe("launch");
-    });
+    it("returns launch for score 85, paying-customers, launched", () => {
+      expect(mapScoreToStage(85, "paying-customers", "launched")).toBe(
+        "launch"
+      )
+    })
+
+    it("returns launch for score 80 (boundary) with paying customers", () => {
+      expect(mapScoreToStage(80, "paying-customers", "mvp")).toBe("launch")
+    })
 
     it("returns launch for score 100 with paying customers", () => {
-      expect(mapScoreToStage(100, true, true)).toBe("launch");
-    });
-
-    it("returns launch for score 95 with customers but no prototype", () => {
-      // Has paying customers -> launch (customers implies product exists)
-      expect(mapScoreToStage(95, true, false)).toBe("launch");
-    });
-  });
+      expect(mapScoreToStage(100, "paying-customers", "launched")).toBe(
+        "launch"
+      )
+    })
+  })
 
   // -----------------------------------------------------------------------
   // Edge cases
   // -----------------------------------------------------------------------
   describe("edge cases", () => {
-    it("score 80 without customers does not reach launch", () => {
-      // score >= 80 but no customers, has prototype -> build would need 60-79
-      // Actually score >= 80 and no customers and has prototype ->
-      // not launch (needs customers), not build (needs 60-79), not validation (needs 30-59)
-      // Falls to: has prototype so not (no customers AND no prototype)
-      // score >= 60 and no prototype check doesn't apply (has prototype)
-      // Actually score >= 80, has prototype, no customers: doesn't match any early rule
-      // Let's trace: not >= 80 with customers. Not 60-79 with prototype (score is 80).
-      // Not 30-59. Not < 30. Not (!customers && !prototype). score >= 60 no prototype? No, has prototype.
-      // Falls to default clarity. But this should be build or validation.
-      // The function will return "clarity" as default -- this is the documented behavior.
-      const result = mapScoreToStage(80, false, true);
-      expect(result).toBe("clarity");
-    });
+    it("never returns grow", () => {
+      // Even the highest possible signals should not return grow
+      expect(mapScoreToStage(100, "paying-customers", "launched")).not.toBe(
+        "grow"
+      )
+    })
 
-    it("score exactly 30 with customers and prototype", () => {
-      expect(mapScoreToStage(30, true, true)).toBe("validation");
-    });
+    it("score 60 with informal and no prototype returns validation", () => {
+      expect(mapScoreToStage(60, "informal", "mockups")).toBe("validation")
+    })
 
-    it("score exactly 60 with no prototype returns clarity (no customers either)", () => {
-      expect(mapScoreToStage(60, false, false)).toBe("clarity");
-    });
-  });
-});
+    it("score 65 with interviews-10plus and no prototype returns validation", () => {
+      expect(mapScoreToStage(65, "interviews-10plus", "mockups")).toBe(
+        "validation"
+      )
+    })
+  })
+})
+
+describe("QUICK_QUESTIONS", () => {
+  it("has exactly 6 questions", () => {
+    expect(QUICK_QUESTIONS).toHaveLength(6)
+  })
+
+  it("has 3 text questions and 3 select questions", () => {
+    const textQs = QUICK_QUESTIONS.filter((q) => q.type === "text")
+    const selectQs = QUICK_QUESTIONS.filter((q) => q.type === "select")
+    expect(textQs).toHaveLength(3)
+    expect(selectQs).toHaveLength(3)
+  })
+
+  it("all select questions have options", () => {
+    const selectQs = QUICK_QUESTIONS.filter((q) => q.type === "select")
+    for (const q of selectQs) {
+      expect(q.options).toBeDefined()
+      expect(q.options!.length).toBeGreaterThan(0)
+    }
+  })
+})

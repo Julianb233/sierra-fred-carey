@@ -33,6 +33,7 @@ import {
   markRealityLensComplete,
   getRealityLensStatus,
 } from "@/lib/db/reality-lens-state";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 // ============================================================================
 // Rate Limit Configuration
@@ -135,6 +136,19 @@ export async function POST(req: NextRequest) {
       );
       // Don't fail the request -- the assessment result is still useful
     }
+
+    // Log journey event for dashboard tracking
+    logJourneyEventAsync({
+      userId,
+      eventType: "quick_reality_lens_completed",
+      eventData: {
+        stage: result.stage,
+        verdictLabel: result.verdictLabel,
+        gapCount: result.gaps.length,
+        strengthCount: result.strengths.length,
+      },
+      scoreAfter: result.overallScore,
+    });
 
     const latencyMs = Date.now() - startTime;
 
