@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 79 — Active Founder Memory Layer (Wave 1)
-Plan: 01 of 2 (complete)
-Status: Phase 79 Plan 01 complete
-Last activity: 2026-03-08 — Completed 79-01-PLAN.md (Memory types, builder, extraction prompt)
+Phase: 79 — Active Founder Memory Layer (Wave 1) COMPLETE
+Plan: 02 of 2 (complete)
+Status: Phase 79 complete
+Last activity: 2026-03-08 — Completed 79-02-PLAN.md (Wire memory into chat pipeline)
 
-Progress: [#####.........] 5/14 phases
+Progress: [######........] 6/14 phases
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -67,6 +67,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Semantic memory facts override profile fields (higher recency = higher confidence) [79-01]
 - persistMemoryUpdates writes to BOTH profiles + semantic memory for redundancy [79-01]
 - Memory extraction uses temperature 0.2, maxOutputTokens 256 for fast deterministic output [79-01]
+- persistMemoryUpdates tier-gated: profile columns for all tiers, semantic facts for Pro+ only [79-02]
+- buildContextBlock deprecated in favor of formatMemoryBlock from active-memory.ts [79-02]
+- FRED_CORE_PROMPT v1.1.0: mandatory founder-specific referencing + co-founder as 7th Business Fundamental [79-02]
 
 ### Blockers/Concerns
 
@@ -79,7 +82,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:17Z
-Stopped at: Completed 79-01-PLAN.md (Active Founder Memory data layer). Next: 79-02 (wire memory into chat pipeline).
-Resume file: .planning/phases/79-active-founder-memory-layer/79-01-SUMMARY.md
+Last session: 2026-03-08T10:30Z
+Stopped at: Completed 79-02-PLAN.md (Wire memory into chat pipeline). Phase 79 complete. Next: Wave 2 phases (80, 81, 82).
+Resume file: .planning/phases/79-active-founder-memory-layer/79-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
