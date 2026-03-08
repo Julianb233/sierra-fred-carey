@@ -1,5 +1,5 @@
 {
-  "v": 14,
+  "v": 15,
   "batch": "auto-v12-20260308",
   "tasks": [
     {
@@ -88,7 +88,7 @@
       "phase": 76,
       "plan": "all",
       "type": "plan",
-      "status": "claimed",
+      "status": "done",
       "worker": "worker-auto-v7-1",
       "deps": [
         "74-b",
