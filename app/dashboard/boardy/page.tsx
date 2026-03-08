@@ -19,6 +19,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { JourneyGate } from "@/components/journey/journey-gate";
 import { CelebrationMilestone } from "@/components/journey/celebration-milestone";
+import { JourneyCelebration } from "@/components/boardy/journey-celebration";
+import { IntroPrepCard } from "@/components/boardy/intro-prep-card";
 import { useUserTier } from "@/lib/context/tier-context";
 import { useOasesProgress } from "@/hooks/use-oases-progress";
 import { UserTier } from "@/lib/constants";
@@ -48,6 +50,19 @@ export default function BoardyPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Check if journey is 100% complete and celebration hasn't been dismissed
+  useEffect(() => {
+    if (
+      progress?.journeyPercentage != null &&
+      progress.journeyPercentage >= 100 &&
+      typeof window !== "undefined" &&
+      !localStorage.getItem("sahara_journey_celebration_dismissed")
+    ) {
+      setShowCelebration(true);
+    }
+  }, [progress?.journeyPercentage]);
 
   // ============================================================================
   // Data Fetching
@@ -266,6 +281,11 @@ export default function BoardyPage() {
           {/* Celebration milestone -- shows once on first unlock */}
           <CelebrationMilestone />
 
+          {/* Phase 89: Journey celebration banner */}
+          {showCelebration && (
+            <JourneyCelebration onDismiss={() => setShowCelebration(false)} />
+          )}
+
           {/* Boardy Connect Card */}
           {deepLink && <BoardyConnect deepLink={deepLink} />}
 
@@ -344,6 +364,22 @@ export default function BoardyPage() {
               matches={filteredMatches}
               onStatusUpdate={handleStatusUpdate}
             />
+          )}
+
+          {/* Phase 89: Per-match intro prep cards for connected matches */}
+          {!isLoading && filteredMatches.some(
+            (m) => m.status === "connected" || m.status === "intro_sent"
+          ) && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Prepare for Your Introductions
+              </h3>
+              {filteredMatches
+                .filter((m) => m.status === "connected" || m.status === "intro_sent")
+                .map((match) => (
+                  <IntroPrepCard key={match.id} match={match} />
+                ))}
+            </div>
           )}
 
           {/* Preparation for Introductions */}
