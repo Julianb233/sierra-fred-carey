@@ -236,6 +236,97 @@ export async function getTrackingStatuses(): Promise<TrackingStatus[]> {
  * Deploy a patch and start its 2-week tracking window.
  * Sets baseline thumbs ratio and links insight to patch.
  */
+/**
+ * Start tracking for a deployed patch by ID (Plan 03 wrapper).
+ * Records 30-day baseline and sets 14-day tracking window.
+ * Alias for deployPatchWithTracking when patch is already deployed.
+ */
+export async function startPatchTracking(patchId: string): Promise<void> {
+  const { getPatchById, updatePatchTrackingResults } = await import("@/lib/db/prompt-patches")
+  const patch = await getPatchById(patchId)
+  if (!patch) throw new Error(`Patch ${patchId} not found`)
+
+  // Compute baseline
+  const { ratio } = await computeTopicThumbsRatio(patch.topic)
+
+  // Store baseline on the patch
+  await updatePatchTrackingResults(patchId, patch.thumbs_up_after ?? 0, {
+    baseline_thumbs_ratio: ratio,
+    tracking_started_at: patch.tracking_started_at || new Date().toISOString(),
+    tracking_ends_at: patch.tracking_ends_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    is_finalized: false,
+  })
+
+  logger.info('[patch-validation] Tracking started', {
+    patchId,
+    topic: patch.topic,
+    baseline: ratio,
+  })
+}
+
+/**
+ * Compute patch improvement by ID (Plan 03 convenience overload).
+ * Returns null if patch not found or no tracking data.
+ */
+export async function computePatchImprovementById(patchId: string): Promise<{
+  baseline: number
+  current: number
+  delta: number
+} | null> {
+  const { getPatchById } = await import("@/lib/db/prompt-patches")
+  const patch = await getPatchById(patchId)
+  if (!patch || !patch.tracking_started_at) return null
+
+  const result = await computePatchImprovement(patch)
+  return {
+    baseline: result.thumbsBefore,
+    current: result.thumbsAfter,
+    delta: result.improvement,
+  }
+}
+
+/**
+ * Finalize tracking for a specific patch by ID.
+ * Returns true if the patch showed improvement.
+ */
+export async function finalizePatchTracking(patchId: string): Promise<boolean> {
+  const { getPatchById } = await import("@/lib/db/prompt-patches")
+  const patch = await getPatchById(patchId)
+  if (!patch) return false
+
+  const result = await computePatchImprovement(patch)
+
+  await updatePatchTrackingResults(patch.id, result.thumbsAfter, {
+    validation_result: {
+      improvement: result.improvement,
+      improved: result.improved,
+      sampleSize: result.sampleSize,
+      finalized_at: new Date().toISOString(),
+    },
+  })
+
+  if (result.improved && patch.source_insight_id) {
+    await markInsightResolved(patch.source_insight_id)
+  }
+
+  logger.info('[patch-validation] Tracking finalized via finalizePatchTracking', {
+    patchId: patch.id,
+    improvement: result.improvement,
+    improved: result.improved,
+  })
+
+  return result.improved
+}
+
+/**
+ * Get all patches currently in active tracking (deployed, not finalized).
+ * Plan 03 required export.
+ */
+export async function getActivePatchTracking(): Promise<TrackingStatus[]> {
+  const statuses = await getTrackingStatuses()
+  return statuses.filter((s) => s.status === 'active')
+}
+
 export async function deployPatchWithTracking(
   patchId: string
 ): Promise<{ patch: PromptPatch; baseline: number }> {
