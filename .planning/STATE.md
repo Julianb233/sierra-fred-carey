@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 82 — Chat/Voice Continuity (Wave 2)
-Plan: 01 of 1 (complete)
+Plan: 02 of 2 (complete)
 Status: Phase 82 complete
-Last activity: 2026-03-08 — Completed 82-01-PLAN.md (Chat-voice continuity layer)
+Last activity: 2026-03-08 — Completed 82-02-PLAN.md (Voice transcript injection + context banners)
 
 Progress: [#########.....] 9/14 phases (Wave 2 in progress)
 
@@ -77,6 +77,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Voice worker communicates with app via HTTP endpoints (API route approach), not direct imports [82-01]
 - Chat context preamble capped at ~2000 chars (~500 tokens) to avoid voice prompt bloat [82-01]
 - Dual transcript injection (worker + client) for reliability [82-01]
+- Dual transcript endpoints: /api/voice/transcript (LLM) + /api/fred/call/transcript (channel entries) [82-02]
+- Client-side transcript injection via data channel, not webhook-side [82-02]
+- Room ownership validated via userId in roomName pattern [82-02]
 
 ### Blockers/Concerns
 
@@ -89,7 +92,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:45Z
-Stopped at: Completed 82-01-PLAN.md (Chat-voice continuity layer). Phase 82 complete. Next: Wave 3 phases (83, 84, 85).
-Resume file: .planning/phases/82-chat-voice-continuity/82-01-SUMMARY.md
+Last session: 2026-03-08T10:43Z
+Stopped at: Completed 82-02-PLAN.md (Voice transcript injection + context banners). Phase 82 fully complete. Next: Wave 3 phases (83, 84, 85).
+Resume file: .planning/phases/82-chat-voice-continuity/82-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
