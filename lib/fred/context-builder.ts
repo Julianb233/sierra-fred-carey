@@ -459,6 +459,148 @@ function buildContextBlock(data: FounderContextData): string {
 }
 
 // ============================================================================
+// Recent Assessment Scores Loader
+// ============================================================================
+
+/**
+ * Load the founder's most recent assessment scores (IRS, Reality Lens, Deck Review)
+ * so FRED can reference specific numbers and trends in conversation.
+ * Returns a formatted context block or null if no assessments exist.
+ */
+async function loadRecentAssessments(userId: string): Promise<string | null> {
+  try {
+    const supabase = createServiceClient();
+    const lines: string[] = [];
+
+    // Load in parallel: IRS, Reality Lens status, Deck scores, pending next steps
+    const [irsResult, realityLensResult, deckResult, nextStepsResult] = await Promise.all([
+      supabase
+        .from("investor_readiness_scores")
+        .select("overall_score, category_scores, strengths, weaknesses, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(2),
+      supabase
+        .from("profiles")
+        .select("reality_lens_complete, reality_lens_score, oases_stage")
+        .eq("id", userId)
+        .single(),
+      supabase
+        .from("deck_score_reviews")
+        .select("scorecard, file_name, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("next_steps")
+        .select("description, priority, completed, created_at")
+        .eq("user_id", userId)
+        .eq("completed", false)
+        .eq("dismissed", false)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
+
+    let hasData = false;
+
+    // --- IRS Scores ---
+    if (irsResult.data && irsResult.data.length > 0) {
+      hasData = true;
+      const latest = irsResult.data[0];
+      const score = Number(latest.overall_score);
+      const date = new Date(latest.created_at as string).toLocaleDateString();
+      lines.push("## RECENT ASSESSMENT SCORES");
+      lines.push("");
+      lines.push(`**Investor Readiness Score:** ${score}/100 (assessed ${date})`);
+
+      // Show category breakdown if available
+      const cats = latest.category_scores as Record<string, { score: number }> | null;
+      if (cats && typeof cats === "object") {
+        const catEntries = Object.entries(cats)
+          .map(([k, v]) => `${k}: ${typeof v === "object" && v ? (v as { score: number }).score : v}`)
+          .slice(0, 6);
+        if (catEntries.length > 0) {
+          lines.push(`  Categories: ${catEntries.join(", ")}`);
+        }
+      }
+
+      // Show top weakness for targeted guidance
+      const weaknesses = latest.weaknesses as string[] | null;
+      if (weaknesses && weaknesses.length > 0) {
+        lines.push(`  Biggest gap: ${sanitize(weaknesses[0])}`);
+      }
+
+      // Trend if 2+ scores exist
+      if (irsResult.data.length >= 2) {
+        const prev = Number(irsResult.data[1].overall_score);
+        const diff = score - prev;
+        const trend = diff > 0 ? `+${diff} (improving)` : diff < 0 ? `${diff} (declining)` : "stable";
+        lines.push(`  Trend: ${trend}`);
+      }
+    }
+
+    // --- Reality Lens ---
+    if (realityLensResult.data?.reality_lens_complete) {
+      if (!hasData) {
+        lines.push("## RECENT ASSESSMENT SCORES");
+        lines.push("");
+      }
+      hasData = true;
+      const rlScore = realityLensResult.data.reality_lens_score;
+      const rlStage = realityLensResult.data.oases_stage;
+      lines.push(`**Reality Lens Score:** ${rlScore}/100 → Stage: ${rlStage || "unknown"}`);
+    }
+
+    // --- Deck Score ---
+    if (deckResult.data?.scorecard) {
+      if (!hasData) {
+        lines.push("## RECENT ASSESSMENT SCORES");
+        lines.push("");
+      }
+      hasData = true;
+      const sc = deckResult.data.scorecard as Record<string, unknown>;
+      const overallScore = sc.overallScore || sc.overall_score;
+      const biggestGap = sc.biggestGap || sc.biggest_gap;
+      const date = new Date(deckResult.data.created_at as string).toLocaleDateString();
+      lines.push(`**Pitch Deck Score:** ${overallScore}/10 (reviewed ${date})`);
+      if (biggestGap) {
+        lines.push(`  Biggest gap: ${sanitize(String(biggestGap))}`);
+      }
+    }
+
+    // --- Pending Next Steps (Accountability) ---
+    if (nextStepsResult.data && nextStepsResult.data.length > 0) {
+      if (!hasData) {
+        lines.push("## RECENT ASSESSMENT SCORES");
+        lines.push("");
+      }
+      hasData = true;
+      const pending = nextStepsResult.data.filter((s) => !s.completed);
+      if (pending.length > 0) {
+        lines.push("");
+        lines.push(`**Open Action Items:** ${pending.length} pending`);
+        for (const step of pending.slice(0, 3)) {
+          lines.push(`  - [${step.priority}] ${sanitize(step.description)}`);
+        }
+        lines.push("");
+        lines.push("ACCOUNTABILITY: If the founder's message relates to a pending action item above, acknowledge their progress. If they haven't mentioned working on their actions, gently check in: \"Last time we talked about [action] — how's that going?\"");
+      }
+    }
+
+    if (!hasData) return null;
+
+    lines.push("");
+    lines.push("Reference these scores naturally when relevant. For example: \"Your IRS is at 72 — your Team score is strong but Traction is holding you back. Let's work on that.\"");
+
+    return lines.join("\n");
+  } catch (err) {
+    console.warn("[FRED Context] Failed to load assessments (non-blocking):", err);
+    return null;
+  }
+}
+
+// ============================================================================
 // Red Flags Loader
 // ============================================================================
 
@@ -544,7 +686,7 @@ export async function buildFounderContextWithFacts(
   preloadedConversationState?: { id: string } | null
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }>; memory?: FounderMemory; oasesStage: OasesStage }> {
   try {
-    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, activeMemory] = await Promise.all([
+    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, activeMemory, assessmentsContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId, preloadedConversationState),
@@ -554,6 +696,7 @@ export async function buildFounderContextWithFacts(
         : Promise.resolve(null),
       loadActiveRedFlags(userId),
       buildActiveFounderMemory(userId, hasPersistentMemory),
+      loadRecentAssessments(userId),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -618,6 +761,11 @@ export async function buildFounderContextWithFacts(
       lines.push("");
       lines.push("The founder has been working through the 9-Step Startup Process on their dashboard. Reference their progress naturally. If their dashboard step differs from your conversation assessment, align to the dashboard step — it reflects their self-reported progress.");
       context += "\n\n" + lines.join("\n");
+    }
+
+    // Phase 89: Inject recent assessment scores + pending action items for accountability
+    if (assessmentsContext) {
+      context += "\n\n" + assessmentsContext;
     }
 
     // Phase 80: Stage-gate enforcement — tell FRED which topics are allowed
