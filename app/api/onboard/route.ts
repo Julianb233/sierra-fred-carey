@@ -235,6 +235,7 @@ export async function POST(request: NextRequest) {
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
         onboarding_completed: true,
+        journey_welcomed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -250,6 +251,7 @@ export async function POST(request: NextRequest) {
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
           onboarding_completed: true,
+          journey_welcomed: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });

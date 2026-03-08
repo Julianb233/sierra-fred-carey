@@ -1,12 +1,15 @@
 "use client";
 
 import { ReactNode } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Lock, Rocket, Sparkles } from "lucide-react";
+import { Lock, Rocket, Sparkles, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UserTier, TIER_NAMES, canAccessFeature } from "@/lib/constants";
 import { UpgradeTier } from "@/components/dashboard/UpgradeTier";
+import type { OasesStage } from "@/types/oases";
+import { STAGE_ORDER, getStageConfig } from "@/lib/oases/stage-config";
 
 interface FeatureLockProps {
   /** Required tier to access this feature */
@@ -23,6 +26,12 @@ interface FeatureLockProps {
   blur?: boolean;
   /** Additional className for the container */
   className?: string;
+  /** Required Oases stage to access this feature */
+  requiredStage?: OasesStage;
+  /** User's current Oases stage */
+  currentStage?: OasesStage;
+  /** Journey completion percentage for display */
+  journeyPercentage?: number;
 }
 
 /**
@@ -45,17 +54,78 @@ export function FeatureLock({
   children,
   blur = true,
   className,
+  requiredStage,
+  currentStage,
+  journeyPercentage,
 }: FeatureLockProps) {
-  const hasAccess = canAccessFeature(currentTier, requiredTier);
+  const hasTierAccess = canAccessFeature(currentTier, requiredTier);
+  const hasStageAccess =
+    !requiredStage ||
+    !currentStage ||
+    STAGE_ORDER.indexOf(currentStage) >= STAGE_ORDER.indexOf(requiredStage);
 
-  // If user has access, just render children
-  if (hasAccess) {
+  // If user has both tier and stage access, render children
+  if (hasTierAccess && hasStageAccess) {
     return <>{children}</>;
   }
 
+  // Stage-blocked takes priority (more actionable) when both are blocked
+  const isStageBlocked = requiredStage && currentStage && !hasStageAccess;
+
+  if (isStageBlocked) {
+    const requiredStageName = getStageConfig(requiredStage).name;
+    const currentStageName = getStageConfig(currentStage).name;
+
+    return (
+      <div className={cn("relative min-h-[300px]", className)}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className={cn(
+            "absolute inset-0 z-10 flex items-center justify-center",
+            "bg-white/80 dark:bg-gray-950/80 backdrop-blur-md rounded-lg"
+          )}
+        >
+          <div className="text-center p-6 max-w-sm">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", delay: 0.1 }}
+              className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-400/20 flex items-center justify-center"
+            >
+              <Map className="h-8 w-8 text-[#ff6a1a]" />
+            </motion.div>
+
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Continue Your Journey
+            </h3>
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Complete the {requiredStageName} stage to unlock {featureName}.
+              You&apos;re currently in {currentStageName}.
+            </p>
+
+            {journeyPercentage !== undefined && (
+              <p className="text-sm font-medium text-[#ff6a1a] mb-4">
+                You&apos;re at {journeyPercentage}% of your venture journey.
+              </p>
+            )}
+
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              View Your Journey
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Tier-blocked (existing behavior)
   return (
     <div className={cn("relative min-h-[300px]", className)}>
-      {/* Lock overlay - uses min-height to ensure visibility when children not mounted */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -65,7 +135,6 @@ export function FeatureLock({
         )}
       >
         <div className="text-center p-6 max-w-sm">
-          {/* Lock icon */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -75,18 +144,15 @@ export function FeatureLock({
             <Lock className="h-8 w-8 text-[#ff6a1a]" />
           </motion.div>
 
-          {/* Title */}
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {featureName}
           </h3>
 
-          {/* Description */}
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             {description ||
               `This feature is available on ${TIER_NAMES[requiredTier]} and above.`}
           </p>
 
-          {/* Upgrade button */}
           <UpgradeTier currentTier={currentTier} />
         </div>
       </motion.div>
@@ -102,15 +168,27 @@ export function InlineFeatureLock({
   currentTier,
   featureName,
   className,
+  requiredStage,
+  currentStage,
+  journeyPercentage,
 }: {
   requiredTier: UserTier;
   currentTier: UserTier;
   featureName: string;
   className?: string;
+  requiredStage?: OasesStage;
+  currentStage?: OasesStage;
+  journeyPercentage?: number;
 }) {
-  const hasAccess = canAccessFeature(currentTier, requiredTier);
+  const hasTierAccess = canAccessFeature(currentTier, requiredTier);
+  const hasStageAccess =
+    !requiredStage ||
+    !currentStage ||
+    STAGE_ORDER.indexOf(currentStage) >= STAGE_ORDER.indexOf(requiredStage);
 
-  if (hasAccess) return null;
+  if (hasTierAccess && hasStageAccess) return null;
+
+  const isStageBlocked = requiredStage && currentStage && !hasStageAccess;
 
   return (
     <motion.div
@@ -123,13 +201,26 @@ export function InlineFeatureLock({
         className
       )}
     >
-      <Lock className="h-3.5 w-3.5" />
-      <span>
-        {featureName} requires{" "}
-        <span className="font-medium text-[#ff6a1a]">
-          {TIER_NAMES[requiredTier]}
-        </span>
-      </span>
+      {isStageBlocked ? (
+        <>
+          <Map className="h-3.5 w-3.5" />
+          <span>
+            Complete your journey to unlock{" "}
+            <span className="font-medium text-[#ff6a1a]">{featureName}</span>
+            {journeyPercentage !== undefined && ` (${journeyPercentage}%)`}
+          </span>
+        </>
+      ) : (
+        <>
+          <Lock className="h-3.5 w-3.5" />
+          <span>
+            {featureName} requires{" "}
+            <span className="font-medium text-[#ff6a1a]">
+              {TIER_NAMES[requiredTier]}
+            </span>
+          </span>
+        </>
+      )}
     </motion.div>
   );
 }

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkTierForRequest } from '@/lib/api/tier-middleware';
 import { UserTier } from '@/lib/constants';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import {
   calculateIRS,
   saveIRSResult,
@@ -17,6 +17,7 @@ import {
   getLatestIRS,
   type IRSInput,
 } from '@/lib/fred/irs';
+import { logJourneyEventAsync } from '@/lib/db/journey-events';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,26 +67,19 @@ export async function POST(request: NextRequest) {
     const savedResult = await saveIRSResult(supabase, userId, result);
 
     // Record journey event for dashboard "Investor Readiness" card
-    // Use service client to bypass RLS (user-scoped client fails due to current_setting policy)
-    try {
-      const serviceClient = createServiceClient();
-      const { error: journeyErr } = await serviceClient
-        .from('journey_events')
-        .insert({
-          user_id: userId,
-          event_type: 'score_improved',
-          event_data: {
-            source: 'investor_readiness',
-            categories: Object.fromEntries(
-              Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
-            ),
-          },
-          score_after: Math.round(savedResult.overall),
-        });
-      if (journeyErr) console.error('[IRS API] Journey event save failed:', journeyErr.message);
-    } catch (e) {
-      console.error('[IRS API] Journey event save error:', e);
-    }
+    // Uses service-role client via logJourneyEventAsync for reliable persistence
+    // (previous version used user-scoped client which failed with broken RLS policies)
+    logJourneyEventAsync({
+      userId,
+      eventType: 'score_improved',
+      eventData: {
+        source: 'investor_readiness',
+        categories: Object.fromEntries(
+          Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
+        ),
+      },
+      scoreAfter: Math.round(savedResult.overall),
+    });
 
     return NextResponse.json({
       success: true,

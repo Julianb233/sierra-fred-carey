@@ -78,6 +78,28 @@ export async function middleware(request: NextRequest) {
       return redirectResponse;
     }
 
+    // Phase 77-02: Welcome flow enforcement
+    // Redirect authenticated users who haven't completed intake to /welcome
+    const welcomeExemptPaths = ['/welcome', '/api/', '/login', '/signup', '/get-started', '/onboarding', '/_next/', '/favicon']
+    const needsWelcomeCheck = user && !welcomeExemptPaths.some(p => pathname.startsWith(p)) && isProtectedRoute(pathname)
+
+    if (needsWelcomeCheck) {
+      const { createClient: createServerClient } = await import("@/lib/supabase/server")
+      const supabase = await createServerClient()
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("journey_welcomed")
+        .eq("id", user.id)
+        .single()
+
+      if (profile && profile.journey_welcomed === false) {
+        const welcomeUrl = new URL("/welcome", request.url)
+        const redirectResponse = NextResponse.redirect(welcomeUrl)
+        redirectResponse.headers.set("X-Request-ID", requestId)
+        return redirectResponse
+      }
+    }
+
     // Propagate correlation ID and pathname on every response
     response.headers.set("X-Request-ID", requestId);
     response.headers.set("x-pathname", pathname);

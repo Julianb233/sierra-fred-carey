@@ -15,6 +15,7 @@ import {
   buildTopicPrompt,
   buildStepGuidanceBlock,
 } from "@/lib/ai/prompts";
+import { buildFredVoicePreamble } from "@/lib/fred/voice";
 import type { StartupStep } from "@/lib/ai/frameworks/startup-process";
 
 // ============================================================================
@@ -310,5 +311,40 @@ describe("buildStepGuidanceBlock", () => {
     ]);
     expect(result).toContain("Active blockers");
     expect(result).toContain("No customer interviews completed");
+  });
+});
+
+// ============================================================================
+// Group 10: Conciseness and Baby-Step Coaching (Phase 86)
+// ============================================================================
+
+describe("FRED_CAREY_SYSTEM_PROMPT — Conciseness Protocol", () => {
+  it("assembled system prompt includes conciseness protocol", () => {
+    const result = buildSystemPrompt("");
+    expect(result).toContain("CONCISENESS PROTOCOL");
+    expect(result).toContain("2-3 sentences maximum");
+    expect(result).toContain("Want me to break that down?");
+  });
+
+  it("assembled system prompt includes baby-step coaching rules", () => {
+    const result = buildSystemPrompt("");
+    expect(result).toContain("BABY-STEP COACHING");
+    expect(result).toContain("1-week micro-steps");
+    expect(result).toContain("7 days");
+  });
+
+  it("conciseness rules appear before frameworks section", () => {
+    const result = buildSystemPrompt("");
+    const concisenessIndex = result.indexOf("CONCISENESS");
+    const frameworksIndex = result.indexOf("FRAMEWORKS");
+    expect(concisenessIndex).toBeGreaterThan(-1);
+    expect(frameworksIndex).toBeGreaterThan(-1);
+    expect(concisenessIndex).toBeLessThan(frameworksIndex);
+  });
+
+  it("voice preamble includes voice conciseness constraint", () => {
+    const result = buildFredVoicePreamble();
+    expect(result).toContain("1-2 sentences");
+    expect(result).toContain("voice mode");
   });
 });

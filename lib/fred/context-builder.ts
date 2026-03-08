@@ -15,6 +15,10 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { sanitizeUserInput } from "@/lib/ai/guards/prompt-guard";
 import type { SemanticMemory } from "@/lib/db/fred-memory";
 import { STEP_TITLES, type StepNumber } from "@/types/startup-process";
+import { buildActiveFounderMemory, formatMemoryBlock } from "@/lib/fred/active-memory";
+import type { FounderMemory } from "@/lib/fred/founder-memory-types";
+import { buildStageGatePromptBlock } from "@/lib/oases/stage-validator";
+import type { OasesStage } from "@/types/oases";
 
 // ============================================================================
 // Types
@@ -24,6 +28,7 @@ export interface FounderProfile {
   name: string | null;
   stage: string | null;
   industry: string | null;
+  coFounder: string | null;
   revenueRange: string | null;
   teamSize: number | null;
   fundingHistory: string | null;
@@ -51,7 +56,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("name, stage, industry, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
+    .select("name, stage, industry, co_founder, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
     .eq("id", userId)
     .single();
 
@@ -60,6 +65,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
       name: null,
       stage: null,
       industry: null,
+      coFounder: null,
       revenueRange: null,
       teamSize: null,
       fundingHistory: null,
@@ -73,6 +79,7 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
     name: data.name ?? null,
     stage: data.stage ?? null,
     industry: data.industry ?? null,
+    coFounder: data.co_founder ?? null,
     revenueRange: data.revenue_range ?? null,
     teamSize: data.team_size ?? null,
     fundingHistory: data.funding_history ?? null,
@@ -232,6 +239,10 @@ function extractFactValue(
 // ============================================================================
 
 /**
+ * @deprecated Phase 79: Use formatMemoryBlock(founderMemory) from active-memory.ts instead.
+ * This function is kept for backward compatibility with any code paths that
+ * still reference it directly. New code should use the active memory layer.
+ *
  * Build a Founder Snapshot context block from profile + facts.
  * Follows Operating Bible Section 12 structure.
  * Returns an empty string if no meaningful data is available.
@@ -531,9 +542,9 @@ export async function buildFounderContextWithFacts(
   userId: string,
   hasPersistentMemory: boolean,
   preloadedConversationState?: { id: string } | null
-): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }> }> {
+): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }>; memory?: FounderMemory; oasesStage: OasesStage }> {
   try {
-    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext] = await Promise.all([
+    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, activeMemory] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId, preloadedConversationState),
@@ -542,6 +553,7 @@ export async function buildFounderContextWithFacts(
         ? loadChannelContext(userId)
         : Promise.resolve(null),
       loadActiveRedFlags(userId),
+      buildActiveFounderMemory(userId, hasPersistentMemory),
     ]);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
@@ -550,7 +562,44 @@ export async function buildFounderContextWithFacts(
       seedFounderSnapshot(userId);
     }
 
-    let context = buildContextBlock({ profile, facts, isFirstConversation });
+    // Phase 79: Use active memory layer for the core founder context block
+    // formatMemoryBlock produces the ACTIVE FOUNDER CONTEXT section with
+    // CRITICAL INSTRUCTION, stale field prompts, and missing field collection
+    let context = formatMemoryBlock(activeMemory);
+
+    // Append handoff instructions for first conversation (from legacy buildContextBlock)
+    const hasProfileData =
+      profile.name ||
+      profile.stage ||
+      profile.industry ||
+      profile.revenueRange ||
+      profile.teamSize ||
+      profile.fundingHistory ||
+      profile.challenges.length > 0;
+
+    if (isFirstConversation && profile.onboardingCompleted && hasProfileData) {
+      context += "\n\n## HANDOFF: FIRST CONVERSATION AFTER ONBOARDING";
+      context += "\n\nThis founder just completed onboarding and collected the data above. This is your first real conversation.";
+      context += "\n- Reference what you already know naturally: \"You mentioned you're at [stage] working in [industry]...\"";
+      context += "\n- Do NOT re-ask for stage, industry, challenge, team size, revenue, or funding -- you already have this.";
+      context += "\n- Go deeper: ask about the specifics that onboarding didn't capture (product status, traction metrics, runway, 90-day goal, who their buyer is).";
+      context += "\n- Apply the Universal Entry Flow with context: since you know their challenge, start there. Ask what they've tried, what's working, what's stuck.";
+      context += "\n- Begin building the full Founder Snapshot by filling in the missing fields through natural conversation.";
+      context += "\n- A personalized goal roadmap has been generated on their dashboard based on their funding stage. Reference it naturally: \"I've mapped out a roadmap for your stage — you can track progress on your dashboard.\"";
+    } else if (isFirstConversation && !hasProfileData) {
+      context += "\n\n## HANDOFF: FIRST CONVERSATION (NO ONBOARDING DATA)";
+      context += "\n\nThis founder has no onboarding data. They either skipped onboarding or are a new user.";
+      context += "\n- Run the Universal Entry Flow: \"What are you building?\", \"Who is it for?\", \"What are you trying to accomplish right now?\"";
+      context += "\n- Collect the Business Fundamentals naturally: business name, sector, positioning, revenue status, team size, funding stage, co-founder status.";
+      context += "\n- ALSO gather deeper Founder Snapshot fields over subsequent messages: product status, traction, runway, primary constraint, 90-day goal.";
+      context += "\n- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.";
+      context += "\n- If they jump straight to a specific topic, collect the 2-3 most critical fundamentals for that topic, then help them. Do not block them from getting value.";
+      context += "\n- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.";
+      context += "\n- Once you learn their funding stage, a personalized goal roadmap will be generated on their dashboard. Mention it naturally once you know their stage.";
+    }
+
+    // Phase 80: Extract current Oases stage from active memory
+    const currentOasesStage = (activeMemory.oases_stage?.value as OasesStage) || "clarity"
 
     // Wire startup_processes dashboard data into FRED's context
     if (startupProcess) {
@@ -571,6 +620,12 @@ export async function buildFounderContextWithFacts(
       context += "\n\n" + lines.join("\n");
     }
 
+    // Phase 80: Stage-gate enforcement — tell FRED which topics are allowed
+    const stageGateBlock = buildStageGatePromptBlock(currentOasesStage)
+    if (stageGateBlock) {
+      context += "\n\n" + stageGateBlock
+    }
+
     // Phase 42: Append cross-channel context (SMS, voice, chat history)
     if (channelContext) {
       context += "\n\n" + channelContext;
@@ -581,10 +636,10 @@ export async function buildFounderContextWithFacts(
       context += "\n\n" + redFlagsContext;
     }
 
-    return { context, facts };
+    return { context, facts, memory: activeMemory, oasesStage: currentOasesStage };
   } catch (error) {
     console.warn("[FRED Context] Failed to build founder context (non-blocking):", error);
-    return { context: "", facts: [] };
+    return { context: "", facts: [], oasesStage: "clarity" as OasesStage };
   }
 }
 

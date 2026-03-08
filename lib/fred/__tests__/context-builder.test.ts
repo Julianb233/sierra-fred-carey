@@ -1,8 +1,11 @@
 /**
- * Context Builder Unit Tests — Phase 34-03
+ * Context Builder Unit Tests — Phase 34-03 (Updated Phase 79)
  *
  * Tests for buildFounderContext which loads founder data and
- * assembles the Founder Snapshot for system prompt injection.
+ * assembles the Active Founder Context for system prompt injection.
+ *
+ * Phase 79 changed the output format from "FOUNDER SNAPSHOT" (legacy buildContextBlock)
+ * to "ACTIVE FOUNDER CONTEXT" (formatMemoryBlock from active-memory.ts).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -37,10 +40,18 @@ let profileData: Record<string, unknown> | null = null;
 let profileError: { code?: string; message: string } | null = null;
 let conversationStateData: Record<string, unknown> | null = null;
 let conversationStateError: { code?: string; message: string } | null = null;
+let startupProcessData: Record<string, unknown> | null = null;
 let supabaseThrows = false;
 
+const limitMock = vi.fn(() => ({
+  single: vi.fn(() => ({
+    data: startupProcessData,
+    error: startupProcessData ? null : { code: "PGRST116", message: "no rows" },
+  })),
+}));
+const orderMock = vi.fn(() => ({ limit: limitMock }));
 const singleMock = vi.fn();
-const eqMock = vi.fn(() => ({ single: singleMock }));
+const eqMock = vi.fn(() => ({ single: singleMock, order: orderMock }));
 const selectMock = vi.fn(() => ({ eq: eqMock }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -55,6 +66,8 @@ vi.mock("@/lib/supabase/server", () => ({
             data: conversationStateData,
             error: conversationStateError,
           });
+        } else if (table === "startup_processes") {
+          // handled by orderMock -> limitMock -> single chain
         }
         return { select: selectMock };
       },
@@ -63,7 +76,14 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 // Fred memory mock
-let factsData: Array<{ category: string; key: string; value: Record<string, unknown> }> = [];
+let factsData: Array<{
+  category: string;
+  key: string;
+  value: Record<string, unknown>;
+  confidence?: number;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+}> = [];
 let memoryThrows = false;
 
 vi.mock("@/lib/db/fred-memory", () => ({
@@ -79,6 +99,20 @@ vi.mock("@/lib/db/conversation-state", () => ({
   syncSnapshotFromProfile: vi.fn(async () => {}),
 }));
 
+// Channels mock
+vi.mock("@/lib/channels/conversation-context", () => ({
+  getConversationContext: vi.fn(async () => ({
+    totalConversations: 0,
+    channelSummaries: [],
+  })),
+  buildChannelContextBlock: vi.fn(() => ""),
+}));
+
+// Red flags mock
+vi.mock("@/lib/db/red-flags", () => ({
+  getRedFlags: vi.fn(async () => []),
+}));
+
 // Import AFTER mocks
 const { buildFounderContext } = await import("@/lib/fred/context-builder");
 
@@ -91,6 +125,7 @@ function resetMocks() {
   profileError = { code: "PGRST116", message: "no rows" };
   conversationStateData = null;
   conversationStateError = { code: "PGRST116", message: "no rows" };
+  startupProcessData = null;
   factsData = [];
   supabaseThrows = false;
   memoryThrows = false;
@@ -101,12 +136,16 @@ const FULL_PROFILE = {
   name: "Jane Doe",
   stage: "seed",
   industry: "HealthTech",
+  company_name: "HealthCo",
+  co_founder: null,
   revenue_range: "$10k-$50k MRR",
   team_size: 5,
   funding_history: "Pre-seed $500k",
   challenges: ["distribution", "hiring"],
   enrichment_data: null,
   onboarding_completed: true,
+  oases_stage: null,
+  updated_at: new Date().toISOString(),
 };
 
 // ============================================================================
@@ -121,13 +160,15 @@ describe("buildFounderContext", () => {
   // ---------- Group 1: Empty profile ----------
 
   describe("empty profile (no data)", () => {
-    it("returns empty string when no profile, no facts, and NOT first conversation", async () => {
+    it("returns context with missing fields instruction when no profile and NOT first conversation", async () => {
       // Not first conversation: conversation state exists
       conversationStateData = { id: "existing-state" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-1", false);
-      expect(result).toBe("");
+      // Phase 79: Active memory always produces output (with missing field instructions)
+      expect(result).toContain("ACTIVE FOUNDER CONTEXT");
+      expect(result).toContain("Missing Context");
     });
 
     it("returns first-conversation block when no profile but IS first conversation", async () => {
@@ -149,12 +190,16 @@ describe("buildFounderContext", () => {
         name: "Alice",
         stage: "idea",
         industry: null,
+        company_name: null,
+        co_founder: null,
         revenue_range: null,
         team_size: null,
         funding_history: null,
         challenges: [],
         enrichment_data: null,
         onboarding_completed: false,
+        oases_stage: null,
+        updated_at: new Date().toISOString(),
       };
       profileError = null;
       conversationStateData = { id: "existing" };
@@ -162,68 +207,79 @@ describe("buildFounderContext", () => {
 
       const result = await buildFounderContext("user-2", false);
       expect(result).toContain("Alice");
-      expect(result).toContain("Idea");
+      expect(result).toContain("idea");
       expect(result).not.toContain("undefined");
       expect(result).not.toContain("N/A");
     });
 
-    it("includes challenges when present", async () => {
+    it("includes biggest challenge when challenges array is present", async () => {
       profileData = {
         name: "Bob",
         stage: "pre-seed",
         industry: null,
+        company_name: null,
+        co_founder: null,
         revenue_range: null,
         team_size: null,
         funding_history: null,
         challenges: ["fundraising", "product-market-fit"],
         enrichment_data: null,
         onboarding_completed: false,
+        oases_stage: null,
+        updated_at: new Date().toISOString(),
       };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-3", false);
-      expect(result).toContain("Current Challenges");
+      // Phase 79: challenges[0] maps to biggest_challenge in active memory
+      expect(result).toContain("Biggest Challenge");
+      expect(result).toContain("fundraising");
     });
 
-    it("does not include missing optional fields", async () => {
+    it("does not include missing optional fields as explicit values", async () => {
       profileData = {
         name: "Carol",
         stage: "seed",
         industry: null,
+        company_name: null,
+        co_founder: null,
         revenue_range: null,
         team_size: null,
         funding_history: null,
         challenges: [],
         enrichment_data: null,
         onboarding_completed: false,
+        oases_stage: null,
+        updated_at: new Date().toISOString(),
       };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-4", false);
-      expect(result).not.toContain("Team:");
-      expect(result).not.toContain("Funding:");
-      expect(result).not.toContain("Revenue:");
+      // Phase 79: Missing fields appear in "Missing Context" instruction, not as values
+      expect(result).not.toContain("**Company:**");
+      expect(result).not.toContain("**Co-Founder:**");
+      expect(result).toContain("Missing Context");
     });
   });
 
   // ---------- Group 3: Full profile ----------
 
   describe("full profile", () => {
-    it("output contains FOUNDER SNAPSHOT", async () => {
+    it("output contains ACTIVE FOUNDER CONTEXT header", async () => {
       profileData = { ...FULL_PROFILE };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-5", false);
-      expect(result).toContain("FOUNDER SNAPSHOT");
+      expect(result).toContain("ACTIVE FOUNDER CONTEXT");
     });
 
-    it("output includes name, stage, industry, revenue, team, funding", async () => {
+    it("output includes name, stage, market from active memory", async () => {
       profileData = { ...FULL_PROFILE };
       profileError = null;
       conversationStateData = { id: "existing" };
@@ -231,11 +287,20 @@ describe("buildFounderContext", () => {
 
       const result = await buildFounderContext("user-5", false);
       expect(result).toContain("Jane Doe");
-      expect(result).toContain("Seed");
+      expect(result).toContain("seed");
       expect(result).toContain("HealthTech");
-      expect(result).toContain("$10k-$50k MRR");
-      expect(result).toContain("5");
-      expect(result).toContain("Pre-seed $500k");
+      expect(result).toContain("HealthCo");
+    });
+
+    it("output contains CRITICAL INSTRUCTION for mandatory context referencing", async () => {
+      profileData = { ...FULL_PROFILE };
+      profileError = null;
+      conversationStateData = { id: "existing" };
+      conversationStateError = null;
+
+      const result = await buildFounderContext("user-5", false);
+      expect(result).toContain("CRITICAL INSTRUCTION");
+      expect(result).toContain("MUST reference");
     });
 
     it("output does not contain literal {{FOUNDER_CONTEXT}}", async () => {
@@ -305,61 +370,62 @@ describe("buildFounderContext", () => {
     });
   });
 
-  // ---------- Group 6: Returning user ----------
+  // ---------- Group 6: Returning user with active context ----------
 
   describe("returning user", () => {
-    it("output contains 'Use this snapshot to personalize'", async () => {
+    it("output contains CRITICAL INSTRUCTION for personalization", async () => {
       profileData = { ...FULL_PROFILE };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-8", false);
-      expect(result).toContain("Use this snapshot to personalize");
+      // Phase 79: Active memory always includes CRITICAL INSTRUCTION
+      expect(result).toContain("CRITICAL INSTRUCTION");
+      expect(result).toContain("MUST reference");
     });
   });
 
-  // ---------- Group 7: Enrichment data ----------
+  // ---------- Group 7: Active memory stale/missing fields ----------
 
-  describe("enrichment data", () => {
-    it("includes revenue hint when profile has no revenue", async () => {
+  describe("active memory field instructions", () => {
+    it("includes missing field instructions when core fields are absent", async () => {
       profileData = {
         name: "Dave",
         stage: "seed",
         industry: null,
+        company_name: null,
+        co_founder: null,
         revenue_range: null,
         team_size: null,
         funding_history: null,
         challenges: [],
-        enrichment_data: { revenueHint: "$2k MRR" },
+        enrichment_data: null,
         onboarding_completed: false,
+        oases_stage: null,
+        updated_at: new Date().toISOString(),
       };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-9", false);
-      expect(result).toContain("Revenue mentioned");
+      expect(result).toContain("Missing Context");
+      expect(result).toContain("Company Name");
     });
 
-    it("includes competitors when mentioned", async () => {
+    it("includes co-founder in context when profile has it", async () => {
       profileData = {
-        name: "Eve",
-        stage: "seed",
-        industry: null,
-        revenue_range: null,
-        team_size: null,
-        funding_history: null,
-        challenges: [],
-        enrichment_data: { competitorsMentioned: ["Stripe", "PayPal"] },
-        onboarding_completed: false,
+        ...FULL_PROFILE,
+        co_founder: "Sarah Chen",
       };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
 
       const result = await buildFounderContext("user-10", false);
-      expect(result).toContain("Competitors mentioned");
+      expect(result).toContain("Co-Founder");
+      expect(result).toContain("Sarah Chen");
     });
   });
 
@@ -381,34 +447,41 @@ describe("buildFounderContext", () => {
       memoryThrows = true;
 
       const result = await buildFounderContext("user-12", true);
-      // Should still have profile data (memory failure is caught)
+      // Should still have profile data (memory failure is caught in active-memory.ts)
       expect(result).toContain("Jane Doe");
-      expect(result).toContain("FOUNDER SNAPSHOT");
+      expect(result).toContain("ACTIVE FOUNDER CONTEXT");
     });
   });
 
-  // ---------- Group 9: Sanitization ----------
+  // ---------- Group 9: Active memory integration ----------
 
-  describe("sanitization", () => {
-    it("calls sanitize on user-controlled data", async () => {
+  describe("active memory integration", () => {
+    it("uses formatMemoryBlock output with ACTIVE FOUNDER CONTEXT header", async () => {
       profileData = {
         name: "TestFounder",
         stage: "idea",
         industry: "SaaS",
+        company_name: "TestCo",
+        co_founder: null,
         revenue_range: null,
         team_size: null,
         funding_history: null,
         challenges: ["growth"],
         enrichment_data: null,
         onboarding_completed: false,
+        oases_stage: null,
+        updated_at: new Date().toISOString(),
       };
       profileError = null;
       conversationStateData = { id: "existing" };
       conversationStateError = null;
-      sanitizeMock.mockClear();
 
-      await buildFounderContext("user-13", false);
-      expect(sanitizeMock).toHaveBeenCalled();
+      const result = await buildFounderContext("user-13", false);
+      // Phase 79: Context now comes from formatMemoryBlock
+      expect(result).toContain("ACTIVE FOUNDER CONTEXT");
+      expect(result).toContain("TestFounder");
+      expect(result).toContain("TestCo");
+      expect(result).toContain("SaaS");
     });
   });
 });

@@ -6,6 +6,7 @@ import { extractAndSaveInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 /**
  * Deck Review API
@@ -326,27 +327,20 @@ Provide a thorough IC-perspective review with slide-by-slide analysis, objection
       // Don't fail the main request if insight extraction fails
     }
 
-    // Log journey event
-    try {
-      await sql`
-        INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-        VALUES (
-          ${userId},
-          'deck_review_completed',
-          ${JSON.stringify({
-            reviewId: savedReview.id,
-            evaluationId,
-            deckType,
-            overallScore: review.overallScore,
-            objectionCount: review.likelyObjections.length,
-            gapCount: review.readinessGaps.length,
-          })},
-          ${review.overallScore}
-        )
-      `;
-    } catch (err) {
-      console.error("[Deck Review] Journey event logging failed:", err);
-    }
+    // Log journey event with resilient retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: "deck_review_completed",
+      eventData: {
+        reviewId: savedReview.id,
+        evaluationId,
+        deckType,
+        overallScore: review.overallScore,
+        objectionCount: review.likelyObjections.length,
+        gapCount: review.readinessGaps.length,
+      },
+      scoreAfter: review.overallScore,
+    });
 
     return NextResponse.json(
       {

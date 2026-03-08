@@ -1,28 +1,244 @@
 {
-  "v": 2,
-  "pending": [],
-  "claimed": {},
-  "running": {},
-  "done": [
-    "01-01-b", "01-02-b", "01-03-b", "01-04-b", "01-05-b", "01-06-b",
-    "02-01-b", "02-02-b", "02-03-b", "02-04-b", "02-05-b",
-    "03-01-b", "03-02-b", "03-03-b", "03-04-b", "03-05-b",
-    "10-01-b", "10-02-b", "10-03-b", "10-04-b", "10-05-b",
-    "10b-01-b", "10b-02-b", "10b-03-b",
-    "11-01-b", "11-02-b", "11-03-b", "11-04-b", "11-05-b", "11-06-b",
-    "12-01-b", "12-02-b",
-    "13-01-b", "14-01-b", "14-02-b", "15-01-b",
-    "16-01-b", "17-01-b", "18-01-b", "18-02-b", "19-01-b",
-    "20-01-b", "20-02-b", "21-01-b",
-    "22-01-b", "22-02-b", "23-01-b",
-    "24-01-b", "24-02-b", "25-01-b", "25-02-b",
-    "26-01-b", "26-02-b", "27-01-b", "27-02-b",
-    "28-01-b", "28-02-b", "29-01-b", "29-02-b",
-    "30-01-b", "30-02-b", "31-01-b", "31-02-b",
-    "32-01-b", "32-02-b",
-    "33-01-b", "33-02-b"
+  "v": 10,
+  "batch": "auto-v9-20260308",
+  "tasks": [
+    {
+      "id": "78-01-b",
+      "phase": 78,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "deps": [],
+      "complexity": 5,
+      "wave": 1
+    },
+    {
+      "id": "78-02-b",
+      "phase": 78,
+      "plan": "02",
+      "type": "build",
+      "status": "done",
+      "deps": [
+        "78-01-b"
+      ],
+      "complexity": 6,
+      "wave": 1
+    },
+    {
+      "id": "79-01-b",
+      "phase": 79,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "deps": [],
+      "complexity": 5,
+      "wave": 1
+    },
+    {
+      "id": "79-02-b",
+      "phase": 79,
+      "plan": "02",
+      "type": "build",
+      "status": "done",
+      "deps": [
+        "79-01-b"
+      ],
+      "complexity": 5,
+      "wave": 1
+    },
+    {
+      "id": "80-01-b",
+      "phase": 80,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "deps": [],
+      "complexity": 6,
+      "wave": 2,
+      "planFile": ".planning/phases/80-structured-stage-gate-enforcement/80-01-PLAN.md"
+    },
+    {
+      "id": "80-02-b",
+      "phase": 80,
+      "plan": "02",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-5",
+      "deps": [
+        "80-01-b"
+      ],
+      "complexity": 6,
+      "wave": 2,
+      "planFile": ".planning/phases/80-structured-stage-gate-enforcement/80-02-PLAN.md"
+    },
+    {
+      "id": "81-01-b",
+      "phase": 81,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-4",
+      "deps": [],
+      "complexity": 5,
+      "wave": 2,
+      "planFile": ".planning/phases/81-reality-lens-first-interaction/81-01-PLAN.md",
+      "note": "Verified complete - artifacts committed in previous session"
+    },
+    {
+      "id": "81-02-b",
+      "phase": 81,
+      "plan": "02",
+      "type": "build",
+      "status": "done",
+      "deps": [
+        "81-01-b"
+      ],
+      "complexity": 5,
+      "wave": 2,
+      "planFile": ".planning/phases/81-reality-lens-first-interaction/81-02-PLAN.md",
+      "claimedBy": "worker-2"
+    },
+    {
+      "id": "82-01-b",
+      "phase": 82,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "deps": [],
+      "complexity": 6,
+      "wave": 2,
+      "planFile": ".planning/phases/82-chat-voice-continuity/82-01-PLAN.md"
+    },
+    {
+      "id": "82-02-b",
+      "phase": 82,
+      "plan": "02",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-5",
+      "deps": [
+        "82-01-b"
+      ],
+      "complexity": 6,
+      "wave": 2,
+      "planFile": ".planning/phases/82-chat-voice-continuity/82-02-PLAN.md"
+    },
+    {
+      "id": "83-01-b",
+      "phase": 83,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-4",
+      "deps": [
+        "80-02-b"
+      ],
+      "complexity": 5,
+      "wave": 3,
+      "planFile": ".planning/phases/83-founder-mindset-monitor/PLAN.md"
+    },
+    {
+      "id": "84-01-b",
+      "phase": 84,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-2",
+      "deps": [
+        "80-02-b"
+      ],
+      "complexity": 5,
+      "wave": 3,
+      "planFile": ".planning/phases/84-daily-mentor-guidance/PLAN.md"
+    },
+    {
+      "id": "85-01-b",
+      "phase": 85,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-1",
+      "deps": [
+        "80-02-b"
+      ],
+      "complexity": 6,
+      "wave": 3,
+      "planFile": ".planning/phases/85-journey-gated-fund-matching/PLAN.md"
+    },
+    {
+      "id": "86-01-b",
+      "phase": 86,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-2",
+      "deps": [
+        "83-01-b"
+      ],
+      "complexity": 4,
+      "wave": 4,
+      "planFile": ".planning/phases/86-fred-conciseness/PLAN.md"
+    },
+    {
+      "id": "87-01-b",
+      "phase": 87,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-4",
+      "deps": [
+        "83-01-b"
+      ],
+      "complexity": 6,
+      "wave": 4,
+      "planFile": ".planning/phases/87-pitch-deck-scoring/PLAN.md"
+    },
+    {
+      "id": "88-01-b",
+      "phase": 88,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-2",
+      "deps": [
+        "84-01-b"
+      ],
+      "complexity": 5,
+      "wave": 4,
+      "planFile": ".planning/phases/88-event-launch-kit/PLAN.md"
+    },
+    {
+      "id": "89-01-b",
+      "phase": 89,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-5",
+      "deps": [
+        "85-01-b"
+      ],
+      "complexity": 5,
+      "wave": 4,
+      "planFile": ".planning/phases/89-boardy-polish/PLAN.md"
+    },
+    {
+      "id": "90-01-b",
+      "phase": 90,
+      "plan": "01",
+      "type": "build",
+      "status": "done",
+      "claimedBy": "worker-7",
+      "deps": [
+        "86-01-b",
+        "87-01-b",
+        "88-01-b",
+        "89-01-b"
+      ],
+      "complexity": 5,
+      "wave": 5,
+      "planFile": ".planning/phases/90-user-testing-loop/PLAN.md",
+      "note": "Verified and finalized by worker-7. All artifacts present and type-checked."
+    }
   ],
-  "failed": [],
-  "blocked": {},
-  "lastUpdated": "2026-02-08T06:00:00Z"
+  "lastUpdated": "2026-03-08T20:00:00Z"
 }

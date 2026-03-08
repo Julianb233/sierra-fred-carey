@@ -31,6 +31,7 @@ export async function GET(_request: NextRequest) {
   try {
     // SECURITY: Get userId from server-side session (not from client headers!)
     const userId = await requireAuth();
+    // Use user-scoped client with RLS enforcement
     const supabase = await createClient();
 
     // Fetch multiple stats in parallel with individual error handling

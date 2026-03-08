@@ -8,22 +8,30 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v7.0 UX Feedback Loop
+## Current Milestone: v8.0 Go-Live: Guided Venture Journey
 
-**Goal:** Build a closed-loop feedback system that collects user experience signals from every channel (in-app, WhatsApp, SMS, analytics), analyzes them with AI, auto-prioritizes issues, feeds insights back into FRED's behavior, and surfaces actionable intelligence to the admin team.
+**Goal:** Transform Sahara from a chatbot tool into a structured guided venture journey with "Oases" milestone visualization, mentor-first UX, redesigned onboarding, and event-ready polish for the Palo Alto launch to 200 founders. Derived from Fred Cary strategy sessions (March 4 & 7, 2026).
 
 **Target features:**
-- In-app feedback collection — thumbs up/down on FRED responses, NPS surveys, contextual feedback widgets, feature request submissions
-- WhatsApp/SMS feedback ingestion — monitor WhatsApp conversations for sentiment and feedback signals, parse SMS replies for satisfaction data
-- PostHog analytics pipeline — session recordings, funnel drop-off detection, heatmaps, automated UX friction identification
-- AI feedback analyzer — FRED-powered pattern detection across all feedback channels, trend surfacing, auto-categorization, severity scoring
-- Admin feedback dashboard — aggregated view of all feedback, sentiment trends, top issues, filterable by channel/feature/tier/date
-- Auto-prioritization engine — AI ranks issues by impact (affected users × severity × frequency), suggests sprint priorities
-- FRED self-improvement loop — negative feedback triggers prompt refinement suggestions, positive signals reinforce effective patterns, A/B tracking
-- Linear/GitHub integration — auto-create issues from feedback patterns, link feedback to existing issues, close-the-loop notifications
-- Feedback-to-founder loop — notify founders when their feedback leads to changes, build trust and engagement
+- Onboarding redesign — Mandatory welcome screen ("journey not a transaction"), reality lens check as first interaction, five-question structured flow, handholding orientation before FRED interaction, "spook them" gap awareness
+- Oases journey visualization — Five-stage progress roadmap (Clarity → Validation → Build → Launch → Grow), Sahara-themed desert oasis milestones, stage-gating enforcement (cannot skip ahead), progress percentage prominently displayed
+- UI relabeling & navigation — "Fred AI" → "Mentor", "Journey" → "Progress", prominent "Chat with Fred" entry point, visible "Open Roadmap" button, four main sections persistently visible on main view
+- Onboarding text fields — Convert checkbox-based onboarding into free-text answer fields that FRED captures, rephrases, and stores as founder memory
+- Founder memory enhancement — Store cleaned chat data as per-user memory/mini-brain, capture and restate problem/traction answers, memory persists and updates across sessions
+- Daily guidance system — Twilio SMS integration for orchestrated daily mentor tasks ("validate pricing with 5 customers today"), mentor-tells-you-what-to-do style (not "what do you need?"), cost-effective platform-return flow to manage SMS costs
+- Chat & voice continuity — Fix chat freezing/response-chopping, voice ID integration (Fred Zaharix), seamless continuity between text chat and voice call, mobile call/text continuity
+- Business intelligence radar — Actionable blurbs/headlines from web research in UI, inline article/blurb feature, idea-readiness scoring with personalized explanatory copy (24hr refresh cycle)
+- Event launch kit — QR code landing flow for Palo Alto pitch to 200 founders, two-week free trial mechanism, subscription flow wired (activated when Fred says go), pitch deck upload ready for paid tier
+- Robert Williams user testing loop — Systematic test account creation and full onboarding validation, mobile device testing protocol, feedback collection framework from first 200 users, iteration workflow before scaling
+- Fund matching gating — VC matching grayed out until 100% journey completion, Bordy API integration for direct VC/angel introductions when ready
 
-**Previous Milestone:** v6.0 Full Platform Maturity (67% complete — 8/12 phases shipped)
+**Previous Milestone:** v7.0 UX Feedback Loop (Phases 71-73 complete)
+
+**Meeting Sources:**
+- `docs/meeting-notes-2026-03-04-sahara-founders.md` — Full consolidated notes
+- Fireflies.ai recap: Sahara Founders (March 4, 2026)
+- Read AI meeting report: Sahara Founders (March 4, 2026)
+- Google Gemini notes: Sahara Strategy Session (March 7, 2026)
 
 ## Requirements
 
@@ -94,25 +102,63 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 
 ### Active
 
-**Feedback Collection (COLLECT)**
-- [ ] In-app feedback widgets — Thumbs up/down on FRED responses, contextual feedback forms, NPS micro-surveys, feature request submission
-- [ ] WhatsApp feedback ingestion — Parse WhatsApp conversations for sentiment signals, feedback extraction, satisfaction scoring
-- [ ] SMS feedback parsing — Analyze SMS check-in replies for satisfaction data, keyword detection, sentiment analysis
-- [ ] PostHog analytics pipeline — Session recordings, funnel analysis, heatmaps, automated friction detection
+**Onboarding Transformation (ONBOARD)**
+- [ ] Welcome screen — Mandatory educational screen on first sign-up: "This is a guided venture journey, not a transaction", how it works, what to expect
+- [ ] Reality lens check — First interaction assesses founder's idea readiness, surfaces gaps to motivate engagement ("spook them")
+- [ ] Five-question structured flow — New accounts start with structured intake collecting idea, stage, challenge, goals, timeline as free-text answers
+- [ ] Handholding orientation — Concise onboarding guide/first-statement before users interact with Mentor explaining how to use Mentor + Progress
+- [ ] IdeaPros template mapping — Map IdeaPros ~120-step user journey as structural template for Sahara's founder workflow
 
-**Feedback Intelligence (ANALYZE)**
-- [ ] AI feedback analyzer — Cross-channel pattern detection, trend surfacing, auto-categorization by feature/severity/theme
-- [ ] Auto-prioritization engine — Impact scoring (users × severity × frequency), sprint priority suggestions, urgency classification
-- [ ] Sentiment tracking — Per-feature sentiment over time, cohort analysis by tier/stage, early warning alerts
+**Oases Journey System (JOURNEY)**
+- [ ] Five-stage roadmap — Clarity → Validation → Build → Launch → Grow as "Oases" desert milestones (matches Sahara branding)
+- [ ] Journey visualization UI — Progress roadmap graphic prominently displayed below chat/call, progress percentage above business-intelligence radar
+- [ ] Stage gating — Users cannot skip ahead (e.g., no pitch deck before problem validation), enforced at FRED conversation + UI level
+- [ ] Stage completion tracking — Track which roadmap questions answered, compute per-stage and overall completion percentage
+- [ ] Fund matching gating — VC matching grayed out / locked until 100% journey completion
 
-**Feedback Actions (ACT)**
-- [ ] Admin feedback dashboard — Aggregated multi-channel view, sentiment trends, top issues, filters by channel/feature/tier/date
-- [ ] FRED self-improvement loop — Negative feedback triggers prompt audit, positive signals reinforce patterns, A/B prompt tracking
-- [ ] Linear/GitHub auto-triage — Auto-create issues from feedback clusters, link feedback to existing issues, dedup
-- [ ] Feedback-to-founder notifications — Close the loop: notify founders when their feedback ships, build engagement
+**UI Relabeling & Navigation (UILABEL)**
+- [ ] Rename "Fred AI" → "Mentor" across all UI surfaces
+- [ ] Rename "Journey" → "Progress" across all UI surfaces
+- [ ] Prominent "Chat with Fred" entry point — Upfront, not buried; killer feature positioning
+- [ ] "Open Roadmap" button — Visible and persistently accessible
+- [ ] Four main sections persistently visible on main view (mobile + desktop)
+- [ ] Onboarding checkbox → text field conversion — Free-text answers that FRED captures, rephrases, stores as memory
+
+**Founder Memory & Intelligence (MEMORY)**
+- [ ] Per-user memory/mini-brain — Store cleaned chat data as structured memory, capture problem statements, traction, and key decisions
+- [ ] Capture and restate — FRED rephrases user inputs and stores for later reference and updates
+- [ ] Business intelligence radar — Actionable blurbs/headlines from periodic web searches, inline article feature
+- [ ] Idea-readiness scoring — 24hr refresh cycle with personalized explanatory copy for each user
+
+**Daily Guidance & Outreach (GUIDE)**
+- [ ] Daily task orchestration — FRED sends methodical daily tasks via SMS ("validate pricing with 5 customers today")
+- [ ] Mentor-style outbound — Tells user what to focus on, not "what do you need help with today?"
+- [ ] Twilio integration — Outbound SMS for daily guidance (existing Twilio wiring, extend for proactive guidance)
+- [ ] Platform return flow — Cost-effective strategy to bring users back to platform for full responses (avoid expensive per-message SMS)
+
+**Chat & Voice Polish (VOICE)**
+- [ ] Fix chat freezing/response-chopping — Bug in demo system causing chat to freeze mid-response
+- [ ] Voice ID wiring — Fred Zaharix voice ID integration, API key + account access confirmed
+- [ ] Chat-voice continuity — Seamless transition between text chat and voice call, context preserved
+- [ ] Mobile call/text continuity — Ensure voice calls and text work smoothly on mobile devices
+
+**Event Launch Kit (EVENT)**
+- [ ] QR code landing flow — 3-4 slide presentation deck links to QR code, instant sign-up flow for Palo Alto event (200 founders)
+- [ ] Two-week free trial — Trial mechanism ready for event attendees (activated when Fred says go)
+- [ ] Subscription flow — Stripe checkout wired for $99/month, NOT activated until Julian's full version ships
+- [ ] Pitch deck upload — Document upload for paid tier pitch deck review (Pro/Studio feature, critical for paid launch)
+
+**User Testing Loop (TEST)**
+- [ ] Systematic test accounts — Create new accounts and go through full onboarding to validate interest/five-question system
+- [ ] Mobile device testing — Test call/text continuity on mobile, validate responsive behavior
+- [ ] Event feedback collection — Framework to collect and process feedback from first 200 event attendees
+- [ ] Iteration workflow — Process for analyzing user behavior, prioritizing fixes, and iterating before scaling
+
+**Carried from v7.0 (DEFERRED)**
+- [ ] Feedback intelligence phases (74-76) — Pattern detection, auto-triage, self-improvement loop (deprioritized for go-live)
 
 **Carried from v6.0 (DEFERRED)**
-- [ ] Real Boardy API integration — Blocked pending partnership and API credentials
+- [ ] Real Boardy API integration — Blocked pending partnership and API credentials (may activate for VC matching)
 - [ ] Mux admin routes — Blocked pending Mux credentials
 
 ### Out of Scope
@@ -146,6 +192,19 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - `lib/ai/prompts.ts` — 246 lines, system prompt + 5 coaching prompts + frameworks
 - `fred-cary-db/Fred_Cary_Profile.md` — 381 lines, raw biographical data
 - `fred-cary-db/comma-separated values.csv` — 148+ podcast appearances with topics
+
+**Fred's 7 FRED Brain Enhancements (March 7, 2026 — from WhatsApp):**
+Fred made these enhancements to his ChatGPT FRED version and explicitly said "these should be added to the brain":
+1. **Answer Completeness Rule** — Complete answer in one response. No drip-feeding ("Would you like to know the next thing..."). Instead: "I also recommend...", "One additional improvement is..."
+2. **Question Discipline Rule** — Only ask questions when they materially change the recommendation. Max 3 questions. No curiosity questions. If reasonable assumptions can be made, state assumptions and proceed.
+3. **Compression Rule (Fred Voice)** — High signal, low friction. Clear section headers, short paragraphs, bullet points for frameworks, plain language. Avoid long motivational explanations, repetition, storytelling unless strategically useful.
+4. **Founder Pattern Recognition Layer** — Silently diagnose founder situation before giving advice. Detect: Idea Without Customer, Tech First Problem Second, Everyone Is the Customer, Distribution Fantasy, Premature Fundraising, Feature Not Business, Consulting Disguised as Startup, Vanity Traction, Overbuilt Product. Name the pattern, explain risk, redirect to correct next step.
+5. **Reality Check Trigger** — Detect founder delusion signals (huge market with no evidence, assumes viral growth, expects funding before traction, dismisses competitors, builds before validating). Challenge calmly, translate claim to testable hypothesis, recommend smallest real-world experiment.
+6. **Decision Framework Library** — Apply structured decision tests: Problem Test, Customer Test, Wedge Test, Distribution Test, Build vs Validate Test, Fundraising Test, Focus Test, Founder Edge Test, Timing Test, Scalability Test. Use them explicitly in responses.
+7. **Traction Coaching Mode** — Structured 0→10→100 customers system. Stage 1 (First 10): founder-led outreach, problem interviews, concierge MVP. Stage 2 (First 100): repeatable acquisition path, track conversion. Stage 3 (Toward PMF): cohort analysis, narrow ICP, retention. Favor founder-led sales early, manual validation before building, speed of learning over polish.
+
+**Founder Wellbeing Prompt (from Fred's WhatsApp, March 7):**
+"If a user expresses insecurity, doubt, imposter syndrome, burnout, stress, relationship or family strain, or decision paralysis: Normalize it as common, not weakness. Reduce the problem to what's controllable now. Offer practical exits (simplify priorities, restore basics, add support, define the next step). Be steady and present, not therapeutic or dismissive. If signals indicate serious mental health risk, encourage professional or local support."
 
 **Existing Codebase (v1.0 complete):**
 - Next.js 16 + React 19 with App Router
@@ -197,6 +256,17 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 | Closed-loop feedback system | Feedback → AI analysis → prioritize → fix → notify founder — full cycle | — Pending |
 | Multi-channel collection | In-app + WhatsApp + SMS + analytics — no single point of failure | — Pending |
 | FRED self-improvement from feedback | Negative signals trigger prompt refinement, not just bug reports | — Pending |
+| "Oases" milestone naming | Desert-themed milestones match Sahara brand, create story arc | ✓ Confirmed (Fred, Mar 7) |
+| Platform is a journey, not a chatbot | Users must feel guided venture journey, not chat tool | ✓ Confirmed (Fred, Mar 7) |
+| Stage-gating enforced | Users cannot skip ahead (no pitch deck before validation) | ✓ Confirmed (Fred, Mar 7) |
+| No payment until full version ready | Paid tier delayed until pitch deck upload + document review ships | ✓ Confirmed (Fred, Mar 7) |
+| Launch with Alex's version first | joinsahara.com version goes live; Julian's full version follows | ✓ Confirmed (Fred, Mar 7) |
+| "Mentor" not "Fred AI" | UI labels must say Mentor/Progress, not Fred AI/Journey | ✓ Confirmed (Fred, Mar 7) |
+| Daily guidance is proactive | FRED tells users what to do, doesn't ask what they need | ✓ Confirmed (Fred, Mar 7) |
+| $99/month target price | Positioned as affordable alternative to expensive consultants | ✓ Confirmed (Fred, Mar 4) |
+| 7 FRED brain enhancements | Answer Completeness, Question Discipline, Compression, Pattern Recognition, Reality Check, Decision Frameworks, Traction Coaching | ✓ Confirmed (Fred WhatsApp, Mar 7) |
+| Pre-seed/seed focus only | Not serving Series A+ well yet; real value is with beginners | ✓ Confirmed (Fred WhatsApp, Mar 1) |
+| ElevenLabs voice: "Fred Sahara" | Voice ID: uxq5gLBpu73uF1Aqzb2t, API key shared in WhatsApp | ✓ Confirmed (WhatsApp, Feb 27-28) |
 
 ---
-*Last updated: 2026-03-04 after v7.0 UX Feedback Loop milestone initialization*
+*Last updated: 2026-03-07 after v8.0 Go-Live milestone initialization from Sahara Founders meetings*

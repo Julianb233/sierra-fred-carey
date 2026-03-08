@@ -1,11 +1,15 @@
 "use client";
 
-import { memo } from "react";
+
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
+import type { MessageFeedbackState } from "@/lib/feedback/types";
+
+type FeedbackSignalValue = 'thumbs_up' | 'thumbs_down'
 import { RedFlagBadge } from "./red-flag-badge";
+import { ThumbsWidget } from "./thumbs-widget";
 import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
 import { CourseCardInline } from "@/components/content/course-card-inline";
@@ -60,9 +64,29 @@ interface ChatMessageProps {
   risks?: RedFlag[];
   /** When true, show the TTS playback button on assistant messages. Requires Pro+. */
   showTts?: boolean;
+  /** Feedback state for this message (only relevant for assistant messages) */
+  feedbackState?: MessageFeedbackState;
+  /** Callback when user clicks thumbs up/down */
+  onFeedbackSignal?: (messageId: string, signal: FeedbackSignalValue) => void;
+  /** Callback to toggle comment form */
+  onFeedbackToggleComment?: (messageId: string) => void;
+  /** Callback when comment text changes */
+  onFeedbackCommentChange?: (messageId: string, comment: string) => void;
+  /** Callback to submit comment */
+  onFeedbackSubmitComment?: (messageId: string) => void;
 }
 
-export const ChatMessage = memo(function ChatMessage({ message, index, risks, showTts }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  index,
+  risks,
+  showTts,
+  feedbackState,
+  onFeedbackSignal,
+  onFeedbackToggleComment,
+  onFeedbackCommentChange,
+  onFeedbackSubmitComment,
+}: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
@@ -214,16 +238,28 @@ export const ChatMessage = memo(function ChatMessage({ message, index, risks, sh
           </motion.div>
         )}
 
-        {/* Message actions: TTS + Timestamp */}
+        {/* Message actions: TTS + Feedback + Timestamp */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, delay: Math.min(index, 3) * 0.05 + 0.2 }}
-          className="flex items-center gap-1 mt-1.5 px-2"
+          transition={{ duration: 0.2, delay: index * 0.05 + 0.2 }}
+          className="flex items-start gap-1 mt-1.5 px-2"
         >
           {/* TTS button -- assistant messages only, Pro+ tier */}
           {!isUser && showTts && (
             <TtsButton text={message.content} />
+          )}
+
+          {/* Thumbs feedback -- assistant messages only, after streaming completes */}
+          {!isUser && !message.isStreaming && feedbackState && onFeedbackSignal && (
+            <ThumbsWidget
+              messageId={message.id}
+              state={feedbackState}
+              onSignal={onFeedbackSignal}
+              onToggleComment={onFeedbackToggleComment || (() => {})}
+              onCommentChange={onFeedbackCommentChange || (() => {})}
+              onSubmitComment={onFeedbackSubmitComment || (() => {})}
+            />
           )}
 
           <span className="text-xs text-muted-foreground">
@@ -233,7 +269,7 @@ export const ChatMessage = memo(function ChatMessage({ message, index, risks, sh
       </div>
     </motion.div>
   );
-});
+}
 
 function formatTimestamp(date: Date): string {
   const now = new Date();

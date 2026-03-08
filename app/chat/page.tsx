@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { VoiceCallContextBanner } from "@/components/chat/voice-call-context-banner";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,8 @@ export default function ChatPage() {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
+  const [lastDiscussedTopic, setLastDiscussedTopic] = useState<string | null>(null);
+  const [lastCallSummary, setLastCallSummary] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const { tier } = useUserTier();
   const isProOrAbove = tier >= UserTier.PRO;
@@ -88,6 +91,30 @@ export default function ChatPage() {
       setSidePanelOpen(false);
     }
   }, [isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch voice context for pre-call banner
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchVoiceContext() {
+      try {
+        const res = await fetch("/api/voice/context");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.lastTopic) {
+          setLastDiscussedTopic(data.lastTopic);
+        }
+      } catch {
+        // Non-critical -- banner just won't show
+      }
+    }
+
+    fetchVoiceContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Poll for active mode from conversation state
   useEffect(() => {
@@ -230,6 +257,16 @@ export default function ChatPage() {
       {/* Active mode bar */}
       <ActiveModeBar mode={activeMode} />
 
+      {/* Voice call context banner */}
+      <div className="shrink-0 max-w-4xl mx-auto w-full px-3 sm:px-4">
+        <VoiceCallContextBanner
+          lastDiscussedTopic={lastDiscussedTopic}
+          isCallActive={callModalOpen}
+          lastCallSummary={lastCallSummary}
+          onDismiss={() => setLastCallSummary(null)}
+        />
+      </div>
+
       {/* Main area: Chat + Side Panel */}
       <div className="flex-1 flex min-h-0">
         {/* Chat container */}
@@ -294,7 +331,11 @@ export default function ChatPage() {
       />
 
       {/* Call Fred Modal — now available to all tiers */}
-      <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
+      <CallFredModal
+        open={callModalOpen}
+        onOpenChange={setCallModalOpen}
+        onCallEnd={(summary) => setLastCallSummary(summary)}
+      />
     </div>
   );
 }

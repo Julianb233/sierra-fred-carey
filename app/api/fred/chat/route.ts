@@ -32,6 +32,7 @@ import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
+import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
@@ -39,6 +40,17 @@ import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnosti
 import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
+import { extractSentiment } from "@/lib/feedback/sentiment";
+import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
+import { insertFeedbackSignal } from "@/lib/db/feedback";
+import { TIER_WEIGHTS } from "@/lib/feedback/constants";
+import { extractSentimentFromText } from "@/lib/feedback/sentiment";
+import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "@/lib/sentiment/stress-detector";
+import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
+import { logSentimentSignal } from "@/lib/db/sentiment-log";
+import { validateStageAccess } from "@/lib/oases/stage-validator";
+import type { OasesStage } from "@/types/oases";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -498,6 +510,8 @@ async function handlePost(req: NextRequest) {
     // to avoid a duplicate getAllUserFacts DB call in loadMemoryActor
     const founderContext = founderContextResult.context;
     const preloadedFacts = founderContextResult.facts;
+    // Phase 80: Extract Oases stage from founder context for stage-gate validation
+    const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
 
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
@@ -650,9 +664,65 @@ async function handlePost(req: NextRequest) {
     // Build page navigation context block (only when chatting from an overlay, not the full /chat page)
     const pageContextBlock = pageContext ? buildPageContextBlock(pageContext) : "";
 
+    // Phase 83: Founder Mindset Monitor — pre-response stress detection
+    // Uses heuristic (sync) sentiment for speed, DB query for recent signals is lightweight.
+    let wellbeingBlock = ""
+    try {
+      const quickSentiment = extractSentimentFromText(message)
+      const stressSignal = await detectStressPattern(userId, quickSentiment)
+
+      // Log current sentiment signal (fire-and-forget)
+      const messageTopics = extractTopicsFromMessage(message)
+      void logSentimentSignal({
+        user_id: userId,
+        label: quickSentiment.label,
+        confidence: quickSentiment.confidence,
+        stress_level: stressSignal.score,
+        topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+      })
+
+      // Check if FRED should proactively intervene
+      if (await shouldIntervene(stressSignal, userId)) {
+        const founderName = context?.startupName || "founder"
+        const intervention = generateIntervention(stressSignal, founderName)
+        wellbeingBlock = buildInterventionBlock(intervention)
+
+        // Mark intervention was triggered
+        void logSentimentSignal({
+          user_id: userId,
+          label: quickSentiment.label,
+          confidence: quickSentiment.confidence,
+          stress_level: stressSignal.score,
+          topics: messageTopics.length > 0 ? messageTopics : stressSignal.topics,
+          intervention_triggered: true,
+        })
+
+        console.log(`[Mindset Monitor] Intervention triggered for user ${userId.slice(0, 8)}... (level: ${stressSignal.level}, trend: ${stressSignal.trend})`)
+      }
+    } catch (err) {
+      console.warn("[Mindset Monitor] Stress detection failed (non-blocking):", err)
+    }
+
     // Assemble full system prompt context
     // Order: founderContext + stepGuidance + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
+    // Phase 80: Stage-gate pre-validation
+    const stageValidation = validateStageAccess(message, currentOasesStage)
+    let stageRedirectBlock = ""
+    if (!stageValidation.allowed && stageValidation.redirectMessage) {
+      stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)
+
+The founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.
+
+**Your response MUST redirect them.** Use this language (adapt naturally to context):
+"${stageValidation.redirectMessage}"
+
+${stageValidation.currentStageGuidance ? `Then guide them toward: ${stageValidation.currentStageGuidance}` : ""}
+
+Do NOT answer their original question about ${stageValidation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
+    }
+
     let fullContext = [
+      stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       founderContext,
       stepGuidanceBlock,
       rlStatusBlock,
@@ -662,6 +732,7 @@ async function handlePost(req: NextRequest) {
       irsBlock,
       deckProtocolBlock,
       deckReviewReadyBlock,
+      wellbeingBlock,
       pageContextBlock,
     ].filter(Boolean).join("\n\n");
 
@@ -670,11 +741,12 @@ async function handlePost(req: NextRequest) {
     const contextTokens = estimateTokens(fullContext);
     if (contextTokens > 100_000) {
       // Truncation priority (keep most important first):
-      // 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
+      // 0. stageRedirectBlock, 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
       // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
       // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
       // Drop least critical blocks first (reverse priority)
       const blocksInPriority = [
+        { name: "stageRedirectBlock", value: stageRedirectBlock },
         { name: "founderContext", value: founderContext },
         { name: "frameworkBlock", value: frameworkBlock },
         { name: "stepGuidanceBlock", value: stepGuidanceBlock },
@@ -761,6 +833,51 @@ async function handlePost(req: NextRequest) {
       extractAndStoreNextSteps(userId, result.response.content, new Date().toISOString()).catch(err =>
         console.warn("[FRED Chat] Next steps extraction failed:", err)
       );
+
+      // Phase 73: Fire-and-forget sentiment extraction
+      (async () => {
+        try {
+          const sentiment = await extractSentiment(message, result.response.content);
+          await insertFeedbackSignal({
+            user_id: userId,
+            session_id: effectiveSessionId,
+            message_id: null,
+            channel: 'chat',
+            signal_type: 'sentiment',
+            rating: null,
+            category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+            comment: null,
+            sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+            sentiment_confidence: sentiment.confidence,
+            user_tier: tierName as 'free' | 'pro' | 'studio',
+            weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+            consent_given: true,
+            expires_at: null,
+            metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+          });
+          await aggregateSessionSentiment(effectiveSessionId, userId);
+        } catch (err) {
+          console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+        }
+      })();
+
+      // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
+      if (shouldPersistMemory) {
+        ;(async () => {
+          try {
+            const updates = await extractMemoryUpdates(
+              message,
+              result.response.content
+            )
+            if (updates.length > 0) {
+              await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+              console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
+            }
+          } catch (error) {
+            console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+          }
+        })()
+      }
 
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
@@ -991,31 +1108,25 @@ async function handlePost(req: NextRequest) {
               latencyMs,
             });
 
-            // Log journey event after each completed FRED interaction.
+            // Fire-and-forget: log journey event after each completed FRED interaction.
             // This populates the journey_events table so the Journey Dashboard, re-engagement
             // emails, and digest emails have activity data to work with.
-            try {
+            {
               const intent = update.context.validatedInput?.intent ?? "unknown";
               const step = update.context.conversationState?.currentStep ?? null;
-              // Pick the most descriptive event_type based on intent
               const eventType = intent === "decision_request" ? "decision_made"
                 : intent === "question" ? "step_completed"
                 : "message_sent";
-              const supabase = createServiceClient();
-              const { error: journeyErr } = await supabase.from("journey_events").insert({
-                user_id: userId,
-                event_type: eventType,
-                event_data: {
+              logJourneyEventAsync({
+                userId,
+                eventType,
+                eventData: {
                   intent,
                   latency_ms: latencyMs,
                   tier: tierName,
                   step,
                 },
-                created_at: new Date().toISOString(),
               });
-              if (journeyErr) console.error("[FRED Chat] Journey event save failed:", journeyErr.message);
-            } catch (err) {
-              console.error("[FRED Chat] Journey event save error:", err);
             }
 
             // Fire-and-forget: restore latency observability after streaming completion
@@ -1060,6 +1171,51 @@ async function handlePost(req: NextRequest) {
             extractAndStoreNextSteps(userId, response.content, new Date().toISOString()).catch(err =>
               console.warn("[FRED Chat] Next steps extraction failed:", err)
             );
+
+            // Phase 73: Fire-and-forget sentiment extraction
+            (async () => {
+              try {
+                const sentiment = await extractSentiment(message, response.content);
+                await insertFeedbackSignal({
+                  user_id: userId,
+                  session_id: effectiveSessionId,
+                  message_id: null,
+                  channel: 'chat',
+                  signal_type: 'sentiment',
+                  rating: null,
+                  category: sentiment.isCoachingDiscomfort ? 'coaching_discomfort' : null,
+                  comment: null,
+                  sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
+                  sentiment_confidence: sentiment.confidence,
+                  user_tier: tierName as 'free' | 'pro' | 'studio',
+                  weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+                  consent_given: true,
+                  expires_at: null,
+                  metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
+                });
+                await aggregateSessionSentiment(effectiveSessionId, userId);
+              } catch (err) {
+                console.warn("[FRED Chat] Sentiment extraction failed (non-blocking):", err);
+              }
+            })();
+
+            // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
+            if (shouldPersistMemory) {
+              ;(async () => {
+                try {
+                  const updates = await extractMemoryUpdates(
+                    message,
+                    response.content
+                  )
+                  if (updates.length > 0) {
+                    await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+                    console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
+                  }
+                } catch (error) {
+                  console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+                }
+              })()
+            }
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {

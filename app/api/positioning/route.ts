@@ -8,6 +8,7 @@ import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
 import { logger } from "@/lib/logger";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 // Fallback system prompt if not loaded from database
 const POSITIONING_ASSESSMENT_PROMPT = `You are Fred Carey, a startup advisor who has coached 10,000+ founders. You specialize in positioning clarity diagnostics - helping founders understand whether their positioning is sharp enough to resonate with their target market.
@@ -502,26 +503,19 @@ export async function POST(request: NextRequest) {
       // Don't fail the main request if insight extraction fails
     }
 
-    // Log journey event
-    try {
-      await sql`
-        INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-        VALUES (
-          ${userId},
-          'positioning_assessment',
-          ${JSON.stringify({
-            assessmentId: savedAssessment.id,
-            grade: analysis.positioningGrade,
-            narrativeScore: analysis.narrativeTightnessScore,
-            requestId: trackedResult.requestId,
-            variant: trackedResult.variant,
-          })},
-          ${Math.round(weightedScore)}
-        )
-      `;
-    } catch (err) {
-      console.error("[Positioning] Journey event logging failed:", err);
-    }
+    // Log journey event with resilient retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: "positioning_assessment",
+      eventData: {
+        assessmentId: savedAssessment.id,
+        grade: analysis.positioningGrade,
+        narrativeScore: analysis.narrativeTightnessScore,
+        requestId: trackedResult.requestId,
+        variant: trackedResult.variant,
+      },
+      scoreAfter: Math.round(weightedScore),
+    });
 
     return NextResponse.json(
       {

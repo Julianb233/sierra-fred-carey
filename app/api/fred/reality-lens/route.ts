@@ -25,6 +25,7 @@ import {
   validateInput,
   type RealityLensInput,
 } from "@/lib/fred/reality-lens";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 // ============================================================================
 // Rate Limit Configuration
@@ -180,6 +181,19 @@ export async function POST(req: NextRequest) {
         console.error("[Reality Lens API] Failed to persist analysis:", saveErr);
       }
     })();
+
+    // Log journey event so the Journey dashboard Idea Score updates
+    // Uses resilient logJourneyEventAsync with retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: "analysis_completed",
+      eventData: {
+        assessmentId: result.metadata.assessmentId,
+        verdict: result.verdict,
+        idea: input.idea.slice(0, 200),
+      },
+      scoreAfter: result.overallScore,
+    });
 
     const latencyMs = Date.now() - startTime;
 

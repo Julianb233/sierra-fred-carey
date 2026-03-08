@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-03-06",
+  "lint": {
+    "errors": 3,
+    "warnings": 324,
+    "note": "Pre-existing. Do not increase. Tracked for delta checking."
+  },
+  "tests": {
+    "total": 866,
+    "passing": 865,
+    "failing": 1,
+    "note": "Pre-existing failure in profile-creation flow."
+  }
+}

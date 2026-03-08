@@ -69,5 +69,10 @@ export function buildFredVoicePreamble(
     `${FRED_COMMUNICATION_STYLE.voice.primary}. ${FRED_COMMUNICATION_STYLE.voice.tone}.`
   );
 
+  // Voice-specific conciseness constraint
+  lines.push(
+    `In voice mode, keep responses even shorter -- 1-2 sentences max. Founders are listening, not reading. Lead with the single most important point. Pause after your point and let them respond. Do not front-load context or caveats. If they want more detail, they will ask.`
+  );
+
   return lines.join("\n\n");
 }

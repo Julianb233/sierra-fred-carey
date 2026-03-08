@@ -135,7 +135,7 @@ export const BREAKPOINTS = {
 export const DASHBOARD_NAV = [
   { id: "overview", label: "Overview", icon: "LayoutDashboard", href: "/dashboard", tier: UserTier.FREE },
   { id: "reality-lens", label: "Reality Lens", icon: "OpenInNewWindow", href: "/dashboard/reality-lens", tier: UserTier.FREE },
-  { id: "journey", label: "Your Journey", icon: "Rocket", href: "/dashboard/journey", tier: UserTier.FREE },
+  { id: "journey", label: "Progress", icon: "Rocket", href: "/dashboard/journey", tier: UserTier.FREE },
   { id: "history", label: "Decision History", icon: "CountdownTimer", href: "/dashboard/history", tier: UserTier.FREE },
   { id: "insights", label: "AI Insights", icon: "BarChart", href: "/dashboard/insights", tier: UserTier.FREE },
   { id: "monitoring", label: "Monitoring", icon: "ActivityLog", href: "/dashboard/monitoring", tier: UserTier.FREE },
