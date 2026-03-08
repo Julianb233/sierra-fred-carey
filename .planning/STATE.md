@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 81 — Reality Lens First Interaction (Wave 2)
-Plan: 01 of 2 (complete)
-Status: 81-01 complete, 81-02 pending
-Last activity: 2026-03-08 — Completed 81-01-PLAN.md (Quick Reality Lens backend)
+Phase: 82 — Chat/Voice Continuity (Wave 2)
+Plan: 01 of 1 (complete)
+Status: Phase 82 complete
+Last activity: 2026-03-08 — Completed 82-01-PLAN.md (Chat-voice continuity layer)
 
-Progress: [########......] 8/14 phases (Wave 2 in progress)
+Progress: [#########.....] 9/14 phases (Wave 2 in progress)
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
@@ -74,6 +74,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - QuickAssessmentResult includes verdictLabel for UI display [81-01]
 - quickAssessIdea has full heuristic fallback when LLM fails -- first-time UX must never error [81-01]
 - reality_lens_complete partial index for efficient "who hasn't completed" queries [81-01]
+- Voice worker communicates with app via HTTP endpoints (API route approach), not direct imports [82-01]
+- Chat context preamble capped at ~2000 chars (~500 tokens) to avoid voice prompt bloat [82-01]
+- Dual transcript injection (worker + client) for reliability [82-01]
 
 ### Blockers/Concerns
 
@@ -86,7 +89,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:35Z
-Stopped at: Completed 81-01-PLAN.md (Quick Reality Lens backend). Next: 81-02 (frontend wizard).
-Resume file: .planning/phases/81-reality-lens-first-interaction/81-01-SUMMARY.md
+Last session: 2026-03-08T10:45Z
+Stopped at: Completed 82-01-PLAN.md (Chat-voice continuity layer). Phase 82 complete. Next: Wave 3 phases (83, 84, 85).
+Resume file: .planning/phases/82-chat-voice-continuity/82-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt

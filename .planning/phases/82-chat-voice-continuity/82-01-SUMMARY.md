@@ -36,13 +36,37 @@ Seamless continuity between text chat and voice calls. The voice agent now loads
 
 5. **Dual transcript injection**: Both the voice worker (server-side, on session close) and the client (on call end) can post transcripts. The client-side path ensures injection even if the worker misses the event.
 
+## Deviations from Plan
+
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bug] Fixed maxTokens -> maxOutputTokens in transcript-injector.ts**
+- **Found during:** Task 1 verification
+- **Issue:** AI SDK 6 uses `maxOutputTokens`, not `maxTokens` -- caused TypeScript compilation error
+- **Fix:** Changed property name in `generateText` call
+- **Commit:** 468727f
+
+**2. [Rule 1 - Bug] Fixed requireAuth usage in API routes**
+- **Found during:** Task 1 verification
+- **Issue:** API routes used `checkRateLimit` directly and treated `requireAuth` return as an object with `.id` property, but it returns a string (userId)
+- **Fix:** Rewrote both API routes to use `checkRateLimitForUser` and treat auth result as string
+- **Commit:** 468727f
+
+**3. [Rule 1 - Bug] Fixed TypeScript strict mode errors in voice agent**
+- **Found during:** Task 2 verification
+- **Issue:** `response.json()` returns `unknown` in strict mode, causing TS errors
+- **Fix:** Added explicit type assertions for response data
+- **Commit:** 8828434
+
 ## Verification
 
 - `npx tsc --noEmit` passes for Phase 82 files (pre-existing errors in feedback/funnel modules are unrelated)
+- `cd workers/voice-agent && npx tsc --noEmit` passes (only pre-existing env.ts window error remains)
 - Chat context loader produces formatted preamble under 500 tokens
 - Transcript injector stores episodes with `channel: 'voice'` for proper attribution
 - LastDiscussed component returns null when no prior conversation exists
 - Voice agent handles context fetch failures without breaking the call
+- Tests: 3338 passing, 50 failing (all pre-existing -- no new failures)
 
 ## Must-Have Truth Verification
 
