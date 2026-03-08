@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db/supabase-sql";
 import { logger } from "@/lib/logger";
+import { getExperimentFeedbackComparison } from "@/lib/feedback/experiment-metrics";
 
 /**
  * A/B Test Metrics Collection System
@@ -41,6 +42,12 @@ export interface VariantMetrics {
 
   // Last updated
   lastRequest?: Date;
+
+  // Feedback metrics (Phase 75)
+  thumbsUpRatio?: number;
+  avgSentimentScore?: number;
+  sessionCompletionRate?: number;
+  totalFeedbackSignals?: number;
 }
 
 export interface ExperimentComparison {
@@ -63,6 +70,14 @@ export interface ExperimentComparison {
 
   // Alerts
   alerts: Alert[];
+
+  // Feedback comparison (Phase 75)
+  feedbackComparison?: {
+    thumbsSignificant: boolean;
+    sentimentSignificant: boolean;
+    sessionCompletionSignificant: boolean;
+    feedbackWinner: string | null;
+  };
 }
 
 export interface Alert {
@@ -211,6 +226,50 @@ export async function compareExperimentVariants(
 
     const alerts = generateAlerts(validMetrics, experiment);
 
+    // Merge feedback metrics into variant data (Phase 75)
+    let feedbackComparison: ExperimentComparison["feedbackComparison"];
+    try {
+      const fbComparison = await getExperimentFeedbackComparison(experimentName);
+      if (fbComparison.variants.length > 0) {
+        // Merge feedback metrics into each variant
+        for (const vm of validMetrics) {
+          const fbVariant = fbComparison.variants.find(
+            (fv) => fv.variantName === vm.variantName
+          );
+          if (fbVariant) {
+            vm.thumbsUpRatio = fbVariant.thumbsRatio;
+            vm.avgSentimentScore = fbVariant.avgSentimentScore;
+            vm.sessionCompletionRate = fbVariant.sessionCompletionRate;
+            vm.totalFeedbackSignals = fbVariant.totalFeedbackSignals;
+          }
+        }
+
+        feedbackComparison = {
+          thumbsSignificant: fbComparison.thumbsSignificance?.significant ?? false,
+          sentimentSignificant: fbComparison.sentimentSignificance?.significant ?? false,
+          sessionCompletionSignificant: fbComparison.sessionCompletionSignificance?.significant ?? false,
+          feedbackWinner: fbComparison.feedbackWinner,
+        };
+
+        // Alert if feedback and performance winners disagree
+        if (
+          fbComparison.feedbackWinner &&
+          winner &&
+          fbComparison.feedbackWinner !== winner
+        ) {
+          alerts.push({
+            level: "warning",
+            type: "significance",
+            message: "Feedback and performance metrics disagree on winner",
+            metric: "feedbackWinner",
+            timestamp: new Date(),
+          });
+        }
+      }
+    } catch (err) {
+      logger.warn("[Monitoring] Failed to fetch feedback comparison, skipping:", err);
+    }
+
     // Auto-notify for new alerts if enabled
     if (AUTO_NOTIFY_ALERTS && alerts.length > 0) {
       // Import and trigger notifications asynchronously (don't block the response)
@@ -251,6 +310,7 @@ export async function compareExperimentVariants(
       winningVariant: winner,
       confidenceLevel: confidence,
       alerts,
+      feedbackComparison,
     };
   } catch (error) {
     console.error(`[Monitoring] Error comparing experiment ${experimentName}:`, error);

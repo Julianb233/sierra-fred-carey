@@ -2,6 +2,7 @@ import { sql } from "@/lib/db/supabase-sql";
 import crypto from "crypto";
 import { logVariantAssignment } from "@/lib/monitoring/ab-test-metrics";
 import { logger } from "@/lib/logger";
+import { getVariantFeedbackMetricsBatch } from "@/lib/feedback/experiment-metrics";
 
 export interface ABVariant {
   id: string;
@@ -236,6 +237,83 @@ export async function getVariantStats(
     return stats;
   } catch (error) {
     console.error(`[A/B Test] Error getting variant stats:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get variant statistics with feedback metrics overlay (REQ-A1).
+ * Extends base getVariantStats with thumbs ratio, sentiment score,
+ * and session completion rate from the feedback system.
+ *
+ * @param experimentName - Name of the experiment
+ * @returns Statistics per variant including feedback metrics
+ */
+export async function getVariantStatsWithFeedback(
+  experimentName: string
+): Promise<
+  Array<{
+    variantName: string;
+    totalRequests: number;
+    avgLatency: number;
+    errorRate: number;
+    // Feedback metrics (REQ-A1)
+    thumbsUpRatio: number | null;
+    avgSentimentScore: number | null;
+    sessionCompletionRate: number | null;
+    totalFeedbackSignals: number;
+  }>
+> {
+  logger.log(`[A/B Test] Getting stats with feedback for experiment ${experimentName}`);
+
+  try {
+    // Get base stats
+    const baseStats = await getVariantStats(experimentName);
+
+    // Get variant IDs for feedback metrics lookup
+    const variantResult = await sql`
+      SELECT v.id, v.variant_name as "variantName"
+      FROM ab_variants v
+      JOIN ab_experiments e ON v.experiment_id = e.id
+      WHERE e.name = ${experimentName}
+    `;
+
+    const variantIds = variantResult.map((v) => String(v.id));
+    let feedbackMap;
+    try {
+      feedbackMap = await getVariantFeedbackMetricsBatch(variantIds);
+    } catch (err) {
+      logger.warn("[A/B Test] Failed to fetch feedback metrics, returning base stats only:", err);
+      return baseStats.map((s) => ({
+        ...s,
+        thumbsUpRatio: null,
+        avgSentimentScore: null,
+        sessionCompletionRate: null,
+        totalFeedbackSignals: 0,
+      }));
+    }
+
+    // Build name-to-id mapping
+    const nameToId = new Map<string, string>();
+    for (const v of variantResult) {
+      nameToId.set(String(v.variantName), String(v.id));
+    }
+
+    // Merge base stats with feedback metrics
+    return baseStats.map((stat) => {
+      const variantId = nameToId.get(stat.variantName);
+      const feedback = variantId ? feedbackMap.get(variantId) : undefined;
+
+      return {
+        ...stat,
+        thumbsUpRatio: feedback?.thumbsRatio ?? null,
+        avgSentimentScore: feedback?.avgSentimentScore ?? null,
+        sessionCompletionRate: feedback?.sessionCompletionRate ?? null,
+        totalFeedbackSignals: feedback?.totalFeedbackSignals ?? 0,
+      };
+    });
+  } catch (error) {
+    console.error(`[A/B Test] Error getting variant stats with feedback:`, error);
     throw error;
   }
 }
