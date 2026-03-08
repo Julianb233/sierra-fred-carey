@@ -6,7 +6,7 @@
  */
 
 /** Email categories used across the engagement system */
-export type EmailCategory = 'weekly_digest' | 'milestone' | 're_engagement';
+export type EmailCategory = 'weekly_digest' | 'milestone' | 're_engagement' | 'feedback_improvement';
 
 /** Result of an email send operation */
 export interface EmailSendResult {

@@ -94,3 +94,42 @@ export interface SubmitFeedbackResponse {
   id?: string
   error?: string
 }
+
+// ============================================================================
+// Phase 76: RLHF-Lite — Prompt Patches & Few-Shot Examples
+// ============================================================================
+
+export type PromptPatchType = 'few_shot_positive' | 'few_shot_negative' | 'supplemental_instruction'
+export type PromptPatchStatus = 'draft' | 'pending_review' | 'approved' | 'active' | 'rejected' | 'retired'
+
+export interface PromptPatch {
+  id: string
+  version: number
+  topic: string
+  patch_type: PromptPatchType
+  content: string
+  status: PromptPatchStatus
+  source_insight_id: string | null
+  source_signal_ids: string[]
+  generated_by: string
+  approved_by: string | null
+  approved_at: string | null
+  experiment_id: string | null
+  thumbs_up_before: number | null
+  thumbs_up_after: number | null
+  tracking_started_at: string | null
+  tracking_ends_at: string | null
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export type PromptPatchInsert = Omit<PromptPatch, 'id' | 'version' | 'created_at' | 'updated_at'>
+
+export interface PatchGenerationResult {
+  title: string
+  content: string
+  topic: string
+  rationale: string
+  confidence: 'low' | 'medium' | 'high'
+}

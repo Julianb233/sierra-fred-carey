@@ -407,8 +407,71 @@ export interface SupplementalPromptPatch {
   createdAt: string
 }
 
-// Start empty — patches added via admin dashboard in Phase 76
+// Start empty — patches loaded from DB via loadActiveDBPatches() in Phase 76
 export const SUPPLEMENTAL_PATCHES: SupplementalPromptPatch[] = []
+
+// ============================================================================
+// DB-Driven Patch Loading (Phase 76)
+//
+// Loads active supplemental_instruction patches from the prompt_patches table.
+// Cached for 5 minutes to avoid DB queries on every chat request.
+// ============================================================================
+
+let dbPatchesCache: { patches: SupplementalPromptPatch[]; expiry: number } | null = null
+const DB_PATCH_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+/**
+ * Load active supplemental patches from the database.
+ * Returns cached results for 5 minutes to minimize DB load.
+ * Falls back to empty array on error (FRED works without patches).
+ */
+export async function loadActiveDBPatches(): Promise<SupplementalPromptPatch[]> {
+  // Check cache
+  if (dbPatchesCache && dbPatchesCache.expiry > Date.now()) {
+    return dbPatchesCache.patches
+  }
+
+  try {
+    // Skip on client side — DB access only works server-side
+    if (typeof window !== "undefined") return []
+    // Dynamic import to avoid server-only code in client bundles
+    const { getActiveSupplementalPatches } = await import(/* webpackIgnore: true */ "@/lib/db/prompt-patches")
+    const dbPatches = await getActiveSupplementalPatches()
+
+    const patches: SupplementalPromptPatch[] = dbPatches.map((p) => ({
+      id: p.id,
+      content: p.content,
+      source: p.source_insight_id ? 'feedback' as const : 'manual' as const,
+      sourceId: p.source_insight_id || undefined,
+      active: true,
+      createdAt: p.created_at,
+    }))
+
+    dbPatchesCache = {
+      patches,
+      expiry: Date.now() + DB_PATCH_CACHE_TTL,
+    }
+
+    return patches
+  } catch {
+    // Fail silently — FRED works fine without supplemental patches
+    return []
+  }
+}
+
+/**
+ * Assemble the full prompt with DB-loaded patches.
+ * Async version of buildPromptWithSupplements that loads active patches from DB.
+ *
+ * @param founderContext - Pre-built context string (or empty string)
+ * @returns The complete system prompt with context and DB-loaded patches
+ */
+export async function buildPromptWithDBPatches(
+  founderContext: string
+): Promise<string> {
+  const patches = await loadActiveDBPatches()
+  return buildPromptWithSupplements(founderContext, patches)
+}
 
 /**
  * Assemble the full prompt from core + active supplemental patches + founder context.

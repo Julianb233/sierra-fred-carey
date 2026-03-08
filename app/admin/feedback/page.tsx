@@ -71,7 +71,24 @@ interface TopInsight {
   created_at: string;
 }
 
-type ActiveTab = "signals" | "sessions";
+interface PatchItem {
+  id: string;
+  version: number;
+  topic: string;
+  patch_type: string;
+  content: string;
+  status: string;
+  source_insight_id: string | null;
+  source_signal_ids: string[];
+  thumbs_up_before: number | null;
+  thumbs_up_after: number | null;
+  tracking_started_at: string | null;
+  tracking_ends_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+type ActiveTab = "signals" | "sessions" | "patches";
 
 const DEFAULT_FILTERS: Filters = {
   dateFrom: "",
@@ -103,6 +120,9 @@ export default function AdminFeedbackPage() {
   const [insights, setInsights] = useState<TopInsight[]>([]);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [creatingLinear, setCreatingLinear] = useState<string | null>(null);
+  const [patches, setPatches] = useState<PatchItem[]>([]);
+  const [loadingPatches, setLoadingPatches] = useState(false);
+  const [updatingPatch, setUpdatingPatch] = useState<string | null>(null);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
@@ -193,6 +213,63 @@ export default function AdminFeedbackPage() {
     }
   };
 
+  // Fetch patches (Phase 76)
+  const fetchPatches = useCallback(async () => {
+    setLoadingPatches(true);
+    try {
+      const res = await fetch("/api/admin/feedback/patches?status=all&limit=100");
+      if (!res.ok) throw new Error(`Patches fetch failed: ${res.status}`);
+      const data = await res.json();
+      setPatches(data.patches ?? []);
+    } catch (err) {
+      console.error("[feedback] Patches error:", err);
+    } finally {
+      setLoadingPatches(false);
+    }
+  }, []);
+
+  // Update patch status
+  const handlePatchAction = async (patchId: string, action: string, extra?: Record<string, unknown>) => {
+    setUpdatingPatch(patchId);
+    try {
+      const res = await fetch(`/api/admin/feedback/patches/${patchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: action, ...extra }),
+      });
+      if (res.ok) {
+        fetchPatches();
+      } else {
+        const data = await res.json();
+        console.error("Patch update failed:", data.error);
+      }
+    } catch (err) {
+      console.error("[feedback] Patch update error:", err);
+    } finally {
+      setUpdatingPatch(null);
+    }
+  };
+
+  // Create experiment from patch
+  const handleCreateExperiment = async (patchId: string) => {
+    setUpdatingPatch(patchId);
+    try {
+      const res = await fetch(`/api/admin/feedback/patches/${patchId}/experiment`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fetchPatches();
+      } else {
+        console.error("Experiment creation failed:", data.error);
+      }
+    } catch (err) {
+      console.error("[feedback] Experiment creation error:", err);
+    } finally {
+      setUpdatingPatch(null);
+    }
+  };
+
   // Fetch sessions
   const fetchSessions = useCallback(async () => {
     setLoadingSessions(true);
@@ -225,6 +302,12 @@ export default function AdminFeedbackPage() {
       fetchSessions();
     }
   }, [activeTab, sessions.length, fetchSessions]);
+
+  useEffect(() => {
+    if (activeTab === "patches" && patches.length === 0) {
+      fetchPatches();
+    }
+  }, [activeTab, patches.length, fetchPatches]);
 
   const handleApplyFilters = () => {
     setPage(1);
@@ -630,6 +713,14 @@ export default function AdminFeedbackPage() {
         >
           Sessions
         </Button>
+        <Button
+          variant={activeTab === "patches" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveTab("patches")}
+          className={activeTab === "patches" ? "bg-[#ff6a1a] hover:bg-[#e55e17] text-white" : ""}
+        >
+          Prompt Patches
+        </Button>
       </div>
 
       {/* Feedback Signals Table */}
@@ -838,6 +929,192 @@ export default function AdminFeedbackPage() {
         </Card>
       )}
 
+      {/* Prompt Patches (Phase 76) */}
+      {activeTab === "patches" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Prompt Patches</CardTitle>
+            <CardDescription>
+              RLHF-lite patches generated from feedback patterns. Review, approve, and deploy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingPatches ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : patches.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
+                No prompt patches found. Patches are auto-generated when feedback patterns are detected.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Topic</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Content</TableHead>
+                      <TableHead>Signals</TableHead>
+                      <TableHead>Tracking</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {patches.map((patch) => {
+                      const meta = patch.metadata as Record<string, unknown>;
+                      const confidence = String(meta?.generation_confidence || meta?.confidence || "");
+                      const trackingActive = patch.tracking_started_at && patch.tracking_ends_at;
+                      const improvement =
+                        patch.thumbs_up_before !== null && patch.thumbs_up_after !== null
+                          ? ((patch.thumbs_up_after - patch.thumbs_up_before) * 100).toFixed(1)
+                          : null;
+
+                      return (
+                        <TableRow key={patch.id}>
+                          <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
+                            {patch.topic.replace(/_/g, " ")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {patch.patch_type.replace(/_/g, " ")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-gray-500">
+                            v{patch.version}
+                          </TableCell>
+                          <TableCell>
+                            <PatchStatusBadge status={patch.status} />
+                          </TableCell>
+                          <TableCell className="text-xs max-w-[250px]">
+                            <div className="truncate" title={patch.content}>
+                              {patch.content.slice(0, 120)}
+                              {patch.content.length > 120 ? "..." : ""}
+                            </div>
+                            {confidence && confidence !== "undefined" ? (
+                              <span className="text-xs text-gray-400 mt-0.5 block">
+                                Confidence: {confidence}
+                              </span>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-[#ff6a1a]">
+                            {patch.source_signal_ids?.length ?? 0}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {trackingActive ? (
+                              <div>
+                                {improvement !== null ? (
+                                  <span
+                                    className={`font-semibold ${
+                                      parseFloat(improvement) > 0
+                                        ? "text-green-600"
+                                        : parseFloat(improvement) < 0
+                                          ? "text-red-600"
+                                          : "text-gray-500"
+                                    }`}
+                                  >
+                                    {parseFloat(improvement) > 0 ? "+" : ""}
+                                    {improvement}%
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    Tracking...
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">--</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono whitespace-nowrap">
+                            {new Date(patch.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              {patch.status === "draft" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  disabled={updatingPatch === patch.id}
+                                  onClick={() => handlePatchAction(patch.id, "pending_review")}
+                                >
+                                  Submit
+                                </Button>
+                              )}
+                              {patch.status === "pending_review" && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs text-green-700 border-green-300"
+                                    disabled={updatingPatch === patch.id}
+                                    onClick={() => handlePatchAction(patch.id, "approved")}
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs text-red-700 border-red-300"
+                                    disabled={updatingPatch === patch.id}
+                                    onClick={() => handlePatchAction(patch.id, "rejected")}
+                                  >
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                              {patch.status === "approved" && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs bg-[#ff6a1a] text-white hover:bg-[#e55e17]"
+                                    disabled={updatingPatch === patch.id}
+                                    onClick={() => handlePatchAction(patch.id, "active")}
+                                  >
+                                    Deploy
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs"
+                                    disabled={updatingPatch === patch.id}
+                                    onClick={() => handleCreateExperiment(patch.id)}
+                                  >
+                                    A/B Test
+                                  </Button>
+                                </>
+                              )}
+                              {patch.status === "active" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  disabled={updatingPatch === patch.id}
+                                  onClick={() => handlePatchAction(patch.id, "retired")}
+                                >
+                                  Retire
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Category Distribution */}
       {stats &&
         Object.keys(stats.categoryDistribution).length > 0 && (
@@ -980,6 +1257,24 @@ function SeverityBadge({ severity }: { severity: string }) {
       className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${colors[severity] || colors.low}`}
     >
       {severity}
+    </span>
+  );
+}
+
+function PatchStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    pending_review: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+    approved: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    active: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    rejected: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    retired: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+  };
+  return (
+    <span
+      className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${colors[status] || colors.draft}`}
+    >
+      {status.replace(/_/g, " ")}
     </span>
   );
 }
