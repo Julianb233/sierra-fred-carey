@@ -114,8 +114,8 @@
       "phase": 82,
       "plan": "02",
       "type": "build",
-      "status": "claimed",
-      "claimedBy": "worker-3",
+      "status": "done",
+      "claimedBy": "worker-5",
       "deps": [
         "82-01-b"
       ],
@@ -142,7 +142,8 @@
       "phase": 84,
       "plan": "01",
       "type": "build",
-      "status": "pending",
+      "status": "claimed",
+      "claimedBy": "worker-2",
       "deps": [
         "80-02-b"
       ],

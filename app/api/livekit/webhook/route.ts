@@ -156,6 +156,9 @@ export async function POST(req: NextRequest) {
         // client-side via POST /api/fred/call/transcript. The client receives
         // real-time transcript data through LiveKit's data channel during the
         // call, then POSTs the collected transcript when the call ends.
+        // The transcript endpoint uses storeChannelEntry (from conversation-context)
+        // and injectVoiceTranscriptToChat (from chat-voice-bridge) to persist
+        // voice entries as episodic memory with channel='voice'.
 
         // Finalize coaching_sessions if applicable
         if (roomName.includes('fred-call')) {

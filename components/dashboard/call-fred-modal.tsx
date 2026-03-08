@@ -176,6 +176,8 @@ interface CallFredModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   callType?: "on-demand" | "scheduled";
+  /** Phase 82: Called when call ends with summary for chat context banner */
+  onCallEnd?: (summary: string | null) => void;
 }
 
 // ============================================================================
@@ -217,6 +219,7 @@ export function CallFredModal({
   open,
   onOpenChange,
   callType = "on-demand",
+  onCallEnd,
 }: CallFredModalProps) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [isMuted, setIsMuted] = useState(false);
@@ -545,6 +548,7 @@ export function CallFredModal({
       roomRef.current = null;
     }
 
+    let summaryText: string | null = null;
     try {
       // Generate post-call summary
       const response = await fetch("/api/fred/call/summary", {
@@ -568,6 +572,7 @@ export function CallFredModal({
 
       if (response.ok) {
         const data = await response.json();
+        summaryText = data.summary || null;
         setCallSummary({
           transcript: data.transcript,
           summary: data.summary,
@@ -580,16 +585,36 @@ export function CallFredModal({
     }
 
     // Phase 82: Inject voice transcript into chat history for continuity
+    // Post to both endpoints: voice/transcript (LLM summarization) and
+    // fred/call/transcript (channel-entry based storage)
     if (transcriptEntries.length > 0) {
-      try {
-        await fetch("/api/voice/transcript", {
+      const transcriptPayloads = [
+        fetch("/api/voice/transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transcript: transcriptEntries }),
-        });
+        }),
+        fetch("/api/fred/call/transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roomName: roomNameRef.current,
+            transcript: transcriptEntries,
+          }),
+        }),
+      ];
+      try {
+        await Promise.allSettled(transcriptPayloads);
       } catch (err) {
         console.warn("[CallFred] Failed to inject transcript to chat:", err);
       }
+    }
+
+    // Phase 82: Notify parent (chat page) of call summary for context banner
+    if (onCallEnd) {
+      onCallEnd(summaryText || (transcriptEntries.length > 0
+        ? `Voice call with ${transcriptEntries.length} exchanges`
+        : null));
     }
 
     setCallState("ended");
