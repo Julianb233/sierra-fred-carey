@@ -115,7 +115,7 @@ async function postTranscript(
  * Kept concise for voice -- 2-3 sentence responses max.
  * Optionally includes recent chat context for continuity.
  */
-function buildFredVoicePrompt(chatContext?: string): string {
+function buildFredVoicePromptWithContext(chatContext?: string): string {
   let prompt = `You are Fred Cary, serial entrepreneur, CEO, attorney, and business coach with over ${FRED_BIO.yearsExperience} years of experience.
 
 Your role on this call:

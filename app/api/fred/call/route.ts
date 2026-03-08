@@ -135,16 +135,30 @@ async function handlePost(req: NextRequest) {
       console.log('[Fred Call] Recording skipped: S3 credentials not configured');
     }
 
-    // 2. Explicitly dispatch the voice agent to join this room
+    // 2. Fetch recent chat context for voice continuity (non-blocking)
+    let chatContext = "";
+    let lastDiscussedTopic: string | null = null;
+    try {
+      const voiceContext = await getChatContextForVoice(userId);
+      chatContext = voiceContext.preambleBlock;
+      lastDiscussedTopic = voiceContext.lastTopic;
+      if (chatContext) {
+        console.log(`[Fred Call] Chat context loaded (${chatContext.length} chars), last topic: ${lastDiscussedTopic}`);
+      }
+    } catch (ctxErr) {
+      console.warn("[Fred Call] Chat context fetch failed (proceeding without):", ctxErr);
+    }
+
+    // 3. Explicitly dispatch the voice agent to join this room
     const dispatchClient = new AgentDispatchClient(httpUrl, apiKey, apiSecret);
     const dispatch = await dispatchClient.createDispatch(
       roomName,
       FRED_AGENT_NAME,
-      { metadata: JSON.stringify({ userId, callType }) },
+      { metadata: JSON.stringify({ userId, callType, chatContext }) },
     );
     console.log(`[Fred Call] Agent dispatched: ${dispatch.id} -> ${roomName}`);
 
-    // 3. Generate access token for the user
+    // 4. Generate access token for the user
     const at = new AccessToken(apiKey, apiSecret, {
       identity: userId,
       name: participantName || "Founder",
@@ -169,6 +183,7 @@ async function handlePost(req: NextRequest) {
       callType,
       maxDuration: callType === "on-demand" ? 600 : 1800, // seconds
       egressId, // null if recording not available
+      lastDiscussedTopic, // null if no recent chat context
     });
   } catch (error) {
     if (error instanceof Response) return error;
