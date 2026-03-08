@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 82 — Chat/Voice Continuity (Wave 2)
-Plan: 02 of 2 (complete)
-Status: Phase 82 complete
-Last activity: 2026-03-08 — Completed 82-02-PLAN.md (Voice transcript injection + context banners)
+Phase: 89 — Boardy Polish (Wave 4)
+Plan: 01 of 1 (complete)
+Status: Wave 4 nearly complete (Phase 87 in progress)
+Last activity: 2026-03-08 — Phase 80 verified complete (Stage-gate enforcement wired into chat pipeline)
 
-Progress: [#########.....] 9/14 phases (Wave 2 in progress)
+Progress: [############..] 12/14 phases (Wave 4 in progress)
 
 ### Wave Structure:
 - Wave 1 (Foundation): Phases 77, 78, 79 — parallel execution
