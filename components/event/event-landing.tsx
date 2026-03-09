@@ -31,7 +31,7 @@ const VALUE_PROPS = [
   },
   {
     icon: MessageSquare,
-    title: "FRED AI Coaching",
+    title: "Mentor Coaching",
     description: "24/7 mentor with decades of founder experience",
   },
   {
