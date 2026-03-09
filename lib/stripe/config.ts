@@ -54,3 +54,11 @@ export function getPlanById(id: string): (typeof PLANS)[PlanId] | null {
   ) as PlanId | undefined;
   return key ? PLANS[key] : null;
 }
+
+/** Trial configuration */
+export const TRIAL_DAYS = 14;
+
+/** Whether trial mode is enabled (controlled by env var, defaults to false) */
+export function isTrialEnabled(): boolean {
+  return process.env.STRIPE_TRIALS_ENABLED === "true";
+}
