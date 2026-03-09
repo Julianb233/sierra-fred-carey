@@ -923,23 +923,22 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
         }
       })();
 
-      // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
-      if (shouldPersistMemory) {
-        ;(async () => {
-          try {
-            const updates = await extractMemoryUpdates(
-              message,
-              result.response.content
-            )
-            if (updates.length > 0) {
-              await persistMemoryUpdates(userId, updates, hasPersistentMemory)
-              console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
-            }
-          } catch (error) {
-            console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+      // Phase 79: Fire-and-forget LLM-based memory extraction (all tiers)
+      // persistMemoryUpdates handles tier gating internally: profile columns for all, semantic facts for Pro+
+      void (async () => {
+        try {
+          const updates = await extractMemoryUpdates(
+            message,
+            result.response.content
+          )
+          if (updates.length > 0) {
+            await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+            console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
           }
-        })()
-      }
+        } catch (error) {
+          console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+        }
+      })()
 
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
@@ -1300,23 +1299,22 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
               }
             })();
 
-            // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
-            if (shouldPersistMemory) {
-              ;(async () => {
-                try {
-                  const updates = await extractMemoryUpdates(
-                    message,
-                    response.content
-                  )
-                  if (updates.length > 0) {
-                    await persistMemoryUpdates(userId, updates, hasPersistentMemory)
-                    console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
-                  }
-                } catch (error) {
-                  console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+            // Phase 79: Fire-and-forget LLM-based memory extraction (all tiers)
+            // persistMemoryUpdates handles tier gating internally: profile columns for all, semantic facts for Pro+
+            void (async () => {
+              try {
+                const updates = await extractMemoryUpdates(
+                  message,
+                  response.content
+                )
+                if (updates.length > 0) {
+                  await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+                  console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
                 }
-              })()
-            }
+              } catch (error) {
+                console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+              }
+            })()
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {
