@@ -9,12 +9,15 @@
 export interface EventConfig {
   slug: string
   name: string
+  headline: string
   tagline: string
   date: string
   location: string
   trialDays: number
   trialTier: "pro"
   redirectAfterSignup: string
+  /** URL used in QR codes — absolute path from site root */
+  landingPath: string
   active: boolean
 }
 
@@ -22,12 +25,14 @@ export const EVENT_CONFIGS: Record<string, EventConfig> = {
   "palo-alto-2026": {
     slug: "palo-alto-2026",
     name: "Sahara Founder Launch",
+    headline: "Meet FRED — Your AI Startup Mentor",
     tagline: "Your AI co-pilot for the startup journey. 14 days free.",
     date: "2026-03-22",
     location: "Palo Alto, CA",
     trialDays: 14,
     trialTier: "pro",
-    redirectAfterSignup: "/onboarding",
+    redirectAfterSignup: "/dashboard",
+    landingPath: "/event/palo-alto-2026",
     active: true,
   },
 }

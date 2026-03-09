@@ -20,10 +20,10 @@ interface EventLandingClientProps {
 export function EventLandingClient({ config }: EventLandingClientProps) {
   useEffect(() => {
     trackEvent(EVENT_ANALYTICS.LANDING_VIEW, {
+      event_name: config.slug,
       eventSlug: config.slug,
-      eventName: config.name,
     })
-  }, [config.slug, config.name])
+  }, [config.slug])
 
   return <EventLanding config={config} />
 }

@@ -32,7 +32,10 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
   const handleInputFocus = () => {
     if (!hasTrackedStart.current) {
       hasTrackedStart.current = true
-      trackEvent(EVENT_ANALYTICS.SIGNUP_START, { eventSlug })
+      trackEvent(EVENT_ANALYTICS.SIGNUP_START, {
+        event_name: eventSlug,
+        eventSlug,
+      })
     }
   }
 
@@ -158,7 +161,7 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
         disabled={submitting}
         className="w-full h-12 text-base font-semibold bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
       >
-        {submitting ? "Creating account..." : "Get Started Free"}
+        {submitting ? "Creating account..." : "Start Your Free Trial"}
       </Button>
 
       <p className="text-xs text-gray-400 text-center">

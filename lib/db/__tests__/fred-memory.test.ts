@@ -286,6 +286,19 @@ describe("Episodic Memory Operations", () => {
 
       expect(result).toBeDefined();
     });
+
+    it("skips dedup check when content has no role field", async () => {
+      // Content without role/content fields should bypass dedup and insert directly
+      const result = await storeEpisode(
+        "user-123",
+        "session-456",
+        "conversation",
+        { message: "no role field here" }
+      );
+
+      expect(result).toBeDefined();
+      expect(result.userId).toBe("user-123");
+    });
   });
 
   describe("retrieveRecentEpisodes", () => {
