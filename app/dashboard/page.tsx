@@ -156,7 +156,7 @@ function DashboardContent() {
 
   if (!data) {
     return (
-      <div className="space-y-4 animate-in fade-in duration-500">
+      <div className="space-y-6 animate-in fade-in duration-500">
         <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         <FredHero
           userName={userName}
@@ -185,7 +185,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Trial countdown banner */}
       <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
 
