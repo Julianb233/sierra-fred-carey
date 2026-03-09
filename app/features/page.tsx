@@ -71,7 +71,7 @@ export default function FeaturesPage() {
       ],
     },
     {
-      title: "Venture Studio",
+      title: "Studio",
       subtitle: "$249/month",
       icon: RocketIcon,
       description: "Leverage, execution, and capital connectivity.",

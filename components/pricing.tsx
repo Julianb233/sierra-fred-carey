@@ -31,7 +31,7 @@ export default function Pricing() {
 
   const plans = [
     {
-      name: "Sahara Starter",
+      name: "Free",
       desc: "Free forever — build trust and habit",
       price: 0,
       priceId: null,
@@ -48,7 +48,7 @@ export default function Pricing() {
       ],
     },
     {
-      name: "Fundraising & Strategy",
+      name: "Pro",
       desc: "Turn clarity into investor-grade readiness",
       price: 99,
       priceId: PLANS.FUNDRAISING.priceId,
@@ -65,7 +65,7 @@ export default function Pricing() {
       ],
     },
     {
-      name: "Venture Studio",
+      name: "Studio",
       desc: "Leverage, execution & capital connectivity",
       price: 249,
       priceId: PLANS.VENTURE_STUDIO.priceId,
@@ -73,7 +73,7 @@ export default function Pricing() {
       icon: RocketIcon,
       gradient: "from-orange-600 to-[#ff6a1a]",
       features: [
-        "Everything in Fundraising tier",
+        "Everything in Pro tier",
         "Boardy integration (investor matching)",
         "Investor targeting & outreach sequencing",
         "Weekly SMS Accountability Check-ins",
@@ -87,7 +87,7 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 bg-gray-50 dark:bg-gray-900">
+    <section id="pricing" className="scroll-mt-20 relative w-full overflow-hidden py-16 sm:py-20 md:py-24 bg-gray-50 dark:bg-gray-900">
       {/* Background blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden opacity-30">
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-[#ff6a1a]/20 rounded-full blur-3xl" />

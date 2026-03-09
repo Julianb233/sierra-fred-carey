@@ -9,7 +9,7 @@ import { CheckIcon, Cross2Icon, RocketIcon, StarIcon, LightningBoltIcon } from "
 export default function PricingPage() {
   const plans = [
     {
-      name: "Founder Decision OS",
+      name: "Free",
       subtitle: "Free Forever",
       price: 0,
       description: "Maximum adoption, trust, and habit formation.",
@@ -36,7 +36,7 @@ export default function PricingPage() {
       popular: false,
     },
     {
-      name: "Fundraising & Strategy",
+      name: "Pro",
       subtitle: "For Active Fundraisers",
       price: 99,
       description: "Turn clarity into investor-grade readiness.",
@@ -62,7 +62,7 @@ export default function PricingPage() {
       popular: true,
     },
     {
-      name: "Venture Studio",
+      name: "Studio",
       subtitle: "Full Leverage Mode",
       price: 249,
       description: "Deliver leverage, execution support, and capital connectivity.",
@@ -71,7 +71,7 @@ export default function PricingPage() {
       glowColor: "rgba(234, 88, 12, 0.3)",
       icon: LightningBoltIcon,
       features: [
-        { name: "Everything in Fundraising tier", included: true },
+        { name: "Everything in Pro tier", included: true },
         { name: "Weekly SMS Check-Ins", included: true },
         { name: "Boardy Integration", included: true },
         { name: "Investor Matching & Warm Intros", included: true },

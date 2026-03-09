@@ -94,9 +94,9 @@ for (const device of MOBILE_DEVICES) {
       await assertNoOverflow(page);
 
       // All three tiers visible
-      await expect(page.getByText("Founder Decision OS")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Fundraising & Strategy")).toBeVisible();
-      await expect(page.getByText("Venture Studio")).toBeVisible();
+      await expect(page.getByText("Free Forever")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("For Active Fundraisers")).toBeVisible();
+      await expect(page.getByText("Full Leverage Mode")).toBeVisible();
 
       // Price points visible
       await expect(page.getByText("$0").first()).toBeVisible();
@@ -590,7 +590,7 @@ test.describe("[Regression] Critical Navigation Paths", () => {
     await pricingLink.click();
 
     await page.waitForURL("**/pricing**", { timeout: 10000 });
-    await expect(page.getByText("Founder Decision OS")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Free Forever")).toBeVisible({ timeout: 10000 });
   });
 
   test("homepage → get-started navigation works", async ({ page }) => {
