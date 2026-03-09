@@ -290,7 +290,8 @@ export default function ChatPage() {
       </div>
 
       {/* Floating buttons — Voice (prominent) + Call */}
-      <div className="fixed bottom-6 right-4 md:right-6 z-40 flex flex-col gap-3 items-end">
+      {/* Hidden on mobile where bottom nav already provides voice access */}
+      <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col gap-3 items-end">
         {/* Voice Chat — large, prominent, orange */}
         <Button
           onClick={handleVoiceClick}
