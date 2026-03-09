@@ -22,10 +22,10 @@ export default function Home() {
       {/* Scroll progress indicator */}
       <ScrollProgress />
 
-      {/* Page sections */}
-      <Hero />
+      {/* Page sections with anchor IDs for navigation */}
+      <div id="hero"><Hero /></div>
       <Features />
-      <Stats />
+      <div id="stats" className="scroll-mt-20"><Stats /></div>
       <Testimonials />
       <Pricing />
       <Faq />
