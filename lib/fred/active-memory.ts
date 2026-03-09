@@ -61,7 +61,7 @@ export async function buildActiveFounderMemory(
     const { data } = await supabase
       .from("profiles")
       .select(
-        "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at"
+        "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at, team_size, revenue_range, funding_history"
       )
       .eq("id", userId)
       .single()
@@ -123,6 +123,32 @@ export async function buildActiveFounderMemory(
       )
     }
 
+    // Populate new fields from profile columns
+    if (profile.team_size) {
+      memory.team_size = makeField(
+        String(profile.team_size),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.revenue_range) {
+      memory.revenue_status = makeField(
+        String(profile.revenue_range),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.funding_history) {
+      memory.funding_status = makeField(
+        String(profile.funding_history),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+
     // 3. Enrichment data as fallback for missing fields
     if (profile.enrichment_data && typeof profile.enrichment_data === "object") {
       const ed = profile.enrichment_data as Record<string, unknown>
@@ -140,6 +166,15 @@ export async function buildActiveFounderMemory(
           "enrichment",
           profileDate
         )
+      }
+      if (!memory.traction.value && typeof ed.revenueHint === "string") {
+        memory.traction = makeField(ed.revenueHint, 0.5, "enrichment", profileDate)
+      }
+      if (!memory.revenue_status.value && typeof ed.revenueHint === "string") {
+        memory.revenue_status = makeField(ed.revenueHint, 0.5, "enrichment", profileDate)
+      }
+      if (!memory.funding_status.value && typeof ed.fundingHint === "string") {
+        memory.funding_status = makeField(ed.fundingHint, 0.5, "enrichment", profileDate)
       }
     }
   }
@@ -211,6 +246,36 @@ export async function buildActiveFounderMemory(
             "conversation",
             factDate
           )
+        } else if (
+          fact.category === "metrics" &&
+          fact.key === "traction"
+        ) {
+          memory.traction = makeField(factValue, factConfidence, "conversation", factDate)
+        } else if (
+          fact.category === "metrics" &&
+          fact.key === "revenue"
+        ) {
+          memory.revenue_status = makeField(factValue, factConfidence, "conversation", factDate)
+        } else if (
+          fact.category === "startup_facts" &&
+          fact.key === "funding_status"
+        ) {
+          memory.funding_status = makeField(factValue, factConfidence, "conversation", factDate)
+        } else if (
+          fact.category === "product_details" &&
+          fact.key === "product_status"
+        ) {
+          memory.product_status = makeField(factValue, factConfidence, "conversation", factDate)
+        } else if (
+          fact.category === "goals" &&
+          fact.key === "90_day_goal"
+        ) {
+          memory.ninety_day_goal = makeField(factValue, factConfidence, "conversation", factDate)
+        } else if (
+          fact.category === "decisions" &&
+          fact.key === "recent_decisions"
+        ) {
+          memory.key_decisions = makeField(factValue, factConfidence, "conversation", factDate)
         } else {
           // Store as additional context
           const additionalKey = `${fact.category}/${fact.key}`
@@ -264,6 +329,27 @@ export function formatMemoryBlock(memory: FounderMemory): string {
   }
   if (memory.oases_stage.value) {
     lines.push(`**Journey Stage:** ${memory.oases_stage.value}`)
+  }
+  if (memory.traction.value) {
+    lines.push(`**Traction:** ${memory.traction.value}`)
+  }
+  if (memory.revenue_status.value) {
+    lines.push(`**Revenue:** ${memory.revenue_status.value}`)
+  }
+  if (memory.funding_status.value) {
+    lines.push(`**Funding:** ${memory.funding_status.value}`)
+  }
+  if (memory.team_size.value) {
+    lines.push(`**Team Size:** ${memory.team_size.value}`)
+  }
+  if (memory.product_status.value) {
+    lines.push(`**Product Status:** ${memory.product_status.value}`)
+  }
+  if (memory.ninety_day_goal.value) {
+    lines.push(`**90-Day Goal:** ${memory.ninety_day_goal.value}`)
+  }
+  if (memory.key_decisions.value) {
+    lines.push(`**Key Decisions:** ${memory.key_decisions.value}`)
   }
 
   lines.push("")
@@ -345,6 +431,8 @@ const PROFILE_COLUMN_MAP: Partial<Record<CoreMemoryFieldKey, string>> = {
   co_founder: "co_founder",
   stage: "stage",
   market: "industry",
+  team_size: "team_size",
+  funding_status: "funding_history",
 }
 
 /** Semantic memory category/key mappings for core memory fields */
@@ -355,6 +443,12 @@ const SEMANTIC_MAP: Partial<
   company_name: { category: "startup_facts", key: "company_name" },
   market: { category: "startup_facts", key: "market" },
   co_founder: { category: "team_info", key: "co_founder" },
+  traction: { category: "metrics", key: "traction" },
+  revenue_status: { category: "metrics", key: "revenue" },
+  funding_status: { category: "startup_facts", key: "funding_status" },
+  product_status: { category: "product_details", key: "product_status" },
+  ninety_day_goal: { category: "goals", key: "90_day_goal" },
+  key_decisions: { category: "decisions", key: "recent_decisions" },
 }
 
 /**
@@ -493,6 +587,13 @@ function formatFieldLabel(key: CoreMemoryFieldKey): string {
     co_founder: "Co-Founder",
     biggest_challenge: "Biggest Challenge",
     oases_stage: "Journey Stage",
+    traction: "Traction",
+    revenue_status: "Revenue",
+    funding_status: "Funding",
+    team_size: "Team Size",
+    product_status: "Product Status",
+    ninety_day_goal: "90-Day Goal",
+    key_decisions: "Key Decisions",
   }
   return labels[key] || key
 }

@@ -27,6 +27,13 @@ export const CORE_MEMORY_FIELDS = [
   "co_founder",
   "biggest_challenge",
   "oases_stage",
+  "traction",
+  "revenue_status",
+  "funding_status",
+  "team_size",
+  "product_status",
+  "ninety_day_goal",
+  "key_decisions",
 ] as const
 
 export type CoreMemoryFieldKey = (typeof CORE_MEMORY_FIELDS)[number]
@@ -39,6 +46,13 @@ export interface FounderMemory {
   co_founder: MemoryField // co-founder name(s) or "solo founder"
   biggest_challenge: MemoryField
   oases_stage: MemoryField // Oases journey stage (clarity, validation, build, launch, grow)
+  traction: MemoryField // user count, signups, waitlist, partnerships, pilots
+  revenue_status: MemoryField // current revenue, MRR, ARR, or "pre-revenue"
+  funding_status: MemoryField // bootstrapped, raised $X, seeking funding, etc.
+  team_size: MemoryField // number of team members or "solo founder"
+  product_status: MemoryField // MVP, beta, launched, pre-product, etc.
+  ninety_day_goal: MemoryField // what they want to achieve in the next 90 days
+  key_decisions: MemoryField // important decisions made or pending (comma-separated)
   // Extended fields from semantic memory
   additional: Record<string, MemoryField>
 }
@@ -104,6 +118,13 @@ export function emptyFounderMemory(): FounderMemory {
     co_founder: emptyField(),
     biggest_challenge: emptyField(),
     oases_stage: emptyField(),
+    traction: emptyField(),
+    revenue_status: emptyField(),
+    funding_status: emptyField(),
+    team_size: emptyField(),
+    product_status: emptyField(),
+    ninety_day_goal: emptyField(),
+    key_decisions: emptyField(),
     additional: {},
   }
 }

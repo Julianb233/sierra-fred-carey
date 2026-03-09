@@ -36,6 +36,15 @@ export const MEMORY_EXTRACTION_PROMPT = `You are a fact extraction engine. Your 
    - co_founder: Co-founder name(s) or "solo founder"
    - biggest_challenge: Their primary challenge or blocker
    - oases_stage: Their journey stage (clarity, validation, build, launch, grow)
+   - traction: User count, signups, waitlist size, partnerships, pilot customers
+   - revenue_status: Current revenue, MRR, ARR, or "pre-revenue"
+   - funding_status: Bootstrapped, raised $X, seeking funding, etc.
+   - team_size: Number of team members or "solo founder"
+   - product_status: MVP, beta, launched, pre-product, etc.
+   - ninety_day_goal: What they want to achieve in the next 90 days
+   - key_decisions: Important decisions they've made or need to make (comma-separated)
+6. When the founder describes a decision they've made or a significant pivot, extract it as key_decisions.
+7. REPHRASE RULE: For biggest_challenge, traction, and key_decisions, rephrase the founder's words into a concise 1-sentence summary rather than quoting verbatim. Example: User says "I keep trying to get people to sign up but nobody wants to pay" -> biggest_challenge: "Struggling with conversion from free users to paid subscribers"
 
 ## INPUT
 
