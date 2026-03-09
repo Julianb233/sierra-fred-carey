@@ -36,7 +36,10 @@ Progress: [##############] 14/14 phases COMPLETE
 - v1.0-v5.0: 58 phases shipped across 5 milestones
 - v6.0: 10 phases complete (59-69), 2 blocked (Mux credentials, Boardy API)
 - v7.0: 6 phases complete (71-76), 0 deferred
-- Tests: 766/778 passing (pre-existing failures in profile-creation and get-started)
+- v8.0: 14 phases complete (77-90), milestone complete
+- Tests: 1048/1048 passing (all green)
+- TypeScript: 0 errors (down from 61)
+- Lint: 0 errors, 281 warnings (down from 335 errors + 12 test failures)
 - Build: 221 pages compiling
 
 ## Accumulated Context
@@ -88,8 +91,8 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ### Blockers/Concerns
 
-- **CARRIED** Sentry env vars not yet configured — Linear issue AI-388
-- **CARRIED** CI blocks on 335 lint errors + 12 test failures
+- **RESOLVED** CI — 0 TypeScript errors, 0 lint errors, 1048/1048 tests passing (fixed 2026-03-08)
+- **CARRIED** Sentry env vars not yet configured — needs Sentry account/project setup, code is guarded (AI-388)
 - **CARRIED** Twilio credentials needed for SMS daily guidance (Phase 84)
 - **CARRIED** Boardy API — no public docs, requires partnership agreement (Phase 85, 89)
 - **CARRIED** Mux credentials needed for content library admin

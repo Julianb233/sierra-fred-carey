@@ -32,35 +32,7 @@ export function IntakeForm({ onComplete }: IntakeFormProps) {
 
   const question = INTAKE_QUESTIONS[currentQuestion]
 
-  const handleNext = useCallback(() => {
-    if (!currentAnswer.trim() || !question) return
-
-    // Store the answer
-    const newAnswers = { ...answers, [question.id]: currentAnswer.trim() }
-    setAnswers(newAnswers)
-
-    // Show FRED's rephrase
-    const truncated = currentAnswer.trim().length > 100
-      ? currentAnswer.trim().slice(0, 100) + "..."
-      : currentAnswer.trim()
-    const rephrase = question.fredRephrase.replace("{answer}", truncated)
-    setFredResponse(rephrase)
-
-    // After 1.5s, advance to next question or finish
-    setTimeout(() => {
-      setFredResponse(null)
-      setCurrentAnswer("")
-
-      if (currentQuestion < INTAKE_QUESTIONS.length - 1) {
-        setCurrentQuestion((prev) => prev + 1)
-      } else {
-        // All questions answered -- process and save
-        processAnswers(newAnswers)
-      }
-    }, 1500)
-  }, [currentAnswer, question, answers, currentQuestion])
-
-  const processAnswers = async (finalAnswers: Record<string, string>) => {
+  const processAnswers = useCallback(async (finalAnswers: Record<string, string>) => {
     setIsProcessing(true)
 
     try {
@@ -117,7 +89,35 @@ export function IntakeForm({ onComplete }: IntakeFormProps) {
     }
 
     onComplete()
-  }
+  }, [onComplete])
+
+  const handleNext = useCallback(() => {
+    if (!currentAnswer.trim() || !question) return
+
+    // Store the answer
+    const newAnswers = { ...answers, [question.id]: currentAnswer.trim() }
+    setAnswers(newAnswers)
+
+    // Show FRED's rephrase
+    const truncated = currentAnswer.trim().length > 100
+      ? currentAnswer.trim().slice(0, 100) + "..."
+      : currentAnswer.trim()
+    const rephrase = question.fredRephrase.replace("{answer}", truncated)
+    setFredResponse(rephrase)
+
+    // After 1.5s, advance to next question or finish
+    setTimeout(() => {
+      setFredResponse(null)
+      setCurrentAnswer("")
+
+      if (currentQuestion < INTAKE_QUESTIONS.length - 1) {
+        setCurrentQuestion((prev) => prev + 1)
+      } else {
+        // All questions answered -- process and save
+        processAnswers(newAnswers)
+      }
+    }, 1500)
+  }, [currentAnswer, question, answers, currentQuestion, processAnswers])
 
   // Processing state
   if (isProcessing) {

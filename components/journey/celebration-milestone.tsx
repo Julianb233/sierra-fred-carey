@@ -16,22 +16,30 @@ const AUTO_DISMISS_MS = 10_000
 // CSS Confetti (no extra dependency)
 // ============================================================================
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed + 1) * 10000
+  return x - Math.floor(x)
+}
+
 function ConfettiPiece({ index }: { index: number }) {
   const colors = ["#ff6a1a", "#f59e0b", "#10b981", "#6366f1", "#ec4899", "#14b8a6"]
   const color = colors[index % colors.length]
-  const left = Math.random() * 100
-  const delay = Math.random() * 2
-  const duration = 2 + Math.random() * 2
-  const size = 6 + Math.random() * 8
+  const left = seededRandom(index * 7) * 100
+  const delay = seededRandom(index * 13) * 2
+  const duration = 2 + seededRandom(index * 17) * 2
+  const size = 6 + seededRandom(index * 23) * 8
+  const xDrift = (seededRandom(index * 31) - 0.5) * 200
+  const rotateTo = 360 + seededRandom(index * 37) * 360
+  const isRound = seededRandom(index * 41) > 0.5
 
   return (
     <motion.div
       initial={{ y: -20, x: 0, opacity: 1, rotate: 0 }}
       animate={{
         y: [0, 600],
-        x: [0, (Math.random() - 0.5) * 200],
+        x: [0, xDrift],
         opacity: [1, 1, 0],
-        rotate: [0, 360 + Math.random() * 360],
+        rotate: [0, rotateTo],
       }}
       transition={{
         duration,
@@ -45,7 +53,7 @@ function ConfettiPiece({ index }: { index: number }) {
         width: size,
         height: size * 1.5,
         backgroundColor: color,
-        borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+        borderRadius: isRound ? "50%" : "2px",
       }}
     />
   )
@@ -57,6 +65,11 @@ function ConfettiPiece({ index }: { index: number }) {
 
 export function CelebrationMilestone() {
   const [isVisible, setIsVisible] = useState(false)
+
+  const dismiss = useCallback(() => {
+    setIsVisible(false)
+    localStorage.setItem(CELEBRATION_SEEN_KEY, "true")
+  }, [])
 
   useEffect(() => {
     // Only show if not previously seen
@@ -71,13 +84,7 @@ export function CelebrationMilestone() {
     }, AUTO_DISMISS_MS)
 
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const dismiss = useCallback(() => {
-    setIsVisible(false)
-    localStorage.setItem(CELEBRATION_SEEN_KEY, "true")
-  }, [])
+  }, [dismiss])
 
   return (
     <AnimatePresence>

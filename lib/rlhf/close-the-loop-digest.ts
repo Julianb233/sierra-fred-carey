@@ -193,7 +193,7 @@ export async function sendFeedbackDigest(): Promise<{
       const resend = getResend()
       if (!resend) {
         logger.log(`[digest] Resend not configured, skipping ${user.email}`)
-        results.skipped++
+        result.skipped++
         continue
       }
       const { error } = await resend.emails.send({

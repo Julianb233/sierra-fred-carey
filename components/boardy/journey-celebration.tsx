@@ -33,7 +33,7 @@ export function JourneyCelebration({ onDismiss }: JourneyCelebrationProps) {
   useEffect(() => {
     const dismissed = localStorage.getItem(STORAGE_KEY)
     if (!dismissed) {
-      setVisible(true)
+      setVisible(true) // eslint-disable-line react-hooks/set-state-in-effect -- initial load check
     }
   }, [])
 

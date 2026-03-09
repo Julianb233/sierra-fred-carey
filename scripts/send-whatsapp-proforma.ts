@@ -31,42 +31,30 @@ async function main() {
     const stagehand = new Stagehand({
         browserbaseSessionID: session.id,
         env: "BROWSERBASE",
-        enableCaching: false,
-        modelName: "gpt-4o",
-        modelClientOptions: { apiKey: process.env.OPENAI_API_KEY },
+        model: "gemini-2.0-flash" as const,
     });
 
-    const { page } = await stagehand.init();
+    await stagehand.init();
 
     try {
         console.log("Navigating to WhatsApp Web...");
-        await page.goto("https://web.whatsapp.com", { waitUntil: "networkidle", timeout: 30000 });
-        await page.waitForTimeout(8000);
+        await stagehand.act("Navigate to https://web.whatsapp.com");
+        await new Promise((r) => setTimeout(r, 8000));
 
         console.log("Searching for Sahara Founders...");
-        await stagehand.act({ action: "Click the search box, and write the text 'Sahara Founders' in it" });
-        await page.waitForTimeout(3000);
+        await stagehand.act("Click the search box, and write the text 'Sahara Founders' in it");
+        await new Promise((r) => setTimeout(r, 3000));
 
         console.log("Clicking on Sahara Founders chat...");
-        await stagehand.act({ action: "Click on the 'Sahara Founders' group chat in the search results" });
-        await page.waitForTimeout(3000);
+        await stagehand.act("Click on the 'Sahara Founders' group chat in the search results");
+        await new Promise((r) => setTimeout(r, 3000));
 
         console.log("Sending proforma...");
-        await stagehand.act({ action: "Click the 'Type a message' input field at the bottom of the chat" });
+        await stagehand.act("Click the 'Type a message' input field at the bottom of the chat");
 
-        await page.evaluate((text) => {
-            const dataTransfer = new DataTransfer();
-            dataTransfer.setData('text/plain', text);
-            const event = new ClipboardEvent('paste', {
-                clipboardData: dataTransfer,
-                bubbles: true,
-                cancelable: true
-            });
-            document.activeElement?.dispatchEvent(event);
-        }, proformaText);
+        await stagehand.act(`Type the following text into the message input: ${proformaText.slice(0, 500)}`);
 
-        await page.waitForTimeout(1000);
-        await page.keyboard.press("Enter");
+        await stagehand.act("Press Enter to send the message");
 
         console.log("Successfully sent the message!");
     } finally {

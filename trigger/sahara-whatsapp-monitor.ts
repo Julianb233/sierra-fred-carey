@@ -118,7 +118,7 @@ export const saharaWhatsAppMonitor = schedules.task({
       // Step 6: Update last check timestamp
       await updateLastCheckTimestamp();
 
-      logger.log("WhatsApp monitor completed", result);
+      logger.log("WhatsApp monitor completed", result as unknown as Record<string, unknown>);
       return result;
     } catch (err) {
       const msg = `WhatsApp monitor failed: ${err}`;
@@ -227,16 +227,13 @@ async function extractWhatsAppMessages(
     const stagehand = new Stagehand({
       browserbaseSessionID: sessionId,
       env: "BROWSERBASE",
-      modelName: "google/gemini-2.0-flash",
-      modelClientOptions: {
-        apiKey: process.env.GEMINI_API_KEY,
-      },
+      model: "gemini-2.0-flash" as const,
     });
 
     await stagehand.init();
 
     // Navigate to WhatsApp Web
-    await stagehand.navigate("https://web.whatsapp.com");
+    await stagehand.act("Navigate to https://web.whatsapp.com");
 
     // Wait for WhatsApp to load (either QR or chat list)
     await new Promise((r) => setTimeout(r, 5000));

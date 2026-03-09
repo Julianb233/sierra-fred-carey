@@ -145,7 +145,7 @@ const deckStyles = StyleSheet.create({
   },
 })
 
-function SlideWrapper({ num, children }: { num: number; children: React.ReactNode }) {
+function SlideWrapper({ num, children }: React.PropsWithChildren<{ num: number }>) {
   return React.createElement(
     Page,
     { size: 'LETTER', orientation: 'landscape', style: deckStyles.page },

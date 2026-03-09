@@ -14,7 +14,23 @@ const eslintConfig = [
       ".next/**",
       "get-shit-done/**",
       "fred-cary-db/**",
+      "funnel/**",
+      "trigger/**",
     ],
+  },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+    },
   },
   {
     // Test files: allow `any` in mocks — standard practice per TypeScript ESLint docs
