@@ -637,6 +637,51 @@ async function loadActiveRedFlags(userId: string): Promise<string | null> {
 }
 
 // ============================================================================
+// Boardy Match Count Loader
+// ============================================================================
+
+/**
+ * Load active Boardy match counts for the founder so FRED can reference
+ * matches in conversation. Only loads when journey is 100% complete (grow stage).
+ * Returns a formatted context block or null.
+ */
+async function loadBoardyMatchCounts(userId: string, oasesStage: string | null): Promise<string | null> {
+  // Only inject match data for users who've completed the journey (grow stage)
+  if (oasesStage !== "grow") return null
+
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/server")
+    const supabase = createServiceClient()
+
+    const { data, error } = await supabase
+      .from("boardy_matches")
+      .select("match_type, status")
+      .eq("user_id", userId)
+      .neq("status", "declined")
+
+    if (error || !data || data.length === 0) return null
+
+    const investors = data.filter((m) => m.match_type === "investor").length
+    const advisors = data.filter((m) => m.match_type !== "investor").length
+    const active = data.filter((m) => m.status === "connected" || m.status === "intro_sent" || m.status === "meeting_scheduled").length
+
+    const lines: string[] = []
+    lines.push("## BOARDY MATCH DATA")
+    lines.push("")
+    lines.push(`**Total Active Matches:** ${data.length} (${investors} investor${investors !== 1 ? "s" : ""}, ${advisors} advisor${advisors !== 1 ? "s" : ""})`)
+    if (active > 0) {
+      lines.push(`**In Progress:** ${active} match${active !== 1 ? "es" : ""} with active introductions`)
+    }
+    lines.push("")
+    lines.push("Use this data when the BOARDY MATCH AWARENESS rules apply. Reference exact counts naturally.")
+
+    return lines.join("\n")
+  } catch {
+    return null
+  }
+}
+
+// ============================================================================
 // Cross-Channel Context Loader
 // ============================================================================
 
@@ -791,6 +836,12 @@ export async function buildFounderContextWithFacts(
     // Phase 89: Inject recent assessment scores + pending action items for accountability
     if (assessmentsContext) {
       context += "\n\n" + assessmentsContext;
+    }
+
+    // Phase 85: Inject Boardy match counts for FRED match awareness
+    const boardyMatchContext = await loadBoardyMatchCounts(userId, profile.oasesStage)
+    if (boardyMatchContext) {
+      context += "\n\n" + boardyMatchContext
     }
 
     // Phase 80: Stage-gate enforcement — tell FRED which topics are allowed
