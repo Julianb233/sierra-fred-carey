@@ -78,9 +78,9 @@ export function FredHero({
       <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/10 via-transparent to-transparent pointer-events-none" />
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6a1a]/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
-      <div className="relative p-6 sm:p-8 lg:p-10">
-        {/* FRED identity */}
-        <div className="flex items-center gap-2 mb-4">
+      <div className="relative p-4 sm:p-6 lg:p-8">
+        {/* FRED identity + Compact heading */}
+        <div className="flex items-center gap-2 mb-2">
           <div className={cn(
             "w-2.5 h-2.5 rounded-full",
             fredOnline ? "bg-green-400 animate-pulse" : "bg-red-400"
@@ -93,16 +93,15 @@ export function FredHero({
           </span>
         </div>
 
-        {/* Compact heading */}
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 leading-tight">
           {greeting}
         </h1>
-        <p className="text-gray-400 text-sm sm:text-base mb-5 max-w-xl">
+        <p className="text-gray-400 text-sm mb-3 max-w-xl">
           {subtext}
         </p>
 
         {/* ====== CHAT INPUT — above the fold, first interaction ====== */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
             {/* Gradient glow effect */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#ff6a1a]/20 via-[#ff6a1a]/10 to-transparent blur-xl opacity-50 -z-10" />
@@ -164,15 +163,15 @@ export function FredHero({
           </div>
         </div>
 
-        {/* Conversation starters */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
+        {/* Conversation starters — compact horizontal scroll */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <Sparkles className="h-3.5 w-3.5 text-gray-500" />
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Or start here
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {CONVERSATION_STARTERS.map((starter, i) => (
               <button
                 key={i}
@@ -182,7 +181,7 @@ export function FredHero({
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 className={cn(
-                  "text-sm px-3.5 py-2 rounded-lg border transition-all text-left",
+                  "text-xs px-3 py-1.5 rounded-lg border transition-all text-left",
                   hovered === i
                     ? "border-[#ff6a1a]/50 bg-[#ff6a1a]/10 text-white"
                     : "border-gray-700 bg-gray-800/40 text-gray-400 hover:text-gray-200"
