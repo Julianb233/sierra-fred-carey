@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth"
-import { loadChatContextForVoice, formatChatForPreamble } from "@/lib/voice/chat-context-loader"
+import { getChatContextForVoice } from "@/lib/fred/chat-voice-bridge"
 import { checkRateLimitForUser } from "@/lib/api/rate-limit"
 
 export async function GET(req: NextRequest) {
@@ -22,15 +22,13 @@ export async function GET(req: NextRequest) {
     const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, "free")
     if (rateLimitResponse) return rateLimitResponse
 
-    const context = await loadChatContextForVoice(userId)
-    const preamble = formatChatForPreamble(context)
+    const voiceContext = await getChatContextForVoice(userId)
 
     return NextResponse.json({
       success: true,
-      messages: context.messages,
-      lastTopic: context.lastTopic,
-      summary: context.summary,
-      preamble,
+      lastTopic: voiceContext.lastTopic,
+      preamble: voiceContext.preambleBlock,
+      founderContext: voiceContext.founderContext,
     })
   } catch (error) {
     // requireAuth throws NextResponse on 401

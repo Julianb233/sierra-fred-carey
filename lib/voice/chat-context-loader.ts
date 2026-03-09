@@ -95,12 +95,25 @@ export async function loadChatContextForVoice(
  *
  * Truncates to ~500 tokens to avoid bloating the voice prompt.
  */
-export function formatChatForPreamble(context: ChatContextForVoice): string {
-  if (context.messages.length === 0) {
+export function formatChatForPreamble(context: ChatContextForVoice, founderContext?: string): string {
+  if (context.messages.length === 0 && !founderContext) {
     return ""
   }
 
-  const lines: string[] = ["Recent chat context (the user chatted with you in text before this call):"]
+  const lines: string[] = []
+
+  // Prepend founder context from Phase 79 structured memory
+  if (founderContext && founderContext.length > 0) {
+    lines.push("About this founder:")
+    lines.push(founderContext)
+    lines.push("")
+  }
+
+  if (context.messages.length === 0) {
+    return lines.join("\n")
+  }
+
+  lines.push("Recent chat context (the user chatted with you in text before this call):")
 
   for (const msg of context.messages) {
     const speaker = msg.role === "user" ? "User" : "You (Fred)"

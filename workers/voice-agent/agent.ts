@@ -27,6 +27,7 @@ const APP_BASE_URL =
 interface VoiceContextResponse {
   preamble: string;
   lastTopic: string | null;
+  founderContext: string | null;
 }
 
 /**
@@ -60,6 +61,7 @@ async function fetchChatContext(userId: string): Promise<VoiceContextResponse | 
     return {
       preamble: (data.preamble as string) || '',
       lastTopic: (data.lastTopic as string) || null,
+      founderContext: (data.founderContext as string) || null,
     };
   } catch (error) {
     console.warn('[Fred Voice Agent] Failed to fetch chat context (non-blocking):', error);
