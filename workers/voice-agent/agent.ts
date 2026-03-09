@@ -251,7 +251,9 @@ export default defineAgent({
 
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
-    const tts = new elevenlabs.TTS({ voiceId: 'fpxks3eObfRI1jkeCD2k' });
+    const tts = new elevenlabs.TTS({
+      voiceId: process.env.ELEVENLABS_VOICE_ID || 'uxq5gLBpu73uF1Aqzb2t',
+    });
 
     const session = new AgentSession({
       vad: ctx.proc.userData.vad as silero.VAD,
