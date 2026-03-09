@@ -133,9 +133,13 @@ export async function POST(req: NextRequest) {
         {
           id: userId,
           name: fullName || null,
+          email: email.toLowerCase().trim(),
           tier: config.trialTier,
           trial_ends_at: trialEndsAt.toISOString(),
+          trial_eligible: true,
+          trial_source: `${eventSlug}-event`,
           event_source: eventSlug,
+          onboarding_completed: true,
         },
         { onConflict: "id" }
       )
@@ -149,10 +153,12 @@ export async function POST(req: NextRequest) {
     try {
       const { serverTrack } = await import("@/lib/analytics/server")
       serverTrack(userId, EVENT_ANALYTICS.SIGNUP_COMPLETE, {
+        event_name: eventSlug,
         eventSlug,
         email: email.toLowerCase().trim(),
       })
       serverTrack(userId, EVENT_ANALYTICS.TRIAL_ACTIVATED, {
+        event_name: eventSlug,
         eventSlug,
         trialDays: config.trialDays,
         trialTier: config.trialTier,

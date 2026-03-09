@@ -80,7 +80,7 @@ export function EventLanding({ config }: EventLandingProps) {
           className="text-center mb-10"
         >
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
-            {config.name}
+            {config.headline}
           </h1>
           <p className="text-lg text-gray-300 mb-2">
             {config.tagline}
