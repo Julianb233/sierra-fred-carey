@@ -354,11 +354,14 @@ export function formatMemoryBlock(memory: FounderMemory): string {
 
   lines.push("")
   lines.push(
-    "CRITICAL INSTRUCTION: You MUST reference at least one of the above details in EVERY response. Never give generic advice. Address this founder by context: " +
-      (memory.company_name.value
-        ? `"Since ${memory.company_name.value} is targeting ${memory.market.value || "your market"}..."`
-        : `"Given your challenge with ${memory.biggest_challenge.value || "growth"}..."`) +
-      ". If context above is missing for a field, ask the founder about it rather than guessing."
+    `CRITICAL INSTRUCTION: You MUST reference at least one founder-specific detail in EVERY response.
+Rules:
+1. ALWAYS address the founder by name if known: "Hey ${memory.founder_name.value || "[name]"}..." or "${memory.founder_name.value || "[name]"}, here's what I think..."
+2. ALWAYS tie advice to their specific context. Instead of "startups should focus on..." say "Since ${memory.company_name.value || "[company]"} is in the ${memory.market.value || "[market]"} space at ${memory.stage.value || "[stage]"}..."
+3. NEVER give advice that could apply to any founder. Every recommendation must reference their specific company, market, challenge, stage, or goals.
+4. If you catch yourself writing a generic sentence, rewrite it with their context.
+Examples of BAD (generic): "You should focus on product-market fit" / "Most startups struggle with this"
+Examples of GOOD (personalized): "For ${memory.company_name.value || "[company]"} in ${memory.market.value || "[market]"}, product-market fit means..." / "Given your challenge with ${memory.biggest_challenge.value || "[challenge]"}..."`
   )
 
   // Stale fields
@@ -372,7 +375,11 @@ export function formatMemoryBlock(memory: FounderMemory): string {
       })
       .join(", ")
     lines.push(
-      `**Stale Context (confirm these):** The following were last updated over 7 days ago. Naturally confirm them: ${staleList}. Example: "Last time we talked, your biggest challenge was ${memory.biggest_challenge.value || "[value]"}. Is that still the case?"`
+      `**Stale Context (needs re-confirmation):** The following details are over 7 days old and may be outdated.
+DO NOT assume they are still accurate. Instead, naturally verify them:
+${staleList}
+Example: "Last time we spoke, you mentioned ${staleFields.length > 0 ? memory[staleFields[0]].value || "[old value]" : "[old value]"}. Is that still where things stand, or has anything changed?"
+RULE: If a stale field is directly relevant to the founder's current question, ASK before advising. Do not give advice based on potentially outdated information.`
     )
   }
 
@@ -382,7 +389,12 @@ export function formatMemoryBlock(memory: FounderMemory): string {
     lines.push("")
     const missingList = missingFields.map(formatFieldLabel).join(", ")
     lines.push(
-      `**Missing Context:** ${missingList}. Weave these into the next 1-2 exchanges naturally. Do NOT ask all at once.`
+      `**Missing Context:** I don't have data for: ${missingList}.
+RULE: Do NOT guess or assume values for missing fields. Instead:
+- If the missing field is relevant to the current conversation, ask about it directly
+- Weave questions naturally: "By the way, I don't think you've told me about [field] yet. What's the situation there?"
+- Collect at most 2 missing fields per exchange to avoid feeling like an interrogation
+- NEVER fabricate or assume company names, market segments, or challenges`
     )
   }
 
