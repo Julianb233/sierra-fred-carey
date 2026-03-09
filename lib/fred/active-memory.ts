@@ -40,31 +40,42 @@ import type { MemoryConfidence } from "@/lib/fred/founder-context-types"
  * 1. Semantic memory facts (most recent, from conversations)
  * 2. Profile columns (set during onboarding)
  * 3. Enrichment data JSONB (heuristic extraction fallback)
+ *
+ * @param userId - Authenticated user ID
+ * @param hasPersistentMemory - Whether this tier has persistent memory (Pro+)
+ * @param preloadedProfile - Optional pre-loaded profile row to avoid duplicate profiles query
+ * @param preloadedFacts - Optional pre-loaded semantic facts to avoid duplicate getAllUserFacts call
  */
 export async function buildActiveFounderMemory(
   userId: string,
-  hasPersistentMemory: boolean
+  hasPersistentMemory: boolean,
+  preloadedProfile?: Record<string, unknown> | null,
+  preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>
 ): Promise<FounderMemory> {
   const memory = emptyFounderMemory()
 
-  // 1. Load profile from profiles table
-  const supabase = createServiceClient()
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at"
-    )
-    .eq("id", userId)
-    .single()
+  // 1. Load profile from profiles table (skip if pre-loaded)
+  let profile: Record<string, unknown> | null = preloadedProfile ?? null
+  if (preloadedProfile === undefined) {
+    const supabase = createServiceClient()
+    const { data } = await supabase
+      .from("profiles")
+      .select(
+        "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at"
+      )
+      .eq("id", userId)
+      .single()
+    profile = data as Record<string, unknown> | null
+  }
 
   if (profile) {
     const profileDate = profile.updated_at
-      ? new Date(profile.updated_at)
+      ? new Date(profile.updated_at as string)
       : null
 
     if (profile.name) {
       memory.founder_name = makeField(
-        profile.name,
+        String(profile.name),
         0.9,
         "profile",
         profileDate
@@ -72,21 +83,21 @@ export async function buildActiveFounderMemory(
     }
     if (profile.company_name) {
       memory.company_name = makeField(
-        profile.company_name,
+        String(profile.company_name),
         0.9,
         "profile",
         profileDate
       )
     }
     if (profile.stage) {
-      memory.stage = makeField(profile.stage, 0.8, "profile", profileDate)
+      memory.stage = makeField(String(profile.stage), 0.8, "profile", profileDate)
     }
     if (profile.industry) {
-      memory.market = makeField(profile.industry, 0.8, "profile", profileDate)
+      memory.market = makeField(String(profile.industry), 0.8, "profile", profileDate)
     }
     if (profile.co_founder) {
       memory.co_founder = makeField(
-        profile.co_founder,
+        String(profile.co_founder),
         0.9,
         "profile",
         profileDate
@@ -105,7 +116,7 @@ export async function buildActiveFounderMemory(
     }
     if (profile.oases_stage) {
       memory.oases_stage = makeField(
-        profile.oases_stage,
+        String(profile.oases_stage),
         1.0,
         "profile",
         profileDate
@@ -134,10 +145,16 @@ export async function buildActiveFounderMemory(
   }
 
   // 2. Load semantic memory facts (overrides profile with higher confidence)
+  // Use preloadedFacts when available to avoid duplicate DB query
   if (hasPersistentMemory) {
     try {
-      const { getAllUserFacts } = await import("@/lib/db/fred-memory")
-      const facts = await getAllUserFacts(userId)
+      let facts: Array<{ category: string; key: string; value: Record<string, unknown>; confidence?: number; updatedAt?: Date | null; createdAt?: Date | null }>
+      if (preloadedFacts) {
+        facts = preloadedFacts as typeof facts
+      } else {
+        const { getAllUserFacts } = await import("@/lib/db/fred-memory")
+        facts = await getAllUserFacts(userId)
+      }
 
       for (const fact of facts) {
         const factValue = extractFactString(fact.value)

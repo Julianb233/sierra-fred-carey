@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Clock, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { redirectToCheckoutByTier } from "@/lib/stripe/client"

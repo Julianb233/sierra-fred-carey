@@ -84,6 +84,8 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
         // User not authenticated or error - default to FREE
         setTier(UserTier.FREE);
         setIsSubscriptionActive(false);
+        setSubscriptionStatus(null);
+        setTrialEnd(null);
         return;
       }
 
@@ -105,6 +107,8 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
       console.error("[TierContext] Error fetching tier:", error);
       setTier(UserTier.FREE);
       setIsSubscriptionActive(false);
+      setSubscriptionStatus(null);
+      setTrialEnd(null);
     } finally {
       setIsLoading(false);
     }

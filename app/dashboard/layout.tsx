@@ -502,10 +502,8 @@ export default function DashboardLayout({
       {/* Phase 46: Mobile Bottom Navigation */}
       <MobileBottomNav />
 
-      {/* Phase 42: Floating Chat Widget — available on all dashboard pages, hidden on mobile (bottom nav has Chat tab) */}
-      <div className="hidden md:block">
-        <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
-      </div>
+      {/* Floating Chat Widget — available on all dashboard pages including mobile */}
+      <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />

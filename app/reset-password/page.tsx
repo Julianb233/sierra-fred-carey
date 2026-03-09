@@ -30,7 +30,8 @@ export default function ResetPasswordPage() {
 
   const allRulesPass = PASSWORD_RULES.every((r) => r.test(password));
 
-  // Supabase handles the token exchange automatically via the URL hash
+  // The /api/auth/callback route exchanges the PKCE code for a session
+  // and sets cookies before redirecting here. We detect the session below.
   useEffect(() => {
     const supabase = createClient();
 
@@ -40,7 +41,7 @@ export default function ResetPasswordPage() {
       }
     });
 
-    // Also check if we already have a session (user clicked link while logged in)
+    // Check for existing session (set by the auth callback route)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
