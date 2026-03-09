@@ -107,7 +107,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-09T23:37Z
-Stopped at: Completed 85-01-PLAN.md (Journey-Gated Fund Matching verification + match count injection)
-Resume file: .planning/milestones/v8.0-go-live/phases/85/85-01-SUMMARY.md
+Last session: 2026-03-09T23:55Z
+Stopped at: Completed 90-01-PLAN.md (User Testing Loop - smoke test, E2E, feedback widget, SLA dashboard)
+Resume file: .planning/milestones/v8.0-go-live/phases/90/90-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
