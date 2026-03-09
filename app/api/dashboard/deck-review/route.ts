@@ -5,6 +5,7 @@ import { checkTierForRequest } from "@/lib/api/tier-middleware"
 import { UserTier } from "@/lib/constants"
 import { sql } from "@/lib/db/supabase-sql"
 import { logger } from "@/lib/logger"
+import { STAGE_ORDER } from "@/lib/oases/stage-config"
 
 /**
  * POST /api/dashboard/deck-review
@@ -40,6 +41,22 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = tierCheck.user.id
+
+    // Stage-gate check: require Build stage or later
+    try {
+      const stageResult = await sql`SELECT oases_stage FROM profiles WHERE id = ${userId}`
+      const userStage = (stageResult?.[0]?.oases_stage || "clarity") as string
+      const buildIndex = STAGE_ORDER.indexOf("build")
+      const userIndex = STAGE_ORDER.indexOf(userStage as typeof STAGE_ORDER[number])
+      if (userIndex < buildIndex) {
+        return NextResponse.json(
+          { success: false, error: "Pitch Deck Scoring is available once you reach the Build stage of your venture journey" },
+          { status: 403 }
+        )
+      }
+    } catch (stageError) {
+      logger.log("[Deck Scoring] Stage check failed, allowing access:", String(stageError))
+    }
 
     // Parse multipart form data
     const formData = await request.formData()
