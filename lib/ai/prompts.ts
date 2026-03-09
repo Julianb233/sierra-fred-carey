@@ -18,8 +18,11 @@ import { CATEGORY_LABELS, STAGE_BENCHMARKS, IRS_CATEGORIES, getReadinessLevel, c
 export type { SupplementalPromptPatch };
 export { FRED_CORE_PROMPT, buildPromptWithSupplements };
 
-// Phase 80: Re-export proactive guidance block for convenience
+// Phase 80 (v3.0): Re-export proactive guidance block for backward compat
 export { buildProactiveGuidanceBlock } from "@/lib/ai/stage-gate/redirect-templates";
+
+// Phase 80 v8.0: Re-export unified stage-gate prompt builders
+export { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 
 // ============================================================================
 // FRED CARY SYSTEM PROMPT — Backward-compatible alias

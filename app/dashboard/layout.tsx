@@ -310,18 +310,18 @@ function SidebarContent({
         })}
       </nav>
 
-      {/* Ask Fred for Help */}
+      {/* Chat with Fred -- prominent orange CTA */}
       <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800">
         <button
           onClick={() => openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
-            "text-gray-500 dark:text-gray-400 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/5",
-            "transition-all duration-200 text-sm group"
+            "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg",
+            "bg-[#ff6a1a] hover:bg-[#ea580c] text-white font-medium",
+            "transition-all duration-200 text-sm"
           )}
         >
-          <HelpCircle className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
-          <span>Ask Fred for Help</span>
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span>Chat with Fred</span>
         </button>
       </div>
 

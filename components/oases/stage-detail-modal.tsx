@@ -62,7 +62,14 @@ export function StageDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{config.name}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {config.name}
+            <span className="text-sm font-normal text-[#ff6a1a]">
+              {stage.stepsTotal > 0
+                ? Math.round((stage.stepsCompleted / stage.stepsTotal) * 100)
+                : 0}%
+            </span>
+          </DialogTitle>
           <DialogDescription>{config.tagline}</DialogDescription>
         </DialogHeader>
 
@@ -151,13 +158,12 @@ export function StageDetailModal({
             </p>
           )}
 
-          {/* Open Roadmap link */}
-          <Link
-            href="/dashboard/journey"
-            className="text-sm text-[#ff6a1a] hover:underline text-center"
-          >
-            Open Roadmap
-          </Link>
+          {/* Open Roadmap button */}
+          <Button variant="outline" className="w-full" asChild>
+            <Link href="/dashboard/journey">
+              Open Roadmap
+            </Link>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

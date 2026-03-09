@@ -3,7 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Map, ArrowRight } from "lucide-react"
+import { Map, ArrowRight, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { JourneyCompletion } from "@/lib/journey/completion"
 import { STAGE_ORDER } from "@/lib/oases/stage-config"
@@ -106,8 +106,11 @@ export function JourneyGate({
 
           {/* Heading */}
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Complete Your Venture Journey
+            Complete your venture journey first
           </h3>
+          <p className="text-lg font-semibold text-[#ff6a1a] mb-2">
+            You&apos;re at {completion.percent}%
+          </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
             {featureName} unlocks when you complete your full venture journey.
             Founders who complete the journey are prepared for what comes next.
@@ -160,14 +163,23 @@ export function JourneyGate({
             </p>
           )}
 
-          {/* CTA */}
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-medium text-sm transition-colors"
-          >
-            Continue Journey
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              Continue Journey
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/chat"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#ff6a1a] text-[#ff6a1a] hover:bg-[#ff6a1a]/10 rounded-lg font-medium text-sm transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Chat with Fred to continue
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

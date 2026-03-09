@@ -56,8 +56,8 @@ interface ChallengeOption {
 
 const WIZARD_STORAGE_KEY = "sahara_onboarding_wizard";
 
-function loadWizardState(): { step: Step; stage: Stage | null; challenge: Challenge | null; email: string } {
-  if (typeof window === "undefined") return { step: 1, stage: null, challenge: null, email: "" };
+function loadWizardState(): { step: Step; stage: Stage | null; challenge: Challenge | null; email: string; coFounder: string } {
+  if (typeof window === "undefined") return { step: 1, stage: null, challenge: null, email: "", coFounder: "" };
   try {
     const stored = localStorage.getItem(WIZARD_STORAGE_KEY);
     if (stored) {
@@ -67,15 +67,16 @@ function loadWizardState(): { step: Step; stage: Stage | null; challenge: Challe
         stage: parsed.stage ?? null,
         challenge: parsed.challenge ?? null,
         email: parsed.email ?? "",
+        coFounder: parsed.coFounder ?? "",
       };
     }
   } catch { /* ignore corrupt data */ }
-  return { step: 1, stage: null, challenge: null, email: "" };
+  return { step: 1, stage: null, challenge: null, email: "", coFounder: "" };
 }
 
-function saveWizardState(step: Step, stage: Stage | null, challenge: Challenge | null, email: string) {
+function saveWizardState(step: Step, stage: Stage | null, challenge: Challenge | null, email: string, coFounder: string) {
   try {
-    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({ step, stage, challenge, email }));
+    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({ step, stage, challenge, email, coFounder }));
   } catch { /* storage full — ignore */ }
 }
 
@@ -85,6 +86,7 @@ const OnboardingPage = () => {
   const [selectedStage, setSelectedStage] = useState<Stage | null>(() => loadWizardState().stage);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(() => loadWizardState().challenge);
   const [email, setEmail] = useState(() => loadWizardState().email);
+  const [coFounder, setCoFounder] = useState(() => loadWizardState().coFounder);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,9 +95,9 @@ const OnboardingPage = () => {
   // Persist wizard state on changes (exclude password for security)
   useEffect(() => {
     if (currentStep !== "wink") {
-      saveWizardState(currentStep, selectedStage, selectedChallenge, email);
+      saveWizardState(currentStep, selectedStage, selectedChallenge, email, coFounder);
     }
-  }, [currentStep, selectedStage, selectedChallenge, email]);
+  }, [currentStep, selectedStage, selectedChallenge, email, coFounder]);
 
   // Stage options - simplified
   const stages: StageOption[] = [
@@ -259,6 +261,7 @@ const OnboardingPage = () => {
           password: password,
           stage: selectedStage,
           challenges: selectedChallenge ? [selectedChallenge] : [],
+          co_founder: coFounder.trim() || undefined,
           isQuickOnboard: true,
         }),
       });
@@ -535,6 +538,19 @@ const OnboardingPage = () => {
                               {/[0-9]/.test(password) ? "\u2713" : "\u2022"} One number
                             </p>
                           </div>
+                        </div>
+
+                        <div className="relative">
+                          <label htmlFor="onboard-cofounder" className="sr-only">Co-founder</label>
+                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            id="onboard-cofounder"
+                            type="text"
+                            placeholder="Co-founder name(s), or 'Solo founder'"
+                            value={coFounder}
+                            onChange={(e) => setCoFounder(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 focus:bg-white dark:focus:bg-gray-900 outline-none transition-all text-lg"
+                          />
                         </div>
 
                         {error && (

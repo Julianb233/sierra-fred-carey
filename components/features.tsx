@@ -64,7 +64,7 @@ export default function Features() {
   ];
 
   return (
-    <section id="features" className="relative py-24 sm:py-32 overflow-hidden bg-white dark:bg-gray-950">
+    <section id="features" className="scroll-mt-20 relative py-24 sm:py-32 overflow-hidden bg-white dark:bg-gray-950">
       {/* Subtle background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
         <motion.div

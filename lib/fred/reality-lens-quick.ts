@@ -195,7 +195,7 @@ Scoring guide:
 
 Provide:
 - An overall readiness score (0-100)
-- 2-5 specific gaps they need to address
+- 2-5 specific gaps they need to address. Be brutally honest about gaps. Frame each gap as something an investor would immediately question. Gaps should be specific to THIS founder's situation, not generic startup advice.
 - 2-3 strengths or positive signals you see
 - One clear, actionable next step they should take immediately
 - A concise verdict label (e.g. "Early Stage - Focus on Clarity")`

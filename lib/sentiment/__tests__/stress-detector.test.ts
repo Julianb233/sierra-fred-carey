@@ -196,4 +196,24 @@ describe("extractTopicsFromMessage", () => {
   it("returns empty for generic messages", () => {
     expect(extractTopicsFromMessage("hello")).toEqual([])
   })
+
+  it("extracts personal topic from family-related message", () => {
+    expect(extractTopicsFromMessage("my family is struggling with this")).toContain("personal")
+  })
+
+  it("extracts competition topic", () => {
+    expect(extractTopicsFromMessage("we're losing to our competitor")).toContain("competition")
+  })
+
+  it("returns empty array for empty message", () => {
+    expect(extractTopicsFromMessage("")).toEqual([])
+  })
+
+  it("caps topics at a reasonable count for messages with many keyword hits", () => {
+    const longMessage = "I'm exhausted and stressed about hiring a team, our competitor is beating us on revenue and sales, my family health is suffering, and the investor pitch for funding is going badly with legal compliance issues on our product"
+    const topics = extractTopicsFromMessage(longMessage)
+    // Should have multiple topics but not exceed total topic categories
+    expect(topics.length).toBeGreaterThan(0)
+    expect(topics.length).toBeLessThanOrEqual(8) // 8 total topic categories
+  })
 })

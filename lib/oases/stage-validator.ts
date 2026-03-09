@@ -4,6 +4,9 @@
  * Validates whether a user's chat message matches their current Oases stage
  * or belongs to a future stage. Provides warm redirect messages in Fred Cary's
  * mentoring voice when users try to jump ahead.
+ *
+ * Phase 80: Added redirect counting, mentor override after 2 redirects,
+ * and enhanced result types for the chat pipeline.
  */
 
 import type { OasesStage } from "@/types/oases"
@@ -16,6 +19,10 @@ export interface StageValidationResult {
   detectedStage: OasesStage | null
   redirectMessage: string | null
   currentStageGuidance: string | null
+  /** Phase 80: Whether mentor override was triggered (user insisted + was redirected before) */
+  isOverride: boolean
+  /** Phase 80: Key for tracking redirect counts (e.g., "build:pitch_deck_creation") */
+  redirectKey: string | null
 }
 
 /**
@@ -26,13 +33,19 @@ export interface StageValidationResult {
  *
  * Returns allowed: false with a warm redirect message if the topic belongs
  * to a future stage.
+ *
+ * Phase 80: Supports redirect counting and mentor override.
+ * - redirectCounts: Record<string, number> tracking how many times each topic was redirected
+ * - After 2 redirects for the same topic, enters MENTOR OVERRIDE mode (allowed: true, isOverride: true)
+ * - When classifyIntent returns isOverride AND redirectCounts >= 1, also enters override mode
  */
 export function validateStageAccess(
   message: string,
-  currentStage: OasesStage
+  currentStage: OasesStage,
+  redirectCounts: Record<string, number> = {}
 ): StageValidationResult {
   const classification = classifyIntent(message)
-  const { detectedStage, confidence } = classification
+  const { detectedStage, confidence, isOverride: userInsists } = classification
 
   // General conversation or low confidence — always allow
   if (detectedStage === null || confidence === "low") {
@@ -42,6 +55,8 @@ export function validateStageAccess(
       detectedStage: null,
       redirectMessage: null,
       currentStageGuidance: null,
+      isOverride: false,
+      redirectKey: null,
     }
   }
 
@@ -56,13 +71,18 @@ export function validateStageAccess(
       detectedStage,
       redirectMessage: null,
       currentStageGuidance: null,
+      isOverride: false,
+      redirectKey: null,
     }
   }
 
-  // Topic belongs to a future stage — generate redirect
+  // Topic belongs to a future stage — check for override conditions
   const currentConfig = getStageConfig(currentStage)
   const detectedConfig = getStageConfig(detectedStage)
   const stageGap = detectedIndex - currentIndex
+
+  const redirectKey = `${detectedStage}:${classification.matchedTopic || "general"}`
+  const topicRedirectCount = redirectCounts[redirectKey] ?? 0
 
   const stepsGuidance = currentConfig.steps
     .map((s) => s.label)
@@ -70,6 +90,25 @@ export function validateStageAccess(
 
   const currentStageGuidance = `In ${currentConfig.name}, focus on: ${stepsGuidance}. Which of these would you like to tackle?`
 
+  // Phase 80: Mentor override — user has been redirected 2+ times OR explicitly insists after 1+ redirect
+  if (topicRedirectCount >= 2 || (userInsists && topicRedirectCount >= 1)) {
+    const overrideMessage =
+      `I hear you — you want to work on ${detectedConfig.name.toLowerCase()} topics. Let's do it. ` +
+      `But I want to be upfront: your ${currentConfig.name} foundation isn't fully solid yet, ` +
+      `so I'll flag the gaps as we go.`
+
+    return {
+      allowed: true,
+      currentStage,
+      detectedStage,
+      redirectMessage: overrideMessage,
+      currentStageGuidance,
+      isOverride: true,
+      redirectKey,
+    }
+  }
+
+  // Standard redirect
   let redirectMessage: string
 
   if (stageGap === 1) {
@@ -90,6 +129,8 @@ export function validateStageAccess(
     detectedStage,
     redirectMessage,
     currentStageGuidance,
+    isOverride: false,
+    redirectKey,
   }
 }
 

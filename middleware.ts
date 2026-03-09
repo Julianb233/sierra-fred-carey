@@ -84,19 +84,45 @@ export async function middleware(request: NextRequest) {
     const needsWelcomeCheck = user && !welcomeExemptPaths.some(p => pathname.startsWith(p)) && isProtectedRoute(pathname)
 
     if (needsWelcomeCheck) {
-      const { createClient: createServerClient } = await import("@/lib/supabase/server")
-      const supabase = await createServerClient()
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("journey_welcomed")
-        .eq("id", user.id)
-        .single()
+      // Use Edge-compatible Supabase client (avoid importing server-only createClient)
+      const { createServerClient: createEdgeClient } = await import("@supabase/ssr")
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (supabaseUrl && supabaseAnonKey) {
+        const supabase = createEdgeClient(supabaseUrl, supabaseAnonKey, {
+          cookies: {
+            getAll() { return request.cookies.getAll() },
+            setAll() { /* read-only check, no need to set cookies */ },
+          },
+        })
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("journey_welcomed, reality_lens_complete")
+          .eq("id", user.id)
+          .single()
 
-      if (profile && profile.journey_welcomed === false) {
-        const welcomeUrl = new URL("/welcome", request.url)
-        const redirectResponse = NextResponse.redirect(welcomeUrl)
-        redirectResponse.headers.set("X-Request-ID", requestId)
-        return redirectResponse
+        if (profile && profile.journey_welcomed === false) {
+          const welcomeUrl = new URL("/welcome", request.url)
+          const redirectResponse = NextResponse.redirect(welcomeUrl)
+          redirectResponse.headers.set("X-Request-ID", requestId)
+          return redirectResponse
+        }
+
+        // Phase 81: Reality Lens enforcement
+        // Users who completed onboarding but not the reality check get redirected
+        // Exempt /dashboard/reality-lens routes to avoid infinite loops
+        if (
+          profile &&
+          profile.journey_welcomed === true &&
+          profile.reality_lens_complete === false &&
+          pathname.startsWith("/dashboard") &&
+          !pathname.startsWith("/dashboard/reality-lens")
+        ) {
+          const realityLensUrl = new URL("/dashboard/reality-lens?first=true", request.url)
+          const redirectResponse = NextResponse.redirect(realityLensUrl)
+          redirectResponse.headers.set("X-Request-ID", requestId)
+          return redirectResponse
+        }
       }
     }
 

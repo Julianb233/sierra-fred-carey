@@ -6,6 +6,16 @@
  * Dark background with Sahara orange accents.
  */
 
+import type { Viewport } from "next"
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0a0a0a",
+}
+
 export default function EventLayout({
   children,
 }: {

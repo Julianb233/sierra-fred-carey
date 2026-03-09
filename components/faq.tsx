@@ -64,7 +64,7 @@ export default function Faq() {
   ];
 
   return (
-    <section id="faq" className="relative w-full bg-white dark:bg-gray-950 py-24 sm:py-28">
+    <section id="faq" className="scroll-mt-20 relative w-full bg-white dark:bg-gray-950 py-24 sm:py-28">
       {/* Background accent */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <div className="absolute top-1/4 right-[10%] w-64 h-64 bg-[#ff6a1a]/20 rounded-full blur-[100px]" />

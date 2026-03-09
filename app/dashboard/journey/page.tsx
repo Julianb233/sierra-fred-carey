@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { OasesVisualizer } from "@/components/oases/oases-visualizer";
 
 interface JourneyStats {
   ideaScore: number | null;
@@ -361,6 +362,9 @@ export default function JourneyDashboard() {
           Track your progress, insights, and milestones in one place
         </p>
       </div>
+
+      {/* Oases Venture Journey Visualizer */}
+      <OasesVisualizer />
 
       {/* Business Fundamentals Progress */}
       {(() => {

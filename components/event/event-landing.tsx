@@ -31,7 +31,7 @@ const VALUE_PROPS = [
   },
   {
     icon: MessageSquare,
-    title: "FRED AI Coaching",
+    title: "Mentor Coaching",
     description: "24/7 mentor with decades of founder experience",
   },
   {
@@ -50,7 +50,7 @@ export function EventLanding({ config }: EventLandingProps) {
   const router = useRouter()
 
   const handleSignupSuccess = (redirectTo: string) => {
-    router.push(redirectTo)
+    router.replace(redirectTo)
   }
 
   return (

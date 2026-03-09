@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Compass, Target, Wrench, Rocket, TrendingUp } from "lucide-react"
+import { Compass, Target, Wrench, Rocket, TrendingUp, MessageCircle, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -81,7 +81,9 @@ export function JourneyWelcome({ onContinue }: JourneyWelcomeProps) {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-xl mx-auto"
       >
-        This isn&apos;t a product demo. It&apos;s a guided path from idea to funded startup.
+        This is a journey, not a transaction. Think of it like crossing the
+        Sahara &mdash; five oases of clarity, validation, building, launching,
+        and growing. Your mentor guides every step.
       </motion.p>
 
       {/* 5 Oases stages timeline */}
@@ -123,11 +125,40 @@ export function JourneyWelcome({ onContinue }: JourneyWelcomeProps) {
         </div>
       </motion.div>
 
+      {/* Orientation: Mentor + Progress cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.5 }}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12 max-w-xl mx-auto"
+      >
+        <div className="flex flex-col items-center text-center p-5 rounded-xl border border-[#ff6a1a]/15 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+          <div className="w-10 h-10 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center mb-3">
+            <MessageCircle className="w-5 h-5 text-[#ff6a1a]" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Mentor</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            Your AI mentor learns about you and gives blunt, personalized
+            guidance. No generic advice.
+          </p>
+        </div>
+        <div className="flex flex-col items-center text-center p-5 rounded-xl border border-[#ff6a1a]/15 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+          <div className="w-10 h-10 rounded-full bg-[#ff6a1a]/10 flex items-center justify-center mb-3">
+            <BarChart3 className="w-5 h-5 text-[#ff6a1a]" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Progress</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            Your roadmap through 5 stages. See where you are, what&apos;s next,
+            and what you&apos;ve accomplished.
+          </p>
+        </div>
+      </motion.div>
+
       {/* Warm paragraph */}
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0, duration: 0.5 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
         className="text-base text-gray-600 dark:text-gray-400 mb-10 max-w-lg mx-auto leading-relaxed"
       >
         Your mentor Fred has guided thousands of entrepreneurs. He&apos;ll learn
@@ -139,7 +170,7 @@ export function JourneyWelcome({ onContinue }: JourneyWelcomeProps) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
+        transition={{ delay: 1.4, duration: 0.5 }}
       >
         <Button
           variant="orange"

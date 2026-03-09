@@ -71,7 +71,6 @@ export function IntakeForm({ onComplete }: IntakeFormProps) {
         .from("profiles")
         .update({
           journey_welcomed: true,
-          co_founder: finalAnswers.co_founder || null,
           venture_timeline: finalAnswers.timeline_goal || null,
           challenges: [finalAnswers.biggest_challenge],
           stage: normalizeStage(finalAnswers.current_stage || ""),

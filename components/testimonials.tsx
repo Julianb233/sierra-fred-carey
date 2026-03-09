@@ -109,7 +109,7 @@ export default function Testimonials() {
   );
 
   return (
-    <section id="testimonials" className="relative py-24 sm:py-32 overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <section id="testimonials" className="scroll-mt-20 relative py-24 sm:py-32 overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
         <motion.div

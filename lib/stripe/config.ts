@@ -12,7 +12,7 @@ export const PLANS = {
   },
   FUNDRAISING: {
     id: "fundraising",
-    name: "Fundraising & Strategy",
+    name: "Pro",
     price: 99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID,
     features: [
@@ -25,11 +25,11 @@ export const PLANS = {
   },
   VENTURE_STUDIO: {
     id: "venture_studio",
-    name: "Venture Studio",
+    name: "Studio",
     price: 249,
     priceId: process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID,
     features: [
-      "Everything in Fundraising & Strategy",
+      "Everything in Pro tier",
       "Virtual Team: Founder Ops Agent",
       "Virtual Team: Fundraising Agent",
       "Virtual Team: Growth Agent",

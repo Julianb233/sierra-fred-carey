@@ -11,4 +11,6 @@ export const EVENT_ANALYTICS = {
   SIGNUP_COMPLETE: "event_signup_completed",
   SIGNUP_ERROR: "event_signup_error",
   TRIAL_ACTIVATED: "event_trial_activated",
+  ONBOARDING_COMPLETE: "event_onboarding_completed",
+  FIRST_FRED_INTERACTION: "event_first_fred_interaction",
 } as const

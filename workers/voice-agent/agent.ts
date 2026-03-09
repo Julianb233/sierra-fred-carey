@@ -27,6 +27,7 @@ const APP_BASE_URL =
 interface VoiceContextResponse {
   preamble: string;
   lastTopic: string | null;
+  founderContext: string | null;
 }
 
 /**
@@ -60,6 +61,7 @@ async function fetchChatContext(userId: string): Promise<VoiceContextResponse | 
     return {
       preamble: (data.preamble as string) || '',
       lastTopic: (data.lastTopic as string) || null,
+      founderContext: (data.founderContext as string) || null,
     };
   } catch (error) {
     console.warn('[Fred Voice Agent] Failed to fetch chat context (non-blocking):', error);
@@ -251,7 +253,7 @@ export default defineAgent({
 
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
-    const tts = new elevenlabs.TTS({ voiceId: 'fpxks3eObfRI1jkeCD2k' });
+    const tts = new elevenlabs.TTS({ voiceId: 'uxq5gLBpu73uF1Aqzb2t' }); // Fred Zaharix voice (ElevenLabs)
 
     const session = new AgentSession({
       vad: ctx.proc.userData.vad as silero.VAD,
