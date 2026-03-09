@@ -32,6 +32,8 @@ export interface FredMessage {
   reasoning?: string;
   /** Whether this message is currently being streamed */
   isStreaming?: boolean;
+  /** Input source: "voice" when message originated from Whisper Flow */
+  source?: "text" | "voice";
   /** Course recommendations from FRED's content-recommender tool */
   courses?: Array<{
     id: string;
@@ -92,7 +94,7 @@ export interface UseFredChatReturn {
   /** All messages in the conversation */
   messages: FredMessage[];
   /** Send a message to FRED */
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, options?: { source?: "text" | "voice" }) => Promise<void>;
   /** Current processing state */
   state: FredState;
   /** Whether FRED is currently processing */
@@ -264,7 +266,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const sendingRef = useRef(false);
 
   // Send message with streaming
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, options?: { source?: "text" | "voice" }) => {
     // Prevent rapid-fire: if we're already processing a send, ignore
     if (sendingRef.current) {
       console.warn("[useFredChat] Ignoring rapid-fire duplicate send");
@@ -284,6 +286,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       role: "user",
       content,
       timestamp: new Date(),
+      source: options?.source,
     };
     setMessages(prev => [...prev, userMessage]);
 

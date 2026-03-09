@@ -46,6 +46,7 @@ import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
+import { FloatingVoiceFab } from "@/components/voice/floating-voice-fab";
 
 // ============================================================================
 // Navigation Configuration
@@ -503,6 +504,11 @@ export default function DashboardLayout({
       {/* Phase 42: Floating Chat Widget — available on all dashboard pages, hidden on mobile (bottom nav has Chat tab) */}
       <div className="hidden md:block">
         <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
+      </div>
+
+      {/* Floating Voice FAB — desktop only, prominent voice entry point */}
+      <div className="hidden md:block">
+        <FloatingVoiceFab onClick={() => setVoiceOverlayOpen(true)} />
       </div>
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
