@@ -632,7 +632,7 @@ export function CallFredModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className={cn(
-          "sm:max-w-md p-0 gap-0 overflow-hidden",
+          "sm:max-w-md p-0 gap-0 overflow-hidden max-h-[90dvh] overflow-y-auto",
           (callState === "in-call" || (callState === "ended" && callSummary)) && "sm:max-w-lg"
         )}
       >
@@ -742,7 +742,7 @@ export function CallFredModal({
               </div>
 
               {/* Call Controls */}
-              <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-8 sm:gap-6">
                 <Button
                   variant="outline"
                   size="icon"
