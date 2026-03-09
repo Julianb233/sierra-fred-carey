@@ -137,7 +137,10 @@ export interface DecisionLog {
 // ============================================================================
 
 /**
- * Store a new episode in episodic memory
+ * Store a new episode in episodic memory.
+ * Includes deduplication: if an episode with the same user, session, event type,
+ * role, and content text was created within the last 60 seconds, the existing
+ * episode is returned instead of creating a duplicate.
  */
 export async function storeEpisode(
   userId: string,
@@ -152,6 +155,32 @@ export async function storeEpisode(
   } = {}
 ): Promise<EpisodicMemory> {
   const supabase = createServiceClient();
+
+  // Deduplication: check for a recent episode with matching content
+  const role = content.role as string | undefined;
+  const textContent = content.content as string | undefined;
+  if (role && textContent) {
+    const dedupeWindow = new Date(Date.now() - 60_000).toISOString();
+    const { data: existing } = await supabase
+      .from("fred_episodic_memory")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("session_id", sessionId)
+      .eq("event_type", eventType)
+      .gte("created_at", dedupeWindow)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (existing && existing.length > 0) {
+      const duplicate = existing.find((row) => {
+        const rowContent = row.content as Record<string, unknown> | null;
+        return rowContent?.role === role && rowContent?.content === textContent;
+      });
+      if (duplicate) {
+        return transformEpisodicRow(duplicate);
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from("fred_episodic_memory")

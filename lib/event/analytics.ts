@@ -7,8 +7,8 @@
 
 export const EVENT_ANALYTICS = {
   LANDING_VIEW: "event_landing_view",
-  SIGNUP_START: "event_signup_start",
-  SIGNUP_COMPLETE: "event_signup_complete",
+  SIGNUP_START: "event_signup_started",
+  SIGNUP_COMPLETE: "event_signup_completed",
   SIGNUP_ERROR: "event_signup_error",
   TRIAL_ACTIVATED: "event_trial_activated",
 } as const
