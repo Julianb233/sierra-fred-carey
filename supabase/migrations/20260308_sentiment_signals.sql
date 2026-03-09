@@ -19,3 +19,4 @@ ALTER TABLE sentiment_signals ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users read own signals" ON sentiment_signals FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Service inserts signals" ON sentiment_signals FOR INSERT WITH CHECK (true);
+CREATE POLICY "Service reads all signals" ON sentiment_signals FOR SELECT USING (true);
