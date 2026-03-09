@@ -42,6 +42,7 @@ export async function GET(_request: NextRequest) {
           status: subscription.status,
           currentPeriodEnd: subscription.currentPeriodEnd,
           cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+          trialEnd: subscription.trialEnd,
         },
         isActive,
       });

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { isTrialEnabled, TRIAL_DAYS } from "./config";
 
 // Lazy-load Stripe client to avoid build-time errors when env var isn't set
 let stripeClient: Stripe | null = null;
@@ -44,6 +45,16 @@ export async function createCheckoutSession({
   successUrl: string;
   cancelUrl: string;
 }) {
+  const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
+    metadata: { userId },
+  };
+
+  // Add 14-day trial when trials are enabled
+  if (isTrialEnabled()) {
+    const trialEnd = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
+    subscriptionData.trial_end = trialEnd;
+  }
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     payment_method_types: ["card"],
@@ -52,9 +63,7 @@ export async function createCheckoutSession({
     cancel_url: cancelUrl,
     client_reference_id: userId,
     metadata: { userId },
-    subscription_data: {
-      metadata: { userId },
-    },
+    subscription_data: subscriptionData,
   };
 
   // Only include customer if we have one (avoids sending undefined to Stripe)

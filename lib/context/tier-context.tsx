@@ -33,6 +33,10 @@ interface TierContextValue {
   isLoading: boolean;
   /** Whether user has an active subscription */
   isSubscriptionActive: boolean;
+  /** Subscription status string (e.g. "active", "trialing") */
+  subscriptionStatus: string | null;
+  /** Trial end date (ISO string) when on a trial */
+  trialEnd: string | null;
   /** Features available to this tier */
   features: readonly string[];
   /** Check if user can access a feature */
@@ -67,6 +71,8 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
   const [tier, setTier] = useState<UserTier>(effectiveInitialTier ?? UserTier.FREE);
   const [isLoading, setIsLoading] = useState(effectiveInitialTier === undefined);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
 
   const fetchTier = useCallback(async () => {
     try {
@@ -86,10 +92,14 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
       // API returns: { plan: { id, name, ... }, subscription: { status, ... } | null, isActive: boolean }
       if (data.isActive && ["active", "trialing", "past_due"].includes(data.subscription?.status)) {
         setIsSubscriptionActive(true);
+        setSubscriptionStatus(data.subscription?.status || null);
+        setTrialEnd(data.subscription?.trialEnd || null);
         setTier(getTierFromString(data.plan?.id || "free"));
       } else {
         setTier(UserTier.FREE);
         setIsSubscriptionActive(false);
+        setSubscriptionStatus(null);
+        setTrialEnd(null);
       }
     } catch (error) {
       console.error("[TierContext] Error fetching tier:", error);
@@ -134,6 +144,8 @@ export function TierProvider({ children, initialTier }: TierProviderProps) {
     tierName: TIER_NAMES[tier],
     isLoading,
     isSubscriptionActive,
+    subscriptionStatus,
+    trialEnd,
     features: TIER_FEATURES[tier],
     canAccess,
     hasFeature,
