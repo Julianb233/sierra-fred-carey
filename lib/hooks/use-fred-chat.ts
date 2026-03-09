@@ -331,11 +331,23 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       let buffer = "";
       let receivedDone = false;
 
+      // Streaming inactivity timeout: abort if no data received for 30s
+      let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+      const STREAM_TIMEOUT_MS = 30_000;
+      const resetInactivityTimer = () => {
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          reader.cancel().catch(() => {});
+        }, STREAM_TIMEOUT_MS);
+      };
+
       try {
+        resetInactivityTimer();
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
+          resetInactivityTimer();
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n\n");
           buffer = lines.pop() || "";
@@ -568,6 +580,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           }
         }
       } finally {
+        // Clean up inactivity timer
+        if (inactivityTimer) clearTimeout(inactivityTimer);
         // Release the reader lock so the browser can clean up the connection
         try {
           reader.releaseLock();
@@ -578,7 +592,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
       // If the stream ended without a "done" event, the server likely crashed mid-response.
       if (!receivedDone) {
-        throw new Error("Connection to FRED was interrupted");
+        throw new Error("Connection to FRED was interrupted. Please try again.");
       }
     };
 
