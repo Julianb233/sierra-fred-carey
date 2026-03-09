@@ -55,6 +55,7 @@ IMPORTANT SCORING GUIDELINES:
 - Be honest and direct. A 7+ means genuinely strong. Most first drafts score 4-6.
 - Do not inflate scores to be encouraging. Founders need real feedback.
 - If information is missing for a dimension, score it low and say what's missing.
+- For vcWantToSee: Write a specific, actionable sentence about what VCs look for in THIS deck's context for each dimension. Do not use generic rubric text -- tailor it to the actual deck content.
 
 Respond ONLY with valid JSON (no markdown code fences):
 {
@@ -63,43 +64,50 @@ Respond ONLY with valid JSON (no markdown code fences):
       "name": "Problem Clarity",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Market Size & Opportunity",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Team & Founder Fit",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Traction & Validation",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Go-to-Market Strategy",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Narrative & Storytelling",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     },
     {
       "name": "Investability",
       "score": <number 1-10>,
       "explanation": "<1-2 sentence justification>",
-      "suggestions": ["<improvement 1>", "<improvement 2>"]
+      "suggestions": ["<improvement 1>", "<improvement 2>"],
+      "vcWantToSee": "<what VCs specifically want to see for this dimension>"
     }
   ],
   "summary": "<2-3 sentence overall assessment>",
@@ -159,6 +167,17 @@ ${textContent}`
     throw new Error("AI response missing dimensions array")
   }
 
+  // Fallback VC recommendations per dimension when AI doesn't provide one
+  const vcWantToSeeDefaults: Record<string, string> = {
+    "Problem Clarity": "VCs want to see a specific, quantified pain point with evidence of real customer suffering.",
+    "Market Size & Opportunity": "VCs want to see bottom-up TAM calculation with credible sources, not top-down guesses.",
+    "Team & Founder Fit": "VCs want to see domain expertise, prior exits, or clear unfair advantages.",
+    "Traction & Validation": "VCs want to see month-over-month growth metrics, retention data, or signed LOIs.",
+    "Go-to-Market Strategy": "VCs want to see tested acquisition channels with known CAC and conversion rates.",
+    "Narrative & Storytelling": "VCs want to see a compelling story arc that builds urgency and is memorable.",
+    "Investability": "VCs want to see a clear ask, specific use of funds, and strong unit economics.",
+  }
+
   // Ensure all 7 dimensions are present and scores are valid
   const validatedDimensions: DeckDimension[] = DECK_DIMENSIONS.map((name) => {
     const found = parsed.dimensions.find(
@@ -169,6 +188,7 @@ ${textContent}`
       score: Math.min(10, Math.max(1, Math.round(found?.score ?? 1))),
       explanation: found?.explanation || "Not enough information in the deck to evaluate this dimension.",
       suggestions: found?.suggestions?.slice(0, 3) || [],
+      vcWantToSee: found?.vcWantToSee || vcWantToSeeDefaults[name] || "",
     }
   })
 
