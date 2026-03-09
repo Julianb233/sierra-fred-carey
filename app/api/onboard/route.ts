@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const teammateEmails = Array.isArray(body.teammateEmails)
       ? body.teammateEmails.map((e: unknown) => (typeof e === "string" ? stripHtml(e) : String(e)))
       : undefined;
+    const coFounder = sanitizeField(body.co_founder);
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
@@ -164,6 +165,7 @@ export async function POST(request: NextRequest) {
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
+          ...(coFounder ? { co_founder: coFounder } : {}),
           onboarding_completed: true,
           updated_at: new Date().toISOString(),
         })
@@ -237,6 +239,7 @@ export async function POST(request: NextRequest) {
         stage: stage || null,
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
+        ...(coFounder ? { co_founder: coFounder } : {}),
         onboarding_completed: true,
         journey_welcomed: false,
         created_at: new Date().toISOString(),
