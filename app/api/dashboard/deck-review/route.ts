@@ -85,44 +85,59 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extract text from PDF
+    // Extract text from PDF and score with 55s timeout guard
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    let text: string
+    const scorecardPromise = (async () => {
+      let text: string
+      try {
+        const parsedDeck = await parsePDF(buffer)
+        text = parsedDeck.fullText
+      } catch (pdfError) {
+        logger.log("[Deck Scoring] PDF parse error:", String(pdfError))
+        const message = pdfError instanceof PDFParseError
+          ? pdfError.message
+          : "Could not read the PDF file. Please ensure it is not corrupted or password-protected."
+        throw { userError: message, status: 400 }
+      }
+
+      if (!text || text.trim().length === 0) {
+        throw { userError: "The PDF appears to be empty or contains only images. Please upload a text-based pitch deck.", status: 400 }
+      }
+
+      if (text.length > 100_000) {
+        throw { userError: "The extracted text exceeds 100,000 characters. Please upload a shorter deck.", status: 400 }
+      }
+
+      logger.log(`[Deck Scoring] Extracted ${text.length} chars from "${file.name}" for user ${userId}`)
+
+      return await scoreDeck(text)
+    })()
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("TIMEOUT")), 55000)
+    )
+
+    let scorecard
     try {
-      const parsedDeck = await parsePDF(buffer)
-      text = parsedDeck.fullText
-    } catch (pdfError) {
-      logger.log("[Deck Scoring] PDF parse error:", String(pdfError))
-      const message = pdfError instanceof PDFParseError
-        ? pdfError.message
-        : "Could not read the PDF file. Please ensure it is not corrupted or password-protected."
-      return NextResponse.json(
-        { success: false, error: message },
-        { status: 400 }
-      )
+      scorecard = await Promise.race([scorecardPromise, timeoutPromise])
+    } catch (raceError: unknown) {
+      if (raceError instanceof Error && raceError.message === "TIMEOUT") {
+        return NextResponse.json(
+          { success: false, error: "Deck scoring took too long. Please try a shorter deck or try again later." },
+          { status: 504 }
+        )
+      }
+      const err = raceError as { userError?: string; status?: number }
+      if (err.userError) {
+        return NextResponse.json(
+          { success: false, error: err.userError },
+          { status: err.status || 400 }
+        )
+      }
+      throw raceError
     }
-
-    // Validate extracted text
-    if (!text || text.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "The PDF appears to be empty or contains only images. Please upload a text-based pitch deck." },
-        { status: 400 }
-      )
-    }
-
-    if (text.length > 100_000) {
-      return NextResponse.json(
-        { success: false, error: "The extracted text exceeds 100,000 characters. Please upload a shorter deck." },
-        { status: 400 }
-      )
-    }
-
-    logger.log(`[Deck Scoring] Extracted ${text.length} chars from "${file.name}" for user ${userId}`)
-
-    // Score the deck via AI
-    const scorecard = await scoreDeck(text)
 
     // Save to database
     try {
