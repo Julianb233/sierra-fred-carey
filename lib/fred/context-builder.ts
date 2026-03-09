@@ -26,6 +26,7 @@ import type { OasesStage } from "@/types/oases";
 
 export interface FounderProfile {
   name: string | null;
+  companyName: string | null;
   stage: string | null;
   industry: string | null;
   coFounder: string | null;
@@ -35,6 +36,8 @@ export interface FounderProfile {
   challenges: string[];
   enrichmentData: Record<string, unknown> | null;
   onboardingCompleted: boolean;
+  oasesStage: string | null;
+  updatedAt: string | null;
 }
 
 export interface FounderContextData {
@@ -56,13 +59,14 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("name, stage, industry, co_founder, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed")
+    .select("name, company_name, stage, industry, co_founder, revenue_range, team_size, funding_history, challenges, enrichment_data, onboarding_completed, oases_stage, updated_at")
     .eq("id", userId)
     .single();
 
   if (error || !data) {
     return {
       name: null,
+      companyName: null,
       stage: null,
       industry: null,
       coFounder: null,
@@ -72,11 +76,14 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
       challenges: [],
       enrichmentData: null,
       onboardingCompleted: false,
+      oasesStage: null,
+      updatedAt: null,
     };
   }
 
   return {
     name: data.name ?? null,
+    companyName: data.company_name ?? null,
     stage: data.stage ?? null,
     industry: data.industry ?? null,
     coFounder: data.co_founder ?? null,
@@ -86,6 +93,8 @@ async function loadFounderProfile(userId: string): Promise<FounderProfile> {
     challenges: Array.isArray(data.challenges) ? data.challenges : [],
     enrichmentData: (data.enrichment_data as Record<string, unknown>) ?? null,
     onboardingCompleted: !!data.onboarding_completed,
+    oasesStage: data.oases_stage ?? null,
+    updatedAt: data.updated_at ?? null,
   };
 }
 
@@ -686,7 +695,10 @@ export async function buildFounderContextWithFacts(
   preloadedConversationState?: { id: string } | null
 ): Promise<{ context: string; facts: Array<{ category: string; key: string; value: Record<string, unknown> }>; memory?: FounderMemory; oasesStage: OasesStage }> {
   try {
-    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, activeMemory, assessmentsContext] = await Promise.all([
+    // Load profile, facts, and other context in parallel.
+    // buildActiveFounderMemory is called AFTER this to reuse profile + facts,
+    // eliminating 2 duplicate DB queries (profile + getAllUserFacts).
+    const [profile, facts, { isFirstConversation }, startupProcess, channelContext, redFlagsContext, assessmentsContext] = await Promise.all([
       loadFounderProfile(userId),
       loadSemanticFacts(userId, hasPersistentMemory),
       loadConversationStateContext(userId, preloadedConversationState),
@@ -695,9 +707,22 @@ export async function buildFounderContextWithFacts(
         ? loadChannelContext(userId)
         : Promise.resolve(null),
       loadActiveRedFlags(userId),
-      buildActiveFounderMemory(userId, hasPersistentMemory),
       loadRecentAssessments(userId),
     ]);
+
+    // Build active memory using pre-loaded profile + facts to avoid duplicate DB queries.
+    const profileForMemory = {
+      name: profile.name,
+      company_name: profile.companyName,
+      stage: profile.stage,
+      industry: profile.industry,
+      co_founder: profile.coFounder,
+      challenges: profile.challenges,
+      oases_stage: profile.oasesStage,
+      enrichment_data: profile.enrichmentData,
+      updated_at: profile.updatedAt,
+    };
+    const activeMemory = await buildActiveFounderMemory(userId, hasPersistentMemory, profileForMemory, facts);
 
     // Phase 35: On first conversation, seed the conversation state founder_snapshot
     // from the profile data collected during onboarding (fire-and-forget)
