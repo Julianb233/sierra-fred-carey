@@ -88,6 +88,13 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Dual transcript endpoints: /api/voice/transcript (LLM) + /api/fred/call/transcript (channel entries) [82-02]
 - Client-side transcript injection via data channel, not webhook-side [82-02]
 - Room ownership validated via userId in roomName pattern [82-02]
+- CORE_MEMORY_FIELDS extended from 7 to 14 fields (traction, revenue_status, funding_status, team_size, product_status, ninety_day_goal, key_decisions) [79-01 v2]
+- Memory extraction runs for ALL tiers, not just Pro+ -- persistMemoryUpdates handles tier gating [79-01 v2]
+- Extraction prompt includes REPHRASE rule for biggest_challenge, traction, key_decisions [79-01 v2]
+- CRITICAL INSTRUCTION includes BAD/GOOD personalization examples [79-02 v2]
+- Stale fields (7+ days): ask before advising, do not assume still accurate [79-02 v2]
+- Missing fields: do not guess/fabricate, collect max 2 per exchange [79-02 v2]
+- Co-founder text input added to onboarding step 3, saves to profiles.co_founder [79-02 v2]
 
 ### Blockers/Concerns
 
@@ -100,7 +107,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-08T12:00Z
-Stopped at: v8.0 Go-Live milestone COMPLETE. All 14 phases (77-90) shipped. Phase 90 (User Testing Loop) was the final phase.
-Resume file: .planning/phases/90-user-testing-loop/90-01-SUMMARY.md
+Last session: 2026-03-09T23:15Z
+Stopped at: Phase 79 (Active Founder Memory Layer) re-executed with enhanced plans (14 core fields, rephrase rules, all-tier extraction, prompt enforcement, co-founder onboarding)
+Resume file: .planning/milestones/v8.0-go-live/phases/79/79-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
