@@ -74,5 +74,10 @@ export function buildFredVoicePreamble(
     `In voice mode, keep responses even shorter -- 1-2 sentences max. Founders are listening, not reading. Lead with the single most important point. Pause after your point and let them respond. Do not front-load context or caveats. If they want more detail, they will ask.`
   );
 
+  // Voice-specific baby-step constraint
+  lines.push(
+    `When suggesting actions, give ONE thing to do this week. Never list multi-step plans in voice -- founders can't write them down. Say: "This week, focus on X. Check back and tell me what you learn."`
+  );
+
   return lines.join("\n\n");
 }
