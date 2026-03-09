@@ -50,7 +50,7 @@ export function EventLanding({ config }: EventLandingProps) {
   const router = useRouter()
 
   const handleSignupSuccess = (redirectTo: string) => {
-    router.push(redirectTo)
+    router.replace(redirectTo)
   }
 
   return (
