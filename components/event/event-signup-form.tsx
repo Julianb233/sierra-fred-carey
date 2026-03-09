@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { trackEvent } from "@/lib/analytics"
 import { EVENT_ANALYTICS } from "@/lib/event/analytics"
+import { createClient } from "@/lib/supabase/client"
 
 interface EventSignupFormProps {
   eventSlug: string
@@ -79,7 +80,16 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
         throw new Error(data.error || "Registration failed")
       }
 
-      onSuccess(data.redirectTo || "/onboarding")
+      // Hydrate client-side session so /welcome auth gate sees an authenticated user
+      if (data.access_token && data.refresh_token) {
+        const supabase = createClient()
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        })
+      }
+
+      onSuccess(data.redirectTo || "/welcome")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Registration failed"
       setError(msg)

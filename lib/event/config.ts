@@ -31,7 +31,7 @@ export const EVENT_CONFIGS: Record<string, EventConfig> = {
     location: "Palo Alto, CA",
     trialDays: 14,
     trialTier: "pro",
-    redirectAfterSignup: "/dashboard",
+    redirectAfterSignup: "/welcome",
     landingPath: "/event/palo-alto-2026",
     active: true,
   },

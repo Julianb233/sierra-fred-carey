@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { createClient as createServerClient } from "@supabase/supabase-js"
 import { createServiceClient } from "@/lib/supabase/server"
 import { getEventConfig } from "@/lib/event/config"
 import { EVENT_ANALYTICS } from "@/lib/event/analytics"
@@ -140,6 +141,7 @@ export async function POST(req: NextRequest) {
           trial_source: `${eventSlug}-event`,
           event_source: eventSlug,
           onboarding_completed: true,
+          journey_welcomed: false,
         },
         { onConflict: "id" }
       )
@@ -147,6 +149,22 @@ export async function POST(req: NextRequest) {
     if (profileError) {
       console.error("[Event Register] Profile update error:", profileError)
       // Don't fail the registration -- user was created, they just might not have the trial
+    }
+
+    // Sign in to create a client-usable session (admin createUser doesn't set session cookies)
+    const anonClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: sessionData, error: signInError } =
+      await anonClient.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password,
+      })
+
+    if (signInError) {
+      console.error("[Event Register] Auto-login error:", signInError)
+      // User was created but auto-login failed -- they can still sign in manually
     }
 
     // Track analytics (fire-and-forget)
@@ -171,6 +189,9 @@ export async function POST(req: NextRequest) {
       success: true,
       redirectTo: config.redirectAfterSignup,
       userId,
+      // Session tokens for client-side auth hydration
+      access_token: sessionData?.session?.access_token ?? null,
+      refresh_token: sessionData?.session?.refresh_token ?? null,
     })
   } catch (error) {
     console.error("[Event Register] Unexpected error:", error)
