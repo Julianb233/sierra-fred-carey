@@ -23,6 +23,7 @@ import { GoalRoadmap } from "@/components/dashboard/goal-roadmap";
 import { OasesVisualizer } from "@/components/oases/oases-visualizer";
 import { DailyAgendaWidget } from "@/components/dashboard/daily-agenda-widget";
 import { FadeIn } from "@/components/animations/FadeIn";
+import { TrialStatusBanner } from "@/components/dashboard/trial-status-banner";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 import type { MomentumIndicator as MomentumIndicatorType } from "@/lib/dashboard/engagement-score";
@@ -34,7 +35,7 @@ function DashboardContent() {
   const [showCallModal, setShowCallModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("Founder");
-  const { tier, refresh: refreshTier } = useTier();
+  const { tier, refresh: refreshTier, subscriptionStatus, trialEnd } = useTier();
   const [data, setData] = useState<CommandCenterData | null>(null);
   const [momentumData, setMomentumData] = useState<MomentumIndicatorType | null>(null);
   const canCallFred = tier >= UserTier.PRO;
@@ -156,6 +157,7 @@ function DashboardContent() {
   if (!data) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
+        <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         <FredHero
           userName={userName}
           canCallFred={canCallFred}
@@ -184,6 +186,9 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Trial countdown banner */}
+      <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
+
       {/* FRED HERO — front and center, the reason you're here */}
       <FredHero
         userName={userName}
