@@ -46,6 +46,8 @@ import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
+import { EventFeedbackWidget } from "@/components/event-feedback-widget";
+import { EventMicroSurvey } from "@/components/event-micro-survey";
 
 // ============================================================================
 // Navigation Configuration
@@ -514,6 +516,10 @@ export default function DashboardLayout({
         onClose={() => setVoiceOverlayOpen(false)}
         onSendMessage={handleVoiceSend}
       />
+
+      {/* AI-1804: Event feedback collection for first 200 attendees */}
+      <EventFeedbackWidget />
+      <EventMicroSurvey />
     </div>
   );
 }
