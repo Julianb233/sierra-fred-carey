@@ -97,13 +97,29 @@ export async function middleware(request: NextRequest) {
         })
         const { data: profile } = await supabase
           .from("profiles")
-          .select("journey_welcomed")
+          .select("journey_welcomed, reality_lens_complete")
           .eq("id", user.id)
           .single()
 
         if (profile && profile.journey_welcomed === false) {
           const welcomeUrl = new URL("/welcome", request.url)
           const redirectResponse = NextResponse.redirect(welcomeUrl)
+          redirectResponse.headers.set("X-Request-ID", requestId)
+          return redirectResponse
+        }
+
+        // Phase 81: Reality Lens enforcement
+        // Users who completed onboarding but not the reality check get redirected
+        // Exempt /dashboard/reality-lens routes to avoid infinite loops
+        if (
+          profile &&
+          profile.journey_welcomed === true &&
+          profile.reality_lens_complete === false &&
+          pathname.startsWith("/dashboard") &&
+          !pathname.startsWith("/dashboard/reality-lens")
+        ) {
+          const realityLensUrl = new URL("/dashboard/reality-lens?first=true", request.url)
+          const redirectResponse = NextResponse.redirect(realityLensUrl)
           redirectResponse.headers.set("X-Request-ID", requestId)
           return redirectResponse
         }
