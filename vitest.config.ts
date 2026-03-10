@@ -4,6 +4,11 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Force React to load its development CJS build which includes React.act()
+    // Without this, Vite's production optimization strips act() and breaks @testing-library/react
+    'process.env.NODE_ENV': '"test"',
+  },
   test: {
     environment: 'jsdom',
     globals: true,

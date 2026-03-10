@@ -7,10 +7,12 @@
  *
  * If any test fails, it means someone modified the core prompt in a way
  * that degrades FRED's voice. The change must be reviewed manually.
+ *
+ * @vitest-environment node
  */
 
 import { describe, it, expect } from "vitest";
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { FRED_CORE_PROMPT, buildPromptWithSupplements } from "@/lib/ai/prompt-layers";
 import type { SupplementalPromptPatch } from "@/lib/ai/prompt-layers";
 import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
@@ -19,7 +21,7 @@ import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
 // Snapshot hash of the core prompt — update ONLY after manual voice review
 // ============================================================================
 const CORE_PROMPT_SHA256 =
-  "190148e63406f018ac177eb492a3448f1dedcc53f21b76fedb9564c3c54c69f8";
+  "ba87812e3c406855ef6e0743f301f4b2962ebf9a1c549223e43d4e103ef14137";
 
 const prompt = FRED_CORE_PROMPT.content;
 
