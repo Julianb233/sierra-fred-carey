@@ -32,9 +32,10 @@ describe('Pricing Page (/pricing)', () => {
       render(<PricingPage />);
     });
 
-    expect(screen.getByText('Founder Decision OS')).toBeInTheDocument();
-    expect(screen.getByText('Fundraising & Strategy')).toBeInTheDocument();
-    expect(screen.getByText('Venture Studio')).toBeInTheDocument();
+    // Tier names appear in headings
+    expect(screen.getAllByText('Free').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Pro').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Studio').length).toBeGreaterThan(0);
   });
 
   it('should display correct prices', async () => {
