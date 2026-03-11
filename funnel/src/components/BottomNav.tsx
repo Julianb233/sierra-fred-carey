@@ -1,7 +1,7 @@
-import { MessageCircle, Map, HelpCircle } from 'lucide-react'
+import { MessageCircle, Map, HelpCircle, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type Tab = 'chat' | 'journey' | 'faq'
+export type Tab = 'home' | 'chat' | 'journey' | 'faq'
 
 interface BottomNavProps {
   activeTab: Tab
@@ -10,6 +10,7 @@ interface BottomNavProps {
 }
 
 const tabs = [
+  { id: 'home' as Tab, label: 'Home', icon: Home },
   { id: 'chat' as Tab, label: 'Chat', icon: MessageCircle },
   { id: 'journey' as Tab, label: 'Journey', icon: Map },
   { id: 'faq' as Tab, label: 'FAQ', icon: HelpCircle },
