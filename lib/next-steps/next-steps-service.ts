@@ -59,7 +59,7 @@ export async function getNextSteps(userId: string): Promise<GroupedNextSteps> {
 
   const { data, error } = await supabase
     .from("next_steps")
-    .select("*")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .eq("user_id", userId)
     .eq("dismissed", false)
     .order("created_at", { ascending: false });
@@ -95,7 +95,7 @@ export async function markComplete(
     })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("*")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -123,7 +123,7 @@ export async function markIncomplete(
     })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("*")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -152,7 +152,7 @@ export async function dismissStep(
     .update({ dismissed: true })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("*")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -211,7 +211,7 @@ export async function extractAndStoreNextSteps(
   const { data, error } = await supabase
     .from("next_steps")
     .insert(inserts)
-    .select("*");
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at");
 
   if (error) {
     console.error("[NextSteps] Failed to store:", error);
@@ -252,7 +252,7 @@ export async function getOverdueSteps(userId: string): Promise<NextStep[]> {
 
   const { data, error } = await supabase
     .from("next_steps")
-    .select("*")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .eq("user_id", userId)
     .eq("completed", false)
     .eq("dismissed", false)
