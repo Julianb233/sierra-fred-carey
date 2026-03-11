@@ -833,7 +833,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       // Store in episodic memory only for Pro+ tiers (Phase 21)
       // Fire-and-forget: don't block response delivery on memory persistence
       if (shouldPersistMemory) {
-        Promise.all([
+        void Promise.all([
           storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "user",
             content: message,
@@ -1155,7 +1155,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             // Store assistant response in memory (Pro+ only, Phase 21)
             // Fire-and-forget: don't block "done" SSE event on memory persistence
             if (shouldPersistMemory) {
-              storeEpisode(userId, effectiveSessionId, "conversation", {
+              void storeEpisode(userId, effectiveSessionId, "conversation", {
                 role: "assistant",
                 content: response.content,
                 action: response.action,
