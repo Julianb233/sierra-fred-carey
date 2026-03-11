@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -12,9 +13,11 @@ import {
   Target,
   TrendingUp,
   MessageCircle,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BRAND } from '@/lib/constants'
+import { redirectToProCheckout } from '@/lib/stripe'
 
 interface LandingPageProps {
   onStartChat: () => void
@@ -77,6 +80,21 @@ const PRO_FEATURES = [
 ]
 
 export function LandingPage({ onStartChat }: LandingPageProps) {
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  const handleProCheckout = async () => {
+    try {
+      setCheckoutLoading(true)
+      setCheckoutError(null)
+      await redirectToProCheckout()
+    } catch (err) {
+      console.error('Checkout error:', err)
+      setCheckoutError(err instanceof Error ? err.message : 'Something went wrong')
+      setCheckoutLoading(false)
+    }
+  }
+
   return (
     <div className="h-full overflow-y-auto">
       {/* ─── HERO ─── */}
@@ -415,15 +433,29 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
                 </li>
               ))}
             </ul>
-            <a
-              href={BRAND.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-2.5 bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-sm font-semibold rounded-full transition-colors text-center shadow-md shadow-[#ff6a1a]/20"
+            <button
+              onClick={handleProCheckout}
+              disabled={checkoutLoading}
+              className={cn(
+                'w-full py-2.5 bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-sm font-semibold rounded-full transition-colors text-center shadow-md shadow-[#ff6a1a]/20',
+                checkoutLoading && 'opacity-70 cursor-not-allowed'
+              )}
             >
-              Start 14-Day Free Trial
-            </a>
-            <p className="text-[10px] text-gray-400 text-center mt-2">No credit card required</p>
+              {checkoutLoading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </span>
+              ) : (
+                'Start 14-Day Free Trial'
+              )}
+            </button>
+            {checkoutError && (
+              <p className="text-[10px] text-red-500 text-center mt-2">{checkoutError}</p>
+            )}
+            {!checkoutError && (
+              <p className="text-[10px] text-gray-400 text-center mt-2">14-day free trial, cancel anytime</p>
+            )}
           </motion.div>
         </div>
       </section>
