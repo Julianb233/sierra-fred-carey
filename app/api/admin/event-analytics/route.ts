@@ -41,12 +41,13 @@ export async function GET(request: NextRequest) {
     const onboardingComplete = all.filter((p) => p.journey_welcomed === true).length
     const realityLensComplete = all.filter((p) => p.reality_lens_complete === true).length
 
-    // For first chat: check if fred_memories has any entries for these users
+    // For first chat: check if fred_episodic_memory has entries for these users
+    // (was fred_memories -- that table does not exist; actual table is fred_episodic_memory)
     let firstChatCount = 0
     if (all.length > 0) {
       const userIds = all.map((p) => p.id)
       const { count } = await supabase
-        .from("fred_memories")
+        .from("fred_episodic_memory")
         .select("user_id", { count: "exact", head: true })
         .in("user_id", userIds)
 

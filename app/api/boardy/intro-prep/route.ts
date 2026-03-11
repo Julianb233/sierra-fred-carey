@@ -53,13 +53,14 @@ export async function GET(request: NextRequest) {
   // Fetch user profile for personalization
   const { data: profile } = await supabase
     .from("profiles")
-    .select("company_name, startup_stage, sector")
+    // DB columns: stage (not startup_stage), industry (not sector)
+    .select("company_name, stage, industry")
     .eq("id", user.id)
     .single()
 
   const companyName = profile?.company_name || "your company"
-  const stage = profile?.startup_stage || "early stage"
-  const sector = profile?.sector || "technology"
+  const stage = profile?.stage || "early stage"
+  const sector = profile?.industry || "technology"
 
   const matchName = match.match_name || "the match"
   const matchType = match.match_type || "investor"

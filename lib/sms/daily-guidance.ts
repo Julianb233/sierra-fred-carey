@@ -106,7 +106,10 @@ export async function sendDailyGuidanceSMS(
 
 /**
  * Get users eligible for daily guidance SMS.
- * Requires: sms_notifications_enabled = true, non-null phone, Pro+ tier.
+ * Requires: checkin_enabled = true, verified phone, Pro+ tier.
+ *
+ * Fixed: was querying profiles.phone and profiles.sms_notifications_enabled
+ * which don't exist. Phone data lives in user_sms_preferences table.
  */
 export async function getEligibleUsersForSMS(): Promise<
   Array<{ userId: string; phone: string }>
@@ -114,12 +117,14 @@ export async function getEligibleUsersForSMS(): Promise<
   try {
     const supabase = createServiceClient()
 
-    // Query profiles with SMS enabled and a phone number
+    // Query user_sms_preferences for opted-in users with verified phones
+    // (profiles table does not have phone or sms_notifications_enabled columns)
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, phone")
-      .eq("sms_notifications_enabled", true)
-      .not("phone", "is", null)
+      .from("user_sms_preferences")
+      .select("user_id, phone_number")
+      .eq("checkin_enabled", true)
+      .eq("phone_verified", true)
+      .not("phone_number", "is", null)
 
     if (error) {
       console.error(`${LOG_PREFIX} Failed to query eligible users:`, error)
@@ -134,11 +139,11 @@ export async function getEligibleUsersForSMS(): Promise<
 
     const eligible: Array<{ userId: string; phone: string }> = []
 
-    for (const profile of data) {
+    for (const pref of data) {
       try {
-        const tier = await getUserTier(profile.id)
+        const tier = await getUserTier(pref.user_id)
         if (tier >= UserTier.PRO) {
-          eligible.push({ userId: profile.id, phone: profile.phone })
+          eligible.push({ userId: pref.user_id, phone: pref.phone_number })
         }
       } catch {
         // Skip users where tier check fails

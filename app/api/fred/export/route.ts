@@ -116,9 +116,10 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient();
 
     // Build query -- user-scoped via RLS + explicit filter
+    // Use specific columns instead of SELECT * to reduce payload size
     let query = supabase
       .from("fred_episodic_memory")
-      .select("*")
+      .select("id, session_id, event_type, content, importance_score, metadata, created_at")
       .eq("user_id", userId)
       .eq("event_type", "conversation")
       .order("created_at", { ascending: true });

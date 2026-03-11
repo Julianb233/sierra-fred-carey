@@ -262,10 +262,10 @@ async function getSessionDetail(
   userId: string,
   sessionId: string
 ): Promise<SessionDetail> {
-  // Fetch episodes for this session
+  // Fetch episodes for this session (specific columns instead of SELECT * to reduce payload)
   const { data: episodes, error: episodesError } = await supabase
     .from("fred_episodic_memory")
-    .select("*")
+    .select("id, event_type, content, importance_score, metadata, created_at")
     .eq("user_id", userId)
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
@@ -275,10 +275,10 @@ async function getSessionDetail(
     // Return empty session if table doesn't exist
   }
 
-  // Fetch decisions for this session
+  // Fetch decisions for this session (specific columns to reduce payload)
   const { data: decisions, error: decisionsError } = await supabase
     .from("fred_decision_log")
-    .select("*")
+    .select("id, decision_type, input_context, recommendation, final_decision, confidence, created_at")
     .eq("user_id", userId)
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
@@ -288,10 +288,10 @@ async function getSessionDetail(
     console.warn("[FRED History] Error fetching decisions:", decisionsError);
   }
 
-  // Fetch relevant facts (most recently updated during session)
+  // Fetch relevant facts (most recently updated -- specific columns to reduce payload)
   const { data: facts, error: factsError } = await supabase
     .from("fred_semantic_memory")
-    .select("*")
+    .select("id, category, key, value, confidence, source, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(10);
