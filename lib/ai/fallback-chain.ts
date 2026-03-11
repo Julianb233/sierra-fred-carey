@@ -3,6 +3,8 @@
  *
  * Orchestrates failover between AI providers using circuit breaker
  * pattern and retry logic for maximum reliability.
+ *
+ * Default order: xAI -> OpenAI -> Anthropic -> Google
  */
 
 import type { LanguageModel } from "ai";
@@ -12,18 +14,20 @@ import {
   getPrimaryModel,
   getFallback1Model,
   getFallback2Model,
+  getFallback3Model,
   getFastModel,
   hasAnyProvider,
+  hasXai,
 } from "./providers";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type ProviderName = "openai" | "anthropic" | "google";
+export type ProviderName = "xai" | "openai" | "anthropic" | "google";
 
 export interface FallbackConfig {
-  /** Provider order for fallback (default: openai -> anthropic -> google) */
+  /** Provider order for fallback (default: xai -> openai -> anthropic -> google) */
   providerOrder?: ProviderName[];
   /** Enable retry per provider (default: true) */
   enableRetry?: boolean;
@@ -46,7 +50,7 @@ export interface FallbackResult<T> {
 // Default Configuration
 // ============================================================================
 
-const DEFAULT_FALLBACK_ORDER: ProviderName[] = ["openai", "anthropic", "google"];
+const DEFAULT_FALLBACK_ORDER: ProviderName[] = ["xai", "openai", "anthropic", "google"];
 
 const DEFAULT_CONFIG: FallbackConfig = {
   providerOrder: DEFAULT_FALLBACK_ORDER,
@@ -61,12 +65,15 @@ const DEFAULT_CONFIG: FallbackConfig = {
 
 function getModelForProvider(provider: ProviderName): LanguageModel | null {
   switch (provider) {
-    case "openai":
+    case "xai":
+      if (!hasXai()) return null;
       return getPrimaryModel() || getFastModel();
+    case "openai":
+      return getFallback1Model() || getFastModel();
     case "anthropic":
-      return getFallback1Model();
-    case "google":
       return getFallback2Model();
+    case "google":
+      return getFallback3Model();
     default:
       return null;
   }
@@ -93,7 +100,7 @@ export async function executeWithFallback<T>(
 
   if (!hasAnyProvider()) {
     throw new Error(
-      "No AI providers configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY."
+      "No AI providers configured. Set XAI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY."
     );
   }
 

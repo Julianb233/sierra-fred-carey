@@ -39,10 +39,11 @@ export interface TokenEstimate {
 // ============================================================================
 
 const MODEL_CONTEXT_LIMITS: Record<ProviderKey, number> = {
-  primary: 128_000,    // GPT-4o
-  fallback1: 200_000,  // Claude 3.5 Sonnet
-  fallback2: 1_000_000, // Gemini 1.5 Pro
-  fast: 128_000,       // GPT-4o-mini
+  primary: 131_072,    // Grok 3 Fast
+  fallback1: 128_000,  // GPT-4o
+  fallback2: 200_000,  // Claude Sonnet 4.5
+  fallback3: 1_000_000, // Gemini 2.0 Flash
+  fast: 131_072,       // Grok 3 Mini Fast
   reasoning: 200_000,  // o1
 };
 

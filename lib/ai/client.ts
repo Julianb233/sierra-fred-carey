@@ -11,12 +11,24 @@ export interface ChatMessage {
   content: string;
 }
 
-type Provider = "openai" | "anthropic" | "google";
+type Provider = "xai" | "openai" | "anthropic" | "google";
 
 // Lazy-load clients to avoid build-time errors
+let xaiClient: OpenAI | null = null;
 let openaiClient: OpenAI | null = null;
 let anthropicClient: Anthropic | null = null;
 let googleClient: GoogleGenerativeAI | null = null;
+
+function getXai(): OpenAI | null {
+  if (!process.env.XAI_API_KEY) return null;
+  if (!xaiClient) {
+    xaiClient = new OpenAI({
+      apiKey: process.env.XAI_API_KEY,
+      baseURL: "https://api.x.ai/v1",
+    });
+  }
+  return xaiClient;
+}
 
 function getOpenAI(): OpenAI | null {
   if (!process.env.OPENAI_API_KEY) return null;
@@ -40,6 +52,28 @@ function getGoogle(): GoogleGenerativeAI | null {
     googleClient = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   }
   return googleClient;
+}
+
+// xAI (Grok) implementation -- uses OpenAI-compatible API
+async function generateWithXai(
+  messages: ChatMessage[],
+  systemPrompt?: string
+): Promise<string> {
+  const client = getXai();
+  if (!client) throw new Error("xAI not configured");
+
+  const allMessages: ChatMessage[] = systemPrompt
+    ? [{ role: "system", content: systemPrompt }, ...messages]
+    : messages;
+
+  const response = await client.chat.completions.create({
+    model: "grok-3-fast",
+    messages: allMessages,
+    temperature: 0.7,
+    max_tokens: 1000,
+  });
+
+  return response.choices[0]?.message?.content || "";
 }
 
 // OpenAI implementation
@@ -121,9 +155,10 @@ async function generateWithGoogle(
   return result.response.text();
 }
 
-// Get available providers in priority order
+// Get available providers in priority order (xAI first for lowest latency)
 function getAvailableProviders(): Provider[] {
   const providers: Provider[] = [];
+  if (process.env.XAI_API_KEY) providers.push("xai");
   if (process.env.OPENAI_API_KEY) providers.push("openai");
   if (process.env.ANTHROPIC_API_KEY) providers.push("anthropic");
   if (process.env.GOOGLE_API_KEY) providers.push("google");
@@ -236,7 +271,7 @@ export async function generateChatResponse(
   const providers = getAvailableProviders();
 
   if (providers.length === 0) {
-    throw new Error("No AI providers configured. Please set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY.");
+    throw new Error("No AI providers configured. Please set XAI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY.");
   }
 
   let lastError: Error | null = null;
@@ -246,6 +281,8 @@ export async function generateChatResponse(
       logger.log(`[AI] Trying ${provider}...`);
 
       switch (provider) {
+        case "xai":
+          return await generateWithXai(messages, systemPrompt);
         case "openai":
           return await generateWithOpenAI(messages, systemPrompt);
         case "anthropic":
@@ -268,9 +305,9 @@ export async function generateStreamingResponse(
   messages: ChatMessage[],
   systemPrompt?: string
 ): Promise<ReadableStream> {
-  const openai = getOpenAI();
+  const streamClient = getXai() || getOpenAI();
 
-  if (!openai) {
+  if (!streamClient) {
     // Fallback to non-streaming response
     const response = await generateChatResponse(messages, systemPrompt);
     const encoder = new TextEncoder();
@@ -286,8 +323,10 @@ export async function generateStreamingResponse(
     ? [{ role: "system", content: systemPrompt }, ...messages]
     : messages;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const streamModel = getXai() ? "grok-3-fast" : "gpt-4o";
+
+  const response = await streamClient.chat.completions.create({
+    model: streamModel,
     messages: allMessages,
     temperature: 0.7,
     max_tokens: 1000,
@@ -340,7 +379,7 @@ export async function generateTrackedResponse(
   let variant: string | undefined;
 
   // Default values
-  let model = "gpt-4o";
+  let model = process.env.XAI_API_KEY ? "grok-3-fast" : "gpt-4o";
   let temperature = 0.7;
   let maxTokens = 1000;
   let finalSystemPrompt = systemPrompt || "";

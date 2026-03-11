@@ -2,12 +2,21 @@
  * AI Provider Configuration
  *
  * Unified provider configuration using Vercel AI SDK 6.
- * Supports OpenAI, Anthropic, and Google with automatic fallback.
+ * Supports xAI (Grok), OpenAI, Anthropic, and Google with automatic fallback.
+ *
+ * Provider priority (when XAI_API_KEY is set):
+ *   primary   -> Grok 3 Fast (xAI) -- lowest latency, streaming-optimized
+ *   fallback1 -> GPT-4o (OpenAI)
+ *   fallback2 -> Claude Sonnet (Anthropic)
+ *   fallback3 -> Gemini 2.0 Flash (Google)
+ *   fast      -> Grok 3 Mini Fast (xAI)
+ *   reasoning -> o3 (OpenAI)
  */
 
-import { createOpenAI, openai } from "@ai-sdk/openai";
-import { createAnthropic, anthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+import { xai } from "@ai-sdk/xai";
 import type { LanguageModel, EmbeddingModel } from "ai";
 
 // ============================================================================
@@ -18,6 +27,7 @@ export type ProviderKey =
   | "primary"
   | "fallback1"
   | "fallback2"
+  | "fallback3"
   | "fast"
   | "reasoning";
 
@@ -43,6 +53,10 @@ export interface EmbeddingConfig {
 // Provider Availability Check
 // ============================================================================
 
+export function hasXai(): boolean {
+  return !!process.env.XAI_API_KEY;
+}
+
 function hasOpenAI(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
@@ -60,35 +74,47 @@ function hasGoogle(): boolean {
 // ============================================================================
 
 /**
- * Get primary model (GPT-4o)
+ * Get primary model -- Grok 3 Fast (xAI) for lowest latency streaming.
+ * Falls back to GPT-4o if XAI_API_KEY is not set.
  */
 export function getPrimaryModel(): LanguageModel | null {
+  if (hasXai()) return xai("grok-3-fast");
+  if (hasOpenAI()) return openai("gpt-4o");
+  return null;
+}
+
+/**
+ * Get fallback model 1 (GPT-4o)
+ */
+export function getFallback1Model(): LanguageModel | null {
   if (!hasOpenAI()) return null;
   return openai("gpt-4o");
 }
 
 /**
- * Get fallback model 1 (Claude 3.5 Sonnet)
+ * Get fallback model 2 (Claude Sonnet 4.5)
  */
-export function getFallback1Model(): LanguageModel | null {
+export function getFallback2Model(): LanguageModel | null {
   if (!hasAnthropic()) return null;
   return anthropic("claude-sonnet-4-5-20250929");
 }
 
 /**
- * Get fallback model 2 (Gemini 1.5 Pro)
+ * Get fallback model 3 (Gemini 2.0 Flash)
  */
-export function getFallback2Model(): LanguageModel | null {
+export function getFallback3Model(): LanguageModel | null {
   if (!hasGoogle()) return null;
   return google("gemini-2.0-flash");
 }
 
 /**
- * Get fast model for quick operations (GPT-4o-mini)
+ * Get fast model -- Grok 3 Mini Fast for quick, low-cost operations.
+ * Falls back to GPT-4o-mini if XAI_API_KEY is not set.
  */
 export function getFastModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("gpt-4o-mini");
+  if (hasXai()) return xai("grok-3-mini-fast");
+  if (hasOpenAI()) return openai("gpt-4o-mini");
+  return null;
 }
 
 /**
@@ -127,6 +153,7 @@ export function getModel(key: ProviderKey): LanguageModel {
     primary: getPrimaryModel,
     fallback1: getFallback1Model,
     fallback2: getFallback2Model,
+    fallback3: getFallback3Model,
     fast: getFastModel,
     reasoning: getReasoningModel,
   };
@@ -134,11 +161,11 @@ export function getModel(key: ProviderKey): LanguageModel {
   const model = modelFns[key]();
   if (model) return model;
 
-  // Fallback chain: try other providers in order
   const fallbackOrder: ProviderKey[] = [
     "primary",
     "fallback1",
     "fallback2",
+    "fallback3",
     "fast",
   ];
 
@@ -154,7 +181,7 @@ export function getModel(key: ProviderKey): LanguageModel {
   }
 
   throw new Error(
-    "No AI providers configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY."
+    "No AI providers configured. Set XAI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY."
   );
 }
 
@@ -180,14 +207,18 @@ export function getEmbedding(
 export function getAvailableProviders(): ProviderKey[] {
   const available: ProviderKey[] = [];
 
+  if (hasXai()) {
+    available.push("primary", "fast");
+  }
   if (hasOpenAI()) {
-    available.push("primary", "fast", "reasoning");
+    if (!hasXai()) available.push("primary", "fast");
+    available.push("fallback1", "reasoning");
   }
   if (hasAnthropic()) {
-    available.push("fallback1");
+    available.push("fallback2");
   }
   if (hasGoogle()) {
-    available.push("fallback2");
+    available.push("fallback3");
   }
 
   return available;
@@ -197,7 +228,7 @@ export function getAvailableProviders(): ProviderKey[] {
  * Check if any provider is available
  */
 export function hasAnyProvider(): boolean {
-  return hasOpenAI() || hasAnthropic() || hasGoogle();
+  return hasXai() || hasOpenAI() || hasAnthropic() || hasGoogle();
 }
 
 // ============================================================================
@@ -206,20 +237,24 @@ export function hasAnyProvider(): boolean {
 
 export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model">> = {
   primary: {
+    name: "Grok 3 Fast",
+    costPerMillionTokens: { input: 5, output: 25 },
+  },
+  fallback1: {
     name: "GPT-4o",
     costPerMillionTokens: { input: 2.5, output: 10 },
   },
-  fallback1: {
+  fallback2: {
     name: "Claude Sonnet 4.5",
     costPerMillionTokens: { input: 3, output: 15 },
   },
-  fallback2: {
+  fallback3: {
     name: "Gemini 2.0 Flash",
     costPerMillionTokens: { input: 1.25, output: 5 },
   },
   fast: {
-    name: "GPT-4o-mini",
-    costPerMillionTokens: { input: 0.15, output: 0.6 },
+    name: "Grok 3 Mini Fast",
+    costPerMillionTokens: { input: 0.3, output: 0.5 },
   },
   reasoning: {
     name: "o3",
