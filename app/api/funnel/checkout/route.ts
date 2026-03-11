@@ -13,11 +13,21 @@ import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
  *
  * After checkout, the user is redirected to the main app to complete signup.
  */
+
+// Map user-facing tier names to internal plan keys
+const TIER_TO_PLAN_KEY: Record<string, keyof typeof PLANS> = {
+  PRO: "FUNDRAISING",
+  FUNDRAISING: "FUNDRAISING",
+  STUDIO: "VENTURE_STUDIO",
+  VENTURE_STUDIO: "VENTURE_STUDIO",
+};
+
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
 
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("[Funnel Checkout] STRIPE_SECRET_KEY not set");
       return NextResponse.json(
         {
           error: "Stripe not configured",
@@ -31,16 +41,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tier, email } = body;
 
-    // Map tier to plan -- only Pro (fundraising) is available from the funnel
-    const TIER_TO_PLAN_KEY: Record<string, keyof typeof PLANS> = {
-      PRO: "FUNDRAISING",
-      FUNDRAISING: "FUNDRAISING",
-    };
-
     const planKey = TIER_TO_PLAN_KEY[(tier || "PRO").toUpperCase()];
     if (!planKey) {
       return NextResponse.json(
-        { error: "Invalid tier. Only 'pro' is available from the funnel." },
+        {
+          error: "Invalid tier",
+          message: `Tier '${tier}' is not available. Choose 'pro' or 'studio'.`,
+          code: "INVALID_TIER",
+        },
         { status: 400, headers: corsHeaders(origin) }
       );
     }
@@ -49,8 +57,13 @@ export async function POST(request: NextRequest) {
     const priceId = plan.priceId;
 
     if (!priceId) {
+      console.error(`[Funnel Checkout] No priceId configured for plan: ${planKey}`);
       return NextResponse.json(
-        { error: "Price ID not configured for this plan." },
+        {
+          error: "Price not configured",
+          message: "This plan is not yet available. Please try again later.",
+          code: "PRICE_NOT_CONFIGURED",
+        },
         { status: 500, headers: corsHeaders(origin) }
       );
     }
@@ -58,16 +71,17 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
     const funnelUrl = process.env.NEXT_PUBLIC_FUNNEL_URL || "https://u.joinsahara.com";
 
-    // After successful checkout, redirect to main app onboarding with success flag.
+    // After successful checkout, redirect to main app onboarding with session info.
     // After cancellation, redirect back to the funnel.
-    const sessionParams: Parameters<typeof createCheckoutSession>[0] = {
+    const session = await createCheckoutSession({
       priceId,
-      userId: "funnel-pending", // Placeholder -- webhook will reconcile after signup
+      customerEmail: email || undefined,
+      userId: "funnel-pending", // Placeholder -- reconciled after user creates account
       successUrl: `${baseUrl}/onboarding?checkout=success&tier=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${funnelUrl}/?checkout=canceled`,
-    };
+    });
 
-    const session = await createCheckoutSession(sessionParams);
+    console.log(`[Funnel Checkout] Session created: ${session.id}, plan: ${plan.id}, email: ${email || "not provided"}`);
 
     return NextResponse.json(
       {
@@ -96,7 +110,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      {
+        error: "Checkout failed",
+        message: "Failed to create checkout session. Please try again.",
+        code: "CHECKOUT_FAILED",
+      },
       { status: 500, headers: corsHeaders(origin) }
     );
   }

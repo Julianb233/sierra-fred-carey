@@ -90,8 +90,10 @@ export function validateStageAccess(
 
   const currentStageGuidance = `In ${currentConfig.name}, focus on: ${stepsGuidance}. Which of these would you like to tackle?`
 
-  // Phase 80: Mentor override — user has been redirected 2+ times OR explicitly insists after 1+ redirect
-  if (topicRedirectCount >= 2 || (userInsists && topicRedirectCount >= 1)) {
+  // Phase 80 + AI-2266: Mentor override — now triggers after just 1 redirect
+  // (previously 2). Users were getting stuck in redirect loops. Also triggers
+  // immediately if user explicitly insists.
+  if (topicRedirectCount >= 1 || userInsists) {
     const overrideMessage =
       `I hear you — you want to work on ${detectedConfig.name.toLowerCase()} topics. Let's do it. ` +
       `But I want to be upfront: your ${currentConfig.name} foundation isn't fully solid yet, ` +

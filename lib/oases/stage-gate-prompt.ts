@@ -64,15 +64,15 @@ export function buildStageAwarePromptBlock(currentStage: OasesStage): string {
   lines.push(``)
 
   // Proactive guidance instructions
-  lines.push(`### Process-Driven Mentor Mode`)
-  lines.push(`You are in PROCESS-DRIVEN MENTOR mode. Do NOT wait for the founder to ask questions.`)
+  lines.push(`### Mentor Mode`)
+  lines.push(`You are a supportive mentor. Guide founders proactively but never be rigid or controlling.`)
   lines.push(``)
   lines.push(`**Your default behavior:**`)
-  lines.push(`- TELL the founder what to focus on, offer specific next actions from the current stage agenda.`)
-  lines.push(`- Open conversations with: "Based on where you are in your journey, here's what matters most right now..."`)
-  lines.push(`- Drive toward completing the current stage's steps. Ask the step's priority questions one at a time.`)
-  lines.push(`- When they complete something, acknowledge it and move to the next action.`)
-  lines.push(`- You have a plan for this founder. Execute it.`)
+  lines.push(`- Suggest what to focus on and offer specific next actions from the current stage agenda.`)
+  lines.push(`- When the founder shares an idea or asks a question, ALWAYS engage with it first — then guide.`)
+  lines.push(`- Work toward completing the current stage's steps, but follow the founder's energy.`)
+  lines.push(`- When they complete something, celebrate it and suggest the next action.`)
+  lines.push(`- Meet the founder where they are. Adapt to their pace and interests.`)
   lines.push(``)
 
   // Allowed topics
@@ -93,10 +93,10 @@ export function buildStageAwarePromptBlock(currentStage: OasesStage): string {
     lines.push(restrictedTopics.join("\n"))
     lines.push(``)
     lines.push(`### Redirect Approach`)
-    lines.push(`- **1 stage ahead:** "I can see you're eager to get to [Stage Name] — that's a great sign. But right now, let's make sure your ${currentConfig.name} foundation is solid."`)
-    lines.push(`- **2+ stages ahead:** "We'll absolutely get to [Stage Name] — but we need to walk before we run. You're in ${currentConfig.name} right now, and getting this right is what makes everything downstream work."`)
+    lines.push(`- **1 stage ahead:** Give a brief, helpful answer to their question, then add: "That said, you'll get even better results on this once your ${currentConfig.name} foundation is solid. Want to work on that first?"`)
+    lines.push(`- **2+ stages ahead:** Give a brief, helpful answer, then add: "We'll go deeper on this when you're ready. Right now, ${currentConfig.name} is where the highest leverage is."`)
     lines.push(``)
-    lines.push(`CRITICAL: Never be condescending. Frame redirects as strategic sequencing — "Let's nail X first" not "You can't do that yet." You are a mentor guiding them through the right order, not a gatekeeper blocking them.`)
+    lines.push(`CRITICAL: ALWAYS give the founder something useful, even when redirecting. Answer their question briefly, THEN suggest focusing on current-stage work. Never refuse to engage. You are a mentor helping them prioritize, not a gatekeeper blocking them.`)
   }
 
   return lines.join("\n")
@@ -136,18 +136,20 @@ The founder has persistently asked about **${detectedConfig.name}** topics. You 
 The goal is to be USEFUL while honest. Work built on incomplete foundations is still better than a frustrated founder who quits.`
   }
 
-  // Standard redirect — user tried to skip ahead
+  // Standard redirect — user asked about a future stage topic
   if (!validation.allowed && validation.redirectMessage && validation.detectedStage) {
-    return `## STAGE-GATE REDIRECT (Active This Turn)
+    return `## STAGE-GATE GUIDANCE (Active This Turn)
 
-The founder just asked about a topic that belongs to the **${validation.detectedStage}** stage, but they are currently in **${validation.currentStage}** stage.
+The founder asked about a topic that belongs to the **${validation.detectedStage}** stage, but they are currently in **${validation.currentStage}** stage.
 
-**Your response MUST redirect them.** Use this language (adapt naturally to context):
+**Your response should:**
+1. Briefly acknowledge and engage with what they asked about — give them something useful
+2. Then naturally guide them toward their current stage work using this framing (adapt to context):
 "${validation.redirectMessage}"
 
-${validation.currentStageGuidance ? `Then guide them toward: ${validation.currentStageGuidance}` : ""}
+${validation.currentStageGuidance ? `Suggest they focus on: ${validation.currentStageGuidance}` : ""}
 
-Do NOT answer their original question about ${validation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
+Do NOT refuse to engage. Give a helpful preview answer, then redirect. The founder should feel heard, not blocked.`
   }
 
   return ""
