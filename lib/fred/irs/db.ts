@@ -49,7 +49,7 @@ export async function getIRSHistory(
 ): Promise<IRSResult[]> {
   const { data, error } = await supabase
     .from('investor_readiness_scores')
-    .select('*')
+    .select('id, user_id, overall_score, category_scores, strengths, weaknesses, recommendations, source_documents, startup_context, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -67,7 +67,7 @@ export async function getIRSHistory(
 export async function getLatestIRS(supabase: SupabaseClient, userId: string): Promise<IRSResult | null> {
   const { data, error } = await supabase
     .from('investor_readiness_scores')
-    .select('*')
+    .select('id, user_id, overall_score, category_scores, strengths, weaknesses, recommendations, source_documents, startup_context, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -91,7 +91,7 @@ export async function getIRSById(
 ): Promise<IRSResult | null> {
   const { data, error } = await supabase
     .from('investor_readiness_scores')
-    .select('*')
+    .select('id, user_id, overall_score, category_scores, strengths, weaknesses, recommendations, source_documents, startup_context, created_at')
     .eq('id', irsId)
     .eq('user_id', userId)
     .single();
