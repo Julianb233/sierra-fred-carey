@@ -621,7 +621,7 @@ describe("Voice QA: Voice Overlay UX Flow", () => {
 
   it("auto-send fires after transcription completes when Stop & Send is used", () => {
     // The autoSendPending flag triggers send after isTranscribing flips to false
-    let autoSendPending = true
+    const autoSendPending = true
     const isTranscribing = false
     const transcribedText = "Hello Fred"
     const shouldAutoSend =
@@ -630,7 +630,7 @@ describe("Voice QA: Voice Overlay UX Flow", () => {
   })
 
   it("auto-send cancels if transcription returns empty text", () => {
-    let autoSendPending = true
+    const autoSendPending = true
     const isTranscribing = false
     const transcribedText = ""
     const shouldCancel =
