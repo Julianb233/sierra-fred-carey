@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Sparkles, Brain, Clock, Users, ArrowRight, Check as CheckIcon } from "lucide-react";
 import NightModeParticles from "@/components/effects/NightModeParticles";
 import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
+import HeroChatPreview from "@/components/hero-chat-preview";
 
 export default function Hero() {
   return (
@@ -167,7 +168,7 @@ export default function Hero() {
           </motion.div>
 
           {/* Trust indicators - visible immediately, no fade-in */}
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-16">
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
               { icon: Users, text: "10,000+ Founders Coached" },
               { icon: CheckIcon, text: "$100M+ Raised" },
@@ -182,6 +183,17 @@ export default function Hero() {
               </div>
             ))}
           </div>
+
+          {/* Interactive Chat Preview - Talk to Fred above the fold */}
+          <motion.div
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="w-full"
+          >
+            <HeroChatPreview />
+          </motion.div>
+
         </div>
       </section>
 
