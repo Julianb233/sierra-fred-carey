@@ -145,15 +145,8 @@ export function MobileHome() {
   if (!data) {
     return (
       <div className="space-y-4 px-1">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Hey, {userName}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Your Founder Command Center
-          </p>
-        </div>
-        <MobileChatInput />
+        {/* Chat input — first thing visible, no scroll needed */}
+        <MobileChatInput userName={userName} />
         <GetStartedWithFred variant="mobile" />
         <GoalRoadmap />
       </div>
@@ -162,18 +155,8 @@ export function MobileHome() {
 
   return (
     <div className="space-y-4">
-      {/* Greeting */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          Hey, {userName}
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Here is what matters today.
-        </p>
-      </div>
-
-      {/* Chat input — above the fold, first interaction on mobile */}
-      <MobileChatInput />
+      {/* Chat input — first thing visible, above the fold */}
+      <MobileChatInput userName={userName} />
 
       {/* Get Started with Fred */}
       <GetStartedWithFred variant="mobile" />
@@ -345,7 +328,7 @@ function CompactNextStep({
 // Mobile Chat Input — above the fold, no scroll needed
 // ============================================================================
 
-function MobileChatInput() {
+function MobileChatInput({ userName = "Founder" }: { userName?: string }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
 
@@ -358,6 +341,14 @@ function MobileChatInput() {
   return (
     <Card className="border-[#ff6a1a]/30 bg-gradient-to-br from-gray-900 to-gray-950 dark:from-gray-950 dark:to-black overflow-hidden">
       <CardContent className="p-3 space-y-3">
+        {/* Greeting integrated into chat card */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-base font-semibold text-white">
+            Hey, {userName}
+          </h1>
+          <span className="text-xs text-gray-500">Talk to Fred</span>
+        </div>
+
         {/* Inline chat input */}
         <div className="flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 p-2">
           <Button
