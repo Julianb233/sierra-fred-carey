@@ -6,6 +6,7 @@ import { LandingPage } from '@/pages/LandingPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { JourneyPage } from '@/pages/JourneyPage'
 import { FaqPage } from '@/pages/FaqPage'
+import { startPeriodicSync, stopPeriodicSync } from '@/lib/sync-service'
 
 const TAB_STORAGE_KEY = 'sahara-funnel-tab'
 
@@ -21,6 +22,12 @@ export default function App() {
   useEffect(() => {
     sessionStorage.setItem(TAB_STORAGE_KEY, activeTab)
   }, [activeTab])
+
+  // Start syncing funnel data to the platform API
+  useEffect(() => {
+    startPeriodicSync()
+    return () => stopPeriodicSync()
+  }, [])
 
   const goToChat = useCallback(() => setActiveTab('chat'), [])
 
