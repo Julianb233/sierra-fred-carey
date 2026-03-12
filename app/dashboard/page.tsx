@@ -157,7 +157,6 @@ function DashboardContent() {
   if (!data) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         <FredHero
           userName={userName}
           canCallFred={canCallFred}
@@ -165,6 +164,7 @@ function DashboardContent() {
           onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
           hasHadConversations={false}
         />
+        <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         {/* Daily Mentor Guidance — proactive task agenda */}
         <FadeIn delay={0.02}>
           <DailyAgendaWidget />
@@ -186,10 +186,7 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Trial countdown banner */}
-      <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
-
-      {/* FRED HERO — front and center, the reason you're here */}
+      {/* FRED HERO — chat input first, above the fold */}
       <FredHero
         userName={userName}
         canCallFred={canCallFred}
@@ -197,6 +194,9 @@ function DashboardContent() {
         onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
         hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
       />
+
+      {/* Trial countdown banner — below chat so input is first visible element */}
+      <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
 
       {/* Daily Mentor Guidance — proactive task agenda */}
       <FadeIn delay={0.02}>
