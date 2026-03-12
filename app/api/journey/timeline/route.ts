@@ -78,6 +78,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate score range (0-100) when provided
+    if (scoreBefore !== undefined && scoreBefore !== null) {
+      if (typeof scoreBefore !== "number" || !Number.isFinite(scoreBefore) || scoreBefore < 0 || scoreBefore > 100) {
+        return NextResponse.json(
+          { success: false, error: "scoreBefore must be a number between 0 and 100" },
+          { status: 400 }
+        );
+      }
+    }
+    if (scoreAfter !== undefined && scoreAfter !== null) {
+      if (typeof scoreAfter !== "number" || !Number.isFinite(scoreAfter) || scoreAfter < 0 || scoreAfter > 100) {
+        return NextResponse.json(
+          { success: false, error: "scoreAfter must be a number between 0 and 100" },
+          { status: 400 }
+        );
+      }
+    }
+
     const result = await sql`
       INSERT INTO journey_events (
         user_id, event_type, event_data, score_before, score_after
