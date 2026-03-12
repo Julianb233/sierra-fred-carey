@@ -229,7 +229,6 @@ export function VoiceChatOverlay({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setTranscribedText("");
                     reset();
                     startRecording();
                   }}
