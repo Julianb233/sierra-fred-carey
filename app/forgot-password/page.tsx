@@ -12,11 +12,15 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();
-  const expiredLink = searchParams.get("error") === "expired";
+  const errorParam = searchParams.get("error");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
-    expiredLink ? "Your reset link has expired or is invalid. Please request a new one." : null
+    errorParam === "expired"
+      ? "Your reset link has expired or is invalid. Please request a new one below."
+      : errorParam === "used"
+      ? "This reset link has already been used. If you still need to reset your password, request a new link below."
+      : null
   );
   const [sent, setSent] = useState(false);
 
@@ -108,15 +112,40 @@ function ForgotPasswordContent() {
                 If an account exists for <strong>{email.trim().toLowerCase()}</strong>, you will
                 receive a password reset email shortly.
               </p>
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  <strong>Tip:</strong> Check your spam/junk folder if you don&apos;t see the email within a few minutes. For @saharacompanies.com addresses, also check your IT-managed email filters.
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-left">
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">
+                  Don&apos;t see the email?
                 </p>
+                <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-0.5 list-disc list-inside">
+                  <li>Check your spam or junk folder</li>
+                  {email.trim().toLowerCase().endsWith("@saharacompanies.com") && (
+                    <li>Check your IT-managed email filters (common with @saharacompanies.com)</li>
+                  )}
+                  <li>Make sure you used the email address you signed up with</li>
+                  <li>The email may take 1-2 minutes to arrive</li>
+                </ul>
               </div>
               <Button
-                asChild
+                type="button"
                 variant="outline"
-                className="w-full mt-4 border-gray-300 dark:border-gray-700"
+                disabled={loading}
+                onClick={() => {
+                  setSent(false);
+                  setError(null);
+                }}
+                className="w-full border-gray-300 dark:border-gray-700"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                Try again with a different email
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="w-full text-gray-500 dark:text-gray-400"
               >
                 <Link href="/login">
                   <ArrowLeft className="w-4 h-4 mr-2" />
