@@ -1,13 +1,10 @@
 name: Auto-Debug Build Failures
 
 on:
-  # Trigger when any workflow fails
+  # Only trigger on Build & Deploy failures (not on itself or other workflows)
   workflow_run:
-    workflows: ["*"]
+    workflows: ["Build & Deploy"]
     types: [completed]
-
-  # Also trigger on failed deployments
-  deployment_status:
 
   # Manual trigger for testing
   workflow_dispatch:
@@ -24,10 +21,9 @@ permissions:
 
 jobs:
   debug-failure:
-    # Only run on failures
+    # Only run on failures (not on success or other conclusions)
     if: >
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
-      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'failure') ||
       github.event_name == 'workflow_dispatch'
     
     runs-on: ubuntu-latest
@@ -48,18 +44,8 @@ jobs:
             } else if (context.eventName === 'workflow_run') {
               runId = context.payload.workflow_run.id;
             } else {
-              // For deployment failures, find the most recent failed run
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                status: 'failure',
-                per_page: 1
-              });
-              if (runs.data.workflow_runs.length === 0) {
-                core.setOutput('has_failure', 'false');
-                return;
-              }
-              runId = runs.data.workflow_runs[0].id;
+              core.setOutput('has_failure', 'false');
+              return;
             }
             
             core.setOutput('run_id', runId);
