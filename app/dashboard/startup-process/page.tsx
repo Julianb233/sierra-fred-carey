@@ -93,21 +93,21 @@ async function validateStep(
       result.synthesis?.confidence ?? result.response?.confidence ?? 0.5;
 
     // Determine pass/fail from confidence + content signals
+    // Thresholds relaxed to reduce user friction (AI-1893)
     const lc = content.toLowerCase();
     let status: ValidationResult["status"];
     if (
-      confidence >= 0.75 ||
+      confidence >= 0.6 ||
       lc.includes("pass") ||
-      (lc.includes("strong") && !lc.includes("not strong"))
+      (lc.includes("strong") && !lc.includes("not strong")) ||
+      (lc.includes("good") && !lc.includes("not good"))
     ) {
       status = "pass";
     } else if (
-      confidence < 0.4 ||
-      lc.includes("blocked") ||
-      lc.includes("critical gap") ||
-      lc.includes("missing")
+      confidence < 0.25 ||
+      (lc.includes("blocked") && lc.includes("critical gap"))
     ) {
-      status = "blocked";
+      status = "needs_work"; // Never hard-block — always let users improve and retry
     } else {
       status = "needs_work";
     }
@@ -257,9 +257,7 @@ export default function StartupProcessPage() {
               status:
                 result.status === "pass"
                   ? "validated"
-                  : result.status === "blocked"
-                  ? "blocked"
-                  : "in_progress",
+                  : "in_progress", // Never hard-block users (AI-1893)
               completedAt:
                 result.status === "pass" ? new Date().toISOString() : undefined,
             } as ProcessStep;
@@ -290,11 +288,9 @@ export default function StartupProcessPage() {
       setHasUnsavedChanges(true);
 
       if (result.status === "pass") {
-        toast.success("Step validated successfully");
-      } else if (result.status === "blocked") {
-        toast.error(result.feedback || "Validation blocked");
+        toast.success("Step validated — great work!");
       } else {
-        toast.info(result.feedback || "Step needs improvement");
+        toast.info("Fred has some suggestions to strengthen this step. You can update your answers or proceed anyway.");
       }
 
       return result;
