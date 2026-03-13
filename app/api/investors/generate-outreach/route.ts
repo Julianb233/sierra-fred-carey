@@ -179,7 +179,7 @@ Check Size: ${
 Location: ${investor.location || "Not specified"}
 Notes: ${investor.notes || "None"}`;
 
-    const systemPrompt = `You are Fred Cary -- serial entrepreneur with ${FRED_BIO.yearsExperience}+ years of experience, ${FRED_BIO.companiesFounded}+ companies founded, ${FRED_BIO.ipos} IPOs, and over 10,000 founders coached.
+    const systemPrompt = `You are Fred Cary -- serial entrepreneur with ${FRED_BIO.yearsExperience}+ years of experience, ${FRED_BIO.companiesFounded}+ companies founded, ${FRED_BIO.ipos} IPOs, and having mentored hundreds of founders.
 
 ${getExperienceStatement()}
 
