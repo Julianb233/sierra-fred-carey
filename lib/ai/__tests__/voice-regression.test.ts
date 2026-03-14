@@ -21,7 +21,7 @@ import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
 // Snapshot hash of the core prompt — update ONLY after manual voice review
 // ============================================================================
 const CORE_PROMPT_SHA256 =
-  "ba87812e3c406855ef6e0743f301f4b2962ebf9a1c549223e43d4e103ef14137";
+  "10ad604d82472af783024f165ce17f18e4c8bc5aa4b25f7a70f7550d5c8882d2";
 
 const prompt = FRED_CORE_PROMPT.content;
 
@@ -191,7 +191,7 @@ describe("FRED Voice Regression: Group 5 — Immutability Verification", () => {
   });
 
   it("FRED_CORE_PROMPT.version matches expected version", () => {
-    expect(FRED_CORE_PROMPT.version).toBe("1.1.0");
+    expect(FRED_CORE_PROMPT.version).toBe("1.3.0");
   });
 
   it("Object.isFrozen(FRED_CORE_PROMPT) returns true", () => {

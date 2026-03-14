@@ -56,7 +56,7 @@ describe('Get Started Page (/get-started)', () => {
       render(<OnboardingPage />);
     });
 
-    expect(screen.getByText(/What stage are you at\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Where are you on your journey\?/i)).toBeInTheDocument();
     expect(screen.getByText(/3 clicks to get started/i)).toBeInTheDocument();
   });
 

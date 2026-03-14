@@ -262,15 +262,28 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
   // Guard against rapid-fire duplicate submissions
   const sendingRef = useRef(false);
+  const sendStartTimeRef = useRef<number>(0);
+  const SENDING_LOCK_TIMEOUT_MS = 60_000; // Force-release lock after 60s
 
   // Send message with streaming
   const sendMessage = useCallback(async (content: string) => {
     // Prevent rapid-fire: if we're already processing a send, ignore
+    // But force-release if lock has been held for over 60 seconds (deadlock recovery)
     if (sendingRef.current) {
-      console.warn("[useFredChat] Ignoring rapid-fire duplicate send");
-      return;
+      const elapsed = Date.now() - sendStartTimeRef.current;
+      if (elapsed < SENDING_LOCK_TIMEOUT_MS) {
+        console.warn("[useFredChat] Ignoring rapid-fire duplicate send");
+        return;
+      }
+      console.warn(`[useFredChat] Force-releasing stale sending lock after ${elapsed}ms`);
+      // Abort any hung request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     }
     sendingRef.current = true;
+    sendStartTimeRef.current = Date.now();
 
     // Abort any in-flight request before starting a new one
     if (abortControllerRef.current) {
@@ -333,7 +346,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
       // Streaming inactivity timeout: abort if no data received for 30s
       let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
-      const STREAM_TIMEOUT_MS = 30_000;
+      const STREAM_TIMEOUT_MS = 45_000; // Must be less than server's 55s timeout
       const resetInactivityTimer = () => {
         if (inactivityTimer) clearTimeout(inactivityTimer);
         inactivityTimer = setTimeout(() => {

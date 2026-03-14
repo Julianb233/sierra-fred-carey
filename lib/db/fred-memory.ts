@@ -182,22 +182,46 @@ export async function storeEpisode(
     }
   }
 
+  // Generate a content hash for idempotency (prevents race-condition duplicates)
+  const contentHash = role && textContent
+    ? `${userId}:${sessionId}:${eventType}:${role}:${textContent.slice(0, 200)}`
+    : undefined;
+
+  const insertPayload = {
+    user_id: userId,
+    session_id: sessionId,
+    event_type: eventType,
+    content,
+    channel: options.channel ?? "chat",
+    embedding: options.embedding,
+    importance_score: options.importanceScore ?? 0.5,
+    metadata: {
+      ...options.metadata ?? {},
+      ...(contentHash ? { _contentHash: contentHash } : {}),
+    },
+  };
+
   const { data, error } = await supabase
     .from("fred_episodic_memory")
-    .insert({
-      user_id: userId,
-      session_id: sessionId,
-      event_type: eventType,
-      content,
-      channel: options.channel ?? "chat",
-      embedding: options.embedding,
-      importance_score: options.importanceScore ?? 0.5,
-      metadata: options.metadata ?? {},
-    })
+    .insert(insertPayload)
     .select()
     .single();
 
   if (error) {
+    // If insert fails due to conflict (e.g. race condition duplicate), try to fetch existing
+    if (error.code === '23505' && contentHash) {
+      console.warn("[FRED Memory] Duplicate episode detected via DB constraint, fetching existing");
+      const { data: existing } = await supabase
+        .from("fred_episodic_memory")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("session_id", sessionId)
+        .eq("event_type", eventType)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (existing) return transformEpisodicRow(existing);
+    }
     console.error("[FRED Memory] Error storing episode:", error);
     throw error;
   }
