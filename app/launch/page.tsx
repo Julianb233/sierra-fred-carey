@@ -250,6 +250,76 @@ const changelog: ChangelogEntry[] = [
       "Fixed crash loops and resolved 129 test failures (#45)",
     ],
   },
+  {
+    date: "March 10, 2026",
+    entries: [
+      "Integrated 7 Fred Cary AI behavior enhancements into system prompt",
+      "Added funnel sync service for funnel-to-platform data persistence",
+    ],
+  },
+  {
+    date: "March 7–9, 2026",
+    entries: [
+      "Deep contact enrichment pipeline with email/iMessage content and AI summaries",
+      "Embedded 17,100 contacts into Pinecone for semantic search",
+      "Added interaction enrichment columns and Gmail/iMessage sync script",
+    ],
+  },
+  {
+    date: "March 5–6, 2026",
+    entries: [
+      "v8.0 Go-Live milestone shipped — Guided Venture Journey",
+      "Mapped IdeaPros 120-step journey template to 5 Oases stages",
+      "Added mobile responsive test suite for launch readiness",
+      "Fixed Fred episodic memory deduplication",
+      "Built floating chat-with-Fred overlay for mobile",
+      "Eliminated duplicate DB queries in Fred memory load pipeline",
+      "Fixed PKCE auth callback route and password reset flow",
+      "Added 14-day free trial with $99/mo Stripe subscription config",
+      "Added event feedback collection framework",
+    ],
+  },
+  {
+    date: "March 3–4, 2026",
+    entries: [
+      "Repositioned chat/talk interface above the fold",
+      "Added inline validation error messages on login",
+      "Full E2E regression suite for funnel version launch",
+      "Resolved all TypeScript errors and lint blockers",
+      "Fixed pricing page blank-page bug (opacity:0 animations)",
+      "Fixed feedback thumbs widget on error fallback messages",
+    ],
+  },
+  {
+    date: "March 1–2, 2026",
+    entries: [
+      "Replaced in-memory admin sessions with stateless JWTs",
+      "Built FRED audit log enrichment + admin dashboard",
+      "Added unified FRED audit log with trace IDs, admin API, and CSV export",
+      "Wired consent banner into thumbs widget and settings page",
+      "RLHF-lite engine, admin approval queue, close-the-loop digest (Phase 76)",
+    ],
+  },
+  {
+    date: "February 2026 highlights",
+    entries: [
+      "Standalone Vite funnel app + launch gap analysis + test coverage",
+      "Mobile nav improvements + auth page polish",
+      "Whisper-powered voice input + VoiceChatOverlay",
+      "Thread conversation state optimization — eliminated duplicate DB reads",
+      "Service Marketplace: provider directory, booking, FRED provider-finder tool (Phases 67-69)",
+      "Content Library: Mux video player, content recommendations, API routes (Phases 66-67)",
+      "Resolved 341 ESLint errors and 7 TypeScript compile errors from QA audit",
+      "Red flag dedup constraint + atomic conversation state updates",
+      "JSON parse error handling, next_steps indexes, SMS retry logic",
+      "Rate limiting on file upload endpoints",
+      "AI timeout + Promise.allSettled for graceful dashboard degradation",
+      "Twilio webhook idempotency via message_sid dedup",
+      "GetStarted completion, Next Steps endpoint, Dashboard Snapshot",
+      "Enforced consent filtering on community directory",
+      "Fixed Fred clarification state deadlock in chatMode",
+    ],
+  },
 ];
 
 const missingAccounts = [
