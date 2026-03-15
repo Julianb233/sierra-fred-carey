@@ -36,7 +36,7 @@ interface ChangelogEntry {
 const LAUNCH_START = new Date("2026-03-16");
 const LAUNCH_END = new Date("2026-03-20");
 const LAUNCH_TARGET = "March 16–20, 2026";
-const LAST_UPDATED = "March 14, 2026 — 10:00 AM PST";
+const LAST_UPDATED = "March 14, 2026 — 2:30 PM PST";
 
 const tasks: Task[] = [
   // Critical Path
@@ -45,7 +45,7 @@ const tasks: Task[] = [
     status: "in-progress",
     linear: "AI-2573",
     linearUrl: "https://linear.app/ai-acrobatics/issue/AI-2573",
-    notes: "Anthropic, Google, Resend, Sentry, CRON_SECRET done locally. Stripe, PostHog, Upstash, VAPID still need accounts created. All must be pushed to Vercel.",
+    notes: "14 vars pushed to Vercel (Anthropic, Google, Resend, Sentry, CRON_SECRET, ElevenLabs, VAPID). PostHog account created — awaiting email verification for API key. Upstash + Stripe need manual account creation.",
     priority: "P0",
     category: "critical",
   },
@@ -199,7 +199,7 @@ const infraItems: InfraItem[] = [
   { component: "Cron Jobs", status: "pass", notes: "All 7 cron routes registered in vercel.json" },
   { component: "Email (Resend)", status: "configured", notes: "API key set locally — needs Vercel deploy" },
   { component: "Error Tracking (Sentry)", status: "configured", notes: "DSN set locally — needs Vercel deploy" },
-  { component: "Analytics (PostHog)", status: "not-configured", notes: "No PostHog account — need to create project" },
+  { component: "Analytics (PostHog)", status: "configured", notes: "Account created (US region) — awaiting email verification for API key" },
   { component: "Rate Limiting (Upstash)", status: "not-configured", notes: "No Upstash account — in-memory fallback active" },
   { component: "Payments (Stripe)", status: "not-configured", notes: "No Sahara Stripe account exists" },
 ];
@@ -210,6 +210,10 @@ const changelog: ChangelogEntry[] = [
     entries: [
       "Moved launch dashboard from /admin/launch to /launch — publicly accessible without login",
       "Improved dashboard: countdown timer, progress bars per category, fixed gauge positioning, better mobile layout",
+      "Generated VAPID keys for push notifications and pushed to Vercel",
+      "Pushed 14 env vars to Vercel production (Anthropic, Google, Resend, Sentry, ElevenLabs, CRON_SECRET, VAPID)",
+      "Created PostHog account (AI Acrobatics org, US region) — awaiting email verification",
+      "Expanded changelog with full project history back to February 2026",
     ],
   },
   {
@@ -340,8 +344,8 @@ const missingAccounts = [
   },
   {
     service: "VAPID Keys",
-    action: "Run: npx web-push generate-vapid-keys",
-    impact: "Push notifications disabled",
+    action: "Done — keys generated and pushed to Vercel on March 14",
+    impact: "Push notifications ready",
   },
 ];
 
