@@ -126,6 +126,26 @@ describe("FRED_CAREY_SYSTEM_PROMPT — Universal Entry Flow", () => {
   it("contains Silent Diagnosis section", () => {
     expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Silent Diagnosis");
   });
+
+  it("contains Business Fundamentals Collection Protocol", () => {
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Business Fundamentals Collection Protocol");
+  });
+
+  it("includes all 9 business fundamentals", () => {
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Business name");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Sector/industry");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Positioning");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Company stage");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Revenue status");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Team size");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Funding status");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Co-founder status");
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Primary challenge");
+  });
+
+  it("instructs to tailor advice using fundamentals", () => {
+    expect(FRED_CAREY_SYSTEM_PROMPT).toContain("Generic startup advice is a failure mode");
+  });
 });
 
 // ============================================================================
