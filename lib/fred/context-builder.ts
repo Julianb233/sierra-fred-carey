@@ -442,10 +442,11 @@ function buildContextBlock(data: FounderContextData): string {
     lines.push("");
     lines.push("This founder has no onboarding data. They either skipped onboarding or are a new user.");
     lines.push("- Run the Universal Entry Flow: \"What are you building?\", \"Who is it for?\", \"What are you trying to accomplish right now?\"");
-    lines.push("- Collect the Business Fundamentals naturally: business name, sector, positioning, revenue status, team size, funding stage.");
+    lines.push("- Collect the Business Fundamentals naturally: business name, sector, positioning, company stage, revenue status, team size, funding status, co-founder status, primary challenge.");
     lines.push("- ALSO gather deeper Founder Snapshot fields over subsequent messages: product status, traction, runway, primary constraint, 90-day goal.");
     lines.push("- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.");
     lines.push("- If they jump straight to a specific topic, collect the 2-3 most critical fundamentals for that topic, then help them. Do not block them from getting value.");
+    lines.push("- Use collected fundamentals to tailor ALL advice — generic responses are a failure mode.");
     lines.push("- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.");
     lines.push("- Once you learn their funding stage, a personalized goal roadmap will be generated on their dashboard. Mention it naturally once you know their stage.");
   } else {
@@ -455,11 +456,13 @@ function buildContextBlock(data: FounderContextData): string {
     const missingFundamentals: string[] = [];
     if (!profile.name) missingFundamentals.push("business name");
     if (!profile.industry) missingFundamentals.push("sector/industry");
+    if (!profile.stage) missingFundamentals.push("company stage");
     if (!profile.revenueRange && !extractFactValue(facts, "metrics", "traction")) missingFundamentals.push("revenue status");
     if (!profile.teamSize) missingFundamentals.push("team size");
-    if (!profile.fundingHistory) missingFundamentals.push("funding stage");
+    if (!profile.fundingHistory) missingFundamentals.push("funding status");
+    if (!profile.challenges || profile.challenges.length === 0) missingFundamentals.push("primary challenge");
     if (missingFundamentals.length > 0) {
-      lines.push(`**Missing business fundamentals:** ${missingFundamentals.join(", ")}. Weave these into the next 1-2 exchanges naturally — do not ask all at once.`);
+      lines.push(`**Missing business fundamentals:** ${missingFundamentals.join(", ")}. Weave these into the next 1-2 exchanges naturally — do not ask all at once. You MUST collect these before giving deep tactical advice.`);
     }
     lines.push("If deeper snapshot fields are missing (product status, traction, runway, primary constraint, 90-day goal), infer from conversation and state your assumptions.");
   }
@@ -803,10 +806,11 @@ export async function buildFounderContextWithFacts(
       context += "\n\n## HANDOFF: FIRST CONVERSATION (NO ONBOARDING DATA)";
       context += "\n\nThis founder has no onboarding data. They either skipped onboarding or are a new user.";
       context += "\n- Run the Universal Entry Flow: \"What are you building?\", \"Who is it for?\", \"What are you trying to accomplish right now?\"";
-      context += "\n- Collect the Business Fundamentals naturally: business name, sector, positioning, revenue status, team size, funding stage, co-founder status.";
+      context += "\n- Collect the Business Fundamentals naturally: business name, sector, positioning, company stage, revenue status, team size, funding status, co-founder status, primary challenge.";
       context += "\n- ALSO gather deeper Founder Snapshot fields over subsequent messages: product status, traction, runway, primary constraint, 90-day goal.";
       context += "\n- Do NOT mention onboarding, forms, or that data is missing. Just mentor naturally.";
       context += "\n- If they jump straight to a specific topic, collect the 2-3 most critical fundamentals for that topic, then help them. Do not block them from getting value.";
+      context += "\n- Use collected fundamentals to tailor ALL advice — generic responses are a failure mode.";
       context += "\n- Ask 2-3 questions at a time, respond thoughtfully, then gather more. This is mentoring, not an interrogation.";
       context += "\n- Once you learn their funding stage, a personalized goal roadmap will be generated on their dashboard. Mention it naturally once you know their stage.";
     }

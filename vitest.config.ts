@@ -20,7 +20,7 @@ export default defineConfig({
     },
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', '.claude'],
+    exclude: ['**/node_modules/**', 'node_modules', '.next', 'dist', '.claude'],
     pool: 'threads',
     fileParallelism: false,
     maxWorkers: 2,

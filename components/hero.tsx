@@ -170,8 +170,8 @@ export default function Hero() {
           {/* Trust indicators - visible immediately, no fade-in */}
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
-              { icon: Users, text: "10,000+ Founders Coached" },
-              { icon: CheckIcon, text: "$100M+ Raised" },
+              { icon: Users, text: "Hundreds of Founders Coached" },
+              { icon: CheckIcon, text: "Billions Raised" },
               { icon: Sparkles, text: "By Fred Cary" },
             ].map((item, i) => (
               <div
@@ -225,7 +225,7 @@ export default function Hero() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff6a1a] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff6a1a]"></span>
                 </span>
-                <span className="text-sm font-semibold text-[#ff6a1a]">Live Interactive Agent</span>
+                <span className="text-sm font-semibold text-[#ff6a1a]">Live Interactive Mentor</span>
               </motion.div>
 
               <div className="grid lg:grid-cols-2 gap-12">
@@ -266,7 +266,7 @@ export default function Hero() {
                     transition={{ duration: 0.4, delay: 0.2 }}
                     className="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed"
                   >
-                    Our live, interactive agent powered by decades of real entrepreneurial experience. Ask him anything—business, mindset, funding, or even your next big move.
+                    Our live, interactive mentor powered by decades of real entrepreneurial experience. Ask him anything—business, mindset, funding, or even your next big move.
                   </motion.p>
 
                   <motion.p

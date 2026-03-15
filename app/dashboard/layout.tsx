@@ -41,7 +41,6 @@ import { UpgradeBanner } from "@/components/dashboard/UpgradeTier";
 import { UserTier } from "@/lib/constants";
 import { useTier } from "@/lib/context/tier-context";
 import { createClient } from "@/lib/supabase/client";
-import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
@@ -502,8 +501,7 @@ export default function DashboardLayout({
       {/* Phase 46: Mobile Bottom Navigation */}
       <MobileBottomNav />
 
-      {/* Floating Chat Widget — available on all dashboard pages including mobile */}
-      <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
+      {/* FloatingChatWidget moved to root layout (AI-902) — available on ALL pages */}
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
