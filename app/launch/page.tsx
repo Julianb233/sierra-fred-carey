@@ -33,8 +33,10 @@ interface ChangelogEntry {
 // Launch Data
 // ============================================================================
 
+const LAUNCH_START = new Date("2026-03-16");
+const LAUNCH_END = new Date("2026-03-20");
 const LAUNCH_TARGET = "March 16–20, 2026";
-const LAST_UPDATED = "March 13, 2026 — 9:15 PM PST";
+const LAST_UPDATED = "March 14, 2026 — 10:00 AM PST";
 
 const tasks: Task[] = [
   // Critical Path
@@ -204,6 +206,13 @@ const infraItems: InfraItem[] = [
 
 const changelog: ChangelogEntry[] = [
   {
+    date: "March 14, 2026",
+    entries: [
+      "Moved launch dashboard from /admin/launch to /launch — publicly accessible without login",
+      "Improved dashboard: countdown timer, progress bars per category, fixed gauge positioning, better mobile layout",
+    ],
+  },
+  {
     date: "March 13, 2026",
     entries: [
       "Fixed Fred chat deadlock — 60s sendingRef timeout with force-release + abort hung requests",
@@ -215,7 +224,7 @@ const changelog: ChangelogEntry[] = [
       "Fixed voice regression test snapshots (version 1.1.0 → 1.3.0, updated SHA-256)",
       "Fixed get-started test assertion (UI text changed)",
       "Confirmed login/password reset flow already fixed (3 prior commits)",
-      "Created launch readiness dashboard at /admin/launch",
+      "Created launch readiness dashboard",
       "Created 5 new Linear issues for launch gaps (AI-2573 through AI-2577)",
     ],
   },
@@ -309,6 +318,26 @@ function calculateReadiness(): number {
   return Math.round(((criticalDone / criticalTotal) * 0.6 + (infraDone / infraTotal) * 0.4) * 100);
 }
 
+function getDaysUntilLaunch(): { days: number; label: string } {
+  const now = new Date();
+  const diffStart = Math.ceil((LAUNCH_START.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diffEnd = Math.ceil((LAUNCH_END.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffStart > 0) {
+    return { days: diffStart, label: `${diffStart} day${diffStart !== 1 ? "s" : ""} until launch window` };
+  } else if (diffEnd >= 0) {
+    return { days: 0, label: "Launch window is NOW" };
+  } else {
+    return { days: diffEnd, label: `${Math.abs(diffEnd)} day${Math.abs(diffEnd) !== 1 ? "s" : ""} past launch window` };
+  }
+}
+
+function getCategoryProgress(category: string) {
+  const filtered = tasks.filter((t) => t.category === category);
+  const done = filtered.filter((t) => t.status === "done").length;
+  return { done, total: filtered.length, pct: filtered.length > 0 ? Math.round((done / filtered.length) * 100) : 0 };
+}
+
 // ============================================================================
 // Components
 // ============================================================================
@@ -319,7 +348,7 @@ function ReadinessGauge({ score }: { score: number }) {
   const color = score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : "#ef4444";
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="relative flex flex-col items-center w-[180px] h-[180px]">
       <svg width="180" height="180" className="transform -rotate-90">
         <circle cx="90" cy="90" r="70" stroke="#1f2937" strokeWidth="12" fill="none" />
         <circle
@@ -335,7 +364,7 @@ function ReadinessGauge({ score }: { score: number }) {
           className="transition-all duration-1000"
         />
       </svg>
-      <div className="absolute mt-14 text-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-4xl font-bold" style={{ color }}>{score}%</div>
         <div className="text-xs text-gray-400 mt-1">Launch Ready</div>
       </div>
@@ -343,14 +372,35 @@ function ReadinessGauge({ score }: { score: number }) {
   );
 }
 
+function ProgressBar({ done, total, pct }: { done: number; total: number; pct: number }) {
+  const color = pct === 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs text-gray-400 whitespace-nowrap">{done}/{total}</span>
+    </div>
+  );
+}
+
 function TaskTable({ category, label }: { category: string; label: string }) {
   const filtered = tasks.filter((t) => t.category === category);
   if (filtered.length === 0) return null;
+  const progress = getCategoryProgress(category);
 
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-semibold text-white mb-3">{label}</h3>
-      <div className="overflow-x-auto">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-white">{label}</h3>
+        <span className="text-xs text-gray-500">{progress.pct}% complete</span>
+      </div>
+      <div className="mb-4">
+        <ProgressBar {...progress} />
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700">
@@ -386,6 +436,29 @@ function TaskTable({ category, label }: { category: string; label: string }) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-3">
+        {filtered.map((task, i) => (
+          <div key={i} className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-sm text-gray-200 font-medium">{task.title}</span>
+              <span className={`text-xs font-mono flex-shrink-0 ${task.priority === "P0" ? "text-red-400" : task.priority === "P1" ? "text-orange-400" : task.priority === "P2" ? "text-yellow-400" : "text-gray-500"}`}>
+                {task.priority}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {getStatusBadge(task.status)}
+              {task.linearUrl && (
+                <a href={task.linearUrl} target="_blank" rel="noopener noreferrer" className="text-[#ff6a1a] hover:underline text-xs">
+                  {task.linear}
+                </a>
+              )}
+            </div>
+            <p className="text-xs text-gray-400">{task.notes}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -397,11 +470,12 @@ function TaskTable({ category, label }: { category: string; label: string }) {
 export default function LaunchDashboard() {
   const [activeTab, setActiveTab] = useState<"tasks" | "infra" | "changelog" | "accounts">("tasks");
   const score = calculateReadiness();
+  const countdown = getDaysUntilLaunch();
 
-  const criticalTasks = tasks.filter((t) => t.category === "critical");
   const doneTasks = tasks.filter((t) => t.status === "done").length;
   const blockedTasks = tasks.filter((t) => t.status === "blocked").length;
   const inProgressTasks = tasks.filter((t) => t.status === "in-progress").length;
+  const todoTasks = tasks.filter((t) => t.status === "todo").length;
 
   return (
     <div className="space-y-8">
@@ -415,12 +489,26 @@ export default function LaunchDashboard() {
               joinsahara.com
             </a>
           </p>
-          <div className="flex items-center gap-4 mt-3">
+          <div className="flex flex-wrap items-center gap-4 mt-3">
             <span className="text-xs text-gray-500">Target: {LAUNCH_TARGET}</span>
             <span className="text-xs text-gray-500">Updated: {LAST_UPDATED}</span>
           </div>
+          {/* Countdown */}
+          <div className="mt-4">
+            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border ${
+              countdown.days > 3
+                ? "bg-emerald-900/20 border-emerald-800/30 text-emerald-400"
+                : countdown.days > 0
+                ? "bg-amber-900/20 border-amber-800/30 text-amber-400"
+                : countdown.days === 0
+                ? "bg-[#ff6a1a]/20 border-[#ff6a1a]/30 text-[#ff6a1a] animate-pulse"
+                : "bg-red-900/20 border-red-800/30 text-red-400"
+            }`}>
+              {countdown.label}
+            </span>
+          </div>
         </div>
-        <div className="relative flex-shrink-0">
+        <div className="flex-shrink-0">
           <ReadinessGauge score={score} />
         </div>
       </div>
@@ -444,19 +532,28 @@ export default function LaunchDashboard() {
           <div className="text-xs text-gray-400 mt-1">Blocked</div>
         </div>
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-gray-300">{criticalTasks.length}</div>
-          <div className="text-xs text-gray-400 mt-1">Critical Path</div>
+          <div className="text-2xl font-bold text-gray-300">{todoTasks}</div>
+          <div className="text-xs text-gray-400 mt-1">To Do</div>
         </div>
+      </div>
+
+      {/* Overall Progress */}
+      <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-300">Overall Progress</span>
+          <span className="text-sm font-bold text-white">{Math.round((doneTasks / tasks.length) * 100)}%</span>
+        </div>
+        <ProgressBar done={doneTasks} total={tasks.length} pct={Math.round((doneTasks / tasks.length) * 100)} />
       </div>
 
       {/* Tabs */}
       <div className="border-b border-gray-700">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {(["tasks", "infra", "changelog", "accounts"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "bg-gray-800 text-[#ff6a1a] border border-gray-700 border-b-0"
                   : "text-gray-400 hover:text-white hover:bg-gray-800/50"
@@ -469,7 +566,7 @@ export default function LaunchDashboard() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-6">
+      <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 md:p-6">
         {activeTab === "tasks" && (
           <>
             <TaskTable category="critical" label="Critical Path (Must Complete)" />
@@ -486,7 +583,7 @@ export default function LaunchDashboard() {
               {infraItems.map((item, i) => (
                 <div key={i} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3 border border-gray-800">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                       item.status === "pass" ? "bg-emerald-400" :
                       item.status === "configured" ? "bg-blue-400" :
                       "bg-red-400"
