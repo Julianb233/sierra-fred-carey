@@ -7,6 +7,7 @@ import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
+import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -90,6 +91,8 @@ export default async function RootLayout({
             <NavBar />
             {children}
           </AnalyticsProvider>
+          {/* AI-902: Global chat-with-Fred overlay — accessible from any page */}
+          <FloatingChatWidget />
           <Toaster
             position="top-right"
             toastOptions={{
