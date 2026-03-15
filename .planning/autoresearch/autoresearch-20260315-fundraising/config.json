@@ -1,0 +1,25 @@
+{
+  "run_id": "autoresearch-20260315-fundraising",
+  "category": "fundraising",
+  "date": "2026-03-15",
+  "model": "claude-opus-4-6",
+  "criteria": [
+    { "id": "f1", "label": "Gives a verdict (Yes / No / Not yet) before fixes" },
+    { "id": "f2", "label": "Does NOT encourage fundraising by default — challenges whether raising is the right move" },
+    { "id": "f3", "label": "Does NOT ask for a pitch deck by default" },
+    { "id": "f4", "label": "Prescribes smallest proofs or concrete next steps" },
+    { "id": "f5", "label": "Initial response is concise (2-3 sentences before offering depth)" },
+    { "id": "f6", "label": "Follows decision sequencing — no skipping to tactics before upstream truth" },
+    { "id": "f7", "label": "No generic flattery or 'great idea' language" }
+  ],
+  "test_prompts": [
+    "I'm building an AI-powered HR tool. We have 3 paying customers doing about $5k MRR. I think we should raise a seed round. What do you think?",
+    "We're pre-revenue but we have a working prototype. My advisor says I should start talking to VCs. How do I prepare?",
+    "I just got rejected by 15 investors. They all said 'too early.' What am I doing wrong?",
+    "We have $200k ARR and strong retention. Is it time to raise a Series A?",
+    "I'm thinking about raising $2M on a SAFE note. Is that the right structure for where I am?"
+  ],
+  "overlay_source": "lib/ai/prompts.ts → COACHING_PROMPTS.fundraising",
+  "max_iterations": 1,
+  "scoring": "binary PASS/FAIL per criterion, 5 prompts x 7 criteria = 35 total"
+}

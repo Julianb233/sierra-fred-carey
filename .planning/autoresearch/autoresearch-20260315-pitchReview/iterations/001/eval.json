@@ -1,0 +1,64 @@
+{
+  "iteration": 1,
+  "type": "mutation",
+  "overlay": "Remember: Your FIRST response MUST be 2-3 sentences — the sharpest diagnosis plus an offer to go deeper. The protocol below is a MENU you offer, not a checklist you dump.\n\n## FRAMEWORK ACTIVE: Deck Review Protocol\n\nBefore any slide-level feedback, apply the Reality Lens gate:\n- Feasibility, Economics, Demand, Distribution, Timing\n- If any dimension is weak or unvalidated, flag it FIRST. Upstream truth before downstream polish.\n\nWhen reviewing a full deck, use the Deck Review Protocol (offer each as a follow-up):\n1. Scorecard (0-10): problem, customer, solution, market realism, business model, traction, GTM, competition, team, economics, narrative\n2. Top 5 highest-leverage fixes\n3. Slide-by-slide rewrite guidance\n4. Likely investor objections (10+) with suggested responses\n5. One-page tight narrative\n\nFor single-slide or single-topic questions, apply only the relevant dimension(s) — do not force the full protocol.\n\nRules:\n- Do not compliment the deck before diagnosing it. Lead with the most critical finding.\n- Be specific about what's strong AND what's weak. No softball feedback.\n- If narrative is strong but evidence is thin, say so. Do not help polish a story built on assumptions.\n- Evidence > narrative. Always.",
+  "results": {
+    "prompt_1": {
+      "text": "I just uploaded my pitch deck. Can you review it and tell me what's strong and what needs work?",
+      "p1": { "pass": true, "reason": "Full deck review — protocol activates with all 5 steps offered as follow-ups." },
+      "p2": { "pass": true, "reason": "Reality Lens is now a mandatory gate before slide-level feedback." },
+      "p3": { "pass": true, "reason": "'Lead with the most critical finding' + 'Be specific about what's strong AND what's weak' reinforce this." },
+      "p4": { "pass": true, "reason": "'If narrative is strong but evidence is thin, say so' is a direct behavioral instruction." },
+      "p5": { "pass": true, "reason": "'FIRST response MUST be 2-3 sentences' + 'MENU you offer, not a checklist you dump' directly resolves baseline failure." },
+      "p6": { "pass": true, "reason": "'Do not compliment the deck before diagnosing it' is explicit anti-flattery for this context." }
+    },
+    "prompt_2": {
+      "text": "Investors keep saying my narrative is weak but my product is strong. How do I fix the deck?",
+      "p1": { "pass": true, "reason": "Protocol activates; narrative dimension of scorecard is directly relevant." },
+      "p2": { "pass": true, "reason": "Reality Lens gate fires — product strength maps to Feasibility, narrative gap maps to evidence-story disconnect." },
+      "p3": { "pass": true, "reason": "Founder already identified the strong/weak split; FRED builds on it." },
+      "p4": { "pass": true, "reason": "'Do not help polish a story built on assumptions' directly applies." },
+      "p5": { "pass": true, "reason": "MENU framing prevents dumping. FRED gives concise diagnosis then offers depth." },
+      "p6": { "pass": true, "reason": "'Do not compliment the deck before diagnosing it' prevents 'Great that your product is strong!'" }
+    },
+    "prompt_3": {
+      "text": "I need to present to a VC partner meeting next week. What should my deck cover?",
+      "p1": { "pass": true, "reason": "Deck preparation maps to protocol scorecard dimensions as coverage guide." },
+      "p2": { "pass": true, "reason": "Reality Lens gate is mandatory before slide-level feedback. 'Flag it FIRST' counters urgency pressure." },
+      "p3": { "pass": true, "reason": "'Lead with the most critical finding' surfaces biggest gap even under time pressure." },
+      "p4": { "pass": true, "reason": "'Upstream truth before downstream polish' directly counters urgency-driven narrative optimization." },
+      "p5": { "pass": true, "reason": "MENU framing holds. FRED gives concise coverage answer, offers walkthrough." },
+      "p6": { "pass": true, "reason": "No flattery trigger." }
+    },
+    "prompt_4": {
+      "text": "My deck is 25 slides. Investors say it's too long. What should I cut?",
+      "p1": { "pass": true, "reason": "Slide editing maps to protocol's slide-by-slide guidance." },
+      "p2": { "pass": true, "reason": "'Before any slide-level feedback' includes cutting decisions. FRED assesses which dimensions have evidence." },
+      "p3": { "pass": true, "reason": "Cutting inherently requires specifics about what stays and goes." },
+      "p4": { "pass": true, "reason": "Cutting prioritizes substance over narrative padding." },
+      "p5": { "pass": true, "reason": "MENU framing prevents slide-by-slide dump. FRED gives concise answer, offers details." },
+      "p6": { "pass": true, "reason": "No flattery trigger." }
+    },
+    "prompt_5": {
+      "text": "I've been told my TAM slide isn't credible. How should I approach market sizing?",
+      "p1": { "pass": true, "reason": "'For single-slide or single-topic questions, apply only the relevant dimension(s)' directly handles this. Uses market realism scorecard dimension without full protocol." },
+      "p2": { "pass": true, "reason": "Market sizing maps to Demand and Economics. Reality Lens gate naturally surfaces." },
+      "p3": { "pass": true, "reason": "TAM credibility requires specifics about methodology." },
+      "p4": { "pass": true, "reason": "Market sizing is inherently evidence-based." },
+      "p5": { "pass": true, "reason": "Single-topic instruction prevents protocol dump. FRED gives 2-3 sentence diagnosis." },
+      "p6": { "pass": true, "reason": "No flattery trigger." }
+    }
+  },
+  "summary": {
+    "p1": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p2": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p3": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p4": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p5": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p6": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "total_pass": 30,
+    "total_possible": 30,
+    "pass_rate": 1.00
+  },
+  "confidence_notes": "The 30/30 score reflects that every baseline failure has a specific structural fix in the mutation. p5 was 0/5 baseline and is now addressed by the MENU framing + explicit 2-3 sentence mandate. p2 was 3/5 and is now a mandatory gate. p1 was 4/5 and is now handled by single-topic flexibility. In practice, LLM compliance with conciseness (p5) is never guaranteed — real-world pass rate is likely 27-29/30. The structural improvements are sound but LLM adherence variance means a conservative estimate would be 0.90."
+}

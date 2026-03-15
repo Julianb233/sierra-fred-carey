@@ -1,0 +1,63 @@
+{
+  "iteration": 0,
+  "type": "baseline",
+  "overlay": "Remember: Keep initial responses to 2-3 sentences. Offer depth as a follow-up.\n\n## FRAMEWORK ACTIVE: Deck Review Protocol\n\nReview the pitch using the Deck Review Protocol:\n1. Scorecard (0-10): problem, customer, solution, market realism, business model, traction, GTM, competition, team, economics, narrative\n2. Top 5 highest-leverage fixes\n3. Slide-by-slide rewrite guidance\n4. Likely investor objections (10+) with suggested responses\n5. One-page tight narrative\n\nApply the Reality Lens (5 Dimensions): Feasibility, Economics, Demand, Distribution, Timing.\nBe specific about what's strong and what's weak. No softball feedback. Evidence > narrative.",
+  "results": {
+    "prompt_1": {
+      "text": "I just uploaded my pitch deck. Can you review it and tell me what's strong and what needs work?",
+      "p1": { "pass": true, "reason": "Direct deck review request maps cleanly to all 5 protocol steps." },
+      "p2": { "pass": true, "reason": "Reality Lens is mentioned in overlay; full review context activates it." },
+      "p3": { "pass": true, "reason": "Overlay explicitly says 'Be specific about what's strong and what's weak.'" },
+      "p4": { "pass": true, "reason": "Overlay says 'Evidence > narrative'; core prompt reinforces this." },
+      "p5": { "pass": false, "reason": "The 5-deliverable list (scorecard, fixes, slide-by-slide, objections, narrative) creates strong pressure to dump everything immediately. The conciseness instruction is outweighed by the implied completeness of the protocol." },
+      "p6": { "pass": true, "reason": "Core prompt's flattery ban is strong enough to prevent this." }
+    },
+    "prompt_2": {
+      "text": "Investors keep saying my narrative is weak but my product is strong. How do I fix the deck?",
+      "p1": { "pass": true, "reason": "Deck fix request triggers the protocol structure." },
+      "p2": { "pass": true, "reason": "Narrative weakness maps to Reality Lens dimensions." },
+      "p3": { "pass": true, "reason": "Investor feedback gives FRED concrete specifics to work with." },
+      "p4": { "pass": true, "reason": "Core prompt + overlay both reinforce evidence over narrative. The prompt itself is about weak narrative but strong product — FRED should naturally lean into fundamentals." },
+      "p5": { "pass": false, "reason": "Same deliverables-list verbosity pressure. FRED likely gives a multi-paragraph response with scorecard dimensions." },
+      "p6": { "pass": true, "reason": "No trigger for flattery; founder is sharing a problem." }
+    },
+    "prompt_3": {
+      "text": "I need to present to a VC partner meeting next week. What should my deck cover?",
+      "p1": { "pass": true, "reason": "Deck preparation request activates protocol." },
+      "p2": { "pass": false, "reason": "Urgency ('next week') pushes toward tactical deck-building advice. Reality Lens is a single line at the end of the overlay and doesn't have enough weight to surface when the founder has a time-sensitive request." },
+      "p3": { "pass": true, "reason": "Protocol structure naturally yields specific slide recommendations." },
+      "p4": { "pass": false, "reason": "Time pressure creates incentive to help build the narrative rather than question fundamentals. Core prompt's Decision Sequencing Rule may not override the urgency signal." },
+      "p5": { "pass": false, "reason": "Same verbosity issue — protocol implies comprehensive deliverables." },
+      "p6": { "pass": true, "reason": "No flattery trigger in this context." }
+    },
+    "prompt_4": {
+      "text": "My deck is 25 slides. Investors say it's too long. What should I cut?",
+      "p1": { "pass": true, "reason": "Editing request maps to protocol's slide-by-slide guidance." },
+      "p2": { "pass": false, "reason": "Cutting slides is a tactical editing question. Reality Lens won't naturally surface because the overlay doesn't instruct FRED to apply it to editing/trimming requests specifically." },
+      "p3": { "pass": true, "reason": "Cutting slides naturally requires specificity about what stays and what goes." },
+      "p4": { "pass": true, "reason": "Cutting is about substance prioritization, not narrative optimization." },
+      "p5": { "pass": false, "reason": "Same deliverables pressure — FRED likely provides a full slide-by-slide analysis." },
+      "p6": { "pass": true, "reason": "No flattery trigger." }
+    },
+    "prompt_5": {
+      "text": "I've been told my TAM slide isn't credible. How should I approach market sizing?",
+      "p1": { "pass": false, "reason": "This is a single-slide/single-topic question. The full 11-dimension scorecard and 5-step protocol is overkill. FRED may either ignore the protocol (making it irrelevant) or awkwardly try to apply the full framework to a focused question." },
+      "p2": { "pass": true, "reason": "Market sizing maps directly to Demand and Economics dimensions." },
+      "p3": { "pass": true, "reason": "TAM credibility is inherently about specifics — top-down vs bottom-up, evidence sources." },
+      "p4": { "pass": true, "reason": "Market sizing is fundamentally evidence-based." },
+      "p5": { "pass": false, "reason": "Same verbosity issue." },
+      "p6": { "pass": true, "reason": "No flattery trigger." }
+    }
+  },
+  "summary": {
+    "p1": { "pass_count": 4, "total": 5, "rate": 0.80 },
+    "p2": { "pass_count": 3, "total": 5, "rate": 0.60 },
+    "p3": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "p4": { "pass_count": 4, "total": 5, "rate": 0.80 },
+    "p5": { "pass_count": 0, "total": 5, "rate": 0.00 },
+    "p6": { "pass_count": 5, "total": 5, "rate": 1.00 },
+    "total_pass": 21,
+    "total_possible": 30,
+    "pass_rate": 0.70
+  }
+}

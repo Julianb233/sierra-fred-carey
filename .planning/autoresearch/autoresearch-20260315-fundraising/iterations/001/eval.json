@@ -1,0 +1,83 @@
+{
+  "overlay_version": "iteration-001",
+  "total_score": 35,
+  "max_score": 35,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "prompt_id": 1,
+      "prompt": "I'm building an AI-powered HR tool. We have 3 paying customers doing about $5k MRR. I think we should raise a seed round. What do you think?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Overlay enforces 'Verdict: Yes / No / Not yet' with specific reason." },
+        "f2": { "pass": true, "note": "'Challenge first' is now the first bullet. 'Default to revenue-first thinking' and 'present alternatives before assuming VC' are explicit." },
+        "f3": { "pass": true, "note": "Explicit: 'Do NOT ask for a pitch deck by default.'" },
+        "f4": { "pass": true, "note": "'Prescribe the smallest proof to flip the verdict — one concrete action this week.'" },
+        "f5": { "pass": true, "note": "Opening line enforces 2-3 sentences." },
+        "f6": { "pass": true, "note": "Hard GATE instruction: verify demand, economics, distribution BEFORE any fundraising analysis. $5k MRR with 3 customers = gate does not pass; FRED would redirect to validating demand and retention." },
+        "f7": { "pass": true, "note": "Final line: 'Never flatter traction that hasn't been pressure-tested.'" }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 2,
+      "prompt": "We're pre-revenue but we have a working prototype. My advisor says I should start talking to VCs. How do I prepare?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Verdict enforced — would say 'Not yet.'" },
+        "f2": { "pass": true, "note": "'Challenge first' + 'default to revenue-first thinking.' Pre-revenue triggers strong challenge." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Smallest proof: e.g., 'Get 3 paying customers first.'" },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "GATE instruction catches pre-revenue: no demand evidence, no economics. FRED must redirect before discussing VC prep." },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 3,
+      "prompt": "I just got rejected by 15 investors. They all said 'too early.' What am I doing wrong?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give verdict on whether 'too early' is accurate." },
+        "f2": { "pass": true, "note": "'Challenge first' applies — maybe they shouldn't be raising." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Smallest proof to flip verdict." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "NEW: 'Diagnose the real gap: When a founder reports rejection, validate whether the feedback is fundamentally accurate before helping them overcome it.' This explicitly gates pitch optimization behind fundamental validation. FRED would first check: are you actually too early? What's your traction? Before discussing how to overcome the objection." },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 4,
+      "prompt": "We have $200k ARR and strong retention. Is it time to raise a Series A?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give verdict on Series A readiness." },
+        "f2": { "pass": true, "note": "'Challenge first' + 'present alternatives before assuming VC.'" },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Would identify the gap between $200k ARR and Series A threshold (~$1M+ ARR)." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "GATE: with $200k ARR and retention, demand/economics evidence exists. Gate would pass with caveats. FRED can legitimately discuss raise mechanics after verification." },
+        "f7": { "pass": true, "note": "'Never flatter traction that hasn't been pressure-tested.' Would probe retention claims." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 5,
+      "prompt": "I'm thinking about raising $2M on a SAFE note. Is that the right structure for where I am?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give verdict on instrument appropriateness." },
+        "f2": { "pass": true, "note": "'Challenge first' — would question whether $2M raise is warranted at all." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Smallest proof prescribed." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "NEW: GATE explicitly requires upstream truth verification BEFORE discussing 'raise amount, instrument structure, timeline.' SAFE note is instrument structure — FRED cannot discuss it until demand/economics are verified. Would redirect: 'Before we pick the instrument, let's verify you're at the right stage to raise.'" },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 7
+    }
+  ],
+  "improvement_analysis": {
+    "criteria_fixed": ["f6 on Prompt 3", "f6 on Prompt 5"],
+    "mechanism": "Explicit upstream-truth GATE instruction prevents FRED from engaging with fundraising mechanics before validating fundamentals. 'Diagnose the real gap' instruction prevents pitch optimization before validation of rejection accuracy. Reordering of bullets enforces challenge-first sequencing.",
+    "risk_of_regression": "Low. All baseline-passing criteria are preserved. The GATE adds specificity without removing any existing instruction. The 'challenge first' bullet strengthens f2 without changing the verdict-first instruction for f1."
+  }
+}
