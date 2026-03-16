@@ -9,6 +9,8 @@ export default function DeckLayout({
         /* Force light mode for deck page */
         html:has(.deck-root) {
           color-scheme: light !important;
+          scroll-behavior: auto !important;
+          scroll-snap-type: none !important;
         }
         html:has(.deck-root),
         html:has(.deck-root) body {
