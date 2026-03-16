@@ -27,7 +27,7 @@ const teamMembers = [
     title: "CPO",
     stats: "Deloitte Alum | 3x venture acquisition lead.",
     tagline: "Specialist in native brain architecture.",
-    image: "/deck/alex-delatorre.jpg",
+    image: "/deck/alex-delatorre.png",
     initials: "AD",
   },
   {
