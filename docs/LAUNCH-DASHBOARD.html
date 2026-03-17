@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sahara Launch Dashboard</title>
+<style>
+  :root {
+    --orange: #ff6a1a;
+    --orange-dim: rgba(255,106,26,0.15);
+    --orange-mid: rgba(255,106,26,0.35);
+    --bg: #0d0f12;
+    --card: #161920;
+    --card-border: #1e222b;
+    --text: #e4e6ea;
+    --text-dim: #8a8f9c;
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --yellow: #eab308;
+    --yellow-bg: rgba(234,179,8,0.12);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --gray: #6b7280;
+    --gray-bg: rgba(107,114,128,0.12);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59,130,246,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 4px;
+    background: var(--orange);
+    border-radius: 2px;
+  }
+  .header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--orange), #ff9a5c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+  }
+  .header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .header-meta span {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    padding: 0.35rem 0.85rem;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+  }
+  .header-meta strong { color: var(--text); }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title .icon { font-size: 1.25rem; }
+
+  /* Readiness Gauge */
+  .gauge-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .gauge-container {
+    position: relative;
+    width: 220px;
+    height: 220px;
+  }
+  .gauge-svg { transform: rotate(-90deg); }
+  .gauge-bg {
+    fill: none;
+    stroke: var(--card-border);
+    stroke-width: 12;
+  }
+  .gauge-fill {
+    fill: none;
+    stroke: var(--orange);
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);
+    filter: drop-shadow(0 0 8px rgba(255,106,26,0.4));
+  }
+  .gauge-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .gauge-pct {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--orange);
+    line-height: 1;
+  }
+  .gauge-pct sup { font-size: 1.5rem; }
+  .gauge-sub {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.25rem;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 1.75rem;
+    font-weight: 800;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.25rem;
+  }
+  .stat-green .stat-val { color: var(--green); }
+  .stat-yellow .stat-val { color: var(--yellow); }
+  .stat-red .stat-val { color: var(--red); }
+  .stat-gray .stat-val { color: var(--gray); }
+  .stat-orange .stat-val { color: var(--orange); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--card-border);
+  }
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(30,34,43,0.5);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge-done { background: var(--green-bg); color: var(--green); }
+  .badge-progress { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-blocked { background: var(--red-bg); color: var(--red); }
+  .badge-todo { background: var(--gray-bg); color: var(--gray); }
+  .badge-pass { background: var(--green-bg); color: var(--green); }
+  .badge-configured { background: var(--blue-bg); color: var(--blue); }
+  .badge-not-configured { background: var(--red-bg); color: var(--red); }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .badge-done::before { background: var(--green); }
+  .badge-progress::before { background: var(--yellow); }
+  .badge-blocked::before { background: var(--red); }
+  .badge-todo::before { background: var(--gray); }
+  .badge-pass::before { background: var(--green); }
+  .badge-configured::before { background: var(--blue); }
+  .badge-not-configured::before { background: var(--red); }
+
+  .linear-id {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    color: var(--orange);
+    opacity: 0.8;
+  }
+  .notes { color: var(--text-dim); font-size: 0.82rem; }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--card-border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s ease;
+  }
+  .progress-green { background: var(--green); }
+  .progress-orange { background: var(--orange); }
+
+  /* Two col grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.75rem; }
+    .gauge-container { width: 180px; height: 180px; }
+    .gauge-pct { font-size: 2.5rem; }
+  }
+
+  /* Changelog */
+  .changelog-item {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(30,34,43,0.5);
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+  }
+  .changelog-item:last-child { border-bottom: none; }
+  .changelog-date {
+    color: var(--orange);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .changelog-text { color: var(--text-dim); }
+
+  /* Key list */
+  .key-item {
+    padding: 0.65rem 0;
+    border-bottom: 1px solid rgba(30,34,43,0.5);
+    font-size: 0.88rem;
+  }
+  .key-item:last-child { border-bottom: none; }
+  .key-name { font-weight: 600; color: var(--text); }
+  .key-desc { color: var(--text-dim); margin-top: 0.15rem; font-size: 0.82rem; }
+
+  /* Deferred */
+  .deferred-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    color: var(--text-dim);
+    font-size: 0.88rem;
+  }
+  .deferred-item::before {
+    content: '—';
+    color: var(--gray);
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    border-top: 1px solid var(--card-border);
+    margin-top: 2rem;
+  }
+  .footer a {
+    color: var(--orange);
+    text-decoration: none;
+  }
+
+  /* Glow effect */
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-card::after {
+    content: '';
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,106,26,0.15), transparent 70%);
+    border-radius: 0 12px 0 0;
+    pointer-events: none;
+  }
+
+  /* Animate on load */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+  .delay-7 { animation-delay: 0.7s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header fade-in">
+    <h1>Sahara Launch Dashboard</h1>
+    <div class="subtitle">AI-Powered Founder OS &mdash; joinsahara.com</div>
+    <div class="header-meta">
+      <span>Target: <strong>March 16&ndash;20, 2026</strong></span>
+      <span>Updated: <strong>March 13, 2026</strong></span>
+    </div>
+  </div>
+
+  <!-- Readiness Gauge -->
+  <div class="gauge-section fade-in delay-1">
+    <div class="card glow-card" style="display:inline-flex; align-items:center; gap:2.5rem; padding:2rem 3rem; flex-wrap:wrap; justify-content:center;">
+      <div class="gauge-container">
+        <svg class="gauge-svg" width="220" height="220" viewBox="0 0 220 220">
+          <circle class="gauge-bg" cx="110" cy="110" r="96"/>
+          <circle class="gauge-fill" cx="110" cy="110" r="96"
+            stroke-dasharray="603.19"
+            stroke-dashoffset="603.19"
+            id="gaugeArc"/>
+        </svg>
+        <div class="gauge-label">
+          <div class="gauge-pct" id="gaugePct">0<sup>%</sup></div>
+          <div class="gauge-sub">Launch Ready</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0.75rem;">CRITICAL PATH SUMMARY</div>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+          <div><span style="font-size:1.5rem; font-weight:800; color:var(--green);">4</span> <span style="font-size:0.8rem; color:var(--text-dim);">Done</span></div>
+          <div><span style="font-size:1.5rem; font-weight:800; color:var(--yellow);">2</span> <span style="font-size:0.8rem; color:var(--text-dim);">In Progress</span></div>
+          <div><span style="font-size:1.5rem; font-weight:800; color:var(--red);">1</span> <span style="font-size:0.8rem; color:var(--text-dim);">Blocked</span></div>
+          <div><span style="font-size:1.5rem; font-weight:800; color:var(--gray);">2</span> <span style="font-size:0.8rem; color:var(--text-dim);">To Do</span></div>
+        </div>
+        <div class="progress-bar" style="margin-top:1rem; width:260px;">
+          <div class="progress-fill progress-orange" style="width:0%" id="progressBar"></div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.4rem;">4 of 9 critical tasks complete</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row fade-in delay-2">
+    <div class="stat-card stat-green">
+      <div class="stat-val">1,070</div>
+      <div class="stat-label">Tests Passing</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-val">221</div>
+      <div class="stat-label">Pages Built</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-val">63</div>
+      <div class="stat-label">Test Files</div>
+    </div>
+    <div class="stat-card stat-orange">
+      <div class="stat-val">7</div>
+      <div class="stat-label">Cron Jobs</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-val">10</div>
+      <div class="stat-label">Infra Passing</div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-val">4</div>
+      <div class="stat-label">Keys Missing</div>
+    </div>
+  </div>
+
+  <!-- Critical Path -->
+  <div class="card fade-in delay-3">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Critical Path &mdash; Must Complete Before Launch</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Task</th><th>Status</th><th>Linear</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Configure Vercel env vars (Stripe, Resend, PostHog, Sentry, Upstash, VAPID)</td>
+            <td><span class="badge badge-progress">In Progress</span></td>
+            <td><span class="linear-id">AI-2573</span></td>
+            <td class="notes">Anthropic, Google, Resend, Sentry, CRON_SECRET done. Stripe, PostHog, Upstash, VAPID still missing</td>
+          </tr>
+          <tr>
+            <td>Fred AI broken states / deadlock recovery</td>
+            <td><span class="badge badge-done">Done</span></td>
+            <td><span class="linear-id">PERS-100, AI-881</span></td>
+            <td class="notes">Fixed: 60s sendingRef timeout, 45s client timeout, graceful error recovery</td>
+          </tr>
+          <tr>
+            <td>Fred duplicate episodes bug</td>
+            <td><span class="badge badge-done">Done</span></td>
+            <td><span class="linear-id">AI-894</span></td>
+            <td class="notes">Fixed: content hash idempotency + Postgres conflict handling</td>
+          </tr>
+          <tr>
+            <td>Login / password reset flow</td>
+            <td><span class="badge badge-done">Done</span></td>
+            <td><span class="linear-id">AI-903</span></td>
+            <td class="notes">Fixed in prior commits (PKCE callback + UX improvements)</td>
+          </tr>
+          <tr>
+            <td>Stripe payment integration</td>
+            <td><span class="badge badge-blocked">Blocked</span></td>
+            <td><span class="linear-id">AI-896</span></td>
+            <td class="notes">Code ready, no Sahara Stripe account exists</td>
+          </tr>
+          <tr>
+            <td>Fred AI vague responses</td>
+            <td><span class="badge badge-todo">To Do</span></td>
+            <td><span class="linear-id">PERS-98</span></td>
+            <td class="notes">Needs structured data collection first</td>
+          </tr>
+          <tr>
+            <td>Chat-with-Fred overlay</td>
+            <td><span class="badge badge-progress">In Progress</span></td>
+            <td><span class="linear-id">AI-902</span></td>
+            <td class="notes">Partially built</td>
+          </tr>
+          <tr>
+            <td>Fred response conciseness</td>
+            <td><span class="badge badge-todo">To Do</span></td>
+            <td><span class="linear-id">PERS-159</span></td>
+            <td class="notes">Prompt tuning needed</td>
+          </tr>
+          <tr>
+            <td>Pre-launch smoke test</td>
+            <td><span class="badge badge-todo">To Do</span></td>
+            <td><span class="linear-id">AI-2575</span></td>
+            <td class="notes">Full E2E user flow verification on production</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Infrastructure Status -->
+  <div class="card fade-in delay-4">
+    <div class="card-title"><span class="icon">&#9881;&#65039;</span> Infrastructure Status</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Status</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Build</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">221 pages compiling</td></tr>
+          <tr><td>Tests</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">63/63 files, 1070/1070 tests</td></tr>
+          <tr><td>SEO / Meta</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">Full metadata, robots.txt, sitemap.xml</td></tr>
+          <tr><td>Mobile Responsive</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">Viewport config, Tailwind responsive</td></tr>
+          <tr><td>PWA</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">manifest.ts, sw.ts, service worker</td></tr>
+          <tr><td>Security Headers</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">CSP, HSTS, X-Frame-Options, etc.</td></tr>
+          <tr><td>Error Pages</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">not-found, error boundaries</td></tr>
+          <tr><td>Auth Flow</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">Signup, login, PKCE callback, password reset</td></tr>
+          <tr><td>Cron Jobs</td><td><span class="badge badge-pass">Pass</span></td><td class="notes">All 7 registered in vercel.json</td></tr>
+          <tr><td>Analytics (PostHog)</td><td><span class="badge badge-not-configured">Not Configured</span></td><td class="notes">Missing NEXT_PUBLIC_POSTHOG_KEY</td></tr>
+          <tr><td>Error Tracking (Sentry)</td><td><span class="badge badge-configured">Configured (local)</span></td><td class="notes">DSN set, needs Vercel deploy</td></tr>
+          <tr><td>Email (Resend)</td><td><span class="badge badge-configured">Configured (local)</span></td><td class="notes">Key set, needs Vercel deploy</td></tr>
+          <tr><td>Rate Limiting (Upstash)</td><td><span class="badge badge-not-configured">Not Configured</span></td><td class="notes">No Upstash account</td></tr>
+          <tr><td>Payments (Stripe)</td><td><span class="badge badge-not-configured">Not Configured</span></td><td class="notes">No Sahara Stripe account</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.35rem;">
+        <span>Infrastructure Health</span>
+        <span>10 / 14 components ready</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill progress-green" style="width:0%" id="infraBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column grid -->
+  <div class="grid-2">
+
+    <!-- Changelog -->
+    <div class="card fade-in delay-5">
+      <div class="card-title"><span class="icon">&#128221;</span> Recent Changelog</div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Fixed Fred chat deadlock &mdash; 60s sendingRef timeout with force-release</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Fixed duplicate episodes &mdash; content hash idempotency + DB conflict handling</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Fixed vitest config &mdash; excluded node_modules test files</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Registered 2 missing cron jobs in vercel.json</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Added Anthropic, Google, Resend, Sentry, CRON_SECRET to env</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Fixed voice regression test snapshots (v1.3.0, updated SHA)</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Fixed get-started test assertion</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Added graceful error recovery for Fred AI provider failures</span></div>
+      <div class="changelog-item"><span class="changelog-date">03-13</span><span class="changelog-text">Confirmed login/password reset flow already fixed (3 prior commits)</span></div>
+    </div>
+
+    <!-- Missing Keys + Deferred -->
+    <div>
+      <!-- Missing Keys -->
+      <div class="card fade-in delay-6" style="margin-bottom:1.5rem;">
+        <div class="card-title"><span class="icon">&#128273;</span> Missing Accounts / Keys</div>
+        <div class="key-item">
+          <div class="key-name">Stripe</div>
+          <div class="key-desc">Create Stripe account for Sahara, get test/live keys, register webhook</div>
+        </div>
+        <div class="key-item">
+          <div class="key-name">PostHog</div>
+          <div class="key-desc">Create project, get API key</div>
+        </div>
+        <div class="key-item">
+          <div class="key-name">Upstash</div>
+          <div class="key-desc">Create Redis database, get REST URL + token</div>
+        </div>
+        <div class="key-item">
+          <div class="key-name">VAPID Keys</div>
+          <div class="key-desc">Generate with <code style="background:var(--bg);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.8rem;">npx web-push generate-vapid-keys</code></div>
+        </div>
+      </div>
+
+      <!-- Deferred -->
+      <div class="card fade-in delay-7">
+        <div class="card-title"><span class="icon">&#128203;</span> Deferred (Not Blocking Launch)</div>
+        <div class="deferred-item">Boardy Integration &mdash; no API creds</div>
+        <div class="deferred-item">Investor firm model training &mdash; P3</div>
+        <div class="deferred-item">v7.0 Phases 74-76 (intelligence, A/B, RLHF)</div>
+        <div class="deferred-item">Oases Stage Visualization gating</div>
+        <div class="deferred-item">Vercel CLI deployment workflow</div>
+        <div class="deferred-item">37 duplicate Linear issues cleanup (AI-2576)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>Sahara Launch Dashboard &mdash; Generated March 13, 2026</div>
+    <div style="margin-top:0.25rem;"><a href="https://joinsahara.com" target="_blank">joinsahara.com</a> &middot; AI-Powered Founder OS</div>
+  </div>
+
+</div>
+
+<script>
+  // Readiness calculation:
+  // 9 critical tasks: 4 done (100%), 2 in-progress (50%), 1 blocked (0%), 2 todo (0%)
+  // = (4*100 + 2*50 + 1*0 + 2*0) / 9 = 500/9 = 55.6%
+  // Infrastructure: 10/14 = 71.4%
+  // Weighted: 60% critical path + 40% infra = 0.6*55.6 + 0.4*71.4 = 33.3 + 28.6 = 61.9%
+  const readiness = 62;
+  const infraPct = Math.round((10/14)*100);
+
+  // Animate gauge
+  window.addEventListener('DOMContentLoaded', () => {
+    const circumference = 2 * Math.PI * 96; // 603.19
+    const arc = document.getElementById('gaugeArc');
+    const pct = document.getElementById('gaugePct');
+    const progressBar = document.getElementById('progressBar');
+    const infraBar = document.getElementById('infraBar');
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const offset = circumference - (readiness / 100) * circumference;
+        arc.style.strokeDashoffset = offset;
+
+        // Animate number
+        let current = 0;
+        const step = readiness / 40;
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= readiness) {
+            current = readiness;
+            clearInterval(timer);
+          }
+          pct.innerHTML = Math.round(current) + '<sup>%</sup>';
+        }, 30);
+
+        // Progress bars
+        progressBar.style.width = Math.round((4/9)*100) + '%';
+        infraBar.style.width = infraPct + '%';
+      }, 300);
+    });
+  });
+</script>
+</body>
+</html>
