@@ -1,14 +1,19 @@
 /**
  * Boardy Client - Abstraction Layer (Strategy Pattern)
- * Phase 04: Studio Tier Features - Plan 06
+ * AI-3587: Boardy.ai warm investor introductions ($249 tier)
  *
- * Delegates to an underlying implementation (MockBoardyClient or future real API client).
- * Callers use getBoardyClient() factory and never need to know which implementation is active.
+ * Delegates to an underlying implementation:
+ * - RealBoardyClient: when BOARDY_API_KEY is set (real Boardy API)
+ * - MockBoardyClient: fallback with AI-generated match suggestions
+ *
+ * Callers use getBoardyClient() factory and never need to know which is active.
  */
 
 import type {
   BoardyClientInterface,
   BoardyMatch,
+  BoardyCallRequest,
+  BoardyCallResponse,
   MatchRequest,
 } from "./types";
 import { MockBoardyClient } from "./mock";
@@ -29,6 +34,10 @@ export class BoardyClient implements BoardyClientInterface {
     this.implementation = implementation;
   }
 
+  get isLive(): boolean {
+    return this.implementation.isLive;
+  }
+
   async getMatches(request: MatchRequest): Promise<BoardyMatch[]> {
     return this.implementation.getMatches(request);
   }
@@ -39,6 +48,16 @@ export class BoardyClient implements BoardyClientInterface {
 
   getDeepLink(userId: string): string {
     return this.implementation.getDeepLink(userId);
+  }
+
+  async requestCall(request: BoardyCallRequest): Promise<BoardyCallResponse> {
+    if (this.implementation.requestCall) {
+      return this.implementation.requestCall(request);
+    }
+    return {
+      success: false,
+      message: "Boardy calls are not available in demo mode.",
+    };
   }
 }
 
@@ -52,16 +71,25 @@ let _client: BoardyClient | null = null;
 /**
  * Get the Boardy client singleton.
  *
- * If BOARDY_API_KEY is set, will use the real API client (future).
+ * If BOARDY_API_KEY is set, uses the real Boardy API client.
  * Otherwise falls back to MockBoardyClient which uses AI to generate
  * contextual match suggestions.
  */
 export function getBoardyClient(): BoardyClient {
   if (!_client) {
-    // Future: if (process.env.BOARDY_API_KEY) { _client = new BoardyClient(new RealBoardyClient()); }
-    const implementation = new MockBoardyClient();
-    _client = new BoardyClient(implementation);
-    logger.log("[Boardy] Initialized with MockBoardyClient (AI-generated matches)");
+    const apiKey = process.env.BOARDY_API_KEY;
+
+    if (apiKey) {
+      // Lazy import to avoid loading real client code when not needed
+      const { RealBoardyClient } = require("./real-client");
+      const implementation = new RealBoardyClient(apiKey);
+      _client = new BoardyClient(implementation);
+      logger.log("[Boardy] Initialized with RealBoardyClient (live API)");
+    } else {
+      const implementation = new MockBoardyClient();
+      _client = new BoardyClient(implementation);
+      logger.log("[Boardy] Initialized with MockBoardyClient (AI-generated matches)");
+    }
   }
   return _client;
 }

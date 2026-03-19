@@ -48,6 +48,16 @@ export const ANALYTICS_EVENTS = {
     CHECKOUT_COMPLETED: "subscription.checkout_completed",
   },
 
+  /** In-chat upsell events */
+  UPSELL: {
+    /** Upsell prompt was shown inline in chat */
+    PROMPT_SHOWN: "upsell.prompt_shown",
+    /** User clicked the upgrade CTA in the upsell prompt */
+    CTA_CLICKED: "upsell.cta_clicked",
+    /** User dismissed the upsell prompt */
+    DISMISSED: "upsell.dismissed",
+  },
+
   /** General engagement events */
   ENGAGEMENT: {
     DASHBOARD_VIEWED: "engagement.dashboard_viewed",
@@ -96,6 +106,13 @@ export interface SubscriptionEventProperties {
   currency?: string;
 }
 
+export interface UpsellEventProperties {
+  trigger?: string;
+  featureLabel?: string;
+  tier?: string;
+  source?: "chat_inline" | "chat_modal";
+}
+
 export interface EngagementEventProperties {
   page?: string;
   section?: string;
@@ -116,4 +133,5 @@ export type AnalyticsEventName =
   | EventValues<EventCategory["CHAT"]>
   | EventValues<EventCategory["FEATURES"]>
   | EventValues<EventCategory["SUBSCRIPTION"]>
+  | EventValues<EventCategory["UPSELL"]>
   | EventValues<EventCategory["ENGAGEMENT"]>;

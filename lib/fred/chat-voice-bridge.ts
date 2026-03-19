@@ -77,13 +77,15 @@ export async function getChatContextForVoice(
  * Stores each transcript entry as an episodic memory record with channel='voice',
  * then appends a summary entry so that subsequent text chats see what was discussed.
  *
+ * Returns { stored, entriesStored, error } so callers can detect failures.
  * Non-throwing: logs warnings on failure, never propagates errors.
  */
 export async function injectVoiceTranscriptToChat(
   userId: string,
   roomName: string,
   transcript: VoiceTranscriptEntry[]
-): Promise<void> {
+): Promise<{ stored: boolean; entriesStored: number; error?: string }> {
+  let entriesStored = 0
   try {
     const sessionId = `voice-${roomName}`
 
@@ -94,6 +96,7 @@ export async function injectVoiceTranscriptToChat(
         roomName,
         voiceTimestamp: entry.timestamp,
       })
+      entriesStored++
     }
 
     // Build a brief summary from user and assistant messages
@@ -125,8 +128,13 @@ export async function injectVoiceTranscriptToChat(
         roomName,
       }
     )
+    entriesStored++
+
+    return { stored: true, entriesStored }
   } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
     console.warn("[Chat-Voice Bridge] Failed to inject voice transcript:", err)
+    return { stored: entriesStored > 0, entriesStored, error: errorMsg }
   }
 }
 

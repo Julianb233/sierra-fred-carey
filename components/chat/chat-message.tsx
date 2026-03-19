@@ -11,6 +11,8 @@ import { TtsButton } from "./tts-button";
 import ReactMarkdown from "react-markdown";
 import { CourseCardInline } from "@/components/content/course-card-inline";
 import { ProviderCardInline } from "@/components/marketplace/provider-card-inline";
+import { UpsellPromptCard } from "./upsell-prompt";
+import type { UpsellPrompt } from "@/lib/hooks/use-fred-chat";
 
 /**
  * Strip orphaned/unclosed markdown tokens during streaming to prevent
@@ -53,6 +55,8 @@ export interface Message {
     review_count: number;
     is_verified?: boolean;
   }>;
+  /** In-chat upsell prompt for free-tier users */
+  upsellPrompt?: UpsellPrompt;
 }
 
 interface ChatMessageProps {
@@ -199,6 +203,10 @@ export function ChatMessage({
                     />
                   ))}
                 </div>
+              )}
+              {/* Inline upsell prompt for free-tier users */}
+              {message.upsellPrompt && !message.isStreaming && (
+                <UpsellPromptCard upsell={message.upsellPrompt} />
               )}
             </div>
           )}

@@ -432,6 +432,15 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 break;
               }
 
+              case "upsell": {
+                // Stage upsell prompt from server-side detection for the next assistant message
+                const upsellData = data as UpsellPrompt;
+                if (upsellData.trigger && upsellData.mentorMessage) {
+                  pendingUpsellRef.current = upsellData;
+                }
+                break;
+              }
+
               case "tool_result": {
                 // Detect recommendContent tool results and stage courses for the next assistant message
                 const toolResultData = data as {
@@ -537,6 +546,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   courses: pendingCoursesRef.current,
                   // Attach any staged provider recommendations from tool results
                   providers: pendingProvidersRef.current,
+                  // Attach any staged upsell prompt from server-side detection
+                  upsellPrompt: pendingUpsellRef.current,
                 };
 
                 if (mountedRef.current) {
@@ -609,11 +620,19 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       }
 
       // Silent auto-retry: transient failures (~20% first-message) usually succeed on retry.
-      // Remove any partial streaming message from the failed attempt before retrying.
+      // Preserve partial streaming content — if retry also fails, user keeps what was received.
       console.warn("[useFredChat] First attempt failed, retrying once:", firstErr);
+      let partialContent: string | null = null;
       if (streamingMessageIdRef.current && mountedRef.current) {
         const partialId = streamingMessageIdRef.current;
-        setMessages(prev => prev.filter(msg => msg.id !== partialId));
+        // Capture partial content before removing the streaming message
+        setMessages(prev => {
+          const partial = prev.find(msg => msg.id === partialId);
+          if (partial && partial.content && partial.content.length > 20) {
+            partialContent = partial.content;
+          }
+          return prev.filter(msg => msg.id !== partialId);
+        });
         streamingMessageIdRef.current = null;
       }
 
@@ -648,11 +667,14 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           setError(errorMessage);
           setState("error");
 
-          // Add error message as assistant response
+          // If we captured partial content from the first attempt, show it with a note
+          // instead of losing the response entirely
           const errorResponseMessage: FredMessage = {
             id: crypto.randomUUID(),
             role: "assistant",
-            content: "I'm having trouble processing your message right now. Please try again.",
+            content: partialContent
+              ? `${partialContent}\n\n---\n*Connection was interrupted. This is a partial response — please try again for the full answer.*`
+              : "I'm having trouble processing your message right now. Please try again.",
             timestamp: new Date(),
             confidence: "low",
           };

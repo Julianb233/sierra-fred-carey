@@ -35,7 +35,7 @@ import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered, updateStageRedirectCounts } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
+import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock, buildMissingFundamentalsBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
@@ -53,6 +53,7 @@ import { validateStageAccess } from "@/lib/oases/stage-validator";
 import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
+import { detectUpsellTrigger, getUpsellMessage } from "@/lib/chat/upsell-detector";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -434,16 +435,18 @@ async function handlePost(req: NextRequest) {
       serverTrack(userId, ANALYTICS_EVENTS.CHAT.SESSION_STARTED, { tier: tierName });
     }
 
-    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only.
-    // INTENTIONAL DESIGN: Free-tier users do NOT get entries in fred_episodic_memory.
-    // Their conversations are not stored across sessions — this is a core product
-    // differentiator between Free and Pro tiers. Free users still benefit from
-    // session-scoped context (within a single request) via loadMemoryActor, but
-    // nothing is written to the DB. For re-engagement tracking, all tiers DO get
-    // journey_events rows (see the fire-and-forget insert near the "done" SSE event
-    // below) so email campaigns have activity data without exposing conversation content.
-    // To change this behaviour, update hasPersistentMemory above.
-    const shouldPersistMemory = storeInMemory && hasPersistentMemory;
+    // Phase 21 (Updated per Sahara Founders Meeting 2026-03-18):
+    // ALL conversations are now stored regardless of tier. This serves:
+    // 1. Valuation: User/conversation count matters for company valuation
+    // 2. Re-engagement: Past conversations enable smarter follow-up
+    // 3. Learning: All conversation data improves the AI over time
+    //
+    // The tier gate is on LOADING, not STORING:
+    // - Free tier: Conversations stored but NOT loaded as context in future sessions
+    // - Pro+: Full persistent memory with context loading
+    //
+    // hasPersistentMemory still controls whether FRED loads past context.
+    const shouldPersistMemory = storeInMemory; // Always store, regardless of tier
 
     // ── Parallel context loading ─────────────────────────────────────
     // Fetch conversation state first (single fast query) so it can be
@@ -1022,6 +1025,31 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           tier: tierName,
         });
 
+        // ── Upsell Detection (Free tier only) ───────────────────────────
+        // Detect if the free-tier user is asking for a Pro feature (doc review,
+        // pitch deck improvement, document storage, strategy docs, etc.)
+        // and emit an upsell SSE event so the client can show an inline prompt.
+        if (userTier === UserTier.FREE) {
+          const upsellDetection = detectUpsellTrigger(message);
+          if (upsellDetection.detected && upsellDetection.trigger) {
+            send("upsell", {
+              trigger: upsellDetection.trigger,
+              confidence: upsellDetection.confidence,
+              featureLabel: upsellDetection.featureLabel,
+              mentorMessage: getUpsellMessage(upsellDetection.trigger),
+            });
+
+            // Track upsell impression (fire-and-forget)
+            serverTrack(userId, "upsell.prompt_shown", {
+              trigger: upsellDetection.trigger,
+              featureLabel: upsellDetection.featureLabel,
+              confidence: upsellDetection.confidence,
+              tier: tierName,
+              source: "chat_inline",
+            });
+          }
+        }
+
         // Store user message in memory (Pro+ only, Phase 21)
         // Fire-and-forget: don't block processStream start on this DB write
         if (shouldPersistMemory) {
@@ -1154,16 +1182,26 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             });
 
             // Store assistant response in memory (Pro+ only, Phase 21)
+            // Retry up to 2 times on failure — this is the only record of the response
             if (shouldPersistMemory) {
-              try {
-                await storeEpisode(userId, effectiveSessionId, "conversation", {
-                  role: "assistant",
-                  content: response.content,
-                  action: response.action,
-                  confidence: response.confidence,
-                });
-              } catch (error) {
-                console.warn("[FRED Chat] Failed to store assistant response:", error);
+              const maxRetries = 2;
+              for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                  await storeEpisode(userId, effectiveSessionId, "conversation", {
+                    role: "assistant",
+                    content: response.content,
+                    action: response.action,
+                    confidence: response.confidence,
+                  });
+                  break; // Success — exit retry loop
+                } catch (error) {
+                  if (attempt < maxRetries) {
+                    console.warn(`[FRED Chat] Failed to store assistant response (attempt ${attempt + 1}/${maxRetries + 1}), retrying:`, error);
+                    await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+                  } else {
+                    console.error("[FRED Chat] Failed to store assistant response after all retries:", error);
+                  }
+                }
               }
             }
 

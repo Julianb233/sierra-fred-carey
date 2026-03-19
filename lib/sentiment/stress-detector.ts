@@ -60,10 +60,10 @@ const TOPIC_KEYWORDS: Record<string, string[]> = {
   product: ["product", "feature", "build", "ship", "launch", "mvp", "prototype", "bug"],
   team: ["team", "hire", "cofounder", "co-founder", "employee", "talent", "culture"],
   revenue: ["revenue", "sales", "customer", "churn", "mrr", "arr", "growth", "pricing"],
-  burnout: ["tired", "exhausted", "overwhelm", "burnout", "sleep", "stress", "anxiety", "quit"],
+  burnout: ["tired", "exhausted", "overwhelm", "burnout", "sleep", "stress", "anxiety", "quit", "can't sleep", "woke up", "insomnia", "panic", "breaking point", "giving up", "drowning", "falling apart", "crying", "can't stop thinking"],
   competition: ["competitor", "competition", "market share", "losing", "behind"],
   legal: ["legal", "lawsuit", "ip", "patent", "compliance", "regulation"],
-  personal: ["family", "health", "relationship", "lonely", "isolated", "depressed"],
+  personal: ["family", "health", "relationship", "lonely", "isolated", "depressed", "divorce", "sick", "hospital", "therapy", "counseling", "medication", "mental health", "suicidal", "worthless", "hopeless"],
 }
 
 /**
