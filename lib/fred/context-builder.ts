@@ -397,6 +397,8 @@ function buildContextBlock(data: FounderContextData): string {
     (f) => !surfacedKeys.has(f.key)
   );
 
+  // Cap total additional facts to prevent context window overflow
+  const MAX_ADDITIONAL_FACTS_TOTAL = 15;
   if (remainingFacts.length > 0) {
     lines.push("**Additional Context (from memory):**");
 
@@ -408,10 +410,13 @@ function buildContextBlock(data: FounderContextData): string {
       grouped.set(fact.category, existing);
     }
 
+    let totalIncluded = 0;
     for (const [category, items] of grouped) {
+      if (totalIncluded >= MAX_ADDITIONAL_FACTS_TOTAL) break;
       const categoryLabel = category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       lines.push(`  *${categoryLabel}:*`);
-      for (const item of items.slice(0, 5)) {
+      const remaining = MAX_ADDITIONAL_FACTS_TOTAL - totalIncluded;
+      for (const item of items.slice(0, Math.min(5, remaining))) {
         const rawValue =
           typeof item.value === "string"
             ? item.value
@@ -419,6 +424,7 @@ function buildContextBlock(data: FounderContextData): string {
               ? item.value.value
               : JSON.stringify(item.value).slice(0, 200);
         lines.push(`  - ${sanitize(item.key)}: ${sanitize(rawValue)}`);
+        totalIncluded++;
       }
     }
     lines.push("");

@@ -93,7 +93,10 @@ export function parseExtractionResult(raw: string): MemoryUpdate[] {
           typeof u.confidence === "number" &&
           u.value.length > 0 &&
           u.confidence >= 0.7 &&
-          u.confidence <= 1.0
+          u.confidence <= 1.0 &&
+          // Only accept known core memory fields — reject arbitrary field names
+          // to prevent unbounded memory growth and prompt injection via field names
+          validFields.has(u.field as string)
       )
       .map((u: Record<string, unknown>) => ({
         field: u.field as CoreMemoryFieldKey | string,
