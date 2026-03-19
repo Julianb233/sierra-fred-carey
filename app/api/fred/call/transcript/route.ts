@@ -56,13 +56,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    await injectVoiceTranscriptToChat(
+    const result = await injectVoiceTranscriptToChat(
       userId,
       body.roomName,
       body.transcript as VoiceTranscriptEntry[]
     )
 
-    return NextResponse.json({ success: true })
+    if (result.error && !result.stored) {
+      console.error("[Fred Call Transcript] Storage failed completely:", result.error)
+      return NextResponse.json(
+        { success: false, error: "Failed to store transcript", entriesStored: 0 },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      entriesStored: result.entriesStored,
+      ...(result.error ? { warning: "Some entries may not have been stored" } : {}),
+    })
   } catch (error) {
     // requireAuth throws NextResponse on 401
     if (error instanceof NextResponse) return error
