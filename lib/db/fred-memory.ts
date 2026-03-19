@@ -173,35 +173,59 @@ export async function storeEpisode(
   const supabase = createServiceClient();
   const contentHash = computeEpisodeContentHash(eventType, content);
 
-  const { data, error } = await supabase
+  // Build insert payload — include content_hash and channel columns
+  // which may not exist yet if the migration hasn't run.
+  const insertPayload: Record<string, unknown> = {
+    user_id: userId,
+    session_id: sessionId,
+    event_type: eventType,
+    content,
+    content_hash: contentHash,
+    channel: options.channel ?? "chat",
+    embedding: options.embedding,
+    importance_score: options.importanceScore ?? 0.5,
+    metadata: options.metadata ?? {},
+  };
+
+  let { data, error } = await supabase
     .from("fred_episodic_memory")
-    .insert({
-      user_id: userId,
-      session_id: sessionId,
-      event_type: eventType,
-      content,
-      content_hash: contentHash,
-      channel: options.channel ?? "chat",
-      embedding: options.embedding,
-      importance_score: options.importanceScore ?? 0.5,
-      metadata: options.metadata ?? {},
-    })
+    .insert(insertPayload)
     .select()
     .single();
+
+  // If content_hash/channel columns don't exist yet (migration pending),
+  // retry without those columns to avoid breaking episode storage
+  if (error && (error.message?.includes("content_hash") || error.message?.includes("channel"))) {
+    const fallbackPayload = { ...insertPayload };
+    delete fallbackPayload.content_hash;
+    delete fallbackPayload.channel;
+    const fallbackResult = await supabase
+      .from("fred_episodic_memory")
+      .insert(fallbackPayload)
+      .select()
+      .single();
+    data = fallbackResult.data;
+    error = fallbackResult.error;
+  }
 
   if (error) {
     // Unique constraint violation — duplicate episode already exists
     if (error.code === "23505") {
-      const { data: existing } = await supabase
-        .from("fred_episodic_memory")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("session_id", sessionId)
-        .eq("content_hash", contentHash)
-        .single();
+      // Try to find by content_hash first, fall back gracefully
+      try {
+        const { data: existing } = await supabase
+          .from("fred_episodic_memory")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("session_id", sessionId)
+          .eq("content_hash", contentHash)
+          .single();
 
-      if (existing) {
-        return transformEpisodicRow(existing);
+        if (existing) {
+          return transformEpisodicRow(existing);
+        }
+      } catch {
+        // content_hash column may not exist yet — ignore lookup failure
       }
     }
 
@@ -293,7 +317,18 @@ export async function searchEpisodesByEmbedding(
     return episodes.map((e) => ({ ...e, similarity: 0 }));
   }
 
-  return (data || []).map((row: Record<string, unknown>) => ({
+  // Safety-net dedup on read: filter out any duplicates by content_hash
+  const seen = new Set<string>();
+  const deduped = (data || []).filter((row: Record<string, unknown>) => {
+    const hash = row.content_hash as string | null;
+    if (!hash) return true;
+    const key = `${row.session_id}:${hash}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return deduped.map((row: Record<string, unknown>) => ({
     ...transformEpisodicRow(row),
     similarity: row.similarity as number,
   }));
@@ -401,7 +436,7 @@ export async function getFactsByCategory(
     .eq("user_id", userId)
     .eq("category", category)
     .order("updated_at", { ascending: false })
-    .limit(200);
+    .limit(50);
 
   if (error) {
     console.error("[FRED Memory] Error getting facts by category:", error);

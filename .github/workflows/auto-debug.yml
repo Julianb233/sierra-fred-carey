@@ -129,11 +129,15 @@ jobs:
       - name: Analyze failure and post fix suggestions
         if: steps.get-logs.outputs.has_failure == 'true'
         uses: actions/github-script@v7
+        env:
+          FAILURE_LOGS: ${{ steps.get-logs.outputs.logs }}
+          RUN_URL: ${{ steps.get-logs.outputs.run_url }}
+          PR_NUMBER: ${{ steps.get-logs.outputs.pr_number }}
         with:
           script: |
-            const logs = `${{ steps.get-logs.outputs.logs }}`;
-            const runUrl = `${{ steps.get-logs.outputs.run_url }}`;
-            const prNumber = `${{ steps.get-logs.outputs.pr_number }}`;
+            const logs = process.env.FAILURE_LOGS || '';
+            const runUrl = process.env.RUN_URL || '';
+            const prNumber = process.env.PR_NUMBER || '';
             
             // Pattern-based error analysis
             const patterns = [

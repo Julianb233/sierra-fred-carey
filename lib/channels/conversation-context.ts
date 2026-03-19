@@ -65,13 +65,24 @@ export async function getConversationContext(
   // Fetch recent episodic memory entries across all channels
   const { data: entries } = await supabase
     .from("fred_episodic_memory")
-    .select("id, session_id, event_type, content, created_at")
+    .select("id, session_id, event_type, content, content_hash, created_at")
     .eq("user_id", userId)
     .eq("event_type", "conversation")
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  const recentEntries: ChannelConversationEntry[] = (entries || []).map(
+  // Deduplicate by (session_id, content_hash) to prevent duplicate episodes
+  const seenHashes = new Set<string>();
+  const dedupedEntries = (entries || []).filter((entry) => {
+    const hash = entry.content_hash as string | null;
+    if (!hash) return true;
+    const key = `${entry.session_id}:${hash}`;
+    if (seenHashes.has(key)) return false;
+    seenHashes.add(key);
+    return true;
+  });
+
+  const recentEntries: ChannelConversationEntry[] = dedupedEntries.map(
     (entry) => {
       const content = entry.content as Record<string, unknown>;
       return {

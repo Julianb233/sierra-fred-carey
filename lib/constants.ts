@@ -185,7 +185,7 @@ export function getTierFromString(tier: string): UserTier {
 export const MEMORY_CONFIG = {
   free: {
     maxMessages: 5,
-    retentionDays: 0,
+    retentionDays: 365,
     loadEpisodic: false,
     maxEpisodicItems: 0,
   },
