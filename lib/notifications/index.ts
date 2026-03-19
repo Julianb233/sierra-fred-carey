@@ -146,7 +146,7 @@ export async function sendNotification(
     };
 
     const filteredConfigs = configs.filter((config) =>
-      routingConfig.channels.includes(config.channel)
+      (routingConfig.channels as string[]).includes(config.channel)
     );
 
     if (filteredConfigs.length === 0) {
