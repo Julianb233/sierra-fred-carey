@@ -52,6 +52,7 @@ import { logSentimentSignal } from "@/lib/db/sentiment-log";
 import { validateStageAccess } from "@/lib/oases/stage-validator";
 import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
+import { detectArchetype } from "@/lib/oases/founder-archetype";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
@@ -733,7 +734,20 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
     const stageRedirectCounts = (persistedModeResult?.modeContext as unknown as Record<string, unknown> | null)?.stageRedirectCounts as Record<string, number> ?? {}
     const stageValidation = validateStageAccess(message, currentOasesStage, stageRedirectCounts)
     const stageRedirectBlock = buildStageRedirectBlock(stageValidation)
-    const stageAwareBlock = buildStageAwarePromptBlock(currentOasesStage)
+
+    // AI-3581: Detect founder archetype from profile for stage-aware coaching
+    const founderArchetype = detectArchetype({
+      stage: (founderContextResult as { profile?: { stage?: string } }).profile?.stage,
+      company_name: (founderContextResult as { profile?: { companyName?: string } }).profile?.companyName,
+      industry: (founderContextResult as { profile?: { industry?: string } }).profile?.industry,
+      revenue_range: (founderContextResult as { profile?: { revenueRange?: string } }).profile?.revenueRange,
+      funding_history: (founderContextResult as { profile?: { fundingHistory?: string } }).profile?.fundingHistory,
+      team_size: (founderContextResult as { profile?: { teamSize?: number } }).profile?.teamSize?.toString(),
+    })
+    const stageAwareBlock = buildStageAwarePromptBlock(currentOasesStage, {
+      archetype: founderArchetype,
+      userTier,
+    })
 
     // Phase 80: Persist redirect counts when a redirect occurs (fire-and-forget)
     if (!stageValidation.allowed && stageValidation.redirectKey) {
