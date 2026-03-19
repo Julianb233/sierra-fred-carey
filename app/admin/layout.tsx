@@ -119,6 +119,12 @@ export default async function AdminLayout({
             >
               Audit Log
             </Link>
+            <Link
+              href="/admin/launch"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Launch
+            </Link>
           </div>
         </div>
       </nav>

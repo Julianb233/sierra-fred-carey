@@ -1,0 +1,95 @@
+{
+  "iteration": 1,
+  "type": "mutation",
+  "total_score": 33,
+  "max_score": 35,
+  "pass_rate": 0.94,
+  "prompts": [
+    {
+      "id": 1,
+      "prompt": "I have a great app idea for fitness tracking. I want to build the full platform with social features, coaching, and marketplace. Where do I start?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Explicit instruction to name the step: 'You're at Step N: [name]'. Model will say 'You're at Step 1: Define the Real Problem.'" },
+        "s2": { "result": "PASS", "reasoning": "Gate enforcement step explicitly redirects: 'Before [building], you need [problem validation].'" },
+        "s3": { "result": "PASS", "reasoning": "Upstream truth enforcement retained and strengthened with reframing instruction." },
+        "s4": { "result": "PASS", "reasoning": "Explicit mandate: 'End with exactly ONE concrete next step they can execute this week. Not a menu.' Model will prescribe one action like 'Talk to 5 potential users this week.'" },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction retained." },
+        "s6": { "result": "PASS", "reasoning": "Step 3 explicitly says 'Reframe their question to the ONE decision that actually matters right now.' Founder asks about building; model will reframe to problem validation." },
+        "s7": { "result": "PASS", "reasoning": "Explicit rule: 'Never open with praise, flattery, or great question language. Open with diagnosis.'" }
+      },
+      "pass_count": 7,
+      "fail_count": 0
+    },
+    {
+      "id": 2,
+      "prompt": "We've been building for 8 months but have no users yet. Should we keep building or try to launch what we have?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Model will diagnose: 'You're at Step 5: Validate Before Building — and you skipped it.'" },
+        "s2": { "result": "PASS", "reasoning": "Gate enforcement catches the skip. 8 months building without validation is a clear gate violation." },
+        "s3": { "result": "PASS", "reasoning": "Reframing instruction catches the false binary. Neither option addresses upstream truth." },
+        "s4": { "result": "PASS", "reasoning": "ONE next step mandate forces a concrete prescription like 'Stop building. Get 10 potential users on a call this week.'" },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "PASS", "reasoning": "Reframing instruction: 'Ignore the surface question if it's downstream.' The build-vs-launch binary is downstream; real question is demand validation." },
+        "s7": { "result": "PASS", "reasoning": "No-flattery rule prevents 'It's great you've been building.'" }
+      },
+      "pass_count": 7,
+      "fail_count": 0
+    },
+    {
+      "id": 3,
+      "prompt": "I want to expand into a new market segment. We're doing OK in our current niche but growth has slowed.",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Model will diagnose step — likely Step 9 (scale-decision) or back to Step 1 for new segment." },
+        "s2": { "result": "PASS", "reasoning": "Gate enforcement prevents expansion before diagnosing why growth slowed." },
+        "s3": { "result": "PASS", "reasoning": "Upstream truth: Why did growth slow? Is the current niche exhausted? These must come before expansion." },
+        "s4": { "result": "PASS", "reasoning": "ONE next step: e.g., 'Diagnose why growth slowed — interview 5 churned or non-converting leads this week.'" },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "PASS", "reasoning": "Reframing instruction catches this — surface question is 'how to expand'; real question is 'why did growth stall?'" },
+        "s7": { "result": "FAIL", "reasoning": "Edge case: model may still say 'It sounds like you've built something real' as a diagnostic opener. The no-flattery rule helps but 'doing OK' acknowledgment could slip through as implied praise." }
+      },
+      "pass_count": 6,
+      "fail_count": 1
+    },
+    {
+      "id": 4,
+      "prompt": "My co-founder wants to pivot to B2B but I think we should stay B2C. How do we decide?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Model will diagnose which step drives this decision — likely Step 5 (validation) or Step 2 (buyer identification)." },
+        "s2": { "result": "PASS", "reasoning": "Gate enforcement: pivot decision requires evidence from prior steps." },
+        "s3": { "result": "PASS", "reasoning": "Decision sequencing: B2B vs B2C is a data question, not a preference question. Upstream evidence required." },
+        "s4": { "result": "PASS", "reasoning": "ONE next step mandate: e.g., 'Each of you run 5 customer conversations in your proposed segment this week. Compare notes Friday.'" },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "PASS", "reasoning": "Reframing: surface is 'how do we decide B2B vs B2C'; real question is 'where is the evidence of demand stronger?'" },
+        "s7": { "result": "PASS", "reasoning": "No-flattery rule prevents 'This is a healthy tension' style openers." }
+      },
+      "pass_count": 7,
+      "fail_count": 0
+    },
+    {
+      "id": 5,
+      "prompt": "I'm not sure if my problem is real or if I'm just building something I personally want. How do I validate?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Model will diagnose: 'You're at Step 1: Define the Real Problem.'" },
+        "s2": { "result": "PASS", "reasoning": "Founder isn't trying to skip — framework naturally aligns." },
+        "s3": { "result": "PASS", "reasoning": "This IS the upstream truth question — framework strongly supports." },
+        "s4": { "result": "PASS", "reasoning": "ONE next step: e.g., 'Find 5 people who aren't you who have this problem. Talk to them this week.'" },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "PASS", "reasoning": "Founder is already at the right question — reframing aligns naturally." },
+        "s7": { "result": "FAIL", "reasoning": "Edge case: 'That self-awareness puts you ahead of most founders' is flattery disguised as diagnosis. The rule helps but this specific prompt invites affirming the founder's humility." }
+      },
+      "pass_count": 6,
+      "fail_count": 1
+    }
+  ],
+  "criteria_summary": {
+    "s1": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s2": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s3": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s4": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s5": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s6": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s7": { "pass": 3, "fail": 2, "rate": 0.6 }
+  },
+  "weakest_criteria": ["s7"],
+  "analysis": "Massive improvement from 21/35 to 33/35. All criteria now pass at >= 60%. The remaining 2 failures are edge cases on s7 (no-flattery) where the model may slip into implicit praise when the founder shows self-awareness or has real traction. The no-flattery rule catches explicit flattery but can't fully prevent subtle affirmation. Further improvement would require even more aggressive anti-flattery language, but that risks making Fred feel hostile rather than direct."
+}

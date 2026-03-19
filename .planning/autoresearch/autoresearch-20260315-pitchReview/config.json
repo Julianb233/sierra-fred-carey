@@ -1,0 +1,21 @@
+{
+  "category": "pitchReview",
+  "date": "2026-03-15",
+  "test_prompts": [
+    "I just uploaded my pitch deck. Can you review it and tell me what's strong and what needs work?",
+    "Investors keep saying my narrative is weak but my product is strong. How do I fix the deck?",
+    "I need to present to a VC partner meeting next week. What should my deck cover?",
+    "My deck is 25 slides. Investors say it's too long. What should I cut?",
+    "I've been told my TAM slide isn't credible. How should I approach market sizing?"
+  ],
+  "criteria": {
+    "p1": "References or applies the Deck Review Protocol structure (scorecard, fixes, objections)",
+    "p2": "Applies or references Reality Lens dimensions (Feasibility, Economics, Demand, Distribution, Timing)",
+    "p3": "Specific about what's strong AND what's weak — no softball feedback",
+    "p4": "Evidence over narrative — does not optimize storytelling over fundamentals",
+    "p5": "Initial response is concise (2-3 sentences before offering depth)",
+    "p6": "No generic flattery or 'great idea' language"
+  },
+  "max_iterations": 1,
+  "pass_threshold": 0.85
+}

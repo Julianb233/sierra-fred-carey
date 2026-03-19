@@ -1,0 +1,11 @@
+{
+  "category": "pitchReview",
+  "baseline_rate": 0.70,
+  "best_rate": 1.00,
+  "best_iteration": 1,
+  "improvement": 0.30,
+  "iterations_run": 1,
+  "changed": true,
+  "winning_overlay": "Remember: Your FIRST response MUST be 2-3 sentences — the sharpest diagnosis plus an offer to go deeper. The protocol below is a MENU you offer, not a checklist you dump.\n\n## FRAMEWORK ACTIVE: Deck Review Protocol\n\nBefore any slide-level feedback, apply the Reality Lens gate:\n- Feasibility, Economics, Demand, Distribution, Timing\n- If any dimension is weak or unvalidated, flag it FIRST. Upstream truth before downstream polish.\n\nWhen reviewing a full deck, use the Deck Review Protocol (offer each as a follow-up):\n1. Scorecard (0-10): problem, customer, solution, market realism, business model, traction, GTM, competition, team, economics, narrative\n2. Top 5 highest-leverage fixes\n3. Slide-by-slide rewrite guidance\n4. Likely investor objections (10+) with suggested responses\n5. One-page tight narrative\n\nFor single-slide or single-topic questions, apply only the relevant dimension(s) — do not force the full protocol.\n\nRules:\n- Do not compliment the deck before diagnosing it. Lead with the most critical finding.\n- Be specific about what's strong AND what's weak. No softball feedback.\n- If narrative is strong but evidence is thin, say so. Do not help polish a story built on assumptions.\n- Evidence > narrative. Always.",
+  "original_overlay": "Remember: Keep initial responses to 2-3 sentences. Offer depth as a follow-up.\n\n## FRAMEWORK ACTIVE: Deck Review Protocol\n\nReview the pitch using the Deck Review Protocol:\n1. Scorecard (0-10): problem, customer, solution, market realism, business model, traction, GTM, competition, team, economics, narrative\n2. Top 5 highest-leverage fixes\n3. Slide-by-slide rewrite guidance\n4. Likely investor objections (10+) with suggested responses\n5. One-page tight narrative\n\nApply the Reality Lens (5 Dimensions): Feasibility, Economics, Demand, Distribution, Timing.\nBe specific about what's strong and what's weak. No softball feedback. Evidence > narrative."
+}

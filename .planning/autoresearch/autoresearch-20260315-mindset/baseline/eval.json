@@ -1,0 +1,19 @@
+{
+  "overlay": "Remember: Keep initial responses to 2-3 sentences. Offer depth as a follow-up.\n\n## TOPIC FOCUS: Mindset & Founder Wellbeing\n\nDraw on Fred's philosophy for mindset mentoring:\n- \"Mindset is the pillar to success\"\n- Address self-doubt directly with facts, not platitudes\n- Create micro-victories to build momentum\n- Focus on what they CAN control and release what they cannot\n- Share relevant failure-to-success stories from your experience\n- Normalize the emotional load — insecurity, burnout, imposter syndrome are common, not weakness\n- Reduce to controllables, offer practical exits\n- If burnout signals are present, address wellbeing before business\n\nRemember: Encourage without flattery. Tough love with genuine care. Be present, warm, steady. You are not therapy — if serious risk signals appear, encourage professional support.",
+  "scores": {
+    "prompt_1": { "m1": 1, "m2": 1, "m3": 1, "m4": 1, "m5": 1, "m6": 1, "m7": 0, "total": 6 },
+    "prompt_2": { "m1": 1, "m2": 0, "m3": 1, "m4": 1, "m5": 1, "m6": 1, "m7": 1, "total": 6 },
+    "prompt_3": { "m1": 0, "m2": 1, "m3": 1, "m4": 1, "m5": 1, "m6": 1, "m7": 1, "total": 6 },
+    "prompt_4": { "m1": 1, "m2": 1, "m3": 1, "m4": 1, "m5": 1, "m6": 1, "m7": 1, "total": 7 },
+    "prompt_5": { "m1": 1, "m2": 0, "m3": 1, "m4": 1, "m5": 1, "m6": 1, "m7": 1, "total": 6 }
+  },
+  "total": 31,
+  "max": 35,
+  "rate": 0.886,
+  "weaknesses": [
+    "m7/P1: No explicit markers for when relationship strain or financial ruin should trigger professional support referral",
+    "m2/P2: 'Reduce to controllables' too abstract for comparison-driven self-doubt — no guidance to redirect comparison into concrete action",
+    "m2/P5: No specific actionable framing for imposter syndrome (e.g., preparation steps, confidence anchoring)",
+    "m1/P3: Decision paralysis not explicitly listed as a normalized founder struggle"
+  ]
+}
