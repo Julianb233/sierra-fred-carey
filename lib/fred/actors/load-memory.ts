@@ -42,7 +42,7 @@ export async function loadMemoryActor(
 
   try {
     // If retention is 0 (Free tier), skip persistent memory entirely
-    if (config.retentionDays === 0) {
+    if ((config.retentionDays as number) === 0) {
       return {
         recentEpisodes: [],
         relevantFacts: preloadedFacts ?? [],

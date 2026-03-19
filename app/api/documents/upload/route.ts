@@ -15,6 +15,7 @@ import { checkTierForRequest, getUserTier } from '@/lib/api/tier-middleware';
 import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import { checkRateLimit, createRateLimitResponse } from '@/lib/api/rate-limit';
+import { captureError } from '@/lib/sentry';
 
 // Upload rate limits per tier (per day)
 const UPLOAD_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
@@ -148,6 +149,7 @@ export async function POST(request: NextRequest) {
     // In production, this would be a background job
     processDocument(document.id, fileUrl, documentType).catch(err => {
       console.error('[DocumentUpload] Processing error:', err);
+      captureError(err instanceof Error ? err : new Error(String(err)), { route: "POST /api/documents/upload", phase: "background-processing", documentId: document.id });
     });
 
     return NextResponse.json({
@@ -166,6 +168,7 @@ export async function POST(request: NextRequest) {
       return error;
     }
     console.error('[DocumentUpload] Error:', error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/documents/upload" });
     return NextResponse.json(
       { error: 'Failed to upload document' },
       { status: 500 }

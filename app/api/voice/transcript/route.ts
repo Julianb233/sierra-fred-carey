@@ -14,6 +14,7 @@ import { z } from "zod"
 import { requireAuth } from "@/lib/auth"
 import { summarizeTranscript, injectTranscriptToChat } from "@/lib/voice/transcript-injector"
 import { checkRateLimitForUser } from "@/lib/api/rate-limit"
+import { captureError } from "@/lib/sentry"
 
 // ============================================================================
 // Request Validation
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.error("[Voice Transcript API] Error:", error)
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/voice/transcript" })
     return NextResponse.json(
       { success: false, error: "Failed to process transcript" },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signUp } from "@/lib/auth";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { captureError } from "@/lib/sentry";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[api/auth/signup] Error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/auth/signup" });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

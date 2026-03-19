@@ -3,6 +3,7 @@ import { createCheckoutSession } from "@/lib/stripe/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { requireAuth } from "@/lib/auth";
 import { PLANS, getPlanByPriceId } from "@/lib/stripe/config";
+import { captureError } from "@/lib/sentry";
 
 /**
  * POST /api/stripe/checkout
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Checkout error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/stripe/checkout" });
 
     // Handle specific Stripe errors
     if (error instanceof Error) {
