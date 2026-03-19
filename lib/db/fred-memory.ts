@@ -395,6 +395,9 @@ export async function storeFact(
     throw error;
   }
 
+  // Invalidate cache so next getAllUserFacts picks up the new fact
+  invalidateFactsCache(userId);
+
   return transformSemanticRow(data);
 }
 
@@ -523,8 +526,13 @@ export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]>
   }
 
   const result = (data || []).map(transformSemanticRow);
-  factsCache.set(userId, { data: result, expiry: Date.now() + 5000 });
+  factsCache.set(userId, { data: result, expiry: Date.now() + 30000 }); // 30s TTL (was 5s)
   return result;
+}
+
+/** Invalidate the facts cache for a user after storing new facts */
+export function invalidateFactsCache(userId: string): void {
+  factsCache.delete(userId);
 }
 
 // ============================================================================
