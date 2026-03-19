@@ -46,6 +46,8 @@ type MatchSuggestion = z.infer<typeof matchSuggestionSchema>;
 // ============================================================================
 
 export class MockBoardyClient implements BoardyClientInterface {
+  readonly isLive = false;
+
   /**
    * Generate match suggestions using AI and store them in the database.
    */
