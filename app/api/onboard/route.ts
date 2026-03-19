@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { stripHtml } from "@/lib/communities/sanitize";
+import { detectArchetype } from "@/lib/oases/founder-archetype";
 
 export async function POST(request: NextRequest) {
   try {
@@ -157,6 +158,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // AI-3581: Detect founder archetype from onboarding data
+      const archetype = detectArchetype({
+        stage: stage || null,
+        company_name: null,
+        industry: null,
+        challenges: challenges || null,
+      });
+
       // Only update profile after successful authentication
       const { error: updateError } = await supabase
         .from("profiles")
@@ -166,6 +175,8 @@ export async function POST(request: NextRequest) {
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
           ...(coFounder ? { co_founder: coFounder } : {}),
+          founder_archetype: archetype,
+          oases_stage: "clarity",
           onboarding_completed: true,
           updated_at: new Date().toISOString(),
         })
@@ -228,9 +239,15 @@ export async function POST(request: NextRequest) {
 
       userId = authData.user.id;
 
+      // AI-3581: Detect founder archetype from onboarding data
+      const archetype = detectArchetype({
+        stage: stage || null,
+        company_name: null,
+        industry: null,
+        challenges: challenges || null,
+      });
+
       // Create profile record using service client (bypasses RLS)
-      // The newly signed-up user doesn't have an active session yet,
-      // so the user-scoped client cannot insert into profiles via RLS.
       const supabaseAdmin = createServiceClient();
       const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
         id: userId,
@@ -240,6 +257,8 @@ export async function POST(request: NextRequest) {
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
         ...(coFounder ? { co_founder: coFounder } : {}),
+        founder_archetype: archetype,
+        oases_stage: "clarity",
         onboarding_completed: true,
         journey_welcomed: false,
         created_at: new Date().toISOString(),
@@ -256,6 +275,8 @@ export async function POST(request: NextRequest) {
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
+          founder_archetype: archetype,
+          oases_stage: "clarity",
           onboarding_completed: true,
           journey_welcomed: false,
           created_at: new Date().toISOString(),
