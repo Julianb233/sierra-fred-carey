@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error("[admin/event-analytics] Supabase query error:", error.message)
+      return NextResponse.json({ error: "Failed to fetch event analytics" }, { status: 500 })
     }
 
     const all = profiles || []

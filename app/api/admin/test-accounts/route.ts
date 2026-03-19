@@ -106,12 +106,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[admin/test-accounts] POST error:", error)
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create test account",
-      },
+      { error: "Failed to create test account" },
       { status: 500 }
     )
   }
@@ -151,12 +146,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("[admin/test-accounts] DELETE error:", error)
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to delete test account",
-      },
+      { error: "Failed to delete test account" },
       { status: 500 }
     )
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { captureError } from "@/lib/sentry";
 
 /**
  * Diagnostic Events API
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("[POST /api/diagnostic/events]", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/diagnostic/events" });
     return NextResponse.json(
       { success: false, error: "Failed to log diagnostic event" },
       { status: 500 }
@@ -236,6 +238,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.error("[GET /api/diagnostic/events]", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "GET /api/diagnostic/events" });
     return NextResponse.json(
       { success: false, error: "Failed to fetch diagnostic events" },
       { status: 500 }

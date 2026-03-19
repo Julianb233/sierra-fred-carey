@@ -12,6 +12,7 @@ import { createClient as createServerClient } from "@supabase/supabase-js"
 import { createServiceClient } from "@/lib/supabase/server"
 import { getEventConfig } from "@/lib/event/config"
 import { EVENT_ANALYTICS } from "@/lib/event/analytics"
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit"
 
 // ============================================================================
 // Validation
@@ -27,6 +28,17 @@ function validateEmail(email: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 registration attempts per hour per IP
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0].trim() || "unknown";
+    const rateLimitResult = await checkRateLimit(`event-register:${ip}`, {
+      limit: 5,
+      windowSeconds: 3600,
+    });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     // Parse body
     let body: Record<string, unknown>
     try {

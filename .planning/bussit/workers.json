@@ -1,0 +1,30 @@
+{
+  "workers": [
+    {
+      "id": "worker-a2-3636",
+      "registeredAt": "2026-03-18T19:01:00Z",
+      "lastHeartbeat": "2026-03-18T19:01:00Z",
+      "status": "idle",
+      "currentTask": null,
+      "checkpoint": null,
+      "sessionId": "bussit-session-20260318",
+      "stats": {
+        "tasksCompleted": 0,
+        "tasksFailed": 0,
+        "totalExecutionTime": 0,
+        "avgTaskTime": 0
+      },
+      "capabilities": {
+        "preferredTypes": ["build", "improvement", "bugfix"],
+        "avoidTypes": [],
+        "maxComplexity": 10
+      },
+      "health": {
+        "consecutiveFailures": 0,
+        "lastError": null,
+        "circuitBreakerOpen": false
+      },
+      "shutdownRequested": false
+    }
+  ]
+}

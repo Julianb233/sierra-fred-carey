@@ -1,0 +1,63 @@
+{
+  "workers": [
+    {
+      "id": "worker-Ubun-73568",
+      "registeredAt": "2026-03-18T12:00:00Z",
+      "lastHeartbeat": "2026-03-18T12:00:00Z",
+      "status": "idle",
+      "currentTask": "lin-3581-journey",
+      "checkpoint": null,
+      "sessionId": "bussit-linear-pull-20260318",
+      "stats": {
+        "tasksCompleted": 0,
+        "tasksFailed": 0,
+        "totalExecutionTime": 0,
+        "avgTaskTime": 0
+      },
+      "capabilities": {
+        "preferredTypes": ["build", "bugfix"],
+        "avoidTypes": [],
+        "maxComplexity": 10
+      },
+      "health": {
+        "consecutiveFailures": 0,
+        "lastError": null,
+        "circuitBreakerOpen": false
+      },
+      "shutdownRequested": false
+    },
+    {
+      "id": "worker-ubun-3632",
+      "registeredAt": "2026-03-18T12:00:00Z",
+      "lastHeartbeat": "2026-03-18T12:05:00Z",
+      "status": "running",
+      "currentTask": "lin-1447-auth",
+      "checkpoint": {
+        "taskId": "lin-1447-auth",
+        "phase": "claimed",
+        "startedAt": "2026-03-18T12:05:00Z",
+        "lastUpdate": "2026-03-18T12:05:00Z",
+        "progress": 0,
+        "context": {}
+      },
+      "sessionId": "session-20260318-agent2",
+      "stats": {
+        "tasksCompleted": 1,
+        "tasksFailed": 0,
+        "totalExecutionTime": 1163,
+        "avgTaskTime": 1163
+      },
+      "capabilities": {
+        "preferredTypes": ["build", "bugfix"],
+        "avoidTypes": [],
+        "maxComplexity": 10
+      },
+      "health": {
+        "consecutiveFailures": 0,
+        "lastError": null,
+        "circuitBreakerOpen": false
+      },
+      "shutdownRequested": false
+    }
+  ]
+}

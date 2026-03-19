@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/lib/supabase/server"
+import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +25,17 @@ interface EventFeedbackBody {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 feedback submissions per hour per IP
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0].trim() || "unknown";
+    const rateLimitResult = await checkRateLimit(`event-feedback:${ip}`, {
+      limit: 10,
+      windowSeconds: 3600,
+    });
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+
     const body: EventFeedbackBody = await request.json()
 
     // Validate required fields

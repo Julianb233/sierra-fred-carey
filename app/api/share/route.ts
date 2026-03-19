@@ -97,9 +97,10 @@ export async function POST(request: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Failed to create share link";
     log.error("POST /api/share error", { error: message });
+    const isNotFound = error instanceof Error && message.includes("not found");
     return NextResponse.json(
-      { success: false, error: message },
-      { status: error instanceof Error && message.includes("not found") ? 404 : 500 }
+      { success: false, error: isNotFound ? "Resource not found" : "Failed to create share link" },
+      { status: isNotFound ? 404 : 500 }
     );
   }
 }
@@ -116,12 +117,12 @@ export async function GET() {
     return NextResponse.json({ success: true, links });
   } catch (error) {
     if (error instanceof Response) return error;
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch share links";
-    log.error("GET /api/share error", { error: message });
+    log.error("GET /api/share error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Failed to fetch share links" },
       { status: 500 }
     );
   }
@@ -157,11 +158,11 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Response) return error;
-    const message =
-      error instanceof Error ? error.message : "Failed to revoke share link";
-    log.error("DELETE /api/share error", { error: message });
+    log.error("DELETE /api/share error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Failed to revoke share link" },
       { status: 500 }
     );
   }

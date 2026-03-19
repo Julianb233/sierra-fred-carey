@@ -27,10 +27,9 @@ export async function POST(
       message: `Approved patch "${patch.title}"`,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to approve patch"
     console.error("[Admin Prompt Patch Approve] Error:", error)
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Failed to approve patch" },
       { status: 400 }
     )
   }

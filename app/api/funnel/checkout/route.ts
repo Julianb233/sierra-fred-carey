@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe/server";
 import { PLANS } from "@/lib/stripe/config";
 import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
+import { captureError } from "@/lib/sentry";
 
 /**
  * POST /api/funnel/checkout
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("[Funnel Checkout] Error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/funnel/checkout" });
 
     if (error instanceof Error && error.message.includes("STRIPE_SECRET_KEY")) {
       return NextResponse.json(

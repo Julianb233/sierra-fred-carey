@@ -11,6 +11,7 @@ import {
   needsInvestorLens,
   type InvestorReadinessSignals,
 } from "@/lib/ai/frameworks/investor-lens";
+import { captureError } from "@/lib/sentry";
 
 /**
  * Framework Introduction API
@@ -293,6 +294,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("[POST /api/diagnostic/introduce]", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/diagnostic/introduce" });
     return NextResponse.json(
       { success: false, error: "Failed to check framework introduction" },
       { status: 500 }
@@ -373,6 +375,7 @@ export async function GET() {
     }
 
     console.error("[GET /api/diagnostic/introduce]", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "GET /api/diagnostic/introduce" });
     return NextResponse.json(
       { success: false, error: "Failed to get introduction state" },
       { status: 500 }

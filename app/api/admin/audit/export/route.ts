@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(5000)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error("[admin/audit/export] Supabase query error:", error.message)
+      return NextResponse.json({ error: "Failed to export audit data" }, { status: 500 })
+    }
 
     if (!data || data.length === 0) {
       return new NextResponse("No data", { status: 204 })

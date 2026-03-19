@@ -55,10 +55,9 @@ export async function POST(
       message: `Launched A/B test "${experimentName}" for patch "${patch.title}"`,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to launch test"
     console.error("[Admin Prompt Patch Launch Test] Error:", error)
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Failed to launch test" },
       { status: 400 }
     )
   }

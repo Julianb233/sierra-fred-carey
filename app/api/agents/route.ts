@@ -28,6 +28,7 @@ import { createActor } from "xstate";
 import { agentOrchestratorMachine } from "@/lib/agents/machine";
 import type { AgentType, AgentStatus } from "@/lib/agents/types";
 import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/prompt-guard";
+import { captureError } from "@/lib/sentry";
 
 // ============================================================================
 // Request Validation
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
         `[Agent API] Failed to start agent execution for task ${task.id}:`,
         err
       );
+      captureError(err instanceof Error ? err : new Error(String(err)), { route: "POST /api/agents", phase: "fire-and-forget", taskId: task.id, agentType });
     });
 
     // 8. Return immediately with task ID
@@ -157,6 +159,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Response) return error;
 
     console.error("[Agent API] POST error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/agents" });
     return NextResponse.json(
       { success: false, error: "Failed to dispatch agent task" },
       { status: 500 }
@@ -249,6 +252,7 @@ export async function GET(request: NextRequest) {
     if (error instanceof Response) return error;
 
     console.error("[Agent API] GET error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "GET /api/agents" });
     return NextResponse.json(
       { success: false, error: "Failed to fetch agent tasks" },
       { status: 500 }
@@ -322,6 +326,7 @@ async function startAgentExecution(
       },
       error: (err) => {
         console.error(`[Agent API] Orchestrator error for task ${taskId}:`, err);
+        captureError(err instanceof Error ? err : new Error(String(err)), { route: "POST /api/agents", phase: "orchestrator-error", taskId });
         updateAgentTask(taskId, {
           status: "failed",
           error: "Agent execution failed",
@@ -367,6 +372,7 @@ async function startAgentExecution(
     }, AGENT_TIMEOUT_MS);
   } catch (error) {
     console.error(`[Agent API] startAgentExecution failed for task ${taskId}:`, error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/agents", phase: "startAgentExecution", taskId });
     await updateAgentTask(taskId, {
       status: "failed",
       error: "Agent execution failed",
