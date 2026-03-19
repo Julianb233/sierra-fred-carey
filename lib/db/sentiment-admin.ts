@@ -105,12 +105,12 @@ export async function getSentimentOverview(
   if (highStressUserIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name, email")
+      .select("id, name, email")
       .in("id", highStressUserIds)
 
     const profileMap = new Map<string, string>()
     for (const p of profiles ?? []) {
-      profileMap.set(p.id, p.display_name || p.email || "Unknown")
+      profileMap.set(p.id, p.name || p.email || "Unknown")
     }
 
     highStressFounders = highStressUserIds.map((uid) => {
@@ -155,12 +155,12 @@ export async function getInterventionLog(
   const userIds = [...new Set(interventions.map((i) => i.user_id))]
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name, email")
+    .select("id, name, email")
     .in("id", userIds)
 
   const profileMap = new Map<string, string>()
   for (const p of profiles ?? []) {
-    profileMap.set(p.id, p.display_name || p.email || "Unknown")
+    profileMap.set(p.id, p.name || p.email || "Unknown")
   }
 
   return interventions.map((i) => ({

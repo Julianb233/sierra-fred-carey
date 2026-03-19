@@ -50,7 +50,7 @@ export async function getEligibleUsers(): Promise<EligibleUser[]> {
     SELECT
       fdp.user_id,
       p.email,
-      COALESCE(p.full_name, p.display_name, 'Founder') as first_name
+      COALESCE(p.name, 'Founder') as first_name
     FROM feedback_digest_preferences fdp
     JOIN profiles p ON p.id = fdp.user_id
     WHERE fdp.enabled = true

@@ -63,10 +63,12 @@ export async function createTestAccount(
     {
       id: userId,
       email: config.email,
-      full_name: config.fullName || `Test User (${config.testGroup})`,
+      name: config.fullName || `Test User (${config.testGroup})`,
       tier: config.tier,
-      is_test_account: true,
-      test_group: config.testGroup,
+      metadata: {
+        is_test_account: true,
+        test_group: config.testGroup,
+      },
     },
     { onConflict: "id" }
   )
