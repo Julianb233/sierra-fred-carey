@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,35 +27,64 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const allRulesPass = PASSWORD_RULES.every((r) => r.test(password));
 
   // The /api/auth/callback route exchanges the PKCE code for a session
   // and sets cookies before redirecting here. We detect the session below.
   useEffect(() => {
+    let cancelled = false;
     const supabase = createClient();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    const markReady = () => {
+      if (!cancelled) {
         setSessionReady(true);
+        // Clear the expiry timeout once session is confirmed
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      }
+    };
+
+    // Listen for auth state changes — PASSWORD_RECOVERY fires for implicit
+    // flows, SIGNED_IN fires after PKCE code exchange via the callback route.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        markReady();
       }
     });
 
-    // Check for existing session (set by the auth callback route)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
+    // Also check for existing session (already set by the auth callback route
+    // before redirecting here). Use getUser() for server-verified check,
+    // falling back to getSession() for faster local detection.
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        markReady();
       }
+    }).catch(() => {
+      // Fallback: try getSession for local storage detection
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          markReady();
+        }
+      });
     });
 
     // Timeout: if session doesn't resolve, the link is likely expired or invalid
-    const timeout = setTimeout(() => {
-      setLinkExpired(true);
+    timeoutRef.current = setTimeout(() => {
+      if (!cancelled) {
+        setLinkExpired(true);
+      }
     }, SESSION_VERIFY_TIMEOUT_MS);
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
-      clearTimeout(timeout);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -86,8 +115,15 @@ export default function ResetPasswordPage() {
           if (updateError.message.includes("same password") || updateError.message.includes("should be different")) {
             throw new Error("New password must be different from your current password.");
           }
-          if (updateError.message.includes("session") || updateError.message.includes("expired")) {
-            throw new Error("Your reset link has expired. Please request a new one.");
+          if (
+            updateError.message.includes("session") ||
+            updateError.message.includes("expired") ||
+            updateError.message.includes("Auth session missing") ||
+            updateError.message.includes("not authorized") ||
+            updateError.status === 401 ||
+            updateError.status === 403
+          ) {
+            throw new Error("Your reset link has expired. Please request a new one from the forgot password page.");
           }
           throw updateError;
         }

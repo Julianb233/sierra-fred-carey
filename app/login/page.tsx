@@ -41,12 +41,17 @@ function LoginContent() {
   }
 
   const redirect = getSafeRedirect(searchParams.get("redirect"));
+  const authError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    authError === "auth_failed"
+      ? "Email verification failed. Please try again or contact support."
+      : null
+  );
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
