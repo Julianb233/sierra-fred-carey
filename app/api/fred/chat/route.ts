@@ -35,7 +35,7 @@ import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered, updateStageRedirectCounts } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
+import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock, buildMissingFundamentalsBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
@@ -519,6 +519,15 @@ async function handlePost(req: NextRequest) {
     // Phase 80: Extract Oases stage from founder context for stage-gate validation
     const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
 
+    // AI-2619: Build missing fundamentals enforcement block
+    let fundamentalsBlock = "";
+    const founderMemory = (founderContextResult as { memory?: import("@/lib/fred/founder-memory-types").FounderMemory }).memory;
+    if (founderMemory) {
+      const { getMissingFields } = await import("@/lib/fred/founder-memory-types");
+      const missing = getMissingFields(founderMemory);
+      fundamentalsBlock = buildMissingFundamentalsBlock(missing);
+    }
+
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
     let stepGuidanceBlock = "";
@@ -762,6 +771,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       stageAwareBlock,     // Phase 80: Always-on stage awareness + proactive guidance
       founderContext,
+      fundamentalsBlock,   // AI-2619: Directive fundamentals collection enforcement
       stepGuidanceBlock,
       accountabilityBlock, // Outstanding action items from past conversations
       rlStatusBlock,
