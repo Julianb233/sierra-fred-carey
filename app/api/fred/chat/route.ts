@@ -1193,6 +1193,14 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
               });
             }
 
+            // Fire-and-forget: send first session email if this is the user's first conversation
+            // The trigger function has idempotency built in — safe to call every time.
+            if (isNewSession) {
+              import("@/lib/email/onboarding/triggers").then(({ sendFirstSessionEmail }) =>
+                sendFirstSessionEmail(userId).catch(() => {})
+              ).catch(() => {});
+            }
+
             // Fire-and-forget: restore latency observability after streaming completion
             (async () => {
               try {
