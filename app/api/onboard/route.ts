@@ -286,21 +286,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     // Send welcome email (fire-and-forget — never block the response)
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
-    import("@/lib/email/send").then(({ sendEmail }) =>
-      import("@/lib/email/templates/welcome").then(({ WelcomeEmail }) =>
-        sendEmail({
-          to: email.toLowerCase(),
-          subject: `Welcome to Sahara, ${userName || "Founder"} — your journey starts now`,
-          react: WelcomeEmail({ founderName: userName || "Founder", appUrl }),
-          tags: [{ name: "category", value: "onboarding" }],
-          tracking: {
-            userId,
-            emailType: "welcome",
-          },
-        }).catch((err) => console.warn("[onboard] Welcome email failed (non-blocking):", err))
-      )
-    ).catch(() => {});
+    import("@/lib/email/onboarding/triggers").then(({ sendWelcomeEmail }) =>
+      sendWelcomeEmail(userId, email.toLowerCase(), userName)
+    ).catch((err) => console.warn("[onboard] Welcome email trigger failed (non-blocking):", err));
 
     return NextResponse.json({
       success: true,

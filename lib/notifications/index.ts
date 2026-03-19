@@ -15,6 +15,7 @@ import {
   sendDigestEmail,
   testEmailNotification,
 } from "./email";
+import { sendSMSNotification } from "./sms";
 import {
   NotificationPayload,
   NotificationResult,
@@ -352,6 +353,10 @@ async function sendToChannel(
           throw new Error("Email address not configured");
         }
         return await sendEmailNotification(config.emailAddress, payload);
+
+      case "sms":
+        // SMS channel uses user's phone from SMS preferences (not from config)
+        return await sendSMSNotification(payload.userId, payload);
 
       default:
         throw new Error(`Unknown channel: ${config.channel}`);

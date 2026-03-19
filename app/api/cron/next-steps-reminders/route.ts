@@ -16,6 +16,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/lib/supabase/server"
 import { getOverdueSteps, markReminderSent } from "@/lib/next-steps/next-steps-service"
 import { notifyOverdueStep } from "@/lib/push/triggers"
+import {
+  sendReminderSMS,
+  buildOverdueReminderMessage,
+  isTwilioConfigured,
+} from "@/lib/sms/send-reminder"
 import { timingSafeEqual } from "crypto"
 
 export const dynamic = "force-dynamic"
@@ -79,6 +84,8 @@ export async function GET(request: NextRequest) {
 
     let reminded = 0
     let failed = 0
+    let smsSent = 0
+    const smsEnabled = isTwilioConfigured()
 
     for (const userId of userIds) {
       try {
@@ -95,6 +102,32 @@ export async function GET(request: NextRequest) {
           topPriority: topStep.priority,
         })
 
+        // Also send SMS reminder to opted-in users (fire-and-forget)
+        if (smsEnabled) {
+          // Fetch founder name for personalized SMS
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", userId)
+            .single()
+
+          const smsMessage = buildOverdueReminderMessage(
+            profile?.name || "Founder",
+            unreminded.length,
+            topStep.description
+          )
+
+          sendReminderSMS(userId, smsMessage, {
+            deepLink: "/dashboard/next-steps",
+          })
+            .then((result) => {
+              if (result.success) smsSent++
+            })
+            .catch((err) => {
+              console.error(`${LOG_PREFIX} SMS failed for user ${userId}:`, err)
+            })
+        }
+
         // Mark all as reminded to prevent duplicates
         for (const step of unreminded) {
           await markReminderSent(userId, step.id)
@@ -107,7 +140,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`${LOG_PREFIX} Complete: ${reminded} users reminded, ${failed} failed`)
+    console.log(`${LOG_PREFIX} Complete: ${reminded} users reminded, ${failed} failed, ~${smsSent} SMS sent`)
 
     return NextResponse.json({
       success: true,

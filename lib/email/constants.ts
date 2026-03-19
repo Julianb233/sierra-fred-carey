@@ -16,6 +16,7 @@ export const EMAIL_CATEGORIES: Record<EmailCategory, string> = {
   milestone: 'email',
   re_engagement: 'marketing',
   feedback_improvement: 'feedback',
+  onboarding: 'email',
 };
 
 /** Minimum total activity items required to send a digest (0 means any activity triggers send) */

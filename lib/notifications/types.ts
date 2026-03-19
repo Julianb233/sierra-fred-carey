@@ -3,7 +3,7 @@
  * Type definitions for multi-channel notification delivery
  */
 
-export type NotificationChannel = 'slack' | 'pagerduty' | 'email';
+export type NotificationChannel = 'slack' | 'pagerduty' | 'email' | 'sms';
 export type AlertLevel = 'info' | 'warning' | 'critical';
 export type AlertType = 'performance' | 'errors' | 'traffic' | 'significance' | 'winner';
 
