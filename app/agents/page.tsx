@@ -117,7 +117,7 @@ const agents: AgentType[] = [
   },
   {
     id: "legal-ops",
-    name: "Legal Assistant",
+    name: "Legal Advisor",
     description: "Contract templates, compliance checks, and terms of service",
     color: "slate",
     icon: Scale,
