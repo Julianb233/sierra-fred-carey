@@ -97,12 +97,12 @@ export function UpgradeCard({
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-orange-500" />
-            <CardTitle className="text-lg">Venture Studio Plan</CardTitle>
+            <CardTitle className="text-lg">Growth Plan</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            You are on the Studio plan with full access to all features.
+            You are on the Growth plan with full access to all features.
           </p>
         </CardContent>
         <CardFooter>
@@ -142,11 +142,11 @@ export function UpgradeCard({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            Upgrade to {TIER_NAMES[UserTier.PRO]} first to unlock Pro features,
-            then level up to Studio for the full Virtual Team experience.
+            Upgrade to {TIER_NAMES[UserTier.PRO]} first to unlock Builder features,
+            then level up to Growth for the full Virtual Team experience.
           </p>
           <div className="text-xs text-gray-500 dark:text-gray-500">
-            Free &rarr; Pro ($99/mo) &rarr; Studio ($249/mo)
+            Free &rarr; Builder ($99/mo) &rarr; Growth ($249/mo)
           </div>
         </CardContent>
         <CardFooter>
@@ -185,7 +185,7 @@ export function UpgradeCard({
                 Processing...
               </>
             ) : (
-              "Upgrade to Pro"
+              "Upgrade to Builder"
             )}
           </Button>
         </CardFooter>
@@ -205,7 +205,7 @@ export function UpgradeCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-orange-500" />
-            <CardTitle className="text-lg">Upgrade to Venture Studio</CardTitle>
+            <CardTitle className="text-lg">Upgrade to Growth</CardTitle>
           </div>
           <div className="text-right">
             <span className="text-2xl font-bold text-gray-900 dark:text-white">

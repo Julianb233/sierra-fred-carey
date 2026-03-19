@@ -33,7 +33,9 @@ export async function POST(request: NextRequest) {
     // Dashboard sends tier="pro"/"studio" but PLANS keys are FUNDRAISING/VENTURE_STUDIO
     const TIER_TO_PLAN_KEY: Record<string, string> = {
       PRO: "FUNDRAISING",
+      BUILDER: "FUNDRAISING",
       STUDIO: "VENTURE_STUDIO",
+      GROWTH: "VENTURE_STUDIO",
       // Direct keys also work
       FREE: "FREE",
       FUNDRAISING: "FUNDRAISING",

@@ -152,6 +152,7 @@ export function ChatMessage({
               "prose-headings:text-foreground/90 prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1",
               "prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5",
               "prose-strong:text-foreground/90 prose-code:text-orange-400 prose-code:bg-white/10 prose-code:px-1 prose-code:rounded",
+              "overflow-x-auto break-words",
             )}>
               <ReactMarkdown>{message.isStreaming ? cleanStreamingMarkdown(message.content) : message.content}</ReactMarkdown>
               {message.isStreaming && (

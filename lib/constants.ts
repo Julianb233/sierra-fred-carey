@@ -42,8 +42,8 @@ export enum UserTier {
 
 export const TIER_NAMES: Record<UserTier, string> = {
   [UserTier.FREE]: "Free",
-  [UserTier.PRO]: "Pro",
-  [UserTier.STUDIO]: "Studio",
+  [UserTier.PRO]: "Builder",
+  [UserTier.STUDIO]: "Growth",
 };
 
 export const TIER_BADGES: Record<UserTier, { label: string; className: string }> = {
@@ -52,11 +52,11 @@ export const TIER_BADGES: Record<UserTier, { label: string; className: string }>
     className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   },
   [UserTier.PRO]: {
-    label: "Pro",
+    label: "Builder",
     className: "bg-[#ff6a1a]/10 text-[#ff6a1a] border border-[#ff6a1a]/20",
   },
   [UserTier.STUDIO]: {
-    label: "Studio",
+    label: "Growth",
     className: "bg-gradient-to-r from-[#ff6a1a] to-orange-400 text-white",
   },
 };
@@ -82,7 +82,7 @@ export const TIER_FEATURES = {
     "Persistent founder memory",
   ],
   [UserTier.STUDIO]: [
-    "Everything in Pro tier",
+    "Everything in Builder tier",
     "Virtual Team: Founder Ops Agent",
     "Virtual Team: Fundraising Agent",
     "Virtual Team: Growth Agent",
@@ -166,8 +166,8 @@ export function getUpgradeTier(currentTier: UserTier): UserTier | null {
 
 export function getTierFromString(tier: string): UserTier {
   const normalized = tier.toLowerCase();
-  if (normalized === "pro" || normalized === "fundraising") return UserTier.PRO;
-  if (normalized === "studio" || normalized === "venture_studio") return UserTier.STUDIO;
+  if (normalized === "pro" || normalized === "builder" || normalized === "fundraising") return UserTier.PRO;
+  if (normalized === "studio" || normalized === "growth" || normalized === "venture_studio") return UserTier.STUDIO;
   return UserTier.FREE;
 }
 

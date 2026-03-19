@@ -157,7 +157,7 @@ export function FloatingChatWidget({
                   setIsOpen(false);
                   setVoiceOverlayOpen(true);
                 }}
-                className="h-8 w-8 text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
+                className="h-10 w-10 min-h-[44px] min-w-[44px] text-[#ff6a1a] hover:bg-[#ff6a1a]/10"
                 aria-label="Switch to voice input"
               >
                 <Mic className="h-4 w-4" />
@@ -166,7 +166,7 @@ export function FloatingChatWidget({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                className="h-10 w-10 min-h-[44px] min-w-[44px] text-gray-500 hover:text-gray-900 dark:hover:text-white"
                 aria-label="Close chat"
               >
                 <X className="h-4 w-4" />

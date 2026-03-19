@@ -214,7 +214,7 @@ export default function PricingPage() {
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-end gap-1">
-                        <span className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
+                        <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
                         <span className="text-gray-500 dark:text-gray-400 mb-2">/month</span>
                       </div>
                     </div>

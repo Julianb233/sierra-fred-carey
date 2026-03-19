@@ -422,7 +422,7 @@ export default function Features() {
                     <input
                       type="text"
                       placeholder="Ask about your startup..."
-                      className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-[#ff6a1a] transition-colors"
+                      className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-[#ff6a1a] transition-colors"
                     />
                     <button className="w-12 h-12 rounded-xl bg-[#ff6a1a] flex items-center justify-center hover:shadow-lg hover:shadow-[#ff6a1a]/25 transition-shadow">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

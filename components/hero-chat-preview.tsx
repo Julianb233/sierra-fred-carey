@@ -199,7 +199,7 @@ export default function HeroChatPreview() {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Ask Fred anything..."
             className={cn(
-              "flex-1 bg-transparent text-sm outline-none",
+              "flex-1 bg-transparent text-sm outline-none min-h-[44px]",
               "text-gray-900 dark:text-white",
               "placeholder:text-gray-400 dark:placeholder:text-gray-500"
             )}
@@ -207,14 +207,14 @@ export default function HeroChatPreview() {
           <button
             type="submit"
             className={cn(
-              "shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+              "shrink-0 w-10 h-10 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center",
               "bg-[#ff6a1a] hover:bg-[#ea580c] text-white",
               "transition-colors duration-200",
               !inputValue.trim() && "opacity-50 cursor-default"
             )}
             disabled={!inputValue.trim()}
           >
-            <Send className="h-3.5 w-3.5" />
+            <Send className="h-4 w-4" />
           </button>
         </form>
 

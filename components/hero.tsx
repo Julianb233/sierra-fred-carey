@@ -104,7 +104,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-6"
           >
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
               <span className="block">What if you could</span>
               <span className="block text-[#ff6a1a] mt-2 relative inline-block">
                 create a unicorn,
@@ -254,7 +254,7 @@ export default function Hero() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4"
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
                   >
                     Meet Fred Cary
                   </motion.h2>
@@ -342,7 +342,7 @@ export default function Hero() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-4xl sm:text-5xl font-bold text-center text-gray-900 dark:text-white mb-12"
+            className="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-gray-900 dark:text-white mb-12"
           >
             We think you can. And we&apos;re here to prove it.
           </motion.h2>
@@ -387,7 +387,7 @@ export default function Hero() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-4xl sm:text-5xl font-bold text-center text-gray-900 dark:text-white mb-12"
+            className="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-gray-900 dark:text-white mb-12"
           >
             We&apos;re building a different kind of AI
           </motion.h2>
@@ -434,7 +434,7 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
           className="max-w-3xl mx-auto text-center"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             This is that moment.
           </h2>
 

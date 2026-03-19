@@ -285,6 +285,23 @@ export async function POST(request: NextRequest) {
       .eq("id", userId)
       .single();
 
+    // Send welcome email (fire-and-forget — never block the response)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
+    import("@/lib/email/send").then(({ sendEmail }) =>
+      import("@/lib/email/templates/welcome").then(({ WelcomeEmail }) =>
+        sendEmail({
+          to: email.toLowerCase(),
+          subject: `Welcome to Sahara, ${userName || "Founder"} — your journey starts now`,
+          react: WelcomeEmail({ founderName: userName || "Founder", appUrl }),
+          tags: [{ name: "category", value: "onboarding" }],
+          tracking: {
+            userId,
+            emailType: "welcome",
+          },
+        }).catch((err) => console.warn("[onboard] Welcome email failed (non-blocking):", err))
+      )
+    ).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: profile || {
