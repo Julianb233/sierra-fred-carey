@@ -33,7 +33,7 @@ describe("generateIntervention", () => {
 
   it("mentions stepping back for high level", () => {
     const result = generateIntervention(
-      makeSignal({ level: "high", score: 0.55 }),
+      makeSignal({ level: "high", score: 0.55, trend: "stable" }),
       "Alex"
     )
     expect(result).toContain("step back")
