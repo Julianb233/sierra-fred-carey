@@ -604,28 +604,44 @@ export async function recordProcedureUsage(
 ): Promise<void> {
   const supabase = createServiceClient();
 
-  const { data: current, error: fetchError } = await supabase
-    .from("fred_procedural_memory")
-    .select("usage_count, success_rate")
-    .eq("name", name)
-    .single();
+  // Atomic update: single query instead of fetch-then-update (N+1 fix)
+  // Uses exponential moving average: new_rate = old_rate * 0.9 + success * 0.1
+  const { error: updateError } = await supabase.rpc("update_procedure_usage", {
+    proc_name: name,
+    was_success: success,
+  });
 
-  if (fetchError) {
-    console.error("[FRED Memory] Error fetching procedure for usage update:", fetchError);
-    throw fetchError;
+  // Fallback to two-query approach if RPC doesn't exist yet
+  if (updateError && updateError.message?.includes("update_procedure_usage")) {
+    const { data: current, error: fetchError } = await supabase
+      .from("fred_procedural_memory")
+      .select("usage_count, success_rate")
+      .eq("name", name)
+      .single();
+
+    if (fetchError) {
+      console.error("[FRED Memory] Error fetching procedure for usage update:", fetchError);
+      throw fetchError;
+    }
+
+    const alpha = 0.1;
+    const currentRate = current.success_rate ?? 0.5;
+    const newRate = currentRate * (1 - alpha) + (success ? 1 : 0) * alpha;
+
+    const { error: fallbackError } = await supabase
+      .from("fred_procedural_memory")
+      .update({
+        usage_count: (current.usage_count ?? 0) + 1,
+        success_rate: newRate,
+      })
+      .eq("name", name);
+
+    if (fallbackError) {
+      console.error("[FRED Memory] Error updating procedure usage:", fallbackError);
+      throw fallbackError;
+    }
+    return;
   }
-
-  const alpha = 0.1;
-  const currentRate = current.success_rate ?? 0.5;
-  const newRate = currentRate * (1 - alpha) + (success ? 1 : 0) * alpha;
-
-  const { error: updateError } = await supabase
-    .from("fred_procedural_memory")
-    .update({
-      usage_count: (current.usage_count ?? 0) + 1,
-      success_rate: newRate,
-    })
-    .eq("name", name);
 
   if (updateError) {
     console.error("[FRED Memory] Error updating procedure usage:", updateError);
