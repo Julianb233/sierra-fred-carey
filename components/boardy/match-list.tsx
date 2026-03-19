@@ -167,10 +167,20 @@ function MatchCard({
             {match.matchDescription}
           </p>
 
-          {/* AI-Generated badge */}
-          <div className="flex items-center gap-1 mb-3 text-xs text-amber-600 dark:text-amber-400">
-            <Sparkles className="w-3 h-3" />
-            <span>AI-Generated</span>
+          {/* Source badge */}
+          <div className="flex items-center gap-1 mb-3 text-xs">
+                        {(match.metadata?.source === "boardy_api" || match.metadata?.source === "boardy_webhook") ? (
+              <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Warm Intro
+              </span>
+            ) : (
+              <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                AI-Generated
+              </span>
+            )}
+            
           </div>
 
           {/* Match Score Bar */}

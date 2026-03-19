@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Only update profile after successful authentication
+      // AI-3581: Always start at clarity regardless of archetype — Fred's mandate
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -248,6 +249,9 @@ export async function POST(request: NextRequest) {
       });
 
       // Create profile record using service client (bypasses RLS)
+      // The newly signed-up user doesn't have an active session yet,
+      // so the user-scoped client cannot insert into profiles via RLS.
+      // AI-3581: Always start at clarity regardless of archetype — Fred's mandate
       const supabaseAdmin = createServiceClient();
       const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
         id: userId,

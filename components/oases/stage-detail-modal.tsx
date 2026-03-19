@@ -49,9 +49,11 @@ export function StageDetailModal({
         body: JSON.stringify({ stage: config.id }),
       })
       if (res.ok) {
+        // Close modal and let parent refresh
         onOpenChange(false)
         window.location.reload()
       } else {
+        // AI-3581: Handle tier-gated response with upsell
         const data = await res.json()
         if (data.tierGated) {
           setTierGatedMessage(data.error || "Upgrade your plan to continue your journey.")
@@ -157,7 +159,7 @@ export function StageDetailModal({
             </Button>
           )}
 
-          {/* AI-3581: Tier-gated upsell */}
+          {/* AI-3581: Tier-gated upsell message */}
           {tierGatedMessage && (
             <div className="w-full rounded-lg border border-[#ff6a1a]/30 bg-[#ff6a1a]/5 p-3">
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">

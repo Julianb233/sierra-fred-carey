@@ -11,9 +11,11 @@
  * - buildStageGatePromptBlock in stage-validator.ts (Phase 78)
  */
 
-import type { OasesStage } from "@/types/oases"
+import type { OasesStage, FounderArchetype } from "@/types/oases"
+import { UserTier } from "@/lib/constants"
 import { getStageIndex, getStageConfig, STAGE_ORDER } from "./stage-config"
 import type { StageValidationResult } from "./stage-validator"
+import { buildArchetypePromptBlock, TIER_STAGE_CEILING } from "./founder-archetype"
 
 /**
  * Build a comprehensive stage-aware prompt block for FRED's system prompt.
@@ -26,7 +28,10 @@ import type { StageValidationResult } from "./stage-validator"
  * - Proactive guidance instructions (process-driven mentor mode)
  * - General conversation allowance
  */
-export function buildStageAwarePromptBlock(currentStage: OasesStage): string {
+export function buildStageAwarePromptBlock(
+  currentStage: OasesStage,
+  options?: { archetype?: FounderArchetype; userTier?: UserTier }
+): string {
   const currentIndex = getStageIndex(currentStage)
   const currentConfig = getStageConfig(currentStage)
 
@@ -97,6 +102,26 @@ export function buildStageAwarePromptBlock(currentStage: OasesStage): string {
     lines.push(`- **2+ stages ahead:** "We'll absolutely get to [Stage Name] — but we need to walk before we run. You're in ${currentConfig.name} right now, and getting this right is what makes everything downstream work."`)
     lines.push(``)
     lines.push(`CRITICAL: Never be condescending. Frame redirects as strategic sequencing — "Let's nail X first" not "You can't do that yet." You are a mentor guiding them through the right order, not a gatekeeper blocking them.`)
+  }
+
+  // AI-3581: Inject archetype-specific coaching guidance
+  if (options?.archetype) {
+    const tier = options.userTier ?? UserTier.FREE
+    lines.push(``)
+    lines.push(buildArchetypePromptBlock(options.archetype, tier))
+  }
+
+  // AI-3581: Tier ceiling warning for stage-gate prompt
+  if (options?.userTier !== undefined && options.userTier !== UserTier.STUDIO) {
+    const ceiling = TIER_STAGE_CEILING[options.userTier]
+    const ceilingIndex = getStageIndex(ceiling)
+    if (currentIndex >= ceilingIndex) {
+      lines.push(``)
+      lines.push(`### TIER CEILING REACHED`)
+      lines.push(`This founder has reached the maximum stage for their plan (${ceiling}). They cannot advance further without upgrading.`)
+      lines.push(`When appropriate, mention: "You've made excellent progress through ${ceiling}. To continue into the next stages, you'll want to explore the Pro plan which unlocks strategy documents, pitch deck review, and investor readiness tools."`)
+      lines.push(`Be natural about it — weave it in when relevant, don't hard-sell.`)
+    }
   }
 
   return lines.join("\n")

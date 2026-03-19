@@ -9,7 +9,11 @@ import type { FounderArchetype } from "@/types/oases"
 /**
  * GET /api/oases/progress
  * Returns the authenticated user's full Oases journey progress.
- * AI-3581: Includes founder_archetype and tierGated info.
+ * Merges checklist-based progress (14 high-level steps) with
+ * granular journey_steps-based percentage (120 detailed steps).
+ *
+ * AI-3581: Now includes founder_archetype and tierGated info
+ * so the frontend can show upsell messaging when users hit their ceiling.
  */
 export async function GET() {
   try {
@@ -43,6 +47,8 @@ export async function GET() {
     const nextStage = currentIndex + 1 < STAGE_ORDER.length ? STAGE_ORDER[currentIndex + 1] : null
     const nextStageTierGated = nextStage ? isStageTierGated(nextStage, userTier) : false
 
+    // Use the detailed journey_steps-based percentage for the overall number
+    // while keeping checklist data (completedStepIds, stepsCompleted/Total) for the UI
     const enrichedProgress = {
       ...progress,
       journeyPercentage: detailed.journeyPercentage,
