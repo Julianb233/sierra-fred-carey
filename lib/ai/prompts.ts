@@ -181,6 +181,93 @@ export function getFredGreeting(startupContext?: {
 }
 
 // ============================================================================
+// Business Fundamentals Enforcement Block
+// ============================================================================
+
+/**
+ * Build an enforcement block for the 7 core business fundamentals.
+ * Adjusts FRED's behavior based on how many fundamentals are still unknown:
+ * - 5+ missing → INTAKE MODE: prioritize collection over advice
+ * - 3-4 missing → BALANCED: collect 2-3 while helping
+ * - 1-2 missing → LIGHT: weave in naturally
+ * - 0 missing → no block
+ *
+ * This overrides the soft "Missing Context" instructions in formatMemoryBlock
+ * with a more directive protocol that prevents vague, generic responses.
+ */
+export function buildMissingFundamentalsBlock(
+  missingFields: string[]
+): string {
+  if (missingFields.length === 0) return "";
+
+  // Map internal field keys to human-readable names for the prompt
+  const fieldLabels: Record<string, string> = {
+    founder_name: "founder's name",
+    company_name: "business/company name",
+    stage: "startup stage (idea, pre-seed, seed, etc.)",
+    market: "industry/sector",
+    co_founder: "co-founder status",
+    revenue_status: "revenue status",
+    team_size: "team size",
+    biggest_challenge: "biggest current challenge",
+    funding_status: "funding status",
+    product_status: "product status",
+    traction: "traction metrics",
+    ninety_day_goal: "90-day goal",
+    key_decisions: "key pending decisions",
+  };
+
+  // The 7 core business fundamentals that must be collected before deep advice
+  const CORE_FUNDAMENTALS = [
+    "company_name", "market", "stage", "revenue_status",
+    "team_size", "funding_status", "co_founder",
+  ];
+
+  const missingCore = missingFields.filter(f => CORE_FUNDAMENTALS.includes(f));
+  const missingLabels = missingFields
+    .slice(0, 10) // Limit labels to avoid prompt bloat
+    .map(f => fieldLabels[f] || f.replace(/_/g, " "))
+    .join(", ");
+
+  if (missingCore.length >= 5) {
+    // INTAKE MODE — most fundamentals unknown
+    return `## BUSINESS FUNDAMENTALS — INTAKE MODE
+
+**MANDATORY:** You are missing ${missingCore.length} of 7 core business fundamentals: ${missingLabels}.
+
+Without these, ANY advice you give will be generic and low-value. Follow this protocol:
+
+1. **Acknowledge their question** with a brief, high-level response (2-3 sentences max)
+2. **Immediately ask for 2-3 of the most relevant missing fundamentals** for their question
+3. **Frame it as personalization:** "To give you advice that actually fits your situation, I need to understand a few things..."
+4. **After each response, check:** "What do I still not know?" — keep asking until you have at least 5 of 7 fundamentals
+
+DO NOT give detailed strategic advice, frameworks, or action plans until you have at least 5 of 7 core fundamentals. Brief directional guidance is OK, but save the deep work for when you know their context.
+
+EXCEPTION: If they're in crisis or urgent mode, help first, then circle back to collect fundamentals.`;
+  }
+
+  if (missingCore.length >= 3) {
+    // BALANCED — some fundamentals known
+    return `## BUSINESS FUNDAMENTALS — COLLECTION NEEDED
+
+You're still missing ${missingCore.length} core fundamentals: ${missingLabels}.
+
+PROTOCOL:
+- Give a helpful response to their question, but **personalize it with what you DO know**
+- In every response, naturally ask about **2 of the missing fundamentals** that are most relevant to the topic
+- Frame it naturally: "Quick question — are you [solo/with a co-founder]?" or "What's your revenue looking like right now?"
+- Once you have 5+ fundamentals, shift to full personalized advice mode`;
+  }
+
+  // LIGHT — almost complete
+  return `## BUSINESS FUNDAMENTALS — ALMOST COMPLETE
+
+You're only missing: ${missingLabels}.
+When naturally relevant, ask about ${missingCore.length === 1 ? "this" : "these"} to complete the founder profile. No need to force it — just weave it in when the topic is related.`;
+}
+
+// ============================================================================
 // Step Guidance Block (Phase 36)
 // ============================================================================
 

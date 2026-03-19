@@ -204,6 +204,10 @@ export function ChatMessage({
                   ))}
                 </div>
               )}
+              {/* Inline upsell prompt for free-tier users */}
+              {message.upsellPrompt && !message.isStreaming && (
+                <UpsellPromptCard upsell={message.upsellPrompt} />
+              )}
             </div>
           )}
         </motion.div>
