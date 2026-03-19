@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
           matches: [],
           count: 0,
           deepLink: getBoardyClient().getDeepLink(userId),
-      isLive: getBoardyClient().isLive,
+          isLive: getBoardyClient().isLive,
           generated: false,
           warning: "Failed to generate initial match suggestions. Try refreshing.",
         });
@@ -164,7 +164,7 @@ export async function POST(_request: NextRequest) {
       matches: newMatches,
       count: newMatches.length,
       deepLink: client.getDeepLink(userId),
-          isLive: client.isLive,
+      isLive: client.isLive,
       refreshed: true,
     });
   } catch (error) {
