@@ -432,6 +432,15 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                 break;
               }
 
+              case "upsell": {
+                // Stage upsell prompt from server-side detection for the next assistant message
+                const upsellData = data as UpsellPrompt;
+                if (upsellData.trigger && upsellData.mentorMessage) {
+                  pendingUpsellRef.current = upsellData;
+                }
+                break;
+              }
+
               case "tool_result": {
                 // Detect recommendContent tool results and stage courses for the next assistant message
                 const toolResultData = data as {
@@ -537,6 +546,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
                   courses: pendingCoursesRef.current,
                   // Attach any staged provider recommendations from tool results
                   providers: pendingProvidersRef.current,
+                  // Attach any staged upsell prompt from server-side detection
+                  upsellPrompt: pendingUpsellRef.current,
                 };
 
                 if (mountedRef.current) {

@@ -53,6 +53,7 @@ import { validateStageAccess } from "@/lib/oases/stage-validator";
 import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
+import { detectUpsellTrigger, getUpsellMessage } from "@/lib/chat/upsell-detector";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -1023,6 +1024,31 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           timestamp: new Date().toISOString(),
           tier: tierName,
         });
+
+        // ── Upsell Detection (Free tier only) ───────────────────────────
+        // Detect if the free-tier user is asking for a Pro feature (doc review,
+        // pitch deck improvement, document storage, strategy docs, etc.)
+        // and emit an upsell SSE event so the client can show an inline prompt.
+        if (userTier === UserTier.FREE) {
+          const upsellDetection = detectUpsellTrigger(message);
+          if (upsellDetection.detected && upsellDetection.trigger) {
+            send("upsell", {
+              trigger: upsellDetection.trigger,
+              confidence: upsellDetection.confidence,
+              featureLabel: upsellDetection.featureLabel,
+              mentorMessage: getUpsellMessage(upsellDetection.trigger),
+            });
+
+            // Track upsell impression (fire-and-forget)
+            serverTrack(userId, "upsell.prompt_shown", {
+              trigger: upsellDetection.trigger,
+              featureLabel: upsellDetection.featureLabel,
+              confidence: upsellDetection.confidence,
+              tier: tierName,
+              source: "chat_inline",
+            });
+          }
+        }
 
         // Store user message in memory (Pro+ only, Phase 21)
         // Fire-and-forget: don't block processStream start on this DB write

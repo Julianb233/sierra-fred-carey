@@ -51,12 +51,48 @@ export interface MatchRequest {
 }
 
 // ============================================================================
+// Boardy API Types
+// ============================================================================
+
+/** Request to initiate a Boardy AI call for founder profiling */
+export interface BoardyCallRequest {
+  phoneNumber: string;
+  name?: string;
+  email?: string;
+  slug?: string;
+}
+
+/** Response from Boardy call initiation */
+export interface BoardyCallResponse {
+  success: boolean;
+  message?: string;
+  referenceId?: string;
+}
+
+/** Webhook payload from Boardy when a match is found (double opt-in) */
+export interface BoardyWebhookPayload {
+  event: "match.created" | "match.accepted" | "match.declined" | "intro.completed";
+  referenceId: string;
+  match?: {
+    name: string;
+    title?: string;
+    company?: string;
+    type: string;
+    description?: string;
+    score?: number;
+    linkedinUrl?: string;
+  };
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+}
+
+// ============================================================================
 // Client Interface (Strategy Pattern)
 // ============================================================================
 
 /**
  * BoardyClientInterface - abstraction for match generation.
- * Implementations: MockBoardyClient (AI-generated), future RealBoardyClient (API).
+ * Implementations: MockBoardyClient (AI-generated), RealBoardyClient (API).
  */
 export interface BoardyClientInterface {
   /** Get match suggestions for a user based on their profile */
@@ -67,6 +103,12 @@ export interface BoardyClientInterface {
 
   /** Get a deep link to the Boardy platform */
   getDeepLink(userId: string): string;
+
+  /** Request a Boardy AI call for founder profiling. Returns false if not supported. */
+  requestCall?(request: BoardyCallRequest): Promise<BoardyCallResponse>;
+
+  /** Whether this client connects to the real Boardy API */
+  readonly isLive: boolean;
 }
 
 // ============================================================================
