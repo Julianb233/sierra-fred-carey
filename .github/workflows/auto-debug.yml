@@ -1,9 +1,9 @@
 name: Auto-Debug Build Failures
 
 on:
-  # Trigger when any workflow fails
+  # Trigger when the Build & Deploy workflow fails (not self)
   workflow_run:
-    workflows: ["*"]
+    workflows: ["Build & Deploy"]
     types: [completed]
 
   # Also trigger on failed deployments
