@@ -113,7 +113,7 @@ export async function generatePromptPatch(
     .map((p) => `- "${p.title}": ${p.content.slice(0, 100)}...`)
     .join("\n")
 
-  const prompt = `You are a prompt engineer improving an AI startup coaching assistant called FRED.
+  const prompt = `You are a prompt engineer improving an AI startup mentor called FRED.
 
 A recurring feedback pattern has been detected:
 
