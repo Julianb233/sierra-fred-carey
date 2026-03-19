@@ -15,6 +15,24 @@ export const OASES_STAGES: OasesStage[] = [
   "grow",
 ]
 
+/**
+ * Founder Archetype — categorizes where a founder is in their venture lifecycle.
+ * Used to personalize FRED's coaching approach and map to Oases stages.
+ *
+ * - discovery: Pre-idea, exploring possibilities
+ * - ideation: Has an idea, needs validation and refinement
+ * - pre_seed: Building product/team, seeking initial funding
+ * - seed: Has traction, actively fundraising
+ */
+export type FounderArchetype = "discovery" | "ideation" | "pre_seed" | "seed"
+
+export const FOUNDER_ARCHETYPES: FounderArchetype[] = [
+  "discovery",
+  "ideation",
+  "pre_seed",
+  "seed",
+]
+
 export interface StageStep {
   id: string
   label: string
