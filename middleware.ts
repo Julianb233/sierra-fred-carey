@@ -35,6 +35,10 @@ export async function middleware(request: NextRequest) {
   const start = Date.now();
 
   const { pathname } = request.nextUrl;
+  const normalizedPath =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
   const origin = request.headers.get("origin");
 
   // Phase 25-02: Correlation ID for structured logging
@@ -67,6 +71,26 @@ export async function middleware(request: NextRequest) {
       for (const [key, value] of Object.entries(hdrs)) {
         response.headers.set(key, value);
       }
+    }
+
+    // Deck URL aliases: route short/legacy paths to canonical locations.
+    // Logged-out users should see the public demo, while authenticated users
+    // should land on the full dashboard review experience.
+    if (normalizedPath === "/deck" || normalizedPath === "/pitch-deck") {
+      const destination = user ? "/dashboard/pitch-deck" : "/demo/pitch-deck";
+      const deckUrl = new URL(destination, request.url);
+      deckUrl.search = request.nextUrl.search;
+      const redirectResponse = NextResponse.redirect(deckUrl);
+      redirectResponse.headers.set("X-Request-ID", requestId);
+      return redirectResponse;
+    }
+
+    if (normalizedPath === "/dashboard/deck") {
+      const dashboardDeckUrl = new URL("/dashboard/pitch-deck", request.url);
+      dashboardDeckUrl.search = request.nextUrl.search;
+      const redirectResponse = NextResponse.redirect(dashboardDeckUrl);
+      redirectResponse.headers.set("X-Request-ID", requestId);
+      return redirectResponse;
     }
 
     // Check if this route requires authentication
