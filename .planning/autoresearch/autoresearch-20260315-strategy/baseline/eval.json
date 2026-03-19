@@ -1,0 +1,95 @@
+{
+  "iteration": 0,
+  "type": "baseline",
+  "total_score": 21,
+  "max_score": 35,
+  "pass_rate": 0.60,
+  "prompts": [
+    {
+      "id": 1,
+      "prompt": "I have a great app idea for fitness tracking. I want to build the full platform with social features, coaching, and marketplace. Where do I start?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Overlay explicitly instructs to identify which step they're actually on (not where they think they are). Founder is at Step 1 (problem definition) but presenting as ready to build." },
+        "s2": { "result": "PASS", "reasoning": "Overlay says 'Do not let them skip ahead — validate the current step first'. Building a full platform is clearly skipping ahead." },
+        "s3": { "result": "PASS", "reasoning": "'Upstream truth before downstream optimization' directly applies — building features is downstream of problem validation." },
+        "s4": { "result": "FAIL", "reasoning": "Overlay lists multiple vague actions (identify challenges, determine validation, prioritize resources, define milestones) without mandating a single concrete next step." },
+        "s5": { "result": "PASS", "reasoning": "Explicit '2-3 sentences' instruction present." },
+        "s6": { "result": "FAIL", "reasoning": "No instruction to reframe the question. Founder asks 'where do I start' about building; highest-leverage reframe is 'have you validated the problem exists?'" },
+        "s7": { "result": "FAIL", "reasoning": "No instruction to avoid flattery. LLMs default to 'That's an exciting idea!' without explicit prohibition." }
+      },
+      "pass_count": 4,
+      "fail_count": 3
+    },
+    {
+      "id": 2,
+      "prompt": "We've been building for 8 months but have no users yet. Should we keep building or try to launch what we have?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Overlay will correctly place them — they skipped Step 5 (validation) and jumped to building. The framework should catch this." },
+        "s2": { "result": "PASS", "reasoning": "Framework gates prevent advancing without validation evidence." },
+        "s3": { "result": "PASS", "reasoning": "8 months building without users is textbook downstream optimization before upstream truth." },
+        "s4": { "result": "FAIL", "reasoning": "Overlay doesn't instruct to prescribe ONE specific action. Model may list options (launch vs keep building vs pivot)." },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "FAIL", "reasoning": "No reframing instruction. Founder frames as binary (build vs launch); highest-leverage reframe is 'neither — validate demand first'." },
+        "s7": { "result": "FAIL", "reasoning": "No flattery prohibition. Model may say 'It's great that you've been dedicated to building.'" }
+      },
+      "pass_count": 4,
+      "fail_count": 3
+    },
+    {
+      "id": 3,
+      "prompt": "I want to expand into a new market segment. We're doing OK in our current niche but growth has slowed.",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Framework should identify they may be at Step 9 (scale-decision) or possibly need to loop back to Step 1 for the new segment." },
+        "s2": { "result": "PASS", "reasoning": "Framework gates would require validating current step before expanding." },
+        "s3": { "result": "PASS", "reasoning": "Expanding to new market before understanding why growth slowed is downstream optimization." },
+        "s4": { "result": "FAIL", "reasoning": "Overlay's vague action list doesn't mandate a single diagnostic question or concrete next step." },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "FAIL", "reasoning": "No reframing instruction. Highest-leverage reframe: 'Why did growth slow in the current niche? Have you exhausted that market?'" },
+        "s7": { "result": "FAIL", "reasoning": "No flattery prohibition. Model may say 'It's smart to think about expansion.'" }
+      },
+      "pass_count": 4,
+      "fail_count": 3
+    },
+    {
+      "id": 4,
+      "prompt": "My co-founder wants to pivot to B2B but I think we should stay B2C. How do we decide?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Framework should identify the underlying step — likely a validation (Step 5) or scale-decision (Step 9) question." },
+        "s2": { "result": "PASS", "reasoning": "Framework prevents skipping; pivot decision requires upstream evidence." },
+        "s3": { "result": "PASS", "reasoning": "Decision sequencing applies — the pivot should be evidence-based, not opinion-based." },
+        "s4": { "result": "FAIL", "reasoning": "Overlay doesn't instruct to give ONE clear action. Model may list a framework for deciding." },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "FAIL", "reasoning": "No reframing instruction. Highest-leverage reframe: 'What evidence does each side have? This isn't a preference question — it's a data question.'" },
+        "s7": { "result": "FAIL", "reasoning": "No flattery prohibition. Model may say 'This is a healthy tension to have.'" }
+      },
+      "pass_count": 4,
+      "fail_count": 3
+    },
+    {
+      "id": 5,
+      "prompt": "I'm not sure if my problem is real or if I'm just building something I personally want. How do I validate?",
+      "scores": {
+        "s1": { "result": "PASS", "reasoning": "Founder self-identifies at Step 1/5 boundary — framework should confirm they're at problem validation." },
+        "s2": { "result": "PASS", "reasoning": "Founder isn't trying to skip; overlay reinforces staying at current step." },
+        "s3": { "result": "PASS", "reasoning": "This IS the upstream truth question — framework aligns naturally." },
+        "s4": { "result": "FAIL", "reasoning": "Overlay doesn't instruct to prescribe a specific validation method (e.g., '5 customer conversations this week')." },
+        "s5": { "result": "PASS", "reasoning": "Conciseness instruction present." },
+        "s6": { "result": "PASS", "reasoning": "Founder is already asking the right question — the framework naturally aligns here." },
+        "s7": { "result": "FAIL", "reasoning": "No flattery prohibition. Model may say 'That's a great question to be asking yourself.'" }
+      },
+      "pass_count": 5,
+      "fail_count": 2
+    }
+  ],
+  "criteria_summary": {
+    "s1": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s2": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s3": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s4": { "pass": 0, "fail": 5, "rate": 0.0 },
+    "s5": { "pass": 5, "fail": 0, "rate": 1.0 },
+    "s6": { "pass": 1, "fail": 4, "rate": 0.2 },
+    "s7": { "pass": 0, "fail": 5, "rate": 0.0 }
+  },
+  "weakest_criteria": ["s4", "s7", "s6"],
+  "analysis": "The overlay is strong on framework mechanics (step identification, gating, sequencing) but weak on three areas: (1) No instruction to prescribe a SINGLE concrete next step — the bullet list of actions encourages menus. (2) No instruction to reframe the founder's question to the highest-leverage decision. (3) No explicit prohibition on generic flattery, which LLMs default to."
+}

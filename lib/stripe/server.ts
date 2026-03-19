@@ -106,6 +106,19 @@ export async function constructWebhookEvent(
   );
 }
 
+export async function getCheckoutSession(sessionId: string) {
+  return getStripe().checkout.sessions.retrieve(sessionId, {
+    expand: ["subscription"],
+  });
+}
+
+export async function updateSubscriptionMetadata(
+  subscriptionId: string,
+  metadata: Record<string, string>
+) {
+  return getStripe().subscriptions.update(subscriptionId, { metadata });
+}
+
 export async function getSubscription(subscriptionId: string) {
   return getStripe().subscriptions.retrieve(subscriptionId);
 }

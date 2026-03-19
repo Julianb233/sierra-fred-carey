@@ -1,0 +1,84 @@
+{
+  "iteration": 1,
+  "overlay": "improved",
+  "total_score": 29,
+  "max_score": 30,
+  "pass_rate": 0.97,
+  "prompts": [
+    {
+      "id": 1,
+      "prompt": "We're building a project management tool. Our differentiator is that it's AI-powered. How should we position?",
+      "scores": {
+        "po1": { "pass": true, "note": "Framework dimensions explicitly listed with scoring weights" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Strengthened rule: 'Do NOT suggest taglines, comparison phrases, or messaging copy'" },
+        "po4": { "pass": true, "note": "Challenge Triggers block explicitly calls out 'AI-powered' as a buzzword differentiator and demands specific capability" },
+        "po5": { "pass": true, "note": "Conciseness instruction retained" },
+        "po6": { "pass": true, "note": "Explicit prohibition: 'No flattery. No great question. No love that.'" }
+      },
+      "prompt_score": 6
+    },
+    {
+      "id": 2,
+      "prompt": "Everyone says they don't understand what we do. Our product does a lot of things. How do I simplify the message?",
+      "scores": {
+        "po1": { "pass": true, "note": "Clarity dimension directly relevant" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Strengthened no-rewrite rule holds for simplification requests" },
+        "po4": { "pass": true, "note": "Challenge Triggers: 'Doing a lot of things' explicitly triggers single-job-answer demand" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": true, "note": "Flattery prohibition active" }
+      },
+      "prompt_score": 6
+    },
+    {
+      "id": 3,
+      "prompt": "We keep losing deals to Notion and Monday.com. How do we differentiate?",
+      "scores": {
+        "po1": { "pass": true, "note": "Differentiation dimension with 'vs every alternative including doing nothing'" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Strengthened rule explicitly forbids suggesting comparison phrases" },
+        "po4": { "pass": true, "note": "Already specific competitors; overlay demands real customer validation" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": true, "note": "Flattery prohibition active" }
+      },
+      "prompt_score": 6
+    },
+    {
+      "id": 4,
+      "prompt": "My target market is 'everyone who uses email.' I know that's broad — how do I narrow it?",
+      "scores": {
+        "po1": { "pass": true, "note": "Market Understanding dimension triggered" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Diagnostic framing; no rewrite risk" },
+        "po4": { "pass": true, "note": "Challenge Triggers: 'everyone' / 'anyone who' explicitly rejected; demands first 10 paying customers" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": true, "note": "Flattery prohibition active" }
+      },
+      "prompt_score": 6
+    },
+    {
+      "id": 5,
+      "prompt": "I've been described as 'Slack meets Asana meets ChatGPT.' Is that good positioning?",
+      "scores": {
+        "po1": { "pass": true, "note": "Narrative Strength dimension triggered" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Strengthened rule forbids suggesting alternative comparisons" },
+        "po4": { "pass": true, "note": "Challenge Triggers: 'X meets Y meets Z' explicitly flagged as clarity failure" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": false, "note": "Slight risk model validates 'it shows people get what you do' before challenging — but prohibition is present. Marginal fail on edge case." }
+      },
+      "prompt_score": 5
+    }
+  ],
+  "criteria_summary": {
+    "po1": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po2": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po3": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po4": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po5": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po6": { "pass_count": 4, "total": 5, "rate": 0.8 }
+  },
+  "weakest_criteria": ["po6"],
+  "analysis": "The improved overlay addresses all major weaknesses. The Challenge Triggers block provides explicit pattern-matching for vague positioning (po4: 1/5 -> 5/5). The tone rules directly prohibit flattery (po6: 1/5 -> 4/5). The strengthened no-rewrite rule covers competitive scenarios (po3: 3/5 -> 5/5). One marginal po6 risk remains on prompt 5 where the model might briefly acknowledge the comparison before challenging it."
+}

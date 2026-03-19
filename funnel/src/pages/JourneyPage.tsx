@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { JOURNEY_STAGES, BRAND } from '@/lib/constants'
+import { scheduleFunnelSync } from '@/lib/sync-service'
 
 const STORAGE_KEY = 'sahara-funnel-journey'
 
@@ -27,6 +28,7 @@ export function JourneyPage() {
     const newProgress = { ...progress, [key]: !progress[key] }
     setProgress(newProgress)
     saveProgress(newProgress)
+    scheduleFunnelSync()
   }
 
   const getStageProgress = (stageId: string, total: number) => {

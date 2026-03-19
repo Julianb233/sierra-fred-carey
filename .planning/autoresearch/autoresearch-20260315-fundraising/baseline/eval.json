@@ -1,0 +1,83 @@
+{
+  "overlay_version": "baseline",
+  "total_score": 33,
+  "max_score": 35,
+  "pass_rate": 0.943,
+  "results": [
+    {
+      "prompt_id": 1,
+      "prompt": "I'm building an AI-powered HR tool. We have 3 paying customers doing about $5k MRR. I think we should raise a seed round. What do you think?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Overlay enforces verdict-first. FRED would say 'Not yet' with $5k MRR." },
+        "f2": { "pass": true, "note": "Both overlay and core challenge default fundraising. $5k MRR triggers skepticism." },
+        "f3": { "pass": true, "note": "Overlay explicitly says do NOT ask for deck by default." },
+        "f4": { "pass": true, "note": "Overlay says 'prescribe smallest proofs to flip verdict.'" },
+        "f5": { "pass": true, "note": "Both overlay reminder and core conciseness protocol enforce 2-3 sentences." },
+        "f6": { "pass": true, "note": "Core decision sequencing overrides overlay's tactical bullets. Would check demand/retention first." },
+        "f7": { "pass": true, "note": "Core bans all flattery phrases explicitly." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 2,
+      "prompt": "We're pre-revenue but we have a working prototype. My advisor says I should start talking to VCs. How do I prepare?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give 'Not yet' — pre-revenue is a clear signal." },
+        "f2": { "pass": true, "note": "Pre-revenue = strong trigger for 'capital is a tool' principle." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Would prescribe revenue/demand validation proofs." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "Core sequencing would redirect: 'nail who your buyer is first.'" },
+        "f7": { "pass": true, "note": "No flattery risk." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 3,
+      "prompt": "I just got rejected by 15 investors. They all said 'too early.' What am I doing wrong?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would assess whether founder IS too early — implicit verdict." },
+        "f2": { "pass": true, "note": "Would challenge whether they should be raising at all." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Would prescribe proofs to demonstrate readiness." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": false, "note": "Overlay says 'translate vague feedback into investor filters' which could pull FRED into optimizing the pitch before validating whether the rejection is fundamentally accurate. No explicit gate: 'first verify if too-early is correct diagnosis.'" },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 6
+    },
+    {
+      "prompt_id": 4,
+      "prompt": "We have $200k ARR and strong retention. Is it time to raise a Series A?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give clear verdict on Series A readiness." },
+        "f2": { "pass": true, "note": "Would still probe whether raising is optimal vs. bootstrapping further." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Would identify gaps to Series A threshold." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": true, "note": "$200k ARR with retention = upstream truth partially established; legitimate to discuss fundraising." },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 7
+    },
+    {
+      "prompt_id": 5,
+      "prompt": "I'm thinking about raising $2M on a SAFE note. Is that the right structure for where I am?",
+      "criteria": {
+        "f1": { "pass": true, "note": "Would give verdict on whether SAFE is appropriate." },
+        "f2": { "pass": true, "note": "Final paragraph says challenge assumption before helping raise." },
+        "f3": { "pass": true, "note": "No deck request." },
+        "f4": { "pass": true, "note": "Would prescribe proofs." },
+        "f5": { "pass": true, "note": "Conciseness enforced." },
+        "f6": { "pass": false, "note": "Prompt jumps to instrument structure (downstream). Overlay lacks explicit gate: 'before discussing instrument type, verify the raise itself is warranted and upstream truth is established.' The overlay bullets 'Assess target raise amount' could pull FRED into tactical discussion." },
+        "f7": { "pass": true, "note": "No flattery." }
+      },
+      "score": 6
+    }
+  ],
+  "weakness_analysis": {
+    "most_vulnerable_criteria": ["f6"],
+    "explanation": "f6 (decision sequencing) is the only criterion with failures. The overlay contains tactical bullets ('Assess target raise amount and timeline', 'Evaluate investor targeting strategy', 'Translate vague feedback into explicit investor filters') that can pull FRED into downstream optimization before upstream truth is verified. The closing paragraph ('Challenge the assumption...') is a reminder but not a hard gate. The overlay lacks an explicit sequencing instruction: 'BEFORE any fundraising analysis, verify upstream fundamentals (demand, economics, distribution). If weak, redirect — do not proceed to raise structure, amount, or investor strategy.'",
+    "secondary_risk": "f2 is borderline on prompts where founders present modest traction (P1: $5k MRR, P4: $200k ARR). The overlay's tactical bullets could subtly encourage fundraising mode by focusing attention on raise mechanics."
+  }
+}

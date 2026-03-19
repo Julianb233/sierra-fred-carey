@@ -1,0 +1,84 @@
+{
+  "iteration": "baseline",
+  "overlay": "original",
+  "total_score": 22,
+  "max_score": 30,
+  "pass_rate": 0.73,
+  "prompts": [
+    {
+      "id": 1,
+      "prompt": "We're building a project management tool. Our differentiator is that it's AI-powered. How should we position?",
+      "scores": {
+        "po1": { "pass": true, "note": "Framework dimensions referenced via overlay instructions" },
+        "po2": { "pass": true, "note": "Output format (grade, gaps, actions) specified in overlay" },
+        "po3": { "pass": true, "note": "No rewrite trigger in this prompt; overlay rule holds" },
+        "po4": { "pass": false, "note": "Overlay lacks explicit instruction to challenge 'AI-powered' as a vague differentiator. Model may accept it at face value." },
+        "po5": { "pass": true, "note": "2-3 sentence instruction present" },
+        "po6": { "pass": false, "note": "No explicit prohibition on flattery; model may default to 'interesting idea' preamble" }
+      },
+      "prompt_score": 4
+    },
+    {
+      "id": 2,
+      "prompt": "Everyone says they don't understand what we do. Our product does a lot of things. How do I simplify the message?",
+      "scores": {
+        "po1": { "pass": true, "note": "Clarity dimension directly relevant; overlay will trigger framework" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Simplification request is not a rewrite request; overlay should hold" },
+        "po4": { "pass": false, "note": "Overlay doesn't instruct to probe WHY people don't understand or demand a specific customer segment" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": false, "note": "No flattery guard; model may say 'it's great that you recognize this'" }
+      },
+      "prompt_score": 4
+    },
+    {
+      "id": 3,
+      "prompt": "We keep losing deals to Notion and Monday.com. How do we differentiate?",
+      "scores": {
+        "po1": { "pass": true, "note": "Differentiation dimension directly addressed" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": false, "note": "Competitive framing tempts tactical messaging advice; overlay's rewrite rule may not be strong enough to resist comparative positioning language" },
+        "po4": { "pass": true, "note": "Prompt already specific about competitors; no vague terms to challenge" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": false, "note": "No flattery guard" }
+      },
+      "prompt_score": 4
+    },
+    {
+      "id": 4,
+      "prompt": "My target market is 'everyone who uses email.' I know that's broad — how do I narrow it?",
+      "scores": {
+        "po1": { "pass": true, "note": "Market Understanding dimension triggered" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": true, "note": "Narrowing request is diagnostic, not a rewrite" },
+        "po4": { "pass": false, "note": "Overlay doesn't explicitly instruct to reject 'everyone' as a market and demand evidence of actual customer conversations" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": true, "note": "Self-aware prompt ('I know that's broad') less likely to trigger flattery" }
+      },
+      "prompt_score": 5
+    },
+    {
+      "id": 5,
+      "prompt": "I've been described as 'Slack meets Asana meets ChatGPT.' Is that good positioning?",
+      "scores": {
+        "po1": { "pass": true, "note": "Narrative Strength dimension relevant" },
+        "po2": { "pass": true, "note": "Output format specified" },
+        "po3": { "pass": false, "note": "Direct question about positioning quality may tempt model to suggest alternative comparisons (implicit rewrite)" },
+        "po4": { "pass": false, "note": "Overlay doesn't instruct to challenge mashup comparisons ('X meets Y') as fundamentally weak positioning" },
+        "po5": { "pass": true, "note": "Conciseness instruction present" },
+        "po6": { "pass": false, "note": "No flattery guard; model may validate the comparison before critiquing" }
+      },
+      "prompt_score": 3
+    }
+  ],
+  "criteria_summary": {
+    "po1": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po2": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po3": { "pass_count": 3, "total": 5, "rate": 0.6 },
+    "po4": { "pass_count": 1, "total": 5, "rate": 0.2 },
+    "po5": { "pass_count": 5, "total": 5, "rate": 1.0 },
+    "po6": { "pass_count": 1, "total": 5, "rate": 0.2 }
+  },
+  "weakest_criteria": ["po4", "po6"],
+  "analysis": "The overlay reliably activates the framework dimensions (po1) and output format (po2), and the conciseness instruction works (po5). However, it lacks two critical behavioral guardrails: (1) explicit instructions to challenge vague positioning language like 'AI-powered', 'everyone', and mashup comparisons, and (2) a direct prohibition on generic flattery or validation language. The no-rewrite rule (po3) also needs strengthening for competitive and comparison scenarios."
+}

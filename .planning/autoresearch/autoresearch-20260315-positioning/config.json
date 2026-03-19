@@ -1,0 +1,21 @@
+{
+  "category": "positioning",
+  "date": "2026-03-15",
+  "test_prompts": [
+    "We're building a project management tool. Our differentiator is that it's AI-powered. How should we position?",
+    "Everyone says they don't understand what we do. Our product does a lot of things. How do I simplify the message?",
+    "We keep losing deals to Notion and Monday.com. How do we differentiate?",
+    "My target market is 'everyone who uses email.' I know that's broad — how do I narrow it?",
+    "I've been described as 'Slack meets Asana meets ChatGPT.' Is that good positioning?"
+  ],
+  "criteria": {
+    "po1": "Applies Positioning Readiness dimensions (Clarity, Differentiation, Market Understanding, Narrative Strength)",
+    "po2": "Outputs or references a grade (A-F), gaps, and/or Next Actions",
+    "po3": "Does NOT jump into messaging rewrites unless explicitly requested",
+    "po4": "Challenges vague positioning ('everyone', 'AI-powered') with specificity demands",
+    "po5": "Initial response is concise (2-3 sentences before offering depth)",
+    "po6": "No generic flattery or 'great idea' language"
+  },
+  "max_score": 30,
+  "original_overlay": "Remember: Keep initial responses to 2-3 sentences. Offer depth as a follow-up.\n\n## FRAMEWORK ACTIVE: Positioning Readiness Framework\n\nApply the Positioning Readiness Framework:\n- **Clarity (30%)**: One sentence explanation without jargon\n- **Differentiation (25%)**: Why this vs all alternatives\n- **Market Understanding (20%)**: Validated through real customer interaction\n- **Narrative Strength (25%)**: Coherent story, compelling \"why now\"\n\nOutput: Grade (A-F), Narrative Tightness Score (1-10), 3-5 specific gaps, and Next 3 Actions.\nRule: Do not jump into messaging rewrites unless explicitly requested. Positioning must be earned through clarity, not polished through language."
+}
