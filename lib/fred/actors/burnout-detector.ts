@@ -53,7 +53,7 @@ const INDICATOR_GROUPS: IndicatorGroup[] = [
   },
   {
     name: "isolation",
-    label: "Isolation",
+    label: "Isolation & Relationship Strain",
     keywords: [
       "alone",
       "no one understands",
@@ -64,6 +64,14 @@ const INDICATOR_GROUPS: IndicatorGroup[] = [
       "nobody gets it",
       "by myself",
       "disconnected",
+      "marriage",
+      "divorce",
+      "family strain",
+      "relationship suffering",
+      "partner doesn't understand",
+      "neglecting family",
+      "kids don't see me",
+      "spouse",
     ],
   },
   {

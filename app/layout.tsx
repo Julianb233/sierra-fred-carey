@@ -7,6 +7,7 @@ import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
+import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com"),
   title: "Sahara | AI-Powered Founder Operating System",
-  description: "Think Clearer. Raise Smarter. Scale Faster. Sahara is the AI-powered operating system for startup founders. Built by Fred Cary — 10,000+ founders coached.",
+  description: "Think Clearer. Raise Smarter. Scale Faster. Sahara is the AI-powered operating system for startup founders. Built by Fred Cary — hundreds of founders coached.",
   keywords: ["startup", "founder", "fundraising", "investor", "pitch deck", "venture capital", "AI", "Sahara", "Fred Cary"],
   manifest: "/manifest.webmanifest",
   icons: {
@@ -90,6 +91,8 @@ export default async function RootLayout({
             <NavBar />
             {children}
           </AnalyticsProvider>
+          {/* AI-902: Global chat-with-Fred overlay — accessible from any page */}
+          <FloatingChatWidget />
           <Toaster
             position="top-right"
             toastOptions={{

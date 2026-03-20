@@ -25,7 +25,6 @@ const Footer = () => {
   const footerLinks = [
     { name: "Pricing", href: "/pricing" },
     { name: "Features", href: "/#features" },
-    { name: "Testimonials", href: "/#testimonials" },
     { name: "FAQ", href: "/#faq" },
   ];
 
@@ -55,7 +54,7 @@ const Footer = () => {
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-sm">
               The AI-powered decision operating system for startup founders.
-              Built by Fred Cary — 10,000+ founders coached, $100M+ raised.
+              Built by Fred Cary — hundreds of founders coached, billions raised.
             </p>
             <Button
               asChild

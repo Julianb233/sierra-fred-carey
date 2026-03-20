@@ -338,7 +338,7 @@ const OnboardingPage = () => {
                       3 clicks to get started
                     </motion.div>
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                      What stage are you at?
+                      Where are you on your journey?
                     </h1>
                   </div>
 
@@ -649,6 +649,21 @@ const OnboardingPage = () => {
             </AnimatePresence>
           </div>
         </main>
+
+        {/* Existing user sign-in link */}
+        {currentStep !== "wink" && (
+          <div className="relative z-10 text-center pb-8">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Already have an account?{" "}
+            </span>
+            <a
+              href="/login"
+              className="text-sm font-medium text-[#ff6a1a] hover:text-[#ea580c] transition-colors"
+            >
+              Sign in
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

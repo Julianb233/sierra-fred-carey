@@ -1331,11 +1331,31 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           console.warn("[FredChat] Streaming timed out after 55s", { userId });
           send("error", { type: "error", error: "Request timed out. Please try again." });
         } else {
+          const errMsg = error instanceof Error ? error.message : String(error);
           console.error("[FredChat] Streaming error:", error);
-          captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
-          send("error", {
-            message: "An error occurred while processing your request",
+          captureError(error instanceof Error ? error : new Error(errMsg), { route: "POST /api/fred/chat", userId, streaming: true });
+
+          // PERS-100: Send a graceful recovery response instead of generic error.
+          // This ensures the user always gets a usable reply even when AI providers fail.
+          const isProviderError = errMsg.includes("API") || errMsg.includes("provider") || errMsg.includes("rate limit") || errMsg.includes("503") || errMsg.includes("429") || errMsg.includes("timeout");
+          const recoveryMessage = isProviderError
+            ? "I'm experiencing a temporary connectivity issue. Could you send that again in a moment? I want to make sure I give you a thoughtful response."
+            : "I hit a snag processing that. Could you try rephrasing or sending your message again?";
+
+          send("response", {
+            content: recoveryMessage,
+            action: "defer",
+            confidence: 0,
+            requiresApproval: false,
+            meta: {
+              traceId,
+              latencyMs: Date.now() - startTime,
+              finalState: "error_recovery",
+              tier: tierName,
+              persistentMemory: hasPersistentMemory,
+            },
           });
+          send("done", { sessionId: effectiveSessionId, latencyMs: Date.now() - startTime });
         }
       } finally {
         clearTimeout(timeoutId);

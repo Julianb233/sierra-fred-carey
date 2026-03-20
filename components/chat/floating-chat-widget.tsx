@@ -10,8 +10,18 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 import { cn } from "@/lib/utils";
 
-// Pages where the widget should NOT appear (full chat page already exists)
-const HIDDEN_PATHS = ["/chat", "/dashboard/coaching"];
+// Pages where the widget should NOT appear
+// - /chat: full chat page already exists
+// - /dashboard/coaching: has its own chat interface
+// - Auth/public pages where unauthenticated users land
+const HIDDEN_PATHS = [
+  "/chat",
+  "/dashboard/coaching",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+];
 
 /** Dispatch this event from anywhere to open the FRED overlay with an optional pre-seeded message */
 export function openFredChat(message?: string) {
