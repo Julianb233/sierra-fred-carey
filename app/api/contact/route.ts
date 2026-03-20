@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
+import { captureError } from "@/lib/sentry";
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[contact] Error:", error);
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/contact" });
 
     return NextResponse.json(
       { error: "Failed to submit contact form. Please try again." },

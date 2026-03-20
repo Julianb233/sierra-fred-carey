@@ -42,8 +42,8 @@ export enum UserTier {
 
 export const TIER_NAMES: Record<UserTier, string> = {
   [UserTier.FREE]: "Free",
-  [UserTier.PRO]: "Pro",
-  [UserTier.STUDIO]: "Studio",
+  [UserTier.PRO]: "Builder",
+  [UserTier.STUDIO]: "Growth",
 };
 
 export const TIER_BADGES: Record<UserTier, { label: string; className: string }> = {
@@ -52,11 +52,11 @@ export const TIER_BADGES: Record<UserTier, { label: string; className: string }>
     className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   },
   [UserTier.PRO]: {
-    label: "Pro",
+    label: "Builder",
     className: "bg-[#ff6a1a]/10 text-[#ff6a1a] border border-[#ff6a1a]/20",
   },
   [UserTier.STUDIO]: {
-    label: "Studio",
+    label: "Growth",
     className: "bg-gradient-to-r from-[#ff6a1a] to-orange-400 text-white",
   },
 };
@@ -66,28 +66,29 @@ export const TIER_BADGES: Record<UserTier, { label: string; className: string }>
 // ============================================
 export const TIER_FEATURES = {
   [UserTier.FREE]: [
-    "Core Sahara Decision Engine",
-    "Strategy & execution reframing",
+    "Chat with Fred AI Mentor",
+    "One-time Document Scoring (A-F grade)",
     "Startup Reality Lens",
     "Red Flag Detection",
     "Founder wellbeing support",
-    "Founder Intake Snapshot",
+    "Discovery & Ideation stages",
   ],
   [UserTier.PRO]: [
-    "Everything in Free tier",
+    "Everything in Free",
+    "Document storage, improvement & monitoring",
+    "Full journey through Seed stage",
     "Full Investor Lens (Pre-Seed / Seed / Series A)",
     "Investor Readiness Score",
     "Pitch Deck Review & Scorecard",
-    "Strategy Documents",
+    "Strategy Documents & Plans",
     "Persistent founder memory",
   ],
   [UserTier.STUDIO]: [
-    "Everything in Pro tier",
-    "Virtual Team: Founder Ops Agent",
-    "Virtual Team: Fundraising Agent",
-    "Virtual Team: Growth Agent",
+    "Everything in Builder",
+    "Boardy.ai warm investor intros",
+    "AI Team: Founder Ops, Marketing, Fundraise, Growth Agents",
     "Weekly SMS Accountability Check-ins",
-    "Boardy Investor/Advisor Matching",
+    "Investor matching & targeting",
     "Priority compute & deeper memory",
   ],
 } as const;
@@ -185,7 +186,7 @@ export function getTierFromString(tier: string): UserTier {
 export const MEMORY_CONFIG = {
   free: {
     maxMessages: 5,
-    retentionDays: 0,
+    retentionDays: 365,
     loadEpisodic: false,
     maxEpisodicItems: 0,
   },

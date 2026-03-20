@@ -138,8 +138,20 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Deduplicate episodes by (session_id, content) to prevent duplicate exports
+    const seenKeys = new Set<string>();
+    const dedupedEpisodes = (episodes || []).filter((ep) => {
+      const content = ep.content as Record<string, unknown>;
+      const role = (content?.role as string) || "";
+      const text = (content?.content as string) || "";
+      const key = `${ep.session_id}:${role}:${text}`;
+      if (seenKeys.has(key)) return false;
+      seenKeys.add(key);
+      return true;
+    });
+
     // Transform episodes into exportable messages
-    const messages: ExportMessage[] = (episodes || []).map((ep) => {
+    const messages: ExportMessage[] = dedupedEpisodes.map((ep) => {
       const content = ep.content as {
         role?: string;
         content?: string;

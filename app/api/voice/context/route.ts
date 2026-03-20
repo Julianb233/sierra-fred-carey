@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth"
 import { getChatContextForVoice } from "@/lib/fred/chat-voice-bridge"
 import { checkRateLimitForUser } from "@/lib/api/rate-limit"
+import { captureError } from "@/lib/sentry"
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
     if (error instanceof NextResponse) return error
 
     console.error("[Voice Context API] Error:", error)
+    captureError(error instanceof Error ? error : new Error(String(error)), { route: "GET /api/voice/context" })
     return NextResponse.json(
       { success: false, error: "Failed to load voice context" },
       { status: 500 }

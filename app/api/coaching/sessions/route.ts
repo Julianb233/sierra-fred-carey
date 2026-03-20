@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import {
   getUserTier,
@@ -29,20 +30,8 @@ interface CoachingSession {
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse pagination params
     const searchParams = request.nextUrl.searchParams;
@@ -57,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { data: sessions, error: queryError, count } = await supabase
       .from("coaching_sessions")
       .select("*", { count: "exact" })
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -79,6 +68,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Coaching Sessions GET] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -93,29 +83,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
 
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
     // Check Studio tier
-    const userTier = await getUserTier(user.id);
+    const userTier = await getUserTier(userId);
     if (userTier < UserTier.STUDIO) {
       return createTierErrorResponse({
         allowed: false,
         userTier,
         requiredTier: UserTier.STUDIO,
-        userId: user.id,
+        userId,
       });
     }
 
@@ -156,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { data: session, error: insertError } = await supabase
       .from("coaching_sessions")
       .insert({
-        user_id: user.id,
+        user_id: userId,
         room_name: roomName.trim(),
         status: "scheduled",
         notes: notes?.trim() || null,
@@ -177,6 +155,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Coaching Sessions POST] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -191,20 +170,8 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse body
     let body: unknown;
@@ -294,7 +261,7 @@ export async function PATCH(request: NextRequest) {
       .from("coaching_sessions")
       .update(updates)
       .eq("id", id)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .select()
       .single();
 
@@ -315,6 +282,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ session: session as CoachingSession });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Coaching Sessions PATCH] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -329,20 +297,8 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse body
     let body: unknown;
@@ -368,7 +324,7 @@ export async function DELETE(request: NextRequest) {
       .from("coaching_sessions")
       .delete()
       .eq("id", id)
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     if (deleteError) {
       console.error("[Coaching Sessions DELETE] Delete error:", deleteError);
@@ -388,6 +344,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Coaching Sessions DELETE] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

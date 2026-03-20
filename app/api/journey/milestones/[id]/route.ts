@@ -3,6 +3,7 @@ import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
 import { sendMilestoneEmail } from "@/lib/email/milestones/triggers";
 import { logger } from "@/lib/logger";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 /**
  * GET /api/journey/milestones/[id]
@@ -170,14 +171,15 @@ export async function PATCH(
 
     // Log journey event if status changed to completed
     if (status === "completed" && current.status !== "completed") {
-      await sql`
-        INSERT INTO journey_events (user_id, event_type, event_data)
-        VALUES (${userId}, 'milestone_achieved', ${JSON.stringify({
+      logJourneyEventAsync({
+        userId,
+        eventType: "milestone_achieved",
+        eventData: {
           milestoneId: id,
           title: updated.title,
-          category: updated.category
-        })})
-      `;
+          category: updated.category,
+        },
+      });
 
       // Fire-and-forget: send milestone celebration email
       sendMilestoneEmail(userId, 'milestone_completed', updated.title as string).catch(err =>

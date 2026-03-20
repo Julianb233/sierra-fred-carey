@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
           matches: initialMatches,
           count: initialMatches.length,
           deepLink: client.getDeepLink(userId),
+          isLive: client.isLive,
           generated: true,
         });
       } catch (genError) {
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
           matches: [],
           count: 0,
           deepLink: getBoardyClient().getDeepLink(userId),
+          isLive: getBoardyClient().isLive,
           generated: false,
           warning: "Failed to generate initial match suggestions. Try refreshing.",
         });
@@ -119,6 +121,7 @@ export async function GET(request: NextRequest) {
       matches,
       count: matches.length,
       deepLink: getBoardyClient().getDeepLink(userId),
+      isLive: getBoardyClient().isLive,
     });
   } catch (error) {
     // Handle auth errors (thrown as Response by requireAuth)
@@ -161,6 +164,7 @@ export async function POST(_request: NextRequest) {
       matches: newMatches,
       count: newMatches.length,
       deepLink: client.getDeepLink(userId),
+      isLive: client.isLive,
       refreshed: true,
     });
   } catch (error) {

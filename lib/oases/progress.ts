@@ -7,7 +7,9 @@
 
 import { createClient } from "@/lib/supabase/server"
 import type { OasesProgress, OasesStage } from "@/types/oases"
+import { UserTier } from "@/lib/constants"
 import { STAGE_CONFIG, STAGE_ORDER, getStageIndex } from "./stage-config"
+import { isStageTierGated, getTierCeilingLabel } from "./founder-archetype"
 
 /**
  * Compute journey percentage from completed vs total steps.
@@ -172,10 +174,13 @@ export async function getUserOasesProgress(
 
 /**
  * Advance the user to the next Oases stage if all current steps are complete.
+ * AI-3581: Now enforces tier-based stage ceiling — Free users cannot progress
+ * past Validation, Pro users cannot progress past Launch.
  */
 export async function advanceStage(
-  userId: string
-): Promise<{ success: boolean; newStage?: OasesStage; error?: string }> {
+  userId: string,
+  userTier: UserTier = UserTier.FREE
+): Promise<{ success: boolean; newStage?: OasesStage; error?: string; tierGated?: boolean }> {
   const progress = await getUserOasesProgress(userId)
 
   if (progress.currentStage === "grow") {
@@ -195,6 +200,17 @@ export async function advanceStage(
   }
 
   const newStage = STAGE_ORDER[nextIndex]
+
+  // AI-3581: Tier-based stage ceiling enforcement
+  if (isStageTierGated(newStage, userTier)) {
+    const ceilingLabel = getTierCeilingLabel(userTier)
+    return {
+      success: false,
+      tierGated: true,
+      error: `Your current plan allows progress through ${ceilingLabel}. Upgrade to unlock ${newStage.charAt(0).toUpperCase() + newStage.slice(1)} and beyond.`,
+    }
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase

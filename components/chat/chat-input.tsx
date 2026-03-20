@@ -183,7 +183,7 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isRecording ? "Listening..." : placeholder}
-            disabled={isLoading || isRecording}
+            disabled={isRecording}
             rows={1}
             aria-label="Message to Fred"
             className={cn(

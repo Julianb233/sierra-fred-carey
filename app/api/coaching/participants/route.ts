@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAuth } from "@/lib/auth";
 
 // ============================================================================
 // Types
@@ -26,20 +27,8 @@ interface VideoParticipant {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse body
     let body: unknown;
@@ -75,7 +64,7 @@ export async function POST(request: NextRequest) {
       .from("coaching_sessions")
       .select("id, room_name")
       .eq("id", sessionId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     if (sessionError || !session) {
@@ -100,7 +89,7 @@ export async function POST(request: NextRequest) {
         .from("video_rooms")
         .insert({
           room_name: session.room_name,
-          host_user_id: user.id,
+          host_user_id: userId,
           status: "active",
           started_at: new Date().toISOString(),
         })
@@ -122,9 +111,9 @@ export async function POST(request: NextRequest) {
       .from("video_participants")
       .insert({
         room_id: roomId,
-        user_id: user.id,
+        user_id: userId,
         participant_name: name.trim(),
-        participant_identity: user.id,
+        participant_identity: userId,
         role: "host",
         joined_at: new Date().toISOString(),
         metadata: { coaching_session_id: sessionId },
@@ -145,6 +134,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Participants POST] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -159,20 +149,8 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse body
     let body: unknown;
@@ -200,7 +178,7 @@ export async function PATCH(request: NextRequest) {
       .from("video_participants")
       .select("id, joined_at")
       .eq("id", participantId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     if (fetchError || !existing) {
@@ -224,7 +202,7 @@ export async function PATCH(request: NextRequest) {
         duration_seconds: durationSeconds,
       })
       .eq("id", participantId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .select()
       .single();
 
@@ -238,6 +216,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ participant: participant as VideoParticipant });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Participants PATCH] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -252,20 +231,8 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = await requireAuth();
     const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
 
     // Parse query params
     const searchParams = request.nextUrl.searchParams;
@@ -283,7 +250,7 @@ export async function GET(request: NextRequest) {
       .from("coaching_sessions")
       .select("id, room_name")
       .eq("id", sessionId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     if (sessionError || !session) {
@@ -325,6 +292,7 @@ export async function GET(request: NextRequest) {
       count: (participants || []).length,
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[Participants GET] Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

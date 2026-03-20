@@ -35,7 +35,7 @@ import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
 import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered, updateStageRedirectCounts } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
-import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
+import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock, buildMissingFundamentalsBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
 import { estimateTokens } from "@/lib/ai/context-manager";
@@ -52,6 +52,7 @@ import { logSentimentSignal } from "@/lib/db/sentiment-log";
 import { validateStageAccess } from "@/lib/oases/stage-validator";
 import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
+import { detectArchetype } from "@/lib/oases/founder-archetype";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
@@ -518,6 +519,15 @@ async function handlePost(req: NextRequest) {
     // Phase 80: Extract Oases stage from founder context for stage-gate validation
     const currentOasesStage: OasesStage = (founderContextResult as { oasesStage?: OasesStage }).oasesStage || "clarity";
 
+    // AI-2619: Build missing fundamentals enforcement block
+    let fundamentalsBlock = "";
+    const founderMemory = (founderContextResult as { memory?: import("@/lib/fred/founder-memory-types").FounderMemory }).memory;
+    if (founderMemory) {
+      const { getMissingFields } = await import("@/lib/fred/founder-memory-types");
+      const missing = getMissingFields(founderMemory);
+      fundamentalsBlock = buildMissingFundamentalsBlock(missing);
+    }
+
     // Phase 36: Conversation state
     const conversationState = conversationStateResult;
     let stepGuidanceBlock = "";
@@ -733,7 +743,20 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
     const stageRedirectCounts = (persistedModeResult?.modeContext as unknown as Record<string, unknown> | null)?.stageRedirectCounts as Record<string, number> ?? {}
     const stageValidation = validateStageAccess(message, currentOasesStage, stageRedirectCounts)
     const stageRedirectBlock = buildStageRedirectBlock(stageValidation)
-    const stageAwareBlock = buildStageAwarePromptBlock(currentOasesStage)
+
+    // AI-3581: Detect founder archetype from profile for stage-aware coaching
+    const founderArchetype = detectArchetype({
+      stage: (founderContextResult as { profile?: { stage?: string } }).profile?.stage,
+      company_name: (founderContextResult as { profile?: { companyName?: string } }).profile?.companyName,
+      industry: (founderContextResult as { profile?: { industry?: string } }).profile?.industry,
+      revenue_range: (founderContextResult as { profile?: { revenueRange?: string } }).profile?.revenueRange,
+      funding_history: (founderContextResult as { profile?: { fundingHistory?: string } }).profile?.fundingHistory,
+      team_size: (founderContextResult as { profile?: { teamSize?: number } }).profile?.teamSize?.toString(),
+    })
+    const stageAwareBlock = buildStageAwarePromptBlock(currentOasesStage, {
+      archetype: founderArchetype,
+      userTier,
+    })
 
     // Phase 80: Persist redirect counts when a redirect occurs (fire-and-forget)
     if (!stageValidation.allowed && stageValidation.redirectKey) {
@@ -748,6 +771,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       stageAwareBlock,     // Phase 80: Always-on stage awareness + proactive guidance
       founderContext,
+      fundamentalsBlock,   // AI-2619: Directive fundamentals collection enforcement
       stepGuidanceBlock,
       accountabilityBlock, // Outstanding action items from past conversations
       rlStatusBlock,

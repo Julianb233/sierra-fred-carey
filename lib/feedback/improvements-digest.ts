@@ -98,7 +98,7 @@ export async function getDigestRecipients(): Promise<DigestRecipient[]> {
   // Get profiles with emails
   const { data: profiles, error: profileError } = await supabase
     .from("profiles")
-    .select("id, email, full_name")
+    .select("id, email, name")
     .in("id", userIds)
 
   if (profileError) {
@@ -111,7 +111,7 @@ export async function getDigestRecipients(): Promise<DigestRecipient[]> {
     .map((p) => ({
       userId: p.id,
       email: p.email as string,
-      founderName: (p.full_name as string) || "Founder",
+      founderName: (p.name as string) || "Founder",
     }))
 }
 

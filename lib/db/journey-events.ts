@@ -162,6 +162,44 @@ export function logJourneyEventAsync(input: JourneyEventInput): void {
 }
 
 // ============================================================================
+// Query Functions
+// ============================================================================
+
+/**
+ * Get the most recent score_after for a given event type.
+ * Used to populate score_before when recording a new score.
+ *
+ * @param userId - User ID
+ * @param eventType - Event type to look up (e.g., "analysis_completed")
+ * @returns The most recent score_after value, or null if none exists
+ */
+export async function getPreviousScore(
+  userId: string,
+  eventType: string
+): Promise<number | null> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("journey_events")
+      .select("score_after")
+      .eq("user_id", userId)
+      .eq("event_type", eventType)
+      .not("score_after", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data.score_after;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 

@@ -7,6 +7,7 @@ import { extractAndSaveInsights } from "@/lib/ai/insight-extractor";
 import { checkTierForRequest } from "@/lib/api/tier-middleware";
 import { UserTier } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 // Type definitions
 
@@ -735,25 +736,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Log journey event
-    try {
-      await sql`
-        INSERT INTO journey_events (user_id, event_type, event_data)
-        VALUES (
-          ${userId},
-          'investor_lens_evaluation',
-          ${JSON.stringify({
-            evaluationId: savedEvaluation.id,
-            fundingStage,
-            icVerdict: evaluation.icVerdict,
-            ventureBackable: evaluation.ventureBackable,
-            requestId: trackedResult.requestId,
-            variant: trackedResult.variant,
-          })}
-        )
-      `;
-    } catch (err) {
-      console.error("[Investor Lens] Journey event logging failed:", err);
-    }
+    logJourneyEventAsync({
+      userId,
+      eventType: "investor_lens_evaluation",
+      eventData: {
+        evaluationId: savedEvaluation.id,
+        fundingStage,
+        icVerdict: evaluation.icVerdict,
+        ventureBackable: evaluation.ventureBackable,
+        requestId: trackedResult.requestId,
+        variant: trackedResult.variant,
+      },
+    });
 
     return NextResponse.json(
       {

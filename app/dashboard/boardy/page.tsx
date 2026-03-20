@@ -50,6 +50,7 @@ export default function BoardyPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isBoardyLive, setIsBoardyLive] = useState(false);
 
   // Check if journey is 100% complete and celebration hasn't been dismissed
   useEffect(() => {
@@ -93,6 +94,9 @@ export default function BoardyPage() {
           })
         );
         setMatches(mappedMatches);
+        if (typeof data.isLive === "boolean") {
+          setIsBoardyLive(data.isLive);
+        }
       }
     } catch (err) {
       console.error("[BoardyPage] Error fetching matches:", err);
@@ -128,6 +132,9 @@ export default function BoardyPage() {
           })
         );
         setMatches(mappedMatches);
+        if (typeof data.isLive === "boolean") {
+          setIsBoardyLive(data.isLive);
+        }
       }
     } catch (err) {
       console.error("[BoardyPage] Refresh error:", err);
@@ -234,12 +241,12 @@ export default function BoardyPage() {
             </Badge>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Your AI-matched investors and advisors
+            {isBoardyLive ? "Warm introductions to investors who want to meet you" : "Your AI-matched investors and advisors"}
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-              AI-Generated Suggestions
+              {isBoardyLive ? "Powered by Boardy" : "AI-Generated Suggestions"}
             </span>
           </div>
         </div>
@@ -280,7 +287,7 @@ export default function BoardyPage() {
           )}
 
           {/* Boardy Connect Card */}
-          <BoardyConnect />
+          <BoardyConnect isLive={isBoardyLive} />
 
           {/* Error Message */}
           {error && (

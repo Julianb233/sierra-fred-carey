@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { logJourneyEvent } from "@/lib/db/journey-events";
 
 /**
  * GET /api/journey/timeline
@@ -78,26 +79,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await sql`
-      INSERT INTO journey_events (
-        user_id, event_type, event_data, score_before, score_after
-      )
-      VALUES (
-        ${userId}, ${eventType}, ${JSON.stringify(eventData)},
-        ${scoreBefore ?? null}, ${scoreAfter ?? null}
-      )
-      RETURNING
-        id,
-        user_id as "userId",
-        event_type as "eventType",
-        event_data as "eventData",
-        score_before as "scoreBefore",
-        score_after as "scoreAfter",
-        created_at as "createdAt"
-    `;
+    const result = await logJourneyEvent({
+      userId,
+      eventType,
+      eventData,
+      scoreBefore: scoreBefore ?? null,
+      scoreAfter: scoreAfter ?? null,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error || "Failed to create event" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
-      { success: true, data: result[0] },
+      {
+        success: true,
+        data: {
+          id: result.id,
+          userId,
+          eventType,
+          eventData,
+          scoreBefore: scoreBefore ?? null,
+          scoreAfter: scoreAfter ?? null,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {

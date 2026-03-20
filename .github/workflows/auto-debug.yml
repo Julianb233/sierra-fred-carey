@@ -1,9 +1,9 @@
 name: Auto-Debug Build Failures
 
 on:
-  # Trigger when any workflow fails
+  # Trigger when the Build & Deploy workflow fails (not self)
   workflow_run:
-    workflows: ["*"]
+    workflows: ["Build & Deploy"]
     types: [completed]
 
   # Also trigger on failed deployments
@@ -129,25 +129,30 @@ jobs:
       - name: Analyze failure and post fix suggestions
         if: steps.get-logs.outputs.has_failure == 'true'
         uses: actions/github-script@v7
+        env:
+          FAILURE_LOGS: ${{ steps.get-logs.outputs.logs }}
+          RUN_URL: ${{ steps.get-logs.outputs.run_url }}
+          PR_NUMBER: ${{ steps.get-logs.outputs.pr_number }}
         with:
           script: |
-            const logs = `${{ steps.get-logs.outputs.logs }}`;
-            const runUrl = `${{ steps.get-logs.outputs.run_url }}`;
-            const prNumber = `${{ steps.get-logs.outputs.pr_number }}`;
+            const logs = process.env.FAILURE_LOGS || '';
+            const runUrl = process.env.RUN_URL || '';
+            const prNumber = process.env.PR_NUMBER || '';
             
             // Pattern-based error analysis
+            const bt = '`';
             const patterns = [
-              { regex: /Module not found.*'([^']+)'/g, fix: (m) => `Missing module: \`${m[1]}\`. Run \`npm install ${m[1]}\` or check the import path.` },
-              { regex: /Type error:.*Property '(\w+)' does not exist/g, fix: (m) => `TypeScript error: Property \`${m[1]}\` doesn't exist. Check the type definition or add it to the interface.` },
-              { regex: /SyntaxError: Unexpected token/g, fix: () => `Syntax error detected. Check recent changes for typos, missing brackets, or incorrect imports.` },
-              { regex: /ENOENT.*no such file.*'([^']+)'/g, fix: (m) => `File not found: \`${m[1]}\`. Check if the file was deleted, renamed, or not committed.` },
-              { regex: /Error: Command "npm run build" exited with (\d+)/g, fix: () => `Build command failed. Check the build logs above for the specific compilation error.` },
-              { regex: /ERR_MODULE_NOT_FOUND/g, fix: () => `ESM module resolution error. Check import paths — ensure file extensions are included for ESM imports.` },
-              { regex: /out of memory|heap|ENOMEM/gi, fix: () => `Out of memory error. Try increasing Node.js memory: \`NODE_OPTIONS=--max-old-space-size=4096\`` },
-              { regex: /ETIMEOUT|ECONNREFUSED|fetch failed/gi, fix: () => `Network error during build. Check if external services (APIs, packages) are accessible.` },
-              { regex: /error TS\d+:/g, fix: () => `TypeScript compilation error. Run \`npx tsc --noEmit\` locally to see all type errors.` },
-              { regex: /Cannot find module '([^']+)'/g, fix: (m) => `Cannot find module \`${m[1]}\`. Run \`npm install\` or check if the dependency is in \`package.json\`.` },
-              { regex: /Vercel.*Error/gi, fix: () => `Vercel deployment error. Check the Vercel dashboard for detailed build logs.` },
+              { regex: /Module not found.*'([^']+)'/g, fix: (m) => 'Missing module: ' + bt + m[1] + bt + '. Run ' + bt + 'npm install ' + m[1] + bt + ' or check the import path.' },
+              { regex: /Type error:.*Property '(\w+)' does not exist/g, fix: (m) => 'TypeScript error: Property ' + bt + m[1] + bt + ' does not exist. Check the type definition or add it to the interface.' },
+              { regex: /SyntaxError: Unexpected token/g, fix: () => 'Syntax error detected. Check recent changes for typos, missing brackets, or incorrect imports.' },
+              { regex: /ENOENT.*no such file.*'([^']+)'/g, fix: (m) => 'File not found: ' + bt + m[1] + bt + '. Check if the file was deleted, renamed, or not committed.' },
+              { regex: /Error: Command "npm run build" exited with (\d+)/g, fix: () => 'Build command failed. Check the build logs above for the specific compilation error.' },
+              { regex: /ERR_MODULE_NOT_FOUND/g, fix: () => 'ESM module resolution error. Check import paths and ensure file extensions are included for ESM imports.' },
+              { regex: /out of memory|heap|ENOMEM/gi, fix: () => 'Out of memory error. Try increasing Node.js memory: ' + bt + 'NODE_OPTIONS=--max-old-space-size=4096' + bt },
+              { regex: /ETIMEOUT|ECONNREFUSED|fetch failed/gi, fix: () => 'Network error during build. Check if external services (APIs, packages) are accessible.' },
+              { regex: /error TS\d+:/g, fix: () => 'TypeScript compilation error. Run ' + bt + 'npx tsc --noEmit' + bt + ' locally to see all type errors.' },
+              { regex: /Cannot find module '([^']+)'/g, fix: (m) => 'Cannot find module ' + bt + m[1] + bt + '. Run ' + bt + 'npm install' + bt + ' or check if the dependency is in ' + bt + 'package.json' + bt + '.' },
+              { regex: /Vercel.*Error/gi, fix: () => 'Vercel deployment error. Check the Vercel dashboard for detailed build logs.' },
             ];
             
             let analysis = '## 🔍 Auto-Debug Analysis\n\n';
@@ -167,17 +172,18 @@ jobs:
               analysis += '- No common patterns detected. Review the build logs manually.\n';
             }
             
-            analysis += `\n### 📋 Quick Fix Checklist\n`;
-            analysis += `- [ ] Check the error messages in the [workflow logs](${runUrl})\n`;
-            analysis += `- [ ] Run the build locally: \`npm run build\`\n`;
-            analysis += `- [ ] Check for missing dependencies: \`npm install\`\n`;
-            analysis += `- [ ] Verify environment variables are set\n`;
-            
-            analysis += `\n<details><summary>📜 Last 100 lines of build log</summary>\n\n\`\`\`\n`;
+            const tbt = '```';
+            analysis += '\n### Quick Fix Checklist\n';
+            analysis += '- [ ] Check the error messages in the [workflow logs](' + runUrl + ')\n';
+            analysis += '- [ ] Run the build locally: ' + bt + 'npm run build' + bt + '\n';
+            analysis += '- [ ] Check for missing dependencies: ' + bt + 'npm install' + bt + '\n';
+            analysis += '- [ ] Verify environment variables are set\n';
+
+            analysis += '\n<details><summary>Last 100 lines of build log</summary>\n\n' + tbt + '\n';
             analysis += logs.split('\n').slice(-100).join('\n');
-            analysis += `\n\`\`\`\n</details>\n`;
-            
-            analysis += `\n---\n*🤖 Auto-generated by build-debug action • [View full logs](${runUrl})*`;
+            analysis += '\n' + tbt + '\n</details>\n';
+
+            analysis += '\n---\n*Auto-generated by build-debug action - [View full logs](' + runUrl + ')*';
             
             // Post to PR if available, otherwise create an issue
             if (prNumber && prNumber !== 'undefined') {

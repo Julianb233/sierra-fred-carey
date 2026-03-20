@@ -53,7 +53,7 @@ export async function loadChatContextForVoice(
 
   const { data, error } = await supabase
     .from("fred_episodic_memory")
-    .select("content, created_at, event_type")
+    .select("content, content_hash, created_at, event_type")
     .eq("user_id", userId)
     .eq("event_type", "conversation")
     .order("created_at", { ascending: false })
@@ -68,8 +68,18 @@ export async function loadChatContextForVoice(
     return { messages: [], lastTopic: null, summary: "" }
   }
 
+  // Deduplicate by content_hash to prevent duplicate episodes in voice context
+  const seenHashes = new Set<string>()
+  const dedupedData = data.filter((row) => {
+    const hash = row.content_hash as string | null
+    if (!hash) return true
+    if (seenHashes.has(hash)) return false
+    seenHashes.add(hash)
+    return true
+  })
+
   // Reverse to chronological order (oldest first)
-  const rows = data.reverse()
+  const rows = dedupedData.reverse()
 
   const messages: ChatMessage[] = rows
     .filter((row) => row.content && typeof row.content === "object")

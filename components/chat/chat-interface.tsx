@@ -12,6 +12,8 @@ import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from 
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { RefreshCw, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // ============================================================================
 // Suggestion chips — page-aware quick-start prompts
@@ -106,7 +108,7 @@ function buildFredGreeting(): Message {
 }
 
 export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
+  const { messages: fredMessages, sendMessage, state, isProcessing, error, clearError, reset } = useFredChat({ pageContext });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -134,9 +136,28 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
     [fredMessages]
   );
 
-  // Auto-scroll to latest message
+  // Track whether user has manually scrolled up (so we don't force-scroll)
+  const userScrolledUpRef = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // Consider "at bottom" if within 100px of the bottom
+      userScrolledUpRef.current = scrollHeight - scrollTop - clientHeight > 100;
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Auto-scroll to latest message — only if user hasn't scrolled up
+  useEffect(() => {
+    if (!userScrolledUpRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isProcessing]);
 
   const handleSendMessage = async (content: string) => {
@@ -208,6 +229,49 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
           <CognitiveStepIndicator state={state} />
         </div>
       )}
+
+      {/* Error recovery bar — shown when Fred encounters an error */}
+      <AnimatePresence>
+        {error && !isProcessing && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2"
+          >
+            <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50">
+              <span className="text-xs text-red-600 dark:text-red-400">
+                Something went wrong.
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearError();
+                  // Retry the last user message
+                  const lastUserMsg = fredMessages.findLast((m) => m.role === "user");
+                  if (lastUserMsg) {
+                    handleSendMessage(lastUserMsg.content);
+                  }
+                }}
+                className="h-7 gap-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Retry
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={reset}
+                className="h-7 gap-1.5 text-xs text-red-600/70 dark:text-red-400/70 hover:bg-red-100 dark:hover:bg-red-900/30"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Start fresh
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Welcome guide + Suggestion chips — shown only before first message */}
       <AnimatePresence>

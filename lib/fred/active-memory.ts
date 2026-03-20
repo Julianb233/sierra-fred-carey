@@ -277,14 +277,17 @@ export async function buildActiveFounderMemory(
         ) {
           memory.key_decisions = makeField(factValue, factConfidence, "conversation", factDate)
         } else {
-          // Store as additional context
-          const additionalKey = `${fact.category}/${fact.key}`
-          memory.additional[additionalKey] = makeField(
-            factValue,
-            fact.confidence ?? 0.8,
-            "conversation",
-            factDate
-          )
+          // Store as additional context — cap at MAX_ADDITIONAL_FACTS_IN_PROMPT
+          // to prevent unbounded memory growth and prompt token overflow
+          if (Object.keys(memory.additional).length < MAX_ADDITIONAL_FACTS_IN_PROMPT) {
+            const additionalKey = `${fact.category}/${fact.key}`
+            memory.additional[additionalKey] = makeField(
+              factValue.slice(0, MAX_ADDITIONAL_FACT_VALUE_LENGTH),
+              fact.confidence ?? 0.8,
+              "conversation",
+              factDate
+            )
+          }
         }
       }
     } catch {
@@ -300,8 +303,22 @@ export async function buildActiveFounderMemory(
 // ============================================================================
 
 /**
+ * Maximum number of additional (non-core) memory facts to include in the prompt.
+ * Prevents unbounded prompt growth from semantic memory overflow.
+ */
+const MAX_ADDITIONAL_FACTS_IN_PROMPT = 10
+
+/**
+ * Maximum character length for any single additional fact value in the prompt.
+ * Truncates long values to prevent token budget blow-up.
+ */
+const MAX_ADDITIONAL_FACT_VALUE_LENGTH = 200
+
+/**
  * Format a FounderMemory into a prompt block for injection into the
  * FRED system prompt. Includes stale/missing field instructions.
+ * Caps additional facts to MAX_ADDITIONAL_FACTS_IN_PROMPT to prevent
+ * context window overflow.
  */
 export function formatMemoryBlock(memory: FounderMemory): string {
   const lines: string[] = []

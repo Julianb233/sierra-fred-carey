@@ -17,7 +17,7 @@ import {
   getLatestIRS,
   type IRSInput,
 } from '@/lib/fred/irs';
-import { logJourneyEventAsync } from '@/lib/db/journey-events';
+import { logJourneyEvent, getPreviousScore } from '@/lib/db/journey-events';
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,19 +67,27 @@ export async function POST(request: NextRequest) {
     const savedResult = await saveIRSResult(supabase, userId, result);
 
     // Record journey event for dashboard "Investor Readiness" card
-    // Uses service-role client via logJourneyEventAsync for reliable persistence
-    // (previous version used user-scoped client which failed with broken RLS policies)
-    logJourneyEventAsync({
-      userId,
-      eventType: 'score_improved',
-      eventData: {
-        source: 'investor_readiness',
-        categories: Object.fromEntries(
-          Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
-        ),
-      },
-      scoreAfter: Math.round(savedResult.overall),
-    });
+    // Uses service-role client via logJourneyEvent for reliable persistence
+    // Fetches previous score for delta tracking (non-blocking)
+    (async () => {
+      try {
+        const scoreBefore = await getPreviousScore(userId, "score_improved");
+        await logJourneyEvent({
+          userId,
+          eventType: 'score_improved',
+          eventData: {
+            source: 'investor_readiness',
+            categories: Object.fromEntries(
+              Object.entries(savedResult.categories).map(([k, v]) => [k, (v as { score: number }).score])
+            ),
+          },
+          scoreBefore,
+          scoreAfter: Math.round(savedResult.overall),
+        });
+      } catch (err) {
+        console.error("[IRS API] Journey event save failed:", err);
+      }
+    })();
 
     return NextResponse.json({
       success: true,

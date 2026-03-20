@@ -36,7 +36,7 @@ describe("generateIntervention", () => {
       makeSignal({ level: "high", score: 0.55 }),
       "Alex"
     )
-    expect(result).toContain("step back")
+    expect(result).toContain("stepping away")
   })
 
   it("includes founder name for critical level", () => {

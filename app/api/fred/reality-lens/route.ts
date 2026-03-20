@@ -25,7 +25,7 @@ import {
   validateInput,
   type RealityLensInput,
 } from "@/lib/fred/reality-lens";
-import { logJourneyEventAsync } from "@/lib/db/journey-events";
+import { logJourneyEvent, getPreviousScore } from "@/lib/db/journey-events";
 
 // ============================================================================
 // Rate Limit Configuration
@@ -124,27 +124,6 @@ export async function POST(req: NextRequest) {
     // Perform assessment
     const result = await assessIdea(input);
 
-    // Persist journey event BEFORE returning response (critical for dashboard)
-    try {
-      const { sql } = await import("@/lib/db/supabase-sql");
-
-      await sql`
-        INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-        VALUES (
-          ${userId},
-          'analysis_completed',
-          ${JSON.stringify({
-            assessmentId: result.metadata.assessmentId,
-            verdict: result.verdict,
-            idea: input.idea.slice(0, 200),
-          })},
-          ${result.overallScore}
-        )
-      `;
-    } catch (journeyErr) {
-      console.error("[Reality Lens API] Journey event save failed:", journeyErr);
-    }
-
     // Save detailed analysis to reality_lens_analyses (non-blocking, not dashboard-critical)
     (async () => {
       try {
@@ -183,17 +162,26 @@ export async function POST(req: NextRequest) {
     })();
 
     // Log journey event so the Journey dashboard Idea Score updates
-    // Uses resilient logJourneyEventAsync with retry logic
-    logJourneyEventAsync({
-      userId,
-      eventType: "analysis_completed",
-      eventData: {
-        assessmentId: result.metadata.assessmentId,
-        verdict: result.verdict,
-        idea: input.idea.slice(0, 200),
-      },
-      scoreAfter: result.overallScore,
-    });
+    // Uses resilient logJourneyEvent with retry logic
+    // Fetches previous score for delta tracking (non-blocking)
+    (async () => {
+      try {
+        const scoreBefore = await getPreviousScore(userId, "analysis_completed");
+        await logJourneyEvent({
+          userId,
+          eventType: "analysis_completed",
+          eventData: {
+            assessmentId: result.metadata.assessmentId,
+            verdict: result.verdict,
+            idea: input.idea.slice(0, 200),
+          },
+          scoreBefore,
+          scoreAfter: result.overallScore,
+        });
+      } catch (err) {
+        console.error("[Reality Lens API] Journey event save failed:", err);
+      }
+    })();
 
     const latencyMs = Date.now() - startTime;
 

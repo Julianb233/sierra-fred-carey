@@ -48,6 +48,13 @@ export const ANALYTICS_EVENTS = {
     CHECKOUT_COMPLETED: "subscription.checkout_completed",
   },
 
+  /** Upsell / conversion events */
+  UPSELL: {
+    CTA_CLICKED: "upsell.cta_clicked",
+    DISMISSED: "upsell.dismissed",
+    CONVERTED: "upsell.converted",
+  },
+
   /** General engagement events */
   ENGAGEMENT: {
     DASHBOARD_VIEWED: "engagement.dashboard_viewed",
@@ -116,4 +123,5 @@ export type AnalyticsEventName =
   | EventValues<EventCategory["CHAT"]>
   | EventValues<EventCategory["FEATURES"]>
   | EventValues<EventCategory["SUBSCRIPTION"]>
-  | EventValues<EventCategory["ENGAGEMENT"]>;
+  | EventValues<EventCategory["ENGAGEMENT"]>
+  | EventValues<EventCategory["UPSELL"]>;
