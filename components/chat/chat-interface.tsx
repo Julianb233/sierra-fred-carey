@@ -226,7 +226,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
                   Welcome to Sahara
                 </h3>
                 <p className="text-sm text-foreground/80 leading-relaxed mb-3">
-                  Sahara is your AI-powered founder operating system. Your mentor Fred Cary has built 30+ companies, taken 3 public, and mentored 10,000+ founders.
+                  Sahara is your AI-powered founder operating system. Your mentor Fred Cary has advised hundreds of companies, taken 2 public, and mentored hundreds of founders.
                 </p>
                 <div className="space-y-1.5 text-xs text-foreground/70">
                   <p>Here&apos;s what to expect:</p>

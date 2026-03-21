@@ -147,7 +147,7 @@ export default function Testimonials() {
             TESTIMONIALS
           </motion.span>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
-            Trusted by <span className="text-[#ff6a1a]">10,000+</span> Founders
+            Trusted by <span className="text-[#ff6a1a]">Hundreds of</span> Founders
           </h2>
           <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 dark:text-gray-400">
             Real founders sharing their honest experience with the Decision OS.
@@ -245,7 +245,7 @@ export default function Testimonials() {
 
             <div className="relative z-10">
               <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-                Join <span className="text-[#ff6a1a]">10,000+</span> founders who think clearer
+                Join <span className="text-[#ff6a1a]">hundreds of</span> founders who think clearer
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-xl mx-auto">
                 Start free. Upgrade when you&apos;re ready to raise or scale.
@@ -253,11 +253,11 @@ export default function Testimonials() {
               <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#ff6a1a] rounded-full" />
-                  <span>$100M+ raised by users</span>
+                  <span>Billions raised by users</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-orange-400 rounded-full" />
-                  <span>89% investor meeting rate</span>
+                  <span>Proven investor meeting results</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-amber-500 rounded-full" />

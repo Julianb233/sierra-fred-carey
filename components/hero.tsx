@@ -170,8 +170,8 @@ export default function Hero() {
           {/* Trust indicators - visible immediately, no fade-in */}
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
-              { icon: Users, text: "10,000+ Founders Coached" },
-              { icon: CheckIcon, text: "$100M+ Raised" },
+              { icon: Users, text: "Hundreds of Founders Coached" },
+              { icon: CheckIcon, text: "Billions Raised" },
               { icon: Sparkles, text: "By Fred Cary" },
             ].map((item, i) => (
               <div
