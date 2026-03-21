@@ -21,7 +21,7 @@ import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
 // Snapshot hash of the core prompt — update ONLY after manual voice review
 // ============================================================================
 const CORE_PROMPT_SHA256 =
-  "cdc19b40ff03f3fa9a18bdbc125b67bdbe2c8209fe868777057b76fb2a79274e";
+  "f9f3066f9db91170f27e39f4b9817a0ce5fa5d7cee3e667c40725bb989ebdd84";
 
 const prompt = FRED_CORE_PROMPT.content;
 
