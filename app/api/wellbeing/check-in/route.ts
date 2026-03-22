@@ -71,7 +71,7 @@ function generateRecommendations(score: number): Recommendation[] {
       priority: "low",
     },
     {
-      text: "Celebrate a recent win this week, even a small one. Micro victories build the momentum that carries you through the hard months. I've seen it work over and over across 40+ companies.",
+      text: "Celebrate a recent win this week, even a small one. Micro victories build the momentum that carries you through the hard months. I've seen it work over and over across hundreds of companies.",
       priority: "low",
     },
     {

@@ -16,9 +16,9 @@ import {
 } from "@radix-ui/react-icons";
 
 const stats = [
-  { value: "Hundreds", label: "Founders Coached" },
+  { value: "100s+", label: "Founders Coached" },
   { value: "50+", label: "Years Experience" },
-  { value: "Billions", label: "Capital Raised" },
+  { value: "$1B+", label: "Capital Raised" },
   { value: "40+", label: "Companies Founded" },
 ];
 
@@ -221,7 +221,7 @@ export default function AboutPage() {
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     I started hustling at 17 — first as a musician in a rock band, then slinging tacos at 22.
                     By the time I got my law degree, I already knew the courtroom wasn&apos;t going to be my only arena.
-                    Over the next five decades, I founded 40+ companies, took 2 public, and had 2 acquired.
+                    Over the next five decades, I advised hundreds of companies, took 3 public, and had 2 acquired.
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     Along the way, I became obsessed with understanding{" "}

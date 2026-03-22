@@ -174,8 +174,8 @@ export const FRED_COMPANIES = {
   ],
 
   summaryStats: {
-    companiesFounded: "40+",
-    ipos: 2,
+    companiesAdvised: "Hundreds",
+    ipos: 3,
     acquisitions: 2,
     yearsExperience: "50+",
     companiesLaunched: "300+ via IdeaPros",
@@ -183,6 +183,7 @@ export const FRED_COMPANIES = {
     tvHouseholdsReach: "75% worldwide",
     annualRevenue: "$700M+ (Imagine Communications)",
     customerRevenueGenerated: "$50B",
+    capitalRaised: "$1B+",
     ideaprosRevenue: "$30M+",
   },
 } as const;
@@ -397,10 +398,10 @@ export const SAHARA_MESSAGING = {
 // ============================================================================
 
 export const MARKETING_STATS = {
-  capitalRaised: "billions",
-  foundersCoached: "hundreds",
+  capitalRaised: "$1B+",
+  foundersCoached: "Hundreds",
   yearsExperience: "50+",
-  companiesFounded: "40+",
+  companiesAdvised: "Hundreds",
   startupsLaunched: "300+",
   ipos: "2",
   acquisitions: "2",
@@ -416,7 +417,7 @@ export function getRandomQuote(): string {
 }
 
 export function getExperienceStatement(): string {
-  return `With over ${FRED_BIO.yearsExperience} years of experience, having founded ${FRED_BIO.companiesFounded}+ companies, and coaching hundreds of founders, I've seen what works and what doesn't.`;
+  return `With over ${FRED_BIO.yearsExperience} years of experience, having advised hundreds of companies, and coaching hundreds of founders, I've seen what works and what doesn't.`;
 }
 
 export function getCredibilityStatement(): string {

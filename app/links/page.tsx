@@ -196,7 +196,7 @@ export default function LinksPage() {
                 <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   Built by <span className="font-semibold text-[#ff6a1a]">Fred Cary</span>
                   {" "}— Founder coach, startup veteran, and AI pioneer.{" "}
-                  <span className="text-[#ff6a1a] font-semibold">hundreds of founders coached</span> over five decades.
+                  <span className="text-[#ff6a1a] font-semibold">Hundreds of founders coached</span> over two decades.
                   Helping you think clearer, raise smarter, and scale faster.
                 </p>
               </div>

@@ -214,7 +214,7 @@ function generateRecommendation(
     if (factors.composite >= 70) {
       return `After looking at this from ${models.length} angles, I'd say go for it. Here's why: ${topInsights.join(". ")}`;
     } else if (factors.composite >= 50) {
-      return `This one's a toss-up. I've seen similar decisions go both ways across my ${FRED_BIO.companiesFounded}+ companies. Consider: ${topInsights.join(". ")} The score of ${factors.composite}/100 tells me you need more data before committing.`;
+      return `This one's a toss-up. I've seen similar decisions go both ways across my hundreds of companies. Consider: ${topInsights.join(". ")} The score of ${factors.composite}/100 tells me you need more data before committing.`;
     } else {
       return `I'm going to be honest with you -- I have concerns here. ${topInsights.join(". ")} I'd either rethink the approach or gather more information before moving forward.`;
     }

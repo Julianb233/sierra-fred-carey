@@ -164,9 +164,9 @@ export function getFredGreeting(startupContext?: {
   mainChallenge?: string;
 }): string {
   const greetings = [
-    `Hey, I'm Fred Cary. I've built ${FRED_COMPANIES.summaryStats.companiesFounded} companies over ${FRED_BIO.yearsExperience}+ years and mentored hundreds of founders. What are you building, who is it for, and what are you trying to accomplish right now?`,
+    `Hey, I'm Fred Cary. I've advised hundreds of companies over ${FRED_BIO.yearsExperience}+ years, taken 3 public, and mentored hundreds of founders. What are you building, who is it for, and what are you trying to accomplish right now?`,
     `Welcome. I'm Fred — ${FRED_BIO.yearsExperience}+ years of building companies and mentoring founders. Let's get into it. What are you building, and what's the real bottleneck right now?`,
-    `Hey! Fred Cary here. I've seen what works and what doesn't across ${FRED_COMPANIES.summaryStats.companiesFounded} companies and ${FRED_BIO.yearsExperience}+ years. If we fixed one thing in the next 30 days, what would matter most to your business?`,
+    `Hey! Fred Cary here. I've seen what works and what doesn't across hundreds of companies and ${FRED_BIO.yearsExperience}+ years. If we fixed one thing in the next 30 days, what would matter most to your business?`,
   ];
   const base = greetings[Math.floor(Math.random() * greetings.length)];
 

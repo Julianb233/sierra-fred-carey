@@ -36,12 +36,14 @@ export const TW_COLORS = {
 // ============================================
 export enum UserTier {
   FREE = 0,
-  PRO = 1,
-  STUDIO = 2,
+  BUILDER = 1,
+  PRO = 2,
+  STUDIO = 3,
 }
 
 export const TIER_NAMES: Record<UserTier, string> = {
   [UserTier.FREE]: "Free",
+  [UserTier.BUILDER]: "Builder",
   [UserTier.PRO]: "Pro",
   [UserTier.STUDIO]: "Studio",
 };
@@ -50,6 +52,10 @@ export const TIER_BADGES: Record<UserTier, { label: string; className: string }>
   [UserTier.FREE]: {
     label: "Free",
     className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  },
+  [UserTier.BUILDER]: {
+    label: "Builder",
+    className: "bg-amber-500/10 text-amber-600 border border-amber-500/20",
   },
   [UserTier.PRO]: {
     label: "Pro",
@@ -66,29 +72,38 @@ export const TIER_BADGES: Record<UserTier, { label: string; className: string }>
 // ============================================
 export const TIER_FEATURES = {
   [UserTier.FREE]: [
-    "Core Sahara Decision Engine",
-    "Strategy & execution reframing",
-    "Startup Reality Lens",
-    "Red Flag Detection",
-    "Founder wellbeing support",
-    "Founder Intake Snapshot",
+    "Founder Decision Engine",
+    "Feasibility + market reality checks",
+    "Red flag detection",
+    "Founder wellbeing + mental clarity support",
+    "Initial founder snapshot",
+  ],
+  [UserTier.BUILDER]: [
+    "Everything in Free",
+    "Saved founder profile + memory",
+    "Limited Investor Readiness insights",
+    "Strategy outputs (lean plans, early roadmap)",
+    "Early-stage scoring + guidance",
+    "Priority responses",
   ],
   [UserTier.PRO]: [
-    "Everything in Free tier",
-    "Full Investor Lens (Pre-Seed / Seed / Series A)",
+    "Everything in Builder",
+    "Full Investor Lens (Pre-seed → Series A)",
     "Investor Readiness Score",
-    "Pitch Deck Review & Scorecard",
-    "Strategy Documents",
-    "Persistent founder memory",
+    "Pitch deck teardown + scoring",
+    "Executive summaries + 30/60/90 plans",
+    "Deep founder memory + evolving context",
   ],
   [UserTier.STUDIO]: [
-    "Everything in Pro tier",
-    "Virtual Team: Founder Ops Agent",
-    "Virtual Team: Fundraising Agent",
-    "Virtual Team: Growth Agent",
-    "Weekly SMS Accountability Check-ins",
-    "Boardy Investor/Advisor Matching",
-    "Priority compute & deeper memory",
+    "Everything in Pro",
+    "Investor targeting + outreach sequencing",
+    "Boardy integration (investor matching)",
+    "Weekly accountability check-ins (SMS)",
+    "AI Operator Team: Founder Ops Agent",
+    "AI Operator Team: Fundraise Ops Agent",
+    "AI Operator Team: Growth Ops Agent",
+    "AI Operator Team: Inbox Ops Agent",
+    "Priority compute + deeper memory",
   ],
 } as const;
 
@@ -159,13 +174,15 @@ export function canAccessFeature(userTier: UserTier, requiredTier: UserTier): bo
 }
 
 export function getUpgradeTier(currentTier: UserTier): UserTier | null {
-  if (currentTier === UserTier.FREE) return UserTier.PRO;
+  if (currentTier === UserTier.FREE) return UserTier.BUILDER;
+  if (currentTier === UserTier.BUILDER) return UserTier.PRO;
   if (currentTier === UserTier.PRO) return UserTier.STUDIO;
   return null;
 }
 
 export function getTierFromString(tier: string): UserTier {
   const normalized = tier.toLowerCase();
+  if (normalized === "builder") return UserTier.BUILDER;
   if (normalized === "pro" || normalized === "fundraising") return UserTier.PRO;
   if (normalized === "studio" || normalized === "venture_studio") return UserTier.STUDIO;
   return UserTier.FREE;
@@ -178,9 +195,10 @@ export function getTierFromString(tier: string): UserTier {
 /**
  * Per-tier memory depth and retention settings.
  *
- * - Free:   session-only context (5 messages, no persistence, no episodic)
- * - Pro:    30-day persistent memory (20 messages, 10 episodic items)
- * - Studio: 90-day deep memory (50 messages, 25 episodic items)
+ * - Free:    session-only context (5 messages, no persistence, no episodic)
+ * - Builder: 14-day basic memory (10 messages, 3 episodic items)
+ * - Pro:     30-day persistent memory (20 messages, 10 episodic items)
+ * - Studio:  90-day deep memory (50 messages, 25 episodic items)
  */
 export const MEMORY_CONFIG = {
   free: {
@@ -188,6 +206,12 @@ export const MEMORY_CONFIG = {
     retentionDays: 0,
     loadEpisodic: false,
     maxEpisodicItems: 0,
+  },
+  builder: {
+    maxMessages: 10,
+    retentionDays: 14,
+    loadEpisodic: true,
+    maxEpisodicItems: 3,
   },
   pro: {
     maxMessages: 20,

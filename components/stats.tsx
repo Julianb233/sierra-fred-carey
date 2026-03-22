@@ -38,8 +38,8 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 
 export default function Stats() {
   const stats = [
-    { number: 10000, prefix: "", suffix: "+", label: "Founders Coached" },
-    { number: 50, prefix: "$", suffix: "M+", label: "Capital Raised" },
+    { number: 100, prefix: "", suffix: "s+", label: "Founders Coached" },
+    { number: 1, prefix: "$", suffix: "B+", label: "Capital Raised" },
     { number: 500, prefix: "", suffix: "+", label: "Decks Reviewed" },
     { number: 89, prefix: "", suffix: "%", label: "Investor Meeting Rate" },
   ];
@@ -52,7 +52,7 @@ export default function Stats() {
       <div className="relative z-10 max-w-6xl mx-auto">
         <FadeUpOnScroll className="text-center mb-16">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            Trusted by <span className="text-[#ff6a1a]">thousands</span> of founders worldwide
+            Trusted by <span className="text-[#ff6a1a]">hundreds</span> of founders worldwide
           </h2>
         </FadeUpOnScroll>
 
