@@ -203,7 +203,7 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000,
+          sampleRate: { ideal: 16000 },
         },
       });
 

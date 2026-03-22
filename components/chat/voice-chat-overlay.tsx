@@ -52,16 +52,11 @@ export function VoiceChatOverlay({
     maxDuration: 120,
   });
 
-  // Auto-start recording when overlay opens
+  // Reset state when overlay opens (recording starts on user tap — required by mobile browsers)
   useEffect(() => {
-    if (open && isSupported) {
+    if (open) {
       setTranscribedText("");
       reset();
-      // Small delay to let the animation settle
-      const timer = setTimeout(() => {
-        startRecording();
-      }, 300);
-      return () => clearTimeout(timer);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -164,7 +159,17 @@ export function VoiceChatOverlay({
             </p>
           </div>
 
+          {/* Unsupported browser fallback */}
+          {!isSupported && (
+            <div className="bg-red-500/20 border border-red-500/40 rounded-xl p-4 text-center">
+              <p className="text-white text-sm">
+                Voice input isn't supported on this browser. Please use Chrome, Safari, or Edge.
+              </p>
+            </div>
+          )}
+
           {/* Voice button with waveform */}
+          {isSupported && (
           <div className="relative">
             <VoiceChatButton
               isRecording={isRecording}
@@ -175,6 +180,7 @@ export function VoiceChatOverlay({
               variant="prominent"
             />
           </div>
+          )}
 
           {/* Waveform visualization when recording */}
           <AnimatePresence>
