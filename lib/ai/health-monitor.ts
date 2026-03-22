@@ -11,8 +11,11 @@ import {
   getPrimaryModel,
   getFallback1Model,
   getFallback2Model,
+  getFallback3Model,
+  hasXai,
   PROVIDER_METADATA,
 } from "./providers";
+import type { ProviderKey } from "./providers";
 import { circuitBreaker } from "./circuit-breaker";
 import type { ProviderName } from "./fallback-chain";
 import { logger } from "@/lib/logger";
@@ -150,7 +153,7 @@ export class HealthMonitor {
    * Check all providers
    */
   async checkAll(): Promise<HealthCheck[]> {
-    const providers: ProviderName[] = ["openai", "anthropic", "google"];
+    const providers: ProviderName[] = ["xai", "openai", "anthropic", "google"];
     const results = await Promise.all(
       providers.map((p) => this.checkProvider(p))
     );
@@ -205,7 +208,7 @@ export class HealthMonitor {
     const checks = Array.from(this.checks.values());
 
     const healthyCount = checks.filter((c) => c.status === "healthy").length;
-    const totalCount = checks.length || 3; // Default to 3 providers
+    const totalCount = checks.length || 4; // Default to 4 providers
 
     let status: HealthStatus;
     if (checks.length === 0) {
@@ -296,27 +299,30 @@ export class HealthMonitor {
 
   private getModelForProvider(provider: ProviderName): LanguageModel | null {
     switch (provider) {
-      case "openai":
+      case "xai":
+        if (!hasXai()) return null;
         return getPrimaryModel();
-      case "anthropic":
+      case "openai":
         return getFallback1Model();
-      case "google":
+      case "anthropic":
         return getFallback2Model();
+      case "google":
+        return getFallback3Model();
       default:
         return null;
     }
   }
 
-  private providerToKey(
-    provider: ProviderName
-  ): "primary" | "fallback1" | "fallback2" {
+  private providerToKey(provider: ProviderName): ProviderKey {
     switch (provider) {
-      case "openai":
+      case "xai":
         return "primary";
-      case "anthropic":
+      case "openai":
         return "fallback1";
-      case "google":
+      case "anthropic":
         return "fallback2";
+      case "google":
+        return "fallback3";
     }
   }
 
