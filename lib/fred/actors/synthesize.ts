@@ -221,11 +221,17 @@ function generateRecommendation(
   }
 
   if (input.intent === "question") {
-    return `Here's what I see: ${topInsights.join(". ")}`;
+    if (topInsights.length > 0) {
+      return `Here's what I see: ${topInsights.join(". ")}`;
+    }
+    return `That's a good question. Let me think through this with you based on what I know from mentoring hundreds of founders.`;
   }
 
   // Default response
-  return `Here's the bottom line: ${topInsights.slice(0, 2).join(". ")}`;
+  if (topInsights.length > 0) {
+    return `Here's the bottom line: ${topInsights.slice(0, 2).join(". ")}`;
+  }
+  return `Let me give you my perspective on this — I've seen similar situations play out across many companies.`;
 }
 
 /**

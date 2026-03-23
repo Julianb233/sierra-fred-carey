@@ -292,7 +292,7 @@ export async function generateStructuredFromMessages<T extends z.ZodType>(
 export async function streamGenerate(
   prompt: string,
   options: GenerateOptions = {}
-): Promise<StreamTextResult<Record<string, never>, never>> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const model = getModel(options.model || "primary");
 
   return streamText({
@@ -302,6 +302,10 @@ export async function streamGenerate(
     maxOutputTokens: options.maxOutputTokens ?? 4096,
     temperature: options.temperature ?? 0.7,
     abortSignal: options.abortSignal,
+    ...(options.tools ? { tools: options.tools } : {}),
+    ...(options.tools && options.maxSteps
+      ? { stopWhen: stepCountIs(options.maxSteps) }
+      : {}),
   });
 }
 
@@ -311,7 +315,7 @@ export async function streamGenerate(
 export async function streamGenerateFromMessages(
   messages: ModelMessage[],
   options: GenerateOptions = {}
-): Promise<StreamTextResult<Record<string, never>, never>> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const model = getModel(options.model || "primary");
 
   return streamText({
@@ -334,7 +338,7 @@ export async function streamGenerateFromMessages(
  * }
  */
 export async function* streamToGenerator(
-  result: StreamTextResult<Record<string, never>, never>
+  result: StreamTextResult<ToolSet, never>
 ): AsyncGenerator<string> {
   for await (const chunk of result.textStream) {
     yield chunk;
@@ -345,7 +349,7 @@ export async function* streamToGenerator(
  * Convert a stream result to a ReadableStream for HTTP responses
  */
 export function streamToReadableStream(
-  result: StreamTextResult<Record<string, never>, never>
+  result: StreamTextResult<ToolSet, never>
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
 

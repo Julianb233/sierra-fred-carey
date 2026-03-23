@@ -350,7 +350,7 @@ async function buildResponseContent(
         return llmResponse;
       }
     } catch (error) {
-      logger.log("[FRED] LLM failed for clarify/defer, using template fallback:", error);
+      console.error("[FRED] LLM failed for clarify/defer, using template fallback:", error instanceof Error ? error.message : error);
     }
     // Template fallback only if LLM fails
     if (action === "clarify") {
@@ -390,8 +390,9 @@ async function buildResponseContent(
       logger.log("[FRED] LLM response generated successfully");
       return llmResponse;
     }
+    console.warn("[FRED] LLM returned empty response for action:", action, "intent:", input.intent);
   } catch (error) {
-    logger.log("[FRED] LLM response generation failed, using template fallback:", error);
+    console.error("[FRED] LLM response generation failed, using template fallback:", error instanceof Error ? error.message : error);
   }
 
   // ── Template fallback (only reached when LLM fails) ──
