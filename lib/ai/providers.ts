@@ -60,11 +60,11 @@ function hasGoogle(): boolean {
 // ============================================================================
 
 /**
- * Get primary model (GPT-4o)
+ * Get primary model (Gemini 3 Flash Preview)
  */
 export function getPrimaryModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("gpt-4o");
+  if (!hasGoogle()) return null;
+  return google("gemini-3-flash-preview");
 }
 
 /**
@@ -84,19 +84,19 @@ export function getFallback2Model(): LanguageModel | null {
 }
 
 /**
- * Get fast model for quick operations (GPT-4o-mini)
+ * Get fast model for quick operations (Gemini 2.0 Flash)
  */
 export function getFastModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("gpt-4o-mini");
+  if (!hasGoogle()) return null;
+  return google("gemini-2.0-flash");
 }
 
 /**
- * Get reasoning model for complex analysis (o3)
+ * Get reasoning model for complex analysis (Gemini 3 Flash Preview)
  */
 export function getReasoningModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("o3");
+  if (!hasGoogle()) return null;
+  return google("gemini-3-flash-preview");
 }
 
 /**
@@ -180,14 +180,11 @@ export function getEmbedding(
 export function getAvailableProviders(): ProviderKey[] {
   const available: ProviderKey[] = [];
 
-  if (hasOpenAI()) {
-    available.push("primary", "fast", "reasoning");
+  if (hasGoogle()) {
+    available.push("primary", "fast", "reasoning", "fallback2");
   }
   if (hasAnthropic()) {
     available.push("fallback1");
-  }
-  if (hasGoogle()) {
-    available.push("fallback2");
   }
 
   return available;
@@ -206,8 +203,8 @@ export function hasAnyProvider(): boolean {
 
 export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model">> = {
   primary: {
-    name: "GPT-4o",
-    costPerMillionTokens: { input: 2.5, output: 10 },
+    name: "Gemini 3 Flash Preview",
+    costPerMillionTokens: { input: 0.5, output: 3 },
   },
   fallback1: {
     name: "Claude Sonnet 4.5",
@@ -218,12 +215,12 @@ export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model"
     costPerMillionTokens: { input: 1.25, output: 5 },
   },
   fast: {
-    name: "GPT-4o-mini",
-    costPerMillionTokens: { input: 0.15, output: 0.6 },
+    name: "Gemini 2.0 Flash",
+    costPerMillionTokens: { input: 0.1, output: 0.4 },
   },
   reasoning: {
-    name: "o3",
-    costPerMillionTokens: { input: 10, output: 40 },
+    name: "Gemini 3 Flash Preview",
+    costPerMillionTokens: { input: 0.5, output: 3 },
   },
 };
 
