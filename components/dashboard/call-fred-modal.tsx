@@ -77,6 +77,12 @@ function buildRoomOptions(): RoomOptions {
     // WebAudioMix routes all audio through Web Audio API, which works around
     // Samsung Internet's aggressive audio track suspension and autoplay blocking
     options.webAudioMix = true;
+    // Force VP8 codec — VP9 has known issues on Samsung devices causing
+    // video decode failures and audio track desync
+    options.publishDefaults = {
+      ...options.publishDefaults,
+      videoCodec: "vp8",
+    };
   }
 
   return options;
@@ -92,8 +98,9 @@ function buildConnectOptions(): RoomConnectOptions {
 
   if (samsung) {
     options.rtcConfig = {
-      // Use all ICE transport candidates for Samsung network reliability
-      iceTransportPolicy: "all",
+      // Force TURN relay for Samsung — direct peer connections are unreliable
+      // on Samsung browsers due to ICE candidate gathering timeouts
+      iceTransportPolicy: "relay",
       // Pre-allocate ICE candidates for faster negotiation
       iceCandidatePoolSize: 4,
     };
@@ -233,6 +240,7 @@ export function CallFredModal({
   const agentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMutedRef = useRef(false);
   const samsungWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const samsungReconnectAttemptsRef = useRef(0);
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const { seconds, formatted: timerFormatted, reset: resetTimer } = useCallTimer(
     callState === "in-call"
@@ -279,6 +287,7 @@ export function CallFredModal({
       setCallSummary(null);
       setTranscriptEntries([]);
       setConnectionStatus('connected');
+      samsungReconnectAttemptsRef.current = 0;
       resetTimer();
     } else {
       // Disconnect room when modal closes
@@ -354,12 +363,72 @@ export function CallFredModal({
         track.detach().forEach((el) => el.remove());
       });
 
-      // P1 Fix: Handle unexpected disconnects
+      // P1 Fix: Handle unexpected disconnects with Samsung auto-reconnect
       room.on(RoomEvent.Disconnected, () => {
         if (agentTimeoutRef.current) {
           clearTimeout(agentTimeoutRef.current);
           agentTimeoutRef.current = null;
         }
+
+        // Samsung drops connections more frequently — auto-reconnect up to 3 times
+        if (isSamsungDevice() && samsungReconnectAttemptsRef.current < 3) {
+          const attempt = samsungReconnectAttemptsRef.current + 1;
+          samsungReconnectAttemptsRef.current = attempt;
+          console.warn(`[CallFred] Samsung disconnect, auto-reconnect attempt ${attempt}/3`);
+          setConnectionStatus('reconnecting');
+
+          setTimeout(async () => {
+            try {
+              // Fetch fresh token for reconnection
+              const response = await fetch("/api/fred/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ callType }),
+              });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              const freshData = await response.json();
+
+              const reconnectRoom = new Room(buildRoomOptions());
+              roomRef.current = reconnectRoom;
+
+              // Re-attach all event listeners for the new room
+              reconnectRoom.on(
+                RoomEvent.TrackSubscribed,
+                (track, _pub: RemoteTrackPublication, _part: RemoteParticipant) => {
+                  if (track.kind === Track.Kind.Audio) {
+                    const audioEl = track.attach();
+                    audioEl.volume = 1;
+                    audioEl.setAttribute("playsinline", "true");
+                    audioEl.setAttribute("autoplay", "true");
+                    document.body.appendChild(audioEl);
+                    audioEl.play().catch(() => {});
+                  }
+                }
+              );
+              reconnectRoom.on(RoomEvent.TrackUnsubscribed, (track) => {
+                track.detach().forEach((el) => el.remove());
+              });
+              reconnectRoom.on(RoomEvent.Reconnecting, () => setConnectionStatus('reconnecting'));
+              reconnectRoom.on(RoomEvent.Reconnected, () => setConnectionStatus('connected'));
+
+              const connectOpts = buildConnectOptions();
+              await reconnectRoom.connect(freshData.url, freshData.token, connectOpts);
+              const audioOpts = buildAudioCaptureOptions();
+              await reconnectRoom.localParticipant.setMicrophoneEnabled(true, audioOpts);
+
+              setConnectionStatus('connected');
+              console.log(`[CallFred] Samsung reconnect attempt ${attempt} succeeded`);
+            } catch (reconnectErr) {
+              console.error(`[CallFred] Samsung reconnect attempt ${attempt} failed:`, reconnectErr);
+              roomRef.current = null;
+              setError("Call disconnected unexpectedly. Please try again.");
+              setCallState("error");
+            }
+          }, 1000 * attempt); // Exponential backoff: 1s, 2s, 3s
+
+          return;
+        }
+
         roomRef.current = null;
         setError("Call disconnected unexpectedly. Please try again.");
         setCallState("error");
