@@ -177,7 +177,7 @@ export function JourneyGate({
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#ff6a1a] text-[#ff6a1a] hover:bg-[#ff6a1a]/10 rounded-lg font-medium text-sm transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
-              Chat with Fred to continue
+              Chat with Mentor to continue
             </Link>
           </div>
         </div>

@@ -408,7 +408,7 @@ export default function JourneyDashboard() {
                   className="inline-flex items-center gap-1.5 text-sm text-[#ff6a1a] hover:text-[#ea580c] font-medium mt-1"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
-                  Chat with Fred to complete your profile
+                  Chat with Mentor to complete your profile
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               )}
@@ -624,7 +624,7 @@ export default function JourneyDashboard() {
         {/* Timeline Tab */}
         <TabsContent value="timeline" className="space-y-4">
           <div>
-            <h2 className="text-2xl font-bold mb-1">Your Journey Timeline</h2>
+            <h2 className="text-2xl font-bold mb-1">Your Progress Timeline</h2>
             <p className="text-sm text-muted-foreground">
               A complete history of your progress
             </p>

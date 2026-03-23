@@ -310,7 +310,7 @@ function SidebarContent({
         })}
       </nav>
 
-      {/* Chat with Fred -- prominent orange CTA */}
+      {/* Chat with Mentor -- prominent orange CTA */}
       <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800">
         <button
           onClick={() => openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")}
@@ -321,7 +321,7 @@ function SidebarContent({
           )}
         >
           <MessageSquare className="h-4 w-4 shrink-0" />
-          <span>Chat with Fred</span>
+          <span>Chat with Mentor</span>
         </button>
       </div>
 

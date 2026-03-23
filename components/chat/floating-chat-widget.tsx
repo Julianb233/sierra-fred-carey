@@ -124,7 +124,7 @@ export function FloatingChatWidget({
               "transition-all duration-300",
               "text-white border-0"
             )}
-            aria-label="Chat with Fred"
+            aria-label="Chat with Mentor"
           >
             <MessageSquare className="h-6 w-6" />
           </Button>
