@@ -394,7 +394,7 @@ export default function StartupProcessPage() {
       <Card>
         <CardContent className="py-12 text-center">
           <Rocket className="h-12 w-12 text-[#ff6a1a] mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Start Your Journey</h2>
+          <h2 className="text-xl font-bold mb-2">Start Your Progress</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             The 9-Step Startup Process will guide you through building a solid
             foundation for your startup idea.
