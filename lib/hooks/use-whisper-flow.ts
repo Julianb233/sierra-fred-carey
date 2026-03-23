@@ -51,6 +51,24 @@ interface UseWhisperFlowOptions {
   autoSend?: boolean;
 }
 
+// ============================================================================
+// Samsung / Android Browser Detection
+// ============================================================================
+
+/**
+ * Detect Samsung Internet or Samsung Galaxy devices where audio recording
+ * cuts off due to aggressive track suspension and incompatible constraints.
+ */
+function isSamsungDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return (
+    ua.includes("samsungbrowser") ||
+    ua.includes("samsung") ||
+    /sm-[gasn]\d/i.test(navigator.userAgent)
+  );
+}
+
 // Preferred MIME types in order of quality/compatibility
 const MIME_TYPES = [
   "audio/webm;codecs=opus",
@@ -197,14 +215,31 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
     setDuration(0);
     chunksRef.current = [];
 
+    const samsung = isSamsungDevice();
+
     try {
+      // Samsung audio HALs conflict with autoGainControl and specific sampleRates.
+      // Use relaxed constraints to prevent the browser from killing the mic track.
+      const audioConstraints: MediaTrackConstraints = samsung
+        ? {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false,
+            channelCount: 1,
+          }
+        : {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: { ideal: 16000 },
+          };
+
+      if (samsung) {
+        console.log("[WhisperFlow] Samsung device detected, using compatible audio constraints");
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: { ideal: 16000 },
-        },
+        audio: audioConstraints,
       });
 
       streamRef.current = stream;
@@ -250,8 +285,41 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
         stream.getTracks().forEach((t) => t.stop());
       };
 
+      // Samsung Internet can silently kill the audio track without firing
+      // recorder.onerror. Monitor the track's "ended" event to catch this.
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.addEventListener("ended", () => {
+          // Only handle unexpected track ends (not user-initiated stops)
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+            console.warn("[WhisperFlow] Audio track ended unexpectedly (Samsung suspension)");
+            // Stop the recorder gracefully so whatever was captured gets transcribed
+            try {
+              mediaRecorderRef.current.stop();
+            } catch {
+              // Recorder may already be stopped
+            }
+            mediaRecorderRef.current = null;
+            setIsRecording(false);
+          }
+        });
+
+        // Samsung: watch for the track being muted (different from ended).
+        // This happens when the notification drawer opens or the tab loses focus.
+        if (samsung) {
+          audioTrack.addEventListener("mute", () => {
+            console.warn("[WhisperFlow] Samsung: audio track muted, track may recover on unmute");
+          });
+          audioTrack.addEventListener("unmute", () => {
+            console.log("[WhisperFlow] Samsung: audio track unmuted, recording continues");
+          });
+        }
+      }
+
       mediaRecorderRef.current = recorder;
-      recorder.start(1000); // Collect data every second
+      // Samsung: Use shorter timeslice (500ms) to minimize data loss if the
+      // browser suspends the track mid-recording. Other browsers use 1s.
+      recorder.start(samsung ? 500 : 1000);
       startTimeRef.current = Date.now();
       setIsRecording(true);
 
@@ -259,6 +327,17 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
       timerRef.current = setInterval(() => {
         setDuration(Math.floor((Date.now() - startTimeRef.current) / 1000));
       }, 500);
+
+      // Resume AudioContext first on Samsung (autoplay policy can block it)
+      if (samsung) {
+        try {
+          const ctx = new AudioContext();
+          if (ctx.state === "suspended") await ctx.resume();
+          await ctx.close();
+        } catch {
+          // Non-critical — level monitoring may not work but recording still will
+        }
+      }
 
       // Start audio level monitoring for visualizations
       startAudioLevelMonitoring(stream);

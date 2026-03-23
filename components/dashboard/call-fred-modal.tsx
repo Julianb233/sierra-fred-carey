@@ -462,6 +462,25 @@ export function CallFredModal({
         console.log('[CallFred] SignalConnected');
       });
 
+      // Samsung: Immediate mic recovery on TrackMuted event (faster than polling).
+      // Samsung browsers can silently mute the local mic track without user action.
+      if (isSamsungDevice()) {
+        room.on(RoomEvent.TrackMuted, (publication, participant) => {
+          if (
+            participant.identity === room.localParticipant.identity &&
+            publication.source === Track.Source.Microphone &&
+            !isMutedRef.current
+          ) {
+            console.warn('[CallFred] Samsung: Local mic track was muted unexpectedly, re-enabling...');
+            const audioOpts = buildAudioCaptureOptions();
+            room.localParticipant
+              .setMicrophoneEnabled(true, audioOpts)
+              .then(() => console.log('[CallFred] Samsung: Mic restored via TrackMuted handler'))
+              .catch((e) => console.warn('[CallFred] Samsung TrackMuted re-enable failed:', e));
+          }
+        });
+      }
+
       // P1 Fix: Timeout if agent doesn't join within 30 seconds
       const hasRemoteParticipant = room.remoteParticipants.size > 0;
       if (!hasRemoteParticipant) {
@@ -489,6 +508,7 @@ export function CallFredModal({
       // Samsung workaround: Monitor local audio track for silent muting.
       // Samsung Internet can silently mute the track (track.isMuted becomes true)
       // without firing MediaDevicesError. Poll and re-enable if detected.
+      // Also detect fully ended tracks which Samsung can kill during focus loss.
       if (isSamsungDevice()) {
         samsungWatchdogRef.current = setInterval(() => {
           const currentRoom = roomRef.current;
@@ -507,7 +527,20 @@ export function CallFredModal({
               .setMicrophoneEnabled(true, audioOpts)
               .catch((e) => console.warn('[CallFred] Samsung mic re-enable failed:', e));
           }
-        }, 3000);
+
+          // Detect fully ended tracks — Samsung can kill the underlying MediaStreamTrack
+          // entirely when the notification drawer opens or after an OS-level interruption.
+          // In this case, the track won't be muted — it'll be missing. Re-acquire mic.
+          if (!micPub || (micPub.track?.mediaStreamTrack?.readyState === "ended" && !isMutedRef.current)) {
+            console.warn('[CallFred] Samsung: Mic track ended or missing, re-acquiring...');
+            const audioOpts = buildAudioCaptureOptions();
+            currentRoom.localParticipant
+              .setMicrophoneEnabled(false)
+              .then(() => currentRoom.localParticipant.setMicrophoneEnabled(true, audioOpts))
+              .then(() => console.log('[CallFred] Samsung: Mic re-acquired successfully'))
+              .catch((e) => console.warn('[CallFred] Samsung mic re-acquire failed:', e));
+          }
+        }, 2000); // Poll every 2s (was 3s — Samsung suspensions can happen fast)
       }
     } catch (err) {
       console.error("[CallFred] Error starting call:", err);
