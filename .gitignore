@@ -75,3 +75,4 @@ public/sw.js.map
 public/swe-worker-*.js
 .next.bak/
 .claude/worktrees/
+.claude/
