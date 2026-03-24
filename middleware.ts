@@ -118,7 +118,7 @@ export async function middleware(request: NextRequest) {
           pathname.startsWith("/dashboard") &&
           !pathname.startsWith("/dashboard/reality-lens")
         ) {
-          const realityLensUrl = new URL("/dashboard/reality-lens?first=true", request.url)
+          const realityLensUrl = new URL("/dashboard/reality-lens/quick?first=true", request.url)
           const redirectResponse = NextResponse.redirect(realityLensUrl)
           redirectResponse.headers.set("X-Request-ID", requestId)
           return redirectResponse
