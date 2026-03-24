@@ -21,6 +21,7 @@ const productionEnvSchema = z.object({
   STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
+  NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID: z.string().startsWith("price_"),
   NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID: z.string().startsWith("price_"),
   NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID: z
     .string()
