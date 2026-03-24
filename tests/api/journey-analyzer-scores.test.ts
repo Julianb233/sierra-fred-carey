@@ -467,7 +467,7 @@ describe("Score persistence coverage", () => {
     { route: "POST /api/journey/timeline", eventType: "dynamic", hasScore: true },
     { route: "POST /api/fred/chat (stream done)", eventType: "dynamic", hasScore: false },
     { route: "POST /api/startup-process", eventType: "milestone_achieved", hasScore: true },
-    { route: "POST /api/investor-lens", eventType: "investor_lens_evaluation", hasScore: false },
+    { route: "POST /api/investor-lens", eventType: "investor_lens_evaluation", hasScore: true },
     { route: "POST /api/investor-lens/deck-review", eventType: "deck_review_completed", hasScore: true },
     { route: "POST /api/positioning", eventType: "positioning_assessment", hasScore: true },
   ];
