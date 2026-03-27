@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getCurrentUser } from "@/lib/auth";
 import { PLANS, getPlanByPriceId } from "@/lib/stripe/config";
 
 /**
@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Check auth first (don't reveal server config to unauthenticated users)
     const userId = await requireAuth();
+    // Pre-fetch user for email pre-fill on Stripe checkout
+    const user = await getCurrentUser();
 
     // Check if Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession({
       priceId: resolvedPriceId,
       customerId: customerId || undefined,
+      customerEmail: !customerId ? (user?.email || undefined) : undefined,
       userId,
       successUrl: `${baseUrl}/dashboard?success=true&tier=${plan.id}`,
       cancelUrl: `${baseUrl}/pricing?canceled=true`,

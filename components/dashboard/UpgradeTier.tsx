@@ -348,7 +348,9 @@ export function UpgradeBanner({
 
   const nextTier = getUpgradeTier(currentTier);
   const nextPlan = nextTier !== null
-    ? (nextTier === UserTier.PRO ? PLANS.FUNDRAISING : PLANS.VENTURE_STUDIO)
+    ? (nextTier === UserTier.BUILDER ? PLANS.BUILDER
+      : nextTier === UserTier.PRO ? PLANS.FUNDRAISING
+      : PLANS.VENTURE_STUDIO)
     : null;
 
   if (!nextPlan) return null;
