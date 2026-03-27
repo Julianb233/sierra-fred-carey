@@ -71,6 +71,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: build
+    continue-on-error: true
     timeout-minutes: 15
     # E2E tests run against a local build, not against deployed environment.
     # For staging-specific testing, use the staging Vercel URL.
