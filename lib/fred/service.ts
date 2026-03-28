@@ -141,6 +141,7 @@ export class FredService {
           mentalModels: [],
           synthesis: null,
           decision: null,
+          response: null,
           scores: null,
           startedAt: null,
           completedAt: null,
@@ -322,6 +323,15 @@ export class FredService {
    * Extract response from context
    */
   private extractResponse(context: FredContext): FredResponse {
+    // Prefer the full FredResponse from the execute actor — it contains
+    // enriched fields (approvalOptions, updated reasoning, etc.) that
+    // DecisionResult doesn't carry.
+    if (context.response) {
+      return context.response;
+    }
+
+    // Fallback: reconstruct from decision (e.g. human_review path where
+    // execute hasn't run yet).
     if (context.decision) {
       return {
         content: context.decision.content,
