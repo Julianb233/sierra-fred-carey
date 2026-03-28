@@ -218,6 +218,20 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const [sessionIdState, setSessionIdState] = useState<string>(() => sessionIdRef.current);
+
+  // Sync external providedSessionId prop changes to internal ref + state.
+  // Without this, a late-arriving prop (e.g. after async fetch) is ignored
+  // and the hook keeps using the stale initial value.
+  useEffect(() => {
+    if (providedSessionId && providedSessionId !== sessionIdRef.current) {
+      sessionIdRef.current = providedSessionId;
+      setSessionIdState(providedSessionId);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, providedSessionId);
+      }
+    }
+  }, [providedSessionId]);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
