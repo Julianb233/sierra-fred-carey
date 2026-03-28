@@ -216,6 +216,11 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const [redFlags, setRedFlags] = useState<RedFlag[]>([]);
   const [wellbeingAlert, setWellbeingAlert] = useState<BurnoutSignals | null>(null);
 
+  // AI-839: Dual ref+state pattern for sessionId.
+  // - sessionIdRef: synchronous reads inside sendMessage (never stale in callbacks)
+  // - sessionIdState: reactive value returned to consumers (triggers re-renders)
+  // IMPORTANT: Both MUST be updated together. SSE handlers ('connected', 'done'),
+  // reset(), and the providedSessionId sync effect all keep these in sync.
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const [sessionIdState, setSessionIdState] = useState<string>(() => sessionIdRef.current);
 
