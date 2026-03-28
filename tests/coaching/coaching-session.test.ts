@@ -234,7 +234,7 @@ describe("Coaching Sessions API", () => {
 
     it("returns 400 when roomName is missing", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(3); // UserTier.STUDIO = 3
 
       const { POST } = await import(
         "@/app/api/coaching/sessions/route"
@@ -254,7 +254,7 @@ describe("Coaching Sessions API", () => {
 
     it("returns 400 when roomName has invalid characters", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(3); // UserTier.STUDIO = 3
 
       const { POST } = await import(
         "@/app/api/coaching/sessions/route"
@@ -274,7 +274,7 @@ describe("Coaching Sessions API", () => {
 
     it("creates a session for Studio tier user", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(3); // UserTier.STUDIO = 3
 
       const createdSession = {
         id: "new-sess-id",
@@ -327,7 +327,7 @@ describe("Coaching Sessions API", () => {
 
     it("creates a session without notes", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(3); // UserTier.STUDIO = 3
 
       const createdSession = {
         id: "new-sess-id-2",

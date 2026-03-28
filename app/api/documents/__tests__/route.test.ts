@@ -49,7 +49,7 @@ vi.mock('@/lib/stripe/config', () => ({
 
 // Mock tier middleware to return PRO tier for authenticated users
 vi.mock('@/lib/api/tier-middleware', () => ({
-  getUserTier: vi.fn(() => Promise.resolve(1)), // UserTier.PRO
+  getUserTier: vi.fn(() => Promise.resolve(2)), // UserTier.PRO = 2 (FREE=0, BUILDER=1, PRO=2, STUDIO=3)
   createTierErrorResponse: vi.fn(() => {
     const { NextResponse } = require('next/server');
     return NextResponse.json(

@@ -35,12 +35,14 @@ export const stripe = {
 export async function createCheckoutSession({
   priceId,
   customerId,
+  customerEmail,
   userId,
   successUrl,
   cancelUrl,
 }: {
   priceId: string;
   customerId?: string;
+  customerEmail?: string;
   userId: string;
   successUrl: string;
   cancelUrl: string;
@@ -64,11 +66,14 @@ export async function createCheckoutSession({
     client_reference_id: userId,
     metadata: { userId },
     subscription_data: subscriptionData,
+    allow_promotion_codes: true,
   };
 
   // Only include customer if we have one (avoids sending undefined to Stripe)
   if (customerId) {
     sessionParams.customer = customerId;
+  } else if (customerEmail) {
+    sessionParams.customer_email = customerEmail;
   }
 
   const session = await getStripe().checkout.sessions.create(sessionParams);

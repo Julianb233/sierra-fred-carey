@@ -128,16 +128,16 @@ export async function createOrUpdateSubscription(
       ${now}
     )
     ON CONFLICT (user_id) DO UPDATE SET
-      stripe_customer_id = EXCLUDED.stripe_customer_id,
-      stripe_subscription_id = EXCLUDED.stripe_subscription_id,
-      stripe_price_id = EXCLUDED.stripe_price_id,
-      status = EXCLUDED.status,
-      current_period_start = EXCLUDED.current_period_start,
-      current_period_end = EXCLUDED.current_period_end,
-      canceled_at = EXCLUDED.canceled_at,
-      cancel_at_period_end = EXCLUDED.cancel_at_period_end,
-      trial_start = EXCLUDED.trial_start,
-      trial_end = EXCLUDED.trial_end,
+      stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, user_subscriptions.stripe_customer_id),
+      stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, user_subscriptions.stripe_subscription_id),
+      stripe_price_id = COALESCE(EXCLUDED.stripe_price_id, user_subscriptions.stripe_price_id),
+      status = COALESCE(EXCLUDED.status, user_subscriptions.status),
+      current_period_start = COALESCE(EXCLUDED.current_period_start, user_subscriptions.current_period_start),
+      current_period_end = COALESCE(EXCLUDED.current_period_end, user_subscriptions.current_period_end),
+      canceled_at = CASE WHEN EXCLUDED.canceled_at IS NOT NULL THEN EXCLUDED.canceled_at ELSE user_subscriptions.canceled_at END,
+      cancel_at_period_end = COALESCE(EXCLUDED.cancel_at_period_end, user_subscriptions.cancel_at_period_end),
+      trial_start = COALESCE(EXCLUDED.trial_start, user_subscriptions.trial_start),
+      trial_end = COALESCE(EXCLUDED.trial_end, user_subscriptions.trial_end),
       updated_at = EXCLUDED.updated_at
     RETURNING *
   `;

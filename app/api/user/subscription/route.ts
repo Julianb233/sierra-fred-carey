@@ -51,7 +51,11 @@ export async function GET(_request: NextRequest) {
     // Fallback: check profiles.tier for admin-managed tier assignments
     const profileTier = await getProfileTier(userId);
     if (profileTier !== null && profileTier > 0) {
-      const plan = profileTier >= 2 ? PLANS.VENTURE_STUDIO : PLANS.FUNDRAISING;
+      const plan = profileTier >= 3
+        ? PLANS.VENTURE_STUDIO
+        : profileTier >= 2
+          ? PLANS.FUNDRAISING
+          : PLANS.BUILDER;
       return NextResponse.json({
         plan,
         subscription: { status: "active", currentPeriodEnd: null, cancelAtPeriodEnd: false },

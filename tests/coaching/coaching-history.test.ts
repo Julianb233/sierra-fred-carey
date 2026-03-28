@@ -516,7 +516,7 @@ describe("Studio tier requirement", () => {
 
   it("POST rejects Pro tier users", async () => {
     setupAuth(OTHER_USER_ID);
-    mockGetUserTier.mockResolvedValue(1); // UserTier.PRO
+    mockGetUserTier.mockResolvedValue(2); // UserTier.PRO = 2
 
     const { POST } = await import("@/app/api/coaching/sessions/route");
 
@@ -534,7 +534,7 @@ describe("Studio tier requirement", () => {
 
   it("POST allows Studio tier users", async () => {
     setupAuth(STUDIO_USER_ID);
-    mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+    mockGetUserTier.mockResolvedValue(3); // UserTier.STUDIO = 3
 
     const createdSession = {
       ...MOCK_SESSION,

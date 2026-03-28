@@ -22,7 +22,7 @@ vi.mock("next/link", () => ({
 const mockUseUserTier = vi.fn();
 vi.mock("@/lib/context/tier-context", () => ({
   useUserTier: () => mockUseUserTier(),
-  useTier: () => ({ tier: 1, isLoading: false }),
+  useTier: () => ({ tier: 2, isLoading: false }),
 }));
 
 const mockReadinessData = {
@@ -77,7 +77,7 @@ describe("Readiness Tab (/dashboard/readiness)", () => {
     mockFetch.mockReset();
     // Default: Pro tier, loaded
     mockUseUserTier.mockReturnValue({
-      tier: 1,
+      tier: 2, // UserTier.PRO
       isLoading: false,
       tierName: "Pro",
       isSubscriptionActive: true,

@@ -35,7 +35,7 @@ vi.mock("next/link", () => ({
 const mockUseUserTier = vi.fn();
 vi.mock("@/lib/context/tier-context", () => ({
   useUserTier: () => mockUseUserTier(),
-  useTier: () => ({ tier: 1, isLoading: false }),
+  useTier: () => ({ tier: 2, isLoading: false }),
 }));
 
 // ============================================================================
@@ -136,7 +136,7 @@ describe("Documents Page (/dashboard/documents)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockReset();
-    mockUseUserTier.mockReturnValue({ tier: 1, isLoading: false });
+    mockUseUserTier.mockReturnValue({ tier: 2, isLoading: false });
   });
 
   it("renders loading state while tier is loading", () => {

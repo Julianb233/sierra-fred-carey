@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Crown, Zap } from "lucide-react";
+import { Sparkles, Crown, Zap, Hammer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { UserTier, TIER_BADGES } from "@/lib/constants";
@@ -14,6 +14,7 @@ interface TierBadgeProps {
 
 const TIER_ICONS = {
   [UserTier.FREE]: Zap,
+  [UserTier.BUILDER]: Hammer,
   [UserTier.PRO]: Sparkles,
   [UserTier.STUDIO]: Crown,
 };
@@ -112,6 +113,7 @@ export function TierIcon({
 
   const colorClass = {
     [UserTier.FREE]: "text-gray-400",
+    [UserTier.BUILDER]: "text-amber-500",
     [UserTier.PRO]: "text-[#ff6a1a]",
     [UserTier.STUDIO]: "text-orange-400",
   }[tier];
