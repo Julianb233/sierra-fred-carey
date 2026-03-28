@@ -55,6 +55,7 @@ function createInitialContext(
     mentalModels: [],
     synthesis: null,
     decision: null,
+    response: null,
     scores: null,
     error: null,
     retryCount: 0,
@@ -77,8 +78,7 @@ function createInitialContext(
 
 function buildSimpleDecision(input: ValidatedInput): DecisionResult {
   // Generate actual response content inline (no placeholders).
-  // The execute actor returns void and doesn't update context.decision,
-  // so streaming reads context.decision.content directly.
+  // The execute actor returns FredResponse which is stored in context.response.
   let content: string;
   if (input.intent === "greeting") {
     const greetings = [
@@ -691,6 +691,7 @@ export const fredMachine = setup({
             "logTransition",
             "setCompleteTime",
             assign({
+              response: ({ event }) => event.output as FredResponse,
               decision: ({ context, event }) =>
                 context.decision && event.output
                   ? { ...context.decision, content: event.output.content, metadata: event.output.metadata }
