@@ -210,11 +210,11 @@ export declare const SAHARA_MESSAGING: {
     readonly vision: "What if you could create a unicorn, all by yourself?";
     readonly positioning: "Your AI-powered co-founder, available 24/7";
     readonly valueProps: readonly ["Think Clearer - Get clarity on your strategy", "Raise Smarter - Prepare for investors the right way", "Scale Faster - Execute with proven frameworks"];
-    readonly differentiators: readonly ["24/7 proactive guidance (not reactive)", "Real-time strategy and execution support", "Based on 50+ years and 10,000+ founder coaching sessions", "Acts as co-founder, not just advisor"];
+    readonly differentiators: readonly ["24/7 proactive guidance (not reactive)", "Real-time strategy and execution support", "Based on 50+ years and hundreds of founder coaching sessions", "Acts as co-founder, not just advisor"];
 };
 export declare const MARKETING_STATS: {
-    readonly capitalRaised: "$100M+";
-    readonly foundersCoached: "10,000+";
+    readonly capitalRaised: "$3B+";
+    readonly foundersCoached: "Hundreds";
     readonly yearsExperience: "50+";
     readonly companiesFounded: "40+";
     readonly startupsLaunched: "300+";
