@@ -59,6 +59,7 @@ export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Verc
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "free",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 };
@@ -1134,24 +1135,39 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           if (update.isComplete) {
             const latencyMs = Date.now() - startTime;
 
-            const decisionContent = update.context.decision?.content;
+            // Prefer the enriched FredResponse from the execute actor (context.response)
+            // which carries approvalOptions, enriched metadata (sessionId, procedureUsed,
+            // factorScores), etc. Fall back to context.decision for paths that skip execute.
+            const enrichedResponse = update.context.response;
+            const decisionContent = enrichedResponse?.content ?? update.context.decision?.content;
             if (!decisionContent) {
               console.error("[FRED Chat] Decision content is empty/null — LLM likely failed silently.", {
                 traceId,
                 userId,
                 finalState: update.state,
+                hasResponse: !!enrichedResponse,
                 hasDecision: !!update.context.decision,
-                action: update.context.decision?.action,
+                action: enrichedResponse?.action ?? update.context.decision?.action,
                 error: update.context.error,
               });
             }
-            const response = {
-              content: decisionContent || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
-              action: update.context.decision?.action || "defer",
-              confidence: update.context.decision?.confidence || 0,
-              requiresApproval: update.context.decision?.requiresHumanApproval || false,
-              reasoning: update.context.decision?.reasoning,
-            };
+            const response = enrichedResponse
+              ? {
+                  content: enrichedResponse.content || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
+                  action: enrichedResponse.action,
+                  confidence: enrichedResponse.confidence,
+                  requiresApproval: enrichedResponse.requiresApproval,
+                  reasoning: enrichedResponse.reasoning,
+                  approvalOptions: enrichedResponse.approvalOptions,
+                  metadata: enrichedResponse.metadata,
+                }
+              : {
+                  content: decisionContent || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
+                  action: update.context.decision?.action || "defer",
+                  confidence: update.context.decision?.confidence || 0,
+                  requiresApproval: update.context.decision?.requiresHumanApproval || false,
+                  reasoning: update.context.decision?.reasoning,
+                };
 
             send("response", {
               ...response,
