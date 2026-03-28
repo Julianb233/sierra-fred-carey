@@ -216,8 +216,27 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const [redFlags, setRedFlags] = useState<RedFlag[]>([]);
   const [wellbeingAlert, setWellbeingAlert] = useState<BurnoutSignals | null>(null);
 
+  // AI-839: Dual ref+state pattern for sessionId.
+  // - sessionIdRef: synchronous reads inside sendMessage (never stale in callbacks)
+  // - sessionIdState: reactive value returned to consumers (triggers re-renders)
+  // IMPORTANT: Both MUST be updated together. SSE handlers ('connected', 'done'),
+  // reset(), and the providedSessionId sync effect all keep these in sync.
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const [sessionIdState, setSessionIdState] = useState<string>(() => sessionIdRef.current);
+
+  // Sync external providedSessionId prop changes to internal ref + state.
+  // Without this, a late-arriving prop (e.g. after async fetch) is ignored
+  // and the hook keeps using the stale initial value.
+  useEffect(() => {
+    if (providedSessionId && providedSessionId !== sessionIdRef.current) {
+      sessionIdRef.current = providedSessionId;
+      setSessionIdState(providedSessionId);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, providedSessionId);
+      }
+    }
+  }, [providedSessionId]);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);

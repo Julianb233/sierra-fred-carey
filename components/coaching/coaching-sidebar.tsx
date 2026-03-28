@@ -69,6 +69,7 @@ export function CoachingSidebar({
     isProcessing,
     reset,
   } = useFredChat({
+    sessionId,
     context: {
       goals: [
         "You are in a live video coaching session. Keep responses concise and actionable.",

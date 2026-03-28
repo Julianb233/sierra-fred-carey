@@ -199,6 +199,7 @@ export async function checkRateLimit(
 
 export const RATE_LIMIT_TIERS = {
   free: { limit: 20, windowSeconds: 60 },
+  builder: { limit: 40, windowSeconds: 60 },
   pro: { limit: 100, windowSeconds: 60 },
   studio: { limit: 500, windowSeconds: 60 },
   unlimited: { limit: 10000, windowSeconds: 60 },
