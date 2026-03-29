@@ -63,6 +63,16 @@ export default function SettingsPage() {
           email: authUser.email || "",
           company: "",
         })
+
+        // Load SMS check-in preference from user_sms_preferences
+        const { data: smsPrefs } = await supabase
+          .from("user_sms_preferences")
+          .select("checkin_enabled")
+          .eq("user_id", authUser.id)
+          .single()
+        if (smsPrefs) {
+          setNotifications((prev) => ({ ...prev, sms: smsPrefs.checkin_enabled }))
+        }
       }
       setIsProfileLoading(false)
     }
@@ -178,6 +188,38 @@ export default function SettingsPage() {
       const supabase = createClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) return
+
+      // Persist SMS check-in preference to user_sms_preferences table
+      if (notifications.sms) {
+        const { error: smsError } = await supabase
+          .from("user_sms_preferences")
+          .upsert(
+            {
+              user_id: authUser.id,
+              checkin_enabled: true,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          )
+        if (smsError) {
+          console.error("SMS preferences save error:", smsError)
+        }
+      } else {
+        // Disable SMS check-ins if toggled off
+        const { error: smsError } = await supabase
+          .from("user_sms_preferences")
+          .upsert(
+            {
+              user_id: authUser.id,
+              checkin_enabled: false,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          )
+        if (smsError) {
+          console.error("SMS preferences save error:", smsError)
+        }
+      }
 
       const { error } = await supabase
         .from("profiles")
