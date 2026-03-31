@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     // Check rate limit using actual user tier
     const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
       [UserTier.FREE]: "free",
+      [UserTier.BUILDER]: "free",
       [UserTier.PRO]: "pro",
       [UserTier.STUDIO]: "studio",
     };

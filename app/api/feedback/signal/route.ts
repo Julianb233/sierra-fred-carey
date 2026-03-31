@@ -13,6 +13,7 @@ import type { FeedbackSignalInsert } from "@/lib/feedback/types"
  */
 const TIER_MAP: Record<UserTier, "free" | "pro" | "studio"> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "free",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 }

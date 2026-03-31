@@ -60,7 +60,7 @@ export function useSubscription() {
     (requiredPlan: PlanId): boolean => {
       if (!state.isActive) return requiredPlan === "FREE";
 
-      const planHierarchy: PlanId[] = ["FREE", "FUNDRAISING", "VENTURE_STUDIO"];
+      const planHierarchy: PlanId[] = ["FREE", "BUILDER", "FUNDRAISING", "VENTURE_STUDIO"];
       const currentIndex = planHierarchy.indexOf(state.plan.id.toUpperCase() as PlanId);
       const requiredIndex = planHierarchy.indexOf(requiredPlan);
 

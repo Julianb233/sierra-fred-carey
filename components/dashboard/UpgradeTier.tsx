@@ -28,8 +28,9 @@ import {
   ExclamationTriangleIcon,
   ReloadIcon,
 } from "@radix-ui/react-icons";
+import { Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLANS, type PlanId } from "@/lib/stripe/config";
+import { PLANS, type PlanId, isTrialEnabled } from "@/lib/stripe/config";
 import { UserTier, TIER_NAMES, getUpgradeTier } from "@/lib/constants";
 import { redirectToCheckout, redirectToPortal } from "@/lib/stripe/client";
 
@@ -50,12 +51,14 @@ interface PlanCardProps {
 
 const PLAN_ICONS: Record<string, typeof StarIcon> = {
   free: LightningBoltIcon,
+  builder: Hammer as unknown as typeof StarIcon,
   fundraising: StarIcon,
   venture_studio: RocketIcon,
 };
 
 const PLAN_GRADIENTS: Record<string, string> = {
   free: "from-gray-400 to-gray-500",
+  builder: "from-amber-500 to-amber-600",
   fundraising: "from-[#ff6a1a] to-orange-400",
   venture_studio: "from-orange-600 to-[#ff6a1a]",
 };
@@ -180,6 +183,8 @@ export function UpgradeTier({
 
   const currentPlanId = currentTier === UserTier.FREE
     ? "free"
+    : currentTier === UserTier.BUILDER
+    ? "builder"
     : currentTier === UserTier.PRO
     ? "fundraising"
     : "venture_studio";
@@ -223,10 +228,12 @@ export function UpgradeTier({
     }
   }, []);
 
-  const plans = [PLANS.FREE, PLANS.FUNDRAISING, PLANS.VENTURE_STUDIO];
+  const plans = [PLANS.FREE, PLANS.BUILDER, PLANS.FUNDRAISING, PLANS.VENTURE_STUDIO];
   const nextTier = getUpgradeTier(currentTier);
   const nextPlan = nextTier !== null
-    ? (nextTier === UserTier.PRO ? PLANS.FUNDRAISING : PLANS.VENTURE_STUDIO)
+    ? (nextTier === UserTier.BUILDER ? PLANS.BUILDER
+      : nextTier === UserTier.PRO ? PLANS.FUNDRAISING
+      : PLANS.VENTURE_STUDIO)
     : null;
 
   return (
@@ -254,11 +261,13 @@ export function UpgradeTier({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           {plans.map((plan) => {
             const tierForPlan =
               plan.id === "free"
                 ? UserTier.FREE
+                : plan.id === "builder"
+                ? UserTier.BUILDER
                 : plan.id === "fundraising"
                 ? UserTier.PRO
                 : UserTier.STUDIO;
@@ -316,7 +325,9 @@ export function UpgradeTier({
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            All plans include a 14-day free trial. Cancel anytime.
+            {isTrialEnabled()
+              ? "All plans include a 14-day free trial. Cancel anytime."
+              : "Cancel anytime. No long-term commitment."}
           </p>
         </div>
       </DialogContent>
@@ -337,7 +348,9 @@ export function UpgradeBanner({
 
   const nextTier = getUpgradeTier(currentTier);
   const nextPlan = nextTier !== null
-    ? (nextTier === UserTier.PRO ? PLANS.FUNDRAISING : PLANS.VENTURE_STUDIO)
+    ? (nextTier === UserTier.BUILDER ? PLANS.BUILDER
+      : nextTier === UserTier.PRO ? PLANS.FUNDRAISING
+      : PLANS.VENTURE_STUDIO)
     : null;
 
   if (!nextPlan) return null;
