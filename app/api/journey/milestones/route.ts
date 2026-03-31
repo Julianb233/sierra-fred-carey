@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 
 const VALID_CATEGORIES = ["fundraising", "product", "team", "growth", "legal"];
 const VALID_STATUSES = ["pending", "in_progress", "completed", "skipped"];
@@ -120,15 +121,16 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    // Log journey event
-    await sql`
-      INSERT INTO journey_events (user_id, event_type, event_data)
-      VALUES (${userId}, 'milestone_created', ${JSON.stringify({
+    // Log journey event with resilient retry logic
+    logJourneyEventAsync({
+      userId,
+      eventType: "milestone_created",
+      eventData: {
         milestoneId: result[0].id,
         title,
-        category
-      })})
-    `;
+        category,
+      },
+    });
 
     return NextResponse.json(
       { success: true, data: result[0] },

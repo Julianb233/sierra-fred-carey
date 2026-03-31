@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/supabase-sql";
 import { requireAuth } from "@/lib/auth";
+import { logJourneyEventAsync } from "@/lib/db/journey-events";
 import type { StartupProcess, StepData, StepNumber } from "@/types/startup-process";
 import { STEP_TITLES, STEP_DESCRIPTIONS, STEP_KEY_QUESTIONS } from "@/types/startup-process";
 
@@ -203,24 +204,17 @@ export async function PUT(request: NextRequest) {
       }
     }
     if (newlyValidated.length > 0) {
-      try {
-        for (const stepNum of newlyValidated) {
-          await sql`
-            INSERT INTO journey_events (user_id, event_type, event_data, score_after)
-            VALUES (
-              ${userId},
-              'milestone_achieved',
-              ${JSON.stringify({
-                source: 'startup_process',
-                stepNumber: stepNum,
-                stepTitle: STEP_TITLES[stepNum as StepNumber],
-              })},
-              ${completionPct}
-            )
-          `;
-        }
-      } catch (err) {
-        console.error("[PUT /api/startup-process] Failed to log journey events:", err);
+      for (const stepNum of newlyValidated) {
+        logJourneyEventAsync({
+          userId,
+          eventType: "milestone_achieved",
+          eventData: {
+            source: "startup_process",
+            stepNumber: stepNum,
+            stepTitle: STEP_TITLES[stepNum as StepNumber],
+          },
+          scoreAfter: completionPct,
+        });
       }
     }
 
