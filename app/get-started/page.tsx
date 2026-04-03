@@ -30,7 +30,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 // Types
-type Step = 1 | 2 | 3 | 4 | "wink";
+type Step = 1 | 2 | 3 | "wink";
 type Stage = "idea" | "pre-seed" | "seed" | "series-a";
 type Challenge =
   | "product-market-fit"
@@ -80,8 +80,11 @@ function loadWizardState(): { step: Step; stage: Stage | null; challenge: Challe
     const stored = localStorage.getItem(WIZARD_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Clamp legacy 4-step state back to valid 3-step range
+      let step = parsed.step ?? 1;
+      if (step === 4) step = 3;
       return {
-        step: parsed.step ?? 1,
+        step,
         stage: parsed.stage ?? null,
         challenge: parsed.challenge ?? null,
         email: parsed.email ?? "",
@@ -239,16 +242,6 @@ const OnboardingPage = () => {
     setTimeout(() => setCurrentStep(3), 300);
   };
 
-  const handleFundamentalsNext = () => {
-    // At minimum, business name should be provided
-    if (!fundamentals.businessName.trim()) {
-      setError("Please enter your business name");
-      return;
-    }
-    setError(null);
-    setCurrentStep(4);
-  };
-
   const updateFundamental = <K extends keyof BusinessFundamentals>(key: K, value: BusinessFundamentals[K]) => {
     setFundamentals((prev) => ({ ...prev, [key]: value }));
   };
@@ -257,7 +250,6 @@ const OnboardingPage = () => {
     setError(null);
     if (currentStep === 2) setCurrentStep(1);
     if (currentStep === 3) setCurrentStep(2);
-    if (currentStep === 4) setCurrentStep(3);
   };
 
   const handleSubmit = async () => {
@@ -326,7 +318,7 @@ const OnboardingPage = () => {
   };
 
   // Progress dots
-  const stepNumber = currentStep === "wink" ? 4 : currentStep;
+  const stepNumber = currentStep === "wink" ? 3 : currentStep;
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-gray-950 overflow-hidden">
@@ -343,7 +335,7 @@ const OnboardingPage = () => {
           {/* Progress dots */}
           {currentStep !== "wink" && (
             <div className="fixed top-20 lg:top-24 right-4 sm:right-6 lg:right-8 z-40 flex items-center gap-2">
-              {[1, 2, 3, 4].map((step) => (
+              {[1, 2, 3].map((step) => (
                 <div
                   key={step}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
@@ -376,7 +368,7 @@ const OnboardingPage = () => {
                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#ff6a1a]/10 text-[#ff6a1a] rounded-full text-sm font-medium"
                     >
                       <Sparkles className="w-4 h-4" />
-                      4 quick steps to get started
+                      3 clicks to get started
                     </motion.div>
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                       What stage are you at?
@@ -490,145 +482,10 @@ const OnboardingPage = () => {
                 </motion.div>
               )}
 
-              {/* Step 3: Business Fundamentals */}
+              {/* Step 3: Enter Email - Create Account */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-8"
-                >
-                  <div className="text-center space-y-3">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                      Tell us about your <span className="text-[#ff6a1a]">business</span>
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      This helps your Mentor give tailored advice
-                    </p>
-                  </div>
-
-                  <div className="max-w-md mx-auto space-y-4">
-                    <div>
-                      <label htmlFor="business-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Business name *
-                      </label>
-                      <input
-                        id="business-name"
-                        type="text"
-                        placeholder="e.g. Acme Labs"
-                        value={fundamentals.businessName}
-                        onChange={(e) => updateFundamental("businessName", e.target.value)}
-                        autoFocus
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="industry" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Sector / Industry
-                      </label>
-                      <input
-                        id="industry"
-                        type="text"
-                        placeholder="e.g. SaaS, FinTech, HealthTech"
-                        value={fundamentals.industry}
-                        onChange={(e) => updateFundamental("industry", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="positioning" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        One-liner positioning
-                      </label>
-                      <input
-                        id="positioning"
-                        type="text"
-                        placeholder="e.g. Slack for healthcare teams"
-                        value={fundamentals.productPositioning}
-                        onChange={(e) => updateFundamental("productPositioning", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Revenue
-                        </label>
-                        <select
-                          value={fundamentals.revenueRange || ""}
-                          onChange={(e) => updateFundamental("revenueRange", (e.target.value || null) as RevenueRange | null)}
-                          className="w-full px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-sm"
-                        >
-                          <option value="">Select...</option>
-                          <option value="pre-revenue">Pre-revenue</option>
-                          <option value="0-10k">$0 – $10K/mo</option>
-                          <option value="10k-50k">$10K – $50K/mo</option>
-                          <option value="50k-100k">$50K – $100K/mo</option>
-                          <option value="100k-500k">$100K – $500K/mo</option>
-                          <option value="500k+">$500K+/mo</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Team size
-                        </label>
-                        <select
-                          value={fundamentals.teamSize || ""}
-                          onChange={(e) => updateFundamental("teamSize", (e.target.value || null) as TeamSizeRange | null)}
-                          className="w-full px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-sm"
-                        >
-                          <option value="">Select...</option>
-                          <option value="solo">Solo founder</option>
-                          <option value="2-5">2–5 people</option>
-                          <option value="6-10">6–10 people</option>
-                          <option value="11-25">11–25 people</option>
-                          <option value="25+">25+ people</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {error && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        role="alert"
-                        className="text-sm text-red-500"
-                      >
-                        {error}
-                      </motion.p>
-                    )}
-
-                    <Button
-                      size="lg"
-                      onClick={handleFundamentalsNext}
-                      className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-lg py-6 shadow-lg shadow-[#ff6a1a]/25"
-                    >
-                      Continue
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </div>
-
-                  <div className="flex justify-start">
-                    <Button
-                      variant="ghost"
-                      onClick={handleBack}
-                      className="gap-2 text-gray-600 dark:text-gray-400"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Back
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step 4: Enter Email - Create Account */}
-              {currentStep === 4 && (
-                <motion.div
-                  key="step4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}

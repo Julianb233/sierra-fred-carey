@@ -206,7 +206,7 @@ function LoginContent() {
               Don&apos;t have an account?{" "}
             </span>
             <Link
-              href="/get-started"
+              href="https://you.joinsahara.com"
               className="font-medium text-[#ff6a1a] hover:text-[#ea580c]"
             >
               Get started free
