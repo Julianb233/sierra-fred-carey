@@ -10,7 +10,7 @@ export interface FeedbackSignal {
   comment: string | null
   sentiment_score: number | null
   sentiment_confidence: number | null
-  user_tier: 'free' | 'pro' | 'studio'
+  user_tier: 'free' | 'builder' | 'pro' | 'studio'
   weight: number
   consent_given: boolean
   expires_at: string | null
