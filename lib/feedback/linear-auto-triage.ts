@@ -9,6 +9,7 @@
 
 import type { FeedbackInsight } from "@/lib/feedback/types"
 import { createServiceClient } from "@/lib/supabase/server"
+import { findInsightWithLinearIssueByHash } from "@/lib/db/feedback"
 
 // ── Constants ───────────────────────────────────────────────────
 
@@ -68,6 +69,30 @@ export async function createLinearIssueFromInsight(
   }
 
   try {
+    // Step 0a: Check if another insight with the same cluster hash already has a Linear issue
+    const insightRecord = insight as FeedbackInsight & { cluster_embedding_hash?: string }
+    if (insightRecord.cluster_embedding_hash) {
+      const existingLinked = await findInsightWithLinearIssueByHash(
+        insightRecord.cluster_embedding_hash
+      )
+      if (existingLinked && existingLinked.id !== insight.id) {
+        return {
+          success: false,
+          error: `Duplicate: insight ${existingLinked.id} already has Linear issue ${existingLinked.linear_issue_id} for the same feedback theme`,
+        }
+      }
+    }
+
+    // Step 0b: Query Linear for existing issues with the same [Feedback] title
+    const issueTitle = `[Feedback] ${insight.title}`
+    const existingIssue = await findExistingLinearIssue(apiKey, issueTitle)
+    if (existingIssue) {
+      return {
+        success: false,
+        error: `Duplicate: Linear issue ${existingIssue.identifier} already exists with title "${existingIssue.title}"`,
+      }
+    }
+
     // Step 1: Get team ID
     const teamQuery = await fetch("https://api.linear.app/graphql", {
       method: "POST",
@@ -161,6 +186,43 @@ ${signalIdsFormatted}${truncation}`
       success: false,
       error: `Linear API error: ${err instanceof Error ? err.message : String(err)}`,
     }
+  }
+}
+
+/**
+ * Search Linear for an existing issue with an exact title match.
+ * Returns the first match or null if none found.
+ */
+async function findExistingLinearIssue(
+  apiKey: string,
+  title: string
+): Promise<{ identifier: string; title: string; url: string } | null> {
+  try {
+    const res = await fetch("https://api.linear.app/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: apiKey,
+      },
+      body: JSON.stringify({
+        query: `query SearchIssues($filter: IssueFilter!) {
+          issues(filter: $filter, first: 1) {
+            nodes { identifier title url }
+          }
+        }`,
+        variables: {
+          filter: {
+            title: { eq: title },
+          },
+        },
+      }),
+    })
+    const data = await res.json()
+    const match = data.data?.issues?.nodes?.[0]
+    return match ?? null
+  } catch {
+    // Don't block issue creation if search fails
+    return null
   }
 }
 

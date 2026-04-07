@@ -56,9 +56,10 @@ export async function POST(
     const result = await createLinearIssueFromInsight(insight)
 
     if (!result.success) {
+      const isDuplicate = result.error?.startsWith("Duplicate:")
       return NextResponse.json(
         { error: result.error },
-        { status: 500 }
+        { status: isDuplicate ? 409 : 500 }
       )
     }
 
