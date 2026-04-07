@@ -311,6 +311,27 @@ export async function findInsightWithLinearIssueByHash(
   return data ?? null;
 }
 
+/**
+ * Find any active (non-resolved) insight with the same cluster hash.
+ * No time window — merges insights across days for recurring themes.
+ * Used by the clustering pipeline to prevent duplicate insights.
+ */
+export async function findActiveInsightByHash(
+  hash: string
+): Promise<FeedbackInsight | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .eq("cluster_embedding_hash", hash)
+    .in("status", ["new", "reviewed", "actioned"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function updateInsightSignals(
   insightId: string,
   newSignalIds: string[],
