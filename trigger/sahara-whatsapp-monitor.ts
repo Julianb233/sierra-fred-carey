@@ -346,7 +346,7 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
     throw new Error("LINEAR_API_KEY not configured");
   }
 
-  // Get team ID first
+  // Get team ID, label IDs, project ID, and active cycle in one query
   const teamQuery = await fetch("https://api.linear.app/graphql", {
     method: "POST",
     headers: {
@@ -354,7 +354,17 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
       Authorization: apiKey,
     },
     body: JSON.stringify({
-      query: `query { teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) { nodes { id } } }`,
+      query: `query {
+        teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) {
+          nodes { id activeCycle { id } }
+        }
+        issueLabels(filter: { name: { in: ["Bug", "Feature", "Improvement"] } }) {
+          nodes { id name }
+        }
+        projects(filter: { name: { eq: "${LINEAR_PROJECT}" } }) {
+          nodes { id }
+        }
+      }`,
     }),
   });
 
@@ -362,9 +372,17 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
   const teamId = teamData.data?.teams?.nodes?.[0]?.id;
   if (!teamId) throw new Error(`Team "${LINEAR_TEAM}" not found`);
 
-  // Create the issue
-  const labels = issue.type === "bug" ? ["Bug"] : issue.type === "feature" ? ["Feature"] : ["Improvement"];
+  const cycleId = teamData.data?.teams?.nodes?.[0]?.activeCycle?.id;
+  const projectId = teamData.data?.projects?.nodes?.[0]?.id;
 
+  // Resolve label IDs by issue type
+  const labelName = issue.type === "bug" ? "Bug" : issue.type === "feature" ? "Feature" : "Improvement";
+  const allLabels: { id: string; name: string }[] = teamData.data?.issueLabels?.nodes || [];
+  const labelIds = allLabels
+    .filter((l) => l.name === labelName)
+    .map((l) => l.id);
+
+  // Create the issue with labels, project, and cycle
   const createRes = await fetch("https://api.linear.app/graphql", {
     method: "POST",
     headers: {
@@ -384,7 +402,9 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
           title: issue.title,
           description: `## Source\nWhatsApp Feedback — Sahara Founders group (auto-detected)\n\n## Description\n${issue.description}\n\n## Original Message\n> ${issue.source_message}`,
           priority: issue.priority,
-          labelIds: [], // Labels need IDs, skip for now
+          labelIds,
+          ...(projectId && { projectId }),
+          ...(cycleId && { cycleId }),
         },
       },
     }),
