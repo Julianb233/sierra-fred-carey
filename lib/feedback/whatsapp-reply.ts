@@ -88,13 +88,14 @@ export async function sendFeedbackAck(
 }
 
 /**
- * Sends resolution notification when a Linear issue is closed
+ * Sends resolution notification when a Linear issue is closed.
+ * Posts to the WhatsApp group so founders know issues are addressed.
  */
 export async function sendResolutionNotification(
   groupName: string,
   issueTitle: string,
   issueIdentifier: string
-): Promise<void> {
-  const message = `Resolved: "${issueTitle}" (${issueIdentifier}) - Fixed and deployed.`;
-  await sendWhatsAppMessage(groupName, message);
+): Promise<{ success: boolean; error?: string }> {
+  const message = `✓ RESOLVED: ${issueTitle} — fixed and deployed (${issueIdentifier})`;
+  return sendWhatsAppMessage(groupName, message);
 }
