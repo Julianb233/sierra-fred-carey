@@ -6,8 +6,8 @@ export async function sendWhatsAppMessage(
   groupName: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { exec } = require("child_process");
-  const { promisify } = require("util");
+  const { exec } = await import("child_process");
+  const { promisify } = await import("util");
   const execAsync = promisify(exec);
 
   // Escape special characters for AppleScript
