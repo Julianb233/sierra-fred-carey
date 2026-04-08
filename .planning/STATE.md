@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 Phase: 91 of 96 (Foundation — Schema & Tier Activation)
 Plan: 04 of 04 complete
 Status: Phase complete
-Last activity: 2026-04-08 — Completed 91-02-PLAN.md (BUILDER tier resolution tests + getProfileTier fix)
+Last activity: 2026-04-08 — Completed 91-03-PLAN.md (Webhook BUILDER tier tests + hardened DB fallback)
 
 Progress: [██░░░░░░░░░░░░] 1/6 phases (phase 91 complete, 4/4 plans done)
 
@@ -105,6 +105,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID set as placeholder — Stripe secret key (sk_live_*) not yet available [91-04]
 - Manual Stripe product/price creation steps documented in .env.local comments [91-04]
 - getProfileTier uses cascading if-checks (STUDIO >= PRO >= BUILDER) — BUILDER was missing, fixed [91-02]
+- Webhook BUILDER tier tested indirectly via POST handler (not extracted helpers) — simpler for 4 scenarios [91-03]
+- captureMessage (Sentry warning) for DB fallback monitoring in resolveUserIdFromSubscription [91-03]
+- C3 pitfall (subscription.updated before session.completed) documented and observable in production [91-03]
 
 ### Blockers/Concerns
 
@@ -118,7 +121,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T19:43Z
-Stopped at: Completed 91-02-PLAN.md (BUILDER tier resolution tests + getProfileTier fix)
-Resume file: .planning/phases/91-foundation-schema-tier/91-02-SUMMARY.md
+Last session: 2026-04-08T19:55Z
+Stopped at: Completed 91-03-PLAN.md (Webhook BUILDER tier tests + hardened DB fallback)
+Resume file: .planning/phases/91-foundation-schema-tier/91-03-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
