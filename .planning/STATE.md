@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 93 of 96 (PDF Template & Background Generation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-08 — Phase 92 verified (5/5 must-haves passed)
+Plan: 01 of 02 complete
+Status: In progress
+Last activity: 2026-04-08 — Completed 93-01-PLAN.md (PDF template + Trigger task)
 
-Progress: [████░░░░░░░░░░] 2/6 phases complete
+Progress: [████░░░░░░░░░░] 2/6 phases complete (93-01 done, 93-02 pending)
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -116,6 +116,11 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Webhook BUILDER tier tested indirectly via POST handler (not extracted helpers) — simpler for 4 scenarios [91-03]
 - captureMessage (Sentry warning) for DB fallback monitoring in resolveUserIdFromSubscription [91-03]
 - C3 pitfall (subscription.updated before session.completed) documented and observable in production [91-03]
+- Geist WOFF fonts from @fontsource/geist-sans (already installed), registered at module level in pdf-template.ts [93-01]
+- renderToBuffer requires ReactElement<DocumentProps> but cross-file import loses generic — cast to any [93-01]
+- Sections flow on single wrapped page (react-pdf handles page breaks), not one section per page [93-01]
+- bonusSteps not in ReportData type — only on SynthesisOutput, not rendered in PDF template yet [93-01]
+- Trigger task pattern: status=generating -> render -> upload -> status=complete, catch -> status=failed -> re-throw [93-01]
 
 ### Blockers/Concerns
 
@@ -129,7 +134,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T20:29Z
-Stopped at: Completed 92-02-PLAN.md (FRED AI synthesis pipeline) — Phase 92 complete
-Resume file: .planning/phases/92-report-aggregation-synthesis/92-02-SUMMARY.md
+Last session: 2026-04-08T21:20Z
+Stopped at: Completed 93-01-PLAN.md (PDF template + Trigger.dev task)
+Resume file: .planning/phases/93-pdf-template-generation/93-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
