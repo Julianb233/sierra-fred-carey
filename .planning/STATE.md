@@ -2,17 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-07)
+See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v8.0 Go-Live: Guided Venture Journey — Transform Sahara from chatbot to guided venture journey for Palo Alto launch to 200 founders.
+**Current focus:** v9.0 Founder Journey Report & $39 Tier — Generate polished report at 19-step completion, introduce $39/mo Essentials tier as free→paid conversion moment.
 
 ## Current Position
 
-Phase: 90 — User Testing Loop (Wave 5)
-Plan: 01 of 1 (complete)
-Status: v8.0 MILESTONE COMPLETE — All 14 phases (77-90) done
-Last activity: 2026-03-08 — Phase 90 complete (User testing infrastructure shipped)
+Phase: Not started (run /gsd:create-roadmap)
+Plan: —
+Status: Defining requirements for v9.0
+Last activity: 2026-04-08 — Milestone v9.0 started
+
+Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done, last phase number: 90
 
 Progress: [##############] 14/14 phases COMPLETE
 
