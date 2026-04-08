@@ -5,16 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v9.0 Founder Journey Report & $39 Tier — Generate polished report at 19-step completion, introduce $39/mo Essentials tier as free→paid conversion moment.
+**Current focus:** v9.0 Founder Journey Report & $39 Tier — Phase 91: Foundation
 
 ## Current Position
 
-Phase: Not started (run /gsd:create-roadmap)
-Plan: —
-Status: Defining requirements for v9.0
-Last activity: 2026-04-08 — Milestone v9.0 started
+Phase: 91 of 96 (Foundation — Schema & Tier Activation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-08 — Roadmap created (6 phases, 20 requirements mapped)
 
-Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done, last phase number: 90
+Progress: [░░░░░░░░░░░░░░] 0/6 phases
+
+Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
 Progress: [##############] 14/14 phases COMPLETE
 

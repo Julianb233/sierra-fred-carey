@@ -89,31 +89,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RGEN-01 | — | Pending |
-| RGEN-02 | — | Pending |
-| RGEN-03 | — | Pending |
-| RGEN-04 | — | Pending |
-| RGEN-05 | — | Pending |
-| RDEL-01 | — | Pending |
-| RDEL-02 | — | Pending |
-| RDEL-03 | — | Pending |
-| RDEL-04 | — | Pending |
-| TIER-01 | — | Pending |
-| TIER-02 | — | Pending |
-| TIER-03 | — | Pending |
-| TIER-04 | — | Pending |
-| TIER-05 | — | Pending |
-| TIER-06 | — | Pending |
-| TIER-07 | — | Pending |
-| CONV-01 | — | Pending |
-| CONV-02 | — | Pending |
-| CONV-03 | — | Pending |
-| CONV-04 | — | Pending |
+| RGEN-01 | Phase 92 | Pending |
+| RGEN-02 | Phase 92 | Pending |
+| RGEN-03 | Phase 92 | Pending |
+| RGEN-04 | Phase 92 | Pending |
+| RGEN-05 | Phase 92 | Pending |
+| RDEL-01 | Phase 94 | Pending |
+| RDEL-02 | Phase 93 | Pending |
+| RDEL-03 | Phase 94 | Pending |
+| RDEL-04 | Phase 91+93 | Pending |
+| TIER-01 | Phase 91 | Pending |
+| TIER-02 | Phase 91 | Pending |
+| TIER-03 | Phase 91 | Pending |
+| TIER-04 | Phase 95 | Pending |
+| TIER-05 | Phase 91 | Pending |
+| TIER-06 | Phase 95 | Pending |
+| TIER-07 | Phase 95 | Pending |
+| CONV-01 | Phase 96 | Pending |
+| CONV-02 | Phase 96 | Pending |
+| CONV-03 | Phase 96 | Pending |
+| CONV-04 | Phase 96 | Pending |
 
 **Coverage:**
-- v9.0 requirements: 18 total
-- Mapped to phases: 0 (run /gsd:create-roadmap)
-- Unmapped: 18
+- v9.0 requirements: 20 total
+- Mapped to phases: 20
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-08*

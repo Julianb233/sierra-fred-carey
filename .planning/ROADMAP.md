@@ -1,4 +1,4 @@
-# Roadmap: Sahara v7.0 — UX Feedback Loop
+# Roadmap: Sahara
 
 ## Milestones
 
@@ -8,7 +8,9 @@
 - [x] **v4.0 FRED Mentor Experience** — Phases 34-47 (shipped 2026-02-12)
 - [x] **v5.0 QA Fixes** — Phases 54-58 (shipped 2026-02-18)
 - [~] **v6.0 Full Platform Maturity** — Phases 59-70 (67% complete, 2 blocked)
-- [ ] **v7.0 UX Feedback Loop** — Phases 71-76
+- [x] **v7.0 UX Feedback Loop** — Phases 71-76 (shipped 2026-03-04)
+- [x] **v8.0 Go-Live: Guided Venture Journey** — Phases 77-90 (shipped 2026-03-09)
+- [ ] **v9.0 Founder Journey Report & $39 Tier** — Phases 91-96
 
 ---
 
@@ -200,4 +202,123 @@ Phase 71 (Foundation)
 
 ---
 
-*Created: 2026-03-04 | Phases: 71-76 | Requirements: 40 mapped*
+## v9.0 Phases — Founder Journey Report & $39 Tier
+
+**Milestone Goal:** Generate polished Founder Journey Report at 19-step completion, introduce $39/mo Essentials tier as free→paid conversion moment.
+
+### Phase 91: Foundation — Schema & Tier Activation
+**Goal:** Database schema for reports + activate the BUILDER tier in Stripe and codebase
+**Depends on:** Nothing (first v9.0 phase)
+**Requirements:** TIER-01, TIER-02, TIER-03, TIER-05, RDEL-04 (schema)
+**Success Criteria** (what must be TRUE):
+  1. `founder_reports` table exists with versioning, RLS, and indexes
+  2. `getTierFromString('builder')` returns `UserTier.BUILDER` (unit tested)
+  3. Stripe checkout for $39 BUILDER price completes → webhook → `profiles.tier = 'builder'`
+  4. `canAccessFeature(UserTier.BUILDER, UserTier.BUILDER)` returns true
+  5. Webhook handles BUILDER checkout even when `subscription.updated` arrives before `session.completed`
+**Research needed:** No — standard schema + Stripe activation
+**Plans:** TBD
+
+### Phase 92: Report Aggregation & AI Synthesis
+**Goal:** Build the data pipeline that aggregates 19-step answers and passes them through FRED for re-synthesis
+**Depends on:** Phase 91 (needs founder_reports table)
+**Requirements:** RGEN-01, RGEN-02, RGEN-03, RGEN-04, RGEN-05
+**Success Criteria** (what must be TRUE):
+  1. Aggregator returns structured data for all 19 roadmap steps mapped to 5 sections
+  2. FRED synthesis produces rich narrative per section grounded in original answers
+  3. Executive summary captures full business model in 3-5 sentences
+  4. AI-suggested bonus steps are personalized to the specific business
+  5. No generic startup phrases ("passionate team", "strong market opportunity") appear without evidence
+**Research needed:** No — AI synthesis prompt is the work; research complete
+**Plans:** TBD
+
+### Phase 93: PDF Template & Background Generation
+**Goal:** Branded Sahara PDF rendered via Trigger.dev background job, stored in Vercel Blob
+**Depends on:** Phase 92 (needs synthesized report data)
+**Requirements:** RDEL-02, RDEL-04 (storage logic)
+**Success Criteria** (what must be TRUE):
+  1. PDF renders a 4-6 page branded Sahara report with custom fonts and layout
+  2. Generation runs via Trigger.dev task (never inline in API route)
+  3. PDF uploaded to Vercel Blob with versioned path
+  4. Report record created in `founder_reports` with `pdf_blob_url` and `step_snapshot`
+  5. Regeneration creates new version (doesn't overwrite)
+**Research needed:** Light — Geist font TTF availability, Trigger.dev task setup
+**Plans:** TBD
+
+### Phase 94: Report Delivery — Web View & Email
+**Goal:** Founders can view their report on the platform and receive it via email
+**Depends on:** Phase 93 (needs PDF + stored report data)
+**Requirements:** RDEL-01, RDEL-03
+**Success Criteria** (what must be TRUE):
+  1. `/dashboard/report` page renders full report with all 5 sections and executive summary
+  2. Email sent on report completion with styled Blob URL link (NOT PDF attachment)
+  3. Report accessible anytime from dashboard (not just at completion)
+  4. Status polling shows generation progress (pending → generating → complete)
+**Research needed:** No — standard web view + Resend email
+**Plans:** TBD
+
+### Phase 95: $39 Feature Gates & Pricing Page
+**Goal:** Pricing page shows 4 tiers, $39 features properly gated
+**Depends on:** Phase 91 (needs BUILDER tier active)
+**Requirements:** TIER-04, TIER-06, TIER-07
+**Success Criteria** (what must be TRUE):
+  1. Pricing page displays Free / $39 Essentials / $99 Pro / $249 Studio
+  2. Strategy outputs locked for FREE users, unlocked for BUILDER+
+  3. Go-to-market strategy generation available for BUILDER+
+  4. `?plan=builder` URL param pre-highlights the Essentials card
+**Research needed:** No — UI update + existing FeatureLock pattern
+**Plans:** TBD
+
+### Phase 96: Conversion Flow & Paywall
+**Goal:** FREE users see upgrade CTA, report drives conversion to $39
+**Depends on:** Phase 94 (needs report page) + Phase 95 (needs pricing page)
+**Requirements:** CONV-01, CONV-02, CONV-03, CONV-04
+**Success Criteria** (what must be TRUE):
+  1. FREE users see paywall CTA on report page with value-expansion messaging
+  2. BUILDER+ users see full report without friction
+  3. Blurred Investor Readiness section visible in free report (teasing $99 value)
+  4. Shareable report link works for external viewers (co-founders, advisors)
+  5. One clear upgrade CTA at end of report, not multiple interruptions
+**Research needed:** No — UX/copy work + existing FeatureLock
+**Plans:** TBD
+
+---
+
+## v9.0 Phase Dependencies
+
+```
+Phase 91 (Foundation: Schema + Tier)
+  |
+  +---> Phase 92 (Aggregation + AI Synthesis)
+  |       |
+  |       +---> Phase 93 (PDF + Storage)
+  |               |
+  |               +---> Phase 94 (Web View + Email)
+  |                       |
+  +---> Phase 95 ($39 Gates + Pricing)
+          |               |
+          +-------+-------+
+                  |
+                  v
+          Phase 96 (Conversion + Paywall)
+```
+
+**Critical path:** 91 → 92 → 93 → 94 → 96
+**Parallel opportunity:** Phase 95 can run in parallel with 92-94 (only depends on 91)
+
+---
+
+## v9.0 Progress
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 91. Foundation | 0/TBD | Not started | - |
+| 92. AI Synthesis | 0/TBD | Not started | - |
+| 93. PDF Generation | 0/TBD | Not started | - |
+| 94. Report Delivery | 0/TBD | Not started | - |
+| 95. $39 Feature Gates | 0/TBD | Not started | - |
+| 96. Conversion Flow | 0/TBD | Not started | - |
+
+---
+
+*Updated: 2026-04-08 | v9.0 Phases: 91-96 | Requirements: 20 mapped*
