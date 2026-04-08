@@ -4,6 +4,24 @@ export const SIGNAL_TYPES = ['thumbs_up', 'thumbs_down', 'sentiment', 'implicit'
 export const INSIGHT_STATUSES = ['new', 'reviewed', 'actioned', 'resolved', 'communicated'] as const
 export const SEVERITY_LEVELS = ['low', 'medium', 'high', 'critical'] as const
 export const TIER_WEIGHTS = { free: 1.0, pro: 3.0, studio: 5.0 } as const
+
+// Sender role weights — multiplied with tier weight for final signal weight.
+// Product owner (Fred Cary) gets 5x priority per AI-4111.
+export const SENDER_ROLES = ['user', 'team', 'product_owner'] as const
+export type SenderRole = typeof SENDER_ROLES[number]
+export const ROLE_WEIGHTS: Record<SenderRole, number> = {
+  user: 1.0,
+  team: 2.0,
+  product_owner: 5.0,
+} as const
+
+// Map known email addresses to sender roles.
+// Fred Cary is the product owner/CEO — his feedback gets highest priority.
+export const KNOWN_SENDER_ROLES: Record<string, SenderRole> = {
+  'fred@joinsahara.com': 'product_owner',
+  'fred@astartupbiz.com': 'product_owner',
+  'fredcary@gmail.com': 'product_owner',
+} as const
 export const RETENTION_DAYS = 90
 export const MIN_MESSAGES_FOR_FEEDBACK = 5
 export const MAX_DETAILED_FEEDBACK_PER_WEEK = 1

@@ -44,7 +44,8 @@ import { logJourneyEventAsync } from "@/lib/db/journey-events";
 import { extractSentiment } from "@/lib/feedback/sentiment";
 import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
 import { insertFeedbackSignal } from "@/lib/db/feedback";
-import { TIER_WEIGHTS } from "@/lib/feedback/constants";
+import { TIER_WEIGHTS } from "@/lib/feedback/constants"
+import { getSenderRole, getRoleWeight } from "@/lib/feedback/sender-role";
 import { extractSentimentFromText } from "@/lib/feedback/sentiment";
 import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "@/lib/sentiment/stress-detector";
 import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
@@ -384,6 +385,9 @@ async function handlePost(req: NextRequest) {
 
     // Resolve tier name for model routing and memory gating (Phase 21)
     const tierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+
+    // AI-4111: Resolve sender role for feedback weighting (product owner = 5x)
+    const senderRole = await getSenderRole(userId);
 
     // Phase 59: Tag Sentry errors with user context
     setUserContext(userId, tierName);
@@ -907,7 +911,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
             sentiment_confidence: sentiment.confidence,
             user_tier: tierName as 'free' | 'pro' | 'studio',
-            weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+            sender_role: senderRole,
+            weight: (TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1) * getRoleWeight(senderRole),
             consent_given: true,
             expires_at: null,
             metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
@@ -1294,7 +1299,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
                   sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
                   sentiment_confidence: sentiment.confidence,
                   user_tier: tierName as 'free' | 'pro' | 'studio',
-                  weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+                  sender_role: senderRole,
+                  weight: (TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1) * getRoleWeight(senderRole),
                   consent_given: true,
                   expires_at: null,
                   metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },

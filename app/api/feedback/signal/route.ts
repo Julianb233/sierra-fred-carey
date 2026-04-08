@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { getUserConsentStatus, applyConsent, calculateExpiryDate } from "@/lib/feedback/consent"
-import { SIGNAL_TYPES, FEEDBACK_CATEGORIES, TIER_WEIGHTS } from "@/lib/feedback/constants"
+import { SIGNAL_TYPES, FEEDBACK_CATEGORIES, TIER_WEIGHTS, ROLE_WEIGHTS, KNOWN_SENDER_ROLES } from "@/lib/feedback/constants"
 import { insertFeedbackSignal } from "@/lib/db/feedback"
 import { checkDetailedFeedbackThrottle } from "@/lib/feedback/throttle"
 import { getUserTier } from "@/lib/api/tier-middleware"
@@ -131,10 +131,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 5. Determine tier and weight
+  // 5. Determine tier, sender role, and weight
   const userTierEnum = await getUserTier(user.id)
   const tier = TIER_MAP[userTierEnum]
-  const weight = TIER_WEIGHTS[tier]
+  const senderRole = KNOWN_SENDER_ROLES[user.email ?? ''] ?? 'user'
+  const weight = TIER_WEIGHTS[tier] * ROLE_WEIGHTS[senderRole]
 
   // 6. Build signal insert
   const signal: FeedbackSignalInsert = {
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest) {
     sentiment_score: null,
     sentiment_confidence: null,
     user_tier: tier,
+    sender_role: senderRole,
     weight: weight,
     consent_given: true,
     expires_at: calculateExpiryDate(),
