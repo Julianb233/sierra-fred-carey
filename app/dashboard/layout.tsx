@@ -43,6 +43,7 @@ import { useTier } from "@/lib/context/tier-context";
 import { createClient } from "@/lib/supabase/client";
 import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
@@ -221,6 +222,7 @@ function SidebarContent({
   tierColors,
   isTierLoading,
   onNavClick,
+  onHowToUse,
 }: {
   user: { name: string; email: string; tier: UserTier; stage: string | null };
   visibleNavItems: NavItem[];
@@ -229,6 +231,7 @@ function SidebarContent({
   tierColors: string[];
   isTierLoading?: boolean;
   onNavClick?: () => void;
+  onHowToUse?: () => void;
 }) {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
@@ -311,7 +314,7 @@ function SidebarContent({
       </nav>
 
       {/* Chat with Mentor -- prominent orange CTA */}
-      <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800">
+      <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800 space-y-2">
         <button
           onClick={() => openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")}
           className={cn(
@@ -322,6 +325,17 @@ function SidebarContent({
         >
           <MessageSquare className="h-4 w-4 shrink-0" />
           <span>Chat with Mentor</span>
+        </button>
+        <button
+          onClick={() => { onNavClick?.(); onHowToUse?.(); }}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg",
+            "border border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10",
+            "font-medium transition-all duration-200 text-sm"
+          )}
+        >
+          <HelpCircle className="h-4 w-4 shrink-0" />
+          <span>How To Use Sahara</span>
         </button>
       </div>
 
@@ -348,10 +362,12 @@ export default function DashboardLayout({
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
+  const handleHowToUse = useCallback(() => setHowToUseOpen(true), []);
 
   // Listen for fred:voice custom event from MobileBottomNav
   useEffect(() => {
@@ -473,6 +489,7 @@ export default function DashboardLayout({
               tierColors={tierColors}
               isTierLoading={isTierLoading}
               onNavClick={closeSidebar}
+              onHowToUse={handleHowToUse}
             />
           </SheetContent>
         </Sheet>
@@ -486,6 +503,7 @@ export default function DashboardLayout({
             tierNames={tierNames}
             tierColors={tierColors}
             isTierLoading={isTierLoading}
+            onHowToUse={handleHowToUse}
           />
         </aside>
 
@@ -507,6 +525,9 @@ export default function DashboardLayout({
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
+
+      {/* AI-4104: How To Use Sahara — Loom walkthrough video */}
+      <HowToUseSaharaModal open={howToUseOpen} onOpenChange={setHowToUseOpen} />
 
       {/* Voice Chat Overlay — available from mobile bottom nav and dashboard voice buttons */}
       <VoiceChatOverlay
