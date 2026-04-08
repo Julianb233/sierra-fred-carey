@@ -95,6 +95,7 @@ async function getProfileTier(userId: string): Promise<UserTier | null> {
     const tier = Number(data.tier);
     if (tier >= UserTier.STUDIO) return UserTier.STUDIO;
     if (tier >= UserTier.PRO) return UserTier.PRO;
+    if (tier >= UserTier.BUILDER) return UserTier.BUILDER;
     return null;
   } catch {
     return null;
