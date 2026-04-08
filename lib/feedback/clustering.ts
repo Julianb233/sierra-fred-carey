@@ -14,7 +14,8 @@ import { z } from "zod"
 import { getModel } from "@/lib/ai/providers"
 import { getModelForTier } from "@/lib/ai/tier-routing"
 import { TIER_WEIGHTS } from "@/lib/feedback/constants"
-import type { FeedbackSignal, FeedbackCluster } from "@/lib/feedback/types"
+import type { FeedbackSignal, FeedbackCluster, VisionAnalysis } from "@/lib/feedback/types"
+import { visionAnalysisToText } from "@/lib/feedback/vision-processor"
 
 // ============================================================================
 // Constants
@@ -71,17 +72,25 @@ export async function clusterFeedbackSignals(
   }
 
   try {
-    // Build signal summaries for LLM
-    const summaries = actionable.map((s, i) => ({
-      index: i,
-      category: s.category || "none",
-      comment: s.comment?.slice(0, 200) || "",
-      sentiment: s.sentiment_score !== null
-        ? s.sentiment_score > 0 ? "positive" : s.sentiment_score < -0.5 ? "frustrated" : "negative"
-        : "unknown",
-      tier: s.user_tier,
-      created_at: s.created_at,
-    }))
+    // Build signal summaries for LLM (include vision analysis when available)
+    const summaries = actionable.map((s, i) => {
+      const base: Record<string, unknown> = {
+        index: i,
+        category: s.category || "none",
+        comment: s.comment?.slice(0, 200) || "",
+        sentiment: s.sentiment_score !== null
+          ? s.sentiment_score > 0 ? "positive" : s.sentiment_score < -0.5 ? "frustrated" : "negative"
+          : "unknown",
+        tier: s.user_tier,
+        created_at: s.created_at,
+      }
+      // Append vision analysis summary if media was processed
+      if (s.vision_analysis && s.media_processing_status === "completed") {
+        base.visual_feedback = visionAnalysisToText(s.vision_analysis as VisionAnalysis)
+        base.has_media = true
+      }
+      return base
+    })
 
     const providerKey = getModelForTier("free", "structured")
     const model = getModel(providerKey)
@@ -96,7 +105,8 @@ ${JSON.stringify(summaries, null, 2)}
 
 Group related feedback into clusters. Each signal should belong to exactly one cluster.
 Assign severity based on: signal count, user tier weight (studio > pro > free), and sentiment intensity.
-If a cluster has coaching_discomfort category signals, note that separately — these may be "working as designed".`,
+If a cluster has coaching_discomfort category signals, note that separately — these may be "working as designed".
+Some signals include visual_feedback from analyzed screenshots/images — incorporate these observations into your clustering. Visual issues (broken layouts, confusing UI) should form their own clusters when patterns emerge.`,
     })
 
     // Map LLM output back to signal IDs and compute weighted counts

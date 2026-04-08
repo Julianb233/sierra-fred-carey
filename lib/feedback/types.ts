@@ -1,3 +1,16 @@
+export type MediaType = 'image' | 'screenshot' | 'video' | 'audio'
+export type MediaProcessingStatus = 'none' | 'pending' | 'processing' | 'completed' | 'failed'
+
+export interface VisionAnalysis {
+  descriptions: string[]
+  ui_elements?: string[]
+  issues_detected?: string[]
+  sentiment?: 'positive' | 'neutral' | 'negative'
+  summary: string
+  model_used: string
+  analyzed_at: string
+}
+
 export interface FeedbackSignal {
   id: string
   user_id: string
@@ -14,6 +27,10 @@ export interface FeedbackSignal {
   weight: number
   consent_given: boolean
   expires_at: string | null
+  media_urls: string[]
+  media_types: MediaType[]
+  vision_analysis: VisionAnalysis | null
+  media_processing_status: MediaProcessingStatus
   metadata: Record<string, unknown>
   created_at: string
 }
@@ -52,8 +69,13 @@ export interface FeedbackInsight {
   updated_at: string
 }
 
-// Insert types (omit server-generated fields)
-export type FeedbackSignalInsert = Omit<FeedbackSignal, 'id' | 'created_at'>
+// Insert types (omit server-generated fields; media fields optional with DB defaults)
+export type FeedbackSignalInsert = Omit<FeedbackSignal, 'id' | 'created_at' | 'media_urls' | 'media_types' | 'vision_analysis' | 'media_processing_status'> & {
+  media_urls?: string[]
+  media_types?: MediaType[]
+  vision_analysis?: VisionAnalysis | null
+  media_processing_status?: MediaProcessingStatus
+}
 export type FeedbackSessionInsert = Omit<FeedbackSession, 'id' | 'created_at' | 'updated_at'>
 export type FeedbackInsightInsert = Omit<FeedbackInsight, 'id' | 'created_at' | 'updated_at'>
 

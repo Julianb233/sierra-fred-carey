@@ -225,6 +225,42 @@ function compareSeverity(
 }
 
 // ============================================================================
+// Media / Vision Processing (AI-4115)
+// ============================================================================
+
+export async function getUnprocessedMediaSignals(limit = 100) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_signals")
+    .select("*")
+    .eq("media_processing_status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function updateMediaProcessingStatus(
+  signalId: string,
+  status: "processing" | "completed" | "failed",
+  visionAnalysis?: Record<string, unknown> | null
+) {
+  const supabase = createServiceClient();
+  const update: Record<string, unknown> = { media_processing_status: status };
+  if (visionAnalysis !== undefined) {
+    update.vision_analysis = visionAnalysis;
+  }
+  const { data, error } = await supabase
+    .from("feedback_signals")
+    .update(update)
+    .eq("id", signalId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ============================================================================
 // GDPR Retention
 // ============================================================================
 
