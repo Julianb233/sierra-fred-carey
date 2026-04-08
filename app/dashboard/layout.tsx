@@ -109,6 +109,11 @@ const coreNavItems: NavItem[] = [
     icon: <BookOpen className="h-4 w-4" />,
   },
   {
+    name: "Sales",
+    href: "/dashboard/sales",
+    icon: <TrendingUp className="h-4 w-4" />,
+  },
+  {
     name: "Marketplace",
     href: "/dashboard/marketplace",
     icon: <ShoppingBag className="h-4 w-4" />,
