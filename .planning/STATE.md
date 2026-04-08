@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 93 of 96 (PDF Template & Background Generation)
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-04-08 — Completed 93-01-PLAN.md (PDF template + Trigger task)
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-04-08 — Completed 93-02-PLAN.md (API route + report orchestrator)
 
-Progress: [████░░░░░░░░░░] 2/6 phases complete (93-01 done, 93-02 pending)
+Progress: [████████░░░░░░] 4/6 phases complete (93 complete, 94 next)
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -121,6 +121,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Sections flow on single wrapped page (react-pdf handles page breaks), not one section per page [93-01]
 - bonusSteps not in ReportData type — only on SynthesisOutput, not rendered in PDF template yet [93-01]
 - Trigger task pattern: status=generating -> render -> upload -> status=complete, catch -> status=failed -> re-throw [93-01]
+- Step snapshot built from aggregated sections (stepId -> answer text), not raw progress rows [93-02]
+- API route POST /api/reports/generate accepts no body — userId from auth, data from pipeline [93-02]
+- Trigger failure after DB creation marks report failed then re-throws for visibility [93-02]
 
 ### Blockers/Concerns
 
@@ -134,7 +137,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T21:20Z
-Stopped at: Completed 93-01-PLAN.md (PDF template + Trigger.dev task)
-Resume file: .planning/phases/93-pdf-template-generation/93-01-SUMMARY.md
+Last session: 2026-04-08T21:19Z
+Stopped at: Completed 93-02-PLAN.md (API route + report generation orchestrator)
+Resume file: .planning/phases/93-pdf-template-generation/93-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
