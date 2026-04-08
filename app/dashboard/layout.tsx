@@ -34,6 +34,7 @@ import {
   HelpCircle,
   BookOpen,
   ShoppingBag,
+  Globe,
 } from "lucide-react";
 import { openFredChat } from "@/components/chat/floating-chat-widget";
 import { cn } from "@/lib/utils";
@@ -133,6 +134,11 @@ const coreNavItems: NavItem[] = [
     name: "Documents",
     href: "/dashboard/documents",
     icon: <FileText className="h-4 w-4" />,
+  },
+  {
+    name: "Microsite",
+    href: "/dashboard/microsite",
+    icon: <Globe className="h-4 w-4" />,
   },
   {
     name: "Community",
