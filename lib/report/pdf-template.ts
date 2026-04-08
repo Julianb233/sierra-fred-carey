@@ -12,6 +12,7 @@
  */
 
 import React from "react"
+import path from "path"
 import {
   Document,
   Page,
@@ -24,21 +25,28 @@ import type { ReportData } from "@/types/report"
 
 // ============================================================================
 // Font Registration (module-level — CRITICAL: not inside any function)
+// Use path.join to resolve font files at runtime so webpack doesn't try to
+// parse .woff binaries as JS modules.
 // ============================================================================
+
+const fontDir = path.join(
+  process.cwd(),
+  "node_modules/@fontsource/geist-sans/files"
+)
 
 Font.register({
   family: "Geist",
   fonts: [
     {
-      src: require("@fontsource/geist-sans/files/geist-sans-latin-400-normal.woff"),
+      src: path.join(fontDir, "geist-sans-latin-400-normal.woff"),
       fontWeight: 400,
     },
     {
-      src: require("@fontsource/geist-sans/files/geist-sans-latin-600-normal.woff"),
+      src: path.join(fontDir, "geist-sans-latin-600-normal.woff"),
       fontWeight: 600,
     },
     {
-      src: require("@fontsource/geist-sans/files/geist-sans-latin-700-normal.woff"),
+      src: path.join(fontDir, "geist-sans-latin-700-normal.woff"),
       fontWeight: 700,
     },
   ],
