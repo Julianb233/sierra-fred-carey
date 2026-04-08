@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 92 of 96 (Report Aggregation & AI Synthesis)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-08 — Phase 91 verified (5/5 must-haves passed)
+Plan: 01 of 02 complete
+Status: In progress
+Last activity: 2026-04-08 — Completed 92-01-PLAN.md (step mapping + aggregator pipeline)
 
-Progress: [██░░░░░░░░░░░░] 1/6 phases complete
+Progress: [███░░░░░░░░░░░] 1.5/6 phases complete
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -103,6 +103,10 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - getNextVersion uses ORDER BY DESC LIMIT 1 (not MAX aggregate) for supabase-sql parser compatibility [91-01]
 - ReportData JSONB: executiveSummary, founderName, companyName, generatedAt, sections[], fredSignoff [91-01]
 - NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID set as placeholder — Stripe secret key (sk_live_*) not yet available [91-04]
+- step-mapping.ts is single source of truth for 19-step-to-5-section report mapping [92-01]
+- buildAnswerMap prefers metadata.distilled over metadata.answer for cleaner AI synthesis input [92-01]
+- Single query for all oases_progress rows (lookup map pattern) not per-step queries [92-01]
+- Unit economics + scaling operations steps have empty journeyStepIds — new report-only steps for future journey mapping [92-01]
 - Manual Stripe product/price creation steps documented in .env.local comments [91-04]
 - getProfileTier uses cascading if-checks (STUDIO >= PRO >= BUILDER) — BUILDER was missing, fixed [91-02]
 - Webhook BUILDER tier tested indirectly via POST handler (not extracted helpers) — simpler for 4 scenarios [91-03]
@@ -121,7 +125,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T19:55Z
-Stopped at: Completed 91-03-PLAN.md (Webhook BUILDER tier tests + hardened DB fallback)
-Resume file: .planning/phases/91-foundation-schema-tier/91-03-SUMMARY.md
+Last session: 2026-04-08T20:22Z
+Stopped at: Completed 92-01-PLAN.md (step mapping + aggregator pipeline)
+Resume file: .planning/phases/92-report-aggregation-synthesis/92-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
