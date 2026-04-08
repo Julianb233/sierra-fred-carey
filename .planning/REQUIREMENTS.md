@@ -89,11 +89,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RGEN-01 | Phase 92 | Pending |
-| RGEN-02 | Phase 92 | Pending |
-| RGEN-03 | Phase 92 | Pending |
-| RGEN-04 | Phase 92 | Pending |
-| RGEN-05 | Phase 92 | Pending |
+| RGEN-01 | Phase 92 | Complete |
+| RGEN-02 | Phase 92 | Complete |
+| RGEN-03 | Phase 92 | Complete |
+| RGEN-04 | Phase 92 | Complete |
+| RGEN-05 | Phase 92 | Complete |
 | RDEL-01 | Phase 94 | Pending |
 | RDEL-02 | Phase 93 | Pending |
 | RDEL-03 | Phase 94 | Pending |
