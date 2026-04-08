@@ -35,6 +35,18 @@ export interface ReportData {
   fredSignoff: string
 }
 
+/** A personalized next-step recommendation from FRED */
+export interface BonusStep {
+  title: string
+  description: string
+  rationale: string
+}
+
+/** Full output from the synthesis pipeline (superset of ReportData) */
+export interface SynthesisOutput extends ReportData {
+  bonusSteps: BonusStep[]
+}
+
 /** Row shape returned from the founder_reports table */
 export interface FounderReport {
   id: string
