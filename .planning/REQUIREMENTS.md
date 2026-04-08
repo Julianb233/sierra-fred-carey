@@ -95,9 +95,9 @@
 | RGEN-04 | Phase 92 | Complete |
 | RGEN-05 | Phase 92 | Complete |
 | RDEL-01 | Phase 94 | Pending |
-| RDEL-02 | Phase 93 | Pending |
+| RDEL-02 | Phase 93 | Complete |
 | RDEL-03 | Phase 94 | Pending |
-| RDEL-04 | Phase 91+93 | Partial (schema done, storage logic in 93) |
+| RDEL-04 | Phase 91+93 | Complete |
 | TIER-01 | Phase 91 | Complete (placeholder — Stripe sk_live needed for prod) |
 | TIER-02 | Phase 91 | Complete |
 | TIER-03 | Phase 91 | Complete |
