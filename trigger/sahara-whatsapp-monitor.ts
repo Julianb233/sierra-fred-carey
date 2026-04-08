@@ -99,15 +99,39 @@ export const saharaWhatsAppMonitor = schedules.task({
       }
 
       // Step 4: Create Linear issues
+      const createdIssues: Array<{ title: string; identifier: string; priority: number }> = [];
       for (const issue of issues) {
         try {
           const linearId = await createLinearIssue(issue);
           result.linearIssuesCreated.push(linearId);
+          createdIssues.push({
+            title: issue.title,
+            identifier: linearId,
+            priority: issue.priority,
+          });
           logger.log(`Created Linear issue: ${linearId}`, { title: issue.title });
         } catch (err) {
           const msg = `Failed to create Linear issue: ${issue.title} - ${err}`;
           result.errors.push(msg);
           logger.error(msg);
+        }
+      }
+
+      // Step 4b: Send WhatsApp ack back to the group so Fred knows feedback was captured
+      if (createdIssues.length > 0) {
+        try {
+          const { sendWhatsAppAck } = await import("@/lib/feedback/whatsapp-ack");
+          const ackResult = await sendWhatsAppAck(createdIssues, { logger });
+          if (ackResult.success) {
+            logger.log("WhatsApp ack sent to group");
+          } else {
+            logger.error(`WhatsApp ack failed: ${ackResult.error}`);
+            result.errors.push(`WhatsApp ack failed: ${ackResult.error}`);
+          }
+        } catch (err) {
+          const msg = `WhatsApp ack error: ${err}`;
+          logger.error(msg);
+          result.errors.push(msg);
         }
       }
 
