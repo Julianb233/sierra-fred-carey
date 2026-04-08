@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 Phase: 91 of 96 (Foundation — Schema & Tier Activation)
 Plan: 04 of 04 complete
 Status: Phase complete
-Last activity: 2026-04-08 — Completed 91-04-PLAN.md (Stripe Builder price ID env var setup)
+Last activity: 2026-04-08 — Completed 91-02-PLAN.md (BUILDER tier resolution tests + getProfileTier fix)
 
 Progress: [██░░░░░░░░░░░░] 1/6 phases (phase 91 complete, 4/4 plans done)
 
@@ -104,6 +104,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - ReportData JSONB: executiveSummary, founderName, companyName, generatedAt, sections[], fredSignoff [91-01]
 - NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID set as placeholder — Stripe secret key (sk_live_*) not yet available [91-04]
 - Manual Stripe product/price creation steps documented in .env.local comments [91-04]
+- getProfileTier uses cascading if-checks (STUDIO >= PRO >= BUILDER) — BUILDER was missing, fixed [91-02]
 
 ### Blockers/Concerns
 
@@ -117,7 +118,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T19:44Z
-Stopped at: Completed 91-04-PLAN.md (Stripe Builder price ID env var setup — placeholder, manual steps documented)
-Resume file: .planning/phases/91-foundation-schema-tier/91-04-SUMMARY.md
+Last session: 2026-04-08T19:43Z
+Stopped at: Completed 91-02-PLAN.md (BUILDER tier resolution tests + getProfileTier fix)
+Resume file: .planning/phases/91-foundation-schema-tier/91-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
