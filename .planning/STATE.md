@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 91 of 96 (Foundation — Schema & Tier Activation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-08 — Roadmap created (6 phases, 20 requirements mapped)
+Plan: 01 of 04 complete
+Status: In progress
+Last activity: 2026-04-08 — Completed 91-01-PLAN.md (founder_reports schema + types + CRUD)
 
-Progress: [░░░░░░░░░░░░░░] 0/6 phases
+Progress: [██░░░░░░░░░░░░] 1/6 phases (plan 1/4 in phase 91)
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -99,6 +99,9 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Stale fields (7+ days): ask before advising, do not assume still accurate [79-02 v2]
 - Missing fields: do not guess/fabricate, collect max 2 per exchange [79-02 v2]
 - Co-founder text input added to onboarding step 3, saves to profiles.co_founder [79-02 v2]
+- founder_reports.status typed as pending|generating|complete|failed for async generation polling [91-01]
+- getNextVersion uses ORDER BY DESC LIMIT 1 (not MAX aggregate) for supabase-sql parser compatibility [91-01]
+- ReportData JSONB: executiveSummary, founderName, companyName, generatedAt, sections[], fredSignoff [91-01]
 
 ### Blockers/Concerns
 
@@ -111,7 +114,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-03-09T23:55Z
-Stopped at: Completed 90-01-PLAN.md (User Testing Loop - smoke test, E2E, feedback widget, SLA dashboard)
-Resume file: .planning/milestones/v8.0-go-live/phases/90/90-01-SUMMARY.md
+Last session: 2026-04-08T19:38Z
+Stopped at: Completed 91-01-PLAN.md (founder_reports schema, TypeScript types, CRUD module)
+Resume file: .planning/phases/91-foundation-schema-tier/91-01-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
