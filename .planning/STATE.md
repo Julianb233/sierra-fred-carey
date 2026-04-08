@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 91 of 96 (Foundation — Schema & Tier Activation)
-Plan: 01 of 04 complete
-Status: In progress
-Last activity: 2026-04-08 — Completed 91-01-PLAN.md (founder_reports schema + types + CRUD)
+Plan: 04 of 04 complete
+Status: Phase complete
+Last activity: 2026-04-08 — Completed 91-04-PLAN.md (Stripe Builder price ID env var setup)
 
-Progress: [██░░░░░░░░░░░░] 1/6 phases (plan 1/4 in phase 91)
+Progress: [██░░░░░░░░░░░░] 1/6 phases (phase 91 complete, 4/4 plans done)
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -102,6 +102,8 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - founder_reports.status typed as pending|generating|complete|failed for async generation polling [91-01]
 - getNextVersion uses ORDER BY DESC LIMIT 1 (not MAX aggregate) for supabase-sql parser compatibility [91-01]
 - ReportData JSONB: executiveSummary, founderName, companyName, generatedAt, sections[], fredSignoff [91-01]
+- NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID set as placeholder — Stripe secret key (sk_live_*) not yet available [91-04]
+- Manual Stripe product/price creation steps documented in .env.local comments [91-04]
 
 ### Blockers/Concerns
 
@@ -111,10 +113,11 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - **CARRIED** Boardy API — no public docs, requires partnership agreement (Phase 85, 89)
 - **CARRIED** Mux credentials needed for content library admin
 - Fred Zaharix voice ID — API key and account access confirmed but needs wiring (Phase 82)
+- **CARRIED** Stripe secret key (sk_live_*) not available — blocks real Stripe product/price creation for Builder tier [91-04]
 
 ## Session Continuity
 
-Last session: 2026-04-08T19:38Z
-Stopped at: Completed 91-01-PLAN.md (founder_reports schema, TypeScript types, CRUD module)
-Resume file: .planning/phases/91-foundation-schema-tier/91-01-SUMMARY.md
+Last session: 2026-04-08T19:44Z
+Stopped at: Completed 91-04-PLAN.md (Stripe Builder price ID env var setup — placeholder, manual steps documented)
+Resume file: .planning/phases/91-foundation-schema-tier/91-04-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
