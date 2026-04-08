@@ -1,23 +1,30 @@
-# Research Summary -- v7.0 UX Feedback Loop
+# Research Summary — v9.0 Founder Journey Report & $39 Tier
 
-**Project:** Sahara v7.0
-**Synthesized:** 2026-03-04
-**Overall confidence:** MEDIUM-HIGH
+**Project:** Sahara v9.0
+**Synthesized:** 2026-04-08
+**Overall confidence:** HIGH
 **Inputs:** STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md
 
 ---
 
 ## Executive Summary
 
-- **Sahara is not starting from scratch.** The existing A/B testing framework, WhatsApp-to-Linear pipeline, multi-channel conversation context, PostHog analytics, and Resend email infrastructure provide 60-70% of the scaffolding needed. v7.0 adds new tables, API routes, UI components, and scheduled jobs -- not new infrastructure.
+- **Zero new npm installs required.** `@react-pdf/renderer`, `resend`, `@vercel/blob`, `ai`, `@ai-sdk/anthropic`, `@trigger.dev/sdk`, and `stripe` are all already installed. This is a pure feature-development milestone on proven infrastructure.
 
-- **No new major dependencies required.** The entire feedback loop can be built on Supabase (storage), Vercel AI SDK (sentiment piggyback), Trigger.dev (scheduled analysis), and the existing A/B testing module. The only potential new library is `simple-statistics` for significance testing. This is a rare "extend everything, add nothing" milestone.
+- **The BUILDER tier already exists in code.** `PLANS.BUILDER` in `lib/stripe/config.ts` and `UserTier.BUILDER = 1` in `lib/constants.ts` are defined. v9.0 activates it by creating the Stripe product and setting the env var — no tier plumbing needed.
 
-- **The critical differentiator is RLHF-Lite (D-2): feedback-driven prompt self-refinement with human-in-the-loop approval.** This is what makes Sahara's feedback loop more than a thumbs-up counter. Most AI products collect feedback for humans to act on. Sahara would use it to propose prompt patches, A/B test them, and deploy winners -- a genuine self-improving AI coaching engine.
+- **FRED's voice in the report is THE differentiator.** Competitors (Evalyze, ReadyScore, FoundersPlan) produce clinical scores or template plans. FRED producing a mentored, Fred Cary-voiced narrative report is what no one else has. The report must sound like Fred, not a form printout.
 
-- **The existential risk is FRED voice drift (Pitfall C1).** Feedback-driven optimization naturally favors agreeable, verbose, hedging language. FRED's core value is blunt truth-telling. An unguarded optimizer will sand down the edges that make FRED valuable. The immutable core prompt + layered supplemental guidance architecture is non-negotiable and must be in place before any optimization loop runs.
+- **The report is the paywall trigger, not a gated feature.** Research confirms upgrade prompts shown after meaningful completion convert 2.3x better than time-based prompts. The conversion moment is: founder reads report → sees what $39 unlocks → upgrades.
 
-- **The biggest operational risk is over-engineering.** Building a full feedback analytics platform (Thematic, Canny, Userpilot) inside Sahara would be scope creep. The correct scope is a lean, tightly integrated loop: collect signals, detect patterns, propose improvements, test them, deploy winners, notify users. No more.
+- **Do NOT inline PDF generation in a Vercel function.** Use Trigger.dev (already installed) for the full pipeline: AI synthesis → PDF render → Blob upload → email. The existing `renderToBuffer` pattern works for simple exports but will timeout for a 19-section narrative report.
+
+- **Do NOT email the PDF as an attachment.** PDF attachments trigger spam filters and degrade Resend sender reputation. Upload to Vercel Blob, email a styled link with FRED's voice.
+
+- **The critical design decision is the paywall strategy.** Two research dimensions disagree:
+  - Features research says: "Give the full report free, gate the execution layer ($39 = investor readiness, GTM, strategy)"
+  - Pitfalls research says: "Layered reveal — show 3 of 19 sections free, gate the rest behind $39"
+  - **Resolution needed before implementation.** This is a product decision, not a technical one.
 
 ---
 
@@ -25,254 +32,182 @@
 
 **Recommendation: Zero new infrastructure. Extend everything that exists.**
 
-| Technology | Status | v7.0 Role |
-|------------|--------|-----------|
-| Supabase | Existing | 3 new tables: `feedback_signals`, `feedback_sessions`, `feedback_insights` |
-| Vercel AI SDK | Existing | Piggyback sentiment extraction on FRED's LLM calls (structured output field) |
-| Trigger.dev | Existing | Daily pattern detection job, weekly prompt refinement proposals (mirrors WhatsApp monitor pattern) |
-| PostHog | Existing | Feedback event tracking, funnel analysis for feedback submission rates |
-| Resend | Existing | Close-the-loop notification emails, weekly feedback digest to admin |
-| `lib/ai/ab-testing.ts` | Existing | Extend `getVariantStats()` with feedback metrics (thumbs ratio, sentiment) |
-| `simple-statistics` | NEW (optional) | Chi-squared / t-test for A/B significance when D-5 is implemented |
+| Capability | Library | Already Installed? | Confidence |
+|---|---|---|---|
+| PDF generation | `@react-pdf/renderer` v4.3.1→4.4.0 | Yes | HIGH |
+| PDF storage | `@vercel/blob` v2.0.0 | Yes | HIGH |
+| Email delivery | `resend` v6.9.1 | Yes | HIGH |
+| AI synthesis | `ai` + `@ai-sdk/anthropic` | Yes | HIGH |
+| Background jobs | `@trigger.dev/sdk` v4.4.1 | Yes | MEDIUM |
+| Stripe tier | `stripe` v20.1.0 | Yes | HIGH |
 
-**Alternatives rejected:** Dedicated feedback SaaS (Canny, UserVoice), separate NLP service (AWS Comprehend), external dashboard tool (Retool), external prompt eval tool (Braintrust, PromptLayer). All add dependencies that duplicate existing Sahara capabilities.
+**Rejected:** Puppeteer (150MB bundle, cold-start), jsPDF (client-only, rasterized), pdf-lib (wrong tool for generation).
 
 ---
 
 ## Feature Priorities
 
-### Table Stakes (must ship for v7.0 to be credible)
+### Table Stakes (must ship)
 
-| ID | Feature | Complexity | Confidence | Rationale |
-|----|---------|------------|------------|-----------|
-| TS-4 | Feedback data model | Low-Medium | HIGH | Foundation for everything; 3 tables + indexes + RLS |
-| TS-1 | Thumbs up/down on FRED responses | Low | HIGH | Universal pattern (ChatGPT, Claude, Copilot); absence signals "we don't care about quality" |
-| TS-2 | Feedback admin dashboard | Medium | HIGH | Fred Cary is already demanding visibility via WhatsApp; extend existing `app/admin/` |
-| TS-3 | Sentiment tracking on conversations | Medium | MEDIUM | LLM piggyback approach; flag sessions where sentiment degrades sharply |
+1. Report data aggregation API (19 step answers from `oases_progress.metadata`)
+2. FRED synthesis (AI re-processes into richer narrative, Fred's voice, positive-but-honest)
+3. Report web view (`/dashboard/report`)
+4. PDF download (branded Sahara, `@react-pdf/renderer`)
+5. Email delivery with Blob URL link (NOT attachment)
+6. Per-founder report storage (versioned, `founder_reports` table)
+7. Conversion CTA after report delivery
+8. $39 Stripe product activation + pricing page update
 
-### Differentiators (ordered by build priority based on dependencies)
+### High Value (ship if time permits)
 
-| ID | Feature | Complexity | Confidence | Depends On |
-|----|---------|------------|------------|------------|
-| D-5 | A/B testing + feedback metrics | Medium | HIGH | TS-1, TS-4 |
-| D-4 | Multi-channel feedback aggregation | Medium-High | MEDIUM | TS-1, TS-4 |
-| D-1 | AI-powered categorization and pattern detection | Medium | MEDIUM | TS-3, TS-4 |
-| D-2 | Prompt self-refinement (RLHF-Lite) | High | MEDIUM | D-1, D-5 |
-| D-3 | Close-the-loop notifications | Medium | MEDIUM | D-1 |
+9. AI-suggested bonus steps (1-2 personalized post-completion)
+10. Shareable report link
+11. Soft paywall preview (blurred Investor Readiness stub in free report)
 
-### Defer to v8+ (anti-features)
+### Defer to v10.0
 
-- Full RLHF / model fine-tuning (wrong scale, wrong risk profile)
-- Real-time feedback popups or interruptions (destroys coaching flow)
-- NPS surveys inside FRED chat (conflates coaching with marketing)
-- Public feedback board / feature voting (exposes roadmap, creates expectation debt)
-- Automated prompt deployment without human review (prompt injection / regression risk)
+- Full GTM strategy generation (complex, better as dedicated feature)
+- Report as pitch deck data model (architecture for it now, build later)
+- Stage scoring full implementation (complex AI scoring)
+- Strength indicators per section (nice-to-have)
 
 ---
 
 ## Architecture Blueprint
 
-### Three-Layer Design
+### Data Flow
 
 ```
-COLLECTION          ANALYSIS              ACTION
------------         ----------            ------
-Thumbs UI     -->   Sentiment Track  -->  Prompt Patches
-Post-call     -->   Pattern Detect   -->  A/B Experiments
-SMS rating    -->   AI Categorize    -->  Linear Issues
-Implicit      -->   Trend Analysis   -->  Close-the-Loop
-WhatsApp      -->                    -->  Admin Dashboard
-      |                 |                      |
-      v                 v                      v
-+-----------------------------------------------------------+
-|              FEEDBACK DATA LAYER (Supabase)                |
-| feedback_signals | feedback_sessions | feedback_insights   |
-| Links to: ai_requests, fred_episodic_memory, ab_variants   |
-+-----------------------------------------------------------+
+ANSWER ACCUMULATION (during journey)
+  oases_progress.metadata → { answer, distilled } per step
+       │
+       v
+POST /api/report/generate (BUILDER+ gated)
+  ├── lib/report/aggregator.ts → pulls 19 step answers
+  ├── lib/report/synthesizer.ts → FRED AI synthesis (generateObject)
+  ├── lib/report/pdf-renderer.ts → renderToBuffer (via Trigger.dev)
+  ├── @vercel/blob put() → stores PDF
+  ├── lib/db/founder-reports.ts → upsert report record
+  └── lib/email/send.ts → email with Blob URL link
+       │
+       v
+GET /api/report/[reportId] → web view JSON
+GET /api/report/[reportId]/pdf → redirect to Blob URL
+       │
+       v
+/dashboard/report page
+  ├── BUILDER+: <ReportView> with download button
+  └── FREE: <ReportPaywallCTA> → /pricing?plan=builder
 ```
 
-### Key Integration Points
+### New Database Table
 
-1. **Feedback -> AI Requests:** `feedback_signals.ai_request_id` links every thumbs-up/down to the exact prompt version, model, and A/B variant that produced the response. Full traceability.
-2. **Sentiment -> FRED Pipeline:** Sentiment extraction piggybacks on FRED's existing LLM calls via a structured output field. No separate NLP service.
-3. **Pattern Detection -> Trigger.dev:** Daily scheduled job (same pattern as `sahara-whatsapp-monitor.ts`) clusters feedback, identifies themes, writes to `feedback_insights`.
-4. **Prompt Patches -> A/B Testing:** Proposed patches enter the existing `ab_experiments` / `ab_variants` tables. Canary rollout via existing variant assignment.
-5. **Close-the-Loop -> Resend:** Resolution notifications use existing `lib/email/` infrastructure.
+One new table: `founder_reports` with versioning, JSONB `report_data` for web rendering, `step_snapshot` for diffing, `pdf_blob_url` for storage, RLS for user isolation.
 
-### Key Architectural Patterns
+### Existing Patterns Extended
 
-- **Fire-and-forget for feedback writes** -- never block the chat pipeline
-- **Scheduled batch analysis, not real-time** -- individual signals are noisy; patterns emerge over time
-- **Extend, don't replace** -- wire into PostHog, Linear, A/B testing, admin panel; do not build parallel systems
-- **Human-in-the-loop for prompt changes** -- AI proposes, admin reviews, A/B validates, admin promotes
-- **Self-contained file structure** -- `lib/feedback/`, `components/feedback/`, `app/api/feedback/` to minimize git conflicts with concurrent agents
-
-### Schema (3 new tables)
-
-- `feedback_signals` -- explicit feedback (thumbs, ratings, comments) linked to `ai_requests`
-- `feedback_sessions` -- session-level aggregates (sentiment arc, abandonment, engagement)
-- `feedback_insights` -- AI-generated pattern analysis with status workflow (new -> reviewed -> actioned -> resolved)
+- Tier gating: `checkTierForRequest(req, UserTier.BUILDER)` — same as Pro gating
+- UI gating: `<FeatureLock requiredTier={UserTier.BUILDER}>` — same pattern
+- PDF: `renderToBuffer` from existing `app/api/dashboard/export/route.ts`
+- Email: `sendEmail()` with new optional `attachments` param (or just Blob URL)
+- Blob: same path convention as pitch deck storage
 
 ---
 
-## Critical Pitfalls
-
-### Top 5 Risks (MUST address)
+## Critical Pitfalls (MUST Address)
 
 | # | Pitfall | Severity | Phase | Prevention |
 |---|---------|----------|-------|------------|
-| C1 | FRED voice drift from prompt optimization | CRITICAL | 1 | Immutable core prompt + layered supplemental guidance + voice regression test suite (20+ scenarios) + human gate |
-| C2 | Feedback-driven issue flood without deduplication | CRITICAL | 2 | Semantic dedup before Linear issue creation + 4-hour aggregation windows + severity escalation not duplication |
-| C3 | A/B testing without statistical controls | CRITICAL | 3 | Pre-registration + minimum sample size (500 sessions/variant) + segmented analysis + model drift guard |
-| H1 | Feedback fatigue from wrong timing/frequency | HIGH | 2 | Session-end only + throttle per user (1 detailed/week) + passive signals first + progressive disclosure |
-| H3 | Performance impact on chat pipeline | HIGH | 2 | Fire-and-forget writes + lazy-load widgets + batch Supabase writes + <50ms p95 budget + <20KB bundle budget |
-
-### Secondary Risks (address but lower urgency)
-
-| # | Pitfall | Severity | Phase | Key Mitigation |
-|---|---------|----------|-------|----------------|
-| H2 | Negativity bias in feedback data | HIGH | 2-3 | Stratified sampling by tier + separate bugs from quality feedback + weight by user value |
-| H4 | WhatsApp API compliance (BrowserBase scraping) | HIGH | 1 | Migrate to official WhatsApp Business API before building notifications on top |
-| H5 | Admin dashboard becomes data graveyard | HIGH | 4 | Build triage workflow not dashboard + weekly digest email + link themes to Linear |
-| M1 | Sentiment overconfidence on short text | MEDIUM | 3 | Classify confidence alongside sentiment + context-aware analysis + "coaching discomfort" category |
-| M3 | GDPR concerns with feedback + AI analysis | MEDIUM | 1-2 | Explicit consent at collection + data minimization before AI analysis + 90-day retention + right to deletion |
-
-### Sahara-Specific Risks
-
-- **F1:** Pre-commit hooks auto-revert changes to `dashboard/layout.tsx` -- use wrapper/adapter pattern for feedback UI
-- **F2:** 335 existing lint errors hide new regressions -- baseline snapshot before Phase 1
-- **F3:** FRED chat latency already a pain point -- profile pipeline before and after each feature addition
-- **F4:** Concurrent agents cause git conflicts -- self-contained `lib/feedback/` directory structure
-- **F5:** Free-tier users give biased negative feedback -- tier-aware weighting, minimum 5-message threshold
+| C1 | BUILDER not properly in UserTier enum / webhook handler | CRITICAL | Tier setup | Add enum value + unit test `getTierFromString('builder')` before any product code |
+| C2 | renderToBuffer timeout on Vercel for 19-section report | CRITICAL | PDF architecture | Use Trigger.dev; never inline in API route |
+| C3 | Stripe webhook ordering race (`subscription.updated` before `session.completed`) | CRITICAL | Webhook hardening | Fallback to DB-based customer lookup in `resolveUserIdFromSubscription` |
+| H1 | FRED re-synthesizes into sycophantic corporate-speak | HIGH | AI synthesis | Temperature 0.3-0.5, ground in original answers, no generic startup phrases |
+| H2 | Paywall at wrong moment converts nobody | HIGH | Paywall design | Layered reveal or clear value preview; CTA after report consumption |
+| H4 | PDF email attachment spam-filtered | HIGH | Email delivery | Blob URL link in email, never attachment |
 
 ---
 
 ## Implications for Roadmap
 
-### Suggested Phase Structure (6 phases)
+Based on research, suggested phase structure:
 
-**Phase 0: Pre-Work (Baseline and Guardrails)**
-- Snapshot existing lint errors and test failures (delta checking for CI)
-- Mark FRED core prompt as immutable constant
-- Establish `lib/feedback/`, `components/feedback/`, `app/api/feedback/` directory structure
-- Addresses: F1 (pre-commit hooks), F2 (lint baseline), C1 (voice protection)
-- Uses: Existing codebase
-- Standard patterns: Yes, skip research
+### Phase 1: Foundation (Schema + Tier Activation)
+- Migration: `founder_reports` table with versioning + RLS
+- Verify BUILDER tier in `UserTier` enum, `getTierFromString`, webhook handler
+- Create Stripe product/price, set env var
+- Test: checkout → webhook → tier = BUILDER
+- **Addresses:** C1, C3, H3
+- **Standard patterns:** Yes, skip research
 
-**Phase 1: Foundation (Data Model + Voice Protection)**
-- Create `feedback_signals`, `feedback_sessions`, `feedback_insights` tables with RLS
-- Build layered prompt architecture (immutable core + mutable supplemental layer)
-- Create voice regression test suite (20+ canonical FRED scenarios)
-- Add GDPR consent mechanism to feedback collection points
-- Addresses: TS-4, C1 prevention, M3 consent
-- Avoids: C1 (voice drift) by establishing guardrails before any optimization
-- Uses: Supabase (existing), `FRED_CAREY_SYSTEM_PROMPT`
-- Standard patterns: Yes, database schema + RLS
+### Phase 2: Report Data Pipeline
+- `lib/report/aggregator.ts` — pull 19 answers from `oases_progress`
+- `lib/report/synthesizer.ts` — FRED AI synthesis with anti-sycophancy guardrails
+- Single batched prompt (all 19 answers → one structured output call)
+- Temperature 0.3, grounded in original answers
+- **Addresses:** H1, M3
+- **Needs attention:** Synthesis prompt quality is the highest-leverage work in v9.0
 
-**Phase 2: Collection (Feedback UI + Explicit Signals)**
-- Thumbs up/down component on FRED chat responses (fire-and-forget writes)
-- Progressive disclosure: thumbs-down expands to category selector + optional text
-- Tier-aware collection (no widgets for users with <5 messages; weight Pro/Studio 3-5x)
-- Performance validation (<50ms p95 latency impact, <20KB bundle addition)
-- Addresses: TS-1, D-4 (chat channel), H1 prevention, H3 prevention
-- Avoids: H1 (feedback fatigue) via session-end timing + throttling; H3 (performance) via fire-and-forget + lazy loading
-- Uses: React components, Supabase, existing `use-fred-chat.ts` hook (via wrapper, not modification)
-- Needs research: Feedback widget UX for voice call post-session rating
+### Phase 3: PDF + Storage
+- `lib/report/pdf-template.tsx` — branded Sahara PDF layout
+- `lib/report/pdf-renderer.ts` — renderToBuffer via Trigger.dev task
+- Blob upload with versioned path
+- Font registration (Geist TTF discrete weights)
+- **Addresses:** C2, N1
+- **Architecture decision:** Trigger.dev async (recommended) vs. synchronous (risky)
 
-**Phase 3: Visibility (Admin Dashboard + Sentiment)**
-- Feedback admin section in existing `app/admin/` panel
-- Triage workflow (New -> Reviewed -> Actioned -> Resolved -> Communicated), not just charts
-- Sentiment extraction piggybacking on FRED's LLM calls (structured output field)
-- Flagged sessions where sentiment degrades sharply
-- Weekly feedback digest email to admin via Resend
-- Addresses: TS-2, TS-3, H5 prevention
-- Avoids: H5 (data graveyard) by building workflow not dashboard; M1 (sentiment overconfidence) via confidence scores + coaching discomfort category
-- Uses: Existing `app/admin/`, Vercel AI SDK structured output, Resend
-- Standard patterns: Admin CRUD + LLM structured output
+### Phase 4: Delivery (Email + Web View)
+- Email template with Blob URL link (not attachment)
+- Extend `sendEmail()` if needed
+- Report web view page (`/dashboard/report`)
+- Report read API routes
+- Status polling UI (Supabase Realtime + visibilitychange fallback)
+- **Addresses:** H4, M2, M4
 
-**Phase 4: Intelligence (Pattern Detection + A/B Integration)**
-- Trigger.dev daily job for AI-powered feedback categorization and pattern detection
-- Deduplication logic for Linear issue creation (semantic matching + aggregation windows)
-- Extend `getVariantStats()` with feedback metrics (thumbs ratio, sentiment per variant)
-- Statistical significance testing (minimum sample sizes, segmented analysis)
-- Pre-registration template for experiments
-- Addresses: D-1, D-5, C2 prevention, C3 prevention
-- Avoids: C2 (issue flood) via dedup; C3 (bad stats) via significance testing
-- Uses: Trigger.dev, `lib/ai/ab-testing.ts`, `simple-statistics` (new)
-- Needs research: Optimal aggregation windows, sample size thresholds for Sahara's user base
+### Phase 5: Conversion Flow
+- Paywall CTA component after report delivery
+- Pricing page update (Builder card, `?plan=builder` param)
+- FeatureLock for report page (FREE sees CTA, BUILDER+ sees report)
+- Pending-upgrade localStorage flag to prevent post-checkout paywall flash
+- **Addresses:** H2, N2
+- **Product decision required:** Full report free vs. layered reveal
 
-**Phase 5: Self-Improvement (RLHF-Lite + Close-the-Loop)**
-- Prompt self-refinement: feedback-weighted few-shot examples + category-driven prompt patches
-- Prompt version control in `ab_experiments` / `ab_variants` tables
-- Human-in-the-loop approval workflow in admin dashboard
-- Close-the-loop monthly digest: "Here's what we improved based on your feedback"
-- Staleness cutoff (30 days), severity threshold, opt-in notifications
-- Addresses: D-2, D-3, M2 prevention
-- Avoids: C1 (voice drift) via immutable core + regression tests from Phase 1; M2 (notification spam) via batching + throttling
-- Uses: A/B testing infrastructure, Resend, admin approval queue
-- Needs research: Prompt patch generation strategies, regression testing automation, feedback-to-fix linking data model
+### Phase 6: Polish + Bonus Features (if time)
+- AI-suggested bonus steps
+- Shareable report link
+- Soft paywall preview (blurred section stub)
+- Report regeneration UX
 
 ### Phase Ordering Rationale
+1. **Phase 1 before everything:** Cannot test checkout or gate features without the tier working
+2. **Phase 2 before Phase 3:** PDF template needs synthesized content to render
+3. **Phase 3 before Phase 4:** Email needs Blob URL, web view needs report data
+4. **Phase 4 before Phase 5:** Conversion CTA needs the report to exist
+5. **Phase 5 depends on product decision:** Paywall strategy must be decided before building
 
-1. **Phase 0 before everything:** Cannot measure regressions without a baseline; cannot protect FRED's voice without guardrails already in place.
-2. **Phase 1 (data model) before Phase 2 (collection):** Nowhere to store feedback without the schema. GDPR consent must exist before collecting anything.
-3. **Phase 2 (collection) before Phase 3 (visibility):** Dashboard is empty without data. 2-4 weeks of data accumulation needed before analysis is meaningful.
-4. **Phase 3 (visibility) before Phase 4 (intelligence):** Admin needs to see raw feedback before trusting AI-generated insights. Builds confidence in the system.
-5. **Phase 4 (intelligence) before Phase 5 (self-improvement):** RLHF-Lite needs pattern detection (D-1) and feedback-aware A/B testing (D-5) as inputs. Cannot propose prompt patches without knowing what is wrong.
-6. **Phase 5 is the capstone:** It is the hardest and highest-value phase. It requires all prior infrastructure and accumulated data.
-
-### Parallel Track Opportunities
-
-- **Track A (User-facing):** Phase 2 collection can run in parallel with Phase 1 schema work (schema first, then UI immediately after)
-- **Track B (Admin):** Phase 3 dashboard can begin design/wireframing while Phase 2 ships
-- **Phases 4 and 5 are sequential:** Intelligence feeds self-improvement
+### Parallel Opportunities
+- Phase 1 (schema + Stripe) and Phase 2 (aggregator + synthesizer) can run in parallel — no dependency
+- Phase 3 (PDF) and Phase 4 (email template) have light overlap — email template can start while PDF is in progress
+- Phase 5 and Phase 6 are sequential (conversion before polish)
 
 ### Research Flags
-
-| Phase | Research Needed? | Reason |
-|-------|-----------------|--------|
-| Phase 0 | No | Standard engineering baseline work |
-| Phase 1 | No | Standard Supabase schema + RLS; FRED prompt architecture documented |
-| Phase 2 | Light | Voice call post-session UX; SMS rating collection mechanics |
-| Phase 3 | No | Standard admin CRUD + LLM structured output |
-| Phase 4 | Yes | Statistical significance thresholds for Sahara's scale; aggregation window tuning |
-| Phase 5 | Yes | Prompt patch generation strategies; regression testing automation; feedback-to-fix linking |
-
----
-
-## Cross-Cutting Concerns
-
-These affect ALL phases and must be tracked throughout:
-
-1. **FRED Voice Preservation:** Every phase that touches FRED's output must validate against the voice regression test suite. The immutable core prompt + supplemental guidance layer is a hard constraint.
-
-2. **Performance Budget:** <50ms p95 latency increase on chat pipeline; <20KB bundle addition for feedback widgets. Measure before and after every phase.
-
-3. **GDPR / Data Privacy:** Consent at collection, data minimization before AI analysis, 90-day retention policy, right-to-deletion cascade. Must be designed in from Phase 1, not bolted on.
-
-4. **Tier-Aware Design:** All feedback collection, analysis, and optimization must segment by tier. Free-tier feedback is informational, not directional. Pro/Studio feedback drives prompt optimization.
-
-5. **Fire-and-Forget Pattern:** All feedback writes are asynchronous and non-blocking. This is not optional -- FRED latency is already a documented pain point.
-
-6. **Pre-Commit Hook Workaround:** Feedback UI must use wrapper/adapter components, not modify `dashboard/layout.tsx` or `documents/new/page.tsx` directly.
-
-7. **Concurrent Agent Safety:** Self-contained directory structure (`lib/feedback/`, `components/feedback/`, `app/api/feedback/`). Minimize touchpoints with shared files.
+| Phase | More Research? | Reason |
+|-------|---------------|--------|
+| Phase 1 | No | Standard schema + Stripe activation |
+| Phase 2 | No | AI synthesis prompt is the work; research complete |
+| Phase 3 | Light | Geist font TTF availability; Trigger.dev task setup |
+| Phase 4 | No | Standard email + web view |
+| Phase 5 | **YES** | Paywall strategy needs product decision |
+| Phase 6 | No | Standard feature work |
 
 ---
 
 ## Open Questions
 
-Aggregated from all 4 research files:
-
-1. **Statistical thresholds:** What sample size is sufficient for A/B significance testing given Sahara's current user base? Is 500 sessions/variant realistic?
-2. **Voice call feedback UX:** How to prompt for rating after a LiveKit voice session without disrupting the experience? Timing and modality are unclear.
-3. **SMS feedback collection:** Character limits and response parsing for rating collection via SMS. How to handle non-numeric responses?
-4. **Prompt versioning schema:** How to track which prompt version (core + supplemental + few-shot examples) produced which response? The current `ab_variants` table may need extension.
-5. **Regression testing automation:** How to automatically validate that a prompt patch for one topic does not degrade another? What does the test harness look like?
-6. **Feedback-to-fix linking:** Data model for connecting a Linear issue resolution back to the specific `feedback_signals` records that originated it. Required for close-the-loop.
-7. **WhatsApp Business API migration timeline:** When to migrate off BrowserBase scraping? Before or during v7.0? What is the effort estimate?
-8. **Implicit signal calibration:** What constitutes "session abandonment" vs. "user got what they needed quickly"? Heuristic design for implicit feedback.
-9. **"Coaching discomfort" sentiment category:** How to distinguish "FRED was too harsh" (real issue) from "FRED challenged my assumptions and it was uncomfortable" (working as designed)?
+1. **Paywall strategy:** Full report free (gate execution layer) vs. layered reveal (3 sections free, gate the rest)? This is the biggest product decision in v9.0.
+2. **Font availability:** Are Geist variable font discrete-weight TTFs available, or does the PDF need a different brand font?
+3. **Shareable links:** Should founders choose public vs. private for their report? Privacy decision needed.
+4. **Investor Readiness in $39:** Currently gated at Pro. Confirm it moves to Builder tier.
+5. **19-step mapping source:** The exact 19-item roadmap exists in the UI but needs a single authoritative source file in the codebase.
 
 ---
 
@@ -280,42 +215,30 @@ Aggregated from all 4 research files:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Zero new infrastructure; extending proven existing stack |
-| Table Stakes Features | HIGH | Universal patterns (thumbs, dashboards) with extensive competitive examples |
-| Differentiator Features | MEDIUM | Individual components proven; full integration (especially D-2 RLHF-Lite) is novel |
-| Architecture | HIGH | Extends existing Sahara patterns; three-layer design is straightforward |
-| Critical Pitfalls (C1-C3) | HIGH | Based on direct codebase analysis + well-documented industry anti-patterns |
-| High Pitfalls (H1-H5) | MEDIUM-HIGH | UX patterns well-studied; Sahara-specific timing/impact extrapolated |
-| Medium Pitfalls (M1-M4) | MEDIUM | Known risks with clear mitigations; severity depends on user geography and scale |
-| FRED-Specific Risks (F1-F5) | HIGH | Based on documented project history and codebase constraints |
+| Stack (zero new deps) | HIGH | Verified against package.json + existing working code |
+| BUILDER tier exists | HIGH | Read lib/stripe/config.ts and lib/constants.ts directly |
+| PDF pattern works | HIGH | Existing renderToBuffer route in the codebase |
+| Critical pitfalls (C1-C3) | HIGH | Codebase-verified webhook + tier issues |
+| Feature priorities | MEDIUM-HIGH | Based on competitor analysis + SaaS conversion research |
+| Paywall strategy | MEDIUM | Two valid approaches; needs product decision |
+| Trigger.dev for PDF | MEDIUM | Installed but not battle-tested for this specific pipeline |
 
-**Overall: MEDIUM-HIGH.** The domain is well-understood and Sahara's existing infrastructure provides strong scaffolding. The main uncertainty is in Phase 5 (RLHF-Lite) where the full integration is genuinely novel. Phases 0-4 use standard patterns with high confidence.
+**Overall: HIGH.** The domain is well-understood, the stack is already in place, and the existing codebase provides strong patterns to follow. The main uncertainty is the paywall strategy (product decision) and Trigger.dev performance for PDF generation (testable in Phase 3).
 
 ---
 
 ## Sources
 
-Aggregated from all research files. Confidence annotations reflect cross-referencing across multiple research dimensions.
+Aggregated from all 4 research files. See individual files for full citation lists.
 
 **First-Party (HIGH):**
-- Sahara codebase: `lib/ai/ab-testing.ts`, `trigger/sahara-whatsapp-monitor.ts`, `lib/channels/conversation-context.ts`, `lib/ai/prompts.ts`, `lib/email/`
-- Sahara `package.json` and existing infrastructure
+- Sahara codebase: `lib/stripe/config.ts`, `lib/constants.ts`, `app/api/dashboard/export/route.ts`, `lib/email/send.ts`, `lib/storage/upload.ts`, `supabase/migrations/`
 
-**Industry Research (MEDIUM-HIGH):**
-- [Braintrust: Prompt Evaluation Tools 2025](https://www.braintrust.dev/articles/best-prompt-evaluation-tools-2025)
-- [Statsig: Prompt Regression Testing](https://www.statsig.com/perspectives/slug-prompt-regression-testing)
-- [Statsig: When Statistical Significance Misleads](https://www.statsig.com/perspectives/abtesting-llms-misleading)
-- [Microsoft Copilot Studio: Collect Thumbs Feedback](https://learn.microsoft.com/en-us/power-platform/release-plan/2025wave1/microsoft-copilot-studio/collect-thumbs-up-or-down-feedback-comments-agents)
-- [Chatarmin: WhatsApp Messaging Limits 2026](https://chatarmin.com/en/blog/whats-app-messaging-limits)
+**Stack (HIGH):**
+- Vercel Functions Limits (April 2026), @react-pdf/renderer npm registry, react-pdf GitHub issues, Resend docs, Stripe docs
 
-**UX and Feedback Patterns (MEDIUM):**
-- [Zonka Feedback: Thumbs Up/Down Surveys](https://www.zonkafeedback.com/blog/collecting-feedback-with-thumbs-up-thumbs-down-survey)
-- [Thematic: Customer Feedback Loop Guide](https://getthematic.com/insights/customer-feedback-loop-guide)
-- [Userpilot: AI Customer Feedback Analysis](https://userpilot.com/blog/ai-customer-feedback-analysis/)
-- [FeatureBot: Closing the Feedback Loop](https://featurebot.com/blog/closing-the-feedback-loop)
-- [OrangeLoops: UX Patterns for AI Assistants](https://orangeloops.com/2025/07/9-ux-patterns-to-build-trustworthy-ai-assistants/)
+**Features (MEDIUM-HIGH):**
+- Evalyze, ReadyScore, FoundersPlan competitor analysis, CliftonStrengths report model, SaaS pricing psychology studies
 
-**Compliance and Regulatory (MEDIUM):**
-- [SecurePrivacy: AI GDPR Compliance 2025](https://secureprivacy.ai/blog/ai-gdpr-compliance-challenges-2025)
-- [Orrick: EDPB Opinion on AI and GDPR](https://www.orrick.com/en/Insights/2025/03/The-European-Data-Protection-Board-Shares-Opinion-on-How-to-Use-AI-in-Compliance-with-GDPR)
-- [GMCSCO: WhatsApp API Compliance 2026](https://gmcsco.com/your-simple-guide-to-whatsapp-api-compliance-2026/)
+**Pitfalls (HIGH):**
+- Stripe webhook ordering docs, react-pdf memory leak issues, Vercel timeout documentation, OpenAI GPT-4o sycophancy rollback, email deliverability research
