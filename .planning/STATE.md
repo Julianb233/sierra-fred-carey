@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 92 of 96 (Report Aggregation & AI Synthesis)
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-04-08 — Completed 92-01-PLAN.md (step mapping + aggregator pipeline)
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-04-08 — Completed 92-02-PLAN.md (FRED AI synthesis pipeline)
 
-Progress: [███░░░░░░░░░░░] 1.5/6 phases complete
+Progress: [████░░░░░░░░░░] 2/6 phases complete
 
 Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
@@ -108,6 +108,10 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Single query for all oases_progress rows (lookup map pattern) not per-step queries [92-01]
 - Unit economics + scaling operations steps have empty journeyStepIds — new report-only steps for future journey mapping [92-01]
 - Manual Stripe product/price creation steps documented in .env.local comments [91-04]
+- Anti-sycophancy enforced at prompt level, not post-generation — avoids false positives on founder-quoted phrases (RGEN-05 limitation) [92-02]
+- Single AI call produces ReportData + bonusSteps — bonusSteps extracted before DB storage [92-02]
+- Temperature 0.3 for grounded deterministic report synthesis output [92-02]
+- buildSystemPrompt/buildUserPrompt exported for testability and prompt inspection [92-02]
 - getProfileTier uses cascading if-checks (STUDIO >= PRO >= BUILDER) — BUILDER was missing, fixed [91-02]
 - Webhook BUILDER tier tested indirectly via POST handler (not extracted helpers) — simpler for 4 scenarios [91-03]
 - captureMessage (Sentry warning) for DB fallback monitoring in resolveUserIdFromSubscription [91-03]
@@ -125,7 +129,7 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 
 ## Session Continuity
 
-Last session: 2026-04-08T20:22Z
-Stopped at: Completed 92-01-PLAN.md (step mapping + aggregator pipeline)
-Resume file: .planning/phases/92-report-aggregation-synthesis/92-01-SUMMARY.md
+Last session: 2026-04-08T20:29Z
+Stopped at: Completed 92-02-PLAN.md (FRED AI synthesis pipeline) — Phase 92 complete
+Resume file: .planning/phases/92-report-aggregation-synthesis/92-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
