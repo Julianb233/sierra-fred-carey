@@ -97,12 +97,12 @@
 | RDEL-01 | Phase 94 | Pending |
 | RDEL-02 | Phase 93 | Pending |
 | RDEL-03 | Phase 94 | Pending |
-| RDEL-04 | Phase 91+93 | Pending |
-| TIER-01 | Phase 91 | Pending |
-| TIER-02 | Phase 91 | Pending |
-| TIER-03 | Phase 91 | Pending |
+| RDEL-04 | Phase 91+93 | Partial (schema done, storage logic in 93) |
+| TIER-01 | Phase 91 | Complete (placeholder — Stripe sk_live needed for prod) |
+| TIER-02 | Phase 91 | Complete |
+| TIER-03 | Phase 91 | Complete |
 | TIER-04 | Phase 95 | Pending |
-| TIER-05 | Phase 91 | Pending |
+| TIER-05 | Phase 91 | Complete |
 | TIER-06 | Phase 95 | Pending |
 | TIER-07 | Phase 95 | Pending |
 | CONV-01 | Phase 96 | Pending |
