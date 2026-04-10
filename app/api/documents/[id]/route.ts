@@ -24,13 +24,13 @@ export async function GET(
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
 
-    // SECURITY: Require Pro tier for Strategy Documents
+    // SECURITY: Require Builder tier for Documents
     const userTier = await getUserTier(userId);
-    if (userTier < UserTier.PRO) {
+    if (userTier < UserTier.BUILDER) {
       return createTierErrorResponse({
         allowed: false,
         userTier,
-        requiredTier: UserTier.PRO,
+        requiredTier: UserTier.BUILDER,
         userId,
       });
     }
@@ -82,13 +82,13 @@ export async function PATCH(
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
 
-    // SECURITY: Require Pro tier for Strategy Documents
+    // SECURITY: Require Builder tier for Documents
     const userTierPatch = await getUserTier(userId);
-    if (userTierPatch < UserTier.PRO) {
+    if (userTierPatch < UserTier.BUILDER) {
       return createTierErrorResponse({
         allowed: false,
         userTier: userTierPatch,
-        requiredTier: UserTier.PRO,
+        requiredTier: UserTier.BUILDER,
         userId,
       });
     }
@@ -161,13 +161,13 @@ export async function DELETE(
     // SECURITY: Get userId from server-side session
     const userId = await requireAuth();
 
-    // SECURITY: Require Pro tier for Strategy Documents
+    // SECURITY: Require Builder tier for Documents
     const userTierDel = await getUserTier(userId);
-    if (userTierDel < UserTier.PRO) {
+    if (userTierDel < UserTier.BUILDER) {
       return createTierErrorResponse({
         allowed: false,
         userTier: userTierDel,
-        requiredTier: UserTier.PRO,
+        requiredTier: UserTier.BUILDER,
         userId,
       });
     }

@@ -1,290 +1,199 @@
-# Features Research -- v7.0 UX Feedback Loop
+# Feature Landscape: Sahara v9.0 Founder Journey Report & $39 Tier
 
-**Domain:** Closed-loop UX feedback systems for AI-powered SaaS (founder coaching)
-**Platform:** Sahara -- AI Founder OS with FRED cognitive engine
-**Researched:** 2026-03-04
-**Mode:** Ecosystem (Features dimension)
+**Domain:** AI founder coaching platform — completion report + freemium-to-paid conversion
+**Researched:** 2026-04-08
+**Research mode:** Ecosystem + Feasibility (features dimension only)
 
 ---
 
-## Existing Sahara Assets (What We Already Have)
+## Context
 
-Before mapping new features, note what Sahara v1-v3 already shipped that v7.0 builds on:
+Sahara's v9.0 milestone has two coupled goals:
 
-| Asset | Location | Relevance |
-|-------|----------|-----------|
-| A/B testing framework | `lib/ai/ab-testing.ts` | Deterministic user-variant assignment, experiment CRUD, variant stats by latency/error rate. **Solid foundation -- needs feedback signal integration.** |
-| WhatsApp monitor + Linear pipeline | `trigger/sahara-whatsapp-monitor.ts` | Scrapes WhatsApp group, AI categorizes issues, auto-creates Linear issues, sends SMS/email reports. **Already a feedback-to-tracker pipeline.** |
-| Multi-channel conversation context | `lib/channels/conversation-context.ts` | Unified context across chat/voice/SMS with channel tagging. **Cross-channel memory exists.** |
-| PostHog analytics | `lib/analytics/` | Product analytics, funnels, onboarding tracking (shipped v3.0 Phase 30). |
-| Email engagement | `lib/email/` | Weekly digests, milestone notifications, re-engagement (shipped v3.0 Phase 31). |
-| FRED memory system | `lib/db/fred-memory.ts` | Episodic memory with per-tier limits. |
-| Sentry error tracking | Configured | Production observability (shipped v3.0 Phase 25). |
-| Admin panel | `app/admin/` | Existing admin interface to extend. |
+1. **The Report** — When a founder completes all 19 roadmap steps, FRED synthesizes their answers into a polished Founder Journey Report (web view + PDF + email). This is the free-tier graduation artifact.
+2. **The $39 Conversion** — The report delivery is the conversion moment. After receiving the report, founders are prompted to upgrade to the new $39/mo Essentials tier.
 
-**Key insight:** Sahara is not starting from zero. The WhatsApp-to-Linear pipeline is an early feedback loop. v7.0 formalizes and extends this into a comprehensive system.
+The critical insight from research: **the report IS the paywall trigger.** The founder has already done the work. The report proves it. The upgrade is the natural next step to execute on what they just built. This is the highest-converting pattern in SaaS — upgrade after value realization, not before.
 
 ---
 
 ## Table Stakes
 
-Features users expect from an AI product that claims to improve over time. Missing these means the feedback system feels broken or performative.
+Features users expect. Missing = product feels incomplete or the conversion moment falls flat.
 
-### TS-1: Thumbs Up/Down on AI Responses
-**Complexity:** Low
-**Why expected:** Every major AI product (ChatGPT, Claude, Copilot, Gemini) has this. Users reflexively look for it. Its absence signals the product does not care about quality.
-**Implementation pattern:**
-- Thumbs up/down icons inline on each FRED response (chat and voice transcript)
-- On thumbs-down: expand to optional category selector (irrelevant, incorrect, too vague, too long, wrong tone) plus free-text box
-- On thumbs-up: optional "What was helpful?" text box
-- Store: `feedback_signals` table with `user_id`, `message_id`, `session_id`, `channel`, `rating` (1/-1), `categories[]`, `comment`, `created_at`
-- Fire-and-forget write -- zero UX friction
-**Competitive examples:** ChatGPT (thumbs + category on downvote), Claude (thumbs + freetext), Microsoft Copilot Studio (thumbs + comments, aggregated in analytics dashboard)
-**Confidence:** HIGH -- universal pattern, well-documented
-
-### TS-2: Feedback Admin Dashboard
-**Complexity:** Medium
-**Why expected:** Without visibility, feedback collection is a black hole. The admin (Fred Cary) needs to see what founders are saying about FRED. This is table stakes because the WhatsApp monitoring PRD already revealed that Fred demands visibility into quality issues.
-**Implementation pattern:**
-- New section in existing `app/admin/` panel
-- Views: (1) Feedback feed with filters (date, channel, rating, category), (2) Aggregate stats (thumbs ratio over time, top complaint categories), (3) Per-session drill-down
-- Key metrics: daily feedback volume, positive/negative ratio, category distribution, response time to resolution
-- Export to CSV for offline analysis
-**Competitive examples:** Intercom feedback dashboard, Zendesk satisfaction analytics, Microsoft Copilot Studio analytics page
-**Confidence:** HIGH -- standard admin pattern
-
-### TS-3: Basic Sentiment Tracking on Conversations
-**Complexity:** Medium
-**Why expected:** An AI coaching product must know when a founder is frustrated, confused, or disengaged. Without sentiment awareness, FRED cannot self-correct in-session or flag problematic interactions for review.
-**Implementation pattern:**
-- Lightweight per-message sentiment scoring using the LLM already in the pipeline (piggyback on FRED's response generation -- add a structured output field for detected user sentiment: positive/neutral/negative/frustrated)
-- Store sentiment alongside conversation in episodic memory metadata
-- Aggregate session-level sentiment score (weighted average of message sentiments)
-- Flag sessions where sentiment degrades sharply (frustration spike detection)
-- Surface flagged sessions in admin dashboard
-**Why not a separate NLP model:** Sahara already uses LLMs for every interaction. Adding a sentiment field to the existing structured output is cheaper and more contextually accurate than running a separate sentiment analysis service.
-**Competitive examples:** Hume AI (emotion detection), Intercom (customer satisfaction prediction), Drift (conversation health scoring)
-**Confidence:** MEDIUM -- the piggyback approach is common in AI-native products but requires prompt engineering to avoid degrading response quality
-
-### TS-4: Feedback Storage and Data Model
-**Complexity:** Low-Medium
-**Why expected:** Without a proper data model, nothing else works. This is infrastructure, not a user-facing feature, but it is table stakes for the feedback system.
-**Implementation pattern:**
-- `feedback_signals` table: explicit feedback (thumbs, ratings, comments)
-- `feedback_sessions` table: session-level aggregates (sentiment arc, engagement metrics)
-- `feedback_categories` table: configurable taxonomy (bug, quality, relevance, tone, missing-info)
-- Link to existing `ai_requests`/`ai_responses` tables for A/B test correlation
-- Link to existing `fred_episodic_memory` for conversation context
-- Channel tagging using existing `Channel` type from `conversation-context.ts`
-**Confidence:** HIGH -- data modeling, no external dependencies
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| All 19-step answers aggregated into report | Report without the answers is meaningless | Low | Data already exists in DB; needs clean aggregation API |
+| FRED-synthesized narrative summaries per section | Raw "what I typed" feels like a form printout, not a report | Medium | AI re-processing pass over each of the 5 sections; positive/upbeat framing |
+| Executive summary at the top | Every premium report has an exec summary; absence signals unprofessionalism | Medium | FRED synthesizes all 19 answers into a 3-5 sentence overview of the business |
+| Founder name + company name on the report | Personalization is expected; generic report = low perceived value | Low | Already captured in onboarding |
+| Report date + version | Founders need to know when the report was generated; signals freshness | Low | Auto-generated metadata |
+| Web view of the report | Founders expect to read it on-platform before downloading | Low | `/dashboard/report` page |
+| PDF download | Reports that can't be shared offline are incomplete; every competitor offers this | Medium | Branded Sahara PDF via @react-pdf/renderer |
+| Email delivery with PDF | Graduation moment requires an email — feels ceremonial; also practical (saves the file) | Low | Resend SDK already integrated |
+| Report accessible anytime | Founders return to review; one-time delivery is insufficient | Low | Stored per-founder, retrievable from dashboard |
+| Clear upgrade CTA after report delivery | The report IS the conversion moment; no CTA = no conversion | Low | "Ready to turn this model into a structured business?" |
+| $39 tier on pricing page | Founders researching tiers need to see it; absent tier causes confusion | Low | UI change only, Stripe product creation required |
 
 ---
 
 ## Differentiators
 
-Features that create competitive advantage for Sahara specifically. Not expected, but valuable -- especially for an AI coaching product where the AI must demonstrably improve.
+Features that make the report feel premium, shareable, and worth the journey. Not universally expected, but they significantly increase perceived value and conversion.
 
-### D-1: AI-Powered Feedback Categorization and Pattern Detection
-**Complexity:** Medium
-**Value proposition:** Transform raw feedback into actionable insights automatically. Instead of Fred Cary manually reading hundreds of thumbs-down comments, FRED identifies patterns: "23 founders this week said FRED's fundraising advice was too generic for their stage."
-**Implementation pattern:**
-- Scheduled job (Trigger.dev, like existing WhatsApp monitor) runs daily/weekly
-- Pulls recent negative feedback + low-sentiment sessions
-- LLM analysis: cluster by theme, identify recurring patterns, rank by frequency and severity
-- Output: structured report stored in `feedback_insights` table
-- Surface in admin dashboard as "Top Issues This Week" with drill-down
-**Why differentiating:** Most AI products collect feedback but do not synthesize it. Synthesis is the hard part.
-**Competitive examples:** Thematic (AI feedback categorization SaaS), Userpilot (AI-powered feedback analysis for SaaS product teams), BuildBetter (AI feedback tools)
-**Confidence:** MEDIUM -- the pattern is proven in dedicated feedback tools; implementing it as a native feature in Sahara is novel but feasible
-
-### D-2: Prompt Self-Refinement from Feedback Signals (RLHF-Lite)
-**Complexity:** High
-**Value proposition:** FRED actually gets better based on user feedback -- the core promise of v7.0. Not full RLHF (which requires model fine-tuning), but a practical "RLHF-lite" that refines prompts and retrieval.
-**Implementation pattern:**
-- **Feedback-weighted prompt examples:** Thumbs-up responses become few-shot examples in FRED's prompt library. Thumbs-down responses become "avoid this" negative examples.
-- **Category-driven prompt patches:** When pattern detection (D-1) identifies recurring complaints (e.g., "too vague on unit economics"), generate a prompt patch: additional instructions appended to FRED's system prompt for that coaching topic.
-- **Prompt version control:** Store prompt versions in DB (extend existing `ab_experiments` schema). Each patch creates a new version. A/B test new vs. old automatically using existing `lib/ai/ab-testing.ts`.
-- **Human-in-the-loop gate:** Prompt patches are proposed, not auto-deployed. Admin reviews and approves in dashboard before going live.
-- **Feedback loop closure:** After deploying a prompt patch, track whether thumbs-up ratio improves for that topic.
-**Why differentiating:** Most AI SaaS products treat feedback as a quality signal for humans to act on. Sahara would use it to directly improve FRED -- a tighter loop.
-**Risk:** Prompt drift, regression on unrelated topics. Mitigated by A/B testing and human gate.
-**Competitive examples:** Braintrust (production traces become eval datasets), PromptLayer (prompt versioning + evaluation), Yohei Nakajima's self-improving agent patterns
-**Confidence:** MEDIUM -- the individual components (prompt versioning, A/B testing, few-shot examples) are well-understood; the integration is novel
-
-### D-3: Close-the-Loop Notifications
-**Complexity:** Medium
-**Value proposition:** When a founder reports an issue and it gets fixed, they receive a notification: "Thanks for your feedback -- FRED now gives more specific fundraising advice for pre-seed founders." This creates a virtuous cycle where founders feel heard and continue providing feedback.
-**Implementation pattern:**
-- Track which feedback signals contributed to which prompt patches or bug fixes
-- When a fix ships (Linear issue closed, prompt patch deployed), query related feedback signals
-- Send targeted notification via existing email engagement system (`lib/email/`) or in-app notification
-- Template: "You helped improve FRED! Your feedback about [topic] led to [improvement]. Try it out."
-- Link back to relevant feature/conversation
-**Why differentiating:** Research shows "customer-obsessed" companies see 41% faster revenue growth from communicating changes back to users. Very few AI products do this.
-**Competitive examples:** Aha! (marks feature requests as shipped + notifies followers), Canny (close-the-loop notifications), FeatureBot (automated feedback loop closure)
-**Confidence:** MEDIUM -- the notification infrastructure exists in Sahara; linking feedback to fixes requires careful data modeling
-
-### D-4: Multi-Channel Feedback Aggregation
-**Complexity:** Medium-High
-**Value proposition:** Sahara uniquely has FRED accessible via chat, voice, SMS, and WhatsApp (indirectly via monitoring). Founders give feedback everywhere -- not just through thumbs buttons. A frustrated WhatsApp message, a curt SMS, or an abandoned voice call are all feedback signals.
-**Implementation pattern:**
-- **Explicit signals:** Thumbs up/down (chat), post-call rating prompt (voice), reply-based rating ("Reply 1-5 to rate this advice" in SMS)
-- **Implicit signals:** Session abandonment (started conversation, left mid-flow), sentiment degradation across messages, repeated questions (FRED did not answer satisfactorily), voice call duration vs. engagement
-- **WhatsApp signals:** Already captured via `trigger/sahara-whatsapp-monitor.ts` -- extend to tag as feedback, not just bugs
-- **Unified view:** All signals flow into `feedback_signals` table with channel tag, visible in admin dashboard with channel filtering
-**Why differentiating:** Most feedback tools are single-channel. Sahara's multi-channel FRED gives it a unique aggregation advantage.
-**Dependency:** Requires TS-4 (data model) and TS-1 (explicit feedback UI)
-**Confidence:** MEDIUM -- explicit channel feedback is straightforward; implicit signal extraction (abandonment, repeated questions) requires careful heuristic design
-
-### D-5: A/B Testing Integration with Feedback Signals
-**Complexity:** Medium
-**Value proposition:** Sahara already has A/B testing (`lib/ai/ab-testing.ts`) with latency and error rate metrics. Adding feedback signals (thumbs ratio, sentiment scores) as first-class A/B test metrics transforms experiments from "does it break?" to "does it help?"
-**Implementation pattern:**
-- Extend `getVariantStats()` to include feedback metrics: thumbs-up ratio, average sentiment score, session completion rate per variant
-- Add statistical significance calculation (chi-squared test for binary feedback, t-test for sentiment scores)
-- Admin dashboard: experiment results with feedback-aware metrics, auto-flag winning variants
-- Integrate with D-2: prompt patches automatically enter A/B tests, feedback metrics determine winner
-**Why differentiating:** Connects experimentation to user satisfaction rather than just technical metrics.
-**Competitive examples:** Braintrust (quality gates prevent regressions), Promptfoo (systematic prompt evaluation), Maxim AI (prompt optimization platform)
-**Confidence:** HIGH -- extending existing infrastructure with new metrics is well-understood
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| FRED's voice throughout the report | The report reads like Fred Cary is speaking to the founder, not a form printout. Competitors like Evalyze and ReadyScore produce clinical scores — FRED produces mentorship | Medium | Reuse Fred's voice/tone rules from `lib/fred-brain.ts` and `lib/ai/prompts.ts` |
+| AI-suggested bonus steps (1-2 personalized) | Shows FRED understands this specific business, not every business. Creates "wow, it noticed X about me" moment | Medium | FRED analyzes all 19 answers, pattern-matches to Fred's 7 brain enhancements, produces 1-2 personalized next-step suggestions |
+| Section-by-section strength indicators | ReadyScore.ai uses 40+ factor scoring; CliftonStrengths uses theme breakdowns. Founders want to know where they're strong — not just what they built | Medium | Simple HIGH/MEDIUM/DEVELOP indicator per section, not a score — avoids gamification trap |
+| Shareable report link | Founders will share their report with co-founders, advisors, and investors. Sharing = organic acquisition | Low | Unique shareable URL, no auth required to view (or gated by founder choice) |
+| Report as "pitch deck foundation" messaging | Positions the report as more than a summary — it's the raw material for their pitch deck. Creates future pull toward the pitch deck feature | Low | Copy/messaging only in v9.0; data model design for v10.0 pitch deck generator |
+| Milestone email with celebratory framing | CliftonStrengths delivers a "congratulations" experience; coaching platforms that celebrate completion see higher net promoter scores | Low | Resend email, already wired. Tone: "You just built your business model. Here's what you created." |
+| Upgrade prompt framing: value expansion, not restriction | Spotify's pattern: "you discovered a Premium feature" beats "you're blocked." Grammarly's pattern: show what's possible, don't lock out | Low | Copy design: "You've built the model. Here's what $39 unlocks to execute it." |
+| Stage scoring in $39 tier | Investors and accelerators use stage-specific rubrics (pre-seed, seed). Founders want to know where they stand relative to their stage, not in the abstract | High | AI scoring against stage benchmarks; feeds into Investor Readiness |
+| Go-to-market strategy output in $39 tier | Most actionable thing after completing the journey. Founders who finish want a plan, not more assessment | High | Reuse Strategy Documents infrastructure already built in v1.0 |
+| Priority FRED responses in $39 tier | Perceived value of "your coach answers you first" is high in coaching platforms. Low cost to implement with queue mechanics | Medium | Response latency differentiation or queue priority in API |
 
 ---
 
 ## Anti-Features
 
-Features to deliberately NOT build for v7.0. Common traps in feedback system design.
+Features to deliberately NOT build in v9.0. These are common mistakes in the report/coaching platform space.
 
-### AF-1: Full RLHF / Model Fine-Tuning
-**Why avoid:** Sahara uses third-party LLMs (Anthropic, OpenAI, Google) via Vercel AI SDK. Fine-tuning requires hosting your own model, managing training infrastructure, and introduces severe regression risk. The ROI is terrible for a startup at Sahara's scale.
-**What to do instead:** RLHF-lite via prompt refinement (D-2). Adjust the prompts, examples, and retrieval context -- not the model weights.
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Numeric overall score (e.g., "Your Founder Score: 74/100") | Founders who score low feel judged and disengage. Competitors like ReadyScore use scores, but Sahara's brand is mentorship, not grading. A low score at graduation destroys the celebration moment | Use qualitative section indicators (strength/develop) and stage-specific guidance. Reserve scoring language for Investor Readiness (that's explicitly a score product) |
+| Comparison to other founders ("you're in the top 23%") | Leaderboard mechanics in coaching create anxiety, not motivation. Fred's methodology is about the founder's own business, not competition | Focus on forward momentum: "here's what you've built, here's the next step" |
+| Overly long report (15+ pages) | CliftonStrengths' full 34-report is 25+ pages — users report feeling overwhelmed. StrengthsFinder review noted "not for personal development dabblers." Sahara's founders are action-oriented | Target 4-6 pages. Executive summary + 5 section summaries + FRED's bonus steps + upgrade CTA. Readable in 10 minutes |
+| Generic GTM template disguised as personalized strategy | Founders immediately recognize when an "AI strategy" is a Mad Libs template. Destroys trust. This is the #1 complaint in AI business plan generator reviews (DesignRush 2025 analysis) | Delay GTM strategy to $39 tier so it gets proper AI generation time; or generate on-demand after upgrade |
+| Gating the report itself behind $39 | The report IS the conversion mechanism. If you gate the report, you remove the primary free-tier graduation artifact and conversion trigger. This is the "gate too aggressively" trap | Give the full report free; gate the execution layer ($39: stage scoring, GTM, investor readiness, strategy outputs) |
+| Hard paywall with no preview of $39 features | Research shows 30% lower conversion when users hit a wall without understanding what they're upgrading to (Profitwell data). "You're blocked" vs "here's what unlocks" | Soft paywall: show the Investor Readiness section header with a teaser score (blurred or locked), reveal what $39 unlocks |
+| Asking founders to re-enter data for the $39 features | Friction that kills upgrade intent. If founders already gave 19 answers, $39 features should be pre-populated | All $39 features (investor readiness, GTM, stage scoring) should read from the same 19-step answer store |
+| Multiple upgrade prompts during report delivery | Urgency theater kills the celebratory moment. Founders feel manipulated | One clear upgrade CTA at the end of the report. One follow-up email at 24-48 hours. That's it |
 
-### AF-2: Real-Time Feedback Popups / Interruptions
-**Why avoid:** Founders are busy. Interrupting a coaching session with "Rate this response!" mid-conversation destroys the flow. Research shows interruptive feedback requests reduce both feedback quality and user satisfaction.
-**What to do instead:** Inline thumbs (non-blocking, attached to each message). Post-session micro-survey (1 question max). Passive sentiment detection. Never block the conversation flow.
+---
 
-### AF-3: NPS Surveys Inside the AI Chat
-**Why avoid:** NPS ("How likely are you to recommend...") is a product-level metric, not a conversation-level metric. Asking it inside FRED's chat conflates the coaching relationship with product marketing. It also yields low-quality data because the context is wrong.
-**What to do instead:** NPS via email (periodic, quarterly). In-app NPS on the dashboard (not in chat). Keep FRED's chat sacred -- it is a coaching space.
+## Conversion Psychology
 
-### AF-4: Building a Custom Feedback Analytics SaaS
-**Why avoid:** Sahara is a founder OS, not a feedback tool. Do not over-invest in building Thematic/Userpilot/Canny inside Sahara. Build what is needed for FRED's improvement loop; use existing tools (PostHog, Linear) for everything else.
-**What to do instead:** Lean admin dashboard (TS-2), integrate with PostHog for complex analytics, use Linear for issue tracking (already connected).
+What drives free-to-paid at the $39 price point in this specific context. These are design principles for the conversion flow, not features per se.
 
-### AF-5: Public Feedback Board / Feature Voting
-**Why avoid:** Sahara is a 1-on-1 coaching platform, not a community product. A public "vote on features" board exposes the roadmap to competitors, creates expectation debt, and does not match the intimate founder-AI relationship.
-**What to do instead:** Close-the-loop notifications (D-3) give the feeling of being heard without the governance overhead of a public board.
+### The Graduation Moment Pattern
 
-### AF-6: Automated Prompt Deployment Without Human Review
-**Why avoid:** Auto-deploying prompt changes based on feedback signals is a recipe for prompt injection, quality regression, and unpredictable behavior. One bad batch of feedback could poison FRED's prompts.
-**What to do instead:** Human-in-the-loop gate (part of D-2). AI proposes prompt patches, admin approves, A/B test validates.
+Research finding (HIGH confidence — multiple SaaS conversion studies): Upgrade prompts shown immediately after a user completes a meaningful achievement convert 2.3x better than time-based prompts. Sahara's 19-step completion is the highest-value trigger possible — the founder has invested significant time and built something real.
+
+**Design implication:** The upgrade prompt should appear AFTER the founder has read their report, not before or during delivery. Let them absorb the value, then ask for the upgrade.
+
+### Value Expansion, Not Restriction
+
+Research finding (HIGH confidence — Canva, Spotify, Grammarly documented patterns): Paywalls framed as "unlock more" convert better than "you're blocked." The report already demonstrates Sahara's value. The $39 prompt should expand on that value, not interrupt it.
+
+**Conversion copy framework (matches PROJECT.md intent):**
+- Free framing: "You just built your business model."
+- $39 framing: "Now turn it into a structured business you can execute."
+- Not: "Upgrade to access these locked features."
+
+### The $39 Price Point Psychology
+
+Research finding (MEDIUM confidence — SaaS pricing studies): $39 specifically outperforms both $34 and $40 due to charm pricing + the left-digit effect. $39 is below the psychological $40 threshold and above the "too cheap to be credible" range for a founder coaching product. The price signals substance without requiring a "is this worth it" decision.
+
+**The three-tier structure (Free / $39 / $99 / $249) also benefits from the center-stage effect** — when given multiple options, people disproportionately choose the middle. $39 as the first paid tier makes it feel like the "reasonable choice."
+
+### Soft Paywall Preview in $39 Features
+
+Research finding (HIGH confidence — Chargebee data): Companies that align paywalls with natural product limitations see 25% higher conversion vs. time-based trials. Showing a blurred/locked Investor Readiness section within the free report (with a one-click unlock) is more effective than a separate pricing page.
+
+**Design implication:** The free report should include a section stub for "Investor Readiness Score" that shows the score is calculated but blurred — "Upgrade to $39 to see your score." This is the Canva background-removal pattern applied to the report.
+
+### Completion Rate is the Primary Conversion Lever
+
+Research finding (HIGH confidence — ProductLed): The biggest blocker to free-to-paid conversion is users not reaching the "aha moment" because the free-tier value gap is too large. Sahara's 19-step journey must be genuinely completable to generate conversions.
+
+**Design implication:** The FREE tier must be generous — the entire 19-step journey, FRED responses, and the full report. Gating anything in the journey itself reduces completion rates and therefore conversion. The $39 value is in the execution layer AFTER the journey, not DURING it.
 
 ---
 
 ## Feature Dependencies
 
 ```
-TS-4 (Data Model)
- |
- +---> TS-1 (Thumbs Up/Down)
- |      |
- |      +---> D-4 (Multi-Channel Aggregation)
- |      |
- |      +---> D-5 (A/B Test + Feedback Metrics)
- |             |
- |             +---> D-2 (Prompt Self-Refinement / RLHF-Lite)
- |
- +---> TS-3 (Sentiment Tracking)
- |      |
- |      +---> D-1 (AI Categorization + Pattern Detection)
- |             |
- |             +---> D-2 (Prompt Self-Refinement / RLHF-Lite)
- |             |
- |             +---> D-3 (Close-the-Loop Notifications)
- |
- +---> TS-2 (Admin Dashboard)
-        |
-        +---> D-1 (surfaces insights in dashboard)
-        +---> D-5 (surfaces experiment results in dashboard)
+19-step answer store (existing)
+  └── Report data aggregation API        [v9.0 — REPORT]
+        └── FRED synthesis AI pass       [v9.0 — REPORT]
+              └── Report web view        [v9.0 — REPORT]
+              └── Report PDF             [v9.0 — REPORT]
+              └── Report email           [v9.0 — REPORT]
+              └── Per-founder storage    [v9.0 — REPORT]
+              └── AI bonus steps         [v9.0 — REPORT]
+              └── Report as deck data    [future v10.0]
+
+Report delivery
+  └── Paywall conversion CTA             [v9.0 — CONVERT]
+        └── $39 Stripe product           [v9.0 — TIER39]
+              └── Tier gating middleware [v9.0 — TIER39]
+                    └── Investor Readiness (gated)   [v9.0 — TIER39]
+                    └── Strategy outputs (gated)     [v9.0 — TIER39]
+                    └── GTM strategy (gated)         [v9.0 — TIER39]
+                    └── Stage scoring (gated)        [v9.0 — TIER39]
+                    └── Priority FRED (gated)        [v9.0 — TIER39]
+
+Soft paywall preview (blurred Investor Readiness in free report)
+  └── Requires: $39 tier exists AND Investor Readiness scoring implemented
 ```
 
-**Critical path:** TS-4 -> TS-1 -> D-5 -> D-2
-
-**Parallel tracks:**
-- Track A (User-facing): TS-1 -> D-4 -> D-5
-- Track B (Analysis): TS-3 -> D-1 -> D-2
-- Track C (Admin): TS-2 -> surfaces results from A and B
-- Track D (Engagement): D-3 (can start once D-1 exists)
-
-**Recommended build order:**
-1. **Phase 1:** TS-4 (data model) + TS-1 (thumbs UI) + TS-2 (basic admin dashboard)
-2. **Phase 2:** TS-3 (sentiment tracking) + D-4 (multi-channel aggregation) + D-5 (A/B test integration)
-3. **Phase 3:** D-1 (AI categorization) + D-2 (RLHF-lite prompt refinement)
-4. **Phase 4:** D-3 (close-the-loop notifications) + polish
+**Critical path:** Report aggregation API → FRED synthesis → web view → PDF → email → conversion CTA → $39 Stripe → tier gating. These must be built in order.
 
 ---
 
-## Competitive Examples
+## MVP Recommendation for v9.0
 
-| Product | Feedback Mechanism | What Sahara Can Learn |
-|---------|-------------------|----------------------|
-| **ChatGPT** | Thumbs up/down on every response, category selector on downvote, optional freetext. Regenerate button as implicit negative signal. | Gold standard for explicit feedback UX. Copy the pattern exactly. |
-| **Claude (Anthropic)** | Thumbs up/down with freetext. Simple, non-intrusive. | Simplicity works. Do not over-engineer the feedback widget. |
-| **Intercom Fin** | AI customer support with CSAT after resolution, escalation as implicit negative signal, admin analytics dashboard. | Post-resolution rating pattern applicable to post-coaching-session rating. |
-| **Copilot Studio (Microsoft)** | Thumbs up/down with comments, analytics dashboard aggregating reactions, agent analytics page. | Enterprise-grade feedback analytics -- good reference for admin dashboard design. |
-| **Braintrust** | Production traces automatically become eval datasets, quality gates prevent regressions. | The trace-to-evaluation pipeline is exactly what D-5 should achieve. |
-| **PromptLayer** | "GitHub for prompts" -- version control, A/B evaluation against historical data. | Prompt versioning pattern for D-2. |
-| **Canny** | Feature request board, auto-notify when shipped, changelog integration. | Close-the-loop notification pattern for D-3 (without the public board). |
-| **Thematic** | AI-powered feedback categorization, theme detection, sentiment analysis across channels. | Pattern detection approach for D-1. |
+Build in this priority order:
 
----
+**Must ship (table stakes — the conversion moment breaks without these):**
+1. Report data aggregation API (all 19 answers + metadata)
+2. FRED synthesis pass (AI re-processes into narrative summaries, Fred's voice)
+3. Report web view (`/dashboard/report`)
+4. PDF download (branded Sahara design, @react-pdf/renderer already in stack)
+5. Email delivery with PDF on 19-step completion (Resend already wired)
+6. Per-founder report storage (Supabase, versioned)
+7. Conversion CTA after report delivery
+8. $39 Stripe product + checkout + tier gating middleware
+9. Pricing page with $39 tier
 
-## Confidence Assessment
+**High value, ship if time permits:**
+10. AI-suggested bonus steps (1-2 personalized post-completion recommendations)
+11. Shareable report link
+12. Soft paywall preview (blurred Investor Readiness score stub in free report)
 
-| Feature | Confidence | Reasoning |
-|---------|------------|-----------|
-| TS-1 (Thumbs) | HIGH | Universal pattern, well-documented, simple implementation |
-| TS-2 (Admin Dashboard) | HIGH | Standard admin UI, existing admin panel to extend |
-| TS-3 (Sentiment) | MEDIUM | LLM-piggyback approach is sound but needs prompt testing to validate quality |
-| TS-4 (Data Model) | HIGH | Standard database design, no external dependencies |
-| D-1 (AI Categorization) | MEDIUM | Proven in dedicated tools; quality depends on prompt engineering for Sahara's domain |
-| D-2 (RLHF-Lite) | MEDIUM | Individual components proven; full integration is novel, needs careful rollout |
-| D-3 (Close-the-Loop) | MEDIUM | Notification infra exists; linking feedback to fixes requires data modeling discipline |
-| D-4 (Multi-Channel) | MEDIUM | Explicit signals straightforward; implicit signals (abandonment, repeated Qs) need heuristic tuning |
-| D-5 (A/B + Feedback) | HIGH | Extending existing `lib/ai/ab-testing.ts` with new metrics -- incremental work |
+**Defer to post-v9.0:**
+- Strength indicators per section (nice to have, not conversion-critical)
+- Full GTM strategy generation (complex, better as a dedicated v10.0 feature)
+- Report as pitch deck foundation data model (v10.0 explicitly)
+- Stage scoring full implementation (complex AI scoring, defer to after $39 tier proves out)
 
 ---
 
-## MVP Recommendation
+## Competitive Landscape (Confidence Notes)
 
-For the minimum viable feedback loop, prioritize:
+| Platform | What They Do | What Sahara Does Better |
+|----------|-------------|-------------------------|
+| **ReadyScore.ai** | 40+ factor investor readiness score, free questionnaire. Score in minutes. | Sahara's 19 steps build the answers through a mentored journey — ReadyScore is a one-time assessment. FRED has ongoing context ReadyScore doesn't. |
+| **Evalyze** ($20/mo) | AI pitch deck analysis, investor matching, readiness score. Free tier: 3 analyses. | Evalyze is transactional (upload deck, get score). Sahara builds the underlying business first. Report is a synthesis of the journey, not a deck analysis. |
+| **FoundersPlan** | AI business plan generator, 5-dimension readiness score. Free tool. | Template-based plans are widely recognized as generic. FRED's output is founder-specific, voice-consistent, and built on 19 questions not a single prompt. |
+| **CliftonStrengths** ($19.99–$59.99) | Personality-based strengths report, 34 themes, PDF, coaching guide. | Different category, but the premium report model is directly analogous. The $59.99 full report includes action items, blind spots, development guides. Sahara's $39 tier should feel similarly complete. |
 
-1. **TS-4** (Data model) -- foundation for everything
-2. **TS-1** (Thumbs up/down) -- starts collecting signal immediately
-3. **TS-2** (Admin dashboard) -- gives Fred Cary visibility he is already demanding via WhatsApp
-4. **D-5** (A/B test + feedback integration) -- connects to existing A/B infra, makes experiments meaningful
-
-Defer to later phases:
-- **D-2** (RLHF-lite): High complexity, needs data accumulation first. Defer until 2-4 weeks of feedback data exists.
-- **D-3** (Close-the-loop): Needs fixes to close the loop ON. Defer until the system is generating actionable insights.
-- **D-4** (Multi-channel aggregation): SMS and voice rating prompts are useful but secondary to chat feedback.
+**Confidence:** MEDIUM. All competitive data sourced from public pricing pages and WebFetch. Evalyze pricing verified via their website directly. ReadyScore pricing not publicly posted (free assessment, upgrade path unclear).
 
 ---
 
 ## Sources
 
-Research sources with confidence annotations:
-
-- [Zonka Feedback: Thumbs Up/Down Surveys](https://www.zonkafeedback.com/blog/collecting-feedback-with-thumbs-up-thumbs-down-survey) -- HIGH, practical UX guidance
-- [Microsoft Copilot Studio: Collect Thumbs Feedback](https://learn.microsoft.com/en-us/power-platform/release-plan/2025wave1/microsoft-copilot-studio/collect-thumbs-up-or-down-feedback-comments-agents) -- HIGH, official Microsoft docs
-- [Microsoft Data Science: Beyond Thumbs Up and Down](https://medium.com/data-science-at-microsoft/beyond-thumbs-up-and-thumbs-down-a-human-centered-approach-to-evaluation-design-for-llm-products-d2df5c821da5) -- MEDIUM, good framework for feedback granularity
-- [OrangeLoops: 9 UX Patterns for Trustworthy AI Assistants](https://orangeloops.com/2025/07/9-ux-patterns-to-build-trustworthy-ai-assistants/) -- MEDIUM, UX pattern reference
-- [Userpilot: AI Customer Feedback Analysis for SaaS](https://userpilot.com/blog/ai-customer-feedback-analysis/) -- MEDIUM, SaaS feedback analysis patterns
-- [FeatureBot: Closing the Feedback Loop with AI](https://featurebot.com/blog/closing-the-feedback-loop) -- MEDIUM, close-the-loop patterns
-- [Getthematic: Customer Feedback Loop Guide](https://getthematic.com/insights/customer-feedback-loop-guide) -- MEDIUM, comprehensive loop design
-- [Braintrust: Best Prompt Evaluation Tools 2025](https://www.braintrust.dev/articles/best-prompt-evaluation-tools-2025) -- HIGH, authoritative on eval tooling
-- [Maxim AI: A/B Testing with Prompts Guide](https://www.getmaxim.ai/articles/how-to-perform-a-b-testing-with-prompts-a-comprehensive-guide-for-ai-teams/) -- MEDIUM, practical A/B testing patterns
-- [Yohei Nakajima: Self-Improving AI Agents](https://yoheinakajima.com/better-ways-to-build-self-improving-ai-agents/) -- MEDIUM, architectural patterns for self-improvement
-- [Linear AI Workflows](https://linear.app/ai) -- HIGH, official Linear docs on AI features
-- [SaaS Playbooks: Feedback Loop Automation Guide](https://saasplaybooks.com/ultimate-guide-to-feedback-loop-automation/) -- LOW, single source
-- [Crescendo AI: Customer Sentiment Analysis Guide 2026](https://www.crescendo.ai/blog/customer-sentiment-analysis) -- MEDIUM, sentiment analysis overview
-- Sahara codebase: `lib/ai/ab-testing.ts`, `trigger/sahara-whatsapp-monitor.ts`, `lib/channels/conversation-context.ts` -- HIGH, first-party source
+- [Evalyze pricing and features](https://www.evalyze.ai/) — WebFetch verified
+- [ReadyScore.ai investor ready](https://readyscore.ai/) — 403 on detailed page, public homepage confirmed
+- [SaaS pricing psychology — AlterSquare](https://altersquare.medium.com/saas-pricing-psychology-why-29-beats-30-every-time-42949f600d85) — MEDIUM confidence
+- [Free trial conversion benchmarks 2025](https://www.1capture.io/blog/free-trial-conversion-benchmarks-2025) — MEDIUM confidence
+- [How freemium SaaS products convert with upgrade prompts — Appcues](https://www.appcues.com/blog/best-freemium-upgrade-prompts) — MEDIUM confidence
+- [Feature gating strategies for freemium SaaS — Demogo](https://demogo.com/2025/06/25/feature-gating-strategies-for-your-saas-freemium-model-to-boost-conversions/) — MEDIUM confidence
+- [CliftonStrengths reports comparison — Strengths on Site](https://www.strengthsonsite.com/cliftonstrengthsreportscomparison) — MEDIUM confidence
+- [Investor readiness score dimensions — FasterCapital](https://fastercapital.com/content/Investor-Readiness-Score--Navigating-the-Investor-Landscape--A-Guide-to-Improving-Your-Readiness-Score.html) — MEDIUM confidence
+- [The involvement of AI in startup investment-readiness scores 2025 — Equisy](https://equisy.io/the-involvement-of-ai-in-startup-investment-readiness-scores-2025/) — MEDIUM confidence
+- [Mastering freemium paywalls — Monetizely](https://www.getmonetizely.com/articles/mastering-freemium-paywalls-strategic-timing-for-saas-success) — MEDIUM confidence
+- Sahara PROJECT.md and MILESTONES.md — HIGH confidence (primary source for existing platform context)

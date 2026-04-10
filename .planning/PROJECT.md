@@ -8,30 +8,29 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v8.0 Go-Live: Guided Venture Journey (SHIPPED 2026-03-09)
+## Current Milestone: v9.0 Founder Journey Report & $39 Tier
 
-**Goal:** Transform Sahara from a chatbot tool into a structured guided venture journey with "Oases" milestone visualization, mentor-first UX, redesigned onboarding, and event-ready polish for the Palo Alto launch to 200 founders. Derived from Fred Cary strategy sessions (March 4 & 7, 2026).
+**Goal:** Generate a polished Founder Journey Report when founders complete all 19 roadmap steps, introduce a new $39/mo tier as the conversion moment from free to paid, and restructure tier gating so the 19-step journey is the definitive free experience.
 
 **Target features:**
-- Onboarding redesign — Mandatory welcome screen ("journey not a transaction"), reality lens check as first interaction, five-question structured flow, handholding orientation before FRED interaction, "spook them" gap awareness
-- Oases journey visualization — Five-stage progress roadmap (Clarity → Validation → Build → Launch → Grow), Sahara-themed desert oasis milestones, stage-gating enforcement (cannot skip ahead), progress percentage prominently displayed
-- UI relabeling & navigation — "Fred AI" → "Mentor", "Journey" → "Progress", prominent "Chat with Fred" entry point, visible "Open Roadmap" button, four main sections persistently visible on main view
-- Onboarding text fields — Convert checkbox-based onboarding into free-text answer fields that FRED captures, rephrases, and stores as founder memory
-- Founder memory enhancement — Store cleaned chat data as per-user memory/mini-brain, capture and restate problem/traction answers, memory persists and updates across sessions
-- Daily guidance system — Twilio SMS integration for orchestrated daily mentor tasks ("validate pricing with 5 customers today"), mentor-tells-you-what-to-do style (not "what do you need?"), cost-effective platform-return flow to manage SMS costs
-- Chat & voice continuity — Fix chat freezing/response-chopping, voice ID integration (Fred Zaharix), seamless continuity between text chat and voice call, mobile call/text continuity
-- Business intelligence radar — Actionable blurbs/headlines from web research in UI, inline article/blurb feature, idea-readiness scoring with personalized explanatory copy (24hr refresh cycle)
-- Event launch kit — QR code landing flow for Palo Alto pitch to 200 founders, two-week free trial mechanism, subscription flow wired (activated when Fred says go), pitch deck upload ready for paid tier
-- Robert Williams user testing loop — Systematic test account creation and full onboarding validation, mobile device testing protocol, feedback collection framework from first 200 users, iteration workflow before scaling
-- Fund matching gating — VC matching grayed out until 100% journey completion, Bordy API integration for direct VC/angel introductions when ready
+- Founder Journey Report — Compile all 19 roadmap step answers into a polished, positive report with FRED re-synthesized summaries (more detail, not less). Covers: what the company is, what it does, how it works, pricing model, LTV, CAC, founder story, differentiator, mindset, scaling plan, leadership
+- Report delivery — Web view (on-platform report page per founder), branded PDF download (Sahara design), and email delivery with PDF attachment
+- FRED report synthesis — AI re-processes all 19 answers into richer, more detailed summaries for the report. Each section gets narrative context, not just the raw answer. Positive and upbeat tone celebrating what the founder has built
+- AI-suggested bonus steps — After completing 19 steps, FRED analyzes the founder's specific business and may suggest 1-2 personalized additional steps ("for YOUR business, you also need...")
+- Per-founder report storage — Each founder's report stored in their own folder/record, retrievable anytime, versioned if they update answers
+- Paywall conversion flow — Report delivery is the graduation moment. After receiving the report: "You've built the model. Ready to turn this into a structured business you can execute? Upgrade to $39/mo"
+- New $39/mo Essentials tier — Between Free and Pro. Includes: everything in Free + Investor Readiness scoring + Strategy outputs (plans, roadmaps) + Go-to-market strategy + First year summary + Stage scoring & guidance + Priority FRED responses
+- Tier restructure — Ensure 19-step journey + profile/memory saving are solidly in Free tier. Move features that belong in $39 out of Free. Stripe product/price for $39 tier
+- Report as deck foundation — Architecture the report data so it can be reused as the basis for a pitch deck generator in a future milestone
 
-**Previous Milestone:** v7.0 UX Feedback Loop (Phases 71-73 complete)
+**Previous Milestone:** v8.0 Go-Live: Guided Venture Journey (SHIPPED 2026-03-09)
 
-**Meeting Sources:**
-- `docs/meeting-notes-2026-03-04-sahara-founders.md` — Full consolidated notes
-- Fireflies.ai recap: Sahara Founders (March 4, 2026)
-- Read AI meeting report: Sahara Founders (March 4, 2026)
-- Google Gemini notes: Sahara Strategy Session (March 7, 2026)
+**The 19-Step Founder Roadmap (5 sections):**
+1. **Your Core Offer** (4 steps) — Define product/service, ideal customer, problem in their words, pricing & why
+2. **Your Founder Story** (3 steps) — Personal why, unfair advantage, 30-second elevator pitch
+3. **Unit Economics** (4 steps) — CAC, LTV, LTV:CAC ratio, path to profitability
+4. **Scaling Operations** (4 steps) — #1 process that breaks at scale, bottleneck automation, core playbooks, repeatable acquisition channel
+5. **Leadership Mindset** (4 steps) — Delegate something you love, hard conversation, support system, leadership style
 
 ## Requirements
 
@@ -102,21 +101,43 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 
 ### Active
 
-**Onboarding Transformation (ONBOARD)**
+**v9.0 — Founder Journey Report (REPORT)**
+- [ ] Report data aggregation — API to compile all 19 roadmap step answers + metadata for a given founder
+- [ ] FRED report synthesis — AI re-processes all 19 answers into richer, narrative summaries. Positive/upbeat tone. More detail than the raw step summaries
+- [ ] Report web view — On-platform report page (`/dashboard/report`) showing all 5 sections with synthesized answers, executive summary, and founder profile
+- [ ] Report PDF generation — Branded Sahara PDF with professional layout, all 19 step summaries, executive summary section, downloadable from web view
+- [ ] Report email delivery — Auto-send PDF + web link via email when founder completes all 19 steps
+- [ ] Per-founder report storage — Store generated reports per founder, retrievable anytime, versioned if answers update
+- [ ] AI-suggested bonus steps — After 19-step completion, FRED analyzes the specific business and suggests 1-2 personalized additional steps
+- [ ] Report as deck foundation — Structure report data model so it can feed a future pitch deck generator
+
+**v9.0 — $39 Essentials Tier (TIER39)**
+- [ ] Stripe product & price — Create $39/mo Essentials tier in Stripe, wire checkout flow
+- [ ] Tier gating middleware — Add "essentials" tier between free and pro in tier-check middleware
+- [ ] Essentials feature set — Gate these behind $39: Investor Readiness scoring, Strategy outputs (plans/roadmaps), Go-to-market strategy, First year summary, Stage scoring & guidance, Priority FRED responses
+- [ ] Tier restructure — Ensure 19-step journey + profile/memory saving are solidly in Free. Move features that belong in $39 out of Free if needed
+- [ ] Pricing page update — Add $39 Essentials tier to pricing page between Free and Pro
+
+**v9.0 — Paywall Conversion Flow (CONVERT)**
+- [ ] Report graduation CTA — After report delivery, show conversion screen: "You've built the model. Ready to turn this into a structured business?"
+- [ ] Upgrade flow — Seamless path from report → $39 checkout → unlocked Essentials features
+- [ ] Conversion copy — "Free = take your idea and build a real business model. $39 = turn that model into a structured business you can execute"
+
+**v8.0 — Onboarding Transformation (ONBOARD)**
 - [ ] Welcome screen — Mandatory educational screen on first sign-up: "This is a guided venture journey, not a transaction", how it works, what to expect
 - [ ] Reality lens check — First interaction assesses founder's idea readiness, surfaces gaps to motivate engagement ("spook them")
 - [ ] Five-question structured flow — New accounts start with structured intake collecting idea, stage, challenge, goals, timeline as free-text answers
 - [ ] Handholding orientation — Concise onboarding guide/first-statement before users interact with Mentor explaining how to use Mentor + Progress
 - [ ] IdeaPros template mapping — Map IdeaPros ~120-step user journey as structural template for Sahara's founder workflow
 
-**Oases Journey System (JOURNEY)**
+**v8.0 — Oases Journey System (JOURNEY)**
 - [ ] Five-stage roadmap — Clarity → Validation → Build → Launch → Grow as "Oases" desert milestones (matches Sahara branding)
 - [ ] Journey visualization UI — Progress roadmap graphic prominently displayed below chat/call, progress percentage above business-intelligence radar
 - [ ] Stage gating — Users cannot skip ahead (e.g., no pitch deck before problem validation), enforced at FRED conversation + UI level
 - [ ] Stage completion tracking — Track which roadmap questions answered, compute per-stage and overall completion percentage
 - [ ] Fund matching gating — VC matching grayed out / locked until 100% journey completion
 
-**UI Relabeling & Navigation (UILABEL)**
+**v8.0 — UI Relabeling & Navigation (UILABEL)**
 - [ ] Rename "Fred AI" → "Mentor" across all UI surfaces
 - [ ] Rename "Journey" → "Progress" across all UI surfaces
 - [ ] Prominent "Chat with Fred" entry point — Upfront, not buried; killer feature positioning
@@ -124,42 +145,40 @@ Founders can make better decisions faster using FRED's structured cognitive fram
 - [ ] Four main sections persistently visible on main view (mobile + desktop)
 - [ ] Onboarding checkbox → text field conversion — Free-text answers that FRED captures, rephrases, stores as memory
 
-**Founder Memory & Intelligence (MEMORY)**
+**v8.0 — Founder Memory & Intelligence (MEMORY)**
 - [ ] Per-user memory/mini-brain — Store cleaned chat data as structured memory, capture problem statements, traction, and key decisions
 - [ ] Capture and restate — FRED rephrases user inputs and stores for later reference and updates
 - [ ] Business intelligence radar — Actionable blurbs/headlines from periodic web searches, inline article feature
 - [ ] Idea-readiness scoring — 24hr refresh cycle with personalized explanatory copy for each user
 
-**Daily Guidance & Outreach (GUIDE)**
+**v8.0 — Daily Guidance & Outreach (GUIDE)**
 - [ ] Daily task orchestration — FRED sends methodical daily tasks via SMS ("validate pricing with 5 customers today")
 - [ ] Mentor-style outbound — Tells user what to focus on, not "what do you need help with today?"
 - [ ] Twilio integration — Outbound SMS for daily guidance (existing Twilio wiring, extend for proactive guidance)
 - [ ] Platform return flow — Cost-effective strategy to bring users back to platform for full responses (avoid expensive per-message SMS)
 
-**Chat & Voice Polish (VOICE)**
+**v8.0 — Chat & Voice Polish (VOICE)**
 - [ ] Fix chat freezing/response-chopping — Bug in demo system causing chat to freeze mid-response
 - [ ] Voice ID wiring — Fred Zaharix voice ID integration, API key + account access confirmed
 - [ ] Chat-voice continuity — Seamless transition between text chat and voice call, context preserved
 - [ ] Mobile call/text continuity — Ensure voice calls and text work smoothly on mobile devices
 
-**Event Launch Kit (EVENT)**
+**v8.0 — Event Launch Kit (EVENT)**
 - [ ] QR code landing flow — 3-4 slide presentation deck links to QR code, instant sign-up flow for Palo Alto event (200 founders)
 - [ ] Two-week free trial — Trial mechanism ready for event attendees (activated when Fred says go)
 - [ ] Subscription flow — Stripe checkout wired for $99/month, NOT activated until Julian's full version ships
 - [ ] Pitch deck upload — Document upload for paid tier pitch deck review (Pro/Studio feature, critical for paid launch)
 
-**User Testing Loop (TEST)**
+**v8.0 — User Testing Loop (TEST)**
 - [ ] Systematic test accounts — Create new accounts and go through full onboarding to validate interest/five-question system
 - [ ] Mobile device testing — Test call/text continuity on mobile, validate responsive behavior
 - [ ] Event feedback collection — Framework to collect and process feedback from first 200 event attendees
 - [ ] Iteration workflow — Process for analyzing user behavior, prioritizing fixes, and iterating before scaling
 
-**Carried from v7.0 (DEFERRED)**
-- [ ] Feedback intelligence phases (74-76) — Pattern detection, auto-triage, self-improvement loop (deprioritized for go-live)
-
-**Carried from v6.0 (DEFERRED)**
-- [ ] Real Boardy API integration — Blocked pending partnership and API credentials (may activate for VC matching)
-- [ ] Mux admin routes — Blocked pending Mux credentials
+**Carried (DEFERRED)**
+- [ ] Feedback intelligence phases (74-76) — Pattern detection, auto-triage, self-improvement loop (from v7.0)
+- [ ] Real Boardy API integration — Blocked pending partnership and API credentials (from v6.0)
+- [ ] Mux admin routes — Blocked pending Mux credentials (from v6.0)
 
 ### Out of Scope
 
@@ -219,9 +238,10 @@ Fred made these enhancements to his ChatGPT FRED version and explicitly said "th
 **Pricing Tiers:**
 | Tier | Price | Features |
 |------|-------|----------|
-| Free | $0 | FRED decision engine, Reality Lens, Red Flag Detection, Wellbeing, Intake Snapshot |
-| Pro | $99/mo | + Investor Readiness, Pitch Review, Strategy Docs, SMS Check-ins, Persistent Memory |
-| Studio | $249/mo | + Virtual Agents x4, Boardy, Investor Targeting, Priority Compute, Deeper Memory |
+| Free | $0 | 19-step Founder Roadmap, FRED decision engine, Reality Lens, Profile & Memory saving, Journey Report |
+| Essentials | $39/mo | + Investor Readiness, Strategy outputs (plans/roadmaps), Go-to-market strategy, First year summary, Stage scoring & guidance, Priority FRED responses |
+| Pro | $99/mo | + Pitch Review, Strategy Docs, SMS Check-ins, Deeper Memory |
+| Studio | $249/mo | + Virtual Agents x4, Boardy, Investor Targeting, Priority Compute, Deepest Memory |
 
 ## Constraints
 
@@ -268,5 +288,12 @@ Fred made these enhancements to his ChatGPT FRED version and explicitly said "th
 | Pre-seed/seed focus only | Not serving Series A+ well yet; real value is with beginners | ✓ Confirmed (Fred WhatsApp, Mar 1) |
 | ElevenLabs voice: "Fred Sahara" | Voice ID: uxq5gLBpu73uF1Aqzb2t, API key shared in WhatsApp | ✓ Confirmed (WhatsApp, Feb 27-28) |
 
+| 19-step journey = free tier graduation | Report is the conversion moment; proves value before asking for payment | — Pending |
+| New $39/mo Essentials tier | Bridge between Free and Pro; lowers barrier to first payment | — Pending |
+| Report re-synthesized with more detail | Positive/upbeat, richer than raw step summaries; celebrates what founder built | — Pending |
+| AI-suggested bonus steps post-completion | FRED personalizes 1-2 extra steps per business type after 19-step completion | — Pending |
+| Free tier includes profile + memory saving | Already built; confirm it stays free to maximize 19-step completion rate | — Pending |
+| Report = future deck foundation | Data model structured so pitch deck generator can reuse report content | — Pending |
+
 ---
-*Last updated: 2026-03-07 after v8.0 Go-Live milestone initialization from Sahara Founders meetings*
+*Last updated: 2026-04-08 after v9.0 Founder Journey Report & $39 Tier milestone initialization*
