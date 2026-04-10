@@ -174,6 +174,7 @@ export const FRED_COMPANIES = {
   ],
 
   summaryStats: {
+    companiesFounded: "40+",
     companiesAdvised: "Hundreds",
     ipos: 3,
     acquisitions: 2,

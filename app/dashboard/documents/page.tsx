@@ -9,8 +9,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FeatureLock } from "@/components/tier/feature-lock";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
-import { useOasesProgress } from "@/hooks/use-oases-progress";
-import type { OasesStage } from "@/types/oases";
 import {
   DocumentCard,
   type DocumentItem,
@@ -64,9 +62,8 @@ const FOLDERS: {
 
 export default function DocumentsPage() {
   const { tier, isLoading: isTierLoading } = useUserTier();
-  const { progress, isLoading: isStageLoading } = useOasesProgress();
 
-  if (isTierLoading || isStageLoading) {
+  if (isTierLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
@@ -77,12 +74,10 @@ export default function DocumentsPage() {
   return (
     <div data-testid="documents-page">
       <FeatureLock
-        requiredTier={UserTier.PRO}
+        requiredTier={UserTier.BUILDER}
         currentTier={tier}
         featureName="Document Repository"
-        description="Organize and review all your documents with FRED. Available on Pro tier once you reach the Build stage."
-        requiredStage={"build" as OasesStage}
-        currentStage={progress?.currentStage}
+        description="Organize and review all your documents with FRED. Available on Builder tier and above."
       >
         <DocumentsContent />
       </FeatureLock>
