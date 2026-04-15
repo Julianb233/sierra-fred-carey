@@ -1,3 +1,8 @@
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
 /**
  * Sends a message to a WhatsApp group via Mac Mini SSH + AppleScript.
  * This is the primary method — Mac Mini is always authenticated.
@@ -6,9 +11,6 @@ export async function sendWhatsAppMessage(
   groupName: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { exec } = await import("child_process");
-  const { promisify } = await import("util");
-  const execAsync = promisify(exec);
 
   // Escape special characters for AppleScript
   const escapedMessage = message

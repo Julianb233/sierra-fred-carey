@@ -231,8 +231,12 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Resolve userId from subscription metadata, falling back to customer-based DB lookup.
- * Fixes the critical issue where metadata.userId may be missing on subscription events.
+ * Resolves userId from a Stripe subscription event.
+ *
+ * PITFALL C3: subscription.updated can arrive before checkout.session.completed.
+ * When this happens, metadata.userId is not yet set. We fall back to looking up
+ * the customer in our subscriptions table by stripe_customer_id.
+ * See: lib/__tests__/webhook-builder-tier.test.ts Scenario 3
  */
 async function resolveUserIdFromSubscription(
   subscription: Stripe.Subscription
@@ -241,11 +245,18 @@ async function resolveUserIdFromSubscription(
   const metadataUserId = subscription.metadata?.userId;
   if (metadataUserId) return metadataUserId;
 
-  // Fallback: look up by Stripe customer ID in our DB
+  // DB fallback — handles race condition where subscription.updated arrives
+  // before checkout.session.completed (PITFALL C3)
   const customerId = subscription.customer as string;
   if (customerId) {
     const existingSub = await getSubscriptionByCustomerId(customerId);
-    if (existingSub?.userId) return existingSub.userId;
+    if (existingSub?.userId) {
+      captureMessage(
+        `[Webhook] PITFALL C3: Resolved userId via DB fallback for customer ${customerId} (subscription ${subscription.id})`,
+        "warning"
+      );
+      return existingSub.userId;
+    }
   }
 
   return null;

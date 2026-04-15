@@ -113,7 +113,7 @@ export function TierIcon({
 
   const colorClass = {
     [UserTier.FREE]: "text-gray-400",
-    [UserTier.BUILDER]: "text-blue-400",
+    [UserTier.BUILDER]: "text-amber-500",
     [UserTier.PRO]: "text-[#ff6a1a]",
     [UserTier.STUDIO]: "text-orange-400",
   }[tier];

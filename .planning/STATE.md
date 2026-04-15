@@ -2,17 +2,21 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-07)
+See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Founders can make better decisions faster using FRED's structured cognitive frameworks.
-**Current focus:** v8.0 Go-Live: Guided Venture Journey — Transform Sahara from chatbot to guided venture journey for Palo Alto launch to 200 founders.
+**Current focus:** v9.0 Founder Journey Report & $39 Tier — Phase 94: Report Delivery
 
 ## Current Position
 
-Phase: 90 — User Testing Loop (Wave 5)
-Plan: 01 of 1 (complete)
-Status: v8.0 MILESTONE COMPLETE — All 14 phases (77-90) done
-Last activity: 2026-03-08 — Phase 90 complete (User testing infrastructure shipped)
+Phase: 94 of 96 (Report Delivery — Web View & Email)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-08 — Phase 93 verified (9/9 must-haves passed)
+
+Progress: [██████░░░░░░░░] 3/6 phases complete
+
+Previous milestone: v8.0 COMPLETE — All 14 phases (77-90) done
 
 Progress: [##############] 14/14 phases COMPLETE
 
@@ -95,6 +99,31 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - Stale fields (7+ days): ask before advising, do not assume still accurate [79-02 v2]
 - Missing fields: do not guess/fabricate, collect max 2 per exchange [79-02 v2]
 - Co-founder text input added to onboarding step 3, saves to profiles.co_founder [79-02 v2]
+- founder_reports.status typed as pending|generating|complete|failed for async generation polling [91-01]
+- getNextVersion uses ORDER BY DESC LIMIT 1 (not MAX aggregate) for supabase-sql parser compatibility [91-01]
+- ReportData JSONB: executiveSummary, founderName, companyName, generatedAt, sections[], fredSignoff [91-01]
+- NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID set as placeholder — Stripe secret key (sk_live_*) not yet available [91-04]
+- step-mapping.ts is single source of truth for 19-step-to-5-section report mapping [92-01]
+- buildAnswerMap prefers metadata.distilled over metadata.answer for cleaner AI synthesis input [92-01]
+- Single query for all oases_progress rows (lookup map pattern) not per-step queries [92-01]
+- Unit economics + scaling operations steps have empty journeyStepIds — new report-only steps for future journey mapping [92-01]
+- Manual Stripe product/price creation steps documented in .env.local comments [91-04]
+- Anti-sycophancy enforced at prompt level, not post-generation — avoids false positives on founder-quoted phrases (RGEN-05 limitation) [92-02]
+- Single AI call produces ReportData + bonusSteps — bonusSteps extracted before DB storage [92-02]
+- Temperature 0.3 for grounded deterministic report synthesis output [92-02]
+- buildSystemPrompt/buildUserPrompt exported for testability and prompt inspection [92-02]
+- getProfileTier uses cascading if-checks (STUDIO >= PRO >= BUILDER) — BUILDER was missing, fixed [91-02]
+- Webhook BUILDER tier tested indirectly via POST handler (not extracted helpers) — simpler for 4 scenarios [91-03]
+- captureMessage (Sentry warning) for DB fallback monitoring in resolveUserIdFromSubscription [91-03]
+- C3 pitfall (subscription.updated before session.completed) documented and observable in production [91-03]
+- Geist WOFF fonts from @fontsource/geist-sans (already installed), registered at module level in pdf-template.ts [93-01]
+- renderToBuffer requires ReactElement<DocumentProps> but cross-file import loses generic — cast to any [93-01]
+- Sections flow on single wrapped page (react-pdf handles page breaks), not one section per page [93-01]
+- bonusSteps not in ReportData type — only on SynthesisOutput, not rendered in PDF template yet [93-01]
+- Trigger task pattern: status=generating -> render -> upload -> status=complete, catch -> status=failed -> re-throw [93-01]
+- Step snapshot built from aggregated sections (stepId -> answer text), not raw progress rows [93-02]
+- API route POST /api/reports/generate accepts no body — userId from auth, data from pipeline [93-02]
+- Trigger failure after DB creation marks report failed then re-throws for visibility [93-02]
 
 ### Blockers/Concerns
 
@@ -104,10 +133,11 @@ v8.0 milestone decisions (confirmed by Fred Cary, March 7):
 - **CARRIED** Boardy API — no public docs, requires partnership agreement (Phase 85, 89)
 - **CARRIED** Mux credentials needed for content library admin
 - Fred Zaharix voice ID — API key and account access confirmed but needs wiring (Phase 82)
+- **CARRIED** Stripe secret key (sk_live_*) not available — blocks real Stripe product/price creation for Builder tier [91-04]
 
 ## Session Continuity
 
-Last session: 2026-03-09T23:55Z
-Stopped at: Completed 90-01-PLAN.md (User Testing Loop - smoke test, E2E, feedback widget, SLA dashboard)
-Resume file: .planning/milestones/v8.0-go-live/phases/90/90-01-SUMMARY.md
+Last session: 2026-04-08T21:19Z
+Stopped at: Completed 93-02-PLAN.md (API route + report generation orchestrator)
+Resume file: .planning/phases/93-pdf-template-generation/93-02-SUMMARY.md
 WhatsApp export: docs/whatsapp-sahara-founders-export-2026-03-08.txt
