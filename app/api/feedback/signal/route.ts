@@ -11,8 +11,9 @@ import type { FeedbackSignalInsert } from "@/lib/feedback/types"
 /**
  * Map UserTier enum to string tier for feedback_signals table.
  */
-const TIER_MAP: Record<UserTier, "free" | "pro" | "studio"> = {
+const TIER_MAP: Record<UserTier, "free" | "builder" | "pro" | "studio"> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "builder",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 }

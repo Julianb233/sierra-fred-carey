@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Sahara — Launch Readiness Dashboard (2026-04-20)</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141821;
+    --panel-2: #1b2030;
+    --border: #262c3d;
+    --text: #e7e9ef;
+    --muted: #8a92a6;
+    --accent: #ff6a1a;
+    --ok: #35d399;
+    --warn: #f5b149;
+    --bad: #ef4444;
+    --bad-bg: rgba(239,68,68,0.08);
+    --warn-bg: rgba(245,177,73,0.08);
+    --ok-bg: rgba(53,211,153,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  header {
+    padding: 36px 48px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--panel) 0%, transparent 100%);
+  }
+  h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.01em; }
+  h1 .accent { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 13px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 48px 64px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 0 0 28px;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat .value { font-size: 22px; font-weight: 600; margin-top: 6px; }
+  .stat.bad .value { color: var(--bad); }
+  .stat.warn .value { color: var(--warn); }
+  .stat.ok .value { color: var(--ok); }
+
+  .summary {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin-bottom: 28px;
+  }
+  .summary h2 { margin: 0 0 10px; font-size: 18px; }
+  .summary p { margin: 8px 0; color: #cfd3e0; }
+
+  section { margin: 36px 0 24px; }
+  section h2 {
+    font-size: 18px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section h2 .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .tag.p0 { background: var(--bad); color: #fff; }
+  .tag.p1 { background: var(--warn); color: #1a1a1a; }
+  .tag.p2 { background: #3d4258; color: var(--text); }
+  .tag.ok { background: var(--ok); color: #0b2a1f; }
+
+  .issue {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 10px;
+  }
+  .issue.p0 { background: var(--bad-bg); border-color: rgba(239,68,68,0.3); }
+  .issue.p1 { background: var(--warn-bg); border-color: rgba(245,177,73,0.3); }
+  .issue h3 { margin: 0 0 6px; font-size: 15px; }
+  .issue .where { color: var(--muted); font-size: 13px; margin-bottom: 8px; font-family: ui-monospace, monospace; }
+  .issue p { margin: 6px 0; font-size: 14px; }
+  .issue .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    header, main { padding-left: 20px; padding-right: 20px; }
+  }
+
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+  }
+  code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; }
+  pre { background: var(--panel-2); border: 1px solid var(--border); padding: 14px; border-radius: 8px; overflow-x: auto; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  .footer { color: var(--muted); font-size: 12px; margin-top: 48px; text-align: center; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .action {
+    background: var(--panel-2);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .action.primary { background: var(--accent); color: #120604; border-color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sahara <span class="accent">— Launch Readiness</span></h1>
+  <div class="meta">Diagnostic: 2026-04-20 · Agent: cli-session · Window: 30-min sprint before Julian team meeting</div>
+</header>
+
+<main>
+
+<div class="grid">
+  <div class="stat bad"><div class="label">Status</div><div class="value">NOT READY</div></div>
+  <div class="stat bad"><div class="label">P0 Blockers</div><div class="value">4</div></div>
+  <div class="stat warn"><div class="label">P1 Issues</div><div class="value">5</div></div>
+  <div class="stat ok"><div class="label">Tests passing (Julian repo)</div><div class="value">1048 / 1048</div></div>
+</div>
+
+<div class="summary">
+  <h2>Verdict in three lines</h2>
+  <p><strong>1. Two separate stacks, no shared users.</strong> Live app at <code>you.joinsahara.com</code> is Alex's Vite + Firebase build. Julian's Next.js + Supabase repo (BUILDER tier, PDF reports, WhatsApp pipeline, 1,048 passing tests) is built and preview-deployed but <strong>not reachable by any paying customer</strong>. The April 8 / April 15 consolidation decision never executed.</p>
+  <p><strong>2. Live app leaks user passwords in plaintext.</strong> Every user who signed up has seen their password on a "Copy this!" screen on <code>/dashboard/profile</code>. P0 security bug, fix today regardless of migration path.</p>
+  <p><strong>3. Ship plan we now have in motion:</strong> Migration email to Alex sent at 20:18 UTC (Gmail ID <code>19dac929f36be5e5</code>, CC'd to Fred + William). Asks for Supabase access + Firestore dump by Wednesday, full cutover end of next week.</p>
+</div>
+
+<div class="two-col">
+  <div class="issue">
+    <div class="label">Deployed today (Julian's version)</div>
+    <h3>sahara-45ursmyf4-ai-acrobatics.vercel.app</h3>
+    <p style="color:#cfd3e0">Next.js + Supabase preview of the current <code>ai-1205-microsite-polish-1775661684</code> branch. Build green. Vercel SSO gate is on; open with header <code>x-vercel-protection-bypass</code> or via the bypass URL shared with Julian privately.</p>
+  </div>
+  <div class="issue">
+    <div class="label">Live today (Alex's version)</div>
+    <h3>you.joinsahara.com</h3>
+    <p style="color:#cfd3e0">Vite SPA on Firebase Auth. Onboarding UX is strong (8 steps, good copy). Dashboard + FRED chat work. Password leak + missing v9.0 features.</p>
+  </div>
+</div>
+
+<section>
+  <h2><span class="tag p0">P0</span> Launch Blockers</h2>
+
+  <div class="issue p0">
+    <h3>1. Plaintext password on /dashboard/profile (live app)</h3>
+    <div class="where">https://you.joinsahara.com/dashboard/profile</div>
+    <p class="label">Impact</p>
+    <p>UI shows: "Your Auto-Generated Password: tbLD8bnkYQP#" with "Copy this! It will not appear again and you will have to reset it if lost." Every real user has seen this. Violates basic auth conventions and any compliance story for investors.</p>
+    <p class="label">Fix today</p>
+    <p>Remove the UI. Switch to user-set passwords or magic-link on signup. Audit whether the password is stored in plaintext server-side.</p>
+  </div>
+
+  <div class="issue p0">
+    <h3>2. Deployed stack is Firebase; v9.0 features live on Supabase only</h3>
+    <div class="where">you.joinsahara.com → identitytoolkit.googleapis.com · /opt/agency-workspace/sahara (Next.js + Supabase, not deployed)</div>
+    <p class="label">Impact</p>
+    <p>Stripe BUILDER / Pro / Studio tier activation, Founder Journey Report PDF (Trigger.dev + Vercel Blob), WhatsApp feedback-to-Linear pipeline, weekly SMS check-ins, voice agent on LiveKit — all built, tested, and blocked behind a migration.</p>
+    <p class="label">Fix</p>
+    <p>Migration email sent to Alex today. Option A: Alex migrates his Vite app to Supabase Auth this week (keeps his UI, 1-week plan). Option B: port his onboarding screens into the Next.js repo (2-3 weeks).</p>
+  </div>
+
+  <div class="issue p0">
+    <h3>3. Founder's name misspelled on a demo page</h3>
+    <div class="where">https://joinsahara.com/demo/reality-lens</div>
+    <p>"Get <strong>Fred Carey's</strong> no-BS analysis…" — correct spelling is Fred Cary. 15-second fix, plus a CI grep-guard so it can't regress.</p>
+  </div>
+
+  <div class="issue p0">
+    <h3>4. Pricing Feature Comparison table is broken</h3>
+    <div class="where">https://joinsahara.com/pricing (below tier cards)</div>
+    <p>Every row repeats the four price-tier headers (Free / $39 / $99 / $249) instead of tier-inclusion checkmarks. Users cannot compare. P0 because this is the page where purchase decisions happen.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag p1">P1</span> Pre-launch</h2>
+  <div class="issue p1"><h3>5. PWA "Install Sahara" bubble overlaps Pro tier CTA on desktop pricing</h3></div>
+  <div class="issue p1"><h3>6. Onboarding step 7 market-type badges broken</h3><p>Shows B/B/B/U instead of A/B/C/D. Fourth option reads "I'm selling to I'm not sure yet" — duplicated prefix.</p></div>
+  <div class="issue p1"><h3>7. ESLint config broken — CI has no lint guardrail</h3><p><code>react-hooks</code> plugin referenced but not installed. <code>npm run lint</code> errors. Install <code>eslint-plugin-react-hooks</code>.</p></div>
+  <div class="issue p1"><h3>8. /tools/investor-readiness lead-gen quiz appears stuck on Q1</h3><p>Only "Previous" button visible; needs real-browser verify of Next state.</p></div>
+  <div class="issue p1"><h3>9. "Features" top-nav link has no href</h3></div>
+</section>
+
+<section>
+  <h2><span class="tag ok">Working</span> Tested + confirmed</h2>
+  <div class="issue">
+    <ul style="margin:6px 0">
+      <li><strong>Onboarding UX (Alex's version)</strong> — 8 steps: welcome → tell me more → startup/idea/entrepreneur → signup form → stage (Ideation/Pre-seed/Seed/Series A+) → weak spot → idea + company name → market + location → roadmap teaser → BI radar teaser → dashboard. Copy is on-brand; no-sugarcoating tone matches Fred.</li>
+      <li><strong>FRED chat streaming</strong> — ~12 s end-to-end response. Anti-sycophancy guardrail fires correctly (pushed back on a validation question and redirected to problem definition).</li>
+      <li><strong>Personalization</strong> — FRED used the user's signup name and referenced the company name (TestCo) they entered.</li>
+      <li><strong>Dashboard nav</strong> — Progress / Mentor / Checklist / You tabs all route cleanly.</li>
+      <li><strong>Marketing site SEO</strong> — OG tags, meta, mobile viewport, Sentry + PostHog wiring all correct.</li>
+      <li><strong>Julian's Next.js repo build</strong> — <code>npm run build</code> exit 0, 116 routes generated.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Recommended meeting agenda (next 20 min)</h2>
+  <div class="issue">
+    <ol>
+      <li><strong>Password leak</strong> — same-day patch, regardless of migration path.</li>
+      <li><strong>Alex migration email</strong> — Alex has it; Fred + William are CC'd. Use the call to align on: Wed for Supabase access + Firestore dump, end of next week for cutover.</li>
+      <li><strong>Ship-or-hold decision</strong> — Julian's recommendation: ship Alex's version with the password fix + copy fixes today, run the Firebase → Supabase migration in parallel, relaunch as v1 in 1-2 weeks with the full v9.0 pipeline.</li>
+      <li><strong>P0 copy fixes</strong> — Fred Cary typo, pricing comparison table. ~15 min of work once someone has repo access.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Artifacts</h2>
+  <div class="issue">
+    <ul>
+      <li>Full markdown report: <code>/opt/agency-workspace/sahara/LAUNCH-READINESS-2026-04-20.md</code></li>
+      <li>Migration email draft: <code>/tmp/alex-migration-email.md</code> (sent at 20:18 UTC, Gmail <code>19dac929f36be5e5</code>)</li>
+      <li>Screenshots: <code>/tmp/sahara-[01-22]-*.png</code> (22 stages of the live flow)</li>
+      <li>Obsidian session log: <code>obsidian-vault/Projects/Sahara/2026-04-20-launch-readiness-diagnostic.md</code></li>
+    </ul>
+  </div>
+</section>
+
+<div class="footer">Generated 2026-04-20 · this page is unlisted (<code>noindex</code>) and lives on the Sahara preview deploy</div>
+
+</main>
+</body>
+</html>

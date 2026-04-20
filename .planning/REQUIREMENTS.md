@@ -1,108 +1,120 @@
-# Requirements — v7.0 UX Feedback Loop
+# Requirements — v9.0 Founder Journey Report & $39 Tier
 
-**Milestone:** v7.0
-**Defined:** 2026-03-04
+**Milestone:** v9.0
+**Defined:** 2026-04-08
 **Source:** Research (FEATURES.md, SUMMARY.md, ARCHITECTURE.md, PITFALLS.md)
-**Previous:** v1.0-v6.0 requirements archived (all shipped or carried)
+**Core Value:** Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
+**Previous:** v1.0-v8.0 requirements archived (all shipped or carried)
 
 ---
 
-## v7.0 Scope (35 requirements, 8 categories)
+## v9.0 Scope (18 requirements, 4 categories)
 
-### Foundation & Guardrails (6)
+### Report Generation (5)
 
-- [ ] **REQ-F1:** Feedback data model — `feedback_signals`, `feedback_sessions`, `feedback_insights` tables with RLS policies, linked to `ai_requests` and `fred_episodic_memory`
-- [ ] **REQ-F2:** Immutable core prompt architecture — FRED's core system prompt marked as constant; supplemental guidance layer for mutable additions; no optimization can modify the core
-- [ ] **REQ-F3:** Voice regression test suite — 20+ canonical FRED scenarios testing blunt truth-telling, reframe-before-prescribe, and mentor tone; automated validation before prompt changes deploy
-- [ ] **REQ-F4:** GDPR consent mechanism — explicit opt-in before feedback collection; data minimization before AI analysis; 90-day retention policy; right-to-deletion cascade
-- [ ] **REQ-F5:** Self-contained directory structure — `lib/feedback/`, `components/feedback/`, `app/api/feedback/` to minimize git conflicts with concurrent agents
-- [ ] **REQ-F6:** Lint/test baseline snapshot — document existing 335 lint errors and 12 test failures; CI uses delta checking so new regressions are caught
+- [ ] **RGEN-01**: All 19 roadmap step answers aggregated into a structured report with 5 sections (Core Offer, Founder Story, Unit Economics, Scaling Operations, Leadership Mindset)
+- [ ] **RGEN-02**: FRED re-synthesizes each section into richer narrative summaries — positive/upbeat but grounded in the founder's actual answers, never generic
+- [ ] **RGEN-03**: Executive summary generated at the top — 3-5 sentence FRED synthesis of the entire business model
+- [ ] **RGEN-04**: AI-suggested bonus steps — FRED analyzes the specific business and recommends 1-2 personalized next steps after completion
+- [ ] **RGEN-05**: Anti-sycophancy guardrails — synthesis uses temperature 0.3-0.5, grounds in original answers, no generic startup phrases without evidence
 
-### Feedback Collection (6)
+### Report Delivery (4)
 
-- [ ] **REQ-C1:** Thumbs up/down on every FRED chat response — inline icons, fire-and-forget write, zero UX friction
-- [ ] **REQ-C2:** Thumbs-down expansion — category selector (irrelevant, incorrect, too vague, too long, wrong tone) + optional free-text box
-- [ ] **REQ-C3:** Thumbs-up expansion — optional "What was helpful?" text box
-- [ ] **REQ-C4:** Performance budget enforced — <50ms p95 latency increase on chat pipeline; <20KB bundle addition for feedback widgets
-- [ ] **REQ-C5:** Tier-aware collection — no widgets for users with <5 messages in session; weight Pro/Studio feedback 3-5x in analysis
-- [ ] **REQ-C6:** Feedback throttling — max 1 detailed feedback prompt per user per week; passive signals unlimited
+- [ ] **RDEL-01**: Web view of the report at `/dashboard/report` showing all sections with synthesized content
+- [ ] **RDEL-02**: Branded Sahara PDF download generated via `@react-pdf/renderer` through Trigger.dev background job
+- [ ] **RDEL-03**: Email delivered on report completion with Vercel Blob URL link (NOT PDF attachment)
+- [ ] **RDEL-04**: Per-founder report storage in `founder_reports` table — versioned, with step snapshot for diffing
 
-### Admin Visibility (7)
+### $39 Essentials Tier (7)
 
-- [ ] **REQ-V1:** Feedback admin section in existing `app/admin/` panel — not a separate app
-- [ ] **REQ-V2:** Triage workflow — statuses: New → Reviewed → Actioned → Resolved → Communicated (not just read-only charts)
-- [ ] **REQ-V3:** Feedback feed with filters — date range, channel, rating, category, tier, user
-- [ ] **REQ-V4:** Aggregate stats — daily volume, positive/negative ratio, category distribution, response time to resolution
-- [ ] **REQ-V5:** Per-session drill-down — view full conversation with feedback annotations and sentiment arc
-- [ ] **REQ-V6:** CSV export for offline analysis
-- [ ] **REQ-V7:** Weekly feedback digest email to admin via Resend
+- [ ] **TIER-01**: Stripe product and $39/mo price created and activated via `NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID` env var
+- [ ] **TIER-02**: BUILDER tier properly in UserTier enum, getTierFromString, and webhook handler — unit tested
+- [ ] **TIER-03**: Tier gating middleware recognizes BUILDER between FREE and PRO
+- [ ] **TIER-04**: Pricing page updated with 4 tiers: Free / $39 Essentials / $99 Pro / $249 Studio
+- [ ] **TIER-05**: Webhook hardening — `resolveUserIdFromSubscription` falls back to DB customer lookup if metadata missing
+- [ ] **TIER-06**: Strategy outputs (plans, roadmaps) gated at $39 BUILDER tier
+- [ ] **TIER-07**: Go-to-market strategy generation gated at $39 BUILDER tier
 
-### Sentiment Analysis (4)
+### Conversion Flow (2)
 
-- [ ] **REQ-S1:** Per-message sentiment extraction piggybacking on FRED's LLM calls — structured output field (positive/neutral/negative/frustrated + confidence score)
-- [ ] **REQ-S2:** Session-level sentiment aggregation — weighted average with frustration spike detection
-- [ ] **REQ-S3:** Flagged sessions — auto-flag sessions where sentiment degrades sharply; surface in admin dashboard
-- [ ] **REQ-S4:** "Coaching discomfort" category — distinguish "FRED was too harsh" (real issue) from "FRED challenged my assumptions" (working as designed)
-
-### Intelligence & Pattern Detection (4)
-
-- [x] **REQ-I1:** Trigger.dev daily job for AI-powered feedback categorization — cluster by theme, identify recurring patterns, rank by frequency × severity
-- [x] **REQ-I2:** Deduplication logic — semantic matching + 4-hour aggregation windows before Linear issue creation; severity escalation not duplication
-- [x] **REQ-I3:** "Top Issues This Week" with drill-down in admin dashboard
-- [x] **REQ-I4:** Linear auto-triage — create issues from feedback clusters with Browserbase replay links as proof; link to existing issues when duplicate detected
-
-### A/B Testing Integration (4)
-
-- [x] **REQ-A1:** Extend `getVariantStats()` with feedback metrics — thumbs-up ratio, average sentiment score, session completion rate per variant
-- [x] **REQ-A2:** Statistical significance testing — chi-squared for binary feedback, t-test for sentiment; minimum 500 sessions/variant before declaring winner
-- [x] **REQ-A3:** Experiment pre-registration template — hypothesis, metrics, sample size, duration before starting
-- [x] **REQ-A4:** Admin dashboard: experiment results with feedback-aware metrics, auto-flag winning variants
-
-### FRED Self-Improvement / RLHF-Lite (5)
-
-- [x] **REQ-R1:** Feedback-weighted few-shot examples — thumbs-up responses become positive examples; thumbs-down become "avoid this" negative examples in prompt library
-- [x] **REQ-R2:** Category-driven prompt patches — when pattern detection identifies recurring complaint, generate supplemental prompt instructions for that coaching topic
-- [x] **REQ-R3:** Prompt version control — store versions in extended `ab_experiments` schema; each patch creates new version; full traceability to source feedback
-- [x] **REQ-R4:** Human-in-the-loop gate — prompt patches proposed in admin dashboard; admin reviews, approves, and triggers A/B test; no auto-deployment ever
-- [x] **REQ-R5:** Feedback loop closure validation — after deploying a prompt patch, track whether thumbs-up ratio improves for that topic over 2-week window
-
-### Close-the-Loop (4)
-
-- [x] **REQ-L1:** Track which feedback signals contributed to which prompt patches or bug fixes
-- [x] **REQ-L2:** Monthly digest notification — "Here's what we improved based on your feedback" via email (Resend)
-- [x] **REQ-L3:** Staleness cutoff — only notify about improvements from last 30 days; severity threshold (skip trivial fixes)
-- [x] **REQ-L4:** Opt-in notifications — respect existing notification preferences; never spam
+- [ ] **CONV-01**: Upgrade CTA displayed after report delivery — "You've built the model. Ready to turn this into a structured business?"
+- [ ] **CONV-02**: FeatureLock on report page — FREE users see paywall CTA, BUILDER+ users see full report
+- [ ] **CONV-03**: Soft paywall preview — blurred/locked Investor Readiness section stub in free report teasing $99 value
+- [ ] **CONV-04**: Shareable report link — unique URL founders can share with co-founders, advisors, investors
 
 ---
 
-## Deferred to v8+
+## v10.0 (Deferred)
 
-- Full RLHF / model fine-tuning — wrong scale and risk for Sahara
-- Real-time feedback popups or interruptions — destroys coaching flow
-- NPS surveys inside FRED chat — conflates coaching with marketing
-- Public feedback board / feature voting — exposes roadmap, creates expectation debt
-- Automated prompt deployment without human review — prompt injection / regression risk
-- Voice call post-session rating widget — needs UX research on timing
-- SMS rating collection — character limits and parsing complexity
-- WhatsApp Business API migration — separate infrastructure effort
+### Report Enhancements
+
+- **RGEN-06**: Report as pitch deck data model — structure report data to feed future deck generator
+- **CONV-05**: Strength indicators per section (HIGH/MEDIUM/DEVELOP qualitative markers)
+
+### $99 Pro Tier Features
+
+- **TIER-08**: First year summary generation — AI financial/operational year-one plan
+- **TIER-09**: Stage scoring & guidance with pre-seed/seed benchmarks
+- **TIER-10**: Priority FRED responses — queue priority or latency differentiation for Pro users
 
 ---
 
 ## Out of Scope
 
-- Custom feedback analytics SaaS (use PostHog + admin dashboard)
-- Separate NLP service for sentiment (piggyback on existing LLM)
-- External prompt eval tools (extend existing A/B testing)
-- Mobile-specific feedback UI (PWA responsive handles it)
-- Multi-language feedback analysis
+| Feature | Reason |
+|---------|--------|
+| Numeric overall founder score | Destroys celebration moment; Sahara is mentorship, not grading |
+| Comparison to other founders | Leaderboard mechanics create anxiety in coaching context |
+| 15+ page report | Overwhelms action-oriented founders; target 4-6 pages |
+| PDF email attachment | Spam filter risk degrades Resend sender reputation; use Blob URL link |
+| Generic GTM templates | Founders immediately recognize Mad Libs; destroys trust |
+| Report behind hard paywall | Report IS the conversion trigger; gating it kills completion rate |
+| Multiple upgrade prompts | Urgency theater kills celebratory moment; one CTA at end |
+| Full RLHF for report quality | Wrong scale; prompt engineering with guardrails is sufficient |
 
 ---
 
 ## Cross-Cutting Constraints
 
-1. **FRED Voice Preservation:** Every phase touching FRED output validates against voice regression suite
-2. **Performance Budget:** <50ms p95 chat latency increase; <20KB feedback widget bundle
-3. **GDPR:** Consent at collection, minimization before analysis, 90-day retention, deletion cascade
-4. **Tier-Aware:** Free-tier feedback is informational; Pro/Studio drives optimization
-5. **Fire-and-Forget:** All feedback writes async and non-blocking
-6. **Pre-Commit Hooks:** Use wrapper/adapter pattern, not modify protected files
+1. **FRED Voice Preservation:** Report synthesis must sound like Fred Cary — mentored, specific, grounded. Not corporate-speak.
+2. **Anti-Sycophancy:** Temperature 0.3-0.5, ground in original answers, quality gate for generic phrases.
+3. **No Inline renderToBuffer:** PDF generation through Trigger.dev background job, never inline in API route.
+4. **Email Deliverability:** Blob URL link in email body, never PDF attachment.
+5. **Tier Ordering:** BUILDER (1) between FREE (0) and PRO (2); `canAccessFeature` uses `>=` comparison.
+6. **Report Target:** 4-6 pages, readable in 10 minutes.
+
+---
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| RGEN-01 | Phase 92 | Complete |
+| RGEN-02 | Phase 92 | Complete |
+| RGEN-03 | Phase 92 | Complete |
+| RGEN-04 | Phase 92 | Complete |
+| RGEN-05 | Phase 92 | Complete |
+| RDEL-01 | Phase 94 | Pending |
+| RDEL-02 | Phase 93 | Complete |
+| RDEL-03 | Phase 94 | Pending |
+| RDEL-04 | Phase 91+93 | Complete |
+| TIER-01 | Phase 91 | Complete (placeholder — Stripe sk_live needed for prod) |
+| TIER-02 | Phase 91 | Complete |
+| TIER-03 | Phase 91 | Complete |
+| TIER-04 | Phase 95 | Pending |
+| TIER-05 | Phase 91 | Complete |
+| TIER-06 | Phase 95 | Pending |
+| TIER-07 | Phase 95 | Pending |
+| CONV-01 | Phase 96 | Pending |
+| CONV-02 | Phase 96 | Pending |
+| CONV-03 | Phase 96 | Pending |
+| CONV-04 | Phase 96 | Pending |
+
+**Coverage:**
+- v9.0 requirements: 20 total
+- Mapped to phases: 20
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-04-08*
+*Last updated: 2026-04-08 after v9.0 milestone definition*
