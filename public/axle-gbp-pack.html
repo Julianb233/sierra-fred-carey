@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Axle Towing — Google Business Profile Optimization Pack</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141821;
+    --panel-2: #1b2030;
+    --border: #262c3d;
+    --text: #e7e9ef;
+    --muted: #8a92a6;
+    --accent: #ff8c1a;
+    --ok: #35d399;
+    --warn: #f5b149;
+    --bad: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  header {
+    padding: 40px 48px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,140,26,0.06) 0%, transparent 100%);
+  }
+  h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.01em; }
+  h1 .accent { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 13px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 28px 48px 64px; }
+
+  section { margin: 36px 0 24px; }
+  section h2 {
+    font-size: 20px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  section h3 { font-size: 15px; color: var(--accent); margin: 18px 0 6px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+  }
+  .copyblock {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    color: #e7e9ef;
+    cursor: pointer;
+    position: relative;
+  }
+  .copyblock:hover { border-left-color: var(--ok); }
+  .copyblock::after {
+    content: "click to copy";
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: -apple-system, sans-serif;
+  }
+  .copyblock.copied::after { content: "copied ✓"; color: var(--ok); }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 0 0 28px;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat .value { font-size: 24px; font-weight: 600; margin-top: 6px; color: var(--accent); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    header, main { padding-left: 20px; padding-right: 20px; }
+  }
+
+  a { color: var(--accent); }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    background: var(--panel-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  td.primary { color: var(--accent); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .section-nav {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin: 0 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .section-nav a {
+    padding: 4px 10px;
+    background: var(--panel-2);
+    border-radius: 4px;
+    font-size: 12px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+  }
+  .qna { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; margin: 6px 0; }
+  .qna .q { font-weight: 600; color: var(--accent); font-size: 13px; margin-bottom: 4px; }
+  .qna .a { font-size: 13px; color: #cfd3e0; }
+  .post { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 10px 0; }
+  .post-meta { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .post-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .post-body { font-size: 13px; color: #cfd3e0; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Axle Towing <span class="accent">— GBP Optimization Pack</span></h1>
+  <div class="meta">Ready-to-paste assets for Google Business Profile · Apache Junction + Phoenix locations · Updated 2026-04-20</div>
+</header>
+
+<main>
+
+<div class="section-nav">
+  <a href="#access">1. Access</a>
+  <a href="#profile">2. Profile Fields</a>
+  <a href="#descriptions">3. Descriptions</a>
+  <a href="#categories">4. Categories</a>
+  <a href="#services">5. Services</a>
+  <a href="#qna">6. Q&amp;A (25)</a>
+  <a href="#posts">7. Posts (12)</a>
+  <a href="#photos">8. Photo Plan</a>
+  <a href="#reviews">9. Review Templates</a>
+  <a href="#execution">10. Execution Order</a>
+</div>
+
+<div class="grid-4">
+  <div class="stat"><div class="label">Target locations</div><div class="value">2</div></div>
+  <div class="stat"><div class="label">Services to add</div><div class="value">6</div></div>
+  <div class="stat"><div class="label">Q&amp;A entries</div><div class="value">25</div></div>
+  <div class="stat"><div class="label">Ready-to-post</div><div class="value">12</div></div>
+</div>
+
+<section id="access">
+  <h2>1. Access &amp; Verification</h2>
+  <div class="card">
+    <h3>Current state</h3>
+    <ul>
+      <li>Two locations in scope: Apache Junction + Phoenix, phone <code>480-288-5526</code> (shared)</li>
+      <li>Website GSC verification infrastructure already shipped (<code>/api/google-verification</code> + <code>public/google-site-verification.html</code> in the Railway deploy)</li>
+      <li>What we need: Elliott adds <code>julian@aiacrobatics.com</code> as Manager on both GBP listings</li>
+      <li>Fastest verification path for new listings: Google Search Console domain verification (inherits into GBP)</li>
+    </ul>
+    <h3>Ask Elliott (ready to send, pending Julian approval)</h3>
+    <div class="copyblock">Elliott - real quick, two things for the GBP setup:
+
+1. Open Google Business Profile Manager, find both Axle Towing locations (Apache Junction + Phoenix), go to Users, click Add, enter julian@aiacrobatics.com, set role to Manager. Takes 60 seconds per location.
+
+2. If either location isn't verified yet, snap me a photo of the current state (or tell me which one) - I'll run the verification for you.
+
+Once I have access I can push the full optimization pack in one sitting - descriptions, services, 25 Q&A, a quarter of posts lined up, and 75+ photo uploads. Whole profile gets to 100% complete.</div>
+  </div>
+</section>
+
+<section id="profile">
+  <h2>2. Profile Fields (both locations)</h2>
+  <div class="card">
+    <table>
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Business Name</td><td class="primary">Axle Towing &amp; Impound</td></tr>
+      <tr><td>Phone</td><td>480-288-5526</td></tr>
+      <tr><td>Website</td><td>https://axletowing.com</td></tr>
+      <tr><td>Hours</td><td>Open 24 hours, 7 days a week</td></tr>
+      <tr><td>Year Established</td><td>2021</td></tr>
+      <tr><td>Appointment link</td><td>https://axletowing.com/get-quote</td></tr>
+      <tr><td>Attributes to check</td><td>24/7 service · Online estimates · Free assessment · Locally owned</td></tr>
+    </table>
+    <div class="two-col" style="margin-top:14px">
+      <div>
+        <h3>Apache Junction Location</h3>
+        <div class="copyblock">Address: 1151 W. Apache Trail, Apache Junction, AZ 85120
+Phone: 480-288-5526
+Service area: Apache Junction, Mesa, Gilbert, Chandler, Queen Creek, Gold Canyon, San Tan Heights, Sun Lakes, Ahwatukee, Laveen</div>
+      </div>
+      <div>
+        <h3>Phoenix Location</h3>
+        <div class="copyblock">Address: 320 E. Pioneer St., Phoenix, AZ 85040
+Phone: 480-288-5526
+Service area: Phoenix, Scottsdale, Tempe, Glendale, Peoria, Surprise, Avondale, Goodyear, Tolleson, Buckeye</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="descriptions">
+  <h2>3. Business Descriptions (paste into GBP)</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Apache Junction (750 chars)</h3>
+      <div class="copyblock">Axle Towing &amp; Impound provides professional private property towing, parking enforcement, and HOA towing services across the East Valley. We serve apartment complexes, HOA communities, commercial properties, and retail centers — at zero cost to property owners.
+
+Services include 24/7 private property impounds, scheduled patrol enforcement, vehicle relocations, and Arizona-compliant signage installation. 30+ years combined team experience.
+
+What sets us apart: zero cost to owners, 24/7 dispatch with 30-minute average response, monthly enforcement reports, and full Arizona compliance (ARS 9-499.05). Call 480-288-5526 for a free property assessment.</div>
+    </div>
+    <div class="card">
+      <h3>Phoenix (750 chars)</h3>
+      <div class="copyblock">Axle Towing &amp; Impound serves Phoenix, Scottsdale, Tempe, Glendale, and surrounding communities with professional private property towing and parking enforcement — at zero cost to property owners.
+
+We work with apartment complexes, HOA boards, commercial properties, and office buildings to eliminate unauthorized parking. 24/7 dispatch, 30-minute average response, monthly enforcement reports, and full Arizona compliance.
+
+Arizona Multihousing Association member. Fully licensed, insured, and bonded. Call 480-288-5526 for a free property assessment.</div>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <h2>4. Categories (both locations)</h2>
+  <div class="card">
+    <table>
+      <tr><th>Type</th><th>Category</th><th>Why</th></tr>
+      <tr><td><strong>Primary</strong></td><td class="primary">Towing Service</td><td>Highest volume for core service</td></tr>
+      <tr><td>Secondary 1</td><td>Impound Lot</td><td>"impound" searches</td></tr>
+      <tr><td>Secondary 2</td><td>Parking Lot</td><td>Property-related searches</td></tr>
+      <tr><td>Secondary 3</td><td>Property Maintenance</td><td>Property manager searches</td></tr>
+      <tr><td>Secondary 4</td><td>Vehicle Storage Facility</td><td>Storage-related searches</td></tr>
+      <tr><td>Secondary 5</td><td>Tow Truck Operator</td><td>Additional towing signal</td></tr>
+    </table>
+    <div class="hint">Do NOT add Auto Repair / unrelated categories — Google dilutes rankings on irrelevant matches.</div>
+  </div>
+</section>
+
+<section id="services">
+  <h2>5. Service List (add each with description)</h2>
+  <div class="card">
+    <h3>1. Private Property Towing</h3>
+    <div class="copyblock">24/7 private property towing for apartment complexes, HOA communities, commercial properties, and retail centers across the Phoenix metro area. Zero cost to property owners. We tow vehicles in violation of posted regulations, fire lanes, reserved spaces, and handicapped zones.</div>
+
+    <h3>2. HOA Parking Enforcement</h3>
+    <div class="copyblock">Dedicated parking enforcement program for HOA communities. We install compliant Arizona signage, conduct scheduled patrols, enforce community parking rules, and provide monthly reports for board meetings. Customized enforcement programs for communities of all sizes.</div>
+
+    <h3>3. Apartment Complex Towing</h3>
+    <div class="copyblock">Specialized towing and parking enforcement for apartment communities. We handle guest vehicle violations, expired tags, abandoned vehicles, and unauthorized parking in reserved spaces — protecting resident quality of life.</div>
+
+    <h3>4. Commercial Property Towing</h3>
+    <div class="copyblock">Parking enforcement for retail centers, office buildings, medical facilities, churches, and industrial parks. We remove unauthorized vehicles quickly to protect your customer and tenant parking.</div>
+
+    <h3>5. Vehicle Relocation (Paid Service)</h3>
+    <div class="copyblock">Scheduled vehicle relocation for property maintenance, landscaping, and cleaning operations. We safely move vehicles to allow work to proceed and return them to designated spots. This is a paid service separate from standard enforcement towing.</div>
+
+    <h3>6. Compliant Towing Signage Installation</h3>
+    <div class="copyblock">We provide and install Arizona-compliant towing signage at every property entrance at no additional cost. Signs meet all ARS 9-499.05 and HB 2269 requirements, protecting you from liability disputes. Free signage audits available.</div>
+  </div>
+</section>
+
+<section id="qna">
+  <h2>6. Q&amp;A — 25 Seed Entries</h2>
+  <div class="hint">Ask from a personal Google account, answer from the business account. Each Q matches common voice-search phrasing.</div>
+  <div class="card">
+    <div class="qna"><div class="q">Q1. How much does it cost for a property to use Axle Towing's parking enforcement?</div><div class="a">Our parking enforcement program is completely free for property owners. We handle signage, patrols, and towing at zero cost to you — tow fees from violators cover our service. Call 480-288-5526 for a free property assessment.</div></div>
+    <div class="qna"><div class="q">Q2. What areas does Axle Towing serve?</div><div class="a">We serve the entire Phoenix metropolitan area including Phoenix, Scottsdale, Mesa, Tempe, Chandler, Gilbert, Glendale, Apache Junction, and 30+ surrounding communities. Our two locations allow us to respond quickly across the entire Valley.</div></div>
+    <div class="qna"><div class="q">Q3. How quickly can Axle Towing respond to a tow request?</div><div class="a">Our average response time is 30 minutes or less, 24 hours a day, 7 days a week, 365 days a year. Two-location coverage gives faster response than a single-location competitor.</div></div>
+    <div class="qna"><div class="q">Q4. Do you provide towing signage for our property?</div><div class="a">Yes. We provide and install Arizona-compliant towing signage at every entrance at no cost. Our signs meet all ARS 9-499.05 and HB 2269 requirements. We also offer free signage audits for existing properties.</div></div>
+    <div class="qna"><div class="q">Q5. How do I find out if my car was towed by Axle Towing?</div><div class="a">Visit axletowing.com/locate-vehicle to search for your vehicle online 24/7, or call 480-288-5526. We can confirm and walk you through the retrieval process.</div></div>
+    <div class="qna"><div class="q">Q6. What types of properties does Axle Towing work with?</div><div class="a">Apartment complexes, HOA communities, commercial properties, retail centers, office buildings, medical facilities, churches, and industrial parks. Any private property with parking that needs professional enforcement.</div></div>
+    <div class="qna"><div class="q">Q7. Is Axle Towing licensed and insured?</div><div class="a">Yes — fully licensed, insured, and bonded in Arizona. Member of the Arizona Multihousing Association (AMA). 30+ years combined team experience.</div></div>
+    <div class="qna"><div class="q">Q8. Do you offer parking enforcement for HOA communities?</div><div class="a">Yes. Dedicated HOA program with customized enforcement rules per community, monthly board-meeting reports, signage compliance, 24/7 emergency dispatch. Visit axletowing.com/services/hoa-towing.</div></div>
+    <div class="qna"><div class="q">Q9. What happens to a vehicle after it's towed?</div><div class="a">Stored securely at one of our two facilities. Vehicle owner notified per Arizona law, retrieval with valid ID, registration, and payment of applicable fees. Full details at axletowing.com/locate-vehicle.</div></div>
+    <div class="qna"><div class="q">Q10. Do you speak Spanish?</div><div class="a">¡Sí! Ofrecemos servicio en español. Visite axletowing.com/es o llámenos al 480-288-5526. Estamos aquí para ayudarle.</div></div>
+    <div class="qna"><div class="q">Q11. What is private property towing in Arizona?</div><div class="a">Private property towing (consent towing) is when a towing company removes vehicles from private property at the property owner's request. Governed by ARS 9-499.05 — requires specific signage at all entrances.</div></div>
+    <div class="qna"><div class="q">Q12. How do I set up a parking enforcement program for my apartment complex?</div><div class="a">Call 480-288-5526 or visit axletowing.com/get-quote for a free property assessment. We evaluate parking, recommend a plan, install signage, and begin patrols on your schedule.</div></div>
+    <div class="qna"><div class="q">Q13. Can you tow vehicles from a fire lane or handicapped space?</div><div class="a">Yes. Fire lane and unauthorized handicapped space violations can be towed immediately. We respond 24/7 to these high-priority situations.</div></div>
+    <div class="qna"><div class="q">Q14. What is the best towing company for HOA parking enforcement in Phoenix?</div><div class="a">Axle Towing &amp; Impound specializes in HOA parking enforcement across Phoenix and the East Valley. Zero cost, customized enforcement, monthly compliance reports, 24/7 dispatch. Call 480-288-5526.</div></div>
+    <div class="qna"><div class="q">Q15. Do you provide monthly reports for property managers?</div><div class="a">Yes. Every property receives a monthly enforcement report with tow counts by violation type, patrol frequency, and compliance issues noted.</div></div>
+    <div class="qna"><div class="q">Q16. Can I get towing service near Apache Junction?</div><div class="a">We're at 1151 W. Apache Trail, Apache Junction, AZ 85120. Serving Apache Junction, Gold Canyon, Mesa, Gilbert, and all East Valley communities. Call 480-288-5526.</div></div>
+    <div class="qna"><div class="q">Q17. What are the Arizona towing sign requirements for private property?</div><div class="a">Under ARS 9-499.05, every entrance must have signage listing the towing company name, phone, address, and enforcement hours. We install compliant signs at no charge as part of our program.</div></div>
+    <div class="qna"><div class="q">Q18. How do I report an abandoned vehicle in a parking lot?</div><div class="a">If you manage the property or are authorized, call 480-288-5526 and we'll dispatch. Serving Phoenix, Apache Junction, and the full metro area.</div></div>
+    <div class="qna"><div class="q">Q19. What's the difference between a private property tow and a repossession?</div><div class="a">A private property tow (consent tow) works for the property owner to remove unauthorized vehicles. A repossession works for a lender reclaiming a financed vehicle. We handle private property tows only.</div></div>
+    <div class="qna"><div class="q">Q20. Does Axle Towing handle commercial properties like strip malls?</div><div class="a">Yes. Retail centers, strip malls, shopping centers, office parks, and industrial properties across Phoenix. Protects customer/tenant parking at zero cost to the owner.</div></div>
+    <div class="qna"><div class="q">Q21. How do I start a towing contract for my apartment complex?</div><div class="a">Call 480-288-5526 or visit axletowing.com/get-quote. We review parking rules, existing signage, and enforcement history, then propose a customized program. Most properties up within 48 hours.</div></div>
+    <div class="qna"><div class="q">Q22. What should an HOA board know before hiring a towing company?</div><div class="a">Verify: Arizona license + insurance, compliant signage provided, monthly reports, response time, MVD notification handling. Axle Towing covers all of it.</div></div>
+    <div class="qna"><div class="q">Q23. Is parking enforcement free for property owners in Arizona?</div><div class="a">Yes with a consent towing company like Axle. Vehicle owners pay tow and storage fees. This is how private property towing works under Arizona law when proper signage is in place.</div></div>
+    <div class="qna"><div class="q">Q24. Do you tow vehicles for church parking lots?</div><div class="a">Yes. Churches, religious institutions, and faith communities across Phoenix. Customized patrol schedules around service times.</div></div>
+    <div class="qna"><div class="q">Q25. What towing company is open 24 hours in Phoenix?</div><div class="a">Axle Towing &amp; Impound — 24/7/365. Two locations (Apache Junction + Phoenix) dispatching the entire metro. Call 480-288-5526 any time.</div></div>
+  </div>
+</section>
+
+<section id="posts">
+  <h2>7. Ready-to-Post GBP Updates (Month 1 — 12 posts)</h2>
+  <div class="hint">3/week cadence: Mon service spotlight · Wed educational · Fri offer or social proof. Attach a photo to every post — posts with photos get 42% more clicks.</div>
+  <div class="card">
+    <div class="post"><div class="post-meta">Week 1 · Mon · Service Spotlight · CTA: Call Now</div><div class="post-title">Zero-Cost Parking Enforcement for Phoenix Properties</div><div class="post-body">Did you know parking enforcement can cost your property absolutely nothing?
+
+Axle Towing &amp; Impound provides 24/7 private property towing and parking enforcement at zero cost to property owners across the Phoenix metro area.
+
+We handle everything: compliant signage, scheduled patrols, unauthorized vehicle removal, and monthly enforcement reports.
+
+📞 Call 480-288-5526 for a free property assessment.</div></div>
+
+    <div class="post"><div class="post-meta">Week 1 · Wed · Educational · CTA: Learn More</div><div class="post-title">Arizona Towing Signage Requirements — Is Your Property Compliant?</div><div class="post-body">Under ARS 9-499.05, every private property in Arizona must have specific towing signage at EVERY entrance to legally enforce parking.
+
+Signs must include: towing company name, phone, address, and hours of enforcement.
+
+Non-compliant signage can invalidate tows and expose property owners to liability.
+
+Not sure if your signs are compliant? We offer free signage audits — no obligation.</div></div>
+
+    <div class="post"><div class="post-meta">Week 1 · Fri · Offer · CTA: Book Now</div><div class="post-title">Free 30-Day Parking Enforcement Trial</div><div class="post-body">Apartment managers and HOA boards: try professional parking enforcement for 30 days — completely free.
+
+We'll install compliant signage, patrol your property, and handle all unauthorized vehicle removal. Zero risk, zero commitment.
+
+If you love the results, we continue. If not, no hard feelings.
+
+Limited spots available.</div></div>
+
+    <div class="post"><div class="post-meta">Week 2 · Mon · Service Spotlight · CTA: Learn More</div><div class="post-title">HOA Towing: Customized for Every Community</div><div class="post-body">Every HOA has different parking rules — guest passes, permit systems, reserved spaces, overnight restrictions.
+
+Axle Towing builds a customized enforcement program around YOUR community's CC&amp;Rs.
+
+✓ Monthly reports for board meetings
+✓ 24/7 emergency dispatch
+✓ Compliant signage at no charge
+✓ Zero cost to the HOA</div></div>
+
+    <div class="post"><div class="post-meta">Week 2 · Wed · Educational · CTA: Learn More</div><div class="post-title">What Property Managers Need to Know About Private Property Towing</div><div class="post-body">Arizona law (ARS 9-499.05) gives property owners the right to remove unauthorized vehicles — but only with proper signage in place.
+
+Three things every property manager should know:
+
+1. Signage at EVERY entrance
+2. Use a licensed, bonded tow company
+3. MVD notification must be handled by the tow company
+
+We handle all of it. Free assessment at axletowing.com/get-quote.</div></div>
+
+    <div class="post"><div class="post-meta">Week 2 · Fri · Social Proof · CTA: Call Now</div><div class="post-title">Serving the Phoenix Metro 24/7/365</div><div class="post-body">From Apache Junction to Glendale, Scottsdale to Laveen — Axle Towing &amp; Impound serves the entire Valley.
+
+24/7 dispatch. 30-minute average response. Zero cost to property owners.
+
+Whether you manage 20 units or 2,000, we customize our enforcement program to your property's needs.</div></div>
+
+    <div class="post"><div class="post-meta">Week 3 · Mon · Service Spotlight · CTA: Get a Free Assessment</div><div class="post-title">Commercial Property Towing: Keep Your Parking Lots Customer-Ready</div><div class="post-body">Non-customer vehicles in your parking lot cost you business.
+
+Axle Towing &amp; Impound provides fast, professional parking enforcement for retail centers, office parks, and commercial properties across Phoenix.
+
+We remove unauthorized vehicles quickly — protecting customer access and tenant satisfaction.</div></div>
+
+    <div class="post"><div class="post-meta">Week 3 · Wed · Educational · CTA: Call Now</div><div class="post-title">The 3 Most Common Parking Violations We Tow From Phoenix Properties</div><div class="post-body">After thousands of tows across the Valley, the violations that cause the most issues:
+
+1. Abandoned vehicles — old tags, no movement for weeks
+2. Fire lane parking — safety and liability emergency
+3. Reserved spot violations — residents lose assigned spaces
+
+All three are immediately towable with proper signage in place.
+
+Got a problem that won't go away? Call 480-288-5526.</div></div>
+
+    <div class="post"><div class="post-meta">Week 3 · Fri · Offer · CTA: Book Now</div><div class="post-title">Free Property Parking Assessment — Apache Junction + Phoenix</div><div class="post-body">Not sure if your property has a parking problem? We'll come assess it for free.
+
+Our team will:
+✓ Review current signage compliance
+✓ Walk your parking lot and identify violation hot spots
+✓ Recommend a customized enforcement schedule
+✓ Provide a written report — no charge
+
+Zero commitment. We just want you to see the difference.</div></div>
+
+    <div class="post"><div class="post-meta">Week 4 · Mon · Service Spotlight · CTA: Call Now</div><div class="post-title">24/7 Dispatch — We Never Close</div><div class="post-body">Unauthorized vehicle at 2am? Fire lane blocked at midnight?
+
+Axle Towing &amp; Impound dispatches 24 hours a day, 7 days a week, 365 days a year — including holidays.
+
+Two-location coverage means faster response times across the entire Valley. Average on-site: 30 minutes or less.</div></div>
+
+    <div class="post"><div class="post-meta">Week 4 · Wed · Educational · CTA: Learn More</div><div class="post-title">Monthly Enforcement Reports: Why Your HOA Board Needs Them</div><div class="post-body">Property boards are asking: "Are we actually enforcing parking rules?"
+
+Axle Towing provides monthly enforcement reports showing:
+• Number of tows by violation type
+• Patrol frequency and coverage
+• Signage compliance status
+• Recommendations for rule adjustments
+
+Protects the HOA from resident complaints and gives boards the data they need.</div></div>
+
+    <div class="post"><div class="post-meta">Week 4 · Fri · Team / Brand · CTA: Call Now</div><div class="post-title">Phoenix's Private Property Towing Specialists</div><div class="post-body">30+ years of combined towing experience. 24/7/365 dispatch. Two strategic locations.
+
+Axle Towing &amp; Impound specializes exclusively in private property enforcement and HOA towing — not a general roadside service.
+
+That focus means faster response, better compliance documentation, and a team that knows Arizona towing law inside and out.</div></div>
+  </div>
+</section>
+
+<section id="photos">
+  <h2>8. Photo Plan — target 75+ per location</h2>
+  <div class="card">
+    <table>
+      <tr><th>Category</th><th>Count</th><th>What to Shoot</th></tr>
+      <tr><td>Exterior</td><td>5+</td><td>Building from multiple angles, entrance signage, storage yard gate, address numbers</td></tr>
+      <tr><td>Interior</td><td>3+</td><td>Office / reception, dispatch center, customer counter</td></tr>
+      <tr><td>Fleet</td><td>15+</td><td>Individual trucks with branding, flatbed, wheel-lift, different angles</td></tr>
+      <tr><td>Team</td><td>5+</td><td>Elliott, Brian, Tori, Chris, drivers in uniform, full team photo</td></tr>
+      <tr><td>At Work</td><td>15+</td><td>Loading vehicles, patrol in action, signage installation in progress</td></tr>
+      <tr><td>Properties Served</td><td>5+</td><td>Apartments, HOA, commercial (get permission first)</td></tr>
+      <tr><td>Signage</td><td>5+</td><td>Compliant towing signs at property entrances</td></tr>
+      <tr><td>Before/After</td><td>5+</td><td>Parking lots before vs after enforcement</td></tr>
+      <tr><td>Branding</td><td>3+</td><td>Logo on vehicle, business cards, branded uniforms</td></tr>
+      <tr><td>Virtual Tour (360°)</td><td>1</td><td>Google-certified photographer — significant ranking boost</td></tr>
+    </table>
+    <h3>Shoot specs</h3>
+    <ul>
+      <li>Min resolution 720x720 (higher better — shoot 4K)</li>
+      <li>Geo-tag photos at the business location (iPhone Camera with Location Services on handles it)</li>
+      <li>File name pattern: <code>axle-towing-{service-or-context}-phoenix-az.jpg</code></li>
+      <li>No stock photos — Google deprioritizes them</li>
+      <li>Add 5+ new photos/month ongoing (recency is a ranking signal)</li>
+    </ul>
+  </div>
+</section>
+
+<section id="reviews">
+  <h2>9. Review Response Templates</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Positive — general</h3>
+      <div class="copyblock">Thank you for the kind words, [Name]! We take pride in providing reliable parking enforcement for properties like yours. It's great to hear that our team has made a positive difference. We appreciate your trust in Axle Towing &amp; Impound — we're here 24/7 whenever you need us!</div>
+
+      <h3>Positive — Property Manager / HOA</h3>
+      <div class="copyblock">[Name], thank you for trusting Axle Towing with your property's parking enforcement. Working with [property type] communities is exactly what we built this business to do. Looking forward to a long partnership — reach out any time at 480-288-5526.</div>
+    </div>
+    <div class="card">
+      <h3>Negative — vehicle-owner complaint (empathetic)</h3>
+      <div class="copyblock">[Name], we understand how frustrating it is to have your vehicle towed. We only tow vehicles from private property at the direction of the property owner or manager, and in full compliance with Arizona law.
+
+If you have questions about the tow or believe there was an error, please call us directly at 480-288-5526. We're happy to review the documentation and work with you to resolve any concerns.</div>
+
+      <h3>Negative — disputed tow</h3>
+      <div class="copyblock">[Name], we're sorry to hear this situation has been frustrating. Every tow we conduct is documented thoroughly and performed at the authorized request of the property. If you believe there was an error, we welcome the opportunity to review the specifics with you directly — please call 480-288-5526. We want to resolve this.</div>
+    </div>
+  </div>
+  <div class="hint">Respond within 24h. Never argue publicly. Never reveal private info. Include the phone number in every negative response.</div>
+</section>
+
+<section id="execution">
+  <h2>10. Execution Order (once access lands)</h2>
+  <div class="card">
+    <h3>Day 1 — foundation (90 min)</h3>
+    <ul>
+      <li>Verify both locations (or claim + run GSC-first verification using our website)</li>
+      <li>Fill profile fields per section 2</li>
+      <li>Paste descriptions per section 3</li>
+      <li>Set categories per section 4 (Towing Service primary + 5 secondaries)</li>
+      <li>Add all 6 services per section 5</li>
+      <li>Upload logo + cover photo (provided)</li>
+    </ul>
+
+    <h3>Day 2 — content (2 hours)</h3>
+    <ul>
+      <li>Upload first 25 photos per location (fleet, team, at-work, exterior)</li>
+      <li>Seed first 10 Q&amp;A per section 6 (remainder over week 2)</li>
+      <li>Publish first 3 GBP posts per section 7 (Week 1 set)</li>
+      <li>Add social media links (Facebook, Instagram)</li>
+      <li>Enable GBP messaging</li>
+    </ul>
+
+    <h3>Week 2 — depth</h3>
+    <ul>
+      <li>Seed remaining 15 Q&amp;A</li>
+      <li>Upload additional 25 photos per location</li>
+      <li>Request first batch of reviews from existing clients</li>
+      <li>Claim Yelp, Bing Places, Apple Maps with consistent NAP</li>
+    </ul>
+
+    <h3>Ongoing cadence (monthly)</h3>
+    <ul>
+      <li>3 GBP posts/week (Mon / Wed / Fri per schedule in section 7)</li>
+      <li>5+ new photos/month (recency = ranking)</li>
+      <li>Review requests at 30- and 90-day client marks</li>
+      <li>Respond to all reviews + Q&amp;A within 24h</li>
+      <li>Monthly GBP Insights pull → report in client dashboard</li>
+    </ul>
+  </div>
+</section>
+
+<div style="color:var(--muted); font-size:12px; margin-top:48px; text-align:center">
+  Package prepared by AI Acrobatics · unlisted · 2026-04-20
+</div>
+
+</main>
+
+<script>
+  document.querySelectorAll('.copyblock').forEach(el => {
+    el.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(el.textContent);
+        el.classList.add('copied');
+        setTimeout(() => el.classList.remove('copied'), 1200);
+      } catch (e) { console.error(e); }
+    });
+  });
+</script>
+
+</body>
+</html>
