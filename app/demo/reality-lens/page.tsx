@@ -91,7 +91,7 @@ export default function RealityLensDemo() {
               transition={{ delay: 0.1 }}
               className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto"
             >
-              Stop lying to yourself. Get Fred Carey&apos;s no-BS analysis of your startup idea
+              Stop lying to yourself. Get Fred Cary&apos;s no-BS analysis of your startup idea
               in under 60 seconds. Real scores. Real insights. Real talk.
             </motion.p>
           </div>
