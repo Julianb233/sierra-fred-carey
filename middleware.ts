@@ -38,21 +38,33 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get("origin");
 
   // ---------------------------------------------------------------------
-  // u.joinsahara.com deprecation (2026-04-22). The legacy Firebase-backed
-  // funnel subdomain is consolidated onto the permanent platform. Any
+  // you.joinsahara.com deprecation (2026-04-22). The legacy Firebase-backed
+  // funnel subdomain (hosted on a separate Vercel project serving the
+  // Vite funnel app) is consolidated onto the permanent platform. Any
   // request arriving with the legacy host header is 308-redirected to the
   // equivalent path on www.joinsahara.com, with a ?from=funnel-migration
   // flag so the landing page can show a one-time "welcome back" banner
   // (see components/welcome-back-banner.tsx).
+  //
+  // NOTE: this middleware only fires once you.joinsahara.com is pointed at
+  // THIS Vercel project. Until the domain is moved (or DNS is flipped)
+  // this block is defensive / a no-op.
   // ---------------------------------------------------------------------
   const host = (request.headers.get("host") || "").toLowerCase();
-  if (host === "u.joinsahara.com" || host.startsWith("u.joinsahara.com:")) {
+  if (
+    host === "you.joinsahara.com" ||
+    host.startsWith("you.joinsahara.com:") ||
+    // keep the old (unused) subdomain supported too in case it ever gets
+    // DNS; costs nothing and covers both references in the old changelog.
+    host === "u.joinsahara.com" ||
+    host.startsWith("u.joinsahara.com:")
+  ) {
     const target = new URL(pathname, "https://www.joinsahara.com");
     // Preserve the original query string.
     request.nextUrl.searchParams.forEach((v, k) => target.searchParams.set(k, v));
 
     // Path-level remapping for routes that changed names on the new app.
-    if (pathname === "/signup") {
+    if (pathname === "/signup" || pathname === "/") {
       target.pathname = "/get-started";
     } else if (pathname === "/login") {
       target.searchParams.set("migrated", "1");

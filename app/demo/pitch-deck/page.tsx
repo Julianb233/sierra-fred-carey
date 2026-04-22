@@ -267,7 +267,7 @@ export default function PitchDeckDemo() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild className="bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-90">
-                    <Link href="https://you.joinsahara.com">
+                    <Link href="/get-started">
                       Start Free Trial
                       <RocketIcon className="ml-2 h-4 w-4" />
                     </Link>

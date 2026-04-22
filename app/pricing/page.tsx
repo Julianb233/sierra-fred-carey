@@ -291,7 +291,7 @@ export default function PricingPage() {
                         variant={plan.popular ? "default" : "outline"}
                         size="lg"
                       >
-                        <Link href="https://you.joinsahara.com">{plan.cta}</Link>
+                        <Link href="/get-started">{plan.cta}</Link>
                       </Button>
                     </div>
                   </div>

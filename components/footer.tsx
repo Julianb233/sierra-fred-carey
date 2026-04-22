@@ -60,7 +60,7 @@ const Footer = () => {
               asChild
               className="w-fit bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
             >
-              <Link href="https://you.joinsahara.com">
+              <Link href="/get-started">
                 Get Started Free
                 <RocketIcon className="ml-2 h-4 w-4" />
               </Link>

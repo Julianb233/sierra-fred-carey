@@ -185,13 +185,13 @@ function NavBar() {
                 ) : (
                   <>
                     <Button asChild size="lg" variant="outline" className="w-full touch-target border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a]">
-                      <Link href="https://you.joinsahara.com" onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/get-started" onClick={() => setIsMenuOpen(false)}>
                         Login
                       </Link>
                     </Button>
 
                     <Button asChild size="lg" className="w-full touch-target bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25">
-                      <Link href="https://you.joinsahara.com" onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/get-started" onClick={() => setIsMenuOpen(false)}>
                         Get Started Free
                         <RocketIcon className="ml-2 h-4 w-4" />
                       </Link>
@@ -291,7 +291,7 @@ function NavBar() {
                   className="hidden sm:flex border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href="https://you.joinsahara.com">
+                  <Link href="/get-started">
                     Login
                   </Link>
                 </Button>
@@ -300,7 +300,7 @@ function NavBar() {
                   className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href="https://you.joinsahara.com">
+                  <Link href="/get-started">
                     Get Started Free
                     <RocketIcon className="ml-2 h-4 w-4" />
                   </Link>
