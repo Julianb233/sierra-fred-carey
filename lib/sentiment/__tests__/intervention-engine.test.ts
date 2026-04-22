@@ -31,12 +31,14 @@ describe("generateIntervention", () => {
     expect(result).toContain("/dashboard/wellbeing")
   })
 
-  it("mentions stepping back for high level", () => {
+  it("mentions stepping away for high level", () => {
     const result = generateIntervention(
       makeSignal({ level: "high", score: 0.55 }),
       "Alex"
     )
-    expect(result).toContain("step back")
+    // High-level intervention tells FRED to suggest stepping away.
+    // Lower "stress" intervention says "step back"; keep them distinct.
+    expect(result).toContain("stepping away")
   })
 
   it("includes founder name for critical level", () => {
