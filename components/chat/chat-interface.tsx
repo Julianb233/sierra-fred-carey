@@ -12,6 +12,8 @@ import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from 
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { usePaywall } from "@/lib/context/paywall-context";
+import { useTier } from "@/lib/context/tier-context";
 
 // ============================================================================
 // Suggestion chips — page-aware quick-start prompts
@@ -106,13 +108,27 @@ function buildFredGreeting(): Message {
 }
 
 export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
+  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo } = useFredChat({ pageContext });
+  const { triggerPaywall } = usePaywall();
+  const { tier } = useTier();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [greeting] = useState<Message>(() => buildFredGreeting());
   const sessionTrackedRef = useRef(false);
   const initialMessageSentRef = useRef(false);
+
+  // Trigger paywall modal when rate-limited
+  useEffect(() => {
+    if (rateLimitInfo.isRateLimited) {
+      triggerPaywall({
+        trigger: "rate-limit",
+        featureName: "FRED Mentor Chat",
+        currentTier: tier,
+        retryAfter: rateLimitInfo.retryAfter,
+      });
+    }
+  }, [rateLimitInfo.isRateLimited, rateLimitInfo.retryAfter, triggerPaywall, tier]);
 
   // Map FredMessage[] to Message[] (compatible shape) and prepend greeting
   const messages: Message[] = useMemo(() => {

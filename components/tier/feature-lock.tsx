@@ -1,13 +1,13 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Lock, Rocket, Sparkles, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UserTier, TIER_NAMES, canAccessFeature } from "@/lib/constants";
-import { UpgradeTier } from "@/components/dashboard/UpgradeTier";
+import { usePaywall } from "@/lib/context/paywall-context";
 import type { OasesStage } from "@/types/oases";
 import { STAGE_ORDER, getStageConfig } from "@/lib/oases/stage-config";
 
@@ -35,16 +35,8 @@ interface FeatureLockProps {
 }
 
 /**
- * Feature lock component that gates content by tier
- *
- * @example
- * <FeatureLock
- *   requiredTier={UserTier.PRO}
- *   currentTier={userTier}
- *   featureName="Pitch Deck Review"
- * >
- *   <PitchDeckReview />
- * </FeatureLock>
+ * Feature lock component that gates content by tier.
+ * Tier-blocked features show an inline lock with a CTA that opens the PaywallModal.
  */
 export function FeatureLock({
   requiredTier,
@@ -123,7 +115,45 @@ export function FeatureLock({
     );
   }
 
-  // Tier-blocked (existing behavior)
+  // Tier-blocked: show inline lock with CTA that opens PaywallModal
+  return (
+    <FeatureLockOverlay
+      featureName={featureName}
+      description={description}
+      requiredTier={requiredTier}
+      currentTier={currentTier}
+      className={className}
+    />
+  );
+}
+
+/**
+ * Tier-blocked overlay with paywall modal trigger.
+ */
+function FeatureLockOverlay({
+  featureName,
+  description,
+  requiredTier,
+  currentTier,
+  className,
+}: {
+  featureName: string;
+  description?: string;
+  requiredTier: UserTier;
+  currentTier: UserTier;
+  className?: string;
+}) {
+  const { triggerPaywall } = usePaywall();
+
+  const handleUpgrade = useCallback(() => {
+    triggerPaywall({
+      trigger: "tier-gate",
+      featureName,
+      requiredTier,
+      currentTier,
+    });
+  }, [triggerPaywall, featureName, requiredTier, currentTier]);
+
   return (
     <div className={cn("relative min-h-[300px]", className)}>
       <motion.div
@@ -153,7 +183,14 @@ export function FeatureLock({
               `This feature is available on ${TIER_NAMES[requiredTier]} and above.`}
           </p>
 
-          <UpgradeTier currentTier={currentTier} />
+          <Button
+            onClick={handleUpgrade}
+            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
+            size="sm"
+          >
+            <Rocket className="mr-2 h-4 w-4" />
+            Upgrade to {TIER_NAMES[requiredTier]}
+          </Button>
         </div>
       </motion.div>
     </div>
@@ -271,6 +308,17 @@ export function UpgradePromptCard({
   features?: string[];
   className?: string;
 }) {
+  const { triggerPaywall } = usePaywall();
+
+  const handleUpgrade = useCallback(() => {
+    triggerPaywall({
+      trigger: "feature-click",
+      featureName: title,
+      requiredTier: targetTier,
+      currentTier,
+    });
+  }, [triggerPaywall, title, targetTier, currentTier]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -309,7 +357,14 @@ export function UpgradePromptCard({
             </ul>
           )}
 
-          <UpgradeTier currentTier={currentTier} />
+          <Button
+            onClick={handleUpgrade}
+            className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
+            size="sm"
+          >
+            <Rocket className="mr-2 h-4 w-4" />
+            Upgrade to {TIER_NAMES[targetTier]}
+          </Button>
         </div>
       </div>
     </motion.div>

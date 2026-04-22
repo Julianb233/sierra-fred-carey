@@ -88,6 +88,11 @@ export interface UseFredChatOptions {
   onSynthesis?: (synthesis: FredSynthesis) => void;
 }
 
+export interface RateLimitInfo {
+  isRateLimited: boolean;
+  retryAfter?: number;
+}
+
 export interface UseFredChatReturn {
   /** All messages in the conversation */
   messages: FredMessage[];
@@ -115,6 +120,8 @@ export interface UseFredChatReturn {
   wellbeingAlert: BurnoutSignals | null;
   /** Dismiss the wellbeing alert */
   dismissWellbeingAlert: () => void;
+  /** Rate limit info (set when a 429 is received) */
+  rateLimitInfo: RateLimitInfo;
 }
 
 // ============================================================================
@@ -215,6 +222,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   const [error, setError] = useState<string | null>(null);
   const [redFlags, setRedFlags] = useState<RedFlag[]>([]);
   const [wellbeingAlert, setWellbeingAlert] = useState<BurnoutSignals | null>(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>({ isRateLimited: false });
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
   const [sessionIdState, setSessionIdState] = useState<string>(() => sessionIdRef.current);
@@ -292,6 +300,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setAnalysis(null);
     setSynthesis(null);
     setError(null);
+    setRateLimitInfo({ isRateLimited: false });
     streamingMessageIdRef.current = null;
     pendingCoursesRef.current = undefined;
     pendingProvidersRef.current = undefined;
@@ -317,6 +326,12 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = parseInt(response.headers?.get?.("Retry-After") || "60", 10);
+          if (mountedRef.current) {
+            setRateLimitInfo({ isRateLimited: true, retryAfter });
+          }
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
       }
@@ -690,6 +705,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setSynthesis(null);
     setError(null);
     setRedFlags([]);
+    setRateLimitInfo({ isRateLimited: false });
 
     // Generate new session ID and clear persisted messages
     const newSessionId = crypto.randomUUID();
@@ -715,5 +731,6 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     redFlags,
     wellbeingAlert,
     dismissWellbeingAlert,
+    rateLimitInfo,
   };
 }
