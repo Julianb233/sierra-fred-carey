@@ -1,5 +1,5 @@
 /**
- * App-wide constants for the Fred Carey / Sahara platform
+ * App-wide constants for the Fred Cary / Sahara platform
  * Single source of truth for colors, tiers, and features
  */
 

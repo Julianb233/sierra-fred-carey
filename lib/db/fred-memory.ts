@@ -233,7 +233,7 @@ export async function retrieveRecentEpisodes(
 
   let query = supabase
     .from("fred_episodic_memory")
-    .select("*")
+    .select("id, user_id, session_id, event_type, content, content_hash, importance_score, metadata, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(options.limit ?? 10);
@@ -372,7 +372,7 @@ export async function getFact(
 
   const { data, error } = await supabase
     .from("fred_semantic_memory")
-    .select("*")
+    .select("id, user_id, category, key, value, confidence, source, created_at, updated_at")
     .eq("user_id", userId)
     .eq("category", category)
     .eq("key", key)
@@ -397,7 +397,7 @@ export async function getFactsByCategory(
 
   const { data, error } = await supabase
     .from("fred_semantic_memory")
-    .select("*")
+    .select("id, user_id, category, key, value, confidence, source, created_at, updated_at")
     .eq("user_id", userId)
     .eq("category", category)
     .order("updated_at", { ascending: false })
@@ -476,7 +476,7 @@ export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]>
 
   const { data, error } = await supabase
     .from("fred_semantic_memory")
-    .select("*")
+    .select("id, user_id, category, key, value, confidence, source, created_at, updated_at")
     .eq("user_id", userId)
     .order("category")
     .order("updated_at", { ascending: false })
@@ -501,7 +501,7 @@ export async function getProcedure(name: string): Promise<ProceduralMemory | nul
 
   const { data, error } = await supabase
     .from("fred_procedural_memory")
-    .select("*")
+    .select("id, name, description, procedure_type, steps, triggers, input_schema, output_schema, success_rate, usage_count, version, is_active, created_at, updated_at")
     .eq("name", name)
     .eq("is_active", true)
     .single();
@@ -524,7 +524,7 @@ export async function getProceduresByType(
 
   const { data, error } = await supabase
     .from("fred_procedural_memory")
-    .select("*")
+    .select("id, name, description, procedure_type, steps, triggers, input_schema, output_schema, success_rate, usage_count, version, is_active, created_at, updated_at")
     .eq("procedure_type", procedureType)
     .eq("is_active", true)
     .order("usage_count", { ascending: false });
@@ -542,7 +542,7 @@ export async function getAllProcedures(): Promise<ProceduralMemory[]> {
 
   const { data, error } = await supabase
     .from("fred_procedural_memory")
-    .select("*")
+    .select("id, name, description, procedure_type, steps, triggers, input_schema, output_schema, success_rate, usage_count, version, is_active, created_at, updated_at")
     .eq("is_active", true)
     .order("procedure_type")
     .order("name");
@@ -687,7 +687,7 @@ export async function getRecentDecisions(
 
   let query = supabase
     .from("fred_decision_log")
-    .select("*")
+    .select("id, user_id, session_id, decision_type, input_context, analysis, scores, recommendation, final_decision, outcome, outcome_score, procedure_used, confidence, created_at, decided_at, outcome_recorded_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(options.limit ?? 10);

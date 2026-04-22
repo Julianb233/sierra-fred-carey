@@ -12,6 +12,8 @@ import { getRandomQuote, getExperienceStatement, getCredibilityStatement } from 
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { usePaywall } from "@/lib/context/paywall-context";
+import { useTier } from "@/lib/context/tier-context";
 
 // ============================================================================
 // Suggestion chips — page-aware quick-start prompts
@@ -106,13 +108,27 @@ function buildFredGreeting(): Message {
 }
 
 export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing } = useFredChat({ pageContext });
+  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo, error, clearError } = useFredChat({ pageContext });
+  const { triggerPaywall } = usePaywall();
+  const { tier } = useTier();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [greeting] = useState<Message>(() => buildFredGreeting());
   const sessionTrackedRef = useRef(false);
   const initialMessageSentRef = useRef(false);
+
+  // Trigger paywall modal when rate-limited
+  useEffect(() => {
+    if (rateLimitInfo.isRateLimited) {
+      triggerPaywall({
+        trigger: "rate-limit",
+        featureName: "FRED Mentor Chat",
+        currentTier: tier,
+        retryAfter: rateLimitInfo.retryAfter,
+      });
+    }
+  }, [rateLimitInfo.isRateLimited, rateLimitInfo.retryAfter, triggerPaywall, tier]);
 
   // Map FredMessage[] to Message[] (compatible shape) and prepend greeting
   const messages: Message[] = useMemo(() => {
@@ -260,6 +276,27 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Error banner with retry */}
+      {error && (
+        <div className="px-4 py-2">
+          <div className="max-w-4xl mx-auto flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3">
+            <div className="flex-1 text-sm text-red-400">
+              Fred is having trouble responding. This is usually temporary.
+            </div>
+            <button
+              onClick={() => {
+                clearError();
+                const lastUserMsg = fredMessages.filter(m => m.role === "user").pop();
+                if (lastUserMsg) sendMessage(lastUserMsg.content);
+              }}
+              className="shrink-0 rounded-md bg-red-500/20 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Input area */}
       <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl bg-background/80 border-t border-white/10">

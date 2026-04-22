@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -14,10 +14,16 @@ import {
   TrendingUp,
   MessageCircle,
   Loader2,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BRAND } from '@/lib/constants'
-import { redirectToProCheckout } from '@/lib/stripe'
+import {
+  redirectToCheckout,
+  getCheckoutStatus,
+  clearCheckoutStatus,
+  type UpgradeTier,
+} from '@/lib/stripe'
 
 interface LandingPageProps {
   onStartChat: () => void
@@ -69,34 +75,88 @@ const FEATURES = [
   },
 ]
 
-/* ─── Pro plan features ─── */
-const PRO_FEATURES = [
-  'AI coaching by Fred Cary',
-  'Investor Readiness Score',
-  'Pitch Deck Review & Scorecard',
-  'Strategy Documents (Executive Summary, 30/60/90)',
-  'Full Investor Lens (Pre-Seed / Seed / Series A)',
-  'Persistent founder memory',
-]
+/* ─── Plan configs ─── */
+const PLAN_CONFIGS = {
+  pro: {
+    tier: 'pro' as UpgradeTier,
+    name: 'Pro',
+    price: 99,
+    tagline: 'Investor-grade readiness',
+    badge: 'Most Popular',
+    features: [
+      'AI coaching by Fred Cary',
+      'Investor Readiness Score',
+      'Pitch Deck Review & Scorecard',
+      'Strategy Documents (Executive Summary, 30/60/90)',
+      'Full Investor Lens (Pre-Seed / Seed / Series A)',
+      'Persistent founder memory',
+    ],
+  },
+  studio: {
+    tier: 'studio' as UpgradeTier,
+    name: 'Studio',
+    price: 249,
+    tagline: 'Full venture studio',
+    badge: 'Best Value',
+    features: [
+      'Everything in Pro',
+      'Virtual Team: Founder Ops Agent',
+      'Virtual Team: Fundraising Agent',
+      'Virtual Team: Growth Agent',
+      'Weekly SMS Accountability Check-ins',
+      'Boardy Investor/Advisor Matching',
+      'Priority AI compute & deeper memory',
+    ],
+  },
+}
 
 export function LandingPage({ onStartChat }: LandingPageProps) {
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState<UpgradeTier | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [checkoutBanner, setCheckoutBanner] = useState<'success' | 'canceled' | null>(null)
 
-  const handleProCheckout = async () => {
+  // Check for checkout result on mount
+  useEffect(() => {
+    const status = getCheckoutStatus()
+    if (status) {
+      setCheckoutBanner(status)
+      clearCheckoutStatus()
+    }
+  }, [])
+
+  const handleCheckout = async (tier: UpgradeTier) => {
     try {
-      setCheckoutLoading(true)
+      setCheckoutLoading(tier)
       setCheckoutError(null)
-      await redirectToProCheckout()
+      await redirectToCheckout(tier)
     } catch (err) {
       console.error('Checkout error:', err)
       setCheckoutError(err instanceof Error ? err.message : 'Something went wrong')
-      setCheckoutLoading(false)
+      setCheckoutLoading(null)
     }
   }
 
   return (
     <div className="h-full overflow-y-auto">
+      {/* ─── CHECKOUT BANNERS ─── */}
+      {checkoutBanner === 'canceled' && (
+        <div className="sticky top-0 z-20 bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-amber-800">Checkout was canceled. No charge was made.</p>
+          <button onClick={() => setCheckoutBanner(null)} className="text-amber-600 hover:text-amber-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {checkoutBanner === 'success' && (
+        <div className="sticky top-0 z-20 bg-green-50 border-b border-green-200 px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-green-800">Payment successful! You're being redirected to complete setup.</p>
+          <button onClick={() => setCheckoutBanner(null)} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ─── HERO ─── */}
       <section className="relative px-5 pt-6 pb-10 overflow-hidden">
         {/* Background glow */}
@@ -150,7 +210,7 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
             transition={{ duration: 0.4, delay: 0.2 }}
             className="text-base text-gray-600 mb-6 leading-relaxed"
           >
-            Fred Cary has coached hundreds of founders and helped raise billions. Now his
+            Fred Cary has coached hundreds of founders and helped raise over $3B. Now his
             experience is available 24/7 as your AI co-founder.
           </motion.p>
 
@@ -192,7 +252,7 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
             </span>
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#ff6a1a]" />
-              Billions Raised
+              $3B+ Raised
             </span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-[#ff6a1a]" />
@@ -401,62 +461,23 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
           </motion.div>
 
           {/* Pro tier */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="relative bg-gradient-to-b from-[#ff6a1a]/5 to-white border-2 border-[#ff6a1a] rounded-xl p-5 shadow-lg shadow-[#ff6a1a]/10"
-          >
-            {/* Badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="bg-[#ff6a1a] text-white px-4 py-1 rounded-full text-[10px] font-semibold shadow-md">
-                Most Popular
-              </span>
-            </div>
+          <PricingCard
+            plan={PLAN_CONFIGS.pro}
+            isHighlighted
+            isLoading={checkoutLoading === 'pro'}
+            disabled={checkoutLoading !== null}
+            error={checkoutLoading === null ? checkoutError : null}
+            onCheckout={() => handleCheckout('pro')}
+          />
 
-            <div className="flex items-center justify-between mb-3 mt-1">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">Pro</h3>
-                <p className="text-[10px] text-gray-500">Investor-grade readiness</p>
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-gray-900">$99</span>
-                <span className="text-xs text-gray-400">/mo</span>
-              </div>
-            </div>
-            <ul className="space-y-1.5 mb-4">
-              {PRO_FEATURES.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 text-xs text-gray-600">
-                  <Check className="w-3.5 h-3.5 text-[#ff6a1a] flex-shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={handleProCheckout}
-              disabled={checkoutLoading}
-              className={cn(
-                'w-full py-2.5 bg-[#ff6a1a] hover:bg-[#ea580c] text-white text-sm font-semibold rounded-full transition-colors text-center shadow-md shadow-[#ff6a1a]/20',
-                checkoutLoading && 'opacity-70 cursor-not-allowed'
-              )}
-            >
-              {checkoutLoading ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </span>
-              ) : (
-                'Start 14-Day Free Trial'
-              )}
-            </button>
-            {checkoutError && (
-              <p className="text-[10px] text-red-500 text-center mt-2">{checkoutError}</p>
-            )}
-            {!checkoutError && (
-              <p className="text-[10px] text-gray-400 text-center mt-2">14-day free trial, cancel anytime</p>
-            )}
-          </motion.div>
+          {/* Studio tier */}
+          <PricingCard
+            plan={PLAN_CONFIGS.studio}
+            isLoading={checkoutLoading === 'studio'}
+            disabled={checkoutLoading !== null}
+            error={checkoutLoading === null ? checkoutError : null}
+            onCheckout={() => handleCheckout('studio')}
+          />
         </div>
       </section>
 
@@ -490,5 +511,98 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
         </div>
       </section>
     </div>
+  )
+}
+
+/* ─── Pricing Card Component ─── */
+function PricingCard({
+  plan,
+  isHighlighted,
+  isLoading,
+  disabled,
+  error,
+  onCheckout,
+}: {
+  plan: typeof PLAN_CONFIGS.pro
+  isHighlighted?: boolean
+  isLoading: boolean
+  disabled: boolean
+  error: string | null
+  onCheckout: () => void
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.1 }}
+      className={cn(
+        'relative rounded-xl p-5 mb-3',
+        isHighlighted
+          ? 'bg-gradient-to-b from-[#ff6a1a]/5 to-white border-2 border-[#ff6a1a] shadow-lg shadow-[#ff6a1a]/10'
+          : 'bg-white border border-gray-200'
+      )}
+    >
+      {plan.badge && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className={cn(
+            'px-4 py-1 rounded-full text-[10px] font-semibold shadow-md',
+            isHighlighted
+              ? 'bg-[#ff6a1a] text-white'
+              : 'bg-gray-900 text-white'
+          )}>
+            {plan.badge}
+          </span>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-3 mt-1">
+        <div>
+          <h3 className="text-sm font-bold text-gray-900">{plan.name}</h3>
+          <p className="text-[10px] text-gray-500">{plan.tagline}</p>
+        </div>
+        <div className="text-right">
+          <span className="text-2xl font-bold text-gray-900">${plan.price}</span>
+          <span className="text-xs text-gray-400">/mo</span>
+        </div>
+      </div>
+      <ul className="space-y-1.5 mb-4">
+        {plan.features.map((f, i) => (
+          <li key={i} className="flex items-center gap-2 text-xs text-gray-600">
+            <Check className={cn(
+              'w-3.5 h-3.5 flex-shrink-0',
+              isHighlighted ? 'text-[#ff6a1a]' : 'text-green-500'
+            )} />
+            {f}
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={onCheckout}
+        disabled={disabled}
+        className={cn(
+          'w-full py-2.5 text-sm font-semibold rounded-full transition-colors text-center',
+          isHighlighted
+            ? 'bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-md shadow-[#ff6a1a]/20'
+            : 'border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900',
+          disabled && 'opacity-70 cursor-not-allowed'
+        )}
+      >
+        {isLoading ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading...
+          </span>
+        ) : (
+          'Start 14-Day Free Trial'
+        )}
+      </button>
+      {error && (
+        <p className="text-[10px] text-red-500 text-center mt-2">{error}</p>
+      )}
+      {!error && (
+        <p className="text-[10px] text-gray-400 text-center mt-2">14-day free trial, cancel anytime</p>
+      )}
+    </motion.div>
   )
 }

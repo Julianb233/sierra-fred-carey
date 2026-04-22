@@ -24,7 +24,9 @@ import { OasesVisualizer } from "@/components/oases/oases-visualizer";
 import { DailyAgendaWidget } from "@/components/dashboard/daily-agenda-widget";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { TrialStatusBanner } from "@/components/dashboard/trial-status-banner";
+import { StageGoalHero } from "@/components/dashboard/stage-goal-hero";
 import { StageFocusBanner } from "@/components/dashboard/stage-focus-banner";
+import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 import type { MomentumIndicator as MomentumIndicatorType } from "@/lib/dashboard/engagement-score";
@@ -84,6 +86,10 @@ function DashboardContent() {
             const json = await ccRes.json();
             if (json.success) {
               setData(json.data);
+              // Also pick up stage from command center if profile didn't have it
+              if (!profile?.stage && json.data?.founderSnapshot?.stage) {
+                setUserStage(json.data.founderSnapshot.stage);
+              }
             }
           } else {
             console.warn("Command center API returned status:", ccRes.status);
@@ -139,6 +145,9 @@ function DashboardContent() {
     }
   }, [searchParams, router, refreshTier]);
 
+  // Determine whether to show funding-related widgets based on stage
+  const isEarlyStage = userStage === "idea";
+
   // Loading state
   if (loading) {
     return (
@@ -161,6 +170,7 @@ function DashboardContent() {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
+        <InviteBanner />
         <FredHero
           userName={userName}
           canCallFred={canCallFred}
@@ -168,8 +178,14 @@ function DashboardContent() {
           onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
           hasHadConversations={false}
         />
+        {/* Stage-based goal hero — primary stage guidance */}
+        {userStage && (
+          <FadeIn delay={0.01}>
+            <StageGoalHero stage={userStage} />
+          </FadeIn>
+        )}
         {/* Stage-specific focus banner */}
-        <FadeIn delay={0.01}>
+        <FadeIn delay={0.015}>
           <StageFocusBanner stage={userStage} />
         </FadeIn>
         {/* Daily Mentor Guidance — proactive task agenda */}
@@ -196,6 +212,9 @@ function DashboardContent() {
       {/* Trial countdown banner */}
       <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
 
+      {/* Team invite notification */}
+      <InviteBanner />
+
       {/* FRED HERO — front and center, the reason you're here */}
       <FredHero
         userName={userName}
@@ -205,8 +224,14 @@ function DashboardContent() {
         hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
       />
 
+      {/* Stage-based goal hero — personalized path based on funding stage */}
+      {userStage && (
+        <FadeIn delay={0.01}>
+          <StageGoalHero stage={userStage} />
+        </FadeIn>
+      )}
       {/* Stage-specific focus banner */}
-      <FadeIn delay={0.01}>
+      <FadeIn delay={0.015}>
         <StageFocusBanner stage={userStage} />
       </FadeIn>
 
@@ -247,17 +272,19 @@ function DashboardContent() {
         <RedFlagsWidget />
       </FadeIn>
 
-      {/* Decision Box + Funding Gauge */}
+      {/* Decision Box + Funding Gauge — de-emphasize for idea stage, emphasize for seed+ */}
       <FadeIn delay={0.2}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DecisionBox
             currentStep={data.currentStep}
             processProgress={data.processProgress}
           />
-          <FundingReadinessGauge
-            readiness={data.fundingReadiness}
-            displayRules={data.displayRules}
-          />
+          {!isEarlyStage && (
+            <FundingReadinessGauge
+              readiness={data.fundingReadiness}
+              displayRules={data.displayRules}
+            />
+          )}
         </div>
       </FadeIn>
 
