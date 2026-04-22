@@ -832,22 +832,21 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       const latencyMs = Date.now() - startTime;
 
       // Store in episodic memory only for Pro+ tiers (Phase 21)
+      // Fire-and-forget: don't block response delivery on memory persistence
       if (shouldPersistMemory) {
-        try {
-          await storeEpisode(userId, effectiveSessionId, "conversation", {
+        void Promise.all([
+          storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "user",
             content: message,
             context,
-          });
-          await storeEpisode(userId, effectiveSessionId, "conversation", {
+          }),
+          storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "assistant",
             content: result.response.content,
             action: result.response.action,
             confidence: result.response.confidence,
-          });
-        } catch (error) {
-          console.warn("[FRED Chat] Failed to store in memory:", error);
-        }
+          }),
+        ]).catch(error => console.warn("[FRED Chat] Failed to store in memory:", error));
       }
 
       // Phase 18-02: Fire-and-forget enrichment extraction
@@ -1166,17 +1165,14 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             });
 
             // Store assistant response in memory (Pro+ only, Phase 21)
+            // Fire-and-forget: don't block "done" SSE event on memory persistence
             if (shouldPersistMemory) {
-              try {
-                await storeEpisode(userId, effectiveSessionId, "conversation", {
-                  role: "assistant",
-                  content: response.content,
-                  action: response.action,
-                  confidence: response.confidence,
-                });
-              } catch (error) {
-                console.warn("[FRED Chat] Failed to store assistant response:", error);
-              }
+              void storeEpisode(userId, effectiveSessionId, "conversation", {
+                role: "assistant",
+                content: response.content,
+                action: response.action,
+                confidence: response.confidence,
+              }).catch(error => console.warn("[FRED Chat] Failed to store assistant response:", error));
             }
 
             send("done", {

@@ -51,7 +51,7 @@ export async function getPitchReview(
 ): Promise<PitchReview | null> {
   const { data, error } = await supabase
     .from('pitch_reviews')
-    .select('*')
+    .select('id, user_id, document_id, overall_score, structure_score, content_score, slides, missing_sections, strengths, improvements, created_at')
     .eq('id', reviewId)
     .eq('user_id', userId)
     .single();
@@ -74,7 +74,7 @@ export async function getPitchReviews(
 ): Promise<PitchReview[]> {
   const { data, error } = await supabase
     .from('pitch_reviews')
-    .select('*')
+    .select('id, user_id, document_id, overall_score, structure_score, content_score, slides, missing_sections, strengths, improvements, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -96,7 +96,7 @@ export async function getPitchReviewByDocument(
 ): Promise<PitchReview | null> {
   const { data, error } = await supabase
     .from('pitch_reviews')
-    .select('*')
+    .select('id, user_id, document_id, overall_score, structure_score, content_score, slides, missing_sections, strengths, improvements, created_at')
     .eq('user_id', userId)
     .eq('document_id', documentId)
     .order('created_at', { ascending: false })

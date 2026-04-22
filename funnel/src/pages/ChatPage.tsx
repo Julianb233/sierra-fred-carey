@@ -13,9 +13,10 @@ import { scheduleFunnelSync } from '@/lib/sync-service'
 
 const SUGGESTION_CHIPS = [
   "I have a startup idea",
-  "Help me with fundraising",
-  "Review my business model",
+  "I'm building an app for...",
+  "Help me think through my business",
   "Where should I start?",
+  "I'm stuck and need guidance",
 ]
 
 export function ChatPage() {
@@ -82,7 +83,7 @@ export function ChatPage() {
       const errorMessage: ChatMessage = {
         id: uid(),
         role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        content: "I'm having a brief connection issue. Try sending your message again — I don't want to miss what you were saying!",
         timestamp: new Date(),
       }
       setMessages(prev => [...prev, errorMessage])
@@ -230,7 +231,7 @@ export function ChatPage() {
               value={input}
               onChange={handleTextareaInput}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Fred anything..."
+              placeholder="Tell Fred about your idea or ask anything..."
               rows={1}
               disabled={isLoading}
               className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff6a1a]/30 focus:border-[#ff6a1a]/50 disabled:opacity-50 transition-all"
