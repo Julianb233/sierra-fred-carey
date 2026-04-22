@@ -2,24 +2,19 @@
  * Scheduled task: Sahara WhatsApp Feedback Monitor
  *
  * Runs twice daily (9 AM and 5 PM UTC) to:
- * 1. Open WhatsApp Web via BrowserBase → "Sahara Founders" group
- * 2. Extract messages since last check
- * 3. Use AI to identify actionable feedback/bugs/feature requests
- * 4. Create Linear issues for each
- * 5. Send status report via WhatsApp reply, SMS, and email
+ * 1. Extract messages from "Sahara Founders" group (Mac Mini SSH primary, BrowserBase fallback)
+ * 2. Use AI to identify actionable feedback/bugs/feature requests
+ * 3. Create Linear issues for each
+ * 4. Send WhatsApp ack back to the group
+ * 5. Send status report via SMS and email
  *
+ * Extraction fallback chain: Mac Mini SSH + AppleScript (primary) → BrowserBase (fallback)
  * State tracking: Uses Supabase `whatsapp_monitor_state` table
- * to track last check timestamp and avoid duplicate processing.
  */
 import { schedules, logger } from "@trigger.dev/sdk/v3";
 
 // ── Types ───────────────────────────────────────────────────────
-interface WhatsAppMessage {
-  sender: string;
-  timestamp: string;
-  text: string | null;
-  media: string | null;
-}
+import type { WhatsAppMessage } from "@/lib/feedback/whatsapp-extract";
 
 interface IdentifiedIssue {
   title: string;
@@ -39,7 +34,6 @@ interface MonitorResult {
 
 // ── Constants ───────────────────────────────────────────────────
 const WHATSAPP_GROUP_NAME = "Sahara Founders";
-const BROWSERBASE_CONTEXT_ID = "ed424c84-729a-49f3-bfe2-811d5cda5282"; // Persistent context — cookies survive across sessions
 const JULIAN_PHONE = process.env.JULIAN_PHONE || "+16265226199";
 const JULIAN_EMAIL = process.env.JULIAN_EMAIL || "julian@aiacrobatics.com";
 const LINEAR_TEAM = "Ai Acrobatics";
@@ -76,10 +70,12 @@ export const saharaWhatsAppMonitor = schedules.task({
       const lastCheck = await getLastCheckTimestamp();
       logger.log("Last check timestamp", { lastCheck });
 
-      // Step 2: Extract messages from WhatsApp via BrowserBase
-      const messages = await extractWhatsAppMessages(lastCheck);
+      // Step 2: Extract messages (Mac Mini SSH primary, BrowserBase fallback)
+      const { extractMessages } = await import("@/lib/feedback/whatsapp-extract");
+      const extraction = await extractMessages(lastCheck, logger);
+      const messages = extraction.messages;
       result.messagesExtracted = messages.length;
-      logger.log(`Extracted ${messages.length} messages`);
+      logger.log(`Extracted ${messages.length} messages via ${extraction.method}`);
 
       if (messages.length === 0) {
         logger.log("No new messages since last check");
@@ -172,105 +168,10 @@ async function updateLastCheckTimestamp(): Promise<void> {
       .upsert({
         group_name: WHATSAPP_GROUP_NAME,
         last_check_at: new Date().toISOString(),
-        context_id: BROWSERBASE_CONTEXT_ID,
+        context_id: "ed424c84-729a-49f3-bfe2-811d5cda5282",
       }, { onConflict: "group_name" });
   } catch (err) {
     logger.error(`Failed to update last check timestamp: ${err}`);
-  }
-}
-
-async function extractWhatsAppMessages(
-  _lastCheck: string | null
-): Promise<WhatsAppMessage[]> {
-  // BrowserBase + Stagehand automation
-  // Uses the persistent authenticated session to avoid QR re-scan
-  const BROWSERBASE_API_KEY = process.env.BROWSERBASE_API_KEY;
-  const BROWSERBASE_PROJECT_ID = process.env.BROWSERBASE_PROJECT_ID;
-
-  if (!BROWSERBASE_API_KEY || !BROWSERBASE_PROJECT_ID) {
-    throw new Error("BrowserBase credentials not configured");
-  }
-
-  // Create a new session (reusing auth cookies from persistent session)
-  const sessionRes = await fetch("https://www.browserbase.com/v1/sessions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-bb-api-key": BROWSERBASE_API_KEY,
-    },
-    body: JSON.stringify({
-      projectId: BROWSERBASE_PROJECT_ID,
-      // Use persistent context to reuse WhatsApp login across sessions
-      browserSettings: {
-        context: {
-          id: BROWSERBASE_CONTEXT_ID,
-          persist: true,
-        },
-      },
-    }),
-  });
-
-  if (!sessionRes.ok) {
-    throw new Error(`BrowserBase session creation failed: ${sessionRes.status}`);
-  }
-
-  const session = await sessionRes.json();
-  const sessionId = session.id;
-  const connectUrl = session.connectUrl;
-
-  logger.log("BrowserBase session created", { sessionId });
-
-  try {
-    // Connect via Stagehand SDK
-    const { Stagehand } = await import("@browserbasehq/stagehand");
-
-    const stagehand = new Stagehand({
-      browserbaseSessionID: sessionId,
-      env: "BROWSERBASE",
-      model: "gemini-2.0-flash" as const,
-    });
-
-    await stagehand.init();
-
-    // Navigate to WhatsApp Web
-    await stagehand.act("Navigate to https://web.whatsapp.com");
-
-    // Wait for WhatsApp to load (either QR or chat list)
-    await new Promise((r) => setTimeout(r, 5000));
-
-    // Search for the group
-    await stagehand.act(
-      `Click the search box and type "${WHATSAPP_GROUP_NAME}"`
-    );
-
-    await new Promise((r) => setTimeout(r, 2000));
-
-    // Click on the group
-    await stagehand.act(
-      `Click on the "${WHATSAPP_GROUP_NAME}" group chat in the search results`
-    );
-
-    await new Promise((r) => setTimeout(r, 3000));
-
-    // Extract messages
-    const extraction = await stagehand.extract(
-      `Extract ALL chat messages visible on this page from the "${WHATSAPP_GROUP_NAME}" group. For each message, extract: the sender name, the timestamp, and the full message text. Also note any images or photos mentioned. Return everything in chronological order.`
-    );
-
-    await stagehand.close();
-
-    const messages = (extraction as any).messages || [];
-    return messages.filter(
-      (m: WhatsAppMessage) => m.text && m.text.length > 0
-    );
-  } catch (err) {
-    logger.error(`WhatsApp extraction failed: ${err}`);
-    // Close the session on failure
-    await fetch(`https://www.browserbase.com/v1/sessions/${sessionId}`, {
-      method: "DELETE",
-      headers: { "x-bb-api-key": BROWSERBASE_API_KEY },
-    }).catch(() => {});
-    throw err;
   }
 }
 
