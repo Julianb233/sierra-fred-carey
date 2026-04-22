@@ -5,7 +5,7 @@ import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
 
 /**
  * POST /api/funnel/checkout
- * Create Stripe checkout session for the funnel (u.joinsahara.com).
+ * Create Stripe checkout session for the legacy funnel (you.joinsahara.com).
  *
  * Unlike the main checkout route, this does NOT require authentication.
  * The funnel is a static Vite app where users may not have accounts yet.
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
-    const funnelUrl = process.env.NEXT_PUBLIC_FUNNEL_URL || "https://u.joinsahara.com";
+    const funnelUrl = process.env.NEXT_PUBLIC_FUNNEL_URL || "https://you.joinsahara.com";
 
     // After successful checkout, redirect to main app onboarding with success flag.
     // After cancellation, redirect back to the funnel.

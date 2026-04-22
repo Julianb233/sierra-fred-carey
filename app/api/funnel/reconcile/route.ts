@@ -14,7 +14,7 @@ import Stripe from "stripe";
  * Links a funnel Stripe checkout session to an authenticated user.
  *
  * Flow:
- * 1. User pays on funnel (u.joinsahara.com) → Stripe checkout with userId "funnel-pending"
+ * 1. User pays on funnel (you.joinsahara.com) → Stripe checkout with userId "funnel-pending"
  * 2. User is redirected to main app onboarding with session_id in URL
  * 3. User creates account / logs in on main app
  * 4. Frontend calls this endpoint with the session_id to link the subscription

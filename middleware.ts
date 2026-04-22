@@ -53,11 +53,7 @@ export async function middleware(request: NextRequest) {
   const host = (request.headers.get("host") || "").toLowerCase();
   if (
     host === "you.joinsahara.com" ||
-    host.startsWith("you.joinsahara.com:") ||
-    // keep the old (unused) subdomain supported too in case it ever gets
-    // DNS; costs nothing and covers both references in the old changelog.
-    host === "u.joinsahara.com" ||
-    host.startsWith("u.joinsahara.com:")
+    host.startsWith("you.joinsahara.com:")
   ) {
     const target = new URL(pathname, "https://www.joinsahara.com");
     // Preserve the original query string.

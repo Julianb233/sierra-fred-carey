@@ -4,7 +4,7 @@
  * WelcomeBackBanner
  *
  * One-time banner shown when a visitor arrives via the redirect from the
- * legacy u.joinsahara.com subdomain. Reassures them that their account
+ * legacy you.joinsahara.com subdomain. Reassures them that their account
  * migrated cleanly and points them at the password-reset flow if they
  * can't sign in.
  *
