@@ -15,6 +15,7 @@ import { getModel } from "@/lib/ai/providers"
 import { getModelForTier } from "@/lib/ai/tier-routing"
 import { TIER_WEIGHTS, ROLE_WEIGHTS } from "@/lib/feedback/constants"
 import type { SenderRole } from "@/lib/feedback/constants"
+import { detectUrgency, urgencyToMinSeverity } from "@/lib/feedback/urgency"
 import type { FeedbackSignal, FeedbackCluster } from "@/lib/feedback/types"
 
 // ============================================================================
@@ -184,7 +185,19 @@ function computeSeverity(
   if (count >= 10 || hasStudio || hasProductOwner) return "critical"
   if (count >= 5 || weightedCount >= 15) return "high"
   if (count >= 3) return "medium"
-  return "low"
+
+  // AI-4110: Check for urgency keywords in signal comments
+  const severityOrder: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 }
+  let baseSeverity: "low" | "medium" | "high" | "critical" = "low"
+  for (const s of signals) {
+    const urgency = detectUrgency(s.comment)
+    const minSev = urgencyToMinSeverity(urgency.level)
+    if ((severityOrder[minSev] || 0) > (severityOrder[baseSeverity] || 0)) {
+      baseSeverity = minSev
+    }
+  }
+
+  return baseSeverity
 }
 
 // ============================================================================
@@ -275,7 +288,18 @@ export function computeClusterSeverity(
   if (weightedImpact >= 15 || count >= 10) return "critical"
   if (weightedImpact >= 8 || count >= 5) return "high"
   if (weightedImpact >= 3 || count >= 3) return "medium"
-  return "low"
+
+  // AI-4110: Urgency keyword escalation
+  const severityOrder: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 }
+  let baseSeverity: "low" | "medium" | "high" | "critical" = "low"
+  for (const s of signals) {
+    const urgency = detectUrgency(s.comment)
+    const minSev = urgencyToMinSeverity(urgency.level)
+    if ((severityOrder[minSev] || 0) > (severityOrder[baseSeverity] || 0)) {
+      baseSeverity = minSev
+    }
+  }
+  return baseSeverity
 }
 
 /**

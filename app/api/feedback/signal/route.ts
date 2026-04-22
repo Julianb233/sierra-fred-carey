@@ -7,6 +7,7 @@ import { checkDetailedFeedbackThrottle } from "@/lib/feedback/throttle"
 import { getUserTier } from "@/lib/api/tier-middleware"
 import { UserTier } from "@/lib/constants"
 import type { FeedbackSignalInsert } from "@/lib/feedback/types"
+import { detectUrgency } from "@/lib/feedback/urgency"
 
 /**
  * Map UserTier enum to string tier for feedback_signals table.
@@ -147,11 +148,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 5. Determine tier, sender role, and weight
+  // 5. Determine tier, sender role, urgency, and weight
   const userTierEnum = await getUserTier(user.id)
   const tier = TIER_MAP[userTierEnum]
   const senderRole = KNOWN_SENDER_ROLES[user.email ?? ''] ?? 'user'
-  const weight = TIER_WEIGHTS[tier] * ROLE_WEIGHTS[senderRole]
+  const urgency = detectUrgency(comment as string | null)
+  const weight = TIER_WEIGHTS[tier] * ROLE_WEIGHTS[senderRole] * urgency.weightMultiplier
 
   // 7. Build signal insert
   const signal: FeedbackSignalInsert = {
@@ -176,6 +178,7 @@ export async function POST(req: NextRequest) {
       ...(model_used ? { model_used } : {}),
       ...(response_latency_ms ? { response_latency_ms } : {}),
       ...(page_context ? { page_context } : {}),
+      ...(urgency.level !== 'none' ? { urgency_level: urgency.level, urgency_keywords: urgency.matchedKeywords } : {}),
     },
   }
 
