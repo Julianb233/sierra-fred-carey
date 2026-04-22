@@ -9,7 +9,7 @@ import { Hammer } from "lucide-react";
 import { Card3D } from "@/components/premium/Card3D";
 import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
 import { redirectToCheckout } from "@/lib/stripe/client";
-import { PLANS } from "@/lib/stripe/config";
+import { PLANS, isTrialEnabled } from "@/lib/stripe/config";
 
 export default function Pricing() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -255,7 +255,9 @@ export default function Pricing() {
         {/* Risk reversal + Anchor */}
         <FadeUpOnScroll delay={0.5} className="text-center mt-8 sm:mt-10 space-y-3">
           <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium">
-            Try any paid plan free for 14 days. If Sahara doesn&apos;t give you clarity you didn&apos;t have before, don&apos;t pay.
+            {isTrialEnabled()
+              ? "Try any paid plan free for 14 days. If Sahara doesn\u2019t give you clarity you didn\u2019t have before, don\u2019t pay."
+              : "Cancel anytime. No long-term commitment required."}
           </p>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
             Founders spend $5K–$15K on advisors, tools, and consultants. Sahara replaces that with one system.

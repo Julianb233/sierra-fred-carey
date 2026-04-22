@@ -66,6 +66,7 @@ export async function createCheckoutSession({
     client_reference_id: userId,
     metadata: { userId },
     subscription_data: subscriptionData,
+    allow_promotion_codes: true,
   };
 
   // Only include customer if we have one (avoids sending undefined to Stripe)
