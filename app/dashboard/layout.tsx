@@ -49,6 +49,7 @@ import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 import { EventFeedbackWidget } from "@/components/event-feedback-widget";
 import { EventMicroSurvey } from "@/components/event-micro-survey";
+import { BugReportWidget } from "@/components/bug-report-widget";
 
 // ============================================================================
 // Navigation Configuration
@@ -537,6 +538,9 @@ export default function DashboardLayout({
       />
 
       {/* AI-1804: Event feedback collection for first 200 attendees */}
+      {/* AI-8499: Bug report widget -- all authenticated users */}
+      <BugReportWidget />
+
       <EventFeedbackWidget />
       <EventMicroSurvey />
     </div>
