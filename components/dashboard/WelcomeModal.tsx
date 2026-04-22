@@ -55,7 +55,7 @@ export function WelcomeModal({
     },
     {
       icon: Brain,
-      title: "Your Journey",
+      title: "Your Progress",
       description:
         "Follow a curated roadmap based on your stage and challenges. Every milestone brings you closer to success.",
       color: "from-green-500 to-emerald-500",

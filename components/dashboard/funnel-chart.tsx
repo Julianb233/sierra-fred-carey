@@ -92,7 +92,7 @@ export function FunnelChart() {
   return (
     <Card className="border-orange-100/20 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-base">Your Journey</CardTitle>
+        <CardTitle className="text-base">Your Progress</CardTitle>
         <CardDescription>
           Steps completed on your founder path
         </CardDescription>

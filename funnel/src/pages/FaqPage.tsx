@@ -105,7 +105,7 @@ export function FaqPage() {
             Still have questions?
           </p>
           <p className="text-xs text-gray-500 mb-3">
-            Chat with Fred — he can answer anything about startups, fundraising, or the Sahara platform.
+            Chat with your Mentor — they can answer anything about startups, fundraising, or the Sahara platform.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
             <a

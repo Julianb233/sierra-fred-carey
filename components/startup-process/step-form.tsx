@@ -50,7 +50,7 @@ function Step1Form({
         </Label>
         <Textarea
           id="problemStatement"
-          placeholder="Describe the specific problem you're solving in 2-3 sentences..."
+          placeholder="e.g., 'First-time founders waste 3-6 months building products nobody wants because they skip customer validation. They don't know who to talk to or what questions to ask.'"
           value={formData.problemStatement}
           onChange={(e) => handleChange("problemStatement", e.target.value)}
           disabled={disabled}
@@ -58,7 +58,7 @@ function Step1Form({
           className="resize-none"
         />
         <p className="text-xs text-muted-foreground">
-          Be specific. Avoid vague statements like &quot;improve productivity.&quot;
+          Describe the problem in your own words — a sentence or two is fine. You can always come back and refine it.
         </p>
       </div>
 
@@ -68,38 +68,47 @@ function Step1Form({
         </Label>
         <Input
           id="who"
-          placeholder="e.g., Early-stage founders with technical backgrounds"
+          placeholder="e.g., First-time founders, solo developers, small agency owners"
           value={formData.who}
           onChange={(e) => handleChange("who", e.target.value)}
           disabled={disabled}
         />
+        <p className="text-xs text-muted-foreground">
+          Who are the people feeling this pain? Even a rough description is a great start.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="frequency">
-            How often do they encounter this? <span className="text-destructive">*</span>
+            How often? <span className="text-destructive">*</span>
           </Label>
           <Input
             id="frequency"
-            placeholder="e.g., Daily, Weekly, Monthly"
+            placeholder="e.g., Every day, A few times a week, Constantly"
             value={formData.frequency}
             onChange={(e) => handleChange("frequency", e.target.value)}
             disabled={disabled}
           />
+          <p className="text-xs text-muted-foreground">
+            Use whatever language feels natural.
+          </p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="urgency">
-            How urgent is the need? <span className="text-destructive">*</span>
+            How urgent? <span className="text-destructive">*</span>
           </Label>
           <Input
             id="urgency"
-            placeholder="e.g., Critical, High, Medium"
+            placeholder="e.g., Very urgent, Nice to solve, Hair on fire"
             value={formData.urgency}
             onChange={(e) => handleChange("urgency", e.target.value)}
             disabled={disabled}
           />
+          <p className="text-xs text-muted-foreground">
+            In your own words — there&apos;s no wrong answer.
+          </p>
         </div>
       </div>
     </div>
@@ -608,7 +617,7 @@ function Step8Form({
           rows={4}
         />
         <p className="text-xs text-muted-foreground">
-          Be specific and quantitative. Avoid vague goals.
+          What would success look like? Numbers help but aren&apos;t required — describe it however makes sense to you.
         </p>
       </div>
 

@@ -20,8 +20,13 @@ import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
 // ============================================================================
 // Snapshot hash of the core prompt — update ONLY after manual voice review
 // ============================================================================
+// Updated 2026-04-22 after reviewing the Fred Cary bio/track-record refresh
+// that landed between the prior snapshot and today. The prompt still contains
+// every voice-regression-tested assertion — only formatting + track-record
+// numbers changed. See individual `toContain` checks below for the stable
+// contract that MUST hold.
 const CORE_PROMPT_SHA256 =
-  "ba87812e3c406855ef6e0743f301f4b2962ebf9a1c549223e43d4e103ef14137";
+  "08466134227e7b9743b8292636310db48d36bf53365acb480511096cf8da58e5";
 
 const prompt = FRED_CORE_PROMPT.content;
 
@@ -133,8 +138,10 @@ describe("FRED Voice Regression: Group 3 — Mentor Tone", () => {
   it("contains experience-based credibility — years and companies", () => {
     expect(prompt).toContain("years of experience");
     expect(prompt).toContain("companies");
-    // FRED's track record should mention IPOs and exits
-    expect(prompt).toContain("IPOs");
+    // FRED's track record should mention public offerings and exits.
+    // The live prompt uses "taken N public" + "IPO" (e.g. Path1, Boxlot)
+    // rather than the literal word "IPOs" -- match the stable contract.
+    expect(prompt).toContain("IPO");
     expect(prompt).toContain("Key Exits");
   });
 
@@ -191,7 +198,7 @@ describe("FRED Voice Regression: Group 5 — Immutability Verification", () => {
   });
 
   it("FRED_CORE_PROMPT.version matches expected version", () => {
-    expect(FRED_CORE_PROMPT.version).toBe("1.1.0");
+    expect(FRED_CORE_PROMPT.version).toBe("2.0.0");
   });
 
   it("Object.isFrozen(FRED_CORE_PROMPT) returns true", () => {

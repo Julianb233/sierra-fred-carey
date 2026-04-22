@@ -219,13 +219,13 @@ export function OasesVisualizer() {
           </div>
         </div>
 
-        {/* Chat with Fred CTA -- full-width prominent button */}
+        {/* Chat with Mentor CTA -- full-width prominent button */}
         <Link
           href="/chat"
           className="flex items-center justify-center gap-2 mt-4 w-full px-4 py-3 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-semibold text-sm transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          Chat with Fred
+          Chat with Mentor
         </Link>
       </div>
 

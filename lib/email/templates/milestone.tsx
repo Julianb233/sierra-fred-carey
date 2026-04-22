@@ -114,7 +114,7 @@ export function MilestoneEmail(props: MilestoneEmailData) {
             textDecoration: 'none',
           }}
         >
-          Continue Your Journey
+          Continue Your Progress
         </Link>
       </Section>
     </EmailLayout>

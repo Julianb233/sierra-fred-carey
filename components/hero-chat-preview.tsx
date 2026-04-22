@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 const FRED_GREETING =
-  "Hey, I'm Fred Cary. I've built 30+ companies, taken 3 public, and mentored 10,000+ founders. What's on your mind?";
+  "Hey, I'm Fred Cary. I've advised hundreds of companies, taken 3 public, and mentored hundreds of founders. What's on your mind?";
 
 const SUGGESTION_CHIPS = [
   "I have a startup idea",

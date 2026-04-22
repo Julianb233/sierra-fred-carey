@@ -7,6 +7,7 @@
  * - Procedural Memory: Decision frameworks, action templates
  */
 
+import { createHash } from "crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { MEMORY_CONFIG, type MemoryTier } from "@/lib/constants";
 
@@ -14,16 +15,10 @@ import { MEMORY_CONFIG, type MemoryTier } from "@/lib/constants";
 // Async Embedding Generation (fire-and-forget)
 // ============================================================================
 
-/**
- * Fire-and-forget embedding generation for a stored episode.
- * Generates an embedding for the text content and updates the row.
- * Never throws — logs warnings on failure.
- */
 function fireEmbeddingGeneration(episodeId: string, text: string): void {
   (async () => {
     try {
       const { generateEmbedding } = await import("@/lib/ai/fred-client");
-      // Truncate to 8000 chars to stay within embedding model limits
       const truncated = text.slice(0, 8000);
       const result = await generateEmbedding(truncated);
       const supabase = createServiceClient();
@@ -133,14 +128,35 @@ export interface DecisionLog {
 }
 
 // ============================================================================
+// Content Hash (Deduplication)
+// ============================================================================
+
+/**
+ * Compute a deterministic hash for episode deduplication.
+ * Uses event_type + content role + content text as the identity key.
+ * For non-conversation events (no role/content), falls back to full content JSON.
+ */
+export function computeEpisodeContentHash(
+  eventType: string,
+  content: Record<string, unknown>
+): string {
+  const role = (content.role as string) || "";
+  const text = (content.content as string) || "";
+  const hashInput =
+    role && text
+      ? `${eventType}:${role}:${text}`
+      : `${eventType}:${JSON.stringify(content)}`;
+  return createHash("md5").update(hashInput).digest("hex");
+}
+
+// ============================================================================
 // Episodic Memory Operations
 // ============================================================================
 
 /**
  * Store a new episode in episodic memory.
- * Includes deduplication: if an episode with the same user, session, event type,
- * role, and content text was created within the last 60 seconds, the existing
- * episode is returned instead of creating a duplicate.
+ * Deduplication is enforced by a unique index on (user_id, session_id, content_hash).
+ * If a duplicate is detected, the existing episode is returned.
  */
 export async function storeEpisode(
   userId: string,
@@ -155,32 +171,7 @@ export async function storeEpisode(
   } = {}
 ): Promise<EpisodicMemory> {
   const supabase = createServiceClient();
-
-  // Deduplication: check for a recent episode with matching content
-  const role = content.role as string | undefined;
-  const textContent = content.content as string | undefined;
-  if (role && textContent) {
-    const dedupeWindow = new Date(Date.now() - 60_000).toISOString();
-    const { data: existing } = await supabase
-      .from("fred_episodic_memory")
-      .select("id, user_id, session_id, event_type, content, importance_score, metadata, created_at")
-      .eq("user_id", userId)
-      .eq("session_id", sessionId)
-      .eq("event_type", eventType)
-      .gte("created_at", dedupeWindow)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    if (existing && existing.length > 0) {
-      const duplicate = existing.find((row) => {
-        const rowContent = row.content as Record<string, unknown> | null;
-        return rowContent?.role === role && rowContent?.content === textContent;
-      });
-      if (duplicate) {
-        return transformEpisodicRow(duplicate);
-      }
-    }
-  }
+  const contentHash = computeEpisodeContentHash(eventType, content);
 
   const { data, error } = await supabase
     .from("fred_episodic_memory")
@@ -189,6 +180,7 @@ export async function storeEpisode(
       session_id: sessionId,
       event_type: eventType,
       content,
+      content_hash: contentHash,
       channel: options.channel ?? "chat",
       embedding: options.embedding,
       importance_score: options.importanceScore ?? 0.5,
@@ -198,14 +190,27 @@ export async function storeEpisode(
     .single();
 
   if (error) {
+    // Unique constraint violation — duplicate episode already exists
+    if (error.code === "23505") {
+      const { data: existing } = await supabase
+        .from("fred_episodic_memory")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("session_id", sessionId)
+        .eq("content_hash", contentHash)
+        .single();
+
+      if (existing) {
+        return transformEpisodicRow(existing);
+      }
+    }
+
     console.error("[FRED Memory] Error storing episode:", error);
     throw error;
   }
 
   const episode = transformEpisodicRow(data);
 
-  // Fire-and-forget: generate embedding for episodes with text content.
-  // Only for user/assistant messages that have a string content field.
   if (!options.embedding && content && typeof content.content === "string" && content.content.length > 0) {
     fireEmbeddingGeneration(episode.id, content.content as string);
   }
@@ -248,7 +253,18 @@ export async function retrieveRecentEpisodes(
     throw error;
   }
 
-  return (data || []).map(transformEpisodicRow);
+  // Safety-net dedup on read: filter out any duplicates by content_hash
+  const seen = new Set<string>();
+  const deduped = (data || []).filter((row) => {
+    const hash = row.content_hash as string | null;
+    if (!hash) return true;
+    const key = `${row.session_id}:${hash}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return deduped.map(transformEpisodicRow);
 }
 
 /**
@@ -264,7 +280,6 @@ export async function searchEpisodesByEmbedding(
 ): Promise<Array<EpisodicMemory & { similarity: number }>> {
   const supabase = createServiceClient();
 
-  // Use Supabase's RPC for vector similarity search
   const { data, error } = await supabase.rpc("search_episodic_memory", {
     query_embedding: embedding,
     match_user_id: userId,
@@ -273,7 +288,6 @@ export async function searchEpisodesByEmbedding(
   });
 
   if (error) {
-    // If the function doesn't exist yet, fall back to regular query
     console.warn("[FRED Memory] Vector search RPC not available, using fallback:", error.message);
     const episodes = await retrieveRecentEpisodes(userId, { limit: options.limit ?? 5 });
     return episodes.map((e) => ({ ...e, similarity: 0 }));
@@ -309,9 +323,6 @@ export async function updateEpisodeImportance(
 // Semantic Memory Operations
 // ============================================================================
 
-/**
- * Store or update a fact in semantic memory
- */
 export async function storeFact(
   userId: string,
   category: SemanticCategory,
@@ -352,9 +363,6 @@ export async function storeFact(
   return transformSemanticRow(data);
 }
 
-/**
- * Get a specific fact from semantic memory
- */
 export async function getFact(
   userId: string,
   category: SemanticCategory,
@@ -372,7 +380,6 @@ export async function getFact(
 
   if (error) {
     if (error.code === "PGRST116") {
-      // No rows found
       return null;
     }
     console.error("[FRED Memory] Error getting fact:", error);
@@ -382,9 +389,6 @@ export async function getFact(
   return data ? transformSemanticRow(data) : null;
 }
 
-/**
- * Get all facts in a category for a user
- */
 export async function getFactsByCategory(
   userId: string,
   category: SemanticCategory
@@ -407,9 +411,6 @@ export async function getFactsByCategory(
   return (data || []).map(transformSemanticRow);
 }
 
-/**
- * Search facts by embedding similarity
- */
 export async function searchFactsByEmbedding(
   userId: string,
   embedding: number[],
@@ -443,9 +444,6 @@ export async function searchFactsByEmbedding(
   }));
 }
 
-/**
- * Delete a fact from semantic memory
- */
 export async function deleteFact(
   userId: string,
   category: SemanticCategory,
@@ -466,17 +464,8 @@ export async function deleteFact(
   }
 }
 
-/**
- * Short-lived cache for getAllUserFacts to avoid duplicate DB queries
- * within a single request cycle. TTL of 5 seconds ensures freshness
- * across separate requests while deduplicating calls within one.
- */
 const factsCache = new Map<string, { data: SemanticMemory[]; expiry: number }>();
 
-/**
- * Get all semantic memory for a user (for context building).
- * Results are cached for 5s to deduplicate calls within a single request.
- */
 export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]> {
   const cached = factsCache.get(userId);
   if (cached && Date.now() < cached.expiry) {
@@ -507,9 +496,6 @@ export async function getAllUserFacts(userId: string): Promise<SemanticMemory[]>
 // Procedural Memory Operations
 // ============================================================================
 
-/**
- * Get a procedure by name
- */
 export async function getProcedure(name: string): Promise<ProceduralMemory | null> {
   const supabase = createServiceClient();
 
@@ -531,9 +517,6 @@ export async function getProcedure(name: string): Promise<ProceduralMemory | nul
   return data ? transformProceduralRow(data) : null;
 }
 
-/**
- * Get all procedures of a specific type
- */
 export async function getProceduresByType(
   procedureType: ProcedureType
 ): Promise<ProceduralMemory[]> {
@@ -554,9 +537,6 @@ export async function getProceduresByType(
   return (data || []).map(transformProceduralRow);
 }
 
-/**
- * Get all active procedures
- */
 export async function getAllProcedures(): Promise<ProceduralMemory[]> {
   const supabase = createServiceClient();
 
@@ -575,16 +555,12 @@ export async function getAllProcedures(): Promise<ProceduralMemory[]> {
   return (data || []).map(transformProceduralRow);
 }
 
-/**
- * Record usage of a procedure and update success rate
- */
 export async function recordProcedureUsage(
   name: string,
   success: boolean
 ): Promise<void> {
   const supabase = createServiceClient();
 
-  // First get current stats
   const { data: current, error: fetchError } = await supabase
     .from("fred_procedural_memory")
     .select("usage_count, success_rate")
@@ -596,12 +572,10 @@ export async function recordProcedureUsage(
     throw fetchError;
   }
 
-  // Calculate new success rate (exponential moving average)
-  const alpha = 0.1; // Weight for new observations
+  const alpha = 0.1;
   const currentRate = current.success_rate ?? 0.5;
   const newRate = currentRate * (1 - alpha) + (success ? 1 : 0) * alpha;
 
-  // Update the procedure
   const { error: updateError } = await supabase
     .from("fred_procedural_memory")
     .update({
@@ -620,9 +594,6 @@ export async function recordProcedureUsage(
 // Decision Log Operations
 // ============================================================================
 
-/**
- * Log a new decision
- */
 export async function logDecision(
   userId: string,
   sessionId: string,
@@ -662,9 +633,6 @@ export async function logDecision(
   return transformDecisionRow(result);
 }
 
-/**
- * Record the final decision (may differ from recommendation if escalated)
- */
 export async function recordFinalDecision(
   decisionId: string,
   finalDecision: Record<string, unknown>
@@ -685,9 +653,6 @@ export async function recordFinalDecision(
   }
 }
 
-/**
- * Record the outcome of a decision
- */
 export async function recordDecisionOutcome(
   decisionId: string,
   outcome: Record<string, unknown>,
@@ -710,9 +675,6 @@ export async function recordDecisionOutcome(
   }
 }
 
-/**
- * Get recent decisions for a user
- */
 export async function getRecentDecisions(
   userId: string,
   options: {
@@ -754,10 +716,6 @@ export async function getRecentDecisions(
 // Retention Enforcement (Phase 32-02)
 // ============================================================================
 
-/**
- * Enforce tier-based memory retention limits.
- * Deletes episodic memories that exceed the tier's retention window or item cap.
- */
 export async function enforceRetentionLimits(
   userId: string,
   tier: MemoryTier
@@ -766,7 +724,6 @@ export async function enforceRetentionLimits(
   const supabase = createServiceClient();
   let deletedCount = 0;
 
-  // For Free tier (0 days retention), delete all episodic memories
   if (config.retentionDays === 0) {
     const { data } = await supabase
       .from("fred_episodic_memory")
@@ -777,7 +734,6 @@ export async function enforceRetentionLimits(
     return deletedCount;
   }
 
-  // Delete episodes older than retention period
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - config.retentionDays);
   const { data: expired } = await supabase
@@ -788,7 +744,6 @@ export async function enforceRetentionLimits(
     .select("id");
   deletedCount += expired?.length ?? 0;
 
-  // Delete excess episodes beyond maxEpisodicItems (keep newest)
   if (config.maxEpisodicItems > 0) {
     const { data: all } = await supabase
       .from("fred_episodic_memory")

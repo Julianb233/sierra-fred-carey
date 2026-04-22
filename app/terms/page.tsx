@@ -107,7 +107,7 @@ export default function TermsPage() {
                   <section id="acceptance">
                     <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">1. Acceptance of Terms</h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      By accessing and using Fred Carey (&quot;Service&quot;), you accept and agree to be bound by the terms
+                      By accessing and using Fred Cary (&quot;Service&quot;), you accept and agree to be bound by the terms
                       and provision of this agreement. If you do not agree to these Terms of Service, please do not
                       use the Service.
                     </p>
@@ -116,7 +116,7 @@ export default function TermsPage() {
                   <section id="description">
                     <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">2. Description of Service</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Fred Carey provides a comprehensive decision-making platform designed for founders and executives.
+                      Fred Cary provides a comprehensive decision-making platform designed for founders and executives.
                       The Service includes various tools, frameworks, and analytics to support business decision-making processes.
                     </p>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -170,7 +170,7 @@ export default function TermsPage() {
                   <section id="intellectual">
                     <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">6. Intellectual Property</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      The Service and its original content, features, and functionality are owned by Fred Carey
+                      The Service and its original content, features, and functionality are owned by Fred Cary
                       and are protected by international copyright, trademark, and other intellectual property laws.
                     </p>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -230,8 +230,8 @@ export default function TermsPage() {
                     </p>
                     <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                       <p className="text-gray-600 dark:text-gray-400">
-                        Fred Carey Legal Team<br />
-                        Email: legal@fredcarey.com<br />
+                        Fred Cary Legal Team<br />
+                        Email: legal@fredcary.com<br />
                         Address: 123 Innovation Drive, San Francisco, CA 94102
                       </p>
                     </div>

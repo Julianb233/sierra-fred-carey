@@ -20,7 +20,7 @@ import { checkRateLimitForUser } from "@/lib/api/rate-limit"
 // ============================================================================
 
 const transcriptEntrySchema = z.object({
-  speaker: z.string(),
+  speaker: z.enum(["user", "fred"]),
   text: z.string(),
   timestamp: z.string().optional(),
 })
