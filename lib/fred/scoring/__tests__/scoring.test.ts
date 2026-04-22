@@ -1,5 +1,13 @@
 /**
  * Tests for FRED 7-Factor Scoring Engine
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * TRACEABILITY: Every eval criterion in this file MUST map to a section
+ * in .planning/OPERATING-BIBLE.md or an existing test in prompts.test.ts.
+ * See .planning/FRED-EVAL-TRACEABILITY.md for the complete mapping.
+ * Do NOT add new criteria without updating the traceability document.
+ * Source of truth: docs/SAHARA-FRED-AUTORESEARCH-WORKFLOW.md (Section 8)
+ * ═══════════════════════════════════════════════════════════════════════
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

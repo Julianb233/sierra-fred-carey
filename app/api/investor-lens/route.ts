@@ -736,7 +736,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log journey event with score for dashboard visibility
-    // Calculate average axis score as the overall investor readiness metric
+    // Calculate overall score from axes as the investor readiness metric
     const axisScores = [
       evaluation.axes.team.score,
       evaluation.axes.market.score,
@@ -748,10 +748,12 @@ export async function POST(request: NextRequest) {
       evaluation.axes.fundFit.score,
       evaluation.axes.valuation.score,
     ];
-    const avgScore = Math.round(
+    const overallScore = Math.round(
       axisScores.reduce((sum, s) => sum + s, 0) / axisScores.length
     );
 
+    // Log journey event with score_after for dashboard retrieval
+    // Uses resilient logJourneyEventAsync with retry logic (service-role client)
     logJourneyEventAsync({
       userId,
       eventType: "investor_lens_evaluation",
@@ -763,7 +765,7 @@ export async function POST(request: NextRequest) {
         requestId: trackedResult.requestId,
         variant: trackedResult.variant,
       },
-      scoreAfter: avgScore,
+      scoreAfter: overallScore,
     });
 
     return NextResponse.json(

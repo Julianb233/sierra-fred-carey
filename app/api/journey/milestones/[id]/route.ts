@@ -169,7 +169,7 @@ export async function PATCH(
       );
     }
 
-    // Log journey event if status changed to completed
+    // Log journey event if status changed to completed (fire-and-forget with retry)
     if (status === "completed" && current.status !== "completed") {
       logJourneyEventAsync({
         userId,

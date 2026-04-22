@@ -218,6 +218,21 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Auto-trigger founder report when step 9 is newly validated.
+    // Fire-and-forget so the PUT response is fast; the user polls or refreshes
+    // /reports to see the result.
+    if (newlyValidated.includes(9)) {
+      try {
+        const { generateReport } = await import("@/lib/report/generate-report");
+        // Don't await - let it run in the background. Errors are logged inside.
+        generateReport(userId).catch((err) => {
+          console.error("[PUT /api/startup-process] Auto-report failed:", err);
+        });
+      } catch (err) {
+        console.error("[PUT /api/startup-process] Could not start report generation:", err);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Response) return error;
