@@ -161,7 +161,6 @@ function DashboardContent() {
   if (!data) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         <InviteBanner />
         <FredHero
           userName={userName}
@@ -170,6 +169,7 @@ function DashboardContent() {
           onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
           hasHadConversations={false}
         />
+        <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
         {/* Stage-specific focus banner */}
         <FadeIn delay={0.01}>
           <StageFocusBanner stage={userStage} />
@@ -195,9 +195,6 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Trial countdown banner */}
-      <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
-
       {/* Team invite notification */}
       <InviteBanner />
 
@@ -209,6 +206,9 @@ function DashboardContent() {
         onVoiceChat={() => window.dispatchEvent(new CustomEvent("fred:voice"))}
         hasHadConversations={!!data.weeklyMomentum?.lastCheckinDate}
       />
+
+      {/* Trial countdown banner — below hero so chat stays above the fold */}
+      <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
 
       {/* Stage-specific focus banner */}
       <FadeIn delay={0.01}>
