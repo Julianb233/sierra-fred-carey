@@ -47,6 +47,7 @@ import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-mo
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
+import { FloatingVoiceFab } from "@/components/voice/floating-voice-fab";
 import { EventFeedbackWidget } from "@/components/event-feedback-widget";
 import { EventMicroSurvey } from "@/components/event-micro-survey";
 import { BugReportWidget } from "@/components/bug-report-widget";
@@ -528,6 +529,11 @@ export default function DashboardLayout({
 
       {/* Floating Chat Widget — available on all dashboard pages including mobile */}
       <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
+
+      {/* Floating Voice FAB — desktop only, prominent voice entry point */}
+      <div className="hidden md:block">
+        <FloatingVoiceFab onClick={() => setVoiceOverlayOpen(true)} />
+      </div>
 
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
