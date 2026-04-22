@@ -14,6 +14,7 @@ import { findInsightWithLinearIssueByHash } from "@/lib/db/feedback"
 // ── Constants ───────────────────────────────────────────────────
 
 const LINEAR_TEAM = "Ai Acrobatics"
+const LINEAR_PROJECT = "Sahara - AI Founder OS"
 const ADMIN_DASHBOARD_URL = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/admin/feedback`
   : "https://joinsahara.com/admin/feedback"
@@ -93,7 +94,7 @@ export async function createLinearIssueFromInsight(
       }
     }
 
-    // Step 1: Get team ID
+    // Step 1: Get team ID, active cycle, project ID, and label IDs
     const teamQuery = await fetch("https://api.linear.app/graphql", {
       method: "POST",
       headers: {
@@ -101,7 +102,17 @@ export async function createLinearIssueFromInsight(
         Authorization: apiKey,
       },
       body: JSON.stringify({
-        query: `query { teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) { nodes { id } } }`,
+        query: `query {
+          teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) {
+            nodes { id activeCycle { id } }
+          }
+          projects(filter: { name: { eq: "${LINEAR_PROJECT}" } }) {
+            nodes { id }
+          }
+          issueLabels(filter: { name: { in: ["Bug", "Feature", "Improvement"] } }) {
+            nodes { id name }
+          }
+        }`,
       }),
     })
 
@@ -110,6 +121,10 @@ export async function createLinearIssueFromInsight(
     if (!teamId) {
       return { success: false, error: `Team "${LINEAR_TEAM}" not found in Linear` }
     }
+
+    const cycleId = teamData.data?.teams?.nodes?.[0]?.activeCycle?.id
+    const projectId = teamData.data?.projects?.nodes?.[0]?.id
+    const allLabels: { id: string; name: string }[] = teamData.data?.issueLabels?.nodes || []
 
     // Step 2: Build description
     const signalIdsList = insight.signal_ids.slice(0, 20)
@@ -141,8 +156,14 @@ Auto-created from feedback pattern detection.
 ### Signal IDs
 ${signalIdsFormatted}${truncation}`
 
-    // Step 3: Create issue
+    // Step 3: Create issue with labels, project, and cycle
     const priority = severityToPriority(insight.severity)
+
+    // Map feedback category to label — default to "Improvement" for feedback clusters
+    const labelName = insight.category === "bug" ? "Bug" : insight.category === "feature_request" ? "Feature" : "Improvement"
+    const labelIds = allLabels
+      .filter((l) => l.name === labelName)
+      .map((l) => l.id)
 
     const createRes = await fetch("https://api.linear.app/graphql", {
       method: "POST",
@@ -163,6 +184,9 @@ ${signalIdsFormatted}${truncation}`
             title: `[Feedback] ${insight.title}`,
             description,
             priority,
+            labelIds,
+            ...(projectId && { projectId }),
+            ...(cycleId && { cycleId }),
           },
         },
       }),
