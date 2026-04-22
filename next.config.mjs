@@ -84,10 +84,29 @@ const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
-      widenClientFileUpload: true,
+      // Was `widenClientFileUpload: true`. With the growth of client chunks
+      // (many routes + lots of pages merged 2026-04-22), the Sentry source-map
+      // upload step OOMed the default 4GB Vercel build container (SIGKILL
+      // after "Successfully uploaded source maps to Sentry" completed the
+      // bulk of the work but pushed the build over the limit). Setting to
+      // false limits upload to default/server files and server bundles,
+      // which is enough for useful stack traces without upload storms.
+      // Re-enable only after Enhanced Builds (higher RAM) is toggled in the
+      // Vercel project settings.
+      widenClientFileUpload: false,
       hideSourceMaps: true,
       disableLogger: true,
-      tunnelRoute: "/monitoring-tunnel",
+      // tunnelRoute intentionally OMITTED. Prior setting ("/monitoring-tunnel")
+      // relied on the Sentry Next.js plugin to auto-emit a route handler, but
+      // with Next 16 + Serwist outer wrap the handler never materializes --
+      // https://www.joinsahara.com/monitoring-tunnel returns 404 to GET + POST
+      // (verified against prod a89daa2 and a preview deployment). Result:
+      // every client-side Sentry event was POSTed to a dead endpoint and
+      // dropped. Without tunnelRoute, events go directly to
+      // *.ingest.us.sentry.io. Ad-blockers can see + block that host for
+      // single-digit % of users; that's a meaningful improvement over
+      // losing 100% of client errors. Re-enable only after adding a real
+      // handler at the configured path and verifying 200-on-POST in prod.
     })
   : serwistConfig;
 

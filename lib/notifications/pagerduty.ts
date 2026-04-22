@@ -117,7 +117,7 @@ function formatPagerDutyEvent(
       class: payload.level,
       custom_details: customDetails,
     },
-    client: "Sierra Fred Carey",
+    client: "Sierra Fred Cary",
     ...(appUrl ? { client_url: appUrl } : {}),
   };
 

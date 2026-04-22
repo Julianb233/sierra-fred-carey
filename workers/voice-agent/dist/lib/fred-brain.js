@@ -357,7 +357,7 @@ export const SAHARA_MESSAGING = {
     differentiators: [
         "24/7 proactive guidance (not reactive)",
         "Real-time strategy and execution support",
-        "Based on 50+ years and 10,000+ founder coaching sessions",
+        "Based on 50+ years and hundreds of founder coaching sessions",
         "Acts as co-founder, not just advisor",
     ],
 };
@@ -365,8 +365,8 @@ export const SAHARA_MESSAGING = {
 // MARKETING STATS (Single source of truth for all marketing copy)
 // ============================================================================
 export const MARKETING_STATS = {
-    capitalRaised: "$100M+",
-    foundersCoached: "10,000+",
+    capitalRaised: "$3B+",
+    foundersCoached: "Hundreds",
     yearsExperience: "50+",
     companiesFounded: "40+",
     startupsLaunched: "300+",
@@ -381,7 +381,7 @@ export function getRandomQuote() {
     return quotes[Math.floor(Math.random() * quotes.length)];
 }
 export function getExperienceStatement() {
-    return `With over ${FRED_BIO.yearsExperience} years of experience, having founded ${FRED_BIO.companiesFounded}+ companies, and coaching 10,000+ founders, I've seen what works and what doesn't.`;
+    return `With over ${FRED_BIO.yearsExperience} years of experience, having founded ${FRED_BIO.companiesFounded}+ companies, and coaching hundreds of founders, I've seen what works and what doesn't.`;
 }
 export function getCredibilityStatement() {
     return `I've taken 3 companies public, had 2 acquired, created technology used in 75% of the world's TV households, and helped generate over $50 billion in revenue for my customers.`;

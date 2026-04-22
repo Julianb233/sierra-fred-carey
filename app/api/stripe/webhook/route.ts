@@ -120,6 +120,14 @@ export async function POST(request: NextRequest) {
             session.subscription as string
           );
           let userId = session.client_reference_id;
+
+          // Funnel checkouts use "funnel-pending" as placeholder -- skip DB update,
+          // the /api/funnel/reconcile endpoint will link it after user signs up.
+          if (userId === "funnel-pending") {
+            console.log(`[Webhook] checkout.session.completed: Funnel checkout (pending reconciliation). Session: ${session.id}, Subscription: ${subscription.id}`);
+            break;
+          }
+
           if (!userId) {
             // Fallback: try to resolve userId from subscription metadata or customer ID
             userId = await resolveUserIdFromSubscription(subscription);
@@ -139,14 +147,18 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = await resolveUserIdFromSubscription(subscription);
-        if (userId) {
-          const newTier = getUserTierFromSubscription(subscription);
-          serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.TIER_CHANGED, { toTier: newTier, priceId: subscription.items.data[0]?.price.id });
-          await handleSubscriptionUpdate(subscription, userId);
-        } else {
-          console.error(`[Webhook] No userId found for subscription ${subscription.id}`);
-          await markEventAsFailed(stripeEvent.id, `No userId found for subscription ${subscription.id}`);
+
+        // Funnel-pending subscriptions will be reconciled via /api/funnel/reconcile
+        if (!userId || userId === "funnel-pending") {
+          if (!userId) {
+            console.log(`[Webhook] ${event.type}: No userId for subscription ${subscription.id} (may be funnel-pending, awaiting reconciliation)`);
+          }
+          break;
         }
+
+        const newTier = getUserTierFromSubscription(subscription);
+        serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.TIER_CHANGED, { toTier: newTier, priceId: subscription.items.data[0]?.price.id });
+        await handleSubscriptionUpdate(subscription, userId);
         break;
       }
 

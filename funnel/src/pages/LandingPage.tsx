@@ -150,7 +150,7 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
             transition={{ duration: 0.4, delay: 0.2 }}
             className="text-base text-gray-600 mb-6 leading-relaxed"
           >
-            Fred Cary has coached hundreds of founders and helped raise billions. Now his
+            Fred Cary has coached hundreds of founders and helped raise over $3B. Now his
             experience is available 24/7 as your AI co-founder.
           </motion.p>
 
@@ -192,7 +192,7 @@ export function LandingPage({ onStartChat }: LandingPageProps) {
             </span>
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#ff6a1a]" />
-              Billions Raised
+              $3B+ Raised
             </span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-[#ff6a1a]" />
