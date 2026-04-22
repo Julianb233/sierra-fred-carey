@@ -47,9 +47,19 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors: { email?: string; password?: string } = {};
+    if (!email.trim()) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+    setFieldErrors({});
     setLoading(true);
     setError(null);
 
@@ -63,6 +73,12 @@ function LoginContent() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Too many login attempts. Please wait a minute before trying again.");
+        }
+        if (data.code === "EMAIL_NOT_CONFIRMED") {
+          throw new Error("EMAIL_NOT_CONFIRMED");
+        }
         throw new Error(data.error || "Failed to sign in");
       }
 
@@ -73,8 +89,9 @@ function LoginContent() {
     } catch (err) {
       console.error("Login error:", err);
       const msg = err instanceof Error ? err.message : "Failed to sign in";
-      // Enhance generic auth errors with helpful guidance
-      if (msg === "Invalid email or password") {
+      if (msg === "EMAIL_NOT_CONFIRMED") {
+        setError("EMAIL_NOT_CONFIRMED");
+      } else if (msg === "Invalid email or password") {
         setError("Invalid email or password. Double-check your credentials or use \"Forgot password?\" below to reset.");
       } else {
         setError(msg);
@@ -104,7 +121,25 @@ function LoginContent() {
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 shadow-lg">
             {error && (
               <div role="alert" className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
+                {error === "EMAIL_NOT_CONFIRMED" ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">Your email address hasn&apos;t been confirmed yet.</p>
+                    <p>Please check your inbox (and spam/junk folder) for the confirmation email.{" "}
+                      {email.trim().toLowerCase().endsWith("@saharacompanies.com") && (
+                        <>For <strong>@saharacompanies.com</strong> addresses, also check your IT-managed email filters.</>
+                      )}
+                    </p>
+                    <p>
+                      Need a new confirmation?{" "}
+                      <Link href="/forgot-password" className="text-[#ff6a1a] hover:underline font-medium">
+                        Reset your password
+                      </Link>{" "}
+                      to confirm your account and set a new password.
+                    </p>
+                  </div>
+                ) : (
+                  error
+                )}
               </div>
             )}
 
@@ -120,13 +155,15 @@ function LoginContent() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
+                    onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
+                    className={`w-full pl-11 pr-4 py-3 rounded-lg border ${fieldErrors.email ? "border-red-500" : "border-gray-200 dark:border-gray-700"} bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base`}
                     placeholder="you@saharacompanies.com"
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="mt-1 text-sm text-red-500">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -140,10 +177,9 @@ function LoginContent() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
-                    required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-11 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base"
+                    onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
+                    className={`w-full pl-11 pr-11 py-3 rounded-lg border ${fieldErrors.password ? "border-red-500" : "border-gray-200 dark:border-gray-700"} bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#ff6a1a] focus:ring-2 focus:ring-[#ff6a1a]/20 outline-none transition-all text-base`}
                     placeholder="••••••••"
                   />
                   <button
@@ -155,6 +191,9 @@ function LoginContent() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="mt-1 text-sm text-red-500">{fieldErrors.password}</p>
+                )}
               </div>
             </div>
 

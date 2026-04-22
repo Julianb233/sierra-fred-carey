@@ -13,6 +13,7 @@ import {
   type ChatMessage,
 } from "@/lib/voice/chat-context-loader"
 import { storeChannelEntry } from "@/lib/channels/conversation-context"
+import { buildActiveFounderMemory, formatMemoryBlock } from "@/lib/fred/active-memory"
 
 // ============================================================================
 // Types
@@ -23,6 +24,8 @@ export interface ChatVoiceContext {
   preambleBlock: string
   /** Short description of the last discussed topic (for UI display) */
   lastTopic: string | null
+  /** Formatted founder context from Phase 79 structured memory */
+  founderContext: string
 }
 
 export interface VoiceTranscriptEntry {
@@ -49,13 +52,22 @@ export async function getChatContextForVoice(
   try {
     const context = await loadChatContextForVoice(userId, 10)
 
-    const preambleBlock = formatChatForPreamble(context)
+    // Load Phase 79 structured founder memory (14 fields)
+    let founderContext = ""
+    try {
+      const memory = await buildActiveFounderMemory(userId, true)
+      founderContext = formatMemoryBlock(memory)
+    } catch (memErr) {
+      console.warn("[Chat-Voice Bridge] Failed to load founder memory (non-blocking):", memErr)
+    }
+
+    const preambleBlock = formatChatForPreamble(context, founderContext)
     const lastTopic = context.lastTopic
 
-    return { preambleBlock, lastTopic }
+    return { preambleBlock, lastTopic, founderContext }
   } catch (err) {
     console.warn("[Chat-Voice Bridge] Failed to load chat context:", err)
-    return { preambleBlock: "", lastTopic: null }
+    return { preambleBlock: "", lastTopic: null, founderContext: "" }
   }
 }
 

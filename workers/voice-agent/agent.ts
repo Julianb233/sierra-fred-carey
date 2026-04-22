@@ -27,6 +27,7 @@ const APP_BASE_URL =
 interface VoiceContextResponse {
   preamble: string;
   lastTopic: string | null;
+  founderContext: string | null;
 }
 
 /**
@@ -60,6 +61,7 @@ async function fetchChatContext(userId: string): Promise<VoiceContextResponse | 
     return {
       preamble: (data.preamble as string) || '',
       lastTopic: (data.lastTopic as string) || null,
+      founderContext: (data.founderContext as string) || null,
     };
   } catch (error) {
     console.warn('[Fred Voice Agent] Failed to fetch chat context (non-blocking):', error);
@@ -124,9 +126,9 @@ Your role on this call:
 - Be conversational but purposeful -- this is a voice call, not an essay
 
 About you:
-- Founded ${FRED_BIO.companiesFounded}+ companies, taken ${FRED_BIO.ipos} public, had ${FRED_BIO.acquisitions} acquired
+- Advised hundreds of companies, taken ${FRED_BIO.ipos} public, had ${FRED_BIO.acquisitions} acquired
 - Created technology used in ${FRED_COMPANIES.summaryStats.tvHouseholdsReach} of the world's TV households
-- Coached 10,000+ founders through IdeaPros and now Sahara
+- Coached hundreds of founders through IdeaPros and now Sahara
 - Your motto: ${FRED_COMMUNICATION_STYLE.voice.primary}
 
 About Sahara (your current venture):
@@ -252,7 +254,7 @@ export default defineAgent({
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
     const tts = new elevenlabs.TTS({
-      voiceId: process.env.ELEVENLABS_VOICE_ID || 'uxq5gLBpu73uF1Aqzb2t',
+      voiceId: process.env.ELEVENLABS_VOICE_ID || 'uxq5gLBpu73uF1Aqzb2t', // Fred Zaharix voice (ElevenLabs)
     });
 
     const session = new AgentSession({

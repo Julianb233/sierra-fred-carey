@@ -963,6 +963,33 @@ export async function resetGateRedirect(
 }
 
 // ============================================================================
+// Phase 80: Stage Redirect Counts
+// ============================================================================
+
+/**
+ * Update stage redirect counts in the conversation state's mode_context.
+ * Used by the unified stage-gate system to track how many times each topic
+ * has been redirected, enabling mentor override after 2 redirects.
+ */
+export async function updateStageRedirectCounts(
+  userId: string,
+  counts: Record<string, number>
+): Promise<void> {
+  const state = await getConversationState(userId);
+  if (!state) return;
+
+  const modeContext = state.modeContext;
+  const supabase = createServiceClient();
+  const dbModeContext = modeContextToDb(modeContext);
+  (dbModeContext as Record<string, unknown>).stageRedirectCounts = counts;
+
+  await supabase
+    .from("fred_conversation_state")
+    .update({ mode_context: dbModeContext })
+    .eq("user_id", userId);
+}
+
+// ============================================================================
 // Wave 3: Diagnostic Mode Operations
 // ============================================================================
 

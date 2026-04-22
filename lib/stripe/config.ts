@@ -5,37 +5,53 @@ export const PLANS = {
     price: 0,
     priceId: null,
     features: [
-      "Basic check-in tracking",
-      "Community access",
-      "Limited AI chat",
+      "Founder Decision Engine",
+      "Feasibility + market reality checks",
+      "Red flag detection",
+      "Founder wellbeing + mental clarity support",
+      "Initial founder snapshot",
+    ],
+  },
+  BUILDER: {
+    id: "builder",
+    name: "Builder",
+    price: 39,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID,
+    features: [
+      "Everything in Free",
+      "Saved founder profile + memory",
+      "Limited Investor Readiness insights",
+      "Strategy outputs (lean plans, early roadmap)",
+      "Early-stage scoring + guidance",
+      "Priority responses",
     ],
   },
   FUNDRAISING: {
     id: "fundraising",
-    name: "Fundraising & Strategy",
+    name: "Pro",
     price: 99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID,
     features: [
-      "Everything in Free",
-      "Unlimited AI coaching sessions",
-      "Weekly strategy check-ins",
-      "Fundraising playbooks",
-      "Investor intro templates",
+      "Everything in Builder",
+      "Full Investor Lens (Pre-seed → Series A)",
+      "Investor Readiness Score",
+      "Pitch deck teardown + scoring",
+      "Executive summaries + 30/60/90 plans",
+      "Deep founder memory + evolving context",
     ],
   },
   VENTURE_STUDIO: {
     id: "venture_studio",
-    name: "Venture Studio",
+    name: "Studio",
     price: 249,
     priceId: process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID,
     features: [
-      "Everything in Fundraising & Strategy",
-      "Virtual Team: Founder Ops Agent",
-      "Virtual Team: Fundraising Agent",
-      "Virtual Team: Growth Agent",
-      "Weekly SMS Accountability Check-ins",
-      "Boardy Investor/Advisor Matching",
-      "Priority AI compute & deeper memory",
+      "Everything in Pro",
+      "Investor targeting + outreach sequencing",
+      "Boardy integration (investor matching)",
+      "Weekly accountability check-ins (SMS)",
+      "AI Operator Team: Founder Ops, Fundraise Ops, Growth Ops, Inbox Ops",
+      "Priority compute + deeper memory",
     ],
   },
 } as const;
@@ -53,4 +69,12 @@ export function getPlanById(id: string): (typeof PLANS)[PlanId] | null {
     (k) => PLANS[k as PlanId].id === id
   ) as PlanId | undefined;
   return key ? PLANS[key] : null;
+}
+
+/** Trial configuration */
+export const TRIAL_DAYS = 14;
+
+/** Whether trial mode is enabled (controlled by env var, defaults to false) */
+export function isTrialEnabled(): boolean {
+  return process.env.STRIPE_TRIALS_ENABLED === "true";
 }

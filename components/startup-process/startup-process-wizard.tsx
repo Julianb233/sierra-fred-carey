@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   ListOrdered,
   AlertTriangle,
+  SkipForward,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StepForm } from "./step-form";
@@ -52,7 +53,8 @@ export function StartupProcessWizard({
     (stepNumber: StepNumber): boolean => {
       const step = process.steps.find((s) => s.stepNumber === stepNumber);
       if (!step) return false;
-      return step.status === "validated";
+      // Allow advancing if validated, skipped, or has data entered (AI-1893)
+      return step.status === "validated" || step.status === "skipped" || step.status === "in_progress";
     },
     [process.steps]
   );
@@ -61,10 +63,10 @@ export function StartupProcessWizard({
     (stepNumber: StepNumber): boolean => {
       // First step is always accessible
       if (stepNumber === 1) return true;
-      // Step is accessible if all previous steps are validated
+      // Step is accessible if all previous steps have been touched (validated, skipped, or in_progress)
       for (let i = 1; i < stepNumber; i++) {
         const prevStep = process.steps.find((s) => s.stepNumber === i);
-        if (!prevStep || prevStep.status !== "validated") {
+        if (!prevStep || prevStep.status === "not_started") {
           return false;
         }
       }
@@ -113,6 +115,25 @@ export function StartupProcessWizard({
 
   const handleDataChange = (data: StepData) => {
     onDataChange(process.currentStep, data);
+  };
+
+  // Skip this step and move forward (AI-1893: reduce friction)
+  const handleSkip = () => {
+    if (process.currentStep < 9) {
+      // Mark step as in_progress so it's "touched" for accessibility
+      // The step will show as incomplete but won't block navigation
+      if (currentStep?.status === "not_started") {
+        onDataChange(process.currentStep, {} as StepData);
+      }
+      onStepChange((process.currentStep + 1) as StepNumber);
+    }
+  };
+
+  // Proceed even when validation says needs_work (AI-1893)
+  const handleProceedAnyway = () => {
+    if (process.currentStep < 9) {
+      onStepChange((process.currentStep + 1) as StepNumber);
+    }
   };
 
   // Check if current step has required fields filled
@@ -221,6 +242,8 @@ export function StartupProcessWizard({
                                 ? "bg-green-500 text-white"
                                 : step.status === "blocked"
                                 ? "bg-amber-500 text-white"
+                                : step.status === "skipped"
+                                ? "bg-gray-400 dark:bg-gray-500 text-white"
                                 : isCurrent
                                 ? "bg-[#ff6a1a] text-white ring-4 ring-[#ff6a1a]/20"
                                 : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
@@ -228,6 +251,8 @@ export function StartupProcessWizard({
                           >
                             {step.status === "validated" ? (
                               <CheckCircle className="h-5 w-5" />
+                            ) : step.status === "skipped" ? (
+                              <SkipForward className="h-4 w-4" />
                             ) : !isAccessible ? (
                               <Lock className="h-4 w-4" />
                             ) : (
@@ -336,7 +361,7 @@ export function StartupProcessWizard({
                         {currentStep?.status === "blocked" && (
                           <Badge className="bg-amber-500 text-white shrink-0">
                             <AlertTriangle className="mr-1 h-3 w-3" />
-                            Needs Work
+                            Suggestions Available
                           </Badge>
                         )}
                       </div>
@@ -379,6 +404,19 @@ export function StartupProcessWizard({
                         </div>
 
                         <div className="flex items-center gap-2">
+                          {/* Skip for now — always available unless validated or last step */}
+                          {currentStep?.status !== "validated" &&
+                            process.currentStep < 9 && (
+                              <Button
+                                variant="ghost"
+                                onClick={handleSkip}
+                                className="text-muted-foreground hover:text-foreground gap-1"
+                              >
+                                <SkipForward className="h-4 w-4" />
+                                Skip for now
+                              </Button>
+                            )}
+
                           {currentStep?.status !== "validated" && (
                             <Button
                               onClick={handleValidate}
@@ -393,6 +431,22 @@ export function StartupProcessWizard({
                               Validate Step
                             </Button>
                           )}
+
+                          {/* Proceed anyway after needs_work validation */}
+                          {currentStep?.validation &&
+                            currentStep.validation.status !== "pass" &&
+                            currentStep.status !== "validated" &&
+                            process.currentStep < 9 && (
+                              <Button
+                                variant="outline"
+                                onClick={handleProceedAnyway}
+                                className="gap-1 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950"
+                              >
+                                Proceed Anyway
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            )}
+
                           {currentStep?.status === "validated" &&
                             process.currentStep < 9 && (
                               <Button

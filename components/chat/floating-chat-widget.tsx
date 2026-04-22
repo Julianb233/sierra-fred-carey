@@ -88,17 +88,20 @@ export function FloatingChatWidget({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="fixed z-50 right-4 lg:right-6 flex flex-col gap-3 items-end"
-          style={{
-            bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
-          }}
+          className={cn(
+            "fixed z-50 right-4 lg:right-6 flex flex-col gap-3 items-end",
+            // On mobile, position above the bottom nav (64px + safe area)
+            "bottom-[calc(5rem+env(safe-area-inset-bottom,0px))]",
+            // On desktop (no bottom nav), position near the bottom edge
+            "md:bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+          )}
         >
-          {/* Voice Chat — prominent, always visible */}
+          {/* Voice Chat — hidden on mobile where bottom nav has its own voice button */}
           <Button
             onClick={() => setVoiceOverlayOpen(true)}
             size="icon"
             className={cn(
-              "h-12 w-12 rounded-full shadow-lg",
+              "hidden md:flex h-12 w-12 rounded-full shadow-lg",
               "bg-white dark:bg-gray-900 text-[#ff6a1a]",
               "border border-[#ff6a1a]/30",
               "hover:bg-[#ff6a1a] hover:text-white",
@@ -110,7 +113,7 @@ export function FloatingChatWidget({
             <Mic className="h-5 w-5" />
           </Button>
 
-          {/* Text Chat — primary large button */}
+          {/* Text Chat — primary large button, visible on all screen sizes */}
           <Button
             onClick={() => setIsOpen(true)}
             size="icon"
@@ -121,7 +124,7 @@ export function FloatingChatWidget({
               "transition-all duration-300",
               "text-white border-0"
             )}
-            aria-label="Chat with Fred"
+            aria-label="Chat with Mentor"
           >
             <MessageSquare className="h-6 w-6" />
           </Button>

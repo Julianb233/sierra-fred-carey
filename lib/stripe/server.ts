@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { isTrialEnabled, TRIAL_DAYS } from "./config";
 
 // Lazy-load Stripe client to avoid build-time errors when env var isn't set
 let stripeClient: Stripe | null = null;
@@ -34,16 +35,28 @@ export const stripe = {
 export async function createCheckoutSession({
   priceId,
   customerId,
+  customerEmail,
   userId,
   successUrl,
   cancelUrl,
 }: {
   priceId: string;
   customerId?: string;
+  customerEmail?: string;
   userId: string;
   successUrl: string;
   cancelUrl: string;
 }) {
+  const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
+    metadata: { userId },
+  };
+
+  // Add 14-day trial when trials are enabled
+  if (isTrialEnabled()) {
+    const trialEnd = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
+    subscriptionData.trial_end = trialEnd;
+  }
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     payment_method_types: ["card"],
@@ -52,14 +65,15 @@ export async function createCheckoutSession({
     cancel_url: cancelUrl,
     client_reference_id: userId,
     metadata: { userId },
-    subscription_data: {
-      metadata: { userId },
-    },
+    subscription_data: subscriptionData,
   };
 
   // Only include customer if we have one (avoids sending undefined to Stripe)
   if (customerId) {
     sessionParams.customer = customerId;
+  } else if (customerEmail) {
+    // Pre-fill email on Stripe Checkout (used by funnel where user may not have an account)
+    sessionParams.customer_email = customerEmail;
   }
 
   const session = await getStripe().checkout.sessions.create(sessionParams);
@@ -105,4 +119,24 @@ export async function cancelSubscription(subscriptionId: string) {
   return getStripe().subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
+}
+
+/**
+ * Retrieve a checkout session with expanded subscription and customer data.
+ * Used for post-checkout reconciliation (e.g., funnel -> main app).
+ */
+export async function getCheckoutSession(sessionId: string) {
+  return getStripe().checkout.sessions.retrieve(sessionId, {
+    expand: ["subscription", "customer"],
+  });
+}
+
+/**
+ * Update subscription metadata (e.g., to link a funnel-pending subscription to a real user).
+ */
+export async function updateSubscriptionMetadata(
+  subscriptionId: string,
+  metadata: Record<string, string>
+) {
+  return getStripe().subscriptions.update(subscriptionId, { metadata });
 }

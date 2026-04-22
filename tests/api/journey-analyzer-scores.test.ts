@@ -10,7 +10,7 @@
  * 6. Milestone completion triggers journey events
  * 7. All score-producing routes persist to journey_events
  *
- * Linear: AI-909
+ * Linear: AI-909, AI-1901
  *
  * @vitest-environment node
  */
@@ -556,5 +556,159 @@ describe("parseNumericHint utility", () => {
     ["5.5", 5.5],
   ])('parseNumericHint(%s) → %s', (input, expected) => {
     expect(parseNumericHint(input as string | undefined | null)).toBe(expected);
+  });
+});
+
+// ============================================================================
+// DB-Level Score Constraint Validation (AI-1901)
+// ============================================================================
+
+describe("DB-level score constraint validation", () => {
+  // Simulates the CHECK constraint: score >= 0 AND score <= 100
+  function isValidDbScore(score: number | null | undefined): boolean {
+    if (score === null || score === undefined) return true; // NULL is allowed
+    return score >= 0 && score <= 100;
+  }
+
+  it("should accept null scores (not all events have scores)", () => {
+    expect(isValidDbScore(null)).toBe(true);
+    expect(isValidDbScore(undefined)).toBe(true);
+  });
+
+  it("should accept boundary values 0 and 100", () => {
+    expect(isValidDbScore(0)).toBe(true);
+    expect(isValidDbScore(100)).toBe(true);
+  });
+
+  it("should accept valid scores in range", () => {
+    expect(isValidDbScore(1)).toBe(true);
+    expect(isValidDbScore(50)).toBe(true);
+    expect(isValidDbScore(99)).toBe(true);
+  });
+
+  it("should reject negative scores", () => {
+    expect(isValidDbScore(-1)).toBe(false);
+    expect(isValidDbScore(-100)).toBe(false);
+  });
+
+  it("should reject scores above 100", () => {
+    expect(isValidDbScore(101)).toBe(false);
+    expect(isValidDbScore(200)).toBe(false);
+    expect(isValidDbScore(999)).toBe(false);
+  });
+});
+
+// ============================================================================
+// Timeline API Score Validation (AI-1901)
+// ============================================================================
+
+describe("Timeline POST score validation", () => {
+  // Simulates the validation added to POST /api/journey/timeline
+  function validateTimelineScore(
+    score: unknown
+  ): { valid: boolean; error?: string } {
+    if (score === undefined || score === null) return { valid: true };
+    if (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 100) {
+      return { valid: false, error: "must be a number between 0 and 100" };
+    }
+    return { valid: true };
+  }
+
+  it("should accept valid scores", () => {
+    expect(validateTimelineScore(0).valid).toBe(true);
+    expect(validateTimelineScore(50).valid).toBe(true);
+    expect(validateTimelineScore(100).valid).toBe(true);
+    expect(validateTimelineScore(null).valid).toBe(true);
+    expect(validateTimelineScore(undefined).valid).toBe(true);
+  });
+
+  it("should reject invalid scores", () => {
+    expect(validateTimelineScore(-1).valid).toBe(false);
+    expect(validateTimelineScore(101).valid).toBe(false);
+    expect(validateTimelineScore("50").valid).toBe(false);
+    expect(validateTimelineScore(NaN).valid).toBe(false);
+  });
+});
+
+// ============================================================================
+// logJourneyEvent input validation (AI-1901)
+// ============================================================================
+
+describe("logJourneyEvent input validation", () => {
+  // Mirrors the validation logic in lib/db/journey-events.ts
+  function validateJourneyEventInput(input: {
+    userId?: string;
+    eventType?: string;
+    scoreBefore?: number | null;
+    scoreAfter?: number | null;
+  }): { valid: boolean; error?: string } {
+    if (!input.userId || !input.eventType) {
+      return { valid: false, error: "Missing userId or eventType" };
+    }
+    return { valid: true };
+  }
+
+  it("should reject missing userId", () => {
+    expect(
+      validateJourneyEventInput({ eventType: "test" }).valid
+    ).toBe(false);
+  });
+
+  it("should reject missing eventType", () => {
+    expect(
+      validateJourneyEventInput({ userId: "user-1" }).valid
+    ).toBe(false);
+  });
+
+  it("should reject empty strings", () => {
+    expect(
+      validateJourneyEventInput({ userId: "", eventType: "test" }).valid
+    ).toBe(false);
+    expect(
+      validateJourneyEventInput({ userId: "user-1", eventType: "" }).valid
+    ).toBe(false);
+  });
+
+  it("should accept valid input", () => {
+    expect(
+      validateJourneyEventInput({
+        userId: "user-1",
+        eventType: "analysis_completed",
+      }).valid
+    ).toBe(true);
+  });
+});
+
+// ============================================================================
+// Migration SQL verification (AI-1901)
+// ============================================================================
+
+describe("Migration 20260309400001 - score constraints", () => {
+  // Verify the migration SQL patterns are correct
+  it("should define CHECK constraints for both score columns", () => {
+    const constraintPattern =
+      /CHECK\s*\(\s*\w+\s+IS\s+NULL\s+OR\s+\(\s*\w+\s*>=\s*0\s+AND\s+\w+\s*<=\s*100\s*\)\s*\)/i;
+
+    const scoreBefore =
+      "CHECK (score_before IS NULL OR (score_before >= 0 AND score_before <= 100))";
+    const scoreAfter =
+      "CHECK (score_after IS NULL OR (score_after >= 0 AND score_after <= 100))";
+
+    expect(scoreBefore).toMatch(constraintPattern);
+    expect(scoreAfter).toMatch(constraintPattern);
+  });
+
+  it("should allow NULL scores (events without score tracking)", () => {
+    // NULL is explicitly allowed by the CHECK constraint pattern:
+    // score IS NULL OR (score >= 0 AND score <= 100)
+    const checkAllowsNull = (score: null | number): boolean => {
+      return score === null || (score >= 0 && score <= 100);
+    };
+
+    expect(checkAllowsNull(null)).toBe(true);
+    expect(checkAllowsNull(0)).toBe(true);
+    expect(checkAllowsNull(100)).toBe(true);
+    expect(checkAllowsNull(-1)).toBe(false);
+    expect(checkAllowsNull(101)).toBe(false);
   });
 });

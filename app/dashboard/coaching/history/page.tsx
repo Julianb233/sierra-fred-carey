@@ -186,7 +186,7 @@ function EmptyState() {
         >
           coaching page
         </a>{" "}
-        to begin a live video coaching session with FRED AI.
+        to begin a live video coaching session with Mentor.
       </p>
     </motion.div>
   );

@@ -21,6 +21,69 @@ export function computeJourneyPercentage(
 }
 
 /**
+ * Get detailed progress from the journey_steps table.
+ * Returns per-stage step counts from the granular 120-step journey_steps table
+ * and completed counts from oases_progress. Used for the progress percentage bar.
+ * Each stage contributes 20% to the total (equal weight).
+ */
+export async function getDetailedProgress(
+  userId: string
+): Promise<{ journeyPercentage: number; perStage: Record<string, { total: number; completed: number }> }> {
+  const supabase = await createClient()
+
+  // Get per-stage step counts from journey_steps
+  const { data: stepCounts, error: stepError } = await supabase
+    .from("journey_steps")
+    .select("stage")
+    .eq("active", true)
+
+  if (stepError || !stepCounts) {
+    // Fallback: return 0
+    return { journeyPercentage: 0, perStage: {} }
+  }
+
+  // Count steps per stage
+  const stageTotals: Record<string, number> = {}
+  for (const row of stepCounts) {
+    stageTotals[row.stage] = (stageTotals[row.stage] || 0) + 1
+  }
+
+  // Get completed step counts from oases_progress
+  const { data: completedRows, error: completedError } = await supabase
+    .from("oases_progress")
+    .select("stage, step_id")
+    .eq("user_id", userId)
+
+  if (completedError) {
+    return { journeyPercentage: 0, perStage: {} }
+  }
+
+  const stageCompleted: Record<string, number> = {}
+  for (const row of (completedRows ?? [])) {
+    stageCompleted[row.stage] = (stageCompleted[row.stage] || 0) + 1
+  }
+
+  // Compute per-stage data and weighted percentage (each stage = 20%)
+  const perStage: Record<string, { total: number; completed: number }> = {}
+  let weightedSum = 0
+  const stageNames = STAGE_ORDER
+
+  for (const stage of stageNames) {
+    const total = stageTotals[stage] || 0
+    const completed = Math.min(stageCompleted[stage] || 0, total)
+    perStage[stage] = { total, completed }
+    if (total > 0) {
+      weightedSum += (completed / total) * 20
+    }
+  }
+
+  return {
+    journeyPercentage: Math.round(weightedSum),
+    perStage,
+  }
+}
+
+/**
  * Fetch the user's full Oases progress including current stage,
  * per-stage step completion, and overall journey percentage.
  */

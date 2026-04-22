@@ -8,7 +8,7 @@ Sahara is an AI-powered founder operating system that transforms how startups ar
 
 Founders can make better decisions faster using FRED's structured cognitive frameworks — honest analysis, scored recommendations, and clear next actions.
 
-## Current Milestone: v8.0 Go-Live: Guided Venture Journey
+## Current Milestone: v8.0 Go-Live: Guided Venture Journey (SHIPPED 2026-03-09)
 
 **Goal:** Transform Sahara from a chatbot tool into a structured guided venture journey with "Oases" milestone visualization, mentor-first UX, redesigned onboarding, and event-ready polish for the Palo Alto launch to 200 founders. Derived from Fred Cary strategy sessions (March 4 & 7, 2026).
 

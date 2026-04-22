@@ -12,6 +12,7 @@ import {
   Check,
   Lock,
   MessageSquare,
+  Map,
 } from "lucide-react"
 import { useOasesProgress } from "@/hooks/use-oases-progress"
 import { STAGE_CONFIG } from "@/lib/oases/stage-config"
@@ -103,12 +104,26 @@ export function OasesVisualizer() {
   return (
     <>
       <div className="w-full rounded-xl border border-[#ff6a1a]/20 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Your Venture Journey
-          </h2>
-          <ProgressRing percentage={progress.journeyPercentage} />
+        {/* Header with prominent progress percentage */}
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Your Venture Journey
+            </h2>
+            <p className="text-2xl font-bold text-[#ff6a1a] mt-1">
+              {progress.journeyPercentage}% Complete
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/journey"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#ff6a1a] hover:bg-[#ff6a1a]/10 rounded-lg transition-colors"
+            >
+              <Map className="h-4 w-4" />
+              Open Roadmap
+            </Link>
+            <ProgressRing percentage={progress.journeyPercentage} />
+          </div>
         </div>
 
         {/* Stage timeline */}
@@ -204,13 +219,13 @@ export function OasesVisualizer() {
           </div>
         </div>
 
-        {/* Chat with Fred CTA */}
+        {/* Chat with Mentor CTA -- full-width prominent button */}
         <Link
           href="/chat"
-          className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-medium text-sm transition-colors"
+          className="flex items-center justify-center gap-2 mt-4 w-full px-4 py-3 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-semibold text-sm transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          Chat with Fred
+          Chat with Mentor
         </Link>
       </div>
 

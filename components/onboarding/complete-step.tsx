@@ -51,7 +51,21 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
     frame();
   }, []);
 
+  // Auto-redirect to Reality Lens after a brief celebration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push("/dashboard/reality-lens/quick?first=true");
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [router]);
+
   const quickLinks = [
+    {
+      icon: Sparkles,
+      title: "Quick Reality Check",
+      description: "2-minute assessment to find your starting point",
+      href: "/dashboard/reality-lens/quick?first=true",
+    },
     {
       icon: MessageSquare,
       title: "Chat with FRED",
@@ -63,12 +77,6 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
       title: "Decision History",
       description: "Track your conversations",
       href: "/dashboard/history",
-    },
-    {
-      icon: Sparkles,
-      title: "Reality Lens",
-      description: "Assess your startup idea",
-      href: "/dashboard",
     },
   ];
 
@@ -108,12 +116,12 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
         {startupName ? (
           <>
             <span className="font-medium text-[#ff6a1a]">{startupName}</span> is
-            now set up and ready to go.
+            now set up.
           </>
         ) : (
-          "Your account is set up and ready to go."
+          "Your account is set up."
         )}
-        {" "}Let&apos;s build something legendary.
+        {" "}Next up: a quick 2-minute reality check to find your starting point.
       </motion.p>
 
       {/* Quick links */}
@@ -154,10 +162,10 @@ export function CompleteStep({ startupName }: CompleteStepProps) {
       >
         <Button
           size="lg"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/reality-lens/quick?first=true")}
           className="w-full sm:w-auto bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
         >
-          Go to Dashboard
+          Start Reality Check
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </motion.div>

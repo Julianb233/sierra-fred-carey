@@ -4,6 +4,11 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Force React to load its development CJS build which includes React.act()
+    // Without this, Vite's production optimization strips act() and breaks @testing-library/react
+    'process.env.NODE_ENV': '"test"',
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -15,7 +20,10 @@ export default defineConfig({
     },
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', '.claude'],
+    // NOTE: '**/node_modules/**' (not just 'node_modules') to also exclude
+    // funnel/node_modules/zod/**/*.test.ts — the Vite sub-project under
+    // funnel/ ships zod's own test files that would otherwise run here.
+    exclude: ['**/node_modules/**', '.next', 'dist', '.claude', 'funnel/**'],
     pool: 'threads',
     fileParallelism: false,
     maxWorkers: 2,

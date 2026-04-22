@@ -289,23 +289,8 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Floating buttons — Voice (prominent) + Call */}
-      <div className="fixed bottom-6 right-4 md:right-6 z-40 flex flex-col gap-3 items-end">
-        {/* Voice Chat — large, prominent, orange */}
-        <Button
-          onClick={handleVoiceClick}
-          className={cn(
-            "h-14 w-14 rounded-full",
-            "bg-[#ff6a1a] hover:bg-[#ea580c] text-white",
-            "shadow-lg shadow-[#ff6a1a]/30 hover:shadow-xl hover:shadow-[#ff6a1a]/40",
-            "transition-all duration-300"
-          )}
-          aria-label="Voice chat with Fred"
-        >
-          <Mic className="h-6 w-6" />
-        </Button>
-
-        {/* Call Fred — smaller, secondary */}
+      {/* Floating Call button — only on desktop (mobile has header buttons) */}
+      <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col gap-3 items-end">
         <Button
           onClick={handleCallClick}
           className={cn(

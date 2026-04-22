@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; color: #1a1a1a; }
+    .container { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #ff6a1a 100%); padding: 32px; color: #ffffff; }
+    .header h1 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+    .header .date { font-size: 14px; color: #ffd4b8; }
+    .header .project { font-size: 14px; color: #ffe0c8; margin-top: 4px; }
+    .body { padding: 32px; }
+    .section { margin-bottom: 28px; }
+    .section h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid #ff6a1a; }
+    .change-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+    .change-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .dot-added { background: #22c55e; }
+    .dot-changed { background: #3b82f6; }
+    .dot-fixed { background: #f59e0b; }
+    .dot-removed { background: #ef4444; }
+    .change-text { font-size: 14px; line-height: 1.5; }
+    .highlight { background: #fff7ed; border-left: 3px solid #ff6a1a; padding: 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .highlight strong { color: #ff6a1a; }
+    .recording-link { display: inline-block; background: #ff6a1a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; margin: 8px 0; }
+    .recording-link:hover { background: #e55d15; }
+    .footer { padding: 24px 32px; background: #f8f8fc; border-top: 1px solid #e8e8f0; font-size: 12px; color: #888; text-align: center; }
+    .stats { display: flex; gap: 16px; margin: 16px 0; }
+    .stat { flex: 1; text-align: center; padding: 12px; background: #f8f8fc; border-radius: 8px; }
+    .stat-number { font-size: 24px; font-weight: 700; color: #ff6a1a; }
+    .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>v8.0 Go-Live: Guided Venture Journey</h1>
+      <div class="project">Sahara &mdash; joinsahara.com</div>
+      <div class="date">March 9, 2026</div>
+    </div>
+    <div class="body">
+      <div class="highlight">
+        <strong>Milestone Complete.</strong> Sahara has been transformed from a chatbot tool into a structured guided venture journey. All 14 phases shipped and verified live. Ready for the Palo Alto founder launch.
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number">14</div>
+          <div class="stat-label">Phases Shipped</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Oases Stages</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">~50</div>
+          <div class="stat-label">Commits</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Bugs Found</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>What's New</h2>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Guided Onboarding</strong> &mdash; New welcome screen with "This is a journey, not a transaction" framing. 5-question structured intake (idea, stage, challenge, goals, timeline) as free-text fields.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Oases Journey Visualization</strong> &mdash; 5-stage desert roadmap (Clarity &rarr; Validation &rarr; Build &rarr; Launch &rarr; Grow) with real-time progress tracking and clickable stage details.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Active Founder Memory</strong> &mdash; FRED now tracks 14 structured fields per founder. Every response references your specific context &mdash; no generic advice ever.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Stage-Gate Enforcement</strong> &mdash; FRED compartmentalizes conversations by Oases stage. Users work through the venture process in order, not random Q&amp;A.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Reality Lens Gate</strong> &mdash; Every new founder's first interaction is a reality check that sets their initial stage and surfaces gaps ("spook them").</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Chat/Voice Continuity</strong> &mdash; Text and voice share full context. Fred Zaharix voice ID wired. 30s streaming timeout prevents chat freezing.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Founder Mindset Monitor</strong> &mdash; Sentiment detection with proactive stress intervention. Admin dashboard for pattern analysis.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Daily Mentor Guidance</strong> &mdash; "Today, accomplish these 3 things" dashboard widget with AI-generated tasks. Proactive SMS via Twilio.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Journey-Gated Fund Matching</strong> &mdash; Boardy unlocks at 100% journey completion with celebration UX and AI-personalized intro prep.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Pitch Deck AI Scoring</strong> &mdash; Upload PDF, get 7-category VC-perspective scoring with "What VCs want to see" recommendations.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-added"></div>
+          <div class="change-text"><strong>Event Launch Kit</strong> &mdash; QR code landing at /event/palo-alto-2026. Scan &rarr; signup &rarr; auto-login &rarr; onboarding in under 5 minutes. 14-day free trial.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-changed"></div>
+          <div class="change-text"><strong>UI Relabeling</strong> &mdash; "Fred AI" renamed to "Mentor", "Journey" renamed to "Progress". Prominent orange "Chat with Fred" CTA throughout.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-changed"></div>
+          <div class="change-text"><strong>Mobile Navigation</strong> &mdash; Simplified to 4+voice sections: Home, Mentor, Voice, Progress, Profile.</div>
+        </div>
+
+        <div class="change-item">
+          <div class="change-dot dot-changed"></div>
+          <div class="change-text"><strong>FRED Conciseness</strong> &mdash; Default responses are 2-3 sentences max. Action items prescribe 1-week micro-steps, not multi-month asks.</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Screen Recording</h2>
+        <p style="font-size:14px;color:#666;margin-bottom:12px;">Watch a live walkthrough of the deployed site:</p>
+        <a href="https://www.browserbase.com/sessions/3da7f789-ea48-42b9-810c-c3e1fcf0c553" class="recording-link">Watch Recording &rarr;</a>
+      </div>
+    </div>
+    <div class="footer">
+      Sent by AI Acrobatics &middot; Sahara v8.0 Go-Live Update
+    </div>
+  </div>
+</body>
+</html>

@@ -18,8 +18,11 @@ import { CATEGORY_LABELS, STAGE_BENCHMARKS, IRS_CATEGORIES, getReadinessLevel, c
 export type { SupplementalPromptPatch };
 export { FRED_CORE_PROMPT, buildPromptWithSupplements };
 
-// Phase 80: Re-export proactive guidance block for convenience
+// Phase 80 (v3.0): Re-export proactive guidance block for backward compat
 export { buildProactiveGuidanceBlock } from "@/lib/ai/stage-gate/redirect-templates";
+
+// Phase 80 v8.0: Re-export unified stage-gate prompt builders
+export { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 
 // ============================================================================
 // FRED CARY SYSTEM PROMPT — Backward-compatible alias
@@ -161,9 +164,9 @@ export function getFredGreeting(startupContext?: {
   mainChallenge?: string;
 }): string {
   const greetings = [
-    `Hey, I'm Fred Cary. I've built ${FRED_COMPANIES.summaryStats.companiesFounded} companies over ${FRED_BIO.yearsExperience}+ years and mentored 10,000+ founders. What are you building, who is it for, and what are you trying to accomplish right now?`,
+    `Hey, I'm Fred Cary. I've advised hundreds of companies over ${FRED_BIO.yearsExperience}+ years, taken 3 public, and mentored hundreds of founders. What are you building, who is it for, and what are you trying to accomplish right now?`,
     `Welcome. I'm Fred — ${FRED_BIO.yearsExperience}+ years of building companies and mentoring founders. Let's get into it. What are you building, and what's the real bottleneck right now?`,
-    `Hey! Fred Cary here. I've seen what works and what doesn't across ${FRED_COMPANIES.summaryStats.companiesFounded} companies and ${FRED_BIO.yearsExperience}+ years. If we fixed one thing in the next 30 days, what would matter most to your business?`,
+    `Hey! Fred Cary here. I've seen what works and what doesn't across hundreds of companies and ${FRED_BIO.yearsExperience}+ years. If we fixed one thing in the next 30 days, what would matter most to your business?`,
   ];
   const base = greetings[Math.floor(Math.random() * greetings.length)];
 

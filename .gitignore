@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/get-shit-done
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -35,6 +36,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase migration data (exports, service account keys)
+scripts/migrations/firebase-to-supabase/_data/
+**/firebase-service-account*.json
+**/firebase-users*.json
+**/firestore-export/
 
 # Environment files with secrets
 .env
@@ -74,3 +81,4 @@ public/sw.js.map
 public/swe-worker-*.js
 .next.bak/
 .claude/worktrees/
+.claude/

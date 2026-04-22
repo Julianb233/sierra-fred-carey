@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { trackEvent } from "@/lib/analytics"
 import { EVENT_ANALYTICS } from "@/lib/event/analytics"
+import { createClient } from "@/lib/supabase/client"
 
 interface EventSignupFormProps {
   eventSlug: string
@@ -32,7 +33,10 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
   const handleInputFocus = () => {
     if (!hasTrackedStart.current) {
       hasTrackedStart.current = true
-      trackEvent(EVENT_ANALYTICS.SIGNUP_START, { eventSlug })
+      trackEvent(EVENT_ANALYTICS.SIGNUP_START, {
+        event_name: eventSlug,
+        eventSlug,
+      })
     }
   }
 
@@ -76,7 +80,16 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
         throw new Error(data.error || "Registration failed")
       }
 
-      onSuccess(data.redirectTo || "/onboarding")
+      // Hydrate client-side session so /welcome auth gate sees an authenticated user
+      if (data.access_token && data.refresh_token) {
+        const supabase = createClient()
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        })
+      }
+
+      onSuccess(data.redirectTo || "/welcome")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Registration failed"
       setError(msg)
@@ -158,7 +171,7 @@ export function EventSignupForm({ eventSlug, onSuccess }: EventSignupFormProps) 
         disabled={submitting}
         className="w-full h-12 text-base font-semibold bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
       >
-        {submitting ? "Creating account..." : "Get Started Free"}
+        {submitting ? "Creating account..." : "Start Your Free Trial"}
       </Button>
 
       <p className="text-xs text-gray-400 text-center">

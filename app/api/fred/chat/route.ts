@@ -33,7 +33,7 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { extractAndStoreNextSteps, getNextSteps } from "@/lib/next-steps/next-steps-service";
 import { buildFounderContextWithFacts } from "@/lib/fred/context-builder";
 import { extractMemoryUpdates, persistMemoryUpdates } from "@/lib/fred/active-memory";
-import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered } from "@/lib/db/conversation-state";
+import { getOrCreateConversationState, getRealityLensGate, checkGateStatus, incrementGateRedirect, getActiveMode, updateActiveMode, markIntroductionDelivered, updateStageRedirectCounts } from "@/lib/db/conversation-state";
 import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
@@ -50,6 +50,7 @@ import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "
 import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
 import { logSentimentSignal } from "@/lib/db/sentiment-log";
 import { validateStageAccess } from "@/lib/oases/stage-validator";
+import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
 
@@ -58,6 +59,7 @@ export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Verc
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "builder",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 };
@@ -728,25 +730,24 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
     }
 
     // Assemble full system prompt context
-    // Order: founderContext + stepGuidance + accountability + rlStatus + rlGate + framework + modeTransition + irs + deckProtocol + deckReview + pageContext
-    // Phase 80: Stage-gate pre-validation
-    const stageValidation = validateStageAccess(message, currentOasesStage)
-    let stageRedirectBlock = ""
-    if (!stageValidation.allowed && stageValidation.redirectMessage) {
-      stageRedirectBlock = `## STAGE-GATE REDIRECT (ACTIVE)
+    // Phase 80: Unified stage-gate enforcement with redirect counting
+    const stageRedirectCounts = (persistedModeResult?.modeContext as unknown as Record<string, unknown> | null)?.stageRedirectCounts as Record<string, number> ?? {}
+    const stageValidation = validateStageAccess(message, currentOasesStage, stageRedirectCounts)
+    const stageRedirectBlock = buildStageRedirectBlock(stageValidation)
+    const stageAwareBlock = buildStageAwarePromptBlock(currentOasesStage)
 
-The founder just asked about a topic that belongs to the **${stageValidation.detectedStage}** stage, but they are currently in **${stageValidation.currentStage}** stage.
-
-**Your response MUST redirect them.** Use this language (adapt naturally to context):
-"${stageValidation.redirectMessage}"
-
-${stageValidation.currentStageGuidance ? `Then guide them toward: ${stageValidation.currentStageGuidance}` : ""}
-
-Do NOT answer their original question about ${stageValidation.detectedStage}-stage topics. Redirect warmly and offer to help with current-stage work instead.`
+    // Phase 80: Persist redirect counts when a redirect occurs (fire-and-forget)
+    if (!stageValidation.allowed && stageValidation.redirectKey) {
+      const updatedCounts = { ...stageRedirectCounts }
+      updatedCounts[stageValidation.redirectKey] = (updatedCounts[stageValidation.redirectKey] || 0) + 1
+      updateStageRedirectCounts(userId, updatedCounts).catch(err =>
+        console.warn("[FRED Chat] Failed to persist stage redirect counts:", err)
+      )
     }
 
     let fullContext = [
       stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
+      stageAwareBlock,     // Phase 80: Always-on stage awareness + proactive guidance
       founderContext,
       stepGuidanceBlock,
       accountabilityBlock, // Outstanding action items from past conversations
@@ -766,12 +767,13 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
     const contextTokens = estimateTokens(fullContext);
     if (contextTokens > 100_000) {
       // Truncation priority (keep most important first):
-      // 0. stageRedirectBlock, 1. founderContext, 2. frameworkBlock, 3. stepGuidanceBlock,
-      // 4. rlStatusBlock, 5. rlGateBlock, 6. modeTransitionBlock,
-      // 7. irsBlock, 8. deckProtocolBlock, 9. deckReviewReadyBlock
+      // 0. stageRedirectBlock, 1. stageAwareBlock, 2. founderContext, 3. frameworkBlock,
+      // 4. stepGuidanceBlock, 5. rlStatusBlock, 6. rlGateBlock, 7. modeTransitionBlock,
+      // 8. irsBlock, 9. deckProtocolBlock, 10. deckReviewReadyBlock
       // Drop least critical blocks first (reverse priority)
       const blocksInPriority = [
         { name: "stageRedirectBlock", value: stageRedirectBlock },
+        { name: "stageAwareBlock", value: stageAwareBlock },
         { name: "founderContext", value: founderContext },
         { name: "frameworkBlock", value: frameworkBlock },
         { name: "stepGuidanceBlock", value: stepGuidanceBlock },
@@ -923,23 +925,22 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
         }
       })();
 
-      // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
-      if (shouldPersistMemory) {
-        ;(async () => {
-          try {
-            const updates = await extractMemoryUpdates(
-              message,
-              result.response.content
-            )
-            if (updates.length > 0) {
-              await persistMemoryUpdates(userId, updates, hasPersistentMemory)
-              console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
-            }
-          } catch (error) {
-            console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+      // Phase 79: Fire-and-forget LLM-based memory extraction (all tiers)
+      // persistMemoryUpdates handles tier gating internally: profile columns for all, semantic facts for Pro+
+      void (async () => {
+        try {
+          const updates = await extractMemoryUpdates(
+            message,
+            result.response.content
+          )
+          if (updates.length > 0) {
+            await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+            console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
           }
-        })()
-      }
+        } catch (error) {
+          console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+        }
+      })()
 
       // Phase 32-02: Fire-and-forget retention enforcement
       if (shouldPersistMemory) {
@@ -1134,8 +1135,19 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
           if (update.isComplete) {
             const latencyMs = Date.now() - startTime;
 
+            const decisionContent = update.context.decision?.content;
+            if (!decisionContent) {
+              console.error("[FRED Chat] Decision content is empty/null — LLM likely failed silently.", {
+                traceId,
+                userId,
+                finalState: update.state,
+                hasDecision: !!update.context.decision,
+                action: update.context.decision?.action,
+                error: update.context.error,
+              });
+            }
             const response = {
-              content: update.context.decision?.content || "I wasn't able to fully process that. Could you try rephrasing or sending your message again?",
+              content: decisionContent || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
               action: update.context.decision?.action || "defer",
               confidence: update.context.decision?.confidence || 0,
               requiresApproval: update.context.decision?.requiresHumanApproval || false,
@@ -1300,23 +1312,22 @@ Do NOT answer their original question about ${stageValidation.detectedStage}-sta
               }
             })();
 
-            // Phase 79: Fire-and-forget LLM-based memory extraction (Pro+ only)
-            if (shouldPersistMemory) {
-              ;(async () => {
-                try {
-                  const updates = await extractMemoryUpdates(
-                    message,
-                    response.content
-                  )
-                  if (updates.length > 0) {
-                    await persistMemoryUpdates(userId, updates, hasPersistentMemory)
-                    console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
-                  }
-                } catch (error) {
-                  console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+            // Phase 79: Fire-and-forget LLM-based memory extraction (all tiers)
+            // persistMemoryUpdates handles tier gating internally: profile columns for all, semantic facts for Pro+
+            void (async () => {
+              try {
+                const updates = await extractMemoryUpdates(
+                  message,
+                  response.content
+                )
+                if (updates.length > 0) {
+                  await persistMemoryUpdates(userId, updates, hasPersistentMemory)
+                  console.log(`[Active Memory] Extracted and stored ${updates.length} facts for user ${userId.slice(0, 8)}...`)
                 }
-              })()
-            }
+              } catch (error) {
+                console.warn('[Active Memory] Extraction pipeline failed (non-blocking):', error)
+              }
+            })()
 
             // Phase 32-02: Fire-and-forget retention enforcement
             if (shouldPersistMemory) {
