@@ -37,6 +37,35 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
 
+  // ---------------------------------------------------------------------
+  // u.joinsahara.com deprecation (2026-04-22). The legacy Firebase-backed
+  // funnel subdomain is consolidated onto the permanent platform. Any
+  // request arriving with the legacy host header is 308-redirected to the
+  // equivalent path on www.joinsahara.com, with a ?from=funnel-migration
+  // flag so the landing page can show a one-time "welcome back" banner
+  // (see components/welcome-back-banner.tsx).
+  // ---------------------------------------------------------------------
+  const host = (request.headers.get("host") || "").toLowerCase();
+  if (host === "u.joinsahara.com" || host.startsWith("u.joinsahara.com:")) {
+    const target = new URL(pathname, "https://www.joinsahara.com");
+    // Preserve the original query string.
+    request.nextUrl.searchParams.forEach((v, k) => target.searchParams.set(k, v));
+
+    // Path-level remapping for routes that changed names on the new app.
+    if (pathname === "/signup") {
+      target.pathname = "/get-started";
+    } else if (pathname === "/login") {
+      target.searchParams.set("migrated", "1");
+    }
+
+    // Always stamp the migration flag so the banner renders once.
+    if (!target.searchParams.has("from")) {
+      target.searchParams.set("from", "funnel-migration");
+    }
+
+    return NextResponse.redirect(target, 308);
+  }
+
   // Phase 25-02: Correlation ID for structured logging
   const requestId =
     request.headers.get("x-request-id") || crypto.randomUUID();

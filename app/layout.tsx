@@ -7,6 +7,8 @@ import NavBar from "@/components/navbar";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
+import { Suspense } from "react";
+import { WelcomeBackBanner } from "@/components/welcome-back-banner";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -87,6 +89,9 @@ export default async function RootLayout({
         />
         <Providers>
           <AnalyticsProvider>
+            <Suspense fallback={null}>
+              <WelcomeBackBanner />
+            </Suspense>
             <NavBar />
             {children}
           </AnalyticsProvider>
