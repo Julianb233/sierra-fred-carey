@@ -97,7 +97,7 @@ export function FeatureLock({
             </motion.div>
 
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Continue Your Journey
+              Continue Your Progress
             </h3>
 
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -115,7 +115,7 @@ export function FeatureLock({
               href="/dashboard"
               className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#ff6a1a] hover:bg-[#ea580c] text-white rounded-lg font-medium text-sm transition-colors"
             >
-              View Your Journey
+              View Your Progress
             </Link>
           </div>
         </motion.div>

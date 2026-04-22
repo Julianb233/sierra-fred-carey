@@ -13,6 +13,7 @@ export default function WelcomePage() {
   const router = useRouter()
   const [step, setStep] = useState<IntakeStep>("welcome")
   const [authChecked, setAuthChecked] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // Auth gate: redirect to /get-started if not logged in
   // Also check if user has already been welcomed (show-once logic)
@@ -49,14 +50,28 @@ export default function WelcomePage() {
   }
 
   const handleIntakeComplete = () => {
-    // After FRED processes answers, redirect to Reality Lens
-    router.push("/dashboard/reality-lens?first=true")
+    // Show transition message, then redirect to Reality Lens
+    setRedirecting(true)
+    setTimeout(() => {
+      router.push("/dashboard/reality-lens?first=true")
+    }, 800)
   }
 
   if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-amber-50/40 to-white dark:from-gray-950 dark:to-gray-900">
         <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a]" />
+      </div>
+    )
+  }
+
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-amber-50/40 via-orange-50/20 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff6a1a] mb-4" />
+        <p className="text-lg text-gray-700 dark:text-gray-300 font-medium">
+          Preparing your first reality check...
+        </p>
       </div>
     )
   }

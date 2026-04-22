@@ -155,6 +155,17 @@ function DimensionCard({ dimension }: { dimension: DeckDimension }) {
           {dimension.explanation}
         </p>
 
+        {dimension.vcWantToSee && (
+          <div className="mt-2 mb-2 p-2 rounded bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50">
+            <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">
+              What VCs want to see
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              {dimension.vcWantToSee}
+            </p>
+          </div>
+        )}
+
         {dimension.suggestions.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}

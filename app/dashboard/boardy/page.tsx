@@ -45,7 +45,6 @@ export default function BoardyPage() {
 
   // State
   const [matches, setMatches] = useState<BoardyMatch[]>([]);
-  const [deepLink, setDeepLink] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +93,6 @@ export default function BoardyPage() {
           })
         );
         setMatches(mappedMatches);
-        if (data.deepLink) {
-          setDeepLink(data.deepLink);
-        }
       }
     } catch (err) {
       console.error("[BoardyPage] Error fetching matches:", err);
@@ -132,9 +128,6 @@ export default function BoardyPage() {
           })
         );
         setMatches(mappedMatches);
-        if (data.deepLink) {
-          setDeepLink(data.deepLink);
-        }
       }
     } catch (err) {
       console.error("[BoardyPage] Refresh error:", err);
@@ -241,7 +234,7 @@ export default function BoardyPage() {
             </Badge>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            AI-powered connections to the right people
+            Your AI-matched investors and advisors
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -287,7 +280,7 @@ export default function BoardyPage() {
           )}
 
           {/* Boardy Connect Card */}
-          {deepLink && <BoardyConnect deepLink={deepLink} />}
+          <BoardyConnect />
 
           {/* Error Message */}
           {error && (

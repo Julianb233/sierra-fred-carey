@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Sparkles, Brain, Clock, Users, ArrowRight, Check as CheckIcon } from "lucide-react";
 import NightModeParticles from "@/components/effects/NightModeParticles";
 import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
+import HeroChatPreview from "@/components/hero-chat-preview";
 
 export default function Hero() {
   return (
@@ -75,11 +76,11 @@ export default function Hero() {
       <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-12">
         <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
 
-          {/* Opening Badge */}
+          {/* Opening Badge - visible immediately, subtle slide-up only */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.4 }}
             className="mb-8"
           >
             <motion.div
@@ -96,11 +97,11 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Main headline */}
+          {/* Main headline - visible immediately, subtle slide-up only */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ y: 15 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-6"
           >
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
@@ -119,21 +120,21 @@ export default function Hero() {
             </h1>
           </motion.div>
 
-          {/* Subheadline */}
+          {/* Subheadline - visible immediately */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
             className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mb-10 leading-relaxed"
           >
             Imagine a mentor who truly understands you, a co-founder who works 24/7, and insights that give you an unfair advantage—all delivered effortlessly, every day.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - visible immediately */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 mb-12 items-center justify-center"
           >
             {/* Expandable Hero Button */}
@@ -142,7 +143,7 @@ export default function Hero() {
               expandedText="Join the Waitlist"
               href="/waitlist"
             />
-            
+
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
@@ -166,39 +167,43 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Trust indicators */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-16"
-          >
+          {/* Trust indicators - visible immediately, no fade-in */}
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
-              { icon: Users, text: "10,000+ Founders Coached" },
-              { icon: CheckIcon, text: "$100M+ Raised" },
+              { icon: Users, text: "Hundreds of Founders Coached" },
+              { icon: CheckIcon, text: "$3B+ Raised" },
               { icon: Sparkles, text: "By Fred Cary" },
             ].map((item, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + i * 0.1 }}
                 className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
               >
                 <item.icon className="h-5 w-5 text-[#ff6a1a] flex-shrink-0" />
                 <span className="font-medium">{item.text}</span>
-              </motion.div>
+              </div>
             ))}
+          </div>
+
+          {/* Interactive Chat Preview - Talk to Fred above the fold */}
+          <motion.div
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="w-full"
+          >
+            <HeroChatPreview />
           </motion.div>
+
         </div>
       </section>
 
-      {/* Meet Fred Cary Card */}
+      {/* Meet Fred Cary Card - animate on scroll into view, not on page load */}
       <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1 }}
+          initial={{ y: 30 }}
+          whileInView={{ y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className="relative max-w-6xl mx-auto"
         >
           {/* Glow effect */}
@@ -211,8 +216,9 @@ export default function Hero() {
               {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
                 className="inline-flex items-center gap-2 bg-[#ff6a1a]/10 dark:bg-[#ff6a1a]/20 px-4 py-2 rounded-full border border-[#ff6a1a]/30 mb-6"
               >
                 <span className="relative flex h-2 w-2">
@@ -227,8 +233,9 @@ export default function Hero() {
                 <div>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.25 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4 }}
                     className="mb-4"
                   >
                     <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-[#ff6a1a]/30 ring-4 ring-[#ff6a1a]/10 shadow-lg shadow-[#ff6a1a]/20">
@@ -244,8 +251,9 @@ export default function Hero() {
 
                   <motion.h2
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.3 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
                     className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4"
                   >
                     Meet Fred Cary
@@ -253,8 +261,9 @@ export default function Hero() {
 
                   <motion.p
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.4 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
                     className="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed"
                   >
                     Our live, interactive agent powered by decades of real entrepreneurial experience. Ask him anything—business, mindset, funding, or even your next big move.
@@ -262,8 +271,9 @@ export default function Hero() {
 
                   <motion.p
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
                     className="text-xl font-semibold text-[#ff6a1a] mb-8"
                   >
                     He&apos;s not just AI. He&apos;s you—five years ahead.
@@ -271,8 +281,9 @@ export default function Hero() {
 
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.6 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.4 }}
                   >
                     <motion.div
                       whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -15px rgba(255, 106, 26, 0.4)" }}
@@ -303,8 +314,9 @@ export default function Hero() {
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.7 + i * 0.1 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: 0.1 * i }}
                       className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-[#ff6a1a]/50 transition-colors"
                     >
                       <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-4`}>
@@ -457,7 +469,7 @@ export default function Hero() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.5 }}
+        transition={{ delay: 1 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 hidden lg:flex"
       >
         <motion.div

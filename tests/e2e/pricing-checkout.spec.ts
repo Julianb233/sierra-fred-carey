@@ -11,15 +11,15 @@ test.describe("Pricing & Checkout Flow", () => {
     page,
   }) => {
     // Free tier
-    await expect(page.getByText("Founder Decision OS")).toBeVisible();
+    await expect(page.getByText("Free", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Free Forever")).toBeVisible();
 
     // Pro tier (Fundraising & Strategy)
-    await expect(page.getByText("Fundraising & Strategy")).toBeVisible();
+    await expect(page.getByText("Pro", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("For Active Fundraisers")).toBeVisible();
 
     // Studio tier (Venture Studio)
-    await expect(page.getByText("Venture Studio")).toBeVisible();
+    await expect(page.getByText("Studio", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Full Leverage Mode")).toBeVisible();
   });
 
@@ -86,7 +86,7 @@ test.describe("Pricing & Checkout Flow", () => {
           body: JSON.stringify({
             url: "https://checkout.stripe.com/mock-session",
             sessionId: "cs_test_mock",
-            plan: { id: "fundraising", name: "Fundraising & Strategy", price: 99 },
+            plan: { id: "fundraising", name: "Pro", price: 99 },
           }),
         });
       } else {

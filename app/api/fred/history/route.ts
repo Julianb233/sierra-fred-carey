@@ -67,13 +67,11 @@ export async function GET(req: NextRequest) {
   try {
     const userId = await requireAuth();
 
-    // Check rate limit
     const { response: rateLimitResponse } = await checkRateLimitForUser(req, userId, "pro");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
 
-    // Parse query parameters
     const { searchParams } = new URL(req.url);
     const queryParams = Object.fromEntries(searchParams.entries());
     const parsed = querySchema.safeParse(queryParams);
@@ -95,7 +93,6 @@ export async function GET(req: NextRequest) {
     const { sessionId, limit, offset } = parsed.data;
     const supabase = await createClient();
 
-    // If sessionId provided, return detailed session view
     if (sessionId) {
       const detail = await getSessionDetail(supabase, userId, sessionId);
       return NextResponse.json({
@@ -105,7 +102,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Otherwise return paginated session list
     const sessions = await getSessionList(supabase, userId, limit, offset);
     const total = await getSessionCount(supabase, userId);
 
@@ -147,20 +143,28 @@ async function getSessionList(
   limit: number,
   offset: number
 ): Promise<Session[]> {
-  // Get all episodes to compute session stats
   const { data: episodes, error } = await supabase
     .from("fred_episodic_memory")
-    .select("session_id, event_type, content, created_at")
+    .select("session_id, event_type, content, content_hash, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("[FRED History] Error fetching episodes:", error);
-    // Return empty list if table doesn't exist yet
     return [];
   }
 
-  // Group by session
+  // Deduplicate episodes by (session_id, content_hash)
+  const seenHashes = new Set<string>();
+  const dedupedList = (episodes || []).filter((ep) => {
+    const hash = ep.content_hash as string | null;
+    if (!hash) return true;
+    const key = `${ep.session_id}:${hash}`;
+    if (seenHashes.has(key)) return false;
+    seenHashes.add(key);
+    return true;
+  });
+
   const sessionMap = new Map<string, {
     sessionId: string;
     firstMessage: string;
@@ -170,7 +174,7 @@ async function getSessionList(
     lastActivityAt: string;
   }>();
 
-  for (const episode of episodes || []) {
+  for (const episode of dedupedList) {
     const sessionId = episode.session_id;
 
     if (!sessionMap.has(sessionId)) {
@@ -186,7 +190,6 @@ async function getSessionList(
 
     const session = sessionMap.get(sessionId)!;
 
-    // Track messages
     if (episode.event_type === "conversation") {
       session.messages.push({
         content: episode.content,
@@ -194,12 +197,10 @@ async function getSessionList(
       });
     }
 
-    // Track decisions
     if (episode.event_type === "decision") {
       session.decisions++;
     }
 
-    // Update time bounds
     if (episode.created_at < session.startedAt) {
       session.startedAt = episode.created_at;
     }
@@ -208,16 +209,12 @@ async function getSessionList(
     }
   }
 
-  // Sort sessions by last activity
   const sortedSessions = Array.from(sessionMap.values())
     .sort((a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime());
 
-  // Apply pagination
   const paginatedSessions = sortedSessions.slice(offset, offset + limit);
 
-  // Extract first user message for preview
   return paginatedSessions.map((session) => {
-    // Find first user message
     const sortedMessages = session.messages.sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
@@ -252,7 +249,6 @@ async function getSessionCount(
     return 0;
   }
 
-  // Count unique sessions
   const uniqueSessions = new Set((data || []).map((d) => d.session_id));
   return uniqueSessions.size;
 }
@@ -262,36 +258,31 @@ async function getSessionDetail(
   userId: string,
   sessionId: string
 ): Promise<SessionDetail> {
-  // Fetch episodes for this session
   const { data: episodes, error: episodesError } = await supabase
     .from("fred_episodic_memory")
-    .select("*")
+    .select("id, event_type, content, content_hash, importance_score, metadata, created_at")
     .eq("user_id", userId)
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
 
   if (episodesError) {
     console.error("[FRED History] Error fetching session episodes:", episodesError);
-    // Return empty session if table doesn't exist
   }
 
-  // Fetch decisions for this session
   const { data: decisions, error: decisionsError } = await supabase
     .from("fred_decision_log")
-    .select("*")
+    .select("id, decision_type, input_context, recommendation, final_decision, confidence, created_at")
     .eq("user_id", userId)
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
 
   if (decisionsError) {
-    // Decision log might not exist yet
     console.warn("[FRED History] Error fetching decisions:", decisionsError);
   }
 
-  // Fetch relevant facts (most recently updated during session)
   const { data: facts, error: factsError } = await supabase
     .from("fred_semantic_memory")
-    .select("*")
+    .select("id, category, key, value, confidence, source, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(10);
@@ -300,8 +291,17 @@ async function getSessionDetail(
     console.warn("[FRED History] Error fetching facts:", factsError);
   }
 
-  // Transform episodes into messages
-  const messages = (episodes || [])
+  // Deduplicate episodes by content_hash
+  const seen = new Set<string>();
+  const dedupedEpisodes = (episodes || []).filter((e) => {
+    const hash = e.content_hash as string | null;
+    if (!hash) return true;
+    if (seen.has(hash)) return false;
+    seen.add(hash);
+    return true;
+  });
+
+  const messages = dedupedEpisodes
     .filter((e) => e.event_type === "conversation")
     .map((e) => {
       const content = e.content as {
@@ -311,7 +311,6 @@ async function getSessionDetail(
         action?: string;
       };
 
-      // Map numeric confidence to level
       let confidence: "high" | "medium" | "low" | undefined;
       if (typeof content.confidence === "number") {
         if (content.confidence >= 0.8) confidence = "high";

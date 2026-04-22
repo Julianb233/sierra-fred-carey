@@ -34,6 +34,12 @@ export async function POST(request: NextRequest) {
     const teammateEmails = Array.isArray(body.teammateEmails)
       ? body.teammateEmails.map((e: unknown) => (typeof e === "string" ? stripHtml(e) : String(e)))
       : undefined;
+    const coFounder = sanitizeField(body.co_founder);
+    const companyName = sanitizeField(body.company_name);
+    const industry = sanitizeField(body.industry);
+    const productPositioning = sanitizeField(body.product_positioning);
+    const revenueRange = sanitizeField(body.revenue_range);
+    const teamSize = typeof body.team_size === "string" ? stripHtml(body.team_size) : (typeof body.team_size === "number" ? body.team_size : undefined);
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
@@ -164,6 +170,12 @@ export async function POST(request: NextRequest) {
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
+          ...(coFounder ? { co_founder: coFounder } : {}),
+          ...(companyName ? { company_name: companyName } : {}),
+          ...(industry ? { industry } : {}),
+          ...(productPositioning ? { product_positioning: productPositioning } : {}),
+          ...(revenueRange ? { revenue_range: revenueRange } : {}),
+          ...(teamSize ? { team_size: teamSize } : {}),
           onboarding_completed: true,
           updated_at: new Date().toISOString(),
         })
@@ -237,6 +249,12 @@ export async function POST(request: NextRequest) {
         stage: stage || null,
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
+        ...(coFounder ? { co_founder: coFounder } : {}),
+        ...(companyName ? { company_name: companyName } : {}),
+        ...(industry ? { industry } : {}),
+        ...(productPositioning ? { product_positioning: productPositioning } : {}),
+        ...(revenueRange ? { revenue_range: revenueRange } : {}),
+        ...(teamSize ? { team_size: teamSize } : {}),
         onboarding_completed: true,
         journey_welcomed: false,
         created_at: new Date().toISOString(),
@@ -253,6 +271,12 @@ export async function POST(request: NextRequest) {
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
+          ...(coFounder ? { co_founder: coFounder } : {}),
+          ...(companyName ? { company_name: companyName } : {}),
+          ...(industry ? { industry } : {}),
+          ...(productPositioning ? { product_positioning: productPositioning } : {}),
+          ...(revenueRange ? { revenue_range: revenueRange } : {}),
+          ...(teamSize ? { team_size: teamSize } : {}),
           onboarding_completed: true,
           journey_welcomed: false,
           created_at: new Date().toISOString(),

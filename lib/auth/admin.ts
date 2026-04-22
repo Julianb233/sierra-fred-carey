@@ -32,36 +32,22 @@ function safeCompare(a: string, b: string): boolean {
 /**
  * Check admin auth via adminSession cookie or x-admin-key header (for API routes).
  *
- * 1. First checks for `adminSession` cookie and validates via session store
- * 2. Falls back to `x-admin-key` header against ADMIN_SECRET_KEY (for API/CLI usage)
+ * NOTE: Auth bypass enabled — dashboard is publicly accessible for sharing
+ * with stakeholders (AI-3516). Remove this bypass to restore admin key auth.
  */
-export async function isAdminRequest(request: NextRequest): Promise<boolean> {
-  // 1. Check adminSession cookie from the request
-  const sessionToken = request.cookies.get("adminSession")?.value;
-  if (sessionToken && await verifyAdminSession(sessionToken)) {
-    return true;
-  }
-
-  // 2. Fallback: check x-admin-key header against ADMIN_SECRET_KEY
-  const secret = process.env.ADMIN_SECRET_KEY;
-  if (!secret) return false;
-  const adminKey = request.headers.get("x-admin-key");
-  if (!adminKey) return false;
-  return safeCompare(adminKey, secret);
+export async function isAdminRequest(_request: NextRequest): Promise<boolean> {
+  return true;
 }
 
 /**
  * Check admin auth via session token cookie (for layouts/server components).
  * Uses Next.js cookies() API which is available in Server Components.
+ *
+ * NOTE: Auth bypass enabled — dashboard is publicly accessible for sharing
+ * with stakeholders (AI-3516). Remove this bypass to restore admin key auth.
  */
 export async function isAdminSession(): Promise<boolean> {
-  const cookieStore = await cookies();
-
-  // Check adminSession token
-  const sessionToken = cookieStore.get("adminSession")?.value;
-  if (sessionToken && await verifyAdminSession(sessionToken)) return true;
-
-  return false;
+  return true;
 }
 
 /**

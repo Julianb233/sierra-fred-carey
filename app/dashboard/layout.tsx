@@ -43,10 +43,14 @@ import { useTier } from "@/lib/context/tier-context";
 import { createClient } from "@/lib/supabase/client";
 import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-modal";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
 import { FloatingVoiceFab } from "@/components/voice/floating-voice-fab";
+import { EventFeedbackWidget } from "@/components/event-feedback-widget";
+import { EventMicroSurvey } from "@/components/event-micro-survey";
+import { BugReportWidget } from "@/components/bug-report-widget";
 
 // ============================================================================
 // Navigation Configuration
@@ -108,6 +112,11 @@ const coreNavItems: NavItem[] = [
     icon: <BookOpen className="h-4 w-4" />,
   },
   {
+    name: "Sales",
+    href: "/dashboard/sales",
+    icon: <TrendingUp className="h-4 w-4" />,
+  },
+  {
     name: "Marketplace",
     href: "/dashboard/marketplace",
     icon: <ShoppingBag className="h-4 w-4" />,
@@ -150,6 +159,12 @@ const coreNavItems: NavItem[] = [
  */
 const conditionalNavItems: NavItem[] = [
   {
+    name: "Reality Lens",
+    href: "/dashboard/reality-lens",
+    icon: <ScanEye className="h-4 w-4" />,
+    condition: "showInvestorLens",
+  },
+  {
     name: "Positioning",
     href: "/dashboard/positioning",
     icon: <TargetIcon className="h-4 w-4" />,
@@ -186,12 +201,6 @@ const conditionalNavItems: NavItem[] = [
     condition: "showInvestorTools",
   },
   {
-    name: "Reality Lens",
-    href: "/dashboard/reality-lens",
-    icon: <ScanEye className="h-4 w-4" />,
-    condition: "showInvestorLens",
-  },
-  {
     name: "Virtual Team",
     href: "/dashboard/agents",
     icon: <Bot className="h-4 w-4" />,
@@ -220,6 +229,7 @@ function SidebarContent({
   tierColors,
   isTierLoading,
   onNavClick,
+  onHowToUse,
 }: {
   user: { name: string; email: string; tier: UserTier; stage: string | null };
   visibleNavItems: NavItem[];
@@ -228,6 +238,7 @@ function SidebarContent({
   tierColors: string[];
   isTierLoading?: boolean;
   onNavClick?: () => void;
+  onHowToUse?: () => void;
 }) {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
@@ -309,18 +320,29 @@ function SidebarContent({
         })}
       </nav>
 
-      {/* Ask Fred for Help */}
-      <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800">
+      {/* Chat with Mentor -- prominent orange CTA */}
+      <div className="px-4 pt-2 pb-1 border-t border-gray-200 dark:border-gray-800 space-y-2">
         <button
           onClick={() => openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
-            "text-gray-500 dark:text-gray-400 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/5",
-            "transition-all duration-200 text-sm group"
+            "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg",
+            "bg-[#ff6a1a] hover:bg-[#ea580c] text-white font-medium",
+            "transition-all duration-200 text-sm"
           )}
         >
-          <HelpCircle className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
-          <span>Ask Fred for Help</span>
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span>Chat with Mentor</span>
+        </button>
+        <button
+          onClick={() => { onNavClick?.(); onHowToUse?.(); }}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg",
+            "border border-[#ff6a1a]/30 text-[#ff6a1a] hover:bg-[#ff6a1a]/10",
+            "font-medium transition-all duration-200 text-sm"
+          )}
+        >
+          <HelpCircle className="h-4 w-4 shrink-0" />
+          <span>How To Use Sahara</span>
         </button>
       </div>
 
@@ -347,10 +369,12 @@ export default function DashboardLayout({
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
+  const handleHowToUse = useCallback(() => setHowToUseOpen(true), []);
 
   // Listen for fred:voice custom event from MobileBottomNav
   useEffect(() => {
@@ -472,6 +496,7 @@ export default function DashboardLayout({
               tierColors={tierColors}
               isTierLoading={isTierLoading}
               onNavClick={closeSidebar}
+              onHowToUse={handleHowToUse}
             />
           </SheetContent>
         </Sheet>
@@ -485,12 +510,13 @@ export default function DashboardLayout({
             tierNames={tierNames}
             tierColors={tierColors}
             isTierLoading={isTierLoading}
+            onHowToUse={handleHowToUse}
           />
         </aside>
 
         {/* Main Content — extra bottom padding on mobile for bottom nav */}
         <main id="main-content" role="main" className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-28 md:pb-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6 pb-28 md:pb-8">
             <PageTransition>
               {children}
             </PageTransition>
@@ -501,10 +527,8 @@ export default function DashboardLayout({
       {/* Phase 46: Mobile Bottom Navigation */}
       <MobileBottomNav />
 
-      {/* Phase 42: Floating Chat Widget — available on all dashboard pages, hidden on mobile (bottom nav has Chat tab) */}
-      <div className="hidden md:block">
-        <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
-      </div>
+      {/* Floating Chat Widget — available on all dashboard pages including mobile */}
+      <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
 
       {/* Floating Voice FAB — desktop only, prominent voice entry point */}
       <div className="hidden md:block">
@@ -514,12 +538,22 @@ export default function DashboardLayout({
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
 
+      {/* AI-4104: How To Use Sahara — Loom walkthrough video */}
+      <HowToUseSaharaModal open={howToUseOpen} onOpenChange={setHowToUseOpen} />
+
       {/* Voice Chat Overlay — available from mobile bottom nav and dashboard voice buttons */}
       <VoiceChatOverlay
         open={voiceOverlayOpen}
         onClose={() => setVoiceOverlayOpen(false)}
         onSendMessage={handleVoiceSend}
       />
+
+      {/* AI-1804: Event feedback collection for first 200 attendees */}
+      {/* AI-8499: Bug report widget -- all authenticated users */}
+      <BugReportWidget />
+
+      <EventFeedbackWidget />
+      <EventMicroSurvey />
     </div>
   );
 }

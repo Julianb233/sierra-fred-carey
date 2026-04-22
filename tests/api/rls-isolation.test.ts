@@ -92,12 +92,12 @@ vi.mock("@/lib/db/subscriptions", () => ({
 vi.mock("@/lib/stripe/config", () => ({
   PLANS: {
     FREE: { id: "free", name: "Free", price: 0, priceId: null },
-    FUNDRAISING: { id: "fundraising", name: "Fundraising & Strategy", price: 99, priceId: "price_pro" },
-    VENTURE_STUDIO: { id: "venture_studio", name: "Venture Studio", price: 249, priceId: "price_studio" },
+    FUNDRAISING: { id: "fundraising", name: "Pro", price: 99, priceId: "price_pro" },
+    VENTURE_STUDIO: { id: "venture_studio", name: "Studio", price: 249, priceId: "price_studio" },
   },
   getPlanByPriceId: vi.fn((priceId: string) => {
-    if (priceId === "price_pro") return { id: "fundraising", name: "Fundraising & Strategy", price: 99, priceId: "price_pro" };
-    if (priceId === "price_studio") return { id: "venture_studio", name: "Venture Studio", price: 249, priceId: "price_studio" };
+    if (priceId === "price_pro") return { id: "fundraising", name: "Pro", price: 99, priceId: "price_pro" };
+    if (priceId === "price_studio") return { id: "venture_studio", name: "Studio", price: 249, priceId: "price_studio" };
     return null;
   }),
 }));

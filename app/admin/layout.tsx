@@ -1,35 +1,10 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { LogoutButton } from "./components/LogoutButton";
-import { isAdminSession } from "@/lib/auth/admin";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await isAdminSession();
-
-  if (!admin) {
-    // Check if we're already on the login page to avoid infinite redirect loop.
-    // The middleware sets x-pathname on every request for server components to read.
-    const headersList = await headers();
-    const pathname = headersList.get("x-pathname") || "";
-    const isLoginPage = pathname === "/admin/login";
-
-    if (!isLoginPage) {
-      redirect("/admin/login");
-    }
-
-    // On the login page — render children without the admin nav chrome
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-10">
@@ -43,7 +18,7 @@ export default async function AdminLayout({
                 AI Settings Management
               </span>
             </div>
-            <LogoutButton />
+            {/* Auth removed — dashboard is publicly accessible */}
           </div>
 
           <div className="flex gap-2">
@@ -106,6 +81,12 @@ export default async function AdminLayout({
               className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               RLHF
+            </Link>
+            <Link
+              href="/admin/sentiment"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Sentiment
             </Link>
             <Link
               href="/admin/audit-log"

@@ -181,7 +181,7 @@ function NextStepsTab({ steps }: { steps: NextStepItem[] | null }) {
           No next steps yet
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500">
-          Chat with Fred to get personalized action items
+          Chat with Mentor to get personalized action items
         </p>
       </div>
     );

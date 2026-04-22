@@ -35,7 +35,7 @@ function CoachingPageContent() {
       requiredTier={UserTier.STUDIO}
       currentTier={tier}
       featureName="Video Coaching"
-      description="Live video coaching sessions with real-time FRED AI assistance. Available on Studio tier."
+      description="Live video coaching sessions with real-time Mentor assistance. Available on Studio tier."
     >
       <CoachingContent />
     </FeatureLock>

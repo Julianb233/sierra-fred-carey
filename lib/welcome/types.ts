@@ -12,7 +12,7 @@ export interface IntakeAnswers {
   startup_idea: string
   current_stage: string
   biggest_challenge: string
-  co_founder: string
+  goals: string
   timeline_goal: string
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, ListChecks, BarChart3, Mic, Users, User } from "lucide-react";
+import { Home, MessageSquare, BarChart3, Mic, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -22,25 +22,13 @@ const NAV_ITEMS_LEFT = [
     icon: MessageSquare,
     matchExact: false,
   },
-  {
-    name: "Next",
-    href: "/dashboard/next-steps",
-    icon: ListChecks,
-    matchExact: false,
-  },
 ] as const;
 
 const NAV_ITEMS_RIGHT = [
   {
     name: "Progress",
-    href: "/dashboard/readiness",
+    href: "/dashboard/journey",
     icon: BarChart3,
-    matchExact: false,
-  },
-  {
-    name: "Community",
-    href: "/dashboard/communities",
-    icon: Users,
     matchExact: false,
   },
   {

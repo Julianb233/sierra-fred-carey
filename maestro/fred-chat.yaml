@@ -1,0 +1,58 @@
+appId: com.joinsahara.app
+name: "Sahara FRED Chat — Send & Receive Messages"
+tags:
+  - critical
+  - fred
+  - P0
+---
+
+# Prerequisite: Must be logged in
+- launchApp
+- openLink: https://joinsahara.com/login
+- tapOn:
+    id: "email-input"
+- inputText: ${E2E_TEST_EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${E2E_TEST_PASSWORD}
+- tapOn: "Sign in"
+- assertVisible: "Dashboard"
+
+# Navigate to Chat
+- openLink: https://joinsahara.com/chat
+
+# Verify chat interface loads
+- assertVisible: "Ask Fred"
+
+# Wait for greeting message
+- waitForAnimationToEnd
+- assertVisible:
+    text: ".*"
+    index: 0
+
+# Send a message
+- tapOn:
+    id: "chat-input"
+- inputText: "What is investor readiness?"
+- tapOn:
+    id: "send-button"
+
+# Verify message appears in chat
+- assertVisible: "What is investor readiness?"
+
+# Wait for FRED response (streaming)
+- extendedWaitUntil:
+    visible: ".*readiness.*"
+    timeout: 30000
+
+# Send follow-up to test context
+- tapOn:
+    id: "chat-input"
+- inputText: "Can you elaborate on the scoring?"
+- tapOn:
+    id: "send-button"
+
+# Verify follow-up response arrives
+- extendedWaitUntil:
+    visible: ".*scor.*"
+    timeout: 30000

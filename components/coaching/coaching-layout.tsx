@@ -128,7 +128,7 @@ function CoachingLobby({
               Video Coaching Session
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Connect to start your live coaching session with FRED AI sidebar
+              Connect to start your live coaching session with Mentor sidebar
               assistance.
             </p>
           </div>

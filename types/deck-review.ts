@@ -10,6 +10,7 @@ export interface DeckDimension {
   score: number // 1-10
   explanation: string // 1-2 sentence justification
   suggestions: string[] // 1-3 improvement suggestions
+  vcWantToSee: string // what VCs specifically look for in this dimension
 }
 
 export interface DeckScorecard {

@@ -79,12 +79,23 @@ for (const device of MOBILE_DEVICES) {
       await page.waitForLoadState("networkidle");
       await assertNoOverflow(page);
 
-      // Hero CTA should be visible and tappable
-      const heroCTA = page.locator('a:has-text("Get Started")').first();
-      await expect(heroCTA).toBeVisible({ timeout: 10000 });
-      const box = await heroCTA.boundingBox();
-      expect(box).toBeTruthy();
-      expect(box!.height).toBeGreaterThanOrEqual(44);
+      // Hero CTA should be visible and tappable (on mobile, the nav CTA may be
+      // hidden via responsive classes — find the first *visible* Get Started link)
+      const allCTAs = page.locator('a:has-text("Get Started")');
+      const count = await allCTAs.count();
+      let foundVisible = false;
+      for (let i = 0; i < count; i++) {
+        const cta = allCTAs.nth(i);
+        if (await cta.isVisible().catch(() => false)) {
+          const box = await cta.boundingBox();
+          expect(box).toBeTruthy();
+          expect(box!.height).toBeGreaterThanOrEqual(44);
+          foundVisible = true;
+          break;
+        }
+      }
+      // At least one CTA variant should be visible (hero or mobile-specific)
+      expect(foundVisible, "At least one Get Started CTA should be visible").toBe(true);
     });
 
     // --- Pricing page ---
@@ -94,9 +105,9 @@ for (const device of MOBILE_DEVICES) {
       await assertNoOverflow(page);
 
       // All three tiers visible
-      await expect(page.getByText("Founder Decision OS")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Fundraising & Strategy")).toBeVisible();
-      await expect(page.getByText("Venture Studio")).toBeVisible();
+      await expect(page.getByText("Free Forever")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("For Active Fundraisers")).toBeVisible();
+      await expect(page.getByText("Full Leverage Mode")).toBeVisible();
 
       // Price points visible
       await expect(page.getByText("$0").first()).toBeVisible();
@@ -590,7 +601,7 @@ test.describe("[Regression] Critical Navigation Paths", () => {
     await pricingLink.click();
 
     await page.waitForURL("**/pricing**", { timeout: 10000 });
-    await expect(page.getByText("Founder Decision OS")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Free Forever")).toBeVisible({ timeout: 10000 });
   });
 
   test("homepage → get-started navigation works", async ({ page }) => {

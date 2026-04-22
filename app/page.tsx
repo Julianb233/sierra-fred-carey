@@ -1,19 +1,18 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Hero from "@/components/hero";
 
-// Dynamic imports with SSR disabled to prevent framer-motion@12 useContext crash
-// during static generation (React 19 SSG compatibility issue)
-const Hero = dynamic(() => import("@/components/hero"), { ssr: false });
-const Features = dynamic(() => import("@/components/features"), { ssr: false });
-const Stats = dynamic(() => import("@/components/stats"), { ssr: false });
-const Testimonials = dynamic(() => import("@/components/testimonials"), { ssr: false });
-const Pricing = dynamic(() => import("@/components/pricing"), { ssr: false });
-const Faq = dynamic(() => import("@/components/faq"), { ssr: false });
-const Footer = dynamic(() => import("@/components/footer"), { ssr: false });
+// Hero is imported directly so it SSR-renders immediately (no blank flash).
+// Below-fold sections are lazy-loaded to keep the initial bundle small.
+const Features = dynamic(() => import("@/components/features"));
+const Stats = dynamic(() => import("@/components/stats"));
+const Testimonials = dynamic(() => import("@/components/testimonials"));
+const Pricing = dynamic(() => import("@/components/pricing"));
+const Faq = dynamic(() => import("@/components/faq"));
+const Footer = dynamic(() => import("@/components/footer"));
 const ScrollProgress = dynamic(
   () => import("@/components/premium/ScrollProgress").then((mod) => ({ default: mod.ScrollProgress })),
-  { ssr: false }
 );
 
 export default function Home() {
@@ -22,10 +21,10 @@ export default function Home() {
       {/* Scroll progress indicator */}
       <ScrollProgress />
 
-      {/* Page sections */}
-      <Hero />
+      {/* Page sections with anchor IDs for navigation */}
+      <div id="hero"><Hero /></div>
       <Features />
-      <Stats />
+      <div id="stats" className="scroll-mt-20"><Stats /></div>
       <Testimonials />
       <Pricing />
       <Faq />

@@ -336,7 +336,7 @@ function QuickRealityLensInner() {
             onClick={() => router.push("/dashboard")}
             className="flex-1 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25"
           >
-            Continue to Your Journey
+            Continue to Your Progress
           </Button>
           <Button
             size="lg"

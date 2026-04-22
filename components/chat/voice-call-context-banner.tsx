@@ -63,10 +63,10 @@ export function VoiceCallContextBanner({
           </div>
           <button
             onClick={handleDismiss}
-            className="shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="shrink-0 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             aria-label="Dismiss call summary"
           >
-            <X className="h-3.5 w-3.5 text-gray-400" />
+            <X className="h-4 w-4 text-gray-400" />
           </button>
         </motion.div>
       </AnimatePresence>

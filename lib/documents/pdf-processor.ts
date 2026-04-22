@@ -17,13 +17,12 @@ export async function extractText(buffer: Buffer): Promise<ExtractedDocument> {
   let parser: PDFParse | undefined;
 
   try {
-    parser = new PDFParse({ data: new Uint8Array(buffer) });
+    parser = new PDFParse({ data: buffer });
 
-    // Get text with per-page results and info in parallel
-    const [textResult, infoResult] = await Promise.all([
-      parser.getText(),
-      parser.getInfo(),
-    ]);
+    // Get text and info sequentially (pdf-parse v2 worker does not support
+    // parallel calls on Node 24+ due to structured clone limitations)
+    const textResult = await parser.getText();
+    const infoResult = await parser.getInfo();
 
     // Build per-page content from v2 page results, with fallback
     let pages: ExtractedPage[];
@@ -129,7 +128,7 @@ export async function getMetadata(buffer: Buffer): Promise<DocumentMetadata & { 
   let parser: PDFParse | undefined;
 
   try {
-    parser = new PDFParse({ data: new Uint8Array(buffer) });
+    parser = new PDFParse({ data: buffer });
     const infoResult = await parser.getInfo();
     const info = infoResult.info as Record<string, unknown> | null;
 

@@ -234,7 +234,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold mb-1 text-gray-900 dark:text-white">Email</h4>
-                      <p className="text-gray-500">hello@fredcarey.com</p>
+                      <p className="text-gray-500">hello@fredcary.com</p>
                     </div>
                   </div>
 

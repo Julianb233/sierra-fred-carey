@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Header } from '@/components/Header'
 import { BottomNav, type Tab } from '@/components/BottomNav'
+import { LandingPage } from '@/pages/LandingPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { JourneyPage } from '@/pages/JourneyPage'
 import { FaqPage } from '@/pages/FaqPage'
+import { startPeriodicSync, stopPeriodicSync } from '@/lib/sync-service'
 
 const TAB_STORAGE_KEY = 'sahara-funnel-tab'
 
 function getInitialTab(): Tab {
   const stored = sessionStorage.getItem(TAB_STORAGE_KEY) as Tab | null
-  if (stored && ['chat', 'journey', 'faq'].includes(stored)) return stored
-  return 'chat'
+  if (stored && ['home', 'chat', 'journey', 'faq'].includes(stored)) return stored
+  return 'home'
 }
 
 export default function App() {
@@ -21,14 +23,34 @@ export default function App() {
     sessionStorage.setItem(TAB_STORAGE_KEY, activeTab)
   }, [activeTab])
 
+  // Start syncing funnel data to the platform API
+  useEffect(() => {
+    startPeriodicSync()
+    return () => stopPeriodicSync()
+  }, [])
+
+  const goToChat = useCallback(() => setActiveTab('chat'), [])
+
   return (
     <div className="h-dvh flex flex-col bg-white overflow-hidden">
       <Header />
 
-      {/* Main content area — below header, above bottom nav */}
+      {/* Main content area -- below header, above bottom nav */}
       <main className="flex-1 mt-14 mb-16 overflow-hidden">
         <div className="h-full max-w-lg mx-auto">
           <AnimatePresence mode="wait">
+            {activeTab === 'home' && (
+              <motion.div
+                key="home"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                <LandingPage onStartChat={goToChat} />
+              </motion.div>
+            )}
             {activeTab === 'chat' && (
               <motion.div
                 key="chat"
