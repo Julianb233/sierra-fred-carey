@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       message: combinedMessage || `Event rating: ${body.rating}/5`,
       category: "other",
       user_tier: "free",
+      sender_role: "user",
       weight: 1.0,
       consent_given: true,
       status: "new",
