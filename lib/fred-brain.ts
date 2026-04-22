@@ -183,7 +183,7 @@ export const FRED_COMPANIES = {
     tvHouseholdsReach: "75% worldwide",
     annualRevenue: "$700M+ (Imagine Communications)",
     customerRevenueGenerated: "$50B",
-    capitalRaised: "$1B+",
+    capitalRaised: "$3B+",
     ideaprosRevenue: "$30M+",
   },
 } as const;
@@ -398,7 +398,7 @@ export const SAHARA_MESSAGING = {
 // ============================================================================
 
 export const MARKETING_STATS = {
-  capitalRaised: "$1B+",
+  capitalRaised: "$3B+",
   foundersCoached: "Hundreds",
   yearsExperience: "50+",
   companiesAdvised: "Hundreds",

@@ -1,0 +1,52 @@
+appId: com.sahara.app
+name: "Login Flow"
+tags:
+  - critical
+  - auth
+  - journey-002
+---
+# Sahara Login E2E Flow
+# Tests returning user login → dashboard
+
+- launchApp
+
+# Navigate to login
+- openLink: https://joinsahara.com/login
+
+# Verify login form
+- assertVisible: "Sign in"
+
+# Enter credentials
+- tapOn:
+    id: "email-input"
+- inputText: ${EMAIL}
+
+- tapOn:
+    id: "password-input"
+- inputText: ${PASSWORD}
+
+# Submit
+- tapOn: "Sign in"
+
+# Verify dashboard loads
+- assertVisible:
+    text: "Dashboard"
+    timeout: 15000
+
+# --- Negative: Wrong password ---
+- openLink: https://joinsahara.com/login
+
+- tapOn:
+    id: "email-input"
+- inputText: ${EMAIL}
+
+- tapOn:
+    id: "password-input"
+- inputText: "WrongPassword999"
+
+- tapOn: "Sign in"
+
+# Verify error shown
+- assertVisible:
+    text: "Invalid"
+    timeout: 5000

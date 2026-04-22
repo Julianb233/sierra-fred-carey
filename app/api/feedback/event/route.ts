@@ -47,6 +47,24 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient()
 
+    // Idempotency check: prevent duplicate event feedback within 1 hour (AI-4120)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const { data: existing } = await supabase
+      .from("event_feedback")
+      .select("id")
+      .eq("user_id", body.userId)
+      .eq("event_name", body.eventName || "default")
+      .gte("created_at", oneHourAgo)
+      .limit(1)
+      .maybeSingle()
+
+    if (existing) {
+      return NextResponse.json(
+        { success: true, id: existing.id, deduplicated: true },
+        { status: 200 }
+      )
+    }
+
     // Insert into event_feedback table
     const { data: feedbackRow, error: feedbackError } = await supabase
       .from("event_feedback")

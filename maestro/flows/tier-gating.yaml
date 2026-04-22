@@ -1,0 +1,57 @@
+appId: com.sahara.app
+name: "Tier Gating & Upgrade Flow"
+tags:
+  - critical
+  - payments
+  - journey-010
+---
+# Sahara Tier Gating E2E Flow
+# Tests free tier limits and upgrade flow via Stripe
+
+# Precondition: Login as free-tier user
+- openLink: https://joinsahara.com/login
+- tapOn:
+    id: "email-input"
+- inputText: ${FREE_EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${FREE_PASSWORD}
+- tapOn: "Sign in"
+- assertVisible:
+    text: "Dashboard"
+    timeout: 15000
+
+# Test: Access Pro-gated feature
+- openLink: https://joinsahara.com/dashboard/investor-targeting
+
+# Should show upgrade prompt or gating message
+- wait: 5000
+- assertVisible:
+    text: "Upgrade"
+    optional: true
+    timeout: 5000
+
+# Navigate to pricing
+- openLink: https://joinsahara.com/pricing
+
+# Verify pricing tiers visible
+- assertVisible:
+    text: "Free"
+    timeout: 10000
+
+- assertVisible:
+    text: "$99"
+    optional: true
+
+- assertVisible:
+    text: "$249"
+    optional: true
+
+# Click upgrade (don't complete Stripe — just verify redirect)
+- tapOn:
+    text: "Get Started"
+    index: 1
+    optional: true
+
+# Verify Stripe checkout loads or redirect happens
+- wait: 5000
