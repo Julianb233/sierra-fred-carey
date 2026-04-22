@@ -78,30 +78,28 @@ export function FredHero({
       <div className="absolute inset-0 bg-gradient-to-br from-[#ff6a1a]/10 via-transparent to-transparent pointer-events-none" />
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6a1a]/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
-      <div className="relative p-4 sm:p-6 lg:p-8">
-        {/* FRED identity + Compact heading */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className={cn(
-            "w-2.5 h-2.5 rounded-full",
-            fredOnline ? "bg-green-400 animate-pulse" : "bg-red-400"
-          )} />
-          <span className={cn(
-            "text-sm font-medium",
-            fredOnline ? "text-green-400" : "text-red-400"
-          )}>
-            {fredOnline ? "Fred is online" : "Fred is unavailable"}
-          </span>
-        </div>
+      <div className="relative p-4 sm:p-5 lg:p-6">
+        {/* ====== CHAT INPUT — first thing visible, above the fold ====== */}
+        <div className="mb-3">
+          {/* Inline greeting + status on same line as label */}
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-base sm:text-lg font-semibold text-white leading-tight truncate">
+              {greeting}
+            </h1>
+            <div className="flex items-center gap-1.5 shrink-0 ml-3">
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                fredOnline ? "bg-green-400 animate-pulse" : "bg-red-400"
+              )} />
+              <span className={cn(
+                "text-xs font-medium",
+                fredOnline ? "text-green-400" : "text-red-400"
+              )}>
+                {fredOnline ? "Online" : "Offline"}
+              </span>
+            </div>
+          </div>
 
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 leading-tight">
-          {greeting}
-        </h1>
-        <p className="text-gray-400 text-sm mb-3 max-w-xl">
-          {subtext}
-        </p>
-
-        {/* ====== CHAT INPUT — above the fold, first interaction ====== */}
-        <div className="mb-4">
           <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
             {/* Gradient glow effect */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#ff6a1a]/20 via-[#ff6a1a]/10 to-transparent blur-xl opacity-50 -z-10" />
@@ -164,14 +162,8 @@ export function FredHero({
         </div>
 
         {/* Conversation starters — compact horizontal scroll */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Or start here
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="mb-3">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
             {CONVERSATION_STARTERS.map((starter, i) => (
               <button
                 key={i}
@@ -181,7 +173,7 @@ export function FredHero({
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 className={cn(
-                  "text-xs px-3 py-1.5 rounded-lg border transition-all text-left",
+                  "text-xs px-3 py-1.5 rounded-lg border transition-all text-left whitespace-nowrap shrink-0",
                   hovered === i
                     ? "border-[#ff6a1a]/50 bg-[#ff6a1a]/10 text-white"
                     : "border-gray-700 bg-gray-800/40 text-gray-400 hover:text-gray-200"
@@ -194,7 +186,7 @@ export function FredHero({
         </div>
 
         {/* Secondary actions — call/voice buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {canCallFred ? (
             <Button
               onClick={onCallFred}
