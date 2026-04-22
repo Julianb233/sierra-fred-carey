@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { getUserConsentStatus, applyConsent, calculateExpiryDate } from "@/lib/feedback/consent"
 import { SIGNAL_TYPES, FEEDBACK_CATEGORIES, TIER_WEIGHTS, MEDIA_TYPES, MAX_MEDIA_URLS } from "@/lib/feedback/constants"
-import { insertFeedbackSignal } from "@/lib/db/feedback"
+import { insertFeedbackSignal, findExistingSignal } from "@/lib/db/feedback"
 import { checkDetailedFeedbackThrottle } from "@/lib/feedback/throttle"
 import { getUserTier } from "@/lib/api/tier-middleware"
 import { UserTier } from "@/lib/constants"
@@ -10,9 +10,12 @@ import type { FeedbackSignalInsert } from "@/lib/feedback/types"
 
 /**
  * Map UserTier enum to string tier for feedback_signals table.
+ * BUILDER ($39) is bucketed with "pro" in this table -- the column only
+ * distinguishes free / pro / studio for now.
  */
 const TIER_MAP: Record<UserTier, "free" | "pro" | "studio"> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "pro",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 }
@@ -145,7 +148,20 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3. Consent check
+  // 3. Idempotency check — return existing signal if duplicate (AI-4120)
+  const existingSignal = await findExistingSignal(
+    user.id,
+    message_id,
+    signal_type
+  )
+  if (existingSignal) {
+    return NextResponse.json(
+      { success: true, id: existingSignal.id, deduplicated: true },
+      { status: 200 }
+    )
+  }
+
+  // 4. Consent check
   const serviceClient = createServiceClient()
   const hasConsent = await getUserConsentStatus(serviceClient, user.id)
   if (!hasConsent) {
@@ -155,7 +171,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // 4. Throttle check (only for detailed signals — category or comment present)
+  // 5. Throttle check (only for detailed signals — category or comment present)
   const isDetailed = (category !== undefined && category !== null) ||
     (sanitizedComment !== null && sanitizedComment !== "")
   if (isDetailed) {
@@ -172,12 +188,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 5. Determine tier and weight
+  // 6. Determine tier and weight
   const userTierEnum = await getUserTier(user.id)
   const tier = TIER_MAP[userTierEnum]
   const weight = TIER_WEIGHTS[tier]
 
-  // 6. Build signal insert
+  // 7. Build signal insert
   const signal: FeedbackSignalInsert = {
     user_id: user.id,
     session_id: (session_id as string) ?? null,
@@ -206,10 +222,10 @@ export async function POST(req: NextRequest) {
     },
   }
 
-  // 7. Apply consent (defensive — stamps consent_given and expires_at)
+  // 8. Apply consent (defensive — stamps consent_given and expires_at)
   const consentedSignal = applyConsent(signal, true)
 
-  // 8. Insert and respond
+  // 9. Insert and respond
   try {
     const data = await insertFeedbackSignal(consentedSignal)
     return NextResponse.json({ success: true, id: data.id }, { status: 201 })

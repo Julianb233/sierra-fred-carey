@@ -29,6 +29,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json(
+        { error: "Password must contain at least one uppercase letter" },
+        { status: 400 }
+      );
+    }
+
+    if (!/\d/.test(password)) {
+      return NextResponse.json(
+        { error: "Password must contain at least one number" },
+        { status: 400 }
+      );
+    }
+
     const result = await signUp(email, password, name);
 
     if (!result.success) {

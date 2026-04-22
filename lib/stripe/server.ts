@@ -35,12 +35,14 @@ export const stripe = {
 export async function createCheckoutSession({
   priceId,
   customerId,
+  customerEmail,
   userId,
   successUrl,
   cancelUrl,
 }: {
   priceId: string;
   customerId?: string;
+  customerEmail?: string;
   userId: string;
   successUrl: string;
   cancelUrl: string;
@@ -69,6 +71,9 @@ export async function createCheckoutSession({
   // Only include customer if we have one (avoids sending undefined to Stripe)
   if (customerId) {
     sessionParams.customer = customerId;
+  } else if (customerEmail) {
+    // Pre-fill email on Stripe Checkout (used by funnel where user may not have an account)
+    sessionParams.customer_email = customerEmail;
   }
 
   const session = await getStripe().checkout.sessions.create(sessionParams);
@@ -114,4 +119,24 @@ export async function cancelSubscription(subscriptionId: string) {
   return getStripe().subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
+}
+
+/**
+ * Retrieve a checkout session with expanded subscription and customer data.
+ * Used for post-checkout reconciliation (e.g., funnel -> main app).
+ */
+export async function getCheckoutSession(sessionId: string) {
+  return getStripe().checkout.sessions.retrieve(sessionId, {
+    expand: ["subscription", "customer"],
+  });
+}
+
+/**
+ * Update subscription metadata (e.g., to link a funnel-pending subscription to a real user).
+ */
+export async function updateSubscriptionMetadata(
+  subscriptionId: string,
+  metadata: Record<string, string>
+) {
+  return getStripe().subscriptions.update(subscriptionId, { metadata });
 }

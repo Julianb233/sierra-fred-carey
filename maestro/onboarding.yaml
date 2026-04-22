@@ -1,0 +1,47 @@
+appId: com.joinsahara.app
+name: "Sahara Onboarding — Full Wizard Flow"
+tags:
+  - critical
+  - onboarding
+  - P0
+---
+
+# Step 1: Navigate to Get Started
+- launchApp
+- openLink: https://joinsahara.com/get-started
+
+# Step 1: Stage Selection
+- assertVisible: "Where are you in your startup journey?"
+- tapOn: "Pre-seed"
+
+# Step 2: Challenge Selection
+- assertVisible: "What's your biggest challenge right now?"
+- tapOn: "Fundraising"
+
+# Step 3: Account Creation
+- assertVisible: "Create your account"
+- tapOn:
+    id: "email-input"
+- inputText: "test-maestro-${TIMESTAMP}@joinsahara.com"
+- tapOn:
+    id: "password-input"
+- inputText: "TestPass123!"
+- tapOn: "Continue"
+
+# Step 4: Business Fundamentals
+- assertVisible: "Tell us about your business"
+- tapOn:
+    id: "business-name-input"
+- inputText: "Maestro Test Co"
+- tapOn:
+    id: "industry-input"
+- inputText: "SaaS"
+- tapOn:
+    id: "positioning-input"
+- inputText: "AI-powered testing platform"
+- tapOn: "Complete Setup"
+
+# Celebration + Redirect
+- assertVisible: "Welcome"
+- waitForAnimationToEnd
+- assertVisible: "Dashboard"
