@@ -436,3 +436,57 @@ export async function declineInvite(
   log.info("Invite declined", { inviteId, memberEmail });
   return { success: true };
 }
+
+// ============================================================================
+// Enrichment Functions (AI-8502: Co-founder invite flow)
+// ============================================================================
+
+export interface EnrichedTeamMember extends TeamMember {
+  inviter_name?: string;
+  inviter_email?: string;
+  inviter_company?: string;
+}
+
+export async function enrichWithInviterInfo(
+  members: TeamMember[]
+): Promise<EnrichedTeamMember[]> {
+  if (members.length === 0) return [];
+  const supabase = createServiceClient();
+  const ownerIds = [...new Set(members.map((m) => m.owner_user_id))];
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("id, name, email, company_name")
+    .in("id", ownerIds);
+  if (error || !profiles) {
+    log.error("Failed to fetch inviter profiles", { error, ownerIds });
+    return members;
+  }
+  const profileMap = new Map<string, { name: string | null; email: string | null; company_name: string | null }>();
+  for (const p of profiles) {
+    profileMap.set(p.id, { name: p.name, email: p.email, company_name: p.company_name });
+  }
+  return members.map((m) => {
+    const profile = profileMap.get(m.owner_user_id);
+    return {
+      ...m,
+      inviter_name: profile?.name || undefined,
+      inviter_email: profile?.email || undefined,
+      inviter_company: profile?.company_name || undefined,
+    };
+  });
+}
+
+export async function getInviteWithInviterInfo(
+  inviteId: string
+): Promise<EnrichedTeamMember | null> {
+  const supabase = createServiceClient();
+  const { data: invite, error } = await supabase
+    .from("team_members")
+    .select("*")
+    .eq("id", inviteId)
+    .single();
+  if (error || !invite) return null;
+  const member = invite as TeamMember;
+  const enriched = await enrichWithInviterInfo([member]);
+  return enriched[0] || null;
+}
