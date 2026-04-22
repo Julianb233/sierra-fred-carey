@@ -455,21 +455,21 @@ export async function enrichWithInviterInfo(
   const ownerIds = [...new Set(members.map((m) => m.owner_user_id))];
   const { data: profiles, error } = await supabase
     .from("profiles")
-    .select("id, name, email, company_name")
+    .select("id, full_name, email, company_name")
     .in("id", ownerIds);
   if (error || !profiles) {
     log.error("Failed to fetch inviter profiles", { error, ownerIds });
     return members;
   }
-  const profileMap = new Map<string, { name: string | null; email: string | null; company_name: string | null }>();
+  const profileMap = new Map<string, { full_name: string | null; email: string | null; company_name: string | null }>();
   for (const p of profiles) {
-    profileMap.set(p.id, { name: p.name, email: p.email, company_name: p.company_name });
+    profileMap.set(p.id, { full_name: p.full_name, email: p.email, company_name: p.company_name });
   }
   return members.map((m) => {
     const profile = profileMap.get(m.owner_user_id);
     return {
       ...m,
-      inviter_name: profile?.name || undefined,
+      inviter_name: profile?.full_name || undefined,
       inviter_email: profile?.email || undefined,
       inviter_company: profile?.company_name || undefined,
     };
