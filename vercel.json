@@ -23,6 +23,10 @@
       "schedule": "0 9 * * 1"
     },
     {
+      "path": "/api/cron/founders-digest",
+      "schedule": "0 16 * * 1"
+    },
+    {
       "path": "/api/cron/sync-linear-status",
       "schedule": "0 */4 * * *"
     }
