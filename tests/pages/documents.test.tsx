@@ -10,6 +10,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import DocumentsPage from "@/app/dashboard/documents/page";
 import { DocumentCard } from "@/components/dashboard/document-card";
 import type { DocumentItem } from "@/components/dashboard/document-card";
+import { UserTier } from "@/lib/constants";
 
 // Mock fetch
 const mockFetch = vi.fn();
@@ -35,7 +36,18 @@ vi.mock("next/link", () => ({
 const mockUseUserTier = vi.fn();
 vi.mock("@/lib/context/tier-context", () => ({
   useUserTier: () => mockUseUserTier(),
-  useTier: () => ({ tier: 2, isLoading: false }),
+  useTier: () => ({ tier: 2, isLoading: false }), // UserTier.PRO = 2 (page requires PRO)
+}));
+
+// Mock useOasesProgress so the documents page doesn't consume a fetch
+// before the test's mocked response.
+vi.mock("@/hooks/use-oases-progress", () => ({
+  useOasesProgress: () => ({
+    progress: { currentStage: "build" },
+    isLoading: false,
+    error: null,
+    refresh: vi.fn(),
+  }),
 }));
 
 // ============================================================================
@@ -136,11 +148,11 @@ describe("Documents Page (/dashboard/documents)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockReset();
-    mockUseUserTier.mockReturnValue({ tier: 2, isLoading: false });
+    mockUseUserTier.mockReturnValue({ tier: UserTier.PRO, isLoading: false });
   });
 
   it("renders loading state while tier is loading", () => {
-    mockUseUserTier.mockReturnValue({ tier: 0, isLoading: true });
+    mockUseUserTier.mockReturnValue({ tier: UserTier.FREE, isLoading: true });
     render(<DocumentsPage />);
     // Should show spinner (no heading yet)
     expect(screen.queryByText("Documents")).not.toBeInTheDocument();

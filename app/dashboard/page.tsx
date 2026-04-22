@@ -25,6 +25,7 @@ import { DailyAgendaWidget } from "@/components/dashboard/daily-agenda-widget";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { TrialStatusBanner } from "@/components/dashboard/trial-status-banner";
 import { StageFocusBanner } from "@/components/dashboard/stage-focus-banner";
+import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 import type { MomentumIndicator as MomentumIndicatorType } from "@/lib/dashboard/engagement-score";
@@ -161,6 +162,7 @@ function DashboardContent() {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
+        <InviteBanner />
         <FredHero
           userName={userName}
           canCallFred={canCallFred}
@@ -195,6 +197,9 @@ function DashboardContent() {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Trial countdown banner */}
       <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
+
+      {/* Team invite notification */}
+      <InviteBanner />
 
       {/* FRED HERO — front and center, the reason you're here */}
       <FredHero

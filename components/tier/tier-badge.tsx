@@ -12,7 +12,7 @@ interface TierBadgeProps {
   className?: string;
 }
 
-const TIER_ICONS = {
+const TIER_ICONS: Record<UserTier, typeof Zap> = {
   [UserTier.FREE]: Zap,
   [UserTier.BUILDER]: Hammer,
   [UserTier.PRO]: Sparkles,
@@ -81,6 +81,7 @@ export function AnimatedTierBadge({
       <div
         className={cn(
           "absolute inset-0 rounded-full blur-sm opacity-50",
+          tier === UserTier.BUILDER && "bg-amber-500",
           tier === UserTier.PRO && "bg-[#ff6a1a]",
           tier === UserTier.STUDIO && "bg-gradient-to-r from-[#ff6a1a] to-orange-400"
         )}
@@ -111,12 +112,12 @@ export function TierIcon({
 }) {
   const Icon = TIER_ICONS[tier];
 
-  const colorClass = {
+  const colorClass: Record<UserTier, string> = {
     [UserTier.FREE]: "text-gray-400",
     [UserTier.BUILDER]: "text-amber-500",
     [UserTier.PRO]: "text-[#ff6a1a]",
     [UserTier.STUDIO]: "text-orange-400",
-  }[tier];
+  };
 
-  return <Icon className={cn("h-4 w-4", colorClass, className)} />;
+  return <Icon className={cn("h-4 w-4", colorClass[tier], className)} />;
 }

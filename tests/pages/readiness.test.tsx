@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import ReadinessPage from "@/app/dashboard/readiness/page";
+import { UserTier } from "@/lib/constants";
 
 // Mock fetch
 const mockFetch = vi.fn();
@@ -22,7 +23,7 @@ vi.mock("next/link", () => ({
 const mockUseUserTier = vi.fn();
 vi.mock("@/lib/context/tier-context", () => ({
   useUserTier: () => mockUseUserTier(),
-  useTier: () => ({ tier: 2, isLoading: false }),
+  useTier: () => ({ tier: 2, isLoading: false }), // UserTier.PRO = 2
 }));
 
 const mockReadinessData = {
@@ -77,7 +78,7 @@ describe("Readiness Tab (/dashboard/readiness)", () => {
     mockFetch.mockReset();
     // Default: Pro tier, loaded
     mockUseUserTier.mockReturnValue({
-      tier: 2, // UserTier.PRO
+      tier: UserTier.PRO,
       isLoading: false,
       tierName: "Pro",
       isSubscriptionActive: true,
@@ -88,7 +89,7 @@ describe("Readiness Tab (/dashboard/readiness)", () => {
 
   it("renders loading state while tier is loading", async () => {
     mockUseUserTier.mockReturnValue({
-      tier: 0,
+      tier: UserTier.FREE,
       isLoading: true,
       tierName: "Free",
       isSubscriptionActive: false,
@@ -108,7 +109,7 @@ describe("Readiness Tab (/dashboard/readiness)", () => {
 
   it("shows FeatureLock for Free tier users", async () => {
     mockUseUserTier.mockReturnValue({
-      tier: 0,
+      tier: UserTier.FREE,
       isLoading: false,
       tierName: "Free",
       isSubscriptionActive: false,

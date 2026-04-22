@@ -91,7 +91,7 @@ export default function RealityLensDemo() {
               transition={{ delay: 0.1 }}
               className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto"
             >
-              Stop lying to yourself. Get Fred Carey&apos;s no-BS analysis of your startup idea
+              Stop lying to yourself. Get Fred Cary&apos;s no-BS analysis of your startup idea
               in under 60 seconds. Real scores. Real insights. Real talk.
             </motion.p>
           </div>
@@ -224,8 +224,8 @@ export default function RealityLensDemo() {
               </div>
 
               <Button asChild size="lg" className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 mt-8">
-                <Link href="/chat">
-                  Sign Up Free & Analyze <ArrowRight className="ml-2 w-4 h-4" />
+                <Link href="/get-started">
+                  Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
             </motion.div>
