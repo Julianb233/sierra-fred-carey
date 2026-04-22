@@ -25,6 +25,8 @@ import { DailyAgendaWidget } from "@/components/dashboard/daily-agenda-widget";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { TrialStatusBanner } from "@/components/dashboard/trial-status-banner";
 import { StageGoalHero } from "@/components/dashboard/stage-goal-hero";
+import { StageFocusBanner } from "@/components/dashboard/stage-focus-banner";
+import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { UserTier } from "@/lib/constants";
 import type { CommandCenterData } from "@/lib/dashboard/command-center";
 import type { MomentumIndicator as MomentumIndicatorType } from "@/lib/dashboard/engagement-score";
@@ -168,6 +170,7 @@ function DashboardContent() {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
+        <InviteBanner />
         <FredHero
           userName={userName}
           canCallFred={canCallFred}
@@ -181,6 +184,10 @@ function DashboardContent() {
             <StageGoalHero stage={userStage} />
           </FadeIn>
         )}
+        {/* Stage-specific focus banner */}
+        <FadeIn delay={0.015}>
+          <StageFocusBanner stage={userStage} />
+        </FadeIn>
         {/* Daily Mentor Guidance — proactive task agenda */}
         <FadeIn delay={0.02}>
           <DailyAgendaWidget />
@@ -205,6 +212,9 @@ function DashboardContent() {
       {/* Trial countdown banner */}
       <TrialStatusBanner trialEnd={trialEnd} subscriptionStatus={subscriptionStatus} />
 
+      {/* Team invite notification */}
+      <InviteBanner />
+
       {/* FRED HERO — front and center, the reason you're here */}
       <FredHero
         userName={userName}
@@ -220,6 +230,10 @@ function DashboardContent() {
           <StageGoalHero stage={userStage} />
         </FadeIn>
       )}
+      {/* Stage-specific focus banner */}
+      <FadeIn delay={0.015}>
+        <StageFocusBanner stage={userStage} />
+      </FadeIn>
 
       {/* Daily Mentor Guidance — proactive task agenda */}
       <FadeIn delay={0.02}>

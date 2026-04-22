@@ -163,7 +163,7 @@ export function VoiceChatOverlay({
           {!isSupported && (
             <div className="bg-red-500/20 border border-red-500/40 rounded-xl p-4 text-center">
               <p className="text-white text-sm">
-                Voice input isn't supported on this browser. Please use Chrome, Safari, or Edge.
+                Voice input isn&apos;t supported on this browser. Please use Chrome, Safari, or Edge.
               </p>
             </div>
           )}
@@ -235,7 +235,6 @@ export function VoiceChatOverlay({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setTranscribedText("");
                     reset();
                     startRecording();
                   }}

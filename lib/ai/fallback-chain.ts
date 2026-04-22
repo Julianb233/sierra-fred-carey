@@ -46,7 +46,7 @@ export interface FallbackResult<T> {
 // Default Configuration
 // ============================================================================
 
-const DEFAULT_FALLBACK_ORDER: ProviderName[] = ["openai", "anthropic", "google"];
+const DEFAULT_FALLBACK_ORDER: ProviderName[] = ["google", "anthropic", "openai"];
 
 const DEFAULT_CONFIG: FallbackConfig = {
   providerOrder: DEFAULT_FALLBACK_ORDER,
@@ -61,12 +61,12 @@ const DEFAULT_CONFIG: FallbackConfig = {
 
 function getModelForProvider(provider: ProviderName): LanguageModel | null {
   switch (provider) {
-    case "openai":
-      return getPrimaryModel() || getFastModel();
+    case "google":
+      return getPrimaryModel() || getFallback2Model() || getFastModel();
     case "anthropic":
       return getFallback1Model();
-    case "google":
-      return getFallback2Model();
+    case "openai":
+      return null; // OpenAI not currently active (no credits)
     default:
       return null;
   }

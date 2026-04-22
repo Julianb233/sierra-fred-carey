@@ -2,13 +2,15 @@
  * Sends a message to a WhatsApp group via Mac Mini SSH + AppleScript.
  * This is the primary method — Mac Mini is always authenticated.
  */
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
 export async function sendWhatsAppMessage(
   groupName: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { exec } = require("child_process");
-  const { promisify } = require("util");
-  const execAsync = promisify(exec);
 
   // Escape special characters for AppleScript
   const escapedMessage = message
@@ -88,13 +90,14 @@ export async function sendFeedbackAck(
 }
 
 /**
- * Sends resolution notification when a Linear issue is closed
+ * Sends resolution notification when a Linear issue is closed.
+ * Posts to the WhatsApp group so founders know issues are addressed.
  */
 export async function sendResolutionNotification(
   groupName: string,
   issueTitle: string,
   issueIdentifier: string
-): Promise<void> {
-  const message = `Resolved: "${issueTitle}" (${issueIdentifier}) - Fixed and deployed.`;
-  await sendWhatsAppMessage(groupName, message);
+): Promise<{ success: boolean; error?: string }> {
+  const message = `✓ RESOLVED: ${issueTitle} — fixed and deployed (${issueIdentifier})`;
+  return sendWhatsAppMessage(groupName, message);
 }

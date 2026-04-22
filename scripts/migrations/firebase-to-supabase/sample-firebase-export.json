@@ -1,0 +1,36 @@
+{
+  "users": [
+    {
+      "localId": "fb_abc123",
+      "email": "sample1@example.com",
+      "emailVerified": true,
+      "displayName": "Sample Founder",
+      "disabled": false,
+      "createdAt": "1715000000000",
+      "lastSignedInAt": "1731000000000",
+      "providerUserInfo": [
+        {
+          "providerId": "password",
+          "email": "sample1@example.com",
+          "displayName": "Sample Founder"
+        }
+      ]
+    },
+    {
+      "localId": "fb_xyz789",
+      "email": "sample2@example.com",
+      "emailVerified": false,
+      "displayName": "OAuth Only User",
+      "disabled": false,
+      "createdAt": "1720000000000",
+      "providerUserInfo": [
+        {
+          "providerId": "google.com",
+          "rawId": "108888",
+          "email": "sample2@example.com",
+          "displayName": "OAuth Only User"
+        }
+      ]
+    }
+  ]
+}
