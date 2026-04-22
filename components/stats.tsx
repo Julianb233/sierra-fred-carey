@@ -39,7 +39,7 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 export default function Stats() {
   const stats = [
     { number: 100, prefix: "", suffix: "s+", label: "Founders Coached" },
-    { number: 1, prefix: "$", suffix: "B+", label: "Capital Raised" },
+    { number: 3, prefix: "$", suffix: "B+", label: "Capital Raised" },
     { number: 500, prefix: "", suffix: "+", label: "Decks Reviewed" },
     { number: 89, prefix: "", suffix: "%", label: "Investor Meeting Rate" },
   ];

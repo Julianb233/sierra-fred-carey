@@ -1,0 +1,88 @@
+appId: com.joinsahara.app
+name: "Sahara Dashboard — Navigate All Core Pages"
+tags:
+  - critical
+  - dashboard
+  - P1
+---
+
+# Prerequisite: Login
+- launchApp
+- openLink: https://joinsahara.com/login
+- tapOn:
+    id: "email-input"
+- inputText: ${E2E_TEST_EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${E2E_TEST_PASSWORD}
+- tapOn: "Sign in"
+- assertVisible: "Dashboard"
+
+# --- Dashboard Home ---
+- openLink: https://joinsahara.com/dashboard
+- assertVisible: "Dashboard"
+
+# --- Next Steps ---
+- openLink: https://joinsahara.com/dashboard/next-steps
+- assertNotVisible: "404"
+- assertNotVisible: "error"
+
+# --- Investor Readiness ---
+- openLink: https://joinsahara.com/dashboard/investor-readiness
+- assertNotVisible: "404"
+
+# --- Investor Lens ---
+- openLink: https://joinsahara.com/dashboard/investor-lens
+- assertNotVisible: "404"
+
+# --- Pitch Deck ---
+- openLink: https://joinsahara.com/dashboard/pitch-deck
+- assertNotVisible: "404"
+
+# --- Coaching ---
+- openLink: https://joinsahara.com/dashboard/coaching
+- assertNotVisible: "404"
+
+# --- Journey ---
+- openLink: https://joinsahara.com/dashboard/journey
+- assertNotVisible: "404"
+
+# --- Documents ---
+- openLink: https://joinsahara.com/dashboard/documents
+- assertNotVisible: "404"
+
+# --- Profile ---
+- openLink: https://joinsahara.com/dashboard/profile
+- assertNotVisible: "404"
+
+# --- Settings ---
+- openLink: https://joinsahara.com/dashboard/settings
+- assertNotVisible: "404"
+
+# --- Analytics ---
+- openLink: https://joinsahara.com/dashboard/analytics
+- assertNotVisible: "404"
+
+# --- Content/Courses ---
+- openLink: https://joinsahara.com/dashboard/content
+- assertNotVisible: "404"
+
+# --- Communities ---
+- openLink: https://joinsahara.com/dashboard/communities
+- assertNotVisible: "404"
+
+# --- Marketplace ---
+- openLink: https://joinsahara.com/dashboard/marketplace
+- assertNotVisible: "404"
+
+# --- Wellbeing ---
+- openLink: https://joinsahara.com/dashboard/wellbeing
+- assertNotVisible: "404"
+
+# --- Strategy ---
+- openLink: https://joinsahara.com/dashboard/strategy
+- assertNotVisible: "404"
+
+# --- Reality Lens ---
+- openLink: https://joinsahara.com/dashboard/reality-lens
+- assertNotVisible: "404"

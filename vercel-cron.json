@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/monitor-health",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/monitoring/auto-promotion/check",
       "schedule": "0 * * * *"
     },
