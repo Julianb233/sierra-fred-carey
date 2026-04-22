@@ -87,7 +87,18 @@ const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
       widenClientFileUpload: true,
       hideSourceMaps: true,
       disableLogger: true,
-      tunnelRoute: "/monitoring-tunnel",
+      // tunnelRoute intentionally OMITTED (AI-8503). The prior setting
+      // ("/monitoring-tunnel") relied on the Sentry Next.js plugin to
+      // auto-generate a route handler, but with Next 16 + Serwist outer
+      // wrap the handler never materializes -- /monitoring-tunnel returns
+      // 404 on both GET and POST (verified against prod a89daa2 and a
+      // preview deployment). Every client-side Sentry event was POSTed to
+      // the dead endpoint and silently dropped. Without tunnelRoute,
+      // events go directly to *.ingest.us.sentry.io. Ad-blockers can
+      // block that host for a single-digit % of users, but that is a
+      // significant improvement over losing 100% of client errors.
+      // Re-enable only after adding a real route handler at the configured
+      // path and verifying 200-on-POST in production.
     })
   : serwistConfig;
 
