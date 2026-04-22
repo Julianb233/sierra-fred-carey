@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/dialog"
 
 /**
- * Loom embed URL for the "How To Use Sahara" walkthrough video.
- * Replace the video ID below once the actual Loom recording is created.
+ * Loom video ID for the "How To Use Sahara" walkthrough.
+ * Set NEXT_PUBLIC_LOOM_WALKTHROUGH_ID in Vercel env vars once the recording exists.
+ * When unset, the modal renders a friendly "coming soon" placeholder.
  */
-const LOOM_VIDEO_ID = "placeholder"
+const LOOM_VIDEO_ID = process.env.NEXT_PUBLIC_LOOM_WALKTHROUGH_ID || "placeholder"
 const LOOM_EMBED_URL = `https://www.loom.com/embed/${LOOM_VIDEO_ID}`
 
 interface HowToUseSaharaModalProps {
