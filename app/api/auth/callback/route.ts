@@ -39,9 +39,18 @@ export async function GET(request: NextRequest) {
     }
 
     console.error("[auth/callback] Code exchange failed:", error.message)
+
+    // Provide specific error hints based on failure type
+    const errorUrl = new URL("/forgot-password", origin)
+    if (error.message.includes("already used") || error.message.includes("consumed")) {
+      errorUrl.searchParams.set("error", "used")
+    } else {
+      errorUrl.searchParams.set("error", "expired")
+    }
+    return NextResponse.redirect(errorUrl)
   }
 
-  // If no code or exchange failed, redirect to forgot-password with error hint
+  // If no code provided, redirect to forgot-password with error hint
   const errorUrl = new URL("/forgot-password", origin)
   errorUrl.searchParams.set("error", "expired")
   return NextResponse.redirect(errorUrl)

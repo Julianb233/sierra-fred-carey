@@ -20,7 +20,10 @@ export default defineConfig({
     },
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', '.claude'],
+    // NOTE: '**/node_modules/**' (not just 'node_modules') to also exclude
+    // funnel/node_modules/zod/**/*.test.ts — the Vite sub-project under
+    // funnel/ ships zod's own test files that would otherwise run here.
+    exclude: ['**/node_modules/**', '.next', 'dist', '.claude', 'funnel/**'],
     pool: 'threads',
     fileParallelism: false,
     maxWorkers: 2,
