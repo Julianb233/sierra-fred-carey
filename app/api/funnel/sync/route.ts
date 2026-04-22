@@ -4,7 +4,7 @@ import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
 
 /**
  * POST /api/funnel/sync
- * Receives funnel data (chat messages + journey progress) from u.joinsahara.com.
+ * Receives funnel data (chat messages + journey progress) from you.joinsahara.com.
  *
  * Stores data in funnel_sessions table keyed by sessionId.
  * When a user signs up for the full platform, this data is used to pre-populate

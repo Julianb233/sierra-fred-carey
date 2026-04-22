@@ -4,7 +4,6 @@ const ALLOWED_ORIGINS = new Set([
   process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://u.joinsahara.com",
   "http://localhost:5173",
 ]);
 
