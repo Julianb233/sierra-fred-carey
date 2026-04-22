@@ -190,6 +190,12 @@ async function detectIntent(
         /let\s+me\s+(tell|share|explain)/i,
         /for\s+your\s+(information|reference)/i,
         /fyi/i,
+        // AI-2266: Idea-sharing patterns — founders describing their concept casually
+        /\b(my\s+idea|i('m|\s+am)\s+(building|working\s+on|thinking\s+(about|of)))/i,
+        /\b(i\s+want\s+to\s+(build|create|make|start|launch))/i,
+        /\b(i('ve|\s+have)\s+(an?\s+)?(idea|concept|startup|app|platform|product))/i,
+        /\b(thinking\s+(about|of)\s+(start|creat|build|launch))/i,
+        /\ban?\s+(app|platform|marketplace|saas|tool|service)\s+(for|that|to)/i,
       ],
       weight: 0.80,
     },
@@ -228,6 +234,13 @@ async function detectIntent(
         break; // Found match for this intent, move to next
       }
     }
+  }
+
+  // AI-2266: Boost confidence for longer messages even when no pattern matched.
+  // Messages with 20+ chars likely contain meaningful content — treat as
+  // information-sharing rather than unknown to reduce unnecessary clarification.
+  if (bestMatch.intent === "unknown" && message.length >= 20) {
+    bestMatch = { intent: "information", confidence: 0.6 };
   }
 
   // Boost confidence if message length suggests thoughtful input
@@ -299,14 +312,18 @@ function determineClarificationNeeds(
   // time out — surfacing as "I'm having trouble processing your message". Instead,
   // treat low-confidence messages as optional clarifications so the full pipeline
   // runs and FRED can still produce a useful response.
-  if (intentResult.confidence < 0.6) {
+  //
+  // AI-2266: Lowered threshold from 0.6 to 0.4 — combined with the "unknown"
+  // confidence boost for 20+ char messages, most natural inputs now proceed
+  // without triggering clarification. Only very short/ambiguous inputs hit this.
+  if (intentResult.confidence < 0.4) {
     clarifications.push({
-      question: "Could you help me understand what you're looking for?",
-      reason: "I want to make sure I address your needs correctly.",
+      question: "Tell me more about what you're working on — I'm here to help with whatever you need.",
+      reason: "I want to give you the most relevant advice.",
       options: [
+        "I have a startup idea to explore",
         "I need help making a decision",
-        "I have a question",
-        "I'm sharing information",
+        "I have a question about startups",
         "I'm giving feedback on your previous response",
       ],
       required: false,
