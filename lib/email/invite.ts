@@ -24,7 +24,8 @@ const FROM_NAME = process.env.RESEND_FROM_NAME || "Sahara";
 export async function sendInviteEmail(
   toEmail: string,
   inviterName: string,
-  role: string
+  role: string,
+  inviteId?: string
 ): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -39,7 +40,9 @@ export async function sendInviteEmail(
 
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const invitationsUrl = `${baseUrl}/dashboard/invitations`;
+    const invitationsUrl = inviteId
+      ? `${baseUrl}/invite/${inviteId}`
+      : `${baseUrl}/dashboard/invitations`;
 
     const html = generateInviteEmailHtml(inviterName, role, invitationsUrl);
     const text = generateInviteEmailText(inviterName, role, invitationsUrl);

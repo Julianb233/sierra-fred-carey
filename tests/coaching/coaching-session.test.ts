@@ -9,6 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // Test Constants
@@ -214,7 +215,7 @@ describe("Coaching Sessions API", () => {
 
     it("returns 403 when user is not Studio tier", async () => {
       setupAuth(FREE_USER_ID);
-      mockGetUserTier.mockResolvedValue(0); // UserTier.FREE
+      mockGetUserTier.mockResolvedValue(UserTier.FREE);
 
       const { POST } = await import(
         "@/app/api/coaching/sessions/route"
@@ -234,7 +235,7 @@ describe("Coaching Sessions API", () => {
 
     it("returns 400 when roomName is missing", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(UserTier.STUDIO);
 
       const { POST } = await import(
         "@/app/api/coaching/sessions/route"
@@ -254,7 +255,7 @@ describe("Coaching Sessions API", () => {
 
     it("returns 400 when roomName has invalid characters", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(UserTier.STUDIO);
 
       const { POST } = await import(
         "@/app/api/coaching/sessions/route"
@@ -274,7 +275,7 @@ describe("Coaching Sessions API", () => {
 
     it("creates a session for Studio tier user", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(UserTier.STUDIO);
 
       const createdSession = {
         id: "new-sess-id",
@@ -327,7 +328,7 @@ describe("Coaching Sessions API", () => {
 
     it("creates a session without notes", async () => {
       setupAuth(STUDIO_USER_ID);
-      mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+      mockGetUserTier.mockResolvedValue(UserTier.STUDIO);
 
       const createdSession = {
         id: "new-sess-id-2",

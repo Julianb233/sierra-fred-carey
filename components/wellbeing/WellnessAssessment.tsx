@@ -102,7 +102,7 @@ function getFredRecommendation(score: number): string {
     return "You're in a strong place right now -- and that's not luck, it's discipline. Keep doing what you're doing. The founders who maintain their health are the ones who last long enough to win. I've seen it over 50 years.";
   }
   if (score >= 40) {
-    return "I can see you're feeling the weight of building something. That's normal. But 'normal' doesn't mean you should ignore it. After coaching 10,000+ founders, I can tell you: the ones who set boundaries and recharge are the ones who build things that last. Pick one thing this week to protect your energy.";
+    return "I can see you're feeling the weight of building something. That's normal. But 'normal' doesn't mean you should ignore it. After coaching hundreds of founders, I can tell you: the ones who set boundaries and recharge are the ones who build things that last. Pick one thing this week to protect your energy.";
   }
   return "Listen, I've watched too many brilliant founders burn themselves into the ground. Your startup needs you healthy -- period. No strategy, no pitch deck, no investor meeting matters if you can't think straight. Take a step back today. Talk to someone. This isn't weakness; this is the smartest business decision you'll make this week.";
 }

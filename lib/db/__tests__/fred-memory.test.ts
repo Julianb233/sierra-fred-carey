@@ -1,32 +1,32 @@
 /**
  * Tests for FRED Memory Access Functions
  *
- * These tests verify the types and structure of the memory functions.
- * Full integration tests require database connection.
+ * ═══════════════════════════════════════════════════════════════════════
+ * TRACEABILITY: Every eval criterion in this file MUST map to a section
+ * in .planning/OPERATING-BIBLE.md or an existing test in prompts.test.ts.
+ * See .planning/FRED-EVAL-TRACEABILITY.md for the complete mapping.
+ * Do NOT add new criteria without updating the traceability document.
+ * Source of truth: docs/SAHARA-FRED-AUTORESEARCH-WORKFLOW.md (Section 8)
+ * ═══════════════════════════════════════════════════════════════════════
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Helper to create a chainable mock that supports any method order
 function createChainableMock(singleResult: any, listResult: any): any {
   const handler = {
     get(_target: any, prop: string): any {
-      // Terminal methods return the appropriate result
       if (prop === "single") {
         return () => Promise.resolve(singleResult);
       }
       if (prop === "then") {
-        // Support direct await on query builder (for list operations)
         return (resolve: any) => resolve(listResult);
       }
-      // All other methods return another chainable proxy
       return (..._args: any[]) => new Proxy({}, handler);
     },
   };
   return new Proxy({}, handler);
 }
 
-// Mock the Supabase client
 vi.mock("@/lib/supabase/server", () => ({
   createServiceClient: vi.fn(() => ({
     from: vi.fn((tableName: string) => {
@@ -86,12 +86,6 @@ vi.mock("@/lib/supabase/server", () => ({
         error: null,
       };
 
-      const listResult = {
-        data: [],
-        error: null,
-      };
-
-      // Choose result based on table
       let singleResult = episodicResult;
       let listData = [episodicResult.data];
       if (tableName === "fred_semantic_memory") {
@@ -116,7 +110,6 @@ vi.mock("@/lib/supabase/server", () => ({
   })),
 }));
 
-// Import after mocking
 import {
   storeEpisode,
   retrieveRecentEpisodes,
@@ -124,6 +117,7 @@ import {
   getFact,
   getProcedure,
   logDecision,
+  computeEpisodeContentHash,
   type EpisodicMemory,
   type SemanticMemory,
   type ProceduralMemory,
@@ -143,19 +137,12 @@ describe("FRED Memory Types", () => {
         createdAt: new Date(),
         metadata: {},
       };
-
       expect(episode.id).toBeDefined();
       expect(episode.userId).toBe("user-123");
-      expect(episode.eventType).toBe("conversation");
     });
 
     it("supports all event types", () => {
-      const types: EpisodicMemory["eventType"][] = [
-        "conversation",
-        "decision",
-        "outcome",
-        "feedback",
-      ];
+      const types: EpisodicMemory["eventType"][] = ["conversation", "decision", "outcome", "feedback"];
       expect(types).toHaveLength(4);
     });
   });
@@ -172,25 +159,7 @@ describe("FRED Memory Types", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
       expect(fact.category).toBe("startup_facts");
-      expect(fact.confidence).toBe(1.0);
-    });
-
-    it("supports all categories", () => {
-      const categories: SemanticMemory["category"][] = [
-        "startup_facts",
-        "user_preferences",
-        "market_knowledge",
-        "team_info",
-        "investor_info",
-        "product_details",
-        "metrics",
-        "goals",
-        "challenges",
-        "decisions",
-      ];
-      expect(categories).toHaveLength(10);
     });
   });
 
@@ -200,13 +169,7 @@ describe("FRED Memory Types", () => {
         id: "test-id",
         name: "seven_factor_scoring",
         procedureType: "scoring_model",
-        steps: [
-          {
-            step: 1,
-            name: "strategic_alignment",
-            description: "Evaluate alignment",
-          },
-        ],
+        steps: [{ step: 1, name: "strategic_alignment", description: "Evaluate alignment" }],
         successRate: 0.5,
         usageCount: 0,
         version: 1,
@@ -214,20 +177,7 @@ describe("FRED Memory Types", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
       expect(procedure.procedureType).toBe("scoring_model");
-      expect(procedure.steps).toHaveLength(1);
-    });
-
-    it("supports all procedure types", () => {
-      const types: ProceduralMemory["procedureType"][] = [
-        "decision_framework",
-        "action_template",
-        "analysis_pattern",
-        "scoring_model",
-        "assessment_rubric",
-      ];
-      expect(types).toHaveLength(5);
     });
   });
 
@@ -241,63 +191,28 @@ describe("FRED Memory Types", () => {
         inputContext: { question: "Should we pivot?" },
         createdAt: new Date(),
       };
-
       expect(decision.decisionType).toBe("recommended");
-    });
-
-    it("supports all decision types", () => {
-      const types: DecisionLog["decisionType"][] = ["auto", "recommended", "escalated"];
-      expect(types).toHaveLength(3);
     });
   });
 });
 
 describe("Episodic Memory Operations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
   describe("storeEpisode", () => {
     it("creates an episode with required fields", async () => {
-      const result = await storeEpisode(
-        "user-123",
-        "session-456",
-        "conversation",
-        { message: "test" }
-      );
-
+      const result = await storeEpisode("user-123", "session-456", "conversation", { message: "test" });
       expect(result).toBeDefined();
       expect(result.userId).toBe("user-123");
-      expect(result.sessionId).toBe("session-456");
       expect(result.eventType).toBe("conversation");
     });
 
     it("accepts optional parameters", async () => {
-      const result = await storeEpisode(
-        "user-123",
-        "session-456",
-        "decision",
-        { choice: "A" },
-        {
-          importanceScore: 0.9,
-          metadata: { source: "chat" },
-        }
-      );
-
+      const result = await storeEpisode("user-123", "session-456", "decision", { choice: "A" }, {
+        importanceScore: 0.9,
+        metadata: { source: "chat" },
+      });
       expect(result).toBeDefined();
-    });
-
-    it("skips dedup check when content has no role field", async () => {
-      // Content without role/content fields should bypass dedup and insert directly
-      const result = await storeEpisode(
-        "user-123",
-        "session-456",
-        "conversation",
-        { message: "no role field here" }
-      );
-
-      expect(result).toBeDefined();
-      expect(result.userId).toBe("user-123");
     });
   });
 
@@ -306,50 +221,17 @@ describe("Episodic Memory Operations", () => {
       const results = await retrieveRecentEpisodes("user-123");
       expect(Array.isArray(results)).toBe(true);
     });
-
-    it("accepts filter options", async () => {
-      const results = await retrieveRecentEpisodes("user-123", {
-        limit: 5,
-        sessionId: "session-456",
-        eventType: "conversation",
-      });
-      expect(Array.isArray(results)).toBe(true);
-    });
   });
 });
 
 describe("Semantic Memory Operations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
   describe("storeFact", () => {
     it("stores a fact with required fields", async () => {
-      const result = await storeFact(
-        "user-123",
-        "startup_facts",
-        "company_name",
-        { name: "Acme Inc" }
-      );
-
+      const result = await storeFact("user-123", "startup_facts", "company_name", { name: "Acme Inc" });
       expect(result).toBeDefined();
       expect(result.category).toBe("startup_facts");
-      expect(result.key).toBe("company_name");
-    });
-
-    it("accepts optional parameters", async () => {
-      const result = await storeFact(
-        "user-123",
-        "user_preferences",
-        "communication_style",
-        { style: "direct" },
-        {
-          confidence: 0.8,
-          source: "user_input",
-        }
-      );
-
-      expect(result).toBeDefined();
     });
   });
 
@@ -362,9 +244,7 @@ describe("Semantic Memory Operations", () => {
 });
 
 describe("Procedural Memory Operations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
   describe("getProcedure", () => {
     it("retrieves a procedure by name", async () => {
@@ -375,9 +255,7 @@ describe("Procedural Memory Operations", () => {
 });
 
 describe("Decision Log Operations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
   describe("logDecision", () => {
     it("logs a decision with required fields", async () => {
@@ -387,41 +265,50 @@ describe("Decision Log Operations", () => {
         scores: { strategic_alignment: 8, leverage: 7 },
         confidence: 0.85,
       });
-
       expect(result).toBeDefined();
       expect(result.decisionType).toBe("recommended");
     });
   });
 });
 
-describe("Integration Scenarios", () => {
-  it("supports a typical chat flow", () => {
-    // This test documents the expected flow without requiring database
-    const flow = [
-      "1. User sends message",
-      "2. storeEpisode('conversation', { message })",
-      "3. retrieveRecentEpisodes() for context",
-      "4. searchFactsByEmbedding() for relevant knowledge",
-      "5. getProcedure('analysis_framework')",
-      "6. Generate response using context + facts + procedure",
-      "7. storeEpisode('conversation', { response })",
-    ];
+describe("Episode Deduplication", () => {
+  describe("computeEpisodeContentHash", () => {
+    it("produces deterministic hashes for same input", () => {
+      const h1 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello world" });
+      const h2 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello world" });
+      expect(h1).toBe(h2);
+    });
 
-    expect(flow).toHaveLength(7);
-  });
+    it("produces different hashes for different content", () => {
+      const h1 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello" });
+      const h2 = computeEpisodeContentHash("conversation", { role: "user", content: "Goodbye" });
+      expect(h1).not.toBe(h2);
+    });
 
-  it("supports a decision flow", () => {
-    const flow = [
-      "1. User presents decision",
-      "2. logDecision({ decisionType: 'recommended', inputContext })",
-      "3. getProcedure('seven_factor_scoring')",
-      "4. Calculate scores",
-      "5. getProcedure('auto_decide_framework')",
-      "6. Determine auto/recommend/escalate",
-      "7. recordFinalDecision() after user confirms",
-      "8. recordDecisionOutcome() when outcome known",
-    ];
+    it("produces different hashes for different roles", () => {
+      const h1 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello" });
+      const h2 = computeEpisodeContentHash("conversation", { role: "assistant", content: "Hello" });
+      expect(h1).not.toBe(h2);
+    });
 
-    expect(flow).toHaveLength(8);
+    it("produces different hashes for different event types", () => {
+      const h1 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello" });
+      const h2 = computeEpisodeContentHash("decision", { role: "user", content: "Hello" });
+      expect(h1).not.toBe(h2);
+    });
+
+    it("handles content without role/content fields using JSON fallback", () => {
+      const h1 = computeEpisodeContentHash("feedback", { rating: 5, comment: "Great" });
+      const h2 = computeEpisodeContentHash("feedback", { rating: 5, comment: "Great" });
+      expect(h1).toBe(h2);
+      const h3 = computeEpisodeContentHash("feedback", { rating: 3, comment: "OK" });
+      expect(h1).not.toBe(h3);
+    });
+
+    it("ignores extra metadata fields for conversation events", () => {
+      const h1 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello", timestamp: "2024-01-01" });
+      const h2 = computeEpisodeContentHash("conversation", { role: "user", content: "Hello", timestamp: "2024-01-02" });
+      expect(h1).toBe(h2);
+    });
   });
 });

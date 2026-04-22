@@ -96,7 +96,9 @@ export function chunkByFixedSize(
     }
 
     // Move start, accounting for overlap
-    start = chunkEnd - overlapChars;
+    // Ensure we always advance by at least 1 character to prevent infinite loops
+    const nextStart = chunkEnd - overlapChars;
+    start = nextStart > start ? nextStart : chunkEnd;
   }
 
   return chunks;

@@ -52,11 +52,13 @@ export async function getUserTier(userId: string): Promise<UserTier> {
 
         // Fallback: if price ID not found in PLANS (e.g. archived price),
         // infer tier from the price ID env vars directly
+        const builderPriceId = process.env.NEXT_PUBLIC_STRIPE_BUILDER_PRICE_ID;
         const fundraisingPriceId = process.env.NEXT_PUBLIC_STRIPE_FUNDRAISING_PRICE_ID;
         const studioPriceId = process.env.NEXT_PUBLIC_STRIPE_VENTURE_STUDIO_PRICE_ID;
 
         if (subscription.stripePriceId === studioPriceId) return UserTier.STUDIO;
         if (subscription.stripePriceId === fundraisingPriceId) return UserTier.PRO;
+        if (subscription.stripePriceId === builderPriceId) return UserTier.BUILDER;
 
         console.warn(
           `[TierMiddleware] Active subscription for user ${userId} has unrecognized price ID: "${subscription.stripePriceId}". ` +
