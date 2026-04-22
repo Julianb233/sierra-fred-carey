@@ -8,6 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
+import { UserTier } from '@/lib/constants';
 
 // Hoist mock functions so they're available in vi.mock factories
 const { mockGetUser, mockGetSession, mockFrom, mockSql } = vi.hoisted(() => ({
@@ -49,7 +50,7 @@ vi.mock('@/lib/stripe/config', () => ({
 
 // Mock tier middleware to return PRO tier for authenticated users
 vi.mock('@/lib/api/tier-middleware', () => ({
-  getUserTier: vi.fn(() => Promise.resolve(1)), // UserTier.PRO
+  getUserTier: vi.fn(() => Promise.resolve(UserTier.PRO)),
   createTierErrorResponse: vi.fn(() => {
     const { NextResponse } = require('next/server');
     return NextResponse.json(
