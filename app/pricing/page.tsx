@@ -18,12 +18,11 @@ export default function PricingPage() {
       glowColor: "rgba(156, 163, 175, 0.3)",
       icon: StarIcon,
       features: [
-        { name: "Core Fred Cary Decision OS", included: true },
-        { name: "Strategy & execution reframing", included: true },
-        { name: "Startup Reality Lens", included: true },
-        { name: "Founder wellbeing support", included: true },
+        { name: "Founder Decision Engine", included: true },
+        { name: "Feasibility + market reality checks", included: true },
         { name: "Red Flag Detection", included: true },
-        { name: "Founder Intake Snapshot", included: true },
+        { name: "Founder wellbeing support", included: true },
+        { name: "Initial founder snapshot", included: true },
         { name: "Investor Lens", included: false },
         { name: "Investor Readiness Score", included: false },
         { name: "Pitch Deck Review", included: false },
@@ -36,8 +35,35 @@ export default function PricingPage() {
       popular: false,
     },
     {
+      name: "Builder",
+      subtitle: "For Founders Getting Serious",
+      price: 39,
+      description: "Turn ideas into structured plans you can actually execute.",
+      audience: "Founders starting to build seriously, moving past the idea stage.",
+      gradient: "from-amber-500 to-amber-600",
+      glowColor: "rgba(245, 158, 11, 0.3)",
+      icon: StarIcon,
+      features: [
+        { name: "Everything in Free", included: true },
+        { name: "Saved founder profile + memory", included: true },
+        { name: "Limited Investor Readiness insights", included: true },
+        { name: "Strategy outputs (lean plans, early roadmap)", included: true },
+        { name: "Early-stage scoring + guidance", included: true },
+        { name: "Priority responses", included: true },
+        { name: "Full Investor Lens", included: false },
+        { name: "Investor Readiness Score", included: false },
+        { name: "Pitch Deck Review", included: false },
+        { name: "Strategy Documents", included: false },
+        { name: "Weekly SMS Check-Ins", included: false },
+        { name: "Boardy Integration", included: false },
+        { name: "Virtual Team Agents", included: false },
+      ],
+      cta: "Start Building",
+      popular: false,
+    },
+    {
       name: "Pro",
-      subtitle: "For Active Fundraisers",
+      subtitle: "For Founders Preparing to Raise",
       price: 99,
       description: "Turn clarity into investor-grade readiness.",
       audience: "Pre-seed and seed founders, founders preparing for fundraising.",
@@ -45,7 +71,7 @@ export default function PricingPage() {
       glowColor: "rgba(255, 106, 26, 0.4)",
       icon: RocketIcon,
       features: [
-        { name: "Everything in Free tier", included: true },
+        { name: "Everything in Builder", included: true },
         { name: "Full Investor Lens (Pre-Seed/Seed/A)", included: true },
         { name: "Investor Readiness Score", included: true },
         { name: "Pitch Deck Review Protocol", included: true },
@@ -58,12 +84,12 @@ export default function PricingPage() {
         { name: "Outreach Automation", included: false },
         { name: "Virtual Team Agents", included: false },
       ],
-      cta: "Start 14-Day Trial",
+      cta: "Get Investor Ready",
       popular: true,
     },
     {
       name: "Studio",
-      subtitle: "Full Leverage Mode",
+      subtitle: "For Founders Who Want Execution",
       price: 249,
       description: "Deliver leverage, execution support, and capital connectivity.",
       audience: "Founders actively fundraising, scaling operations, small teams replacing headcount.",
@@ -71,7 +97,7 @@ export default function PricingPage() {
       glowColor: "rgba(234, 88, 12, 0.3)",
       icon: LightningBoltIcon,
       features: [
-        { name: "Everything in Pro tier", included: true },
+        { name: "Everything in Pro", included: true },
         { name: "Weekly SMS Check-Ins", included: true },
         { name: "Boardy Integration", included: true },
         { name: "Investor Matching & Warm Intros", included: true },
@@ -85,20 +111,29 @@ export default function PricingPage() {
         { name: "Priority Compute", included: true },
         { name: "Deeper Memory Persistence", included: true },
       ],
-      cta: "Start 14-Day Trial",
+      cta: "Run My Company",
       popular: false,
     },
   ];
 
   const comparisonFeatures = [
-    { name: "Core OS", free: true, fundraising: true, studio: true },
-    { name: "Investor Lens", free: false, fundraising: true, studio: true },
-    { name: "Investor Readiness Score", free: false, fundraising: true, studio: true },
-    { name: "Deck Review", free: false, fundraising: true, studio: true },
-    { name: "Strategy Docs", free: false, fundraising: true, studio: true },
-    { name: "Weekly SMS Check-Ins", free: false, fundraising: false, studio: true },
-    { name: "Boardy Integration", free: false, fundraising: false, studio: true },
-    { name: "Virtual Team Agents", free: false, fundraising: false, studio: true },
+    { name: "Core OS", free: true, builder: true, fundraising: true, studio: true },
+    { name: "Founder Profile + Memory", free: false, builder: true, fundraising: true, studio: true },
+    { name: "Strategy Outputs", free: false, builder: true, fundraising: true, studio: true },
+    { name: "Investor Lens", free: false, builder: false, fundraising: true, studio: true },
+    { name: "Investor Readiness Score", free: false, builder: false, fundraising: true, studio: true },
+    { name: "Deck Review", free: false, builder: false, fundraising: true, studio: true },
+    { name: "Strategy Docs", free: false, builder: false, fundraising: true, studio: true },
+    { name: "Weekly SMS Check-Ins", free: false, builder: false, fundraising: false, studio: true },
+    { name: "Boardy Integration", free: false, builder: false, fundraising: false, studio: true },
+    { name: "Virtual Team Agents", free: false, builder: false, fundraising: false, studio: true },
+  ];
+
+  const upgradeGuide = [
+    { question: "Still exploring?", answer: "Stay Free" },
+    { question: "Building seriously?", answer: "Go Builder" },
+    { question: "Planning to raise?", answer: "Go Pro" },
+    { question: "Actively raising or scaling?", answer: "Go Studio" },
   ];
 
   return (
@@ -133,21 +168,17 @@ export default function PricingPage() {
             PRICING
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900 dark:text-white">
-            Simple, <span className="text-[#ff6a1a]">Transparent</span> Pricing
+            Stop guessing. Start building like a <span className="text-[#ff6a1a]">fundable company.</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-4">
-            Each tier unlocks outcomes, not just features. Higher tiers reduce
-            time-to-clarity and time-to-conviction.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 italic">
-            Pricing is about access to judgment, leverage, and continuity.
+            Sahara is your founder operating system — from idea to investor readiness to execution.
           </p>
         </div>
       </section>
 
       {/* Pricing Cards */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 pb-24 md:px-8">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -274,9 +305,42 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* When Should I Upgrade? */}
+      <section className="relative z-10 py-16 px-4 bg-white dark:bg-gray-950">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              When should I <span className="text-[#ff6a1a]">upgrade?</span>
+            </h2>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {upgradeGuide.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 hover:border-[#ff6a1a]/30 transition-all duration-300"
+              >
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{item.question}</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{item.answer}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Comparison Table */}
-      <section className="relative z-10 py-24 px-4 bg-white dark:bg-gray-950">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative z-10 py-24 px-4 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
@@ -298,16 +362,26 @@ export default function PricingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
               {/* Mobile card layout */}
               <div className="md:hidden space-y-3 p-4">
                 {comparisonFeatures.map((feature) => (
-                  <div key={feature.name} className="bg-white dark:bg-gray-950 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+                  <div key={feature.name} className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
                     <h4 className="font-medium text-sm mb-3 text-gray-900 dark:text-white">{feature.name}</h4>
-                    <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="grid grid-cols-4 gap-2 text-center">
                       <div>
                         <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Free</span>
                         {feature.free ? (
+                          <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                            <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
+                          </div>
+                        ) : (
+                          <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xs text-amber-500 block mb-1">$39</span>
+                        {feature.builder ? (
                           <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
                             <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
                           </div>
@@ -346,6 +420,7 @@ export default function PricingPage() {
                     <tr className="border-b border-gray-200 dark:border-gray-800">
                       <th className="text-left p-4 sm:p-6 font-semibold text-gray-900 dark:text-white">Feature</th>
                       <th className="text-center p-4 sm:p-6 font-semibold text-gray-600 dark:text-gray-400">Free</th>
+                      <th className="text-center p-4 sm:p-6 font-semibold text-amber-500">$39</th>
                       <th className="text-center p-4 sm:p-6 font-semibold text-[#ff6a1a]">$99</th>
                       <th className="text-center p-4 sm:p-6 font-semibold text-orange-600">$249</th>
                     </tr>
@@ -359,6 +434,15 @@ export default function PricingPage() {
                         <td className="p-4 sm:p-6 text-sm text-gray-700 dark:text-gray-300">{feature.name}</td>
                         <td className="text-center p-4 sm:p-6">
                           {feature.free ? (
+                            <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
+                              <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
+                            </div>
+                          ) : (
+                            <Cross2Icon className="h-5 w-5 text-gray-400 dark:text-gray-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center p-4 sm:p-6">
+                          {feature.builder ? (
                             <div className="w-6 h-6 rounded-full bg-[#ff6a1a]/20 flex items-center justify-center mx-auto">
                               <CheckIcon className="h-4 w-4 text-[#ff6a1a]" />
                             </div>
@@ -390,6 +474,31 @@ export default function PricingPage() {
                 </table>
               </div>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Risk Reversal */}
+      <section className="relative z-10 py-16 px-4 bg-white dark:bg-gray-950">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6"
+          >
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800">
+              <p className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Try any paid plan free for 14 days.
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                If Sahara doesn&apos;t give you clarity you didn&apos;t have before, don&apos;t pay.
+              </p>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-500 italic">
+              Founders spend $5K&ndash;$15K on advisors, tools, and consultants. Sahara replaces that with one system.
+            </p>
           </motion.div>
         </div>
       </section>

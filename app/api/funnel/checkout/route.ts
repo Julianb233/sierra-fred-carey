@@ -12,6 +12,7 @@ import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
  * Stripe Checkout handles collecting payment info and creating the customer.
  *
  * After checkout, the user is redirected to the main app to complete signup.
+ * The /api/funnel/reconcile endpoint then links the subscription to the real user.
  */
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -31,16 +32,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tier, email } = body;
 
-    // Map tier to plan -- only Pro (fundraising) is available from the funnel
+    // Map tier to plan
     const TIER_TO_PLAN_KEY: Record<string, keyof typeof PLANS> = {
       PRO: "FUNDRAISING",
       FUNDRAISING: "FUNDRAISING",
+      STUDIO: "VENTURE_STUDIO",
+      VENTURE_STUDIO: "VENTURE_STUDIO",
     };
 
     const planKey = TIER_TO_PLAN_KEY[(tier || "PRO").toUpperCase()];
     if (!planKey) {
       return NextResponse.json(
-        { error: "Invalid tier. Only 'pro' is available from the funnel." },
+        { error: "Invalid tier. Available tiers: 'pro', 'studio'." },
         { status: 400, headers: corsHeaders(origin) }
       );
     }
@@ -62,8 +65,9 @@ export async function POST(request: NextRequest) {
     // After cancellation, redirect back to the funnel.
     const sessionParams: Parameters<typeof createCheckoutSession>[0] = {
       priceId,
-      userId: "funnel-pending", // Placeholder -- webhook will reconcile after signup
-      successUrl: `${baseUrl}/onboarding?checkout=success&tier=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
+      userId: "funnel-pending", // Placeholder -- reconcile endpoint links to real user after signup
+      customerEmail: email || undefined,
+      successUrl: `${baseUrl}/onboarding?checkout=success&tier=${plan.id}&source=funnel&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${funnelUrl}/?checkout=canceled`,
     };
 

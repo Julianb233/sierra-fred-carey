@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
             activity trends will appear here.
           </p>
           <Button asChild>
-            <a href="/chat">Chat with Fred</a>
+            <a href="/chat">Chat with Mentor</a>
           </Button>
         </div>
       </div>

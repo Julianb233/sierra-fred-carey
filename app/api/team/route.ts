@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     // Don't block the API response on email delivery
     const user = await getCurrentUser();
     const inviterName = user?.name || user?.email || "A team member";
-    sendInviteEmail(email, inviterName, memberRole).catch((err) => {
+    sendInviteEmail(email, inviterName, memberRole, member.id).catch((err) => {
       log.error("Failed to send invite email (fire-and-forget)", {
         error: err instanceof Error ? err.message : String(err),
         email,

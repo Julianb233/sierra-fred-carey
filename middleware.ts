@@ -19,7 +19,7 @@ function generateCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com https://*.ingest.sentry.io https://*.msgsndr.com https://*.posthog.com",
+    "connect-src 'self' https://*.supabase.co https://api.stripe.com wss://*.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://*.anthropic.com https://*.openai.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.msgsndr.com https://*.posthog.com",
     "worker-src 'self'",
     "media-src 'self' blob:",
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
@@ -118,7 +118,7 @@ export async function middleware(request: NextRequest) {
           pathname.startsWith("/dashboard") &&
           !pathname.startsWith("/dashboard/reality-lens")
         ) {
-          const realityLensUrl = new URL("/dashboard/reality-lens?first=true", request.url)
+          const realityLensUrl = new URL("/dashboard/reality-lens/quick?first=true", request.url)
           const redirectResponse = NextResponse.redirect(realityLensUrl)
           redirectResponse.headers.set("X-Request-ID", requestId)
           return redirectResponse

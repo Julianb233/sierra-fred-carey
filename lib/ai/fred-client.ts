@@ -113,42 +113,44 @@ export async function generate(
   prompt: string,
   options: GenerateOptions = {}
 ): Promise<GenerateResult> {
-  const model = getModel(options.model || "primary");
+  // Use fallback chain with circuit breaker for automatic failover
+  const fallbackResult = await executeWithFallback(
+    async (_provider, model) => {
+      const result = streamText({
+        model,
+        prompt,
+        system: options.system,
+        maxOutputTokens: options.maxOutputTokens ?? 4096,
+        temperature: options.temperature ?? 0.7,
+        abortSignal: options.abortSignal,
+        ...(options.tools ? { tools: options.tools } : {}),
+        ...(options.tools && options.maxSteps
+          ? { stopWhen: stepCountIs(options.maxSteps) }
+          : {}),
+      });
 
-  // Use streamText internally to reduce TTFB — the OpenAI API begins returning
-  // tokens faster in streaming mode. Awaiting `result.text` auto-consumes the
-  // stream and collects the full response, so callers still get a complete
-  // GenerateResult.
-  const result = streamText({
-    model,
-    prompt,
-    system: options.system,
-    maxOutputTokens: options.maxOutputTokens ?? 4096,
-    temperature: options.temperature ?? 0.7,
-    abortSignal: options.abortSignal,
-    ...(options.tools ? { tools: options.tools } : {}),
-    ...(options.tools && options.maxSteps
-      ? { stopWhen: stepCountIs(options.maxSteps) }
-      : {}),
-  });
+      const [text, usage, finishReason, response] = await Promise.all([
+        result.text,
+        result.usage,
+        result.finishReason,
+        result.response,
+      ]);
 
-  const [text, usage, finishReason, response] = await Promise.all([
-    result.text,
-    result.usage,
-    result.finishReason,
-    result.response,
-  ]);
-
-  return {
-    text,
-    usage: {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+      return {
+        text,
+        usage: {
+          promptTokens: usage.inputTokens ?? 0,
+          completionTokens: usage.outputTokens ?? 0,
+          totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+        },
+        finishReason,
+        modelId: response?.modelId ?? "unknown",
+      };
     },
-    finishReason,
-    modelId: response?.modelId ?? "unknown",
-  };
+    { enableRetry: true, retryPreset: "standard" }
+  );
+
+  return fallbackResult.result;
 }
 
 /**
@@ -165,35 +167,40 @@ export async function generateFromMessages(
   messages: ModelMessage[],
   options: GenerateOptions = {}
 ): Promise<GenerateResult> {
-  const model = getModel(options.model || "primary");
+  // Use fallback chain with circuit breaker for automatic failover
+  const fallbackResult = await executeWithFallback(
+    async (_provider, model) => {
+      const result = streamText({
+        model,
+        messages,
+        system: options.system,
+        maxOutputTokens: options.maxOutputTokens ?? 4096,
+        temperature: options.temperature ?? 0.7,
+        abortSignal: options.abortSignal,
+      });
 
-  // Use streamText internally to reduce TTFB (same optimization as generate())
-  const result = streamText({
-    model,
-    messages,
-    system: options.system,
-    maxOutputTokens: options.maxOutputTokens ?? 4096,
-    temperature: options.temperature ?? 0.7,
-    abortSignal: options.abortSignal,
-  });
+      const [text, usage, finishReason, response] = await Promise.all([
+        result.text,
+        result.usage,
+        result.finishReason,
+        result.response,
+      ]);
 
-  const [text, usage, finishReason, response] = await Promise.all([
-    result.text,
-    result.usage,
-    result.finishReason,
-    result.response,
-  ]);
-
-  return {
-    text,
-    usage: {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+      return {
+        text,
+        usage: {
+          promptTokens: usage.inputTokens ?? 0,
+          completionTokens: usage.outputTokens ?? 0,
+          totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+        },
+        finishReason,
+        modelId: response?.modelId ?? "unknown",
+      };
     },
-    finishReason,
-    modelId: response?.modelId ?? "unknown",
-  };
+    { enableRetry: true, retryPreset: "standard" }
+  );
+
+  return fallbackResult.result;
 }
 
 // ============================================================================
@@ -292,7 +299,7 @@ export async function generateStructuredFromMessages<T extends z.ZodType>(
 export async function streamGenerate(
   prompt: string,
   options: GenerateOptions = {}
-): Promise<StreamTextResult<Record<string, never>, never>> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const model = getModel(options.model || "primary");
 
   return streamText({
@@ -302,6 +309,10 @@ export async function streamGenerate(
     maxOutputTokens: options.maxOutputTokens ?? 4096,
     temperature: options.temperature ?? 0.7,
     abortSignal: options.abortSignal,
+    ...(options.tools ? { tools: options.tools } : {}),
+    ...(options.tools && options.maxSteps
+      ? { stopWhen: stepCountIs(options.maxSteps) }
+      : {}),
   });
 }
 
@@ -311,7 +322,7 @@ export async function streamGenerate(
 export async function streamGenerateFromMessages(
   messages: ModelMessage[],
   options: GenerateOptions = {}
-): Promise<StreamTextResult<Record<string, never>, never>> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const model = getModel(options.model || "primary");
 
   return streamText({
@@ -334,7 +345,7 @@ export async function streamGenerateFromMessages(
  * }
  */
 export async function* streamToGenerator(
-  result: StreamTextResult<Record<string, never>, never>
+  result: StreamTextResult<ToolSet, never>
 ): AsyncGenerator<string> {
   for await (const chunk of result.textStream) {
     yield chunk;
@@ -345,7 +356,7 @@ export async function* streamToGenerator(
  * Convert a stream result to a ReadableStream for HTTP responses
  */
 export function streamToReadableStream(
-  result: StreamTextResult<Record<string, never>, never>
+  result: StreamTextResult<ToolSet, never>
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
 

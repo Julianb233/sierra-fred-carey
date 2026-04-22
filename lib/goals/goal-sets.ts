@@ -36,132 +36,118 @@ export interface GoalSetDefinition {
 
 const IDEA_STAGE_GOALS: GoalDefinition[] = [
   {
-    title: "Validate your idea",
+    title: "Validate your problem",
     description:
-      "Talk to at least 10 potential customers. Identify the core problem you solve and confirm people actually experience it. Document their exact words.",
+      "Talk to 10 potential customers. Identify the core problem you solve and confirm people actually experience it. Document their exact words — evidence beats intuition.",
     order: 1,
     category: "validation",
   },
   {
-    title: "Build your MVP",
+    title: "Define your customer",
     description:
-      "Create the simplest version of your product that solves the core problem. Focus on one use case, not a feature list. Ship something people can use.",
+      "Create an Ideal Customer Profile. Get specific: who exactly has this problem, how do they solve it today, and what would make them switch? No 'everyone' answers.",
     order: 2,
+    category: "validation",
+  },
+  {
+    title: "Test your solution",
+    description:
+      "Build a concierge MVP or landing page. Ship the simplest version that proves your solution works for real people. Focus on one use case, not a feature list.",
+    order: 3,
     category: "product",
   },
   {
-    title: "Get your first customers",
+    title: "Find product-market fit signals",
     description:
-      "Acquire your first 5-10 paying customers (or committed users for free products). Prove that someone other than friends and family will use what you built.",
-    order: 3,
-    category: "growth",
-  },
-  {
-    title: "Become fundable",
-    description:
-      "Build a compelling narrative: problem, solution, traction, team. Have a pitch deck ready, understand your unit economics, and know your ask.",
+      "Get 3 paying customers or strong intent signals. Prove that someone other than friends and family will use — and ideally pay for — what you built.",
     order: 4,
-    category: "fundraising",
+    category: "growth",
   },
 ];
 
 const PRE_SEED_GOALS: GoalDefinition[] = [
   {
-    title: "Analyze where you really are",
+    title: "Assess investor readiness",
     description:
-      "Honest assessment of product-market fit signals, burn rate, team gaps, and competitive position. Use FRED's Reality Lens to get an unvarnished view.",
+      "Complete your Investor Readiness Score. Get an honest assessment of where you stand across team, market, product, traction, financials, and pitch readiness.",
     order: 1,
-    category: "strategy",
+    category: "fundraising",
   },
   {
-    title: "Identify what needs to change to be fundable",
+    title: "Build your pitch deck",
     description:
-      "Compare your metrics to stage benchmarks. Identify the 2-3 things investors will ask about that you can't answer yet. Build a plan to close those gaps.",
+      "Upload and review your pitch deck with Mentor. Get specific feedback on narrative flow, data presentation, and the investor objections you need to prepare for.",
     order: 2,
     category: "fundraising",
   },
   {
-    title: "Analyze your existing pitch deck",
+    title: "Identify what to change",
     description:
-      "Upload your deck to FRED for a thorough review. Get specific feedback on narrative flow, data presentation, and investor objection points.",
+      "Address gaps in your fundability profile. Compare your metrics to stage benchmarks and build a plan to close the 2-3 things investors will ask about.",
     order: 3,
-    category: "fundraising",
+    category: "strategy",
   },
   {
-    title: "Create a new pitch deck",
+    title: "Network with investors",
     description:
-      "Build a pitch deck that tells your story with data. Include problem, solution, market size, business model, traction, team, and ask. FRED can help structure it.",
+      "Connect through Boardy to get warm introductions to investors who match your stage, sector, and geography. Quality over quantity — prepared intros convert.",
     order: 4,
-    category: "fundraising",
-  },
-  {
-    title: "Get introduced to investors via Boardy",
-    description:
-      "Use the Boardy network to get warm introductions to investors who match your stage, sector, and geography. Quality over quantity.",
-    order: 5,
     category: "fundraising",
   },
 ];
 
 const SEED_GOALS: GoalDefinition[] = [
   {
-    title: "Validate unit economics",
+    title: "Refine your pitch",
     description:
-      "Know your CAC, LTV, payback period, and gross margins. Prove that each customer is worth more than what it costs to acquire them.",
+      "Polish deck based on investor feedback. Iterate until it's crisp — practice with FRED's pitch review, get timing right, and nail the Q&A. Every slide earns its place.",
     order: 1,
-    category: "strategy",
+    category: "fundraising",
   },
   {
-    title: "Complete market sizing and competitive analysis",
+    title: "Show traction metrics",
     description:
-      "Build a defensible TAM/SAM/SOM analysis. Map your competitive landscape and articulate your unfair advantage clearly.",
+      "Document MRR, growth rate, and retention. Know your CAC, LTV, payback period, and gross margins. Prove each customer is worth more than what it costs to acquire them.",
     order: 2,
     category: "strategy",
   },
   {
-    title: "Achieve investor readiness",
+    title: "Build investor pipeline",
     description:
-      "Score 80+ on the Investor Readiness Score. Have clean financials, a data room ready, and answers to the top 20 investor questions.",
+      "Target 50+ relevant investors. Map your investor landscape by stage, sector, and check size. Use Boardy for warm intros and track your pipeline systematically.",
     order: 3,
     category: "fundraising",
   },
   {
-    title: "Refine your pitch",
+    title: "Prepare for due diligence",
     description:
-      "Iterate on your pitch until it's crisp. Practice with FRED's pitch review, get timing right, and nail the Q&A. Every slide should earn its place.",
+      "Get financials and legal in order. Have clean books, a data room ready, cap table organized, and answers to the top 20 investor questions prepared.",
     order: 4,
-    category: "fundraising",
+    category: "strategy",
   },
 ];
 
 const SERIES_A_GOALS: GoalDefinition[] = [
   {
-    title: "Demonstrate repeatable growth",
+    title: "Strategic advisory",
     description:
-      "Show consistent month-over-month growth in key metrics. Prove that your growth engine works and can scale with more capital.",
+      "Get personalized growth strategy from Mentor. Focus on growth bottlenecks, team scaling, GTM repeatability, and experienced operator perspective.",
     order: 1,
-    category: "growth",
+    category: "strategy",
   },
   {
-    title: "Optimize unit economics for scale",
+    title: "Scale operations",
     description:
-      "Drive down CAC and increase LTV. Show a clear path to profitability at scale with improving margins as you grow.",
+      "Optimize unit economics and team structure. Drive down CAC, increase LTV, and show a clear path to profitability at scale with improving margins.",
     order: 2,
     category: "strategy",
   },
   {
-    title: "Build the Series A narrative",
+    title: "Expand market",
     description:
-      "Articulate why now is the right time to pour fuel on the fire. Show product-market fit, team readiness, and a clear use of funds.",
+      "Identify adjacent markets and expansion opportunities. Articulate why now is the right time to pour fuel on the fire with clear use of funds.",
     order: 3,
-    category: "fundraising",
-  },
-  {
-    title: "Strengthen your leadership team",
-    description:
-      "Identify and plan for key hires. Investors want to see that you can build the team needed to execute at the next level.",
-    order: 4,
-    category: "strategy",
+    category: "growth",
   },
 ];
 
@@ -177,12 +163,12 @@ export const GOAL_SETS: Record<FundingStage, GoalSetDefinition> = {
   },
   "pre-seed": {
     stage: "pre-seed",
-    label: "Friends & Family / Pre-Seed",
+    label: "Pre-Seed Stage",
     goals: PRE_SEED_GOALS,
   },
   seed: {
     stage: "seed",
-    label: "Seed",
+    label: "Seed Stage",
     goals: SEED_GOALS,
   },
   "series-a": {
