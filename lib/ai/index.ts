@@ -55,6 +55,18 @@ export {
   type EmbeddingConfig,
 } from "./providers";
 
+// Circuit breaker and fallback chain
+export { circuitBreaker, type CircuitBreakerMetrics } from "./circuit-breaker";
+export {
+  executeWithFallback,
+  getBestAvailableProvider,
+  getHealthyProviders,
+  getProviderAvailability,
+  type ProviderName,
+  type FallbackConfig,
+} from "./fallback-chain";
+export { healthMonitor } from "./health-monitor";
+
 // Structured output schemas
 export * from "./schemas";
 

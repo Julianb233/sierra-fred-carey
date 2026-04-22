@@ -56,7 +56,7 @@ export async function getStrategyDocuments(
 ): Promise<GeneratedDocument[]> {
   let query = supabase
     .from('strategy_documents')
-    .select('*')
+    .select('id, user_id, type, title, content, sections, metadata, version, created_at, updated_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -88,7 +88,7 @@ export async function getStrategyDocumentById(
 ): Promise<GeneratedDocument | null> {
   const { data, error } = await supabase
     .from('strategy_documents')
-    .select('*')
+    .select('id, user_id, type, title, content, sections, metadata, version, created_at, updated_at')
     .eq('id', docId)
     .eq('user_id', userId)
     .single();

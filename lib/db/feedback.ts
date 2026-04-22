@@ -18,13 +18,75 @@ import type {
 // Signals
 // ============================================================================
 
+/**
+ * Insert a feedback signal with idempotency guard.
+ *
+ * For signals with a message_id, checks for an existing signal with the same
+ * (user_id, message_id, signal_type) tuple first. If found, returns the
+ * existing record instead of inserting a duplicate. This prevents duplicate
+ * processing when tasks retry after partial completion (AI-4120).
+ *
+ * Signals without a message_id (e.g. auto-sentiment) skip the dedup check
+ * since they lack a natural idempotency key.
+ */
 export async function insertFeedbackSignal(signal: FeedbackSignalInsert) {
   const supabase = createServiceClient();
+
+  // Idempotency check: if message_id is present, check for existing signal
+  if (signal.message_id) {
+    const existing = await findExistingSignal(
+      signal.user_id,
+      signal.message_id,
+      signal.signal_type
+    );
+    if (existing) {
+      return existing;
+    }
+  }
+
   const { data, error } = await supabase
     .from("feedback_signals")
     .insert(signal)
     .select()
     .single();
+
+  // Handle race condition: unique constraint violation means another request
+  // inserted the same signal between our check and insert
+  if (error && error.code === "23505") {
+    if (signal.message_id) {
+      const existing = await findExistingSignal(
+        signal.user_id,
+        signal.message_id,
+        signal.signal_type
+      );
+      if (existing) return existing;
+    }
+    // If we still can't find it, re-throw
+    throw error;
+  }
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Check if a signal already exists for a given user + message + signal_type.
+ * Used for idempotency guards (AI-4120).
+ */
+export async function findExistingSignal(
+  userId: string,
+  messageId: string,
+  signalType: string
+) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_signals")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("message_id", messageId)
+    .eq("signal_type", signalType)
+    .limit(1)
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -90,8 +152,31 @@ export async function getFlaggedSessions(limit = 20) {
 // Insights
 // ============================================================================
 
+/**
+ * Insert a feedback insight with idempotency guard (AI-4120).
+ *
+ * Checks for an existing insight with the same title and overlapping signal_ids
+ * within the last 4 hours to prevent duplicate insight creation on retries.
+ */
 export async function insertFeedbackInsight(insight: FeedbackInsightInsert) {
   const supabase = createServiceClient();
+
+  // Idempotency check: look for a recent insight with the same title
+  if (insight.title) {
+    const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+    const { data: existing } = await supabase
+      .from("feedback_insights")
+      .select("*")
+      .eq("title", insight.title)
+      .eq("insight_type", insight.insight_type)
+      .gte("created_at", cutoff)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      return existing;
+    }
+  }
+
   const { data, error } = await supabase
     .from("feedback_insights")
     .insert(insight)
@@ -304,6 +389,27 @@ export async function findInsightWithLinearIssueByHash(
     .select("*")
     .eq("cluster_embedding_hash", hash)
     .not("linear_issue_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+/**
+ * Find any active (non-resolved) insight with the same cluster hash.
+ * No time window — merges insights across days for recurring themes.
+ * Used by the clustering pipeline to prevent duplicate insights.
+ */
+export async function findActiveInsightByHash(
+  hash: string
+): Promise<FeedbackInsight | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .eq("cluster_embedding_hash", hash)
+    .in("status", ["new", "reviewed", "actioned"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

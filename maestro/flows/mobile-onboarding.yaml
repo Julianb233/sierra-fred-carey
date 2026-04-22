@@ -1,0 +1,70 @@
+appId: com.sahara.app
+name: "Mobile Onboarding Flow"
+tags:
+  - critical
+  - mobile
+  - onboarding
+---
+# Sahara Mobile Onboarding E2E Flow
+# Tests the full onboarding on mobile viewport (375x812)
+
+- launchApp
+
+# Navigate to get-started
+- openLink: https://joinsahara.com/get-started
+
+# Verify stage selection renders on mobile
+- assertVisible:
+    text: "What stage are you at?"
+    timeout: 10000
+
+# All options should be tappable on mobile
+- assertVisible: "Ideation"
+- tapOn: "Ideation"
+
+# Challenge selection
+- assertVisible:
+    text: "challenge"
+    timeout: 5000
+- assertVisible: "Product-Market Fit"
+- tapOn: "Product-Market Fit"
+
+# Email form — verify keyboard doesn't cover inputs
+- assertVisible:
+    text: "get started"
+    timeout: 5000
+
+# Verify both inputs are visible and tappable
+- tapOn:
+    id: "email-input"
+- inputText: "mobile-qa-test@test.sahara.com"
+
+- tapOn:
+    id: "password-input"
+- inputText: "MobileTest123!"
+
+# Submit button should be visible without scrolling (above fold)
+- assertVisible: "Create Account"
+
+# Test: Landing page mobile rendering
+- openLink: https://joinsahara.com
+
+- assertVisible:
+    text: "Sahara"
+    timeout: 10000
+
+# Navigation hamburger should be present on mobile
+- assertVisible:
+    id: "mobile-menu"
+    optional: true
+    timeout: 5000
+
+# Test: Dashboard mobile rendering
+- openLink: https://joinsahara.com/dashboard
+- wait: 5000
+
+# Should either show dashboard or redirect to login
+- assertVisible:
+    text: "Dashboard"
+    optional: true
+    timeout: 10000

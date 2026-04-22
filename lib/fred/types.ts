@@ -52,6 +52,8 @@ export interface FredContext {
   decision: DecisionResult | null;
   /** 7-factor scores */
   scores: FactorScores | null;
+  /** Enriched response produced by the execute actor (full FredResponse) */
+  response: FredResponse | null;
   /** Error if any occurred */
   error: FredError | null;
   /** Number of retry attempts */

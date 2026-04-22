@@ -1,0 +1,62 @@
+appId: com.sahara.app
+name: "Onboarding Signup Flow"
+tags:
+  - critical
+  - onboarding
+  - journey-001
+---
+# Sahara Onboarding Signup E2E Flow
+# Tests the 3-step get-started flow: stage → challenge → email/password → dashboard
+
+- launchApp
+
+# Step 1: Navigate to get-started
+- openLink: https://joinsahara.com/get-started
+
+- assertVisible: "What stage are you at?"
+
+# Verify all stage options present
+- assertVisible: "Ideation"
+- assertVisible: "Pre-seed"
+- assertVisible: "Seed"
+- assertVisible: "Series A+"
+
+# Select stage
+- tapOn: "Ideation"
+
+# Step 2: Challenge selection
+- assertVisible:
+    text: "What's your #1 challenge?"
+    timeout: 5000
+
+- assertVisible: "Product-Market Fit"
+
+# Select challenge
+- tapOn: "Product-Market Fit"
+
+# Step 3: Email/password form
+- assertVisible:
+    text: "Let's get started"
+    timeout: 5000
+
+- tapOn:
+    id: "email-input"
+- inputText: "qa-test-${Date.now()}@test.sahara.com"
+
+- tapOn:
+    id: "password-input"
+- inputText: "TestPass123!"
+
+# Submit signup
+- tapOn: "Create Account"
+
+# Verify redirect to dashboard
+- assertVisible:
+    text: "Dashboard"
+    timeout: 15000
+
+# Verify welcome modal or onboarding context
+- assertVisible:
+    text: "Welcome"
+    optional: true
+    timeout: 5000
