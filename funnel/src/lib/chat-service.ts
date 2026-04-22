@@ -132,16 +132,16 @@ function generateDemoResponse(message: string, _history: ChatMessage[]): string 
     return "Here's what Sahara offers to help founders like you:\n\n🧠 **AI Coaching (Free)** — That's me! I'm here to help you think through strategy, fundraising, and building.\n\n📊 **Investor Readiness Score** — Know exactly where you stand before approaching investors.\n\n📑 **Pitch Deck Review** — AI-powered analysis with actionable feedback.\n\n👥 **Virtual Team Agents** — AI-powered CTO, CMO, and CFO to help with decisions.\n\n🔍 **Reality Lens** — Validate your business across 5 critical dimensions.\n\nYou're currently on the lite version. Head to [joinsahara.com](https://joinsahara.com) for the full experience. What would be most helpful for you right now?"
   }
 
-  // Greeting
-  if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey') || msg.length < 10) {
+  // Greeting — only match explicit greetings, not words containing "hi"/"hey"
+  if (/^(hi|hello|hey|howdy|yo|sup)\b/i.test(msg.trim()) || msg.length < 5) {
     return "Hey! Great to connect. I'm Fred — I've worked with thousands of founders across every stage from idea to exit.\n\nI'm here to help you think through your startup — whether that's validating an idea, building your MVP, preparing for fundraising, or scaling.\n\n**What are you working on?** Tell me about your startup and where you're at, and I'll give you my honest take."
   }
 
-  // Default — ask clarifying questions
+  // Default — engage with what they said and ask follow-up questions
   const responses = [
-    "That's a great question. Let me give you my perspective:\n\nThe key thing I've learned from working with thousands of founders is that clarity beats speed. Before I can give you the best advice, help me understand:\n\n1. What stage is your startup at?\n2. What's your biggest challenge right now?\n3. What does success look like for you in the next 90 days?\n\nThe more specific you are, the more I can help. And remember — on the full Sahara platform, I can do deep dives with pitch deck reviews, investor readiness scoring, and more.",
-    "I appreciate you sharing that. Here's what I'd think about:\n\nEvery startup challenge usually boils down to one of three things:\n- **Product** — Are you building something people want?\n- **Distribution** — Can you reach your customers efficiently?\n- **Economics** — Does the math work?\n\nWhich of these feels most relevant to where you are? Let's dig into it together.",
-    "Good thinking. Let me share a framework I use with founders:\n\n**The 3-Question Test:**\n1. If you stopped working on this tomorrow, would anyone notice? (Market pull)\n2. Can you explain what you do in one sentence? (Clarity)\n3. Do you know your next 3 moves? (Execution)\n\nIf you can't answer all three confidently, that's where we should focus. Which one feels weakest for you?",
+    "That's interesting — tell me more. Here's what I'd want to understand:\n\n1. **Who has this problem?** The more specific you can be about your customer, the better.\n2. **How are they solving it today?** If they're not, that might be a signal.\n3. **What's your unfair advantage?** Why you, why now?\n\nDon't worry about having perfect answers — just share what you're thinking and we'll work through it together.",
+    "I like where your head is at. Let me ask you a few things:\n\nEvery startup challenge usually boils down to one of three things:\n- **Product** — Are you building something people want?\n- **Distribution** — Can you reach your customers efficiently?\n- **Economics** — Does the math work?\n\nWhich of these feels most relevant to where you are? Let's dig into it together.",
+    "Good thinking. Let me share a quick framework:\n\n**The 3-Question Test:**\n1. If you stopped working on this tomorrow, would anyone notice? (Market pull)\n2. Can you explain what you do in one sentence? (Clarity)\n3. Do you know your next 3 moves? (Execution)\n\nNo pressure to have all the answers — that's what I'm here for. Which one feels like the biggest gap right now?",
   ]
 
   return responses[Math.floor(Math.random() * responses.length)]

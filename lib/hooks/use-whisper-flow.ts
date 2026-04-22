@@ -102,6 +102,7 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
 
@@ -116,6 +117,9 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
@@ -132,6 +136,7 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
   const startAudioLevelMonitoring = useCallback((stream: MediaStream) => {
     try {
       const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
@@ -159,6 +164,10 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
     }
     setAudioLevel(0);
   }, []);
