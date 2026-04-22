@@ -61,7 +61,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ff6a1a] to-orange-500" />
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">Fred Carey</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">Fred Cary</p>
                   <p className="text-sm text-gray-500">Founder & CEO</p>
                 </div>
               </div>
