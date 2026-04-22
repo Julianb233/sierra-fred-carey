@@ -19,6 +19,19 @@ interface WhatsAppMessage {
   timestamp: string;
   text: string | null;
   media: string | null;
+  thread_id?: string;
+  reply_to_message_id?: string;
+  reply_to_text?: string;
+  reply_to_sender?: string;
+}
+
+interface MessageThread {
+  thread_id: string;
+  sender: string;
+  messages: WhatsAppMessage[];
+  combined_text: string;
+  first_timestamp: string;
+  last_timestamp: string;
 }
 
 interface IdentifiedIssue {
@@ -27,6 +40,7 @@ interface IdentifiedIssue {
   priority: 1 | 2 | 3 | 4; // 1=Urgent, 2=High, 3=Normal, 4=Low
   type: "bug" | "feature" | "improvement";
   source_message: string;
+  thread_id?: string;
 }
 
 interface MonitorResult {
@@ -87,8 +101,12 @@ export const saharaWhatsAppMonitor = schedules.task({
         return result;
       }
 
-      // Step 3: Use AI to identify actionable issues
-      const issues = await identifyIssues(messages);
+      // Step 2.5: Group messages into threads
+      const threads = groupMessagesIntoThreads(messages);
+      logger.log(`Grouped ${messages.length} messages into ${threads.length} threads`);
+
+      // Step 3: Use AI to identify actionable issues (thread-aware)
+      const issues = await identifyIssues(messages, threads);
       result.issuesIdentified = issues.length;
       logger.log(`Identified ${issues.length} actionable issues`);
 
@@ -252,9 +270,17 @@ async function extractWhatsAppMessages(
 
     await new Promise((r) => setTimeout(r, 3000));
 
-    // Extract messages
+    // Extract messages with thread/reply context
     const extraction = await stagehand.extract(
-      `Extract ALL chat messages visible on this page from the "${WHATSAPP_GROUP_NAME}" group. For each message, extract: the sender name, the timestamp, and the full message text. Also note any images or photos mentioned. Return everything in chronological order.`
+      `Extract ALL chat messages visible on this page from the "${WHATSAPP_GROUP_NAME}" group. For each message, extract:
+- sender: the sender name
+- timestamp: the message timestamp
+- text: the full message text
+- media: any images or photos mentioned (null if none)
+- reply_to_text: if this message is a reply to another message, extract the quoted/replied-to text shown above it (null if not a reply)
+- reply_to_sender: if this is a reply, the sender of the original message being replied to (null if not a reply)
+
+In WhatsApp, replies show a small quoted bubble above the message with the original text and sender. Capture this context when present. Return everything in chronological order.`
     );
 
     await stagehand.close();
@@ -275,16 +301,29 @@ async function extractWhatsAppMessages(
 }
 
 async function identifyIssues(
-  messages: WhatsAppMessage[]
+  messages: WhatsAppMessage[],
+  threads: MessageThread[]
 ): Promise<IdentifiedIssue[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY not configured");
   }
 
-  const messageText = messages
-    .map((m) => `[${m.timestamp}] ${m.sender}: ${m.text}`)
-    .join("\n");
+  // Format messages with thread context
+  const threadSummary = threads
+    .map((t) => {
+      if (t.messages.length === 1) {
+        const m = t.messages[0];
+        const replyCtx = m.reply_to_text
+          ? ` (replying to ${m.reply_to_sender}: "${m.reply_to_text}")`
+          : "";
+        return `[${m.timestamp}] ${m.sender}: ${m.text}${replyCtx}`;
+      }
+      // Multi-message thread — show as grouped
+      const lines = t.messages.map((m) => `  [${m.timestamp}] ${m.text}`);
+      return `[THREAD by ${t.sender}, ${t.messages.length} messages]\n${lines.join("\n")}`;
+    })
+    .join("\n\n");
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -301,19 +340,22 @@ async function identifyIssues(
           role: "user",
           content: `You are analyzing WhatsApp messages from the "Sahara Founders" group for the Sahara AI Founder OS platform (joinsahara.com).
 
+IMPORTANT: Messages have been grouped into threads. When a single thought spans multiple consecutive messages from the same sender, they are shown as a [THREAD]. Treat each thread as ONE piece of feedback, not multiple separate issues. Reply context (quoted messages) is also shown where available.
+
 Identify ACTIONABLE feedback — bugs, feature requests, or improvements mentioned by users (especially Fred Cary / "Fred Tec Partner" who is the product owner).
 
 Ignore: greetings, thank yous, scheduling messages, unrelated chatter, admin messages.
 
 For each issue found, return a JSON array with objects containing:
 - title: concise issue title
-- description: detailed description with the original quote
+- description: detailed description with the original quote(s)
 - priority: 1 (Urgent/breaking), 2 (High/important), 3 (Normal), 4 (Low/nice-to-have)
 - type: "bug", "feature", or "improvement"
-- source_message: the original message text
+- source_message: the combined original message text (join multi-message threads with " | ")
+- thread_id: an identifier for the thread this came from (use the first message timestamp + sender)
 
-Messages:
-${messageText}
+Messages (grouped by thread):
+${threadSummary}
 
 Return ONLY a JSON array. If no actionable issues found, return [].`,
         },
@@ -400,7 +442,7 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
         input: {
           teamId,
           title: issue.title,
-          description: `## Source\nWhatsApp Feedback — Sahara Founders group (auto-detected)\n\n## Description\n${issue.description}\n\n## Original Message\n> ${issue.source_message}`,
+          description: `## Source\nWhatsApp Feedback — Sahara Founders group (auto-detected)${issue.thread_id ? `\nThread: ${issue.thread_id}` : ""}\n\n## Description\n${issue.description}\n\n## Original Message\n> ${issue.source_message}`,
           priority: issue.priority,
           labelIds,
           ...(projectId && { projectId }),
@@ -415,6 +457,108 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
   if (!identifier) throw new Error("Failed to create issue");
 
   return identifier;
+}
+
+/**
+ * Groups messages into threads based on:
+ * 1. Explicit reply chains (reply_to_text present)
+ * 2. Consecutive messages from the same sender within 2 minutes (multi-message thoughts)
+ */
+function groupMessagesIntoThreads(messages: WhatsAppMessage[]): MessageThread[] {
+  if (messages.length === 0) return [];
+
+  const threads: MessageThread[] = [];
+  // Map to find messages by their text (for linking replies)
+  const messageByText = new Map<string, WhatsAppMessage>();
+  for (const msg of messages) {
+    if (msg.text) {
+      messageByText.set(msg.text, msg);
+    }
+  }
+
+  // Assign thread IDs
+  let currentThread: MessageThread | null = null;
+
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    const msgTime = parseTimestamp(msg.timestamp);
+
+    // Check if this message is a reply to a message in an existing thread
+    if (msg.reply_to_text) {
+      // Find the thread containing the replied-to message
+      const existingThread = threads.find((t) =>
+        t.messages.some((m) => m.text === msg.reply_to_text)
+      );
+      if (existingThread) {
+        existingThread.messages.push(msg);
+        existingThread.combined_text += ` | ${msg.text}`;
+        existingThread.last_timestamp = msg.timestamp;
+        currentThread = existingThread;
+        continue;
+      }
+    }
+
+    // Check if this is a consecutive message from the same sender within 2 min
+    if (currentThread) {
+      const lastMsg = currentThread.messages[currentThread.messages.length - 1];
+      const lastTime = parseTimestamp(lastMsg.timestamp);
+      const sameWindow =
+        msg.sender === currentThread.sender &&
+        msgTime !== null &&
+        lastTime !== null &&
+        msgTime - lastTime < 2 * 60 * 1000; // 2 minutes
+
+      if (sameWindow) {
+        currentThread.messages.push(msg);
+        currentThread.combined_text += ` | ${msg.text}`;
+        currentThread.last_timestamp = msg.timestamp;
+        continue;
+      }
+    }
+
+    // Start a new thread
+    const threadId = `${msg.timestamp}-${msg.sender}`;
+    currentThread = {
+      thread_id: threadId,
+      sender: msg.sender,
+      messages: [msg],
+      combined_text: msg.text || "",
+      first_timestamp: msg.timestamp,
+      last_timestamp: msg.timestamp,
+    };
+    threads.push(currentThread);
+  }
+
+  return threads;
+}
+
+/**
+ * Parse WhatsApp timestamp strings into epoch ms.
+ * Handles common formats: "10:32 AM", "2026-04-07 10:32", "Yesterday, 10:32 AM"
+ */
+function parseTimestamp(ts: string): number | null {
+  try {
+    // Try direct Date parse first
+    const d = new Date(ts);
+    if (!isNaN(d.getTime())) return d.getTime();
+
+    // Try time-only format (HH:MM AM/PM) — assume today
+    const timeMatch = ts.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (timeMatch) {
+      const now = new Date();
+      let hours = parseInt(timeMatch[1], 10);
+      const minutes = parseInt(timeMatch[2], 10);
+      const period = timeMatch[3]?.toUpperCase();
+      if (period === "PM" && hours !== 12) hours += 12;
+      if (period === "AM" && hours === 12) hours = 0;
+      now.setHours(hours, minutes, 0, 0);
+      return now.getTime();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 async function sendReport(
