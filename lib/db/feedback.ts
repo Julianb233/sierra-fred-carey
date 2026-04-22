@@ -375,6 +375,48 @@ export async function getOpenInsights(limit = 100) {
   return data;
 }
 
+/**
+ * Find any insight with the same cluster hash that already has a Linear issue.
+ * Unlike findInsightByHash, this has NO time window — it checks all time.
+ * Used to prevent duplicate Linear issues for recurring themes.
+ */
+export async function findInsightWithLinearIssueByHash(
+  hash: string
+): Promise<FeedbackInsight | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .eq("cluster_embedding_hash", hash)
+    .not("linear_issue_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+/**
+ * Find any active (non-resolved) insight with the same cluster hash.
+ * No time window — merges insights across days for recurring themes.
+ * Used by the clustering pipeline to prevent duplicate insights.
+ */
+export async function findActiveInsightByHash(
+  hash: string
+): Promise<FeedbackInsight | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("feedback_insights")
+    .select("*")
+    .eq("cluster_embedding_hash", hash)
+    .in("status", ["new", "reviewed", "actioned"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function updateInsightSignals(
   insightId: string,
   newSignalIds: string[],

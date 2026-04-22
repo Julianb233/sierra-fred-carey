@@ -194,16 +194,16 @@ export function computeClusterHash(
 }
 
 /**
- * Check if a cluster with the same hash exists within the dedup window.
- * Uses the findInsightByHash DB helper.
+ * Check if a cluster with the same hash already exists as an active insight.
+ * Checks all active (non-resolved) insights with no time window.
  */
 export async function isDuplicateCluster(
   hash: string,
-  windowHours = 4
+  _windowHours = 4
 ): Promise<boolean> {
   // Dynamic import to avoid bundling Supabase in test context
-  const { findInsightByHash } = await import("@/lib/db/feedback")
-  const existing = await findInsightByHash(hash, windowHours)
+  const { findActiveInsightByHash } = await import("@/lib/db/feedback")
+  const existing = await findActiveInsightByHash(hash)
   return existing !== null
 }
 
@@ -320,7 +320,7 @@ export async function runClusteringPipeline(
   // Dynamic imports to keep Trigger.dev bundle clean
   const {
     getRecentNegativeSignals,
-    findInsightByHash,
+    findActiveInsightByHash,
     upsertInsightWithSignals,
   } = await import("@/lib/db/feedback")
 
@@ -351,8 +351,8 @@ export async function runClusteringPipeline(
 
   for (const cluster of clusters) {
     try {
-      // Check for duplicate via hash-based matching (4h window)
-      const existing = await findInsightByHash(cluster.hash, 4)
+      // Check for duplicate via hash-based matching (all active insights, no time window)
+      const existing = await findActiveInsightByHash(cluster.hash)
 
       if (existing) {
         // Merge signal_ids into existing insight
