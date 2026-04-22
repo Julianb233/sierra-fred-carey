@@ -1,0 +1,63 @@
+appId: com.joinsahara.app
+name: "Sahara Auth — Login, Forgot Password, Reset"
+tags:
+  - critical
+  - auth
+  - P0
+---
+
+# --- LOGIN FLOW ---
+
+- launchApp
+- openLink: https://joinsahara.com/login
+
+# Verify login form renders
+- assertVisible: "Sign in"
+- assertVisible:
+    id: "email-input"
+- assertVisible:
+    id: "password-input"
+
+# Test empty submission
+- tapOn: "Sign in"
+- assertVisible: "required"
+
+# Test invalid credentials
+- tapOn:
+    id: "email-input"
+- inputText: "invalid@test.com"
+- tapOn:
+    id: "password-input"
+- inputText: "wrongpassword"
+- tapOn: "Sign in"
+- assertVisible: "Invalid"
+
+# Test valid login (requires E2E_TEST_EMAIL / E2E_TEST_PASSWORD env vars)
+- clearText:
+    id: "email-input"
+- tapOn:
+    id: "email-input"
+- inputText: ${E2E_TEST_EMAIL}
+- clearText:
+    id: "password-input"
+- tapOn:
+    id: "password-input"
+- inputText: ${E2E_TEST_PASSWORD}
+- tapOn: "Sign in"
+- assertVisible: "Dashboard"
+
+# --- FORGOT PASSWORD FLOW ---
+
+- openLink: https://joinsahara.com/forgot-password
+
+# Verify form renders
+- assertVisible: "Reset your password"
+- assertVisible:
+    id: "email-input"
+
+# Submit email
+- tapOn:
+    id: "email-input"
+- inputText: ${E2E_TEST_EMAIL}
+- tapOn: "Send reset link"
+- assertVisible: "Check your email"

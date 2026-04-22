@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RedFlag } from "@/lib/fred/types";
 import { RedFlagBadge } from "./red-flag-badge";
@@ -33,6 +34,8 @@ export interface Message {
   timestamp: Date;
   /** Whether this message is currently being streamed */
   isStreaming?: boolean;
+  /** Input source: "voice" when originated from Whisper Flow */
+  source?: "text" | "voice";
   /** Course recommendations from FRED's content-recommender tool */
   courses?: Array<{
     id: string;

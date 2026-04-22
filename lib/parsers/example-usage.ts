@@ -2,7 +2,7 @@
  * Example usage of the PDF Parser library
  *
  * This file demonstrates various ways to use the PDF parsing functionality
- * in the Sierra Fred Carey platform.
+ * in the Sierra Fred Cary platform.
  */
 
 import { parsePDF, parsePDFFromUrl, isValidPDF, getPDFInfo, PDFParseError } from './pdf-parser';

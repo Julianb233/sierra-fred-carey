@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
     const result = await signIn(email, password);
 
     if (!result.success) {
+      const status = result.error === "EMAIL_NOT_CONFIRMED" ? 403 : 401;
       return NextResponse.json(
-        { error: result.error },
-        { status: 401 }
+        { error: result.error, code: result.error === "EMAIL_NOT_CONFIRMED" ? "EMAIL_NOT_CONFIRMED" : undefined },
+        { status }
       );
     }
 

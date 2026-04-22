@@ -47,8 +47,10 @@ import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-mo
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
+import { FloatingVoiceFab } from "@/components/voice/floating-voice-fab";
 import { EventFeedbackWidget } from "@/components/event-feedback-widget";
 import { EventMicroSurvey } from "@/components/event-micro-survey";
+import { BugReportWidget } from "@/components/bug-report-widget";
 
 // ============================================================================
 // Navigation Configuration
@@ -110,6 +112,11 @@ const coreNavItems: NavItem[] = [
     icon: <BookOpen className="h-4 w-4" />,
   },
   {
+    name: "Sales",
+    href: "/dashboard/sales",
+    icon: <TrendingUp className="h-4 w-4" />,
+  },
+  {
     name: "Marketplace",
     href: "/dashboard/marketplace",
     icon: <ShoppingBag className="h-4 w-4" />,
@@ -152,6 +159,12 @@ const coreNavItems: NavItem[] = [
  */
 const conditionalNavItems: NavItem[] = [
   {
+    name: "Reality Lens",
+    href: "/dashboard/reality-lens",
+    icon: <ScanEye className="h-4 w-4" />,
+    condition: "showInvestorLens",
+  },
+  {
     name: "Positioning",
     href: "/dashboard/positioning",
     icon: <TargetIcon className="h-4 w-4" />,
@@ -186,12 +199,6 @@ const conditionalNavItems: NavItem[] = [
     href: "/dashboard/pitch-deck",
     icon: <Presentation className="h-4 w-4" />,
     condition: "showInvestorTools",
-  },
-  {
-    name: "Reality Lens",
-    href: "/dashboard/reality-lens",
-    icon: <ScanEye className="h-4 w-4" />,
-    condition: "showInvestorLens",
   },
   {
     name: "Virtual Team",
@@ -523,6 +530,11 @@ export default function DashboardLayout({
       {/* Floating Chat Widget — available on all dashboard pages including mobile */}
       <FloatingChatWidget onCallFred={tier >= UserTier.PRO ? handleCallFred : undefined} />
 
+      {/* Floating Voice FAB — desktop only, prominent voice entry point */}
+      <div className="hidden md:block">
+        <FloatingVoiceFab onClick={() => setVoiceOverlayOpen(true)} />
+      </div>
+
       {/* Phase 42: Call Fred Modal — Pro+ only */}
       <CallFredModal open={callModalOpen} onOpenChange={setCallModalOpen} />
 
@@ -537,6 +549,9 @@ export default function DashboardLayout({
       />
 
       {/* AI-1804: Event feedback collection for first 200 attendees */}
+      {/* AI-8499: Bug report widget -- all authenticated users */}
+      <BugReportWidget />
+
       <EventFeedbackWidget />
       <EventMicroSurvey />
     </div>

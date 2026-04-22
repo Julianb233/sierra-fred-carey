@@ -44,7 +44,8 @@ import { logJourneyEventAsync } from "@/lib/db/journey-events";
 import { extractSentiment } from "@/lib/feedback/sentiment";
 import { aggregateSessionSentiment } from "@/lib/feedback/sentiment-aggregator";
 import { insertFeedbackSignal } from "@/lib/db/feedback";
-import { TIER_WEIGHTS } from "@/lib/feedback/constants";
+import { TIER_WEIGHTS } from "@/lib/feedback/constants"
+import { getSenderRole, getRoleWeight } from "@/lib/feedback/sender-role";
 import { extractSentimentFromText } from "@/lib/feedback/sentiment";
 import { detectStressPattern, shouldIntervene, extractTopicsFromMessage } from "@/lib/sentiment/stress-detector";
 import { generateIntervention, buildInterventionBlock } from "@/lib/sentiment/intervention-engine";
@@ -59,6 +60,7 @@ export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Verc
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "builder",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 };
@@ -384,6 +386,9 @@ async function handlePost(req: NextRequest) {
 
     // Resolve tier name for model routing and memory gating (Phase 21)
     const tierName = (TIER_NAMES[userTier] ?? "Free").toLowerCase();
+
+    // AI-4111: Resolve sender role for feedback weighting (product owner = 5x)
+    const senderRole = await getSenderRole(userId);
 
     // Phase 59: Tag Sentry errors with user context
     setUserContext(userId, tierName);
@@ -831,22 +836,21 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       const latencyMs = Date.now() - startTime;
 
       // Store in episodic memory only for Pro+ tiers (Phase 21)
+      // Fire-and-forget: don't block response delivery on memory persistence
       if (shouldPersistMemory) {
-        try {
-          await storeEpisode(userId, effectiveSessionId, "conversation", {
+        void Promise.all([
+          storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "user",
             content: message,
             context,
-          });
-          await storeEpisode(userId, effectiveSessionId, "conversation", {
+          }),
+          storeEpisode(userId, effectiveSessionId, "conversation", {
             role: "assistant",
             content: result.response.content,
             action: result.response.action,
             confidence: result.response.confidence,
-          });
-        } catch (error) {
-          console.warn("[FRED Chat] Failed to store in memory:", error);
-        }
+          }),
+        ]).catch(error => console.warn("[FRED Chat] Failed to store in memory:", error));
       }
 
       // Phase 18-02: Fire-and-forget enrichment extraction
@@ -907,7 +911,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
             sentiment_confidence: sentiment.confidence,
             user_tier: tierName as 'free' | 'pro' | 'studio',
-            weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+            sender_role: senderRole,
+            weight: (TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1) * getRoleWeight(senderRole),
             consent_given: true,
             expires_at: null,
             metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },
@@ -1134,24 +1139,39 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           if (update.isComplete) {
             const latencyMs = Date.now() - startTime;
 
-            const decisionContent = update.context.decision?.content;
+            // Prefer the enriched FredResponse from the execute actor (context.response)
+            // which carries approvalOptions, enriched metadata (sessionId, procedureUsed,
+            // factorScores), etc. Fall back to context.decision for paths that skip execute.
+            const enrichedResponse = update.context.response;
+            const decisionContent = enrichedResponse?.content ?? update.context.decision?.content;
             if (!decisionContent) {
               console.error("[FRED Chat] Decision content is empty/null — LLM likely failed silently.", {
                 traceId,
                 userId,
                 finalState: update.state,
+                hasResponse: !!enrichedResponse,
                 hasDecision: !!update.context.decision,
-                action: update.context.decision?.action,
+                action: enrichedResponse?.action ?? update.context.decision?.action,
                 error: update.context.error,
               });
             }
-            const response = {
-              content: decisionContent || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
-              action: update.context.decision?.action || "defer",
-              confidence: update.context.decision?.confidence || 0,
-              requiresApproval: update.context.decision?.requiresHumanApproval || false,
-              reasoning: update.context.decision?.reasoning,
-            };
+            const response = enrichedResponse
+              ? {
+                  content: enrichedResponse.content || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
+                  action: enrichedResponse.action,
+                  confidence: enrichedResponse.confidence,
+                  requiresApproval: enrichedResponse.requiresApproval,
+                  reasoning: enrichedResponse.reasoning,
+                  approvalOptions: enrichedResponse.approvalOptions,
+                  metadata: enrichedResponse.metadata,
+                }
+              : {
+                  content: decisionContent || "I'm having a technical issue generating a response right now. Please try sending your message again in a moment.",
+                  action: update.context.decision?.action || "defer",
+                  confidence: update.context.decision?.confidence || 0,
+                  requiresApproval: update.context.decision?.requiresHumanApproval || false,
+                  reasoning: update.context.decision?.reasoning,
+                };
 
             send("response", {
               ...response,
@@ -1165,17 +1185,14 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             });
 
             // Store assistant response in memory (Pro+ only, Phase 21)
+            // Fire-and-forget: don't block "done" SSE event on memory persistence
             if (shouldPersistMemory) {
-              try {
-                await storeEpisode(userId, effectiveSessionId, "conversation", {
-                  role: "assistant",
-                  content: response.content,
-                  action: response.action,
-                  confidence: response.confidence,
-                });
-              } catch (error) {
-                console.warn("[FRED Chat] Failed to store assistant response:", error);
-              }
+              void storeEpisode(userId, effectiveSessionId, "conversation", {
+                role: "assistant",
+                content: response.content,
+                action: response.action,
+                confidence: response.confidence,
+              }).catch(error => console.warn("[FRED Chat] Failed to store assistant response:", error));
             }
 
             send("done", {
@@ -1294,7 +1311,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
                   sentiment_score: sentiment.label === 'positive' ? 1 : sentiment.label === 'neutral' ? 0 : sentiment.label === 'negative' ? -0.5 : -1,
                   sentiment_confidence: sentiment.confidence,
                   user_tier: tierName as 'free' | 'pro' | 'studio',
-                  weight: TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1,
+                  sender_role: senderRole,
+                  weight: (TIER_WEIGHTS[tierName as keyof typeof TIER_WEIGHTS] || 1) * getRoleWeight(senderRole),
                   consent_given: true,
                   expires_at: null,
                   metadata: { label: sentiment.label, isCoachingDiscomfort: sentiment.isCoachingDiscomfort },

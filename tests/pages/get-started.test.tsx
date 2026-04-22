@@ -42,6 +42,45 @@ describe('Get Started Page (/get-started)', () => {
     });
   });
 
+  /**
+   * Helper: navigate from step 1 through stage + challenge + fundamentals
+   * so the test lands on step 4 (email). Fundamentals step was added in the
+   * Mar 21 refactor — the wizard is now 4 steps, not 3.
+   */
+  async function navigateToEmailStep(opts?: { stage?: string; challenge?: string }) {
+    const stage = opts?.stage ?? 'Seed';
+    const challenge = opts?.challenge ?? 'Fundraising';
+
+    // Step 1: stage
+    await act(async () => {
+      fireEvent.click(screen.getByText(stage).closest('button')!);
+    });
+    // Step 2: challenge
+    await waitFor(() => {
+      expect(screen.getByText(challenge)).toBeInTheDocument();
+    }, { timeout: 1000 });
+    await act(async () => {
+      fireEvent.click(screen.getByText(challenge).closest('button')!);
+    });
+    // Step 3: business fundamentals — fill businessName, Continue
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
+    }, { timeout: 1000 });
+    await act(async () => {
+      setInputValue(
+        screen.getByPlaceholderText('e.g. Acme Labs') as HTMLInputElement,
+        'Test Co'
+      );
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Continue'));
+    });
+    // Step 4: email
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
+    }, { timeout: 1000 });
+  }
+
   it('should render without crashing', async () => {
     let container: HTMLElement;
     await act(async () => {
@@ -57,7 +96,7 @@ describe('Get Started Page (/get-started)', () => {
     });
 
     expect(screen.getByText(/What stage are you at\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/3 clicks to get started/i)).toBeInTheDocument();
+    expect(screen.getByText(/4 quick steps to get started/i)).toBeInTheDocument();
   });
 
   it('should display all 4 stage options', async () => {
@@ -122,15 +161,14 @@ describe('Get Started Page (/get-started)', () => {
     }, { timeout: 1000 });
   });
 
-  it('should advance to step 3 when challenge is selected', async () => {
+  it('should advance to step 3 (business fundamentals) when challenge is selected', async () => {
     await act(async () => {
       render(<OnboardingPage />);
     });
 
     // Step 1: Select stage
-    const seedButton = screen.getByText('Seed').closest('button');
     await act(async () => {
-      fireEvent.click(seedButton!);
+      fireEvent.click(screen.getByText('Seed').closest('button')!);
     });
 
     // Wait for step 2
@@ -138,39 +176,23 @@ describe('Get Started Page (/get-started)', () => {
       expect(screen.getByText('Fundraising')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    // Step 2: Select challenge
-    const fundraisingButton = screen.getByText('Fundraising').closest('button');
+    // Step 2: Select challenge -> advances to step 3 (fundamentals)
     await act(async () => {
-      fireEvent.click(fundraisingButton!);
+      fireEvent.click(screen.getByText('Fundraising').closest('button')!);
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/get started/i)).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
+      // Step 3 shows the businessName input
+      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
     }, { timeout: 1000 });
   });
 
-  it('should validate email in step 3', async () => {
+  it('should validate empty email on step 4', async () => {
     await act(async () => {
       render(<OnboardingPage />);
     });
 
-    // Navigate to step 3
-    await act(async () => {
-      fireEvent.click(screen.getByText('Ideation').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Product-Market Fit')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Product-Market Fit').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
-    }, { timeout: 1000 });
+    await navigateToEmailStep({ stage: 'Ideation', challenge: 'Product-Market Fit' });
 
     const submitButton = screen.getByText('Start Free Trial');
     await act(async () => {
@@ -182,27 +204,12 @@ describe('Get Started Page (/get-started)', () => {
     });
   });
 
-  it('should validate email format', async () => {
+  it('should validate email format on step 4', async () => {
     await act(async () => {
       render(<OnboardingPage />);
     });
 
-    // Navigate to step 3
-    await act(async () => {
-      fireEvent.click(screen.getByText('Series A+').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Strategy')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Strategy').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
-    }, { timeout: 1000 });
+    await navigateToEmailStep({ stage: 'Series A+', challenge: 'Strategy' });
 
     await act(async () => {
       setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'invalid-email');
@@ -256,22 +263,7 @@ describe('Get Started Page (/get-started)', () => {
       render(<OnboardingPage />);
     });
 
-    // Navigate to step 3
-    await act(async () => {
-      fireEvent.click(screen.getByText('Pre-seed').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Fundraising')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Fundraising').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
-    }, { timeout: 1000 });
+    await navigateToEmailStep({ stage: 'Pre-seed', challenge: 'Fundraising' });
 
     await act(async () => {
       setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'test@example.com');
@@ -298,12 +290,12 @@ describe('Get Started Page (/get-started)', () => {
     expect(dots.length).toBeGreaterThan(0);
   });
 
-  it('should allow navigation back from step 3', async () => {
+  it('should allow navigation back from step 3 (fundamentals) to step 2 (challenge)', async () => {
     await act(async () => {
       render(<OnboardingPage />);
     });
 
-    // Navigate to step 2
+    // Step 1: stage
     await act(async () => {
       fireEvent.click(screen.getByText('Seed').closest('button')!);
     });
@@ -312,21 +304,20 @@ describe('Get Started Page (/get-started)', () => {
       expect(screen.getByText('Growth & Scaling')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    // Navigate to step 3
+    // Step 2: challenge -> advances to step 3 (fundamentals)
     await act(async () => {
       fireEvent.click(screen.getByText('Growth & Scaling').closest('button')!);
     });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
     }, { timeout: 1000 });
 
-    // Click Back button to return to step 2
+    // Click Back button to return to step 2 (challenge)
     await act(async () => {
       fireEvent.click(screen.getByText('Back').closest('button')!);
     });
 
-    // Should be back to step 2
     await waitFor(() => {
       expect(screen.getByText(/What's your/i)).toBeInTheDocument();
     }, { timeout: 1000 });

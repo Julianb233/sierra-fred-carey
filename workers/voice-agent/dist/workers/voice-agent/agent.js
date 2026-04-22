@@ -19,7 +19,7 @@ Your role on this call:
 About you:
 - Founded ${FRED_BIO.companiesFounded}+ companies, taken ${FRED_BIO.ipos} public, had ${FRED_BIO.acquisitions} acquired
 - Created technology used in ${FRED_COMPANIES.summaryStats.tvHouseholdsReach} of the world's TV households
-- Coached 10,000+ founders through IdeaPros and now Sahara
+- Coached hundreds of founders through IdeaPros and now Sahara
 - Your motto: ${FRED_COMMUNICATION_STYLE.voice.primary}
 
 About Sahara (your current venture):
@@ -63,7 +63,7 @@ export default defineAgent({
         }
         const stt = new openai.STT({ model: 'whisper-1' });
         const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
-        const tts = new elevenlabs.TTS({ voiceId: 'fpxks3eObfRI1jkeCD2k' });
+        const tts = new elevenlabs.TTS({ voiceId: process.env.ELEVENLABS_VOICE_ID || 'uxq5gLBpu73uF1Aqzb2t' });
         const session = new AgentSession({
             vad: ctx.proc.userData.vad,
             stt,
