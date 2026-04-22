@@ -55,6 +55,7 @@ function createInitialContext(
     mentalModels: [],
     synthesis: null,
     decision: null,
+    response: null,
     scores: null,
     error: null,
     retryCount: 0,
@@ -691,6 +692,7 @@ export const fredMachine = setup({
             "logTransition",
             "setCompleteTime",
             assign({
+              response: ({ event }) => event.output as FredResponse,
               decision: ({ context, event }) =>
                 context.decision && event.output
                   ? { ...context.decision, content: event.output.content, metadata: event.output.metadata }
