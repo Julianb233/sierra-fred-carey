@@ -21,6 +21,14 @@
     {
       "path": "/api/cron/feedback-digest",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/paywall-abandoned-checkout",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/paywall-trial-ending",
+      "schedule": "0 11 * * *"
     }
   ],
   "headers": [

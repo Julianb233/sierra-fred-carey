@@ -16,6 +16,9 @@ export const EMAIL_CATEGORIES: Record<EmailCategory, string> = {
   milestone: 'email',
   re_engagement: 'marketing',
   feedback_improvement: 'feedback',
+  paywall_free_limit: 'email',
+  paywall_abandoned_checkout: 'email',
+  paywall_trial_ending: 'email',
 };
 
 /** Minimum total activity items required to send a digest (0 means any activity triggers send) */

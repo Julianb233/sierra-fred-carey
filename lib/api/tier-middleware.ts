@@ -10,6 +10,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { UserTier, TIER_NAMES, canAccessFeature, getTierFromString } from "@/lib/constants";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId } from "@/lib/stripe/config";
+import { notifyFreeLimitHit } from "@/lib/notifications/paywall";
 
 // ============================================================================
 // Types
@@ -187,6 +188,12 @@ export function requireTier(minimumTier: UserTier) {
         const result = await checkUserTier(user.id, minimumTier);
 
         if (!result.allowed) {
+          // Fire-and-forget: notify free-tier users who hit a paywall
+          if (result.userTier === UserTier.FREE) {
+            notifyFreeLimitHit(user.id).catch(() => {
+              // Swallow errors -- notification is best-effort
+            });
+          }
           return createTierErrorResponse(result);
         }
 
