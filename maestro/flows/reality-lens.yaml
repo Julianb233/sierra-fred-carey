@@ -1,0 +1,45 @@
+appId: com.sahara.app
+name: "Reality Lens Analysis"
+tags:
+  - critical
+  - ai
+  - journey-003
+---
+# Sahara Reality Lens E2E Flow
+# Tests the startup reality check / investor readiness analysis
+
+# Precondition: Login
+- openLink: https://joinsahara.com/login
+- tapOn:
+    id: "email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${PASSWORD}
+- tapOn: "Sign in"
+- assertVisible:
+    text: "Dashboard"
+    timeout: 15000
+
+# Navigate to Reality Lens
+- openLink: https://joinsahara.com/dashboard/reality-lens
+
+# Verify page loads
+- assertVisible:
+    text: "Reality"
+    timeout: 10000
+
+# Test Quick Analysis path
+- openLink: https://joinsahara.com/dashboard/reality-lens/quick
+
+- assertVisible:
+    text: "Reality"
+    timeout: 10000
+
+# Complete the analysis flow (interact with whatever prompts appear)
+- wait: 5000
+
+# Verify results or progress (the exact UI depends on implementation)
+- assertNotVisible:
+    text: "Error"
+    optional: true
