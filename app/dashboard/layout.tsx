@@ -151,6 +151,12 @@ const coreNavItems: NavItem[] = [
  */
 const conditionalNavItems: NavItem[] = [
   {
+    name: "Reality Lens",
+    href: "/dashboard/reality-lens",
+    icon: <ScanEye className="h-4 w-4" />,
+    condition: "showInvestorLens",
+  },
+  {
     name: "Positioning",
     href: "/dashboard/positioning",
     icon: <TargetIcon className="h-4 w-4" />,
@@ -185,12 +191,6 @@ const conditionalNavItems: NavItem[] = [
     href: "/dashboard/pitch-deck",
     icon: <Presentation className="h-4 w-4" />,
     condition: "showInvestorTools",
-  },
-  {
-    name: "Reality Lens",
-    href: "/dashboard/reality-lens",
-    icon: <ScanEye className="h-4 w-4" />,
-    condition: "showInvestorLens",
   },
   {
     name: "Virtual Team",
