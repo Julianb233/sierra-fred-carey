@@ -25,20 +25,20 @@ const statusConfig = {
     description: "This step has been validated and you can proceed.",
   },
   needs_work: {
+    icon: Lightbulb,
+    color: "text-amber-500",
+    bgColor: "bg-amber-50 dark:bg-amber-950",
+    borderColor: "border-amber-200 dark:border-amber-800",
+    title: "Suggestions Available",
+    description: "Fred has some ideas to strengthen your answers. You can update them or proceed whenever you're ready.",
+  },
+  blocked: {
     icon: AlertTriangle,
     color: "text-amber-500",
     bgColor: "bg-amber-50 dark:bg-amber-950",
     borderColor: "border-amber-200 dark:border-amber-800",
-    title: "Needs Work",
-    description: "Review the feedback below and make improvements.",
-  },
-  blocked: {
-    icon: XCircle,
-    color: "text-red-500",
-    bgColor: "bg-red-50 dark:bg-red-950",
-    borderColor: "border-red-200 dark:border-red-800",
-    title: "Blocked",
-    description: "Critical issues must be resolved before proceeding.",
+    title: "Needs More Detail",
+    description: "A few areas could use more thought. Review the suggestions below — you can still proceed if you prefer.",
   },
 };
 
@@ -104,18 +104,18 @@ export function ValidationFeedback({ validation, stepNumber }: ValidationFeedbac
           </p>
         </div>
 
-        {/* Blocker Reasons */}
+        {/* Areas to strengthen */}
         {validation.blockerReasons && validation.blockerReasons.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium flex items-center gap-2 text-red-600">
-              <XCircle className="h-4 w-4" />
-              Blockers to Resolve
+            <h4 className="text-sm font-medium flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-4 w-4" />
+              Areas to Strengthen
             </h4>
             <ul className="space-y-2">
               {validation.blockerReasons.map((reason, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300"
+                  className="flex items-start gap-2 text-sm p-2 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
                 >
                   <span className="font-medium shrink-0">{index + 1}.</span>
                   <span>{reason}</span>

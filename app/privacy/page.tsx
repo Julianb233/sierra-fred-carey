@@ -107,7 +107,7 @@ export default function PrivacyPage() {
                   <section id="overview">
                     <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">1. Overview</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      At Fred Carey, we take your privacy seriously. This Privacy Policy explains how we collect,
+                      At Fred Cary, we take your privacy seriously. This Privacy Policy explains how we collect,
                       use, disclose, and safeguard your information when you use our service.
                     </p>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -227,7 +227,7 @@ export default function PrivacyPage() {
                       <li><strong>Withdraw Consent:</strong> Withdraw previously given consent</li>
                     </ul>
                     <p className="text-gray-600 dark:text-gray-400 mt-4">
-                      To exercise these rights, contact us at privacy@fredcarey.com.
+                      To exercise these rights, contact us at privacy@fredcary.com.
                     </p>
                   </section>
 
@@ -285,14 +285,14 @@ export default function PrivacyPage() {
                     </p>
                     <div className="mt-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                       <p className="text-gray-600 dark:text-gray-400">
-                        <strong>Email:</strong> privacy@fredcarey.com<br />
-                        <strong>Address:</strong> Fred Carey Privacy Team<br />
+                        <strong>Email:</strong> privacy@fredcary.com<br />
+                        <strong>Address:</strong> Fred Cary Privacy Team<br />
                         123 Innovation Drive<br />
                         San Francisco, CA 94102<br />
                         United States
                       </p>
                       <p className="text-gray-600 dark:text-gray-400 mt-4">
-                        <strong>Data Protection Officer:</strong> dpo@fredcarey.com
+                        <strong>Data Protection Officer:</strong> dpo@fredcary.com
                       </p>
                     </div>
                   </section>

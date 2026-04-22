@@ -78,7 +78,8 @@ function createInitialContext(
 
 function buildSimpleDecision(input: ValidatedInput): DecisionResult {
   // Generate actual response content inline (no placeholders).
-  // The execute actor returns FredResponse which is stored in context.response.
+  // The execute actor's onDone handler merges event.output back into
+  // context.decision, so streaming reads context.decision.content directly.
   let content: string;
   if (input.intent === "greeting") {
     const greetings = [
