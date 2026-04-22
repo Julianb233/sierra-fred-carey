@@ -84,3 +84,15 @@ export function getWelcomeTemplate(founderName: string): string {
 export function getStopConfirmation(): string {
   return "Got it -- you're unsubscribed from check-ins. Text START anytime to jump back in. --Fred";
 }
+
+/**
+ * SMS sent when a free-tier user hits their usage limit.
+ * Opt-in only (requires verified phone number).
+ *
+ * @param founderName - First name of the founder
+ * @returns SMS message body (max 160 chars)
+ */
+export function getFreeLimitSmsTemplate(founderName: string): string {
+  const msg = `Hey ${founderName}, you hit your free plan limit on Sahara. Upgrade to keep building: joinsahara.com/pricing --Fred`;
+  return msg.slice(0, MAX_SMS_LENGTH);
+}
