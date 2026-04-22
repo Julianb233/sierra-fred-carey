@@ -22,7 +22,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { TeamMember, TeamRole } from "@/lib/sharing/teams";
+import type { EnrichedTeamMember, TeamRole } from "@/lib/sharing/teams";
 
 // ============================================================================
 // Types
@@ -58,7 +58,7 @@ const ROLE_CONFIG: Record<
 // ============================================================================
 
 export default function InvitationsPage() {
-  const [invitations, setInvitations] = useState<TeamMember[]>([]);
+  const [invitations, setInvitations] = useState<EnrichedTeamMember[]>([]);
   const [pageState, setPageState] = useState<PageState>("loading");
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -212,9 +212,14 @@ export default function InvitationsPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         Team invitation from{" "}
                         <span className="text-[#ff6a1a]">
-                          {invitation.owner_user_id}
+                          {invitation.inviter_name || invitation.inviter_email || "a founder"}
                         </span>
                       </p>
+                      {invitation.inviter_company && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {invitation.inviter_company}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         <Badge
                           variant="secondary"

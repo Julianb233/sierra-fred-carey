@@ -12,6 +12,7 @@ import {
   getPendingInvitations,
   getPendingInvitationCount,
   declineInvite,
+  enrichWithInviterInfo,
 } from "@/lib/sharing/teams";
 import { logger } from "@/lib/logger";
 
@@ -42,8 +43,9 @@ export async function GET(request: NextRequest) {
     }
 
     const invitations = await getPendingInvitations(user.email);
+    const enriched = await enrichWithInviterInfo(invitations);
 
-    return NextResponse.json({ success: true, invitations });
+    return NextResponse.json({ success: true, invitations: enriched });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to fetch invitations";

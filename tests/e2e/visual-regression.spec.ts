@@ -13,14 +13,12 @@ const publicPages = [
 ];
 
 test.describe("Visual Regression: Public Pages", () => {
-  // Skip visual regression in CI if baselines have not been committed yet.
-  // To generate baselines: npx playwright test visual-regression --update-snapshots
-  // Then commit the tests/e2e/__screenshots__/ directory.
+  // Skip visual regression in CI — screenshots are environment-dependent
+  // (fonts, rendering engine, GPU) and produce false positives in GitHub Actions.
+  // Run locally with: npx playwright test visual-regression --update-snapshots
   test.skip(
-    () =>
-      !!process.env.CI &&
-      !fs.existsSync(path.join(__dirname, "__screenshots__")),
-    "Visual regression baselines not yet generated. Run: npx playwright test visual-regression --update-snapshots",
+    () => !!process.env.CI,
+    "Visual regression skipped in CI — baselines are environment-dependent",
   );
 
   for (const { name, path: pagePath, waitFor } of publicPages) {

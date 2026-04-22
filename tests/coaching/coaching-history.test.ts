@@ -9,6 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { UserTier } from "@/lib/constants";
 
 // ============================================================================
 // Test Constants
@@ -498,7 +499,7 @@ describe("Studio tier requirement", () => {
 
   it("POST rejects Free tier users", async () => {
     setupAuth(OTHER_USER_ID);
-    mockGetUserTier.mockResolvedValue(0); // UserTier.FREE
+    mockGetUserTier.mockResolvedValue(UserTier.FREE);
 
     const { POST } = await import("@/app/api/coaching/sessions/route");
 
@@ -516,7 +517,7 @@ describe("Studio tier requirement", () => {
 
   it("POST rejects Pro tier users", async () => {
     setupAuth(OTHER_USER_ID);
-    mockGetUserTier.mockResolvedValue(1); // UserTier.PRO
+    mockGetUserTier.mockResolvedValue(UserTier.PRO);
 
     const { POST } = await import("@/app/api/coaching/sessions/route");
 
@@ -534,7 +535,7 @@ describe("Studio tier requirement", () => {
 
   it("POST allows Studio tier users", async () => {
     setupAuth(STUDIO_USER_ID);
-    mockGetUserTier.mockResolvedValue(2); // UserTier.STUDIO
+    mockGetUserTier.mockResolvedValue(UserTier.STUDIO);
 
     const createdSession = {
       ...MOCK_SESSION,
