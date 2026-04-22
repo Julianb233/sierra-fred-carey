@@ -18,7 +18,7 @@ import {
 const stats = [
   { value: "100s+", label: "Founders Coached" },
   { value: "50+", label: "Years Experience" },
-  { value: "$1B+", label: "Capital Raised" },
+  { value: "$3B+", label: "Capital Raised" },
   { value: "40+", label: "Companies Founded" },
 ];
 

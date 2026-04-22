@@ -60,6 +60,7 @@ export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Verc
 /** Map numeric UserTier enum to rate-limit tier key */
 const TIER_TO_RATE_KEY: Record<UserTier, keyof typeof RATE_LIMIT_TIERS> = {
   [UserTier.FREE]: "free",
+  [UserTier.BUILDER]: "builder",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 };

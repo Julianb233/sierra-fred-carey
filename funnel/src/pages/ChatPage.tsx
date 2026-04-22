@@ -9,6 +9,7 @@ import {
   loadChatHistory,
   saveChatHistory,
 } from '@/lib/chat-service'
+import { scheduleFunnelSync } from '@/lib/sync-service'
 
 const SUGGESTION_CHIPS = [
   "I have a startup idea",
@@ -40,10 +41,11 @@ export function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  // Save to localStorage whenever messages change
+  // Save to localStorage whenever messages change, then schedule a sync
   useEffect(() => {
     if (messages.length > 1) {
       saveChatHistory(messages)
+      scheduleFunnelSync()
     }
   }, [messages])
 

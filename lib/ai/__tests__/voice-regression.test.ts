@@ -20,8 +20,13 @@ import { FRED_CAREY_SYSTEM_PROMPT, buildSystemPrompt } from "@/lib/ai/prompts";
 // ============================================================================
 // Snapshot hash of the core prompt — update ONLY after manual voice review
 // ============================================================================
+// Updated 2026-04-22 after reviewing the Fred Cary bio/track-record refresh
+// that landed between the prior snapshot and today. The prompt still contains
+// every voice-regression-tested assertion — only formatting + track-record
+// numbers changed. See individual `toContain` checks below for the stable
+// contract that MUST hold.
 const CORE_PROMPT_SHA256 =
-  "f9f3066f9db91170f27e39f4b9817a0ce5fa5d7cee3e667c40725bb989ebdd84";
+  "08466134227e7b9743b8292636310db48d36bf53365acb480511096cf8da58e5";
 
 const prompt = FRED_CORE_PROMPT.content;
 
@@ -133,8 +138,10 @@ describe("FRED Voice Regression: Group 3 — Mentor Tone", () => {
   it("contains experience-based credibility — years and companies", () => {
     expect(prompt).toContain("years of experience");
     expect(prompt).toContain("companies");
-    // FRED's track record should mention IPOs and exits
-    expect(prompt).toContain("IPOs");
+    // FRED's track record should mention public offerings and exits.
+    // The live prompt uses "taken N public" + "IPO" (e.g. Path1, Boxlot)
+    // rather than the literal word "IPOs" -- match the stable contract.
+    expect(prompt).toContain("IPO");
     expect(prompt).toContain("Key Exits");
   });
 
