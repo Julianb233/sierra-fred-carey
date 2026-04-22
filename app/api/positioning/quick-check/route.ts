@@ -7,7 +7,7 @@ import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware"
 import { logger } from "@/lib/logger";
 
 // Quick clarity check prompt - lightweight diagnostic
-const QUICK_CLARITY_CHECK_PROMPT = `You are Fred Carey, a startup advisor. Perform a QUICK positioning clarity check on the provided startup description.
+const QUICK_CLARITY_CHECK_PROMPT = `You are Fred Cary, a startup advisor. Perform a QUICK positioning clarity check on the provided startup description.
 
 This is a diagnostic signal for a routing flow - NOT a full assessment.
 

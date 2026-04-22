@@ -8,7 +8,7 @@ const teamMembers = [
   {
     name: "Fred Cary",
     title: "Chairman",
-    stats: "400+ startups launched | $2B+ raised | $1B+ ARR track record.",
+    stats: "400+ startups launched | $3B+ raised | $1B+ ARR track record.",
     tagline: "Architect of institutional structure.",
     image: "/deck/fred-cary.jpg",
     initials: "FC",

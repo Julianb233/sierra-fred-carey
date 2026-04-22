@@ -171,7 +171,7 @@ export default function Hero() {
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
               { icon: Users, text: "Hundreds of Founders Coached" },
-              { icon: CheckIcon, text: "$1B+ Raised" },
+              { icon: CheckIcon, text: "$3B+ Raised" },
               { icon: Sparkles, text: "By Fred Cary" },
             ].map((item, i) => (
               <div
