@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     })();
 
     // Log journey event so the Journey dashboard Idea Score updates
-    // Await to ensure score is persisted before returning response (critical for dashboard)
+    // Uses resilient logJourneyEvent with retry logic (awaited — dashboard-critical)
     await logJourneyEvent({
       userId,
       eventType: "analysis_completed",

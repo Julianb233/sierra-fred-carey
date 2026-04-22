@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         created_at as "createdAt"
     `;
 
-    // Log journey event (fire-and-forget with retry via service-role client)
+    // Log journey event with resilient retry logic
     logJourneyEventAsync({
       userId,
       eventType: "milestone_created",

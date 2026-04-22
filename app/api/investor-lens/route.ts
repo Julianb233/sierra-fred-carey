@@ -735,7 +735,8 @@ export async function POST(request: NextRequest) {
       // Don't fail the main request if insight extraction fails
     }
 
-    // Calculate overall score from axes for journey event persistence
+    // Log journey event with score for dashboard visibility
+    // Calculate overall score from axes as the investor readiness metric
     const axisScores = [
       evaluation.axes.team.score,
       evaluation.axes.market.score,
