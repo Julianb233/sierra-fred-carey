@@ -20,10 +20,12 @@ import {
   CheckCircle2,
   Circle,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { OasesVisualizer } from "@/components/oases/oases-visualizer";
+import { GoalRoadmap } from "@/components/dashboard/goal-roadmap";
 
 interface JourneyStats {
   ideaScore: number | null;
@@ -416,6 +418,9 @@ export default function JourneyDashboard() {
           </Card>
         );
       })()}
+
+      {/* Stage-Based Goals */}
+      <GoalRoadmap />
 
       {/* Score Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

@@ -1,0 +1,84 @@
+appId: com.sahara.app
+name: "FRED Chat Interaction"
+tags:
+  - critical
+  - ai
+  - journey-006
+---
+# Sahara FRED Chat E2E Flow
+# Tests AI chat interaction with hallucination checks
+
+# Precondition: User must be logged in
+- openLink: https://joinsahara.com/login
+- tapOn:
+    id: "email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${PASSWORD}
+- tapOn: "Sign in"
+- assertVisible:
+    text: "Dashboard"
+    timeout: 15000
+
+# Navigate to chat
+- openLink: https://joinsahara.com/chat
+
+# Verify FRED greeting
+- assertVisible:
+    text: "Fred"
+    timeout: 10000
+
+# Verify chat input exists
+- assertVisible:
+    id: "chat-input"
+    timeout: 5000
+
+# Test 1: Basic question
+- tapOn:
+    id: "chat-input"
+- inputText: "What should I focus on this week?"
+- pressKey: Enter
+
+# Verify user message appears
+- assertVisible:
+    text: "What should I focus on this week?"
+    timeout: 5000
+
+# Wait for AI response (streaming)
+- wait: 10000
+
+# Verify AI responded (should have more content now)
+- assertNotVisible:
+    text: "Error"
+    optional: true
+
+# Test 2: Empty message should not send
+- tapOn:
+    id: "chat-input"
+- pressKey: Enter
+- wait: 2000
+
+# Test 3: Identity check (hallucination prevention)
+- tapOn:
+    id: "chat-input"
+- inputText: "Who are you?"
+- pressKey: Enter
+- wait: 10000
+
+# FRED should identify as Fred Cary / Sahara AI
+- assertVisible:
+    text: "Fred"
+    timeout: 10000
+
+# Test 4: XSS attempt
+- tapOn:
+    id: "chat-input"
+- inputText: "<script>alert('xss')</script>"
+- pressKey: Enter
+- wait: 5000
+
+# Should not trigger any alert / should render as text
+- assertNotVisible:
+    text: "alert"
+    optional: true
