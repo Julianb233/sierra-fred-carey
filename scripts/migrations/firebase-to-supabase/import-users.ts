@@ -95,13 +95,28 @@ async function loadFirebaseExport(path: string): Promise<FirebaseUser[]> {
   throw new Error(`Unexpected export shape in ${path}`);
 }
 
+// Build-once-per-run cache so we don't re-paginate listUsers for every check.
+let existingEmailsCache: Set<string> | null = null;
+async function ensureEmailCache(db: SupabaseClient): Promise<Set<string>> {
+  if (existingEmailsCache) return existingEmailsCache;
+  const set = new Set<string>();
+  let page = 1;
+  while (true) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw error;
+    for (const u of data.users) {
+      if (u.email) set.add(u.email.toLowerCase());
+    }
+    if (data.users.length < 1000) break;
+    page += 1;
+  }
+  existingEmailsCache = set;
+  return set;
+}
+
 async function emailExists(db: SupabaseClient, email: string): Promise<boolean> {
-  const { data, error } = await db.auth.admin.listUsers({
-    page: 1,
-    perPage: 1,
-  });
-  if (error) throw error;
-  return data.users.some((u) => u.email?.toLowerCase() === email.toLowerCase());
+  const cache = await ensureEmailCache(db);
+  return cache.has(email.toLowerCase());
 }
 
 /**
