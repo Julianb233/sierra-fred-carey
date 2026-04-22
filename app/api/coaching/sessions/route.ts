@@ -110,11 +110,11 @@ export async function POST(request: NextRequest) {
 
     // Check Studio tier
     const userTier = await getUserTier(user.id);
-    if (userTier < UserTier.PRO) {
+    if (userTier < UserTier.STUDIO) {
       return createTierErrorResponse({
         allowed: false,
         userTier,
-        requiredTier: UserTier.PRO,
+        requiredTier: UserTier.STUDIO,
         userId: user.id,
       });
     }
