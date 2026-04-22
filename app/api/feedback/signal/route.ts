@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { getUserConsentStatus, applyConsent, calculateExpiryDate } from "@/lib/feedback/consent"
-import { SIGNAL_TYPES, FEEDBACK_CATEGORIES, TIER_WEIGHTS } from "@/lib/feedback/constants"
+import { SIGNAL_TYPES, FEEDBACK_CATEGORIES, TIER_WEIGHTS, MEDIA_TYPES, MAX_MEDIA_URLS } from "@/lib/feedback/constants"
 import { insertFeedbackSignal, findExistingSignal } from "@/lib/db/feedback"
 import { checkDetailedFeedbackThrottle } from "@/lib/feedback/throttle"
 import { getUserTier } from "@/lib/api/tier-middleware"
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
   const {
     message_id, signal_type, rating, category, comment, session_id,
     detected_topic, oases_stage, model_used, response_latency_ms, page_context,
+    media_urls, media_types,
   } = body as {
     message_id?: string
     signal_type?: string
@@ -68,6 +69,8 @@ export async function POST(req: NextRequest) {
     model_used?: string | null
     response_latency_ms?: number | null
     page_context?: string | null
+    media_urls?: string[]
+    media_types?: string[]
   }
 
   // Validate required fields
@@ -106,6 +109,44 @@ export async function POST(req: NextRequest) {
 
   // Truncate comment to 500 chars
   const sanitizedComment = comment ? comment.slice(0, 500) : null
+
+  // Validate media attachments
+  const validatedMediaUrls: string[] = []
+  const validatedMediaTypes: string[] = []
+  const hasMedia = Array.isArray(media_urls) && media_urls.length > 0
+
+  if (hasMedia) {
+    if (media_urls.length > MAX_MEDIA_URLS) {
+      return NextResponse.json(
+        { error: `Maximum ${MAX_MEDIA_URLS} media attachments allowed` },
+        { status: 400 }
+      )
+    }
+    if (!Array.isArray(media_types) || media_types.length !== media_urls.length) {
+      return NextResponse.json(
+        { error: "media_types must be an array matching media_urls length" },
+        { status: 400 }
+      )
+    }
+    for (let i = 0; i < media_urls.length; i++) {
+      const url = media_urls[i]
+      const type = media_types[i]
+      if (typeof url !== "string" || !url.startsWith("http")) {
+        return NextResponse.json(
+          { error: `Invalid media URL at index ${i}` },
+          { status: 400 }
+        )
+      }
+      if (!(MEDIA_TYPES as readonly string[]).includes(type)) {
+        return NextResponse.json(
+          { error: `Invalid media_type "${type}" at index ${i}. Must be one of: ${MEDIA_TYPES.join(", ")}` },
+          { status: 400 }
+        )
+      }
+      validatedMediaUrls.push(url)
+      validatedMediaTypes.push(type)
+    }
+  }
 
   // 3. Idempotency check — return existing signal if duplicate (AI-4120)
   const existingSignal = await findExistingSignal(
@@ -168,6 +209,10 @@ export async function POST(req: NextRequest) {
     weight: weight,
     consent_given: true,
     expires_at: calculateExpiryDate(),
+    media_urls: validatedMediaUrls,
+    media_types: validatedMediaTypes as FeedbackSignalInsert["media_types"],
+    vision_analysis: null,
+    media_processing_status: hasMedia ? "pending" : "none",
     metadata: {
       ...(detected_topic ? { detected_topic } : {}),
       ...(oases_stage ? { oases_stage } : {}),
