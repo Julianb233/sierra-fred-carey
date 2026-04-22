@@ -40,7 +40,8 @@ function NavBar() {
   const isChat = pathname === "/chat";
   const isLogin = pathname === "/login";
   const isCheckIns = pathname?.startsWith("/check-ins");
-  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns;
+  const isDeck = pathname === "/deck";
+  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck;
 
   useEffect(() => {
     const handleScroll = () => {

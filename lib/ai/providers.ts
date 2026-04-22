@@ -2,7 +2,8 @@
  * AI Provider Configuration
  *
  * Unified provider configuration using Vercel AI SDK 6.
- * Supports OpenAI, Anthropic, and Google with automatic fallback.
+ * Supports Google Gemini (primary), Anthropic Claude (fallback),
+ * with circuit breaker for automatic failover.
  */
 
 import { createOpenAI, openai } from "@ai-sdk/openai";
@@ -40,6 +41,69 @@ export interface EmbeddingConfig {
 }
 
 // ============================================================================
+// Circuit Breaker
+// ============================================================================
+
+/** Track failures per provider for circuit breaker pattern */
+const providerFailures: Record<string, { count: number; lastFailure: number }> = {};
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_WINDOW = 60000; // 60 seconds
+
+/**
+ * Check if a provider is healthy (not circuit-broken).
+ * A provider is unhealthy if it has >= CIRCUIT_BREAKER_THRESHOLD failures
+ * within the CIRCUIT_BREAKER_WINDOW.
+ */
+export function isProviderHealthy(provider: string): boolean {
+  const failures = providerFailures[provider];
+  if (!failures) return true;
+  if (Date.now() - failures.lastFailure > CIRCUIT_BREAKER_WINDOW) {
+    // Reset after window expires
+    delete providerFailures[provider];
+    return true;
+  }
+  return failures.count < CIRCUIT_BREAKER_THRESHOLD;
+}
+
+/**
+ * Record a failure for a provider. After CIRCUIT_BREAKER_THRESHOLD failures
+ * within CIRCUIT_BREAKER_WINDOW, the provider will be marked unhealthy and
+ * skipped in the fallback chain.
+ */
+export function recordFailure(provider: string): void {
+  if (!providerFailures[provider]) {
+    providerFailures[provider] = { count: 0, lastFailure: 0 };
+  }
+  providerFailures[provider].count++;
+  providerFailures[provider].lastFailure = Date.now();
+  console.warn(
+    `[AI Circuit Breaker] ${provider} failure #${providerFailures[provider].count} ` +
+    `(threshold: ${CIRCUIT_BREAKER_THRESHOLD})`
+  );
+}
+
+/**
+ * Reset the circuit breaker for a provider (e.g., after a successful call).
+ */
+export function resetFailures(provider: string): void {
+  delete providerFailures[provider];
+}
+
+/**
+ * Get circuit breaker status for monitoring/debugging.
+ */
+export function getCircuitBreakerStatus(): Record<string, { count: number; lastFailure: number; healthy: boolean }> {
+  const status: Record<string, { count: number; lastFailure: number; healthy: boolean }> = {};
+  for (const [provider, failures] of Object.entries(providerFailures)) {
+    status[provider] = {
+      ...failures,
+      healthy: isProviderHealthy(provider),
+    };
+  }
+  return status;
+}
+
+// ============================================================================
 // Provider Availability Check
 // ============================================================================
 
@@ -47,11 +111,11 @@ function hasOpenAI(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
 
-function hasAnthropic(): boolean {
+export function hasAnthropic(): boolean {
   return !!process.env.ANTHROPIC_API_KEY;
 }
 
-function hasGoogle(): boolean {
+export function hasGoogle(): boolean {
   return !!process.env.GOOGLE_API_KEY;
 }
 
@@ -60,15 +124,16 @@ function hasGoogle(): boolean {
 // ============================================================================
 
 /**
- * Get primary model (GPT-4o)
+ * Get primary model (Gemini 3 Flash Preview, or OpenAI GPT-4o as last resort)
  */
 export function getPrimaryModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("gpt-4o");
+  if (hasGoogle()) return google("gemini-3-flash-preview");
+  if (hasOpenAI()) return openai("gpt-4o");
+  return null;
 }
 
 /**
- * Get fallback model 1 (Claude 3.5 Sonnet)
+ * Get fallback model 1 (Anthropic Claude Sonnet 4.5)
  */
 export function getFallback1Model(): LanguageModel | null {
   if (!hasAnthropic()) return null;
@@ -76,7 +141,7 @@ export function getFallback1Model(): LanguageModel | null {
 }
 
 /**
- * Get fallback model 2 (Gemini 1.5 Pro)
+ * Get fallback model 2 (Gemini 2.0 Flash — retry with different Gemini model)
  */
 export function getFallback2Model(): LanguageModel | null {
   if (!hasGoogle()) return null;
@@ -84,19 +149,25 @@ export function getFallback2Model(): LanguageModel | null {
 }
 
 /**
- * Get fast model for quick operations (GPT-4o-mini)
+ * Get fast model for quick operations (Gemini 2.0 Flash)
  */
 export function getFastModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("gpt-4o-mini");
+  if (hasGoogle()) return google("gemini-2.0-flash");
+  if (hasOpenAI()) return openai("gpt-4o-mini");
+  return null;
 }
 
 /**
- * Get reasoning model for complex analysis (o3)
+ * Get reasoning model for complex analysis
+ * Prefers Anthropic Claude for reasoning tasks, falls back to Gemini/OpenAI
  */
 export function getReasoningModel(): LanguageModel | null {
-  if (!hasOpenAI()) return null;
-  return openai("o3");
+  if (hasAnthropic() && isProviderHealthy("anthropic")) {
+    return anthropic("claude-sonnet-4-5-20250929");
+  }
+  if (hasGoogle()) return google("gemini-3-flash-preview");
+  if (hasOpenAI()) return openai("gpt-4o");
+  return null;
 }
 
 /**
@@ -116,11 +187,42 @@ export function getLargeEmbeddingModel(): EmbeddingModel | null {
 }
 
 // ============================================================================
-// Provider Selection
+// Provider Selection with Circuit Breaker
 // ============================================================================
 
+/** Map provider keys to their underlying provider name for circuit breaker tracking */
+function getProviderName(key: ProviderKey): string {
+  switch (key) {
+    case "primary":
+      return hasGoogle() ? "google" : "openai";
+    case "fallback2":
+      return "google";
+    case "fast":
+      return hasGoogle() ? "google" : "openai";
+    case "fallback1":
+      return "anthropic";
+    case "reasoning":
+      if (hasAnthropic()) return "anthropic";
+      if (hasGoogle()) return "google";
+      return "openai";
+  }
+}
+
 /**
- * Get a model by provider key with fallback support
+ * Get a model by provider key with fallback support and circuit breaker.
+ *
+ * The circuit breaker tracks failures per provider. If a provider has
+ * >= 3 failures within 60 seconds, it is skipped in favor of the next
+ * healthy provider in the fallback chain.
+ *
+ * Fallback chain:
+ *   1. Primary (Gemini 3 Flash Preview)
+ *   2. Fallback 1 (Anthropic Claude)
+ *   3. Fallback 2 (Gemini 2.0 Flash)
+ *   4. Fast (Gemini 2.0 Flash)
+ *
+ * Callers should use recordFailure() when a provider call fails and
+ * resetFailures() on success to maintain circuit breaker state.
  */
 export function getModel(key: ProviderKey): LanguageModel {
   const modelFns: Record<ProviderKey, () => LanguageModel | null> = {
@@ -131,10 +233,18 @@ export function getModel(key: ProviderKey): LanguageModel {
     reasoning: getReasoningModel,
   };
 
-  const model = modelFns[key]();
-  if (model) return model;
+  // Try the requested provider if it's healthy
+  const providerName = getProviderName(key);
+  if (isProviderHealthy(providerName)) {
+    const model = modelFns[key]();
+    if (model) return model;
+  } else {
+    console.warn(
+      `[AI Providers] ${key} (${providerName}) circuit-broken, trying fallbacks`
+    );
+  }
 
-  // Fallback chain: try other providers in order
+  // Fallback chain: try other providers in order, skipping unhealthy ones
   const fallbackOrder: ProviderKey[] = [
     "primary",
     "fallback1",
@@ -144,31 +254,59 @@ export function getModel(key: ProviderKey): LanguageModel {
 
   for (const fallbackKey of fallbackOrder) {
     if (fallbackKey === key) continue;
+    const fallbackProviderName = getProviderName(fallbackKey);
+    if (!isProviderHealthy(fallbackProviderName)) {
+      continue; // Skip circuit-broken providers
+    }
     const fallbackModel = modelFns[fallbackKey]();
     if (fallbackModel) {
       console.warn(
-        `[AI Providers] ${key} not available, falling back to ${fallbackKey}`
+        `[AI Providers] ${key} not available, falling back to ${fallbackKey} (${fallbackProviderName})`
+      );
+      return fallbackModel;
+    }
+  }
+
+  // Last resort: try ALL providers regardless of circuit breaker state
+  // (better to try a flaky provider than return nothing)
+  for (const fallbackKey of fallbackOrder) {
+    const fallbackModel = modelFns[fallbackKey]();
+    if (fallbackModel) {
+      console.warn(
+        `[AI Providers] All healthy providers exhausted, forcing ${fallbackKey} despite circuit breaker`
       );
       return fallbackModel;
     }
   }
 
   throw new Error(
-    "No AI providers configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY."
+    "No AI providers configured. Set GOOGLE_API_KEY or ANTHROPIC_API_KEY."
   );
 }
 
 /**
- * Get an embedding model by key
+ * Get an embedding model by key.
+ * Returns null instead of throwing if no embedding provider is available,
+ * allowing callers to handle gracefully.
+ */
+export function getEmbeddingOrNull(
+  key: EmbeddingProviderKey = "embedding"
+): EmbeddingModel | null {
+  return key === "embeddingLarge" ? getLargeEmbeddingModel() : getEmbeddingModel();
+}
+
+/**
+ * Get an embedding model by key (throws if unavailable)
  */
 export function getEmbedding(
   key: EmbeddingProviderKey = "embedding"
 ): EmbeddingModel {
-  const model =
-    key === "embeddingLarge" ? getLargeEmbeddingModel() : getEmbeddingModel();
+  const model = getEmbeddingOrNull(key);
 
   if (!model) {
-    throw new Error("Embedding model not available. Set OPENAI_API_KEY.");
+    throw new Error(
+      "Embedding model not available. Set OPENAI_API_KEY for embeddings."
+    );
   }
 
   return model;
@@ -183,11 +321,14 @@ export function getAvailableProviders(): ProviderKey[] {
   if (hasOpenAI()) {
     available.push("primary", "fast", "reasoning");
   }
+  if (hasGoogle()) {
+    if (!hasOpenAI()) {
+      available.push("primary", "fast", "reasoning");
+    }
+    available.push("fallback2");
+  }
   if (hasAnthropic()) {
     available.push("fallback1");
-  }
-  if (hasGoogle()) {
-    available.push("fallback2");
   }
 
   return available;
@@ -206,8 +347,8 @@ export function hasAnyProvider(): boolean {
 
 export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model">> = {
   primary: {
-    name: "GPT-4o",
-    costPerMillionTokens: { input: 2.5, output: 10 },
+    name: "Gemini 3 Flash Preview",
+    costPerMillionTokens: { input: 0.5, output: 3 },
   },
   fallback1: {
     name: "Claude Sonnet 4.5",
@@ -218,12 +359,12 @@ export const PROVIDER_METADATA: Record<ProviderKey, Omit<ProviderConfig, "model"
     costPerMillionTokens: { input: 1.25, output: 5 },
   },
   fast: {
-    name: "GPT-4o-mini",
-    costPerMillionTokens: { input: 0.15, output: 0.6 },
+    name: "Gemini 2.0 Flash",
+    costPerMillionTokens: { input: 0.1, output: 0.4 },
   },
   reasoning: {
-    name: "o3",
-    costPerMillionTokens: { input: 10, output: 40 },
+    name: "Claude Sonnet 4.5 / Gemini 3 Flash",
+    costPerMillionTokens: { input: 3, output: 15 },
   },
 };
 

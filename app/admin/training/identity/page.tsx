@@ -40,10 +40,10 @@ export default function IdentityPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-[#ff6a1a]">
-                {FRED_BIO.companiesFounded}+
+                100s
               </div>
               <div className="text-xs text-gray-600 dark:text-gray-400">
-                Companies Founded
+                Companies Advised
               </div>
             </div>
             <div className="text-center">

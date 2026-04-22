@@ -15,7 +15,7 @@ import type { ProviderKey } from "@/lib/ai/providers";
 // Types
 // ============================================================================
 
-export type ModelTier = "free" | "pro" | "studio";
+export type ModelTier = "free" | "builder" | "pro" | "studio";
 
 export interface TierModelConfig {
   /** Provider key for chat interactions */
@@ -51,6 +51,13 @@ export const TIER_MODEL_MAP: Record<ModelTier, TierModelConfig> = {
     agentProvider: "fast",
     structuredProvider: "fast",
     maxTokens: 1024,
+    temperature: 0.7,
+  },
+  builder: {
+    chatProvider: "fast",
+    agentProvider: "fast",
+    structuredProvider: "fast",
+    maxTokens: 1536,
     temperature: 0.7,
   },
   pro: {
@@ -121,20 +128,24 @@ export function getModelConfigForTier(tier: string): TierModelConfig {
 function normalizeTier(tier: string | number | undefined | null): ModelTier {
   if (tier == null) return "free";
 
-  // Handle numeric enum values (UserTier.FREE=0, PRO=1, STUDIO=2)
+  // Handle numeric enum values (UserTier.FREE=0, BUILDER=1, PRO=2, STUDIO=3)
   if (typeof tier === "number") {
-    if (tier >= 2) return "studio";
-    if (tier >= 1) return "pro";
+    if (tier >= 3) return "studio";
+    if (tier >= 2) return "pro";
+    if (tier >= 1) return "builder";
     return "free";
   }
 
   const lower = String(tier).toLowerCase();
 
-  if (lower === "studio" || lower === "venture_studio" || lower === "2") {
+  if (lower === "studio" || lower === "venture_studio" || lower === "3") {
     return "studio";
   }
-  if (lower === "pro" || lower === "fundraising" || lower === "1") {
+  if (lower === "pro" || lower === "fundraising" || lower === "2") {
     return "pro";
+  }
+  if (lower === "builder" || lower === "1") {
+    return "builder";
   }
 
   return "free";

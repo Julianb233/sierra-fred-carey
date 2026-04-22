@@ -13,7 +13,7 @@ const featuredPost = {
   slug: "future-of-decision-making",
   title: "The Future of Decision-Making in the AI Era",
   excerpt: "Explore how artificial intelligence is transforming the way founders and executives make critical business decisions.",
-  author: "Fred Carey",
+  author: "Fred Cary",
   date: "Dec 20, 2024",
   readTime: "8 min read",
   category: "Decision Science",
@@ -52,7 +52,7 @@ const posts = [
     slug: "founder-decision-paralysis",
     title: "Overcoming Decision Paralysis as a Founder",
     excerpt: "Practical strategies to break through analysis paralysis and move forward confidently.",
-    author: "Fred Carey",
+    author: "Fred Cary",
     date: "Dec 10, 2024",
     readTime: "7 min read",
     category: "Decision Science",
@@ -111,7 +111,7 @@ export default function BlogPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ff6a1a]/10 border border-[#ff6a1a]/20 text-sm font-medium text-[#ff6a1a] mb-6"
             >
               <BookOpen className="w-4 h-4" />
-              Fred Carey Blog
+              Fred Cary Blog
             </motion.span>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">

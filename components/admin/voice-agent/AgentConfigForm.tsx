@@ -144,7 +144,7 @@ export function AgentConfigForm({ config, onSave }: AgentConfigFormProps) {
               id="system_prompt"
               value={formData.system_prompt}
               onChange={(e) => handleChange('system_prompt', e.target.value)}
-              placeholder="You are a helpful AI assistant..."
+              placeholder="You are a startup mentor guiding founders..."
               rows={8}
               className="font-mono text-sm"
             />

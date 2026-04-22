@@ -16,9 +16,9 @@ import {
 } from "@radix-ui/react-icons";
 
 const stats = [
-  { value: "10,000+", label: "Founders Coached" },
+  { value: "100s+", label: "Founders Coached" },
   { value: "50+", label: "Years Experience" },
-  { value: "$100M+", label: "Capital Raised" },
+  { value: "$3B+", label: "Capital Raised" },
   { value: "40+", label: "Companies Founded" },
 ];
 
@@ -140,7 +140,7 @@ export default function AboutPage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              After coaching <span className="text-[#ff6a1a] font-semibold">10,000+ founders</span> over five decades,
+              After coaching <span className="text-[#ff6a1a] font-semibold">hundreds of founders</span> over five decades,
               I built the AI-powered decision system I wish I had when starting my first company.
             </p>
 
@@ -221,7 +221,7 @@ export default function AboutPage() {
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     I started hustling at 17 — first as a musician in a rock band, then slinging tacos at 22.
                     By the time I got my law degree, I already knew the courtroom wasn&apos;t going to be my only arena.
-                    Over the next five decades, I founded 40+ companies, took 3 public, and had 2 acquired.
+                    Over the next five decades, I advised hundreds of companies, took 3 public, and had 2 acquired.
                   </p>
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                     Along the way, I became obsessed with understanding{" "}
@@ -241,7 +241,7 @@ export default function AboutPage() {
               <Card className="border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-[#ff6a1a]/30 transition-colors shadow-sm">
                 <CardContent className="p-8 space-y-4">
                   <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-                    Over the next five decades, I had the privilege of coaching over 10,000 founders.
+                    Over the next five decades, I had the privilege of coaching hundreds of founders.
                     I noticed patterns emerging — certain decision frameworks worked consistently across
                     industries, stages, and founder personalities. I codified these into a systematic approach.
                   </p>
@@ -452,7 +452,7 @@ export default function AboutPage() {
               </p>
               <p>
                 Where AI doesn&apos;t replace your judgment but enhances it - helping you see blind spots,
-                identify patterns, and make decisions with confidence backed by data from 10,000+ founder journeys.
+                identify patterns, and make decisions with confidence backed by data from hundreds of founder journeys.
               </p>
               <p className="text-xl font-semibold text-[#ff6a1a]">
                 That&apos;s the world we&apos;re building with the Founder Decision OS.

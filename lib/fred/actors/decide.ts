@@ -350,7 +350,7 @@ async function buildResponseContent(
         return llmResponse;
       }
     } catch (error) {
-      logger.log("[FRED] LLM failed for clarify/defer, using template fallback:", error);
+      console.error("[FRED] LLM failed for clarify/defer, using template fallback:", error instanceof Error ? error.message : error);
     }
     // Template fallback only if LLM fails
     if (action === "clarify") {
@@ -390,8 +390,9 @@ async function buildResponseContent(
       logger.log("[FRED] LLM response generated successfully");
       return llmResponse;
     }
+    console.warn("[FRED] LLM returned empty response for action:", action, "intent:", input.intent);
   } catch (error) {
-    logger.log("[FRED] LLM response generation failed, using template fallback:", error);
+    console.error("[FRED] LLM response generation failed, using template fallback:", error instanceof Error ? error.message : error);
   }
 
   // ── Template fallback (only reached when LLM fails) ──
@@ -409,7 +410,7 @@ async function buildResponseContent(
 
     case "recommend": {
       const nextStepsText = synthesis.nextSteps.slice(0, 2).join("\n- ");
-      content = `Here's my take, based on what I've seen across ${FRED_BIO.companiesFounded}+ companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
+      content = `Here's my take, based on what I've seen across hundreds of companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
       if (input.topic && input.topic in COACHING_PROMPTS) {
         const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
         content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;

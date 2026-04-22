@@ -58,9 +58,9 @@ export interface CircuitBreakerMetrics {
 // ============================================================================
 
 const DEFAULT_CONFIG: CircuitBreakerConfig = {
-  failureThreshold: 5,
+  failureThreshold: 3,
   resetTimeout: 30000, // 30 seconds
-  halfOpenRequests: 3,
+  halfOpenRequests: 2,
   monitoringWindow: 60000, // 1 minute
 };
 
