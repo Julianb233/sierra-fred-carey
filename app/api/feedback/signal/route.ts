@@ -13,9 +13,9 @@ import type { FeedbackSignalInsert } from "@/lib/feedback/types"
  * BUILDER ($39) is bucketed with "pro" in this table -- the column only
  * distinguishes free / pro / studio for now.
  */
-const TIER_MAP: Record<UserTier, "free" | "pro" | "studio"> = {
+const TIER_MAP: Record<UserTier, "free" | "builder" | "pro" | "studio"> = {
   [UserTier.FREE]: "free",
-  [UserTier.BUILDER]: "pro",
+  [UserTier.BUILDER]: "builder",
   [UserTier.PRO]: "pro",
   [UserTier.STUDIO]: "studio",
 }
