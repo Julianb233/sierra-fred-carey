@@ -233,7 +233,7 @@ export async function retrieveRecentEpisodes(
 
   let query = supabase
     .from("fred_episodic_memory")
-    .select("id, user_id, session_id, event_type, content, importance_score, metadata, created_at")
+    .select("id, user_id, session_id, event_type, content, content_hash, importance_score, metadata, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(options.limit ?? 10);
