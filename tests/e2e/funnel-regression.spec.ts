@@ -79,12 +79,23 @@ for (const device of MOBILE_DEVICES) {
       await page.waitForLoadState("networkidle");
       await assertNoOverflow(page);
 
-      // Hero CTA should be visible and tappable
-      const heroCTA = page.locator('a:has-text("Get Started")').first();
-      await expect(heroCTA).toBeVisible({ timeout: 10000 });
-      const box = await heroCTA.boundingBox();
-      expect(box).toBeTruthy();
-      expect(box!.height).toBeGreaterThanOrEqual(44);
+      // Hero CTA should be visible and tappable (on mobile, the nav CTA may be
+      // hidden via responsive classes — find the first *visible* Get Started link)
+      const allCTAs = page.locator('a:has-text("Get Started")');
+      const count = await allCTAs.count();
+      let foundVisible = false;
+      for (let i = 0; i < count; i++) {
+        const cta = allCTAs.nth(i);
+        if (await cta.isVisible().catch(() => false)) {
+          const box = await cta.boundingBox();
+          expect(box).toBeTruthy();
+          expect(box!.height).toBeGreaterThanOrEqual(44);
+          foundVisible = true;
+          break;
+        }
+      }
+      // At least one CTA variant should be visible (hero or mobile-specific)
+      expect(foundVisible, "At least one Get Started CTA should be visible").toBe(true);
     });
 
     // --- Pricing page ---

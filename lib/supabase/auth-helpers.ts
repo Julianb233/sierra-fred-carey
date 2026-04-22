@@ -137,6 +137,15 @@ export async function supabaseSignIn(
       if (error.message.includes("Invalid login credentials")) {
         return { success: false, error: "Invalid email or password" };
       }
+      if (error.message.includes("Email not confirmed")) {
+        return { success: false, error: "EMAIL_NOT_CONFIRMED" };
+      }
+      if (error.message.includes("rate limit") || error.status === 429) {
+        return { success: false, error: "Too many login attempts. Please wait a few minutes before trying again." };
+      }
+      if (error.message.includes("disabled") || error.message.includes("banned")) {
+        return { success: false, error: "This account has been disabled. Please contact support for assistance." };
+      }
       return { success: false, error: error.message };
     }
 

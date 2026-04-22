@@ -22,18 +22,19 @@ describe('Pricing Page (/pricing)', () => {
       render(<PricingPage />);
     });
 
-    // Title is "Simple, Transparent Pricing"
+    // Hero is "Stop guessing. Start building like a fundable company."
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
-    expect(screen.getByText('Transparent')).toBeInTheDocument();
+    expect(screen.getByText(/fundable company/i)).toBeInTheDocument();
   });
 
-  it('should render all 3 pricing tiers', async () => {
+  it('should render all 4 pricing tiers', async () => {
     await act(async () => {
       render(<PricingPage />);
     });
 
-    // Tier names appear in headings
+    // Tier names appear in headings (Free, Builder, Pro, Studio)
     expect(screen.getAllByText('Free').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Builder').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pro').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Studio').length).toBeGreaterThan(0);
   });
@@ -68,8 +69,8 @@ describe('Pricing Page (/pricing)', () => {
       render(<PricingPage />);
     });
 
-    expect(screen.getByText('For Active Fundraisers')).toBeInTheDocument();
-    expect(screen.getByText('Full Leverage Mode')).toBeInTheDocument();
+    expect(screen.getByText('For Founders Preparing to Raise')).toBeInTheDocument();
+    expect(screen.getByText('For Founders Who Want Execution')).toBeInTheDocument();
   });
 
   it('should show CTA buttons for all tiers', async () => {
@@ -226,7 +227,7 @@ describe('Pricing Page (/pricing)', () => {
     });
 
     const monthlyIndicators = screen.getAllByText('/month');
-    expect(monthlyIndicators.length).toBe(3); // All three tiers
+    expect(monthlyIndicators.length).toBe(4); // All four tiers (Free, Builder, Pro, Studio)
   });
 
   it('should render main element', async () => {

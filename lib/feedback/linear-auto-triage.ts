@@ -9,10 +9,12 @@
 
 import type { FeedbackInsight } from "@/lib/feedback/types"
 import { createServiceClient } from "@/lib/supabase/server"
+import { findInsightWithLinearIssueByHash } from "@/lib/db/feedback"
 
 // ── Constants ───────────────────────────────────────────────────
 
 const LINEAR_TEAM = "Ai Acrobatics"
+const LINEAR_PROJECT = "Sahara - AI Founder OS"
 const ADMIN_DASHBOARD_URL = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/admin/feedback`
   : "https://joinsahara.com/admin/feedback"
@@ -68,7 +70,31 @@ export async function createLinearIssueFromInsight(
   }
 
   try {
-    // Step 1: Get team ID
+    // Step 0a: Check if another insight with the same cluster hash already has a Linear issue
+    const insightRecord = insight as FeedbackInsight & { cluster_embedding_hash?: string }
+    if (insightRecord.cluster_embedding_hash) {
+      const existingLinked = await findInsightWithLinearIssueByHash(
+        insightRecord.cluster_embedding_hash
+      )
+      if (existingLinked && existingLinked.id !== insight.id) {
+        return {
+          success: false,
+          error: `Duplicate: insight ${existingLinked.id} already has Linear issue ${existingLinked.linear_issue_id} for the same feedback theme`,
+        }
+      }
+    }
+
+    // Step 0b: Query Linear for existing issues with the same [Feedback] title
+    const issueTitle = `[Feedback] ${insight.title}`
+    const existingIssue = await findExistingLinearIssue(apiKey, issueTitle)
+    if (existingIssue) {
+      return {
+        success: false,
+        error: `Duplicate: Linear issue ${existingIssue.identifier} already exists with title "${existingIssue.title}"`,
+      }
+    }
+
+    // Step 1: Get team ID, active cycle, project ID, and label IDs
     const teamQuery = await fetch("https://api.linear.app/graphql", {
       method: "POST",
       headers: {
@@ -76,7 +102,17 @@ export async function createLinearIssueFromInsight(
         Authorization: apiKey,
       },
       body: JSON.stringify({
-        query: `query { teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) { nodes { id } } }`,
+        query: `query {
+          teams(filter: { name: { eq: "${LINEAR_TEAM}" } }) {
+            nodes { id activeCycle { id } }
+          }
+          projects(filter: { name: { eq: "${LINEAR_PROJECT}" } }) {
+            nodes { id }
+          }
+          issueLabels(filter: { name: { in: ["Bug", "Feature", "Improvement"] } }) {
+            nodes { id name }
+          }
+        }`,
       }),
     })
 
@@ -85,6 +121,10 @@ export async function createLinearIssueFromInsight(
     if (!teamId) {
       return { success: false, error: `Team "${LINEAR_TEAM}" not found in Linear` }
     }
+
+    const cycleId = teamData.data?.teams?.nodes?.[0]?.activeCycle?.id
+    const projectId = teamData.data?.projects?.nodes?.[0]?.id
+    const allLabels: { id: string; name: string }[] = teamData.data?.issueLabels?.nodes || []
 
     // Step 2: Build description
     const signalIdsList = insight.signal_ids.slice(0, 20)
@@ -116,8 +156,14 @@ Auto-created from feedback pattern detection.
 ### Signal IDs
 ${signalIdsFormatted}${truncation}`
 
-    // Step 3: Create issue
+    // Step 3: Create issue with labels, project, and cycle
     const priority = severityToPriority(insight.severity)
+
+    // Map feedback category to label — default to "Improvement" for feedback clusters
+    const labelName = insight.category === "bug" ? "Bug" : insight.category === "feature_request" ? "Feature" : "Improvement"
+    const labelIds = allLabels
+      .filter((l) => l.name === labelName)
+      .map((l) => l.id)
 
     const createRes = await fetch("https://api.linear.app/graphql", {
       method: "POST",
@@ -138,6 +184,9 @@ ${signalIdsFormatted}${truncation}`
             title: `[Feedback] ${insight.title}`,
             description,
             priority,
+            labelIds,
+            ...(projectId && { projectId }),
+            ...(cycleId && { cycleId }),
           },
         },
       }),
@@ -161,6 +210,43 @@ ${signalIdsFormatted}${truncation}`
       success: false,
       error: `Linear API error: ${err instanceof Error ? err.message : String(err)}`,
     }
+  }
+}
+
+/**
+ * Search Linear for an existing issue with an exact title match.
+ * Returns the first match or null if none found.
+ */
+async function findExistingLinearIssue(
+  apiKey: string,
+  title: string
+): Promise<{ identifier: string; title: string; url: string } | null> {
+  try {
+    const res = await fetch("https://api.linear.app/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: apiKey,
+      },
+      body: JSON.stringify({
+        query: `query SearchIssues($filter: IssueFilter!) {
+          issues(filter: $filter, first: 1) {
+            nodes { identifier title url }
+          }
+        }`,
+        variables: {
+          filter: {
+            title: { eq: title },
+          },
+        },
+      }),
+    })
+    const data = await res.json()
+    const match = data.data?.issues?.nodes?.[0]
+    return match ?? null
+  } catch {
+    // Don't block issue creation if search fails
+    return null
   }
 }
 

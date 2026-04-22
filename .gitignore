@@ -37,6 +37,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Firebase migration data (exports, service account keys)
+scripts/migrations/firebase-to-supabase/_data/
+**/firebase-service-account*.json
+**/firebase-users*.json
+**/firestore-export/
+
 # Environment files with secrets
 .env
 .env.local

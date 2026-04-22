@@ -11,6 +11,7 @@ export interface FeedbackSignal {
   sentiment_score: number | null
   sentiment_confidence: number | null
   user_tier: 'free' | 'pro' | 'studio'
+  sender_role: 'user' | 'team' | 'product_owner'
   weight: number
   consent_given: boolean
   expires_at: string | null

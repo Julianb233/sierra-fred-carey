@@ -16,8 +16,8 @@ export default function Pricing() {
 
   const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
     if (!priceId) {
-      // Free plan - redirect to dashboard/sign-up
-      window.location.assign("/dashboard");
+      // Free plan - redirect to you.joinsahara.com
+      window.location.assign("https://you.joinsahara.com");
       return;
     }
 

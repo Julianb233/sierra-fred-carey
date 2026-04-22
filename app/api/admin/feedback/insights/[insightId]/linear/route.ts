@@ -56,14 +56,38 @@ export async function POST(
     const result = await createLinearIssueFromInsight(insight)
 
     if (!result.success) {
+      const isDuplicate = result.error?.startsWith("Duplicate:")
       return NextResponse.json(
         { error: result.error },
-        { status: 500 }
+        { status: isDuplicate ? 409 : 500 }
       )
     }
 
     // Update the insight with the Linear issue ID
     await updateInsightWithLinearIssue(insightId, result.identifier!)
+
+    // Send WhatsApp ack to Sahara Founders group (best-effort, don't block response)
+    try {
+      const { sendWhatsAppAck } = await import("@/lib/feedback/whatsapp-ack")
+      const severity = insight.severity || "medium"
+      const priorityMap: Record<string, number> = {
+        critical: 1,
+        high: 2,
+        medium: 3,
+        low: 4,
+      }
+      sendWhatsAppAck([
+        {
+          title: insight.title,
+          identifier: result.identifier!,
+          priority: priorityMap[severity] || 3,
+        },
+      ]).catch((err: unknown) =>
+        console.error("[whatsapp-ack] Failed:", err)
+      )
+    } catch {
+      // WhatsApp ack is best-effort — don't fail the API response
+    }
 
     return NextResponse.json({
       success: true,

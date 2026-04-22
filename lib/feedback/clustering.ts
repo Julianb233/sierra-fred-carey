@@ -13,7 +13,8 @@ import { generateObject } from "ai"
 import { z } from "zod"
 import { getModel } from "@/lib/ai/providers"
 import { getModelForTier } from "@/lib/ai/tier-routing"
-import { TIER_WEIGHTS } from "@/lib/feedback/constants"
+import { TIER_WEIGHTS, ROLE_WEIGHTS } from "@/lib/feedback/constants"
+import type { SenderRole } from "@/lib/feedback/constants"
 import type { FeedbackSignal, FeedbackCluster } from "@/lib/feedback/types"
 
 // ============================================================================
@@ -28,6 +29,13 @@ const SEVERITY_ORDER: Record<string, number> = {
 }
 
 const MIN_SIGNALS_FOR_CLUSTERING = 3
+
+/** Compute full signal weight: tier weight * role weight (AI-4111) */
+function signalWeight(s: FeedbackSignal): number {
+  const tierW = TIER_WEIGHTS[s.user_tier] || 1
+  const roleW = ROLE_WEIGHTS[(s.sender_role || 'user') as SenderRole] || 1
+  return tierW * roleW
+}
 
 // ============================================================================
 // LLM Clustering
@@ -80,6 +88,7 @@ export async function clusterFeedbackSignals(
         ? s.sentiment_score > 0 ? "positive" : s.sentiment_score < -0.5 ? "frustrated" : "negative"
         : "unknown",
       tier: s.user_tier,
+      role: s.sender_role || "user",
       created_at: s.created_at,
     }))
 
@@ -95,7 +104,8 @@ Feedback signals:
 ${JSON.stringify(summaries, null, 2)}
 
 Group related feedback into clusters. Each signal should belong to exactly one cluster.
-Assign severity based on: signal count, user tier weight (studio > pro > free), and sentiment intensity.
+Assign severity based on: signal count, user tier weight (studio > pro > free), sender role weight (product_owner=5x > team=2x > user=1x), and sentiment intensity.
+Signals from product_owner role should be treated as highest priority.
 If a cluster has coaching_discomfort category signals, note that separately — these may be "working as designed".`,
     })
 
@@ -107,7 +117,7 @@ If a cluster has coaching_discomfort category signals, note that separately — 
 
       const signalIds = clusterSignals.map((s) => s.id)
       const weightedCount = clusterSignals.reduce(
-        (sum, s) => sum + (TIER_WEIGHTS[s.user_tier] || 1),
+        (sum, s) => sum + signalWeight(s),
         0
       )
       const hash = computeClusterHash(cluster.theme, cluster.category)
@@ -147,7 +157,7 @@ function clusterByCategory(signals: FeedbackSignal[]): FeedbackCluster[] {
     .filter(([, sigs]) => sigs.length >= 2)
     .map(([category, sigs]) => {
       const weightedCount = sigs.reduce(
-        (sum, s) => sum + (TIER_WEIGHTS[s.user_tier] || 1),
+        (sum, s) => sum + signalWeight(s),
         0
       )
       const theme = `Recurring ${category.replace(/_/g, " ")} feedback`
@@ -170,7 +180,8 @@ function computeSeverity(
   signals: FeedbackSignal[]
 ): "low" | "medium" | "high" | "critical" {
   const hasStudio = signals.some((s) => s.user_tier === "studio")
-  if (count >= 10 || hasStudio) return "critical"
+  const hasProductOwner = signals.some((s) => s.sender_role === "product_owner")
+  if (count >= 10 || hasStudio || hasProductOwner) return "critical"
   if (count >= 5 || weightedCount >= 15) return "high"
   if (count >= 3) return "medium"
   return "low"
@@ -194,16 +205,16 @@ export function computeClusterHash(
 }
 
 /**
- * Check if a cluster with the same hash exists within the dedup window.
- * Uses the findInsightByHash DB helper.
+ * Check if a cluster with the same hash already exists as an active insight.
+ * Checks all active (non-resolved) insights with no time window.
  */
 export async function isDuplicateCluster(
   hash: string,
-  windowHours = 4
+  _windowHours = 4
 ): Promise<boolean> {
   // Dynamic import to avoid bundling Supabase in test context
-  const { findInsightByHash } = await import("@/lib/db/feedback")
-  const existing = await findInsightByHash(hash, windowHours)
+  const { findActiveInsightByHash } = await import("@/lib/db/feedback")
+  const existing = await findActiveInsightByHash(hash)
   return existing !== null
 }
 
@@ -257,7 +268,7 @@ export function computeClusterSeverity(
   signals: FeedbackSignal[]
 ): "low" | "medium" | "high" | "critical" {
   const weightedImpact = signals.reduce(
-    (sum, s) => sum + (TIER_WEIGHTS[s.user_tier as keyof typeof TIER_WEIGHTS] ?? 1),
+    (sum, s) => sum + signalWeight(s),
     0
   )
   const count = signals.length
@@ -320,7 +331,7 @@ export async function runClusteringPipeline(
   // Dynamic imports to keep Trigger.dev bundle clean
   const {
     getRecentNegativeSignals,
-    findInsightByHash,
+    findActiveInsightByHash,
     upsertInsightWithSignals,
   } = await import("@/lib/db/feedback")
 
@@ -351,8 +362,8 @@ export async function runClusteringPipeline(
 
   for (const cluster of clusters) {
     try {
-      // Check for duplicate via hash-based matching (4h window)
-      const existing = await findInsightByHash(cluster.hash, 4)
+      // Check for duplicate via hash-based matching (all active insights, no time window)
+      const existing = await findActiveInsightByHash(cluster.hash)
 
       if (existing) {
         // Merge signal_ids into existing insight

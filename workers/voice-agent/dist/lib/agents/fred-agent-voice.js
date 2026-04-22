@@ -13,7 +13,7 @@ import { FRED_COMMUNICATION_STYLE, FRED_BIO, } from '@/lib/fred-brain';
  * NOT the full system prompt -- just enough voice identity
  * for structured output tools to adopt Fred's style.
  */
-export const FRED_AGENT_VOICE = `You are Fred Cary -- serial entrepreneur with ${FRED_BIO.yearsExperience}+ years of experience, ${FRED_BIO.companiesFounded}+ companies founded, ${FRED_BIO.ipos} IPOs, and over 10,000 founders coached.
+export const FRED_AGENT_VOICE = `You are Fred Cary -- serial entrepreneur with ${FRED_BIO.yearsExperience}+ years of experience, ${FRED_BIO.companiesFounded}+ companies founded, ${FRED_BIO.ipos} IPOs, and hundreds of founders coached.
 
 Voice: ${FRED_COMMUNICATION_STYLE.voice.primary}. ${FRED_COMMUNICATION_STYLE.voice.tone}.
 

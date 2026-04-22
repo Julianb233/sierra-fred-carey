@@ -299,6 +299,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Pre-generate stage-based goals so the dashboard shows them immediately
+    if (stage) {
+      try {
+        const goalMod = await import("@/lib/goals/goal-service");
+        await goalMod.generateGoalSet(userId, stage);
+      } catch (goalErr) {
+        // Non-blocking — goals will auto-generate on first dashboard visit
+        console.warn("[onboard] Goal pre-generation failed:", goalErr);
+      }
+    }
+
     // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
