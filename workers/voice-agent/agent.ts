@@ -254,7 +254,13 @@ export default defineAgent({
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
     const tts = new elevenlabs.TTS({
-      voiceId: process.env.ELEVENLABS_VOICE_ID || 'uxq5gLBpu73uF1Aqzb2t', // Fred Zaharix voice (ElevenLabs)
+      // Fred Sahara (instant-clone ElevenLabs voice). The "Fred Cary 2026"
+      // professional clone (uxq5gLBpu73uF1Aqzb2t) has its fine-tuning in a
+      // failed state on every model, so any TTS call using it returns
+      // HTTP 400 voice_not_fine_tuned and LiveKit falls back to a default
+      // non-Fred voice. Keep this fallback on the working instant clone
+      // until the professional clone is re-trained.
+      voiceId: process.env.ELEVENLABS_VOICE_ID || 'fpxks3eObfRI1jkeCD2k',
     });
 
     const session = new AgentSession({
