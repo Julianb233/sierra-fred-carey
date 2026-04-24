@@ -50,8 +50,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl)
   }
 
-  // If no code provided, redirect to forgot-password with error hint
-  const errorUrl = new URL("/forgot-password", origin)
-  errorUrl.searchParams.set("error", "expired")
-  return NextResponse.redirect(errorUrl)
+  // No `code` param. This happens when Supabase is configured for the
+  // implicit flow (legacy default) and delivers the session as a URL
+  // fragment (#access_token=...&refresh_token=...). Fragments are not
+  // sent to the server, so we redirect to `next` and let the browser
+  // carry the fragment over; the client-side Supabase SDK on the
+  // destination page picks it up via `detectSessionInUrl`.
+  return NextResponse.redirect(new URL(next, origin))
 }
