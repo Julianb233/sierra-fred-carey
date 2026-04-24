@@ -296,8 +296,13 @@ export function useWhisperFlow(options: UseWhisperFlowOptions = {}): UseWhisperF
 
       // Samsung Internet can silently kill the audio track without firing
       // recorder.onerror. Monitor the track's "ended" event to catch this.
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
+      // getAudioTracks is standard on real MediaStream; guard for minimal
+      // mocks that don't expose it or event listeners.
+      const audioTrack =
+        typeof stream.getAudioTracks === "function"
+          ? stream.getAudioTracks()[0]
+          : null;
+      if (audioTrack && typeof audioTrack.addEventListener === "function") {
         audioTrack.addEventListener("ended", () => {
           // Only handle unexpected track ends (not user-initiated stops)
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
