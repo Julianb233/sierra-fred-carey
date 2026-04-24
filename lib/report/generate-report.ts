@@ -59,7 +59,7 @@ export async function generateReport(userId: string): Promise<GenerateReportResu
   // 2) Load minimal user/profile context for naming
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, founder_name, company_name, stage")
+    .select("name, company_name, stage")
     .eq("id", userId)
     .maybeSingle();
 
@@ -67,8 +67,7 @@ export async function generateReport(userId: string): Promise<GenerateReportResu
   const email = authUser?.user?.email ?? null;
 
   const founderName =
-    (profile as { full_name?: string; founder_name?: string } | null)?.founder_name ??
-    (profile as { full_name?: string } | null)?.full_name ??
+    (profile as { name?: string | null } | null)?.name ??
     email?.split("@")[0] ??
     "Founder";
 

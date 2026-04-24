@@ -13,20 +13,20 @@
  *   email             -> email
  *   stage             -> stage  (raw free-text; may be '')
  *   stageCategory     -> oases_stage  (bucketed into clarity|validation|build|launch|grow)
- *                                      AND enrichment_data.stage_category (raw)
- *   weakSpotCategory  -> challenges[0].category
- *   weakSpot          -> challenges[0].description
+ *                                      AND stage_category (raw, since 2026-04-24)
+ *   weakSpotCategory  -> weak_spot_category (since 2026-04-24)
+ *                        AND challenges[0].category (jsonb, legacy)
+ *   weakSpot          -> weak_spot (since 2026-04-24)
+ *                        AND challenges[0].description (jsonb, legacy)
  *   ideaName          -> company_name
- *   ideaPitch         -> enrichment_data.idea_pitch
- *                        (target column product_positioning exists in repo
- *                        migration 20260323000001 but is NOT applied to the
- *                        live DB; park in enrichment_data for now.)
- *   hasPartners=true  -> co_founder='Yes - details pending onboarding'
- *   targetMarket      -> enrichment_data.target_market
- *   location          -> enrichment_data.location
- *   phone             -> enrichment_data.phone
- *   ideaStatus        -> enrichment_data.idea_status
- *   passions          -> enrichment_data.passions
+ *   ideaPitch         -> product_positioning (live since 2026-04-24 migration)
+ *   hasPartners       -> has_partners (bool, since 2026-04-24)
+ *                        AND co_founder='Yes - details pending onboarding'|'No' (legacy text)
+ *   targetMarket      -> target_market (since 2026-04-24)
+ *   location          -> location (since 2026-04-24)
+ *   phone             -> phone (since 2026-04-24)
+ *   ideaStatus        -> idea_status (since 2026-04-24)
+ *   passions          -> passions (since 2026-04-24)
  *   createdAt         -> created_at (only when ISO-parseable)
  *   <every raw field> -> enrichment_data.firebase_raw.<field>  (lossless archive)
  *
@@ -126,10 +126,17 @@ const MAPPERS: Record<string, Mapper> = {
             ]
           : [];
 
-      const coFounder =
+      const hasPartners =
         doc.hasPartners === true
-          ? "Yes - details pending onboarding"
+          ? true
           : doc.hasPartners === false
+            ? false
+            : null;
+
+      const coFounder =
+        hasPartners === true
+          ? "Yes - details pending onboarding"
+          : hasPartners === false
             ? "No"
             : null;
 
@@ -159,13 +166,18 @@ const MAPPERS: Record<string, Mapper> = {
         name: nonEmpty(doc.name) ? String(doc.name) : undefined,
         stage: nonEmpty(doc.stage) ? String(doc.stage) : null,
         oases_stage: bucketOasesStage(doc.stageCategory),
+        stage_category: nonEmpty(doc.stageCategory) ? String(doc.stageCategory) : null,
+        weak_spot: nonEmpty(doc.weakSpot) ? String(doc.weakSpot) : null,
+        weak_spot_category: nonEmpty(doc.weakSpotCategory) ? String(doc.weakSpotCategory) : null,
         challenges,
         company_name: nonEmpty(doc.ideaName) ? String(doc.ideaName) : null,
-        // NOTE: ideaPitch target column (product_positioning) is defined in
-        // supabase/migrations/20260323000001_add_product_positioning.sql but
-        // that migration is NOT applied to the live DB. Stored in
-        // enrichment_data.idea_pitch instead. Move to column if migration
-        // is applied later.
+        product_positioning: nonEmpty(doc.ideaPitch) ? String(doc.ideaPitch) : null,
+        target_market: nonEmpty(doc.targetMarket) ? String(doc.targetMarket) : null,
+        location: nonEmpty(doc.location) ? String(doc.location) : null,
+        phone: nonEmpty(doc.phone) ? String(doc.phone) : null,
+        idea_status: nonEmpty(doc.ideaStatus) ? String(doc.ideaStatus) : null,
+        passions: nonEmpty(doc.passions) ? String(doc.passions) : null,
+        has_partners: hasPartners,
         co_founder: coFounder,
         enrichment_data: enrichmentData,
         enrichment_source: "firebase_migration_2026_04_21",
