@@ -18,57 +18,16 @@
  * startup_processes, so after this bridge runs, migrated users can generate
  * a founder report without having to re-complete the new 9-step flow.
  *
- * Field mapping:
+ * jsonb field shapes match the 9-step UI's expectations
+ * (see app/api/startup-process/route.ts extractCols()):
+ *   demand_evidence:    string[]
+ *   weekly_priorities:  string[]
+ *   ownership_structure: { structure: string, decisionMaker: string | null }
+ *   pilot_results:      string[]   (not read by UI today; kept for report context)
+ *   what_worked:        string[]   (UI renders index 0 in a textarea)
+ *   what_didnt_work:    string[]
  *
- *   Step 1 (Problem)
- *     problem_statement  <- validation "pain points" summary OR
- *                           offer-clarity "problem" item summary OR
- *                           discovery.problem OR
- *                           profile.weak_spot
- *     problem_who        <- offer-clarity "ideal customer" summary OR
- *                           discovery.customer OR
- *                           profile.enrichment_data.target_market
- *
- *   Step 2 (Customer)
- *     economic_buyer     <- same source chain as problem_who
- *
- *   Step 3 (Founder edge)
- *     founder_edge       <- founder-story "unfair advantage" summary
- *     unique_insight     <- founder-story "why you / why now" summary
- *     unfair_advantage   <- founder-story "unfair advantage" summary
- *
- *   Step 4 (Simplest solution)
- *     simplest_solution  <- offer-clarity "product in one sentence" summary OR
- *                           mvp-plan "core feature" summary OR
- *                           profile.enrichment_data.idea_pitch
- *
- *   Step 5 (Validation)
- *     validation_method  <- validation tile approach (generic if any items done)
- *     demand_evidence    <- jsonb of validation item summaries
- *     validation_results <- pmf-search retention / testimonials summaries
- *
- *   Step 6 (GTM)
- *     gtm_channel        <- scale-ops "acquisition channel" summary
- *     gtm_approach       <- scale-ops "playbooks" summary
- *
- *   Step 7 (Priorities & ownership)
- *     weekly_priorities  <- jsonb array from mentor.actionItems
- *     ownership_structure <- { has_partners: profile.has_partners, co_founder: profile.co_founder }
- *
- *   Step 8 (Pilot)
- *     pilot_definition       <- pmf-search "10 paying customers" summary
- *     pilot_success_criteria <- economics "LTV:CAC ratio" summary
- *     pilot_results          <- jsonb of pmf-search + economics summaries
- *
- *   Step 9 (Scale)
- *     what_worked     <- jsonb of scale-ops items with done=true
- *
- *   step_N_completed = true IFF at least one field for that step was populated.
- *   current_step     = highest step with >=1 field populated (clamped 1..9)
- *   completion_pct   = (# done items across all tiles) / (total items) * 100
- *   status           = 'active' unless all 9 steps complete
- *
- * Idempotent: deletes any prior bridged row (metadata-tagged) before upsert.
+ * Idempotent: deletes the prior row for user before insert.
  *
  * Usage:
  *   npx tsx scripts/migrations/firebase-to-supabase/bridge-roadmap-to-startup-process.ts
@@ -147,20 +106,18 @@ function summariesFrom(tile: RoadmapDoc | undefined): string[] {
   return tile.items.filter((it) => it.done && it.summary).map((it) => it.summary!);
 }
 
-function itemsToJsonb(tile: RoadmapDoc | undefined): unknown[] {
+function itemsToStringArray(tile: RoadmapDoc | undefined): string[] {
   if (!tile?.items) return [];
   return tile.items
     .filter((it) => it.done)
-    .map((it) => ({ text: it.text, summary: it.summary ?? null, done: true }));
+    .map((it) => it.summary ? `${it.text}: ${it.summary}` : String(it.text));
 }
 
-function mentorPriorities(mentor: MentorDoc[] | null | undefined): unknown[] {
+function mentorPriorities(mentor: MentorDoc[] | null | undefined): string[] {
   if (!Array.isArray(mentor)) return [];
-  const all: Array<{ text: string; assignedAt?: string }> = [];
+  const all: string[] = [];
   for (const m of mentor) {
-    if (Array.isArray(m.items)) {
-      for (const text of m.items) all.push({ text, assignedAt: m.assignedAt });
-    }
+    if (Array.isArray(m.items)) for (const text of m.items) all.push(String(text));
   }
   return all;
 }
@@ -218,7 +175,6 @@ function bridgeUser(p: ProfileRow): BridgeResult {
     return { action: "skipped", reason: "no roadmap/mentor/discovery data" };
   }
 
-  // Build a tile lookup by doc_id
   const tileMap = new Map<string, RoadmapDoc>();
   for (const r of roadmap) tileMap.set(r._doc_id, r);
 
@@ -272,9 +228,7 @@ function bridgeUser(p: ProfileRow): BridgeResult {
   // ---- Step 5: Validation ----
   const validationSummaries = summariesFrom(validationTile);
   const pmfSummaries = summariesFrom(pmfSearch);
-  const demand_evidence = validationSummaries.length
-    ? validationSummaries.map((s) => ({ source: "firebase_roadmap:validation", evidence: s }))
-    : [];
+  const demand_evidence: string[] = validationSummaries.slice();
   const validation_method = validationSummaries.length ? "Customer discovery conversations (Firebase journey)" : null;
   const validation_results = pmfSummaries.length ? pmfSummaries.join(" | ") : (validationSummaries.length ? validationSummaries.join(" | ") : null);
 
@@ -283,23 +237,20 @@ function bridgeUser(p: ProfileRow): BridgeResult {
   const gtm_approach = findItemSummary(scaleOps, (txt) => txt.includes("playbook") || txt.includes("repeatable"));
 
   // ---- Step 7: Priorities & ownership ----
-  const weekly_priorities = mentorPriorities(mentor);
+  const weekly_priorities: string[] = mentorPriorities(mentor);
   const ownership_structure = {
-    co_founder: p.co_founder,
-    has_partners: p.has_partners ?? null,
-    source: "firebase_profile",
+    structure: p.co_founder ?? (p.has_partners === true ? "Has partners (details pending)" : p.has_partners === false ? "Solo founder" : ""),
+    decisionMaker: null,
   };
 
   // ---- Step 8: Pilot ----
   const pilot_definition = findItemSummary(pmfSearch, (txt) => txt.includes("paying customers") || txt.includes("pilot"));
   const pilot_success_criteria = findItemSummary(economics, (txt) => txt.includes("ltv:cac") || txt.includes("ratio"));
-  const pilot_results = [
-    ...summariesFrom(pmfSearch).map((s) => ({ source: "pmf-search", result: s })),
-    ...summariesFrom(economics).map((s) => ({ source: "economics", result: s })),
-  ];
+  const pilot_results: string[] = [...summariesFrom(pmfSearch), ...summariesFrom(economics)];
 
   // ---- Step 9: Scale ----
-  const what_worked = itemsToJsonb(scaleOps);
+  const scaleOpsStrings = itemsToStringArray(scaleOps);
+  const what_worked: string[] = scaleOpsStrings.length ? [scaleOpsStrings.join("\n\n")] : [];
 
   // ---- Compute step completion ----
   const step_1_completed = !!(problem_statement || problem_who);
@@ -315,19 +266,14 @@ function bridgeUser(p: ProfileRow): BridgeResult {
   const stepFlags = [step_1_completed, step_2_completed, step_3_completed, step_4_completed, step_5_completed, step_6_completed, step_7_completed, step_8_completed, step_9_completed];
   const stepsCompleted = stepFlags.filter(Boolean).length;
 
-  // current_step = highest step with any data, or 1 if none
   let current_step = 1;
   for (let i = stepFlags.length - 1; i >= 0; i--) {
     if (stepFlags[i]) { current_step = i + 1; break; }
   }
 
-  // completion_percentage = done items / total items across roadmap
   const { done, total } = countDone(roadmap);
   const completion_percentage = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  // validated_at timestamps — use first roadmap timestamp as a generic backfill
   const backfillTs = firstTimestamp(roadmap) ?? new Date().toISOString();
-
   const status = stepsCompleted === 9 ? "completed" : "active";
 
   const row: Record<string, unknown> = {
@@ -336,7 +282,6 @@ function bridgeUser(p: ProfileRow): BridgeResult {
     status,
     completion_percentage,
 
-    // Step 1
     problem_statement,
     problem_who,
     problem_frequency: null,
@@ -344,55 +289,47 @@ function bridgeUser(p: ProfileRow): BridgeResult {
     step_1_completed,
     step_1_validated_at: step_1_completed ? backfillTs : null,
 
-    // Step 2
     economic_buyer,
     user_if_different: null,
     environment_context: null,
     step_2_completed,
     step_2_validated_at: step_2_completed ? backfillTs : null,
 
-    // Step 3
     founder_edge,
     unique_insight,
     unfair_advantage,
     step_3_completed,
     step_3_validated_at: step_3_completed ? backfillTs : null,
 
-    // Step 4
     simplest_solution,
     explicitly_excluded: null,
     step_4_completed,
     step_4_validated_at: step_4_completed ? backfillTs : null,
 
-    // Step 5
     validation_method,
     demand_evidence,
     validation_results,
     step_5_completed,
     step_5_validated_at: step_5_completed ? backfillTs : null,
 
-    // Step 6
     gtm_channel,
     gtm_approach,
     step_6_completed,
     step_6_validated_at: step_6_completed ? backfillTs : null,
 
-    // Step 7
     weekly_priorities,
     ownership_structure,
     step_7_completed,
     step_7_validated_at: step_7_completed ? backfillTs : null,
 
-    // Step 8
     pilot_definition,
     pilot_success_criteria,
     pilot_results,
     step_8_completed,
     step_8_validated_at: step_8_completed ? backfillTs : null,
 
-    // Step 9
     what_worked,
-    what_didnt_work: [],
+    what_didnt_work: [] as string[],
     scale_decision: null,
     scale_reasoning: null,
     step_9_completed,
@@ -419,7 +356,6 @@ async function main() {
 
   const db = makeClient();
 
-  // Fetch candidate profiles — migrated users with firebase_subcollections
   let query = db
     .from("profiles")
     .select("id, email, name, company_name, co_founder, has_partners, weak_spot, target_market:enrichment_data->>target_market, enrichment_data")
@@ -457,7 +393,6 @@ async function main() {
       continue;
     }
 
-    // Clear prior bridged row (if any) then insert fresh
     await db.from("startup_processes").delete().eq("user_id", p.id);
     const { error: insErr } = await db.from("startup_processes").insert(res.row);
     if (insErr) { counts.errors++; console.log(`  ${p.email}: insert err ${insErr.message}`); continue; }
@@ -475,7 +410,6 @@ async function main() {
 
   if (dryRun && sampleRow) {
     console.log(`\n[DRY] Sample row for first candidate:`);
-    // Trim large jsonb fields for display
     const trimmed: Record<string, unknown> = { ...sampleRow };
     for (const k of ["weekly_priorities","demand_evidence","pilot_results","what_worked"]) {
       const v = trimmed[k];
