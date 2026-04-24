@@ -115,6 +115,30 @@ export async function middleware(request: NextRequest) {
       return redirectResponse;
     }
 
+    // Authenticated users hitting auth entry pages (/login, /signup, /get-started)
+    // should be routed onward. Without this, the navbar "Login" button and any
+    // stale-tab navigation drops them back onto the signup wizard or login form,
+    // which is confusing and can produce duplicate-account errors.
+    const authEntryPaths = ["/login", "/signup", "/get-started"];
+    const isAuthEntry = authEntryPaths.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    );
+    if (user && isAuthEntry) {
+      const rawRedirect = request.nextUrl.searchParams.get("redirect");
+      const safeRedirect =
+        rawRedirect &&
+        rawRedirect.startsWith("/") &&
+        !rawRedirect.startsWith("//") &&
+        !rawRedirect.includes("\\") &&
+        !rawRedirect.includes("://")
+          ? rawRedirect
+          : "/dashboard";
+      const target = new URL(safeRedirect, request.url);
+      const redirectResponse = NextResponse.redirect(target);
+      redirectResponse.headers.set("X-Request-ID", requestId);
+      return redirectResponse;
+    }
+
     // Phase 77-02: Welcome flow enforcement
     // Redirect authenticated users who haven't completed intake to /welcome
     const welcomeExemptPaths = ['/welcome', '/api/', '/login', '/signup', '/get-started', '/onboarding', '/_next/', '/favicon']
