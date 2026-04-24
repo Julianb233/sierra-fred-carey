@@ -55,7 +55,16 @@ function NavBar() {
   }, []);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    // Fail closed (logged-out) if Supabase env isn't configured on this deploy
+    // (e.g. preview branches without NEXT_PUBLIC_SUPABASE_* set). Throwing here
+    // bubbles to global-error.tsx and blanks the whole page.
+    let supabase: ReturnType<typeof getSupabaseClient>;
+    try {
+      supabase = getSupabaseClient();
+    } catch {
+      setIsAuthenticated(false);
+      return;
+    }
     supabase.auth.getSession().then((result: { data: { session: unknown | null } }) => {
       setIsAuthenticated(!!result.data.session);
     });
