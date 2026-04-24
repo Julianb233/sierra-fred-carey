@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
   Rocket,
@@ -619,6 +620,13 @@ const OnboardingPage = () => {
                         <p className="text-center text-base font-medium text-gray-700 dark:text-gray-300">
                           <CheckCircle2 className="w-4 h-4 inline-block mr-1.5 text-green-500 -mt-0.5" />
                           No credit card required
+                        </p>
+
+                        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                          Already have an account?{" "}
+                          <Link href="/login" className="font-medium text-[#ff6a1a] hover:text-[#ea580c] hover:underline">
+                            Sign in
+                          </Link>
                         </p>
                       </div>
                     </div>

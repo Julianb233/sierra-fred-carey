@@ -185,7 +185,7 @@ function NavBar() {
                 ) : (
                   <>
                     <Button asChild size="lg" variant="outline" className="w-full touch-target border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a]">
-                      <Link href="/get-started" onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>
                         Login
                       </Link>
                     </Button>
@@ -291,7 +291,7 @@ function NavBar() {
                   className="hidden sm:flex border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href="/get-started">
+                  <Link href="/login">
                     Login
                   </Link>
                 </Button>
