@@ -26,12 +26,15 @@ import Image from "next/image";
 import { useState, useEffect, memo } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
+  const showAuthedNav = isDashboard || isAuthenticated;
 
   // Hide NavBar on pages that have their own full-screen layouts/headers
   // - /chat has its own header with "Talk to Fred" and back button
@@ -49,6 +52,17 @@ function NavBar() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    supabase.auth.getSession().then((result: { data: { session: unknown | null } }) => {
+      setIsAuthenticated(!!result.data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session: unknown | null) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const menuItems = [
@@ -176,7 +190,7 @@ function NavBar() {
 
                 <Separator className="my-2 bg-gray-200 dark:bg-gray-800" />
 
-                {isDashboard ? (
+                {showAuthedNav ? (
                   <Button asChild size="lg" className="w-full touch-target bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25">
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
                       Dashboard
@@ -273,7 +287,7 @@ function NavBar() {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {isDashboard ? (
+            {showAuthedNav ? (
               <Button
                 asChild
                 className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
@@ -288,7 +302,7 @@ function NavBar() {
                 <Button
                   asChild
                   variant="outline"
-                  className="hidden sm:flex border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] transition-all duration-300 touch-target"
+                  className="flex border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] transition-all duration-300 touch-target"
                   size="sm"
                 >
                   <Link href="/login">
