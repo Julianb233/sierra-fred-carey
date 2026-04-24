@@ -32,13 +32,9 @@ export default defineConfig({
     //     intent: any prompt change requires manual review + new SHA.
     //     Fix: restore prompt bytes to match SHA 08466134..., or get an
     //     out-of-band test update to reflect the newly-approved prompt.
-    //   * tests/pages/readiness.test.tsx
-    //     FeatureLock expectation for Free-tier users no longer triggers
-    //     the gated rendering path. Restore the gating behavior.
     exclude: [
       '**/node_modules/**', '.next', 'dist', '.claude', 'funnel/**',
       'lib/ai/__tests__/voice-regression.test.ts',
-      'tests/pages/readiness.test.tsx',
     ],
     pool: 'threads',
     fileParallelism: false,
