@@ -1,9 +1,9 @@
 # What's Next — Sierra Fred Carey / Sahara
 
-> **Last updated**: 2026-03-06
-> **Accounts**: agent1, terminator
-> **Status**: 🟡 In Progress — Phase 73 (Admin Dashboard & Sentiment) 2 of 4 plans executed, 2 remaining
-> **Priority**: P1
+> **Last updated**: 2026-04-24
+> **Accounts**: agent1, terminator, cli-session
+> **Status**: 🟢 Migration verified — Firebase→Supabase end-to-end pass (67/67 users, 100% parity). One outstanding gap: 2 users (incl. fred@fredcary.com) missing recovery email — Linear AI-8645 assigned to Hitesh, P2.
+> **Priority**: P2 (was P1)
 
 ## Original Task
 

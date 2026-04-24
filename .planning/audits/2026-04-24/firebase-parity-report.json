@@ -1,6 +1,6 @@
 {
-  "total_users": 65,
-  "timestamp": "2026-04-24",
+  "total_users": 67,
+  "timestamp": "2026-04-24T23:32:47.510Z",
   "by_user": [
     {
       "email": "agaller@me.com",
@@ -66,6 +66,12 @@
       "email": "dylan.ambro@gmail.com",
       "id": "37e060fe-6e57-4369-aeee-3ecdaa31454d",
       "fb_uid": "6ZWa2I0GzUOGmlyDYS6c1grQ6iT2",
+      "mismatches": []
+    },
+    {
+      "email": "e@gmai.com",
+      "id": "42596283-2e91-41e0-9f07-63f318c12515",
+      "fb_uid": "rHvqPCydRGSgtCc5m760TWvlmU02",
       "mismatches": []
     },
     {
@@ -273,6 +279,12 @@
       "mismatches": []
     },
     {
+      "email": "rock@mediabook.us",
+      "id": "5eb9094b-9ea3-4416-8cce-3a83206e723b",
+      "fb_uid": "wHIk0TTFrAUrqh5vssfa3aQ3eXV2",
+      "mismatches": []
+    },
+    {
       "email": "rr@eubqieru.com",
       "id": "270a30b9-218e-4561-9004-42aaaa95752b",
       "fb_uid": "yMmSPXiAk1WKamu4krQB5v8lsDg1",
@@ -394,67 +406,67 @@
     }
   ],
   "summary": {
-    "users_fully_preserved": 65,
+    "users_fully_preserved": 67,
     "users_with_mismatches": 0,
     "field_stats": {
       "email": {
-        "had_value": 65,
-        "preserved": 65,
+        "had_value": 67,
+        "preserved": 67,
         "missing": 0
       },
       "name": {
-        "had_value": 65,
-        "preserved": 65,
+        "had_value": 67,
+        "preserved": 67,
         "missing": 0
       },
       "ideaName": {
-        "had_value": 30,
-        "preserved": 30,
+        "had_value": 33,
+        "preserved": 33,
         "missing": 0
       },
       "ideaPitch": {
-        "had_value": 30,
-        "preserved": 30,
+        "had_value": 33,
+        "preserved": 33,
         "missing": 0
       },
       "phone": {
-        "had_value": 65,
-        "preserved": 65,
+        "had_value": 67,
+        "preserved": 67,
         "missing": 0
       },
       "location": {
-        "had_value": 30,
-        "preserved": 30,
+        "had_value": 33,
+        "preserved": 33,
         "missing": 0
       },
       "targetMarket": {
-        "had_value": 30,
-        "preserved": 30,
+        "had_value": 33,
+        "preserved": 33,
         "missing": 0
       },
       "stage": {
-        "had_value": 58,
-        "preserved": 58,
+        "had_value": 59,
+        "preserved": 59,
         "missing": 0
       },
       "stageCategory": {
-        "had_value": 65,
-        "preserved": 65,
+        "had_value": 67,
+        "preserved": 67,
         "missing": 0
       },
       "weakSpot": {
-        "had_value": 60,
-        "preserved": 60,
-        "missing": 0
-      },
-      "weakSpotCategory": {
         "had_value": 62,
         "preserved": 62,
         "missing": 0
       },
+      "weakSpotCategory": {
+        "had_value": 64,
+        "preserved": 64,
+        "missing": 0
+      },
       "ideaStatus": {
-        "had_value": 7,
-        "preserved": 7,
+        "had_value": 8,
+        "preserved": 8,
         "missing": 0
       },
       "passions": {
@@ -463,8 +475,8 @@
         "missing": 0
       },
       "hasPartners": {
-        "had_value": 7,
-        "preserved": 7,
+        "had_value": 8,
+        "preserved": 8,
         "missing": 0
       }
     }

@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 Phase: 90 — User Testing Loop (Wave 5)
 Plan: 01 of 1 (complete)
 Status: v8.0 MILESTONE COMPLETE — All 14 phases (77-90) done
-Last activity: 2026-03-08 — Phase 90 complete (User testing infrastructure shipped)
+Last activity: 2026-04-24 — Firebase→Supabase migration end-to-end test pass (67/67 users, 100% field parity, 1003 chat rows, 60/60 startup_processes bridge); 2 users missing recovery email escalated as Linear AI-8645 (assigned Hitesh, P2). New re-runnable smoke at scripts/migrations/firebase-to-supabase/migrated-users-smoke.mjs. Test report at obsidian-vault/Projects/Sahara/2026-04-24-firebase-supabase-migration-test-results.md.
 
 Progress: [##############] 14/14 phases COMPLETE
 
