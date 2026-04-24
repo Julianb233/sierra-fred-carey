@@ -445,6 +445,11 @@ const PROFILE_COLUMN_MAP: Partial<Record<CoreMemoryFieldKey, string>> = {
   market: "industry",
   team_size: "team_size",
   funding_status: "funding_history",
+  traction: "traction",
+  revenue_status: "revenue_range",
+  product_status: "product_status",
+  ninety_day_goal: "ninety_day_goal",
+  biggest_challenge: "primary_constraint",
 }
 
 /** Semantic memory category/key mappings for core memory fields */

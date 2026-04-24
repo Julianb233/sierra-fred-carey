@@ -120,7 +120,7 @@ export function ChatMessage({
             "relative px-4 py-3 rounded-2xl shadow-lg group",
             isUser
               ? "bg-gradient-to-br from-[#ff6a1a] via-orange-500 to-amber-500 text-white rounded-tr-sm"
-              : "backdrop-blur-xl bg-white/10 border border-white/20 text-foreground rounded-tl-sm"
+              : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-tl-sm"
           )}
         >
           {/* Glassmorphism glow effect for AI messages */}
@@ -150,11 +150,11 @@ export function ChatMessage({
             </p>
           ) : (
             <div className={cn(
-              "relative z-10 text-sm leading-relaxed text-foreground/90",
+              "relative z-10 text-sm leading-relaxed text-gray-900 dark:text-gray-100",
               "prose prose-sm dark:prose-invert max-w-none",
-              "prose-headings:text-foreground/90 prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1",
+              "prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1",
               "prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5",
-              "prose-strong:text-foreground/90 prose-code:text-orange-400 prose-code:bg-white/10 prose-code:px-1 prose-code:rounded",
+              "prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-code:text-[#ff6a1a] prose-code:bg-gray-100 dark:prose-code:bg-gray-900 prose-code:px-1 prose-code:rounded",
             )}>
               <ReactMarkdown>{message.isStreaming ? cleanStreamingMarkdown(message.content) : message.content}</ReactMarkdown>
               {message.isStreaming && (
