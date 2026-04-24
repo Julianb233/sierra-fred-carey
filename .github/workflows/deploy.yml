@@ -73,7 +73,6 @@ jobs:
     needs: build
     continue-on-error: true
     timeout-minutes: 15
-    continue-on-error: true
     # E2E tests are informational — failures do NOT block deploy.
     # Tests run against a local build without full env vars (Supabase, Stripe),
     # so some tests (auth flows, visual regression) will always fail in CI.
