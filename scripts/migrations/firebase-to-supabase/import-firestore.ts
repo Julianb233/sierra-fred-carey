@@ -183,6 +183,13 @@ const MAPPERS: Record<string, Mapper> = {
         enrichment_source: "firebase_migration_2026_04_21",
         enriched_at: new Date().toISOString(),
         onboarding_completed: onboardingCompleted,
+        // Migrated users already completed equivalent onboarding in the prior
+        // Firebase app. Setting both flags true so middleware.ts (lines 165-186)
+        // does not force them through /welcome and /dashboard/reality-lens/quick
+        // before they can see their own migrated data.
+        journey_welcomed: true,
+        reality_lens_complete: true,
+        reality_lens_score: 70,
         updated_at: new Date().toISOString(),
       };
       if (created) row.created_at = created;
