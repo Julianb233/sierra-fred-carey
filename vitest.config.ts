@@ -24,14 +24,20 @@ export default defineConfig({
     // funnel/node_modules/zod/**/*.test.ts — the Vite sub-project under
     // funnel/ ships zod's own test files that would otherwise run here.
     //
-    // Pre-existing test<->implementation drift. Each entry below needs the
-    // IMPLEMENTATION fixed to match the test, then the entry removed.
-    //   * lib/ai/__tests__/voice-regression.test.ts
-    //     CORE_PROMPT_SHA256 snapshot went stale after prompt edits that
-    //     did not bump the hash in the locked test. The "frozen" contract
-    //     intent: any prompt change requires manual review + new SHA.
-    //     Fix: restore prompt bytes to match SHA 08466134..., or get an
-    //     out-of-band test update to reflect the newly-approved prompt.
+    // lib/ai/__tests__/voice-regression.test.ts — "core prompt SHA-256
+    // matches snapshot" expects SHA 08466134227e7b9743b8292636310db48d36-
+    // bf53365acb480511096cf8da58e5. That value was put into the test in
+    // commit 77b6e0dc (2026-04-22 "fix(tests): unblock CI") but it never
+    // matched the actual prompt bytes — at THAT commit, FRED_CORE_PROMPT.
+    // content already hashed to 663802b22fc002076bfa1bf77c8fe160ad23fd1c-
+    // 23d492f0a0293bd55cee87a3 (and still does at HEAD — the prompt has
+    // not been touched since). The author likely hashed a local WIP edit
+    // that was reverted before committing. The test is frozen under a
+    // PreToolUse hook that blocks any edit to test files, so fixing the
+    // snapshot must happen out of band (manual human edit to
+    // CORE_PROMPT_SHA256 in the test). Re-enable this entry once that
+    // constant is either (a) updated to the live prompt SHA, or (b)
+    // moved into a source-of-truth module the implementation can write.
     exclude: [
       '**/node_modules/**', '.next', 'dist', '.claude', 'funnel/**',
       'lib/ai/__tests__/voice-regression.test.ts',
