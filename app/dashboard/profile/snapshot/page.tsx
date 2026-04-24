@@ -12,6 +12,12 @@ import {
   Clock,
   Pencil,
   MessageSquare,
+  MapPin,
+  Phone,
+  User,
+  Compass,
+  Heart,
+  Sparkles,
 } from "lucide-react";
 import {
   Card,
@@ -28,13 +34,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 // ============================================================================
 
 interface ProfileSnapshot {
-  startupName: string | null;
+  founderName: string | null;
+  companyName: string | null;
+  productPositioning: string | null;
   stage: string | null;
-  challenges: string[];
+  stageCategory: string | null;
   industry: string | null;
+  targetMarket: string | null;
+  location: string | null;
+  phone: string | null;
+  challenges: string[];
+  weakSpot: string | null;
+  weakSpotCategory: string | null;
+  ideaStatus: string | null;
+  passions: string | null;
+  coFounder: string | null;
+  hasPartners: boolean | null;
   revenueRange: string | null;
   teamSize: number | null;
   fundingHistory: string | null;
+  realityLensComplete: boolean | null;
+  realityLensScore: number | null;
   enrichedAt: string | null;
   enrichmentSource: string | null;
   createdAt: string | null;
@@ -130,7 +150,7 @@ function FieldRow({
   label,
   value,
 }: {
-  label: string;
+  label: string | React.ReactNode;
   value: string | number | null | undefined;
 }) {
   const displayValue =
@@ -264,25 +284,168 @@ export default function ProfileSnapshotPage() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Startup Info */}
+          {/* Company Info */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-[#ff6a1a]" />
-                <CardTitle className="text-lg">Startup Info</CardTitle>
+                <CardTitle className="text-lg">Company</CardTitle>
               </div>
-              <CardDescription>Core company details</CardDescription>
+              <CardDescription>What you are building</CardDescription>
             </CardHeader>
             <CardContent className="space-y-1">
-              <FieldRow label="Name" value={profile.startupName} />
-              <FieldRow
-                label="Stage"
-                value={formatLabel(profile.stage, STAGE_LABELS)}
-              />
+              <FieldRow label="Company name" value={profile.companyName} />
+              <FieldRow label="Positioning" value={profile.productPositioning} />
               <FieldRow
                 label="Industry"
                 value={formatLabel(profile.industry, INDUSTRY_LABELS)}
               />
+              <FieldRow label="Target market" value={profile.targetMarket} />
+              <FieldRow label="Idea status" value={profile.ideaStatus} />
+            </CardContent>
+          </Card>
+
+          {/* Stage */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-[#ff6a1a]" />
+                <CardTitle className="text-lg">Stage</CardTitle>
+              </div>
+              <CardDescription>Where the venture is today</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <FieldRow
+                label="Stage"
+                value={
+                  profile.stageCategory ||
+                  formatLabel(profile.stage, STAGE_LABELS)
+                }
+              />
+              {profile.stage && profile.stageCategory ? (
+                <FieldRow label="In your words" value={profile.stage} />
+              ) : null}
+              <FieldRow
+                label="Reality Lens"
+                value={
+                  profile.realityLensComplete && profile.realityLensScore !== null
+                    ? `Complete (score ${profile.realityLensScore})`
+                    : profile.realityLensComplete
+                      ? "Complete"
+                      : null
+                }
+              />
+            </CardContent>
+          </Card>
+
+          {/* Founder */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-[#ff6a1a]" />
+                <CardTitle className="text-lg">Founder</CardTitle>
+              </div>
+              <CardDescription>How we reach you</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <FieldRow label="Name" value={profile.founderName} />
+              <FieldRow
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" /> Location
+                  </span>
+                }
+                value={profile.location}
+              />
+              <FieldRow
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="h-3.5 w-3.5" /> Phone
+                  </span>
+                }
+                value={profile.phone}
+              />
+              <FieldRow
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    <Heart className="h-3.5 w-3.5" /> Passions
+                  </span>
+                }
+                value={profile.passions}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Team & Co-founder */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-[#ff6a1a]" />
+                <CardTitle className="text-lg">Team</CardTitle>
+              </div>
+              <CardDescription>Who is building with you</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <FieldRow
+                label="Co-founders"
+                value={
+                  profile.hasPartners === true
+                    ? profile.coFounder || "Yes"
+                    : profile.hasPartners === false
+                      ? "Solo founder"
+                      : profile.coFounder
+                }
+              />
+              <FieldRow
+                label="Team size"
+                value={
+                  profile.teamSize !== null
+                    ? `${profile.teamSize} ${profile.teamSize === 1 ? "person" : "people"}`
+                    : null
+                }
+              />
+            </CardContent>
+          </Card>
+
+          {/* Focus / weak spot */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-[#ff6a1a]" />
+                <CardTitle className="text-lg">What to sharpen</CardTitle>
+              </div>
+              <CardDescription>Biggest gap you called out</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <FieldRow
+                label="Category"
+                value={profile.weakSpotCategory}
+              />
+              <FieldRow label="In your words" value={profile.weakSpot} />
+              {profile.challenges.length > 0 ? (
+                <div className="pt-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Focus areas
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.challenges.map((c, i) => {
+                      const label =
+                        typeof c === "string"
+                          ? CHALLENGE_LABELS[c] || c
+                          : ((c as { description?: string })?.description ?? "");
+                      if (!label) return null;
+                      return (
+                        <span
+                          key={i}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ff6a1a]/10 text-[#ff6a1a]"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -304,54 +467,6 @@ export default function ProfileSnapshotPage() {
                 label="Funding"
                 value={formatLabel(profile.fundingHistory, FUNDING_LABELS)}
               />
-            </CardContent>
-          </Card>
-
-          {/* Team */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#ff6a1a]" />
-                <CardTitle className="text-lg">Team</CardTitle>
-              </div>
-              <CardDescription>Team composition</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              <FieldRow
-                label="Team Size"
-                value={
-                  profile.teamSize !== null
-                    ? `${profile.teamSize} ${profile.teamSize === 1 ? "person" : "people"}`
-                    : null
-                }
-              />
-            </CardContent>
-          </Card>
-
-          {/* Challenges */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-[#ff6a1a]" />
-                <CardTitle className="text-lg">Challenges</CardTitle>
-              </div>
-              <CardDescription>Focus areas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {profile.challenges.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {profile.challenges.map((c) => (
-                    <span
-                      key={c}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ff6a1a]/10 text-[#ff6a1a]"
-                    >
-                      {CHALLENGE_LABELS[c] || c}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <MutedText>Not yet captured</MutedText>
-              )}
             </CardContent>
           </Card>
         </div>
