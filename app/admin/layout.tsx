@@ -1,10 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isAdminSession } from "@/lib/auth/admin";
+import { LogoutButton } from "./components/LogoutButton";
+
+// Admin routes read cookies() via the Supabase server client for the
+// role check in isAdminSession(), which is incompatible with static
+// rendering. Mark the whole segment dynamic to avoid build-time
+// "Dynamic server usage" errors on every /admin/* page.
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  if (!(await isAdminSession())) {
+    redirect("/login?redirect=/admin");
+  }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-10">
@@ -18,7 +30,7 @@ export default async function AdminLayout({
                 AI Settings Management
               </span>
             </div>
-            {/* Auth removed — dashboard is publicly accessible */}
+            <LogoutButton />
           </div>
 
           <div className="flex gap-2">

@@ -7,6 +7,14 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   DashboardIcon,
   GearIcon,
   TargetIcon,
@@ -34,6 +42,10 @@ import {
   HelpCircle,
   BookOpen,
   ShoppingBag,
+  LogOut,
+  Settings as SettingsIcon,
+  User as UserIcon,
+  ChevronDown,
 } from "lucide-react";
 import { openFredChat } from "@/components/chat/floating-chat-widget";
 import { cn } from "@/lib/utils";
@@ -230,6 +242,7 @@ function SidebarContent({
   isTierLoading,
   onNavClick,
   onHowToUse,
+  onLogout,
 }: {
   user: { name: string; email: string; tier: UserTier; stage: string | null };
   visibleNavItems: NavItem[];
@@ -239,29 +252,63 @@ function SidebarContent({
   isTierLoading?: boolean;
   onNavClick?: () => void;
   onHowToUse?: () => void;
+  onLogout?: () => void;
 }) {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
       {/* User Profile */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
-            <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
-              {(user.name || "?")
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-              {user.name}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user.email}
-            </p>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Account menu"
+              className="flex items-center gap-3 mb-3 w-full rounded-md p-1 -m-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+            >
+              <Avatar className="h-12 w-12 border-2 border-[#ff6a1a]/30">
+                <AvatarFallback className="bg-gradient-to-br from-[#ff6a1a] to-orange-400 text-white font-bold">
+                  {(user.name || "?")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                  {user.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user.email}
+                </p>
+              </div>
+              <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel className="truncate">{user.email || "Account"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings" onClick={onNavClick} className="cursor-pointer">
+                <UserIcon className="h-4 w-4 mr-2" />
+                <span>Profile</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings" onClick={onNavClick} className="cursor-pointer">
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                <span>Settings</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); onLogout?.(); }}
+              className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         {isTierLoading ? (
           <div className="h-[22px] w-full rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
         ) : (
@@ -375,6 +422,19 @@ export default function DashboardLayout({
   const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
   const handleHowToUse = useCallback(() => setHowToUseOpen(true), []);
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("[dashboard] logout POST failed:", err);
+    }
+    try {
+      await createClient().auth.signOut();
+    } catch (err) {
+      console.error("[dashboard] client signOut failed:", err);
+    }
+    router.replace("/login");
+  }, [router]);
 
   // Listen for fred:voice custom event from MobileBottomNav
   useEffect(() => {
@@ -497,6 +557,7 @@ export default function DashboardLayout({
               isTierLoading={isTierLoading}
               onNavClick={closeSidebar}
               onHowToUse={handleHowToUse}
+              onLogout={handleLogout}
             />
           </SheetContent>
         </Sheet>
@@ -511,6 +572,7 @@ export default function DashboardLayout({
             tierColors={tierColors}
             isTierLoading={isTierLoading}
             onHowToUse={handleHowToUse}
+            onLogout={handleLogout}
           />
         </aside>
 
