@@ -40,11 +40,18 @@ function NavBar() {
   // - /chat has its own header with "Talk to Fred" and back button
   // - /dashboard/* has its own sidebar navigation
   // - /login has a full-screen centered auth layout
+  // - /welcome and /onboarding are auth'd intake flows; the public marketing
+  //   nav (Pricing/Features/About) on an authed screen makes the session
+  //   feel broken for first-time founders.
+  // - /admin has its own admin nav.
   const isChat = pathname === "/chat";
   const isLogin = pathname === "/login";
   const isCheckIns = pathname?.startsWith("/check-ins");
   const isDeck = pathname === "/deck";
-  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck;
+  const isWelcome = pathname === "/welcome";
+  const isOnboarding = pathname?.startsWith("/onboarding");
+  const isAdmin = pathname?.startsWith("/admin");
+  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck || isWelcome || isOnboarding || isAdmin;
 
   useEffect(() => {
     const handleScroll = () => {
