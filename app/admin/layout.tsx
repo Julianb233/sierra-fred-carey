@@ -3,6 +3,12 @@ import { redirect } from "next/navigation";
 import { isAdminSession } from "@/lib/auth/admin";
 import { LogoutButton } from "./components/LogoutButton";
 
+// Admin routes read cookies() via the Supabase server client for the
+// role check in isAdminSession(), which is incompatible with static
+// rendering. Mark the whole segment dynamic to avoid build-time
+// "Dynamic server usage" errors on every /admin/* page.
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {
