@@ -61,7 +61,7 @@ export async function buildActiveFounderMemory(
     const { data } = await supabase
       .from("profiles")
       .select(
-        "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at, team_size, revenue_range, funding_history"
+        "name, company_name, stage, industry, co_founder, challenges, oases_stage, enrichment_data, updated_at, team_size, revenue_range, funding_history, primary_constraint, traction, product_status, ninety_day_goal, key_decisions"
       )
       .eq("id", userId)
       .single()
@@ -103,7 +103,18 @@ export async function buildActiveFounderMemory(
         profileDate
       )
     }
-    if (
+    // biggest_challenge: prefer the text column persistMemoryUpdates writes
+    // to (primary_constraint), fall back to the legacy jsonb challenges[0].
+    // Without this, conversation extractions are silently dropped on read
+    // and FRED loops re-asking the question.
+    if (profile.primary_constraint) {
+      memory.biggest_challenge = makeField(
+        String(profile.primary_constraint),
+        0.85,
+        "profile",
+        profileDate
+      )
+    } else if (
       Array.isArray(profile.challenges) &&
       profile.challenges.length > 0
     ) {
@@ -143,6 +154,38 @@ export async function buildActiveFounderMemory(
     if (profile.funding_history) {
       memory.funding_status = makeField(
         String(profile.funding_history),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.traction) {
+      memory.traction = makeField(
+        String(profile.traction),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.product_status) {
+      memory.product_status = makeField(
+        String(profile.product_status),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.ninety_day_goal) {
+      memory.ninety_day_goal = makeField(
+        String(profile.ninety_day_goal),
+        0.8,
+        "profile",
+        profileDate
+      )
+    }
+    if (profile.key_decisions) {
+      memory.key_decisions = makeField(
+        String(profile.key_decisions),
         0.8,
         "profile",
         profileDate
@@ -450,6 +493,7 @@ const PROFILE_COLUMN_MAP: Partial<Record<CoreMemoryFieldKey, string>> = {
   product_status: "product_status",
   ninety_day_goal: "ninety_day_goal",
   biggest_challenge: "primary_constraint",
+  key_decisions: "key_decisions",
 }
 
 /** Semantic memory category/key mappings for core memory fields */
