@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isAdminSession } from "@/lib/auth/admin";
+import { LogoutButton } from "./components/LogoutButton";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  if (!(await isAdminSession())) {
+    redirect("/login?redirect=/admin");
+  }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-10">
@@ -18,7 +24,7 @@ export default async function AdminLayout({
                 AI Settings Management
               </span>
             </div>
-            {/* Auth removed — dashboard is publicly accessible */}
+            <LogoutButton />
           </div>
 
           <div className="flex gap-2">

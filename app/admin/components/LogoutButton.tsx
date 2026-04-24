@@ -1,16 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export function LogoutButton() {
   const router = useRouter();
 
   async function handleLogout() {
-    const res = await fetch("/api/admin/logout", { method: "POST" });
-    const data = await res.json();
-    if (data.redirect) {
-      router.push(data.redirect);
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch (err) {
+      console.error("[admin/logout] legacy cookie clear failed:", err);
     }
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("[admin/logout] auth logout POST failed:", err);
+    }
+    try {
+      await createClient().auth.signOut();
+    } catch (err) {
+      console.error("[admin/logout] client signOut failed:", err);
+    }
+    router.replace("/login");
   }
 
   return (
