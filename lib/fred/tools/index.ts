@@ -6,12 +6,10 @@
  */
 
 export { recommendContentTool } from "./content-recommender";
-export { findProviderTool } from "./provider-finder";
 export { createMemorySearchTool } from "./memory-search";
 export { matchInvestorFirmsTool } from "./investor-matcher";
 
 import { recommendContentTool } from "./content-recommender";
-import { findProviderTool } from "./provider-finder";
 import { createMemorySearchTool } from "./memory-search";
 import { matchInvestorFirmsTool } from "./investor-matcher";
 
@@ -22,7 +20,6 @@ import { matchInvestorFirmsTool } from "./investor-matcher";
 export function getFredTools(userId: string) {
   return {
     recommendContent: recommendContentTool,
-    findProvider: findProviderTool,
     searchMemory: createMemorySearchTool(userId),
     matchInvestorFirms: matchInvestorFirmsTool,
   };
