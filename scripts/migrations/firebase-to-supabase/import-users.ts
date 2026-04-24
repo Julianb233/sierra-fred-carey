@@ -180,9 +180,13 @@ async function importUser(
     return { status: "error", reason: `profile upsert: ${profileErr.message}` };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.joinsahara.com";
   const { error: linkErr } = await db.auth.admin.generateLink({
     type: "recovery",
     email: fbUser.email,
+    options: {
+      redirectTo: `${siteUrl}/api/auth/callback?next=/reset-password`,
+    },
   });
   if (linkErr) {
     console.warn(`  reset link failed for ${fbUser.email}: ${linkErr.message}`);
