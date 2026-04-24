@@ -76,12 +76,20 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
 // Hook
 // ============================================================================
 
+/** No-op fallback used when a component renders outside a PaywallProvider
+ * (e.g. unit tests that mount a page directly, or sub-trees rendered by
+ * error boundaries before providers mount). Keeps callsites safe without
+ * every test having to wrap in a provider. */
+const NULL_PAYWALL: PaywallContextValue = {
+  isOpen: false,
+  config: null,
+  triggerPaywall: () => {},
+  dismiss: () => {},
+};
+
 export function usePaywall(): PaywallContextValue {
   const context = useContext(PaywallContext);
-  if (!context) {
-    throw new Error("usePaywall must be used within a PaywallProvider");
-  }
-  return context;
+  return context ?? NULL_PAYWALL;
 }
 
 // ============================================================================
