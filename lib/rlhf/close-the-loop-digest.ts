@@ -76,10 +76,13 @@ export async function getEligibleUsers(): Promise<EligibleUser[]> {
   )
   if (eligibleIds.size === 0) return []
 
-  // 3) Fetch profile email + name for the surviving users (COALESCE in JS)
+  // 3) Fetch profile email + name for the surviving users.
+  // The original SQL referenced p.full_name / p.display_name, but those
+  // columns do NOT exist in profiles (verified against prod schema
+  // 2026-04-24). Only `name` is available; that's the COALESCE source.
   const { data: profiles, error: profErr } = await supabase
     .from("profiles")
-    .select("id, email, full_name, display_name, name")
+    .select("id, email, name")
     .in("id", Array.from(eligibleIds))
 
   if (profErr) throw profErr
@@ -90,15 +93,9 @@ export async function getEligibleUsers(): Promise<EligibleUser[]> {
       const row = p as {
         id: string
         email: string
-        full_name?: string | null
-        display_name?: string | null
         name?: string | null
       }
-      const display =
-        row.full_name?.trim() ||
-        row.display_name?.trim() ||
-        row.name?.trim() ||
-        "Founder"
+      const display = row.name?.trim() || "Founder"
       return {
         userId: row.id,
         email: row.email,
