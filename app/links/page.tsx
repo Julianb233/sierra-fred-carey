@@ -52,7 +52,7 @@ const socialLinks = [
   },
   {
     title: "LinkedIn",
-    href: "https://linkedin.com/in/fredcary",
+    href: "https://linkedin.com/in/frederickcary",
     icon: LinkedInLogoIcon,
   },
 ];
