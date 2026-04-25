@@ -959,10 +959,18 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       })()
 
       // Phase 32-02: Fire-and-forget retention enforcement (tier-scoped transcript caps)
-      if (shouldPersistTranscript && typeof enforceRetentionLimits === "function") {
-        enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
-          console.warn("[FRED Chat] Retention enforcement failed:", err)
-        );
+      // Wrap typeof check in try/catch — vitest's strict mock mode throws on
+      // access to unmocked named exports, defeating a plain typeof guard.
+      if (shouldPersistTranscript) {
+        try {
+          if (typeof enforceRetentionLimits === "function") {
+            enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
+              console.warn("[FRED Chat] Retention enforcement failed:", err)
+            );
+          }
+        } catch {
+          // Mock omitted the export in tests — non-blocking.
+        }
       }
 
       // Phase 28-02: Fire-and-forget push for wellbeing alerts (non-streaming)
