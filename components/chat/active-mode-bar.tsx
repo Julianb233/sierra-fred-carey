@@ -69,6 +69,14 @@ const MODE_CONFIG: Record<
 // ============================================================================
 
 export function ActiveModeBar({ mode, className }: ActiveModeBarProps) {
+  // Hide the bar entirely when in the default mode -- the "Neutral / General
+  // mentoring" pill carries no meaningful signal and confuses users (AI-8659).
+  // Only render when a real, non-default mode is active (positioning,
+  // investor-readiness, strategy).
+  if (mode === "founder-os") {
+    return null;
+  }
+
   const config = MODE_CONFIG[mode] || MODE_CONFIG["founder-os"];
 
   return (
