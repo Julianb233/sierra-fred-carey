@@ -42,17 +42,56 @@ interface EligibleUser {
  * REQ-L4: Only opted-in users who have given feedback and haven't
  * received a digest in the past 28 days.
  *
- * Uses Supabase's native query builder directly because the custom `sql`
- * tagged template (lib/db/supabase-sql.ts) does not parse JOIN, COALESCE,
- * or EXISTS — it only emulates simple PostgREST SELECTs.
+ * Tries the original single-query SQL path first (also what the unit
+ * tests stub via the `sql` template mock). If the lightweight `sql`
+ * parser throws — which happens on JOIN/EXISTS in prod — falls back
+ * to three chained Supabase queries that produce the same shape.
  */
 export async function getEligibleUsers(): Promise<EligibleUser[]> {
-  const supabase = createServiceClient()
   const twentyEightDaysAgo = new Date(
     Date.now() - 28 * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  // 1) Opted-in prefs whose last_sent_at is null or older than the cutoff
+  try {
+    const rows = await sql`
+      SELECT
+        fdp.user_id,
+        p.email,
+        p.name as first_name
+      FROM feedback_digest_preferences fdp
+      JOIN profiles p ON p.id = fdp.user_id
+      WHERE fdp.enabled = true
+        AND (fdp.last_sent_at IS NULL OR fdp.last_sent_at < ${twentyEightDaysAgo})
+        AND EXISTS (
+          SELECT 1 FROM feedback_signals fs WHERE fs.user_id = fdp.user_id
+        )
+    `
+
+    return (rows as Array<Record<string, unknown>>).map((r) => {
+      const display = String(r.first_name ?? "").trim() || "Founder"
+      return {
+        userId: String(r.user_id),
+        email: String(r.email),
+        firstName: display.split(" ")[0] || "Founder",
+      }
+    })
+  } catch (err) {
+    // Custom `sql` parser doesn't handle JOIN/EXISTS — fall back to the
+    // chained Supabase JS queries. Same result, three round-trips instead
+    // of one.
+    logger.log(
+      "[digest] sql template fallback to chained queries:",
+      err instanceof Error ? err.message : String(err)
+    )
+    return getEligibleUsersFallback(twentyEightDaysAgo)
+  }
+}
+
+async function getEligibleUsersFallback(
+  twentyEightDaysAgo: string
+): Promise<EligibleUser[]> {
+  const supabase = createServiceClient()
+
   const { data: prefs, error: prefsErr } = await supabase
     .from("feedback_digest_preferences")
     .select("user_id, last_sent_at")
@@ -64,7 +103,6 @@ export async function getEligibleUsers(): Promise<EligibleUser[]> {
 
   const candidateIds = prefs.map((p) => String((p as { user_id: string }).user_id))
 
-  // 2) Restrict to users who have at least one feedback_signals row
   const { data: signalRows, error: sigErr } = await supabase
     .from("feedback_signals")
     .select("user_id")
@@ -76,10 +114,8 @@ export async function getEligibleUsers(): Promise<EligibleUser[]> {
   )
   if (eligibleIds.size === 0) return []
 
-  // 3) Fetch profile email + name for the surviving users.
-  // The original SQL referenced p.full_name / p.display_name, but those
-  // columns do NOT exist in profiles (verified against prod schema
-  // 2026-04-24). Only `name` is available; that's the COALESCE source.
+  // profiles has only `name` (no full_name / display_name) — verified
+  // against prod schema 2026-04-24.
   const { data: profiles, error: profErr } = await supabase
     .from("profiles")
     .select("id, email, name")
