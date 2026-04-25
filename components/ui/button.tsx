@@ -20,12 +20,17 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        // Brand orange button - use for primary CTAs
+        // Brand orange button - use for primary CTAs.
+        // Background uses orange-700 (#c2410c, 4.74:1 vs white) instead of
+        // brand #ff6a1a (2.86:1) so white text passes WCAG AA. Shadow + ring
+        // still use the brand orange so the glow keeps its identity.
         orange:
-          "bg-[#ff6a1a] text-white shadow-lg shadow-[#ff6a1a]/25 hover:bg-[#ea580c] hover:shadow-[#ff6a1a]/40 focus-visible:ring-[#ff6a1a]/30",
-        // Orange outline variant
+          "bg-[#c2410c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:bg-[#9a3412] hover:shadow-[#ff6a1a]/40 focus-visible:ring-[#ff6a1a]/30",
+        // Orange outline variant. Border + text use the darker orange so the
+        // text clears AA on light backgrounds without relying on the cream
+        // wash of any particular page.
         "orange-outline":
-          "border-2 border-[#ff6a1a] text-[#ff6a1a] bg-transparent hover:bg-[#ff6a1a]/10 focus-visible:ring-[#ff6a1a]/30",
+          "border-2 border-[#9a3412] text-[#9a3412] bg-transparent hover:bg-[#ff6a1a]/10 focus-visible:ring-[#ff6a1a]/30",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
