@@ -6,10 +6,14 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Primary hero CTA colors (match site-wide orange buttons)
+// Primary hero CTA colors. The button has white text on top, so the bg needs
+// >=4.5:1 contrast for WCAG AA. `#ff6a1a` (brand) is only 2.86:1; this is
+// the same fix applied to the pricing badge and login submit. Decorative
+// orange (#ff6a1a) is still used for shadows/glow below.
 const BRAND_COLORS = {
-  orange: "#ff6a1a",
-  orangeHover: "#ea580c",
+  orange: "#c2410c",      // orange-700 — 4.74:1 vs white, AA pass
+  orangeHover: "#9a3412", // orange-800 — 7:1 vs white, AAA
+  glow: "#ff6a1a",        // brand for shadows / decorative glow only
   offWhite: "#F7F7EB",
 } as const;
 

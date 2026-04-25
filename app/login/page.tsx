@@ -234,8 +234,9 @@ function LoginContent() {
             </span>
             <Link
               href="/get-started"
-              // Darker orange-700 to clear AA against the page's soft cream wash.
-              className="font-medium text-[#c2410c] hover:text-[#9a3412]"
+              // orange-800 to clear AA against the soft cream wash. orange-700
+              // (#c2410c) measured 4.36:1, just under the 4.5:1 minimum.
+              className="font-medium text-[#9a3412] hover:text-[#7c2d12]"
             >
               Get started free
             </Link>
