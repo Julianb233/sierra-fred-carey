@@ -1,5 +1,7 @@
 /**
- * Export Firebase Auth users + every Firestore collection to JSON.
+ * Export Firebase Auth users + every **root** Firestore collection to JSON.
+ * Subcollections (e.g. users/{uid}/chat) are NOT exported here; use
+ * scan-firestore-subcollections.ts and import-firestore-chat-to-supabase.ts.
  *
  * Uses firebase-admin with the service account key. Output goes to
  * scripts/migrations/firebase-to-supabase/_data/ (gitignored).

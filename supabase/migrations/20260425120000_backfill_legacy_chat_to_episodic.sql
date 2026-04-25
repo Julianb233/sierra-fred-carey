@@ -43,7 +43,9 @@ FROM public.chat_messages cm
 WHERE cm.role IN ('user', 'assistant')
   AND LENGTH(TRIM(cm.content)) > 0
   AND cm.user_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-ON CONFLICT (user_id, session_id, content_hash) DO NOTHING;
+ON CONFLICT (user_id, session_id, content_hash)
+  WHERE content_hash IS NOT NULL
+DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- 2) Funnel JSON chat history -> episodic (one deterministic UUID per funnel session_id)
@@ -96,4 +98,6 @@ CROSS JOIN LATERAL jsonb_array_elements(
 WHERE fs.migrated_to_user_id IS NOT NULL
   AND COALESCE(elem->>'role', '') IN ('user', 'assistant')
   AND LENGTH(TRIM(COALESCE(elem->>'content', ''))) > 0
-ON CONFLICT (user_id, session_id, content_hash) DO NOTHING;
+ON CONFLICT (user_id, session_id, content_hash)
+  WHERE content_hash IS NOT NULL
+DO NOTHING;

@@ -4,9 +4,12 @@
  * Discovered on 2026-04-21 after running export-firebase.ts against the live
  * sahara-6800a project: the Firebase app has ONE root collection, `users`,
  * keyed by firebase_uid, with onboarding + profile fields stored flat on the
- * doc. There are no separate `onboarding` / `profile` / `progress` collections
- * (which the original scaffold assumed). There is no progress data at all --
- * `oases_progress` will be left untouched for the migration.
+ * doc. Chat messages live in a **subcollection** `users/{uid}/chat/{docId}` —
+ * they are NOT in the root export JSON; import them with
+ * `import-firestore-chat-to-supabase.ts`. There are no separate root
+ * `onboarding` / `profile` / `progress` collections (which the original scaffold
+ * assumed). There is no progress data at all -- `oases_progress` will be left
+ * untouched for the migration.
  *
  * Mapping (Firebase users doc -> Supabase profiles row):
  *   name              -> name
