@@ -352,19 +352,21 @@ async function buildResponseContent(
     } catch (error) {
       console.error("[FRED] LLM failed for clarify/defer, using template fallback:", error instanceof Error ? error.message : error);
     }
-    // Template fallback only if LLM fails
+    // Template fallback only if LLM fails. Previously fired
+    // "Let me ask a couple of things so I can give you the right guidance:
+    // 1. Could you help me understand what you're looking for?" — Fred's
+    // #1 reported failure mode. We now return a single human-sounding
+    // line and don't echo back templated clarification questions which
+    // make the bot feel evasive.
     if (action === "clarify") {
-      const questions = synthesis.followUpQuestions.slice(0, 2);
-      const clarifications = input.clarificationNeeded.filter((c) => c.required);
-      const allQuestions = [
-        ...clarifications.map((c) => c.question),
-        ...questions,
-      ].slice(0, 3);
-      if (allQuestions.length > 0) {
-        return `Let me ask a couple of things so I can give you the right guidance:\n\n${allQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+      // Only show real REQUIRED clarifications (not the generic low-confidence
+      // placeholder from validate-input.ts).
+      const required = input.clarificationNeeded.filter((c) => c.required);
+      if (required.length > 0) {
+        return `Quick check before I answer — ${required[0].question}`;
       }
     }
-    return "Tell me more about what you're working on and what you need help with — I want to make sure I point you in the right direction.";
+    return "Tell me a bit more about your situation — what are you working on right now, and what's the specific question on your mind? I want to give you a real answer, not a generic one.";
   }
 
   // Greeting and feedback use templates — no LLM needed.
@@ -409,8 +411,27 @@ async function buildResponseContent(
     }
 
     case "recommend": {
-      const nextStepsText = synthesis.nextSteps.slice(0, 2).join("\n- ");
-      content = `Here's my take, based on what I've seen across hundreds of companies:\n\n${synthesis.recommendation}\n\n**Next Steps:**\n- ${nextStepsText}\n\n*Confidence: ${Math.round(synthesis.confidence * 100)}%*`;
+      // Fred Cary's #2 reported failure mode: this template wrapped
+      // synthesis.recommendation in "Here's my take, based on what I've
+      // seen across hundreds of companies:" + a Next Steps section that
+      // contained generic placeholders. When the LLM was unavailable,
+      // synthesis.recommendation was often built from raw mental-models
+      // insight strings (e.g. "Here's what I see: Root question to explore:
+      // Why is this the right approach?. The fundamental elements are:
+      // many, startups, year"), which then leaked verbatim to users.
+      //
+      // We now skip the corporate preamble. If synthesis.recommendation is
+      // a real answer (long enough and not the obvious placeholder text),
+      // use it. Otherwise return a humble, honest fallback that keeps the
+      // user engaged without producing word-salad.
+      const rec = (synthesis.recommendation || "").trim();
+      const looksLikePlaceholder = rec.length < 60
+        || /fundamental elements are|Root question to explore|That's a good question\. Let me think/.test(rec);
+      if (rec && !looksLikePlaceholder) {
+        content = rec;
+      } else {
+        content = "Give me a bit more on what you're working on right now — your stage, what you're trying to figure out, and what you've already tried. I want to give you something real, not a generic answer.";
+      }
       if (input.topic && input.topic in COACHING_PROMPTS) {
         const topicLabel = input.topic === "pitchReview" ? "Pitch Review" : input.topic.charAt(0).toUpperCase() + input.topic.slice(1);
         content += `\n\n---\n*Applying ${topicLabel} coaching framework*`;

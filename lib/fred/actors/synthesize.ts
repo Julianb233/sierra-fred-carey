@@ -220,18 +220,14 @@ function generateRecommendation(
     }
   }
 
-  if (input.intent === "question") {
-    if (topInsights.length > 0) {
-      return `Here's what I see: ${topInsights.join(". ")}`;
-    }
-    return `That's a good question. Let me think through this with you based on what I know from mentoring hundreds of founders.`;
-  }
-
-  // Default response
-  if (topInsights.length > 0) {
-    return `Here's the bottom line: ${topInsights.slice(0, 2).join(". ")}`;
-  }
-  return `Let me give you my perspective on this — I've seen similar situations play out across many companies.`;
+  // For question and other intents we no longer fabricate a wrapper from
+  // mental-models insight fragments. Those insight strings were internal
+  // analysis artifacts (e.g. "Root question to explore: ...") that should
+  // never have surfaced to users. Returning empty here lets decide.ts fall
+  // through to its humble template-fallback text instead of serving the
+  // word-salad that Fred Cary flagged ("Here's what I see: Root question
+  // to explore: ...").
+  return "";
 }
 
 /**
@@ -434,10 +430,13 @@ function generateNextSteps(
       steps.push("Identify what would need to change for this to be viable");
       steps.push("Consider smaller experiments to test assumptions");
     }
-  } else {
-    steps.push("Consider if additional context would help refine this analysis");
-    steps.push("Share findings with relevant stakeholders");
   }
+  // Non-decision intents (questions, sharing, feedback): no template steps.
+  // The previous behaviour pushed two enterprise-consultant placeholders
+  // ("Consider if additional context would help refine this analysis" /
+  // "Share findings with relevant stakeholders") that leaked into every
+  // non-decision response. Returning an empty array makes appendNextActions
+  // skip the section entirely when there's nothing meaningful to say.
 
   return steps;
 }

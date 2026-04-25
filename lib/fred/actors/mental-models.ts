@@ -149,15 +149,13 @@ const MENTAL_MODEL_IMPLEMENTATIONS: Record<MentalModel, ModelImplementation> = {
       );
     }
 
-    // Identify core components
+    // Identify core components -- kept in analysis for downstream use, but
+    // not surfaced as a user-facing insight string. The previous behaviour
+    // surfaced "The fundamental elements are: many, startups, year" verbatim
+    // when entities leaked from the parser, which was Fred Cary's #1 reported
+    // failure mode. The LLM synthesis path receives analysis directly.
     const coreComponents = identifyCoreComponents(input);
     analysis.coreComponents = coreComponents;
-
-    if (coreComponents.length > 0) {
-      insights.push(
-        `The fundamental elements are: ${coreComponents.join(", ")}`
-      );
-    }
 
     return {
       analysis,
@@ -285,9 +283,10 @@ const MENTAL_MODEL_IMPLEMENTATIONS: Record<MentalModel, ModelImplementation> = {
     const whyChain = buildWhyChain(input);
     analysis.whyChain = whyChain;
 
-    if (whyChain.length > 0) {
-      insights.push(`Root question to explore: ${whyChain[whyChain.length - 1]}`);
-    }
+    // whyChain stays in analysis for the LLM synthesis path; not surfaced
+    // as a user-facing insight string. "Root question to explore: Why is
+    // this the right approach?" leaked verbatim into responses, which was
+    // part of Fred Cary's reported "two haunted answers" failure mode.
 
     return {
       analysis,

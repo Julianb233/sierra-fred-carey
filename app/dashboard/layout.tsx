@@ -18,9 +18,7 @@ import {
   ListChecks,
   FileText,
   BarChart3,
-  Lightbulb,
   Map,
-  GraduationCap,
   Heart,
   Rocket,
   Compass,
@@ -32,7 +30,6 @@ import {
   Bot,
   Network,
   HelpCircle,
-  BookOpen,
   ShoppingBag,
 } from "lucide-react";
 import { openFredChat } from "@/components/chat/floating-chat-widget";
@@ -92,29 +89,9 @@ const coreNavItems: NavItem[] = [
     icon: <BarChart3 className="h-4 w-4" />,
   },
   {
-    name: "AI Insights",
-    href: "/dashboard/insights",
-    icon: <Lightbulb className="h-4 w-4" />,
-  },
-  {
     name: "Progress",
     href: "/dashboard/journey",
     icon: <Map className="h-4 w-4" />,
-  },
-  {
-    name: "Coaching",
-    href: "/dashboard/coaching",
-    icon: <GraduationCap className="h-4 w-4" />,
-  },
-  {
-    name: "Content",
-    href: "/dashboard/content",
-    icon: <BookOpen className="h-4 w-4" />,
-  },
-  {
-    name: "Sales",
-    href: "/dashboard/sales",
-    icon: <TrendingUp className="h-4 w-4" />,
   },
   {
     name: "Marketplace",
@@ -122,7 +99,7 @@ const coreNavItems: NavItem[] = [
     icon: <ShoppingBag className="h-4 w-4" />,
   },
   {
-    name: "Wellbeing",
+    name: "Well-being",
     href: "/dashboard/wellbeing",
     icon: <Heart className="h-4 w-4" />,
   },
