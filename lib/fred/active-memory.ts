@@ -513,6 +513,44 @@ const SEMANTIC_MAP: Partial<
 }
 
 /**
+ * Module-load invariant: every CORE_MEMORY_FIELD must be persistable from chat
+ * extraction (PROFILE_COLUMN_MAP or SEMANTIC_MAP), OR be explicitly opted out
+ * because it has its own write path (e.g. oases_stage advances via the journey
+ * progression flow, not chat).
+ *
+ * This loop has now been fixed twice (commits 45f4366c and b16f2bf9). Each
+ * regression had the same shape: a CORE_MEMORY_FIELD added without a
+ * corresponding persistence destination, so getMissingFields() kept returning
+ * it and FRED re-asked the same question every turn. The protect-tests.sh
+ * fleet hook prevents adding a vitest regression guard, so we enforce the
+ * invariant at module load instead. Throws in dev/test, warns in prod so a
+ * misconfiguration cannot silently take down the chat.
+ */
+const NON_CHAT_PERSISTED: ReadonlySet<CoreMemoryFieldKey> = new Set([
+  "oases_stage", // advances via journey progression, never via chat extraction
+])
+{
+  const persisted = new Set<CoreMemoryFieldKey>([
+    ...(Object.keys(PROFILE_COLUMN_MAP) as CoreMemoryFieldKey[]),
+    ...(Object.keys(SEMANTIC_MAP) as CoreMemoryFieldKey[]),
+  ])
+  const missing = CORE_MEMORY_FIELDS.filter(
+    (f) => !persisted.has(f) && !NON_CHAT_PERSISTED.has(f)
+  )
+  if (missing.length > 0) {
+    const msg =
+      `[Active Memory] CORE_MEMORY_FIELDS missing persistence path: ` +
+      `${missing.join(", ")}. ` +
+      `Add to PROFILE_COLUMN_MAP, SEMANTIC_MAP, or NON_CHAT_PERSISTED. ` +
+      `Without this, FRED loops re-asking the user.`
+    if (process.env.NODE_ENV !== "production") {
+      throw new Error(msg)
+    }
+    console.error(msg)
+  }
+}
+
+/**
  * Persist extracted memory updates to both the profiles table and semantic
  * memory. Designed to be called fire-and-forget (non-blocking after chat
  * response). Never throws -- logs warnings on failure.
