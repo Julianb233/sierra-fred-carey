@@ -108,12 +108,29 @@ export async function generateReport(userId: string): Promise<GenerateReportResu
     payload = await callClaudeForReport(process as FounderAnswers, context);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown Claude error";
-    logger.error("[Report] Claude generation failed", { userId, reportId, error: msg });
+    // Pull the raw Claude output if the error carries it — the prompt parser
+    // attaches it via `cause` so we can debug fence-edge failures from the DB
+    // without having to reproduce the exact non-deterministic LLM run.
+    const rawOutput: string | undefined =
+      err instanceof Error
+        ? (err as Error & { cause?: { rawOutput?: string } }).cause?.rawOutput
+        : undefined;
+    logger.error("[Report] Claude generation failed", {
+      userId,
+      reportId,
+      error: msg,
+      rawOutputLen: rawOutput?.length ?? 0,
+    });
     await supabase
       .from("founder_reports")
       .update({
         generation_status: "failed",
         generation_error: msg,
+        // Stash the raw model output so we can inspect what the parser choked
+        // on without re-running an expensive generation.
+        report_data: rawOutput
+          ? { rawOutput: rawOutput.slice(0, 8000), errorAt: new Date().toISOString() }
+          : { errorAt: new Date().toISOString() },
         generation_duration_ms: Date.now() - startedAt,
       })
       .eq("id", reportId);

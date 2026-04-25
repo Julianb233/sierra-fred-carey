@@ -1,18 +1,16 @@
-import { loadStripe, Stripe } from "@stripe/stripe-js";
-
-let stripePromise: Promise<Stripe | null> | null = null;
-
-export function getStripe(): Promise<Stripe | null> {
-  if (!stripePromise) {
-    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    if (!key) {
-      console.warn("Stripe publishable key not configured");
-      return Promise.resolve(null);
-    }
-    stripePromise = loadStripe(key);
-  }
-  return stripePromise;
-}
+// NOTE: previously this file eagerly imported `@stripe/stripe-js` (loadStripe + Stripe
+// type) to support a `getStripe()` helper. That helper was unused but the
+// module-level import dragged Stripe.js (~222 kB, 162 kB unused on the
+// homepage per Lighthouse 2026-04-24) into every bundle that imports anything
+// from `lib/stripe/client` — including the dynamically loaded pricing
+// component used by the marketing site.
+//
+// The actual checkout flow uses `window.location.href = data.url` (server
+// returns a Stripe Checkout URL), not the JS SDK. Since nothing called
+// `getStripe()`, removing the helper + import drops Stripe.js from the
+// public bundle entirely. If a future caller ever needs the JS SDK, import
+// `loadStripe` directly inside that caller (kept dynamic so it's tree-shaken
+// out of the homepage bundle).
 
 export interface CheckoutResponse {
   sessionId?: string;

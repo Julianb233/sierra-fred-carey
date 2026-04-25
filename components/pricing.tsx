@@ -145,7 +145,8 @@ export default function Pricing() {
                     animate={{ y: 0, opacity: 1 }}
                     className="absolute top-0 left-1/2 -translate-x-1/2 z-20"
                   >
-                    <span className="bg-[#ff6a1a] text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg shadow-[#ff6a1a]/30 whitespace-nowrap">
+                    {/* Darker orange for AA contrast on white text (4.74:1 vs 2.86:1 on brand #ff6a1a). */}
+                    <span className="bg-[#c2410c] text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg shadow-[#ff6a1a]/30 whitespace-nowrap">
                       Most Popular
                     </span>
                   </motion.div>

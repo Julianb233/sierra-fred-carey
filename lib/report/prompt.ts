@@ -273,9 +273,13 @@ export function parseReportPayload(text: string): ReportPayload {
     }
   }
   if (parsed === null) {
-    throw new Error(
-      `Could not parse JSON from Claude output: ${lastErr instanceof Error ? lastErr.message : "unknown"}`
-    );
+    const reason = lastErr instanceof Error ? lastErr.message : "unknown";
+    // Attach the raw output via `cause` so the caller can stash it in
+    // founder_reports.report_data and we can debug from the DB instead of
+    // having to reproduce the non-deterministic LLM run.
+    throw new Error(`Could not parse JSON from Claude output: ${reason}`, {
+      cause: { rawOutput: text },
+    });
   }
 
   // Lightweight shape check; trust Claude for the rest
@@ -286,7 +290,9 @@ export function parseReportPayload(text: string): ReportPayload {
     typeof p.executiveSummary !== "string" ||
     !Array.isArray(p.steps)
   ) {
-    throw new Error("Report payload missing required fields");
+    throw new Error("Report payload missing required fields", {
+      cause: { rawOutput: text },
+    });
   }
 
   return parsed as ReportPayload;

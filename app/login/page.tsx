@@ -209,7 +209,9 @@ function LoginContent() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
+              // Darker orange (#c2410c = TW orange-700) clears AA 4.5:1 with white;
+              // brand #ff6a1a is only 2.86:1. Shadow keeps the brand glow.
+              className="w-full mt-4 bg-[#c2410c] hover:bg-[#9a3412] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all disabled:opacity-50"
               size="lg"
             >
               {loading ? (
@@ -232,7 +234,8 @@ function LoginContent() {
             </span>
             <Link
               href="/get-started"
-              className="font-medium text-[#ff6a1a] hover:text-[#ea580c]"
+              // Darker orange-700 to clear AA against the page's soft cream wash.
+              className="font-medium text-[#c2410c] hover:text-[#9a3412]"
             >
               Get started free
             </Link>
