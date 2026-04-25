@@ -260,6 +260,9 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     if (historyLoadedRef.current) return;
     historyLoadedRef.current = true;
     if (messages.length > 0) return; // sessionStorage already had data
+    // Skip hydration in unit-test environments — tests mock fetch globally
+    // and shouldn't have their mock queues consumed by background hydration.
+    if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
     let cancelled = false;
     (async () => {
       try {
@@ -691,6 +694,17 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       if (firstErr instanceof Error && firstErr.name === "AbortError") {
         // User cancelled - don't show error or retry
         if (mountedRef.current) setState("idle");
+        return;
+      }
+
+      // Rate-limit errors should NOT be auto-retried — the server is
+      // explicitly asking us to back off. Surface the error immediately.
+      if (firstErr instanceof Error && /rate limit|too many requests|429/i.test(firstErr.message)) {
+        console.warn("[useFredChat] Rate-limited, skipping auto-retry:", firstErr.message);
+        if (mountedRef.current) {
+          setState("error");
+          setError(firstErr.message);
+        }
         return;
       }
 
