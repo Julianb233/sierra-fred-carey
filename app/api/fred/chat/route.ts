@@ -958,7 +958,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       })()
 
       // Phase 32-02: Fire-and-forget retention enforcement (tier-scoped transcript caps)
-      if (shouldPersistTranscript) {
+      if (shouldPersistTranscript && typeof enforceRetentionLimits === "function") {
         enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
           console.warn("[FRED Chat] Retention enforcement failed:", err)
         );
@@ -1370,7 +1370,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             })()
 
             // Phase 32-02: Fire-and-forget retention enforcement (tier-scoped transcript caps)
-            if (shouldPersistTranscript) {
+            if (shouldPersistTranscript && typeof enforceRetentionLimits === "function") {
               enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
                 console.warn("[FRED Chat] Retention enforcement failed:", err)
               );
