@@ -7,6 +7,7 @@
  */
 
 import { sql } from "@/lib/db/supabase-sql"
+import { createServiceClient } from "@/lib/supabase/server"
 import { getImprovementsForUser, markAsNotified } from "@/lib/rlhf/improvement-tracker"
 import type { ImprovementEntry } from "@/lib/rlhf/improvement-tracker"
 import { logger } from "@/lib/logger"
@@ -40,34 +41,70 @@ interface EligibleUser {
  * Get users eligible for the feedback digest.
  * REQ-L4: Only opted-in users who have given feedback and haven't
  * received a digest in the past 28 days.
+ *
+ * Uses Supabase's native query builder directly because the custom `sql`
+ * tagged template (lib/db/supabase-sql.ts) does not parse JOIN, COALESCE,
+ * or EXISTS — it only emulates simple PostgREST SELECTs.
  */
 export async function getEligibleUsers(): Promise<EligibleUser[]> {
+  const supabase = createServiceClient()
   const twentyEightDaysAgo = new Date(
     Date.now() - 28 * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  const rows = await sql`
-    SELECT
-      fdp.user_id,
-      p.email,
-      COALESCE(p.full_name, p.display_name, 'Founder') as first_name
-    FROM feedback_digest_preferences fdp
-    JOIN profiles p ON p.id = fdp.user_id
-    WHERE fdp.enabled = true
-      AND (fdp.last_sent_at IS NULL OR fdp.last_sent_at < ${twentyEightDaysAgo})
-      AND EXISTS (
-        SELECT 1 FROM feedback_signals fs WHERE fs.user_id = fdp.user_id
-      )
-  `
+  // 1) Opted-in prefs whose last_sent_at is null or older than the cutoff
+  const { data: prefs, error: prefsErr } = await supabase
+    .from("feedback_digest_preferences")
+    .select("user_id, last_sent_at")
+    .eq("enabled", true)
+    .or(`last_sent_at.is.null,last_sent_at.lt.${twentyEightDaysAgo}`)
 
-  return rows.map((r) => {
-    const row = r as Record<string, unknown>
-    return {
-      userId: String(row.user_id),
-      email: String(row.email),
-      firstName: String(row.first_name).split(" ")[0] || "Founder",
-    }
-  })
+  if (prefsErr) throw prefsErr
+  if (!prefs || prefs.length === 0) return []
+
+  const candidateIds = prefs.map((p) => String((p as { user_id: string }).user_id))
+
+  // 2) Restrict to users who have at least one feedback_signals row
+  const { data: signalRows, error: sigErr } = await supabase
+    .from("feedback_signals")
+    .select("user_id")
+    .in("user_id", candidateIds)
+
+  if (sigErr) throw sigErr
+  const eligibleIds = new Set(
+    (signalRows ?? []).map((r) => String((r as { user_id: string }).user_id))
+  )
+  if (eligibleIds.size === 0) return []
+
+  // 3) Fetch profile email + name for the surviving users (COALESCE in JS)
+  const { data: profiles, error: profErr } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, display_name, name")
+    .in("id", Array.from(eligibleIds))
+
+  if (profErr) throw profErr
+
+  return (profiles ?? [])
+    .filter((p) => Boolean((p as { email?: string | null }).email))
+    .map((p) => {
+      const row = p as {
+        id: string
+        email: string
+        full_name?: string | null
+        display_name?: string | null
+        name?: string | null
+      }
+      const display =
+        row.full_name?.trim() ||
+        row.display_name?.trim() ||
+        row.name?.trim() ||
+        "Founder"
+      return {
+        userId: row.id,
+        email: row.email,
+        firstName: display.split(" ")[0] || "Founder",
+      }
+    })
 }
 
 // ============================================================================

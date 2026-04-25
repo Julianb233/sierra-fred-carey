@@ -237,19 +237,54 @@ function answersForStep(step: StartupStep, a: FounderAnswers): string[] {
 
 /**
  * Extract a JSON object from a Claude response that may have a code fence
- * or stray prose. Throws if no valid JSON ReportPayload can be parsed.
+ * or stray prose. Tolerant of: complete fences, missing closing fences,
+ * no fences, and prose surrounding the JSON object. Throws if no valid
+ * ReportPayload can be parsed.
  */
 export function parseReportPayload(text: string): ReportPayload {
-  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const jsonText = fenceMatch ? fenceMatch[1] : text;
-  const parsed = JSON.parse(jsonText);
+  const candidates: string[] = [];
+
+  // 1) Complete fenced block: ```json ... ```
+  const fullFence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fullFence) candidates.push(fullFence[1]);
+
+  // 2) Open-only fence (Claude truncated or omitted closing): ```json {...
+  const openFence = text.match(/```(?:json)?\s*([\s\S]*)$/);
+  if (openFence) candidates.push(openFence[1].replace(/\s*```\s*$/, ""));
+
+  // 3) First {...} object found in text (last resort, balanced-brace match)
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    candidates.push(text.slice(firstBrace, lastBrace + 1));
+  }
+
+  // 4) Raw text as final fallback
+  candidates.push(text);
+
+  let parsed: unknown = null;
+  let lastErr: unknown = null;
+  for (const c of candidates) {
+    try {
+      parsed = JSON.parse(c.trim());
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (parsed === null) {
+    throw new Error(
+      `Could not parse JSON from Claude output: ${lastErr instanceof Error ? lastErr.message : "unknown"}`
+    );
+  }
 
   // Lightweight shape check; trust Claude for the rest
+  const p = parsed as Record<string, unknown>;
   if (
-    typeof parsed.score !== "number" ||
-    typeof parsed.verdictHeadline !== "string" ||
-    typeof parsed.executiveSummary !== "string" ||
-    !Array.isArray(parsed.steps)
+    typeof p.score !== "number" ||
+    typeof p.verdictHeadline !== "string" ||
+    typeof p.executiveSummary !== "string" ||
+    !Array.isArray(p.steps)
   ) {
     throw new Error("Report payload missing required fields");
   }
