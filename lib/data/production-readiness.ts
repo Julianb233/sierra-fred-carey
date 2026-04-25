@@ -254,7 +254,7 @@ export const featureStatuses: FeatureStatus[] = [
   { name: "Stripe Payments", tier: "All", status: "complete" },
   { name: "Push Notifications", tier: "All", status: "complete" },
   { name: "Analytics (PostHog)", tier: "All", status: "complete" },
-  { name: "Wellbeing Tracking", tier: "All", status: "complete" },
+  { name: "Well-being Tracking", tier: "All", status: "complete" },
   { name: "Community Features", tier: "All", status: "complete" },
 ]
 

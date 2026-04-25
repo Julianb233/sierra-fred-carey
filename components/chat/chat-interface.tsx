@@ -28,7 +28,7 @@ const DEFAULT_CHIPS = [
 const PAGE_CHIPS: Record<string, string[]> = {
   "/dashboard/wellbeing": [
     "What should I do if my stress is too high?",
-    "Walk me through the wellbeing tracker",
+    "Walk me through the well-being tracker",
     "How does stress affect my startup performance?",
   ],
   "/dashboard/reality-lens": [

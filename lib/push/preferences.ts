@@ -45,8 +45,8 @@ export const PUSH_CATEGORY_DEFAULTS: PushPreferences = {
   },
   wellbeing_alerts: {
     enabled: true,
-    label: "Wellbeing Alerts",
-    description: "Receive burnout and wellbeing check-in notifications",
+    label: "Well-being Alerts",
+    description: "Receive burnout and well-being check-in notifications",
   },
   agent_completions: {
     enabled: true,

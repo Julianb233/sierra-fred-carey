@@ -45,7 +45,7 @@ export default function Pricing() {
         "Founder Decision Engine",
         "Feasibility + market reality checks",
         "Red flag detection (before you waste months)",
-        "Founder wellbeing + mental clarity support",
+        "Founder well-being + mental clarity support",
         "Initial founder snapshot",
       ],
     },

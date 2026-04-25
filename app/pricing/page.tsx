@@ -21,7 +21,7 @@ export default function PricingPage() {
         { name: "Founder Decision Engine", included: true },
         { name: "Feasibility + market reality checks", included: true },
         { name: "Red Flag Detection", included: true },
-        { name: "Founder wellbeing support", included: true },
+        { name: "Founder well-being support", included: true },
         { name: "Initial founder snapshot", included: true },
         { name: "Investor Lens", included: false },
         { name: "Investor Readiness Score", included: false },

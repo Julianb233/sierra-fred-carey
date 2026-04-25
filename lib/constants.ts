@@ -75,7 +75,7 @@ export const TIER_FEATURES = {
     "Founder Decision Engine",
     "Feasibility + market reality checks",
     "Red flag detection",
-    "Founder wellbeing + mental clarity support",
+    "Founder well-being + mental clarity support",
     "Initial founder snapshot",
     "Rolling chat history (limited window)",
   ],

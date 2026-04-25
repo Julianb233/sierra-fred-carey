@@ -117,8 +117,8 @@ const PLATFORM_PAGES: Record<string, { label: string; description: string }> = {
     description: "Define and refine your market position and go-to-market strategy",
   },
   "/dashboard/wellbeing": {
-    label: "Wellbeing & Stress Tracker",
-    description: "Monitor founder stress levels and mental health with wellbeing quizzes",
+    label: "Well-being & Stress Tracker",
+    description: "Monitor founder stress levels and mental health with well-being quizzes",
   },
   "/dashboard/next-steps": {
     label: "Next Steps & Action Items",
@@ -193,7 +193,7 @@ ${currentPageInfo}
 You can help the user navigate to other parts of the platform by mentioning them by name. When relevant, proactively suggest specific pages that would help them. Available platform features:
 ${navOptions}
 
-When suggesting navigation, say things like "Head over to your **Wellbeing Tracker**" or "Check out the **Reality Lens** to validate that" rather than giving raw URLs. Keep suggestions natural and only recommend features that are genuinely relevant to what the user is asking.`;
+When suggesting navigation, say things like "Head over to your **Well-being Tracker**" or "Check out the **Reality Lens** to validate that" rather than giving raw URLs. Keep suggestions natural and only recommend features that are genuinely relevant to what the user is asking.`;
 }
 
 // ============================================================================

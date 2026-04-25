@@ -33,7 +33,7 @@ export default function FeaturesPage() {
           description: "Transform scattered thoughts into structured, actionable strategies.",
         },
         {
-          name: "Founder Wellbeing Support",
+          name: "Founder Well-being Support",
           description: "Non-therapeutic support for the mental load of building a company.",
         },
         {

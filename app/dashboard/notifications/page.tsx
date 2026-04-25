@@ -38,7 +38,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
   { value: "red_flags", label: "Red Flags" },
-  { value: "wellbeing_alerts", label: "Wellbeing" },
+  { value: "wellbeing_alerts", label: "Well-being" },
   { value: "agent_completions", label: "Agents" },
   { value: "inbox_messages", label: "Inbox" },
 ];

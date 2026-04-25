@@ -68,7 +68,7 @@ export function BurnoutAlert({
                 href="/dashboard/wellbeing"
                 className="inline-block text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 underline underline-offset-2 transition-colors"
               >
-                Take a Wellbeing Check-in
+                Take a Well-being Check-in
               </Link>
             )}
           </div>
