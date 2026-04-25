@@ -13,6 +13,19 @@ import type { OasesStage } from "@/types/oases"
 import { classifyIntent } from "./intent-classifier"
 import { getStageIndex, getStageConfig, STAGE_ORDER, STAGE_CONFIG } from "./stage-config"
 
+const VALID_STAGE_IDS = new Set<string>(STAGE_ORDER)
+
+/**
+ * DB / memory may still contain a legacy or corrupted oases value;
+ * getStageIndex throws for unknown stages — coalesce to a safe default.
+ */
+function coerceOasesStage(stage: OasesStage | string | undefined | null): OasesStage {
+  if (stage && VALID_STAGE_IDS.has(stage)) {
+    return stage as OasesStage
+  }
+  return "clarity"
+}
+
 export interface StageValidationResult {
   allowed: boolean
   currentStage: OasesStage
@@ -44,6 +57,7 @@ export function validateStageAccess(
   currentStage: OasesStage,
   redirectCounts: Record<string, number> = {}
 ): StageValidationResult {
+  const safeCurrentStage = coerceOasesStage(currentStage)
   const classification = classifyIntent(message)
   const { detectedStage, confidence, isOverride: userInsists } = classification
 
@@ -51,7 +65,7 @@ export function validateStageAccess(
   if (detectedStage === null || confidence === "low") {
     return {
       allowed: true,
-      currentStage,
+      currentStage: safeCurrentStage,
       detectedStage: null,
       redirectMessage: null,
       currentStageGuidance: null,
@@ -60,14 +74,14 @@ export function validateStageAccess(
     }
   }
 
-  const currentIndex = getStageIndex(currentStage)
+  const currentIndex = getStageIndex(safeCurrentStage)
   const detectedIndex = getStageIndex(detectedStage)
 
   // Topic matches current or earlier stage — allowed
   if (detectedIndex <= currentIndex) {
     return {
       allowed: true,
-      currentStage,
+      currentStage: safeCurrentStage,
       detectedStage,
       redirectMessage: null,
       currentStageGuidance: null,
@@ -77,7 +91,7 @@ export function validateStageAccess(
   }
 
   // Topic belongs to a future stage — check for override conditions
-  const currentConfig = getStageConfig(currentStage)
+  const currentConfig = getStageConfig(safeCurrentStage)
   const detectedConfig = getStageConfig(detectedStage)
   const stageGap = detectedIndex - currentIndex
 
@@ -99,7 +113,7 @@ export function validateStageAccess(
 
     return {
       allowed: true,
-      currentStage,
+      currentStage: safeCurrentStage,
       detectedStage,
       redirectMessage: overrideMessage,
       currentStageGuidance,
@@ -125,7 +139,7 @@ export function validateStageAccess(
 
   return {
     allowed: false,
-    currentStage,
+    currentStage: safeCurrentStage,
     detectedStage,
     redirectMessage,
     currentStageGuidance,
