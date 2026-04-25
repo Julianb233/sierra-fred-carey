@@ -77,6 +77,7 @@ export const TIER_FEATURES = {
     "Red flag detection",
     "Founder wellbeing + mental clarity support",
     "Initial founder snapshot",
+    "Rolling chat history (limited window)",
   ],
   [UserTier.BUILDER]: [
     "Everything in Free",
@@ -195,17 +196,17 @@ export function getTierFromString(tier: string): UserTier {
 /**
  * Per-tier memory depth and retention settings.
  *
- * - Free:    session-only context (5 messages, no persistence, no episodic)
+ * - Free:    rolling chat transcript in episodic memory (short window, no semantic tier)
  * - Builder: 14-day basic memory (10 messages, 3 episodic items)
  * - Pro:     30-day persistent memory (20 messages, 10 episodic items)
  * - Studio:  90-day deep memory (50 messages, 25 episodic items)
  */
 export const MEMORY_CONFIG = {
   free: {
-    maxMessages: 5,
-    retentionDays: 0,
-    loadEpisodic: false,
-    maxEpisodicItems: 0,
+    maxMessages: 10,
+    retentionDays: 14,
+    loadEpisodic: true,
+    maxEpisodicItems: 20,
   },
   builder: {
     maxMessages: 10,

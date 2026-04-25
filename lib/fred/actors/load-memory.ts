@@ -4,10 +4,8 @@
  * Phase 63: Embedding-based semantic retrieval merged with recency
  *
  * Loads relevant context from FRED's memory systems before processing.
- * The amount of memory loaded is gated by the user's subscription tier:
- * - Free:   5 recent episodes, no episodic memory, no persistent facts
- * - Pro:    20 recent episodes, 10 episodic items, 30-day retention
- * - Studio: 50 recent episodes, 25 episodic items, 90-day retention
+ * The amount of memory loaded is gated by the user's subscription tier.
+ * Episodic recall is scoped to the current `sessionId` so each chat thread stays coherent.
  *
  * When currentMessage is provided, embedding-based similarity search runs
  * in parallel with recency queries. Results are merged and deduplicated.
@@ -41,8 +39,8 @@ export async function loadMemoryActor(
   const config = MEMORY_CONFIG[normalizedTier] || MEMORY_CONFIG.free;
 
   try {
-    // If retention is 0 (Free tier), skip persistent memory entirely
-    if (config.retentionDays === 0) {
+    // If this tier has no episodic budget, skip DB episode loads (facts may still come from preloadedFacts).
+    if (!config.loadEpisodic || config.maxEpisodicItems <= 0) {
       return {
         recentEpisodes: [],
         relevantFacts: preloadedFacts ?? [],
@@ -61,8 +59,9 @@ export async function loadMemoryActor(
 
     // Phase 63: Generate embedding for current message (if provided)
     // This runs in parallel with recency queries below.
+    // Free tier: transcript recall only (no embedding search — cost control).
     let embeddingPromise: Promise<number[] | null> = Promise.resolve(null);
-    if (config.loadEpisodic && currentMessage) {
+    if (config.loadEpisodic && currentMessage && normalizedTier !== "free") {
       embeddingPromise = (async () => {
         try {
           const { generateEmbedding } = await import("@/lib/ai/fred-client");
@@ -79,7 +78,10 @@ export async function loadMemoryActor(
     // If facts were pre-loaded by buildFounderContext, skip the duplicate DB call.
     const [episodes, facts, decisions, embedding] = await Promise.all([
       config.loadEpisodic
-        ? retrieveRecentEpisodes(userId, { limit: config.maxEpisodicItems }).catch(() => [])
+        ? retrieveRecentEpisodes(userId, {
+            limit: config.maxEpisodicItems,
+            sessionId,
+          }).catch(() => [])
         : Promise.resolve([]),
       preloadedFacts
         ? Promise.resolve(preloadedFacts)

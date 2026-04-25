@@ -439,16 +439,16 @@ async function handlePost(req: NextRequest) {
       serverTrack(userId, ANALYTICS_EVENTS.CHAT.SESSION_STARTED, { tier: tierName });
     }
 
-    // Phase 21: Only persist memory for Pro+ tiers; Free tier is session-only.
-    // INTENTIONAL DESIGN: Free-tier users do NOT get entries in fred_episodic_memory.
-    // Their conversations are not stored across sessions — this is a core product
-    // differentiator between Free and Pro tiers. Free users still benefit from
-    // session-scoped context (within a single request) via loadMemoryActor, but
-    // nothing is written to the DB. For re-engagement tracking, all tiers DO get
-    // journey_events rows (see the fire-and-forget insert near the "done" SSE event
-    // below) so email campaigns have activity data without exposing conversation content.
-    // To change this behaviour, update hasPersistentMemory above.
+    // Phase 21: Pro+ semantic / long-horizon memory (semantic facts, deeper retention, embeddings).
+    // Chat *transcripts* (fred_episodic_memory conversation rows) persist for all tiers when
+    // storeInMemory is true so /api/fred/history + loadMemoryActor can restore continuity.
+    // Embeddings are skipped for tiers below Pro to control cost (skipEmbedding on storeEpisode).
     const shouldPersistMemory = storeInMemory && hasPersistentMemory;
+    const shouldPersistTranscript = storeInMemory;
+    const transcriptEpisodeOpts = {
+      skipEmbedding: !hasPersistentMemory,
+      metadata: { transcript_only: !hasPersistentMemory },
+    } as const;
 
     // ── Parallel context loading ─────────────────────────────────────
     // Fetch conversation state first (single fast query) so it can be
@@ -835,21 +835,32 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
 
       const latencyMs = Date.now() - startTime;
 
-      // Store in episodic memory only for Pro+ tiers (Phase 21)
-      // Fire-and-forget: don't block response delivery on memory persistence
-      if (shouldPersistMemory) {
+      // Store chat transcript for all tiers; semantic/long-term features remain Pro+ gated.
+      if (shouldPersistTranscript) {
         void Promise.all([
-          storeEpisode(userId, effectiveSessionId, "conversation", {
-            role: "user",
-            content: message,
-            context,
-          }),
-          storeEpisode(userId, effectiveSessionId, "conversation", {
-            role: "assistant",
-            content: result.response.content,
-            action: result.response.action,
-            confidence: result.response.confidence,
-          }),
+          storeEpisode(
+            userId,
+            effectiveSessionId,
+            "conversation",
+            {
+              role: "user",
+              content: message,
+              context,
+            },
+            transcriptEpisodeOpts
+          ),
+          storeEpisode(
+            userId,
+            effectiveSessionId,
+            "conversation",
+            {
+              role: "assistant",
+              content: result.response.content,
+              action: result.response.action,
+              confidence: result.response.confidence,
+            },
+            transcriptEpisodeOpts
+          ),
         ]).catch(error => console.warn("[FRED Chat] Failed to store in memory:", error));
       }
 
@@ -946,8 +957,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
         }
       })()
 
-      // Phase 32-02: Fire-and-forget retention enforcement
-      if (shouldPersistMemory) {
+      // Phase 32-02: Fire-and-forget retention enforcement (tier-scoped transcript caps)
+      if (shouldPersistTranscript) {
         enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
           console.warn("[FRED Chat] Retention enforcement failed:", err)
         );
@@ -1027,14 +1038,20 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
           tier: tierName,
         });
 
-        // Store user message in memory (Pro+ only, Phase 21)
+        // Store user message transcript (all tiers when storeInMemory)
         // Fire-and-forget: don't block processStream start on this DB write
-        if (shouldPersistMemory) {
-          storeEpisode(userId, effectiveSessionId, "conversation", {
-            role: "user",
-            content: message,
-            context,
-          }).catch(err => console.warn("[FRED Chat] Failed to store user message:", err));
+        if (shouldPersistTranscript) {
+          storeEpisode(
+            userId,
+            effectiveSessionId,
+            "conversation",
+            {
+              role: "user",
+              content: message,
+              context,
+            },
+            transcriptEpisodeOpts
+          ).catch(err => console.warn("[FRED Chat] Failed to store user message:", err));
         }
 
         // Stream state updates
@@ -1184,15 +1201,21 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
               },
             });
 
-            // Store assistant response in memory (Pro+ only, Phase 21)
+            // Store assistant transcript (all tiers when storeInMemory)
             // Fire-and-forget: don't block "done" SSE event on memory persistence
-            if (shouldPersistMemory) {
-              void storeEpisode(userId, effectiveSessionId, "conversation", {
-                role: "assistant",
-                content: response.content,
-                action: response.action,
-                confidence: response.confidence,
-              }).catch(error => console.warn("[FRED Chat] Failed to store assistant response:", error));
+            if (shouldPersistTranscript) {
+              void storeEpisode(
+                userId,
+                effectiveSessionId,
+                "conversation",
+                {
+                  role: "assistant",
+                  content: response.content,
+                  action: response.action,
+                  confidence: response.confidence,
+                },
+                transcriptEpisodeOpts
+              ).catch(error => console.warn("[FRED Chat] Failed to store assistant response:", error));
             }
 
             send("done", {
@@ -1346,8 +1369,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
               }
             })()
 
-            // Phase 32-02: Fire-and-forget retention enforcement
-            if (shouldPersistMemory) {
+            // Phase 32-02: Fire-and-forget retention enforcement (tier-scoped transcript caps)
+            if (shouldPersistTranscript) {
               enforceRetentionLimits(userId, tierName as MemoryTier).catch((err) =>
                 console.warn("[FRED Chat] Retention enforcement failed:", err)
               );

@@ -168,6 +168,8 @@ export async function storeEpisode(
     importanceScore?: number;
     metadata?: Record<string, unknown>;
     channel?: string;
+    /** When true, skip async embedding generation (e.g. Free/Builder chat transcripts). */
+    skipEmbedding?: boolean;
   } = {}
 ): Promise<EpisodicMemory> {
   const supabase = createServiceClient();
@@ -211,7 +213,13 @@ export async function storeEpisode(
 
   const episode = transformEpisodicRow(data);
 
-  if (!options.embedding && content && typeof content.content === "string" && content.content.length > 0) {
+  if (
+    !options.skipEmbedding &&
+    !options.embedding &&
+    content &&
+    typeof content.content === "string" &&
+    content.content.length > 0
+  ) {
     fireEmbeddingGeneration(episode.id, content.content as string);
   }
 
