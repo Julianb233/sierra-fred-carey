@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { ActiveModeBar, type ChatMode } from "@/components/chat/active-mode-bar";
 import { ChatSidePanel } from "@/components/chat/chat-side-panel";
@@ -16,8 +16,10 @@ import {
   PanelRightClose,
   Phone,
   Mic,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,10 +28,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
+import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-modal";
 import { VoiceCallContextBanner } from "@/components/chat/voice-call-context-banner";
 import { useUserTier } from "@/lib/context/tier-context";
 import { UserTier } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import {
+  SidebarContent,
+  computeVisibleNavItems,
+} from "@/components/dashboard/sidebar-content";
+import { createClient } from "@/lib/supabase/client";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -48,6 +56,7 @@ function useIsMobile() {
 
 export default function ChatPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeMode, setActiveMode] = useState<ChatMode>("founder-os");
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -55,9 +64,64 @@ export default function ChatPage() {
   const [voiceOverlayOpen, setVoiceOverlayOpen] = useState(false);
   const [lastDiscussedTopic, setLastDiscussedTopic] = useState<string | null>(null);
   const [lastCallSummary, setLastCallSummary] = useState<string | null>(null);
+  // AI-8655: nav drawer + how-to-use modal state — gives /chat users the
+  // same dashboard nav (Home, Mentor, Next Steps, etc.) without leaving the page
+  const [navSheetOpen, setNavSheetOpen] = useState(false);
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
+  const [navUser, setNavUser] = useState<{
+    name: string;
+    email: string;
+    stage: string | null;
+  } | null>(null);
   const isMobile = useIsMobile();
-  const { tier } = useUserTier();
+  const { tier, isLoading: isTierLoading } = useUserTier();
   const isProOrAbove = tier >= UserTier.PRO;
+
+  // Fetch user profile for the nav drawer (mirrors dashboard layout)
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchUser() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        if (!authUser || cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, stage")
+          .eq("id", authUser.id)
+          .single();
+        if (cancelled) return;
+        setNavUser({
+          name: profile?.name || authUser.email?.split("@")[0] || "Founder",
+          email: authUser.email || "",
+          stage: profile?.stage ?? null,
+        });
+      } catch {
+        // Non-critical — drawer still renders with empty user info if this fails
+      }
+    }
+    fetchUser();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visibleNavItems = useMemo(
+    () => computeVisibleNavItems(navUser?.stage ?? null, tier),
+    [navUser?.stage, tier]
+  );
+
+  const sidebarUser = {
+    name: navUser?.name || "",
+    email: navUser?.email || "",
+    tier,
+    stage: navUser?.stage ?? null,
+  };
+
+  const closeNavSheet = useCallback(() => setNavSheetOpen(false), []);
+  const handleHowToUse = useCallback(() => setHowToUseOpen(true), []);
 
   // Ref to imperatively send a message via ChatInterface
   const sendMessageRef = useRef<((msg: string) => void) | null>(null);
@@ -170,16 +234,30 @@ export default function ChatPage() {
     <div className="h-dvh flex flex-col bg-white dark:bg-gray-950">
       {/* Top Bar */}
       <header className="shrink-0 flex items-center justify-between px-3 sm:px-4 h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 z-10">
-        <Link href="/dashboard">
+        <div className="flex items-center gap-1">
+          {/* AI-8655: hamburger menu — opens the full dashboard nav in a drawer
+              so users on /chat can navigate elsewhere without using the browser
+              back button. */}
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setNavSheetOpen(true)}
             className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
+            aria-label="Open navigation menu"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm">Back</span>
+            <Menu className="h-5 w-5" />
           </Button>
-        </Link>
+          <Link href="/dashboard">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-gray-700 dark:text-gray-300 hover:text-[#ff6a1a] hover:bg-[#ff6a1a]/10 px-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Back</span>
+            </Button>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-[#ff6a1a]" />
@@ -337,6 +415,26 @@ export default function ChatPage() {
         onOpenChange={setCallModalOpen}
         onCallEnd={(summary) => setLastCallSummary(summary)}
       />
+
+      {/* AI-8655: Dashboard nav drawer — same nav items as /dashboard layout,
+          so chat users can reach Home / Next Steps / Readiness / Progress /
+          Marketplace / Well-being / Startup Process / Strategy / Documents /
+          Community / Settings without leaving /chat. */}
+      <Sheet open={navSheetOpen} onOpenChange={setNavSheetOpen}>
+        <SheetContent side="left" className="p-0 w-[280px] sm:w-72">
+          <SidebarContent
+            user={sidebarUser}
+            visibleNavItems={visibleNavItems}
+            pathname={pathname}
+            isTierLoading={isTierLoading}
+            onNavClick={closeNavSheet}
+            onHowToUse={handleHowToUse}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* How-to-use modal — opened from the nav drawer's "How To Use Sahara" button */}
+      <HowToUseSaharaModal open={howToUseOpen} onOpenChange={setHowToUseOpen} />
     </div>
   );
 }
