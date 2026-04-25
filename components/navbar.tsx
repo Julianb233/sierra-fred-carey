@@ -225,17 +225,16 @@ function NavBar() {
             </SheetContent>
           </Sheet>
 
-          {/* Logo - Center on mobile, left on desktop */}
-          <Link
-            href="/"
-            className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 group"
-          >
+          {/* Logo - flows in flex (left on mobile, left on desktop). Used to
+              be absolute-centered on mobile, which collided with the right-side
+              auth button at narrow widths and made Login/Dashboard look cut off. */}
+          <Link href="/" className="group">
             <Image
               src="/sahara-logo.svg"
               alt="Sahara"
               width={140}
               height={35}
-              className="h-8 sm:h-9 lg:h-10 w-auto group-hover:opacity-80 transition-opacity"
+              className="h-7 sm:h-9 lg:h-10 w-auto group-hover:opacity-80 transition-opacity"
               priority
               unoptimized
             />
@@ -297,9 +296,12 @@ function NavBar() {
           {/* Right Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {showAuthedNav ? (
+              // Dashboard CTA: always visible. Used to be hidden on mobile, which
+              // hid every entry point to the app for signed-in users browsing the
+              // marketing site on their phone.
               <Button
                 asChild
-                className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
+                className="flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
                 size="sm"
               >
                 <Link href="/dashboard">
@@ -330,7 +332,7 @@ function NavBar() {
                 </Button>
               </>
             )}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="hidden sm:block bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <ThemeSwitcher />
             </div>
           </div>
