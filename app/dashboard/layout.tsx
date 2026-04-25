@@ -41,6 +41,7 @@ import { createClient } from "@/lib/supabase/client";
 import { FloatingChatWidget } from "@/components/chat/floating-chat-widget";
 import { CallFredModal } from "@/components/dashboard/call-fred-modal";
 import { HowToUseSaharaModal } from "@/components/dashboard/how-to-use-sahara-modal";
+import { DashboardGuidedTour } from "@/components/dashboard/dashboard-guided-tour";
 import { MobileBottomNav } from "@/components/mobile/mobile-bottom-nav";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { VoiceChatOverlay } from "@/components/chat/voice-chat-overlay";
@@ -517,6 +518,12 @@ export default function DashboardLayout({
 
       {/* AI-4104: How To Use Sahara — Loom walkthrough video */}
       <HowToUseSaharaModal open={howToUseOpen} onOpenChange={setHowToUseOpen} />
+
+      {/* AI-8653: Dashboard guided tour — 5-slide overlay launched from
+          the "Start a Guided Tour with Fred" CTA in the How-To-Use modal.
+          Replaces the previous CTA which dumped users into chat with a
+          pre-seeded message that returned a fallback response. */}
+      <DashboardGuidedTour />
 
       {/* Voice Chat Overlay — available from mobile bottom nav and dashboard voice buttons */}
       <VoiceChatOverlay

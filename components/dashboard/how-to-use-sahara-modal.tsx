@@ -7,8 +7,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { MessageSquare, BarChart3, ListChecks, GraduationCap } from "lucide-react"
-import { openFredChat } from "@/components/chat/floating-chat-widget"
+import { MessageSquare, BarChart3, ListChecks, GraduationCap, Sparkles } from "lucide-react"
+import { startDashboardTour } from "@/components/dashboard/dashboard-guided-tour"
 
 /**
  * Loom video ID — set via NEXT_PUBLIC_LOOM_WALKTHROUGH_ID env var.
@@ -83,14 +83,20 @@ export function HowToUseSaharaModal({
                   </div>
                 </div>
               ))}
+              {/* AI-8653: Launches the in-app DashboardGuidedTour overlay
+                  (5 slides covering Mentor / Next Steps / Readiness / Progress /
+                  Wellbeing+Marketplace). Previously this CTA dispatched a
+                  pre-seeded message into Fred chat which produced a generic
+                  fallback reply — that was reported by Fred Cary as broken on
+                  2026-04-25 and replaced with a real guided tour. */}
               <button
                 onClick={() => {
                   onOpenChange(false)
-                  openFredChat("Give me a tour of the platform and explain what each section does so I know where to go for what.")
+                  startDashboardTour()
                 }}
                 className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#ff6a1a] hover:bg-[#ea580c] text-white font-medium transition-colors text-sm"
               >
-                <MessageSquare className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 Start a Guided Tour with Fred
               </button>
             </div>
