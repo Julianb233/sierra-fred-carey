@@ -732,16 +732,6 @@ export async function enforceRetentionLimits(
   const supabase = createServiceClient();
   let deletedCount = 0;
 
-  if (config.retentionDays === 0) {
-    const { data } = await supabase
-      .from("fred_episodic_memory")
-      .delete()
-      .eq("user_id", userId)
-      .select("id");
-    deletedCount += data?.length ?? 0;
-    return deletedCount;
-  }
-
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - config.retentionDays);
   const { data: expired } = await supabase

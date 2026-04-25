@@ -23,6 +23,8 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import postgres from "postgres";
 import { parseArgs } from "node:util";
+
+type PgJson = postgres.JSONValue;
 import { dirname, join, resolve } from "node:path";
 
 const HERE = dirname(new URL(import.meta.url).pathname);
@@ -304,7 +306,7 @@ async function main() {
         ${r.hash},
         ${0.35},
         ${r.createdAt.toISOString()}::timestamptz,
-        ${sql.json(r.metadata)},
+        ${sql.json(r.metadata as PgJson)},
         ${"chat"}
       )
       on conflict (user_id, session_id, content_hash)
