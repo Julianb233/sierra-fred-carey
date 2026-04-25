@@ -30,18 +30,37 @@ export default function ResetPasswordPage() {
 
   const allRulesPass = PASSWORD_RULES.every((r) => r.test(password));
 
-  // The /api/auth/callback route exchanges the PKCE code for a session
-  // and sets cookies before redirecting here. We detect the session below.
+  // Recovery flow lands here in one of two ways:
+  //   1. PKCE flow: /api/auth/callback exchanges ?code= for cookies, then redirects.
+  //   2. Implicit flow: Supabase verify redirects with #access_token=...&refresh_token=...
+  //      directly — no callback round-trip. The SSR client doesn't auto-consume URL
+  //      fragments, so we must hydrate the session manually before getSession() works.
   useEffect(() => {
     const supabase = createClient();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setSessionReady(true);
       }
     });
 
-    // Check for existing session (set by the auth callback route)
+    // Hydrate session from URL fragment if Supabase used implicit flow.
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (hash.includes("access_token=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+      if (access_token && refresh_token) {
+        supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+          if (!error) setSessionReady(true);
+        });
+        // Strip the tokens from the URL so they don't leak into history/analytics
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+
+    // Check for existing session (set by the auth callback route, the setSession
+    // call above, or a prior login).
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
