@@ -7,7 +7,11 @@ End-to-end migration script set for moving the Vite + Firebase Sahara app onto t
 | File | Purpose |
 |---|---|
 | `import-users.ts` | Imports Firebase Auth users into Supabase Auth. Runnable today against sample data. |
-| `import-firestore.ts` | Imports Firestore collections into Supabase tables. **Scaffold only** -- mappers wait on Alex's schema dump. |
+| `import-firestore.ts` | Imports **root** Firestore collections into Supabase tables (e.g. `users` → `profiles`). |
+| `import-firestore-subcollections.ts` | Imports `users/{uid}/roadmap`, `mentor`, `discovery`, `scores` into `profiles.enrichment_data.firebase_subcollections`. |
+| `import-firestore-chat-to-supabase.ts` | Imports `users/{uid}/chat` → `fred_episodic_memory`. |
+| `bridge-roadmap-to-startup-process.ts` | Maps subcollections + profile → `startup_processes` (founder report). |
+| `bridge-all-firebase-to-supabase.ts` | Runs subcollections import + chat import + roadmap bridge in order. |
 | `sample-firebase-export.json` | Minimal fixture to dry-run `import-users.ts`. |
 
 ## Env required
@@ -44,9 +48,15 @@ npx tsx scripts/migrations/firebase-to-supabase/import-users.ts \
 npx tsx scripts/migrations/firebase-to-supabase/import-users.ts \
   --input ./users.json
 
-# 4. Firestore collections (once mappers are filled in)
+# 4. Firestore root collections (users → profiles)
 npx tsx scripts/migrations/firebase-to-supabase/import-firestore.ts \
   --input ./firestore-export --dry-run
+
+# 5. Full parity: subcollections + chat + startup_processes bridge
+# Requires service account JSON at _data/firebase-service-account.json and env vars below.
+export SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... DATABASE_URL=...
+npx tsx scripts/migrations/firebase-to-supabase/bridge-all-firebase-to-supabase.ts --dry-run
+npx tsx scripts/migrations/firebase-to-supabase/bridge-all-firebase-to-supabase.ts
 ```
 
 ## Password handling

@@ -9,7 +9,7 @@
  *
  * This script bridges by:
  *   1. Reading profiles.enrichment_data.firebase_subcollections.roadmap +
- *      .mentor + .discovery (already imported by import-subcollections.ts)
+ *      .mentor + .discovery + .scores (import via import-firestore-subcollections.ts)
  *   2. Mapping completed roadmap items + item summaries + profile fields
  *      onto the 9-step startup_processes schema
  *   3. Upserting one startup_processes row per migrated user
@@ -81,7 +81,7 @@ import { parseArgs } from "node:util";
 import { config } from "dotenv";
 import { resolve } from "node:path";
 
-config({ path: resolve(process.cwd(), ".env.local"), override: true });
+config({ path: resolve(process.cwd(), ".env.local"), override: false });
 
 type RoadmapItem = { text: string; done?: boolean; summary?: string };
 type RoadmapDoc = {
@@ -115,9 +115,18 @@ function mustEnv(k: string): string {
   return v;
 }
 
+function supabaseUrl(): string {
+  const v = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!v) {
+    console.error("Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL");
+    process.exit(1);
+  }
+  return v;
+}
+
 function makeClient(): SupabaseClient {
   return createClient(
-    mustEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    supabaseUrl(),
     mustEnv("SUPABASE_SERVICE_ROLE_KEY"),
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
@@ -419,11 +428,13 @@ async function main() {
 
   const db = makeClient();
 
-  // Fetch candidate profiles — migrated users with firebase_subcollections
+  // Candidates: legacy Firebase profile import OR subcollections imported after chat bridge
   let query = db
     .from("profiles")
     .select("id, email, name, company_name, co_founder, has_partners, weak_spot, target_market:enrichment_data->>target_market, enrichment_data")
-    .eq("enrichment_source", "firebase_migration_2026_04_21");
+    .or(
+      "enrichment_source.eq.firebase_migration_2026_04_21,enrichment_data->firebase_subcollections->imported_at.not.is.null"
+    );
   if (onlyEmail) query = query.eq("email", onlyEmail);
   if (limit) query = query.limit(limit);
 

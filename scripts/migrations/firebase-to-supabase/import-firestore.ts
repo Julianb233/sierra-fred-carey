@@ -40,6 +40,10 @@
  *   npx tsx scripts/migrations/firebase-to-supabase/import-firestore.ts \
  *     --input ./scripts/migrations/firebase-to-supabase/_data/firestore-export \
  *     [--dry-run] [--collection users] [--limit 10]
+ *
+ * After root Firestore JSON exists, run import-firestore-subcollections.ts to
+ * pull users/{uid}/{roadmap,mentor,discovery,scores} into profiles, then
+ * bridge-roadmap-to-startup-process.ts (or bridge-all-firebase-to-supabase.ts).
  */
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
