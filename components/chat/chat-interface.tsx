@@ -96,6 +96,8 @@ interface ChatInterfaceProps {
   onInitialMessageConsumed?: () => void;
   /** Mutable ref that the parent can use to imperatively send messages (e.g. from voice overlay) */
   onSendRef?: MutableRefObject<((msg: string) => void) | null>;
+  /** AI-8663: open a specific past conversation (e.g. from Next Steps "View conversation") */
+  sessionId?: string;
 }
 
 function buildFredGreeting(): Message {
@@ -107,8 +109,8 @@ function buildFredGreeting(): Message {
   };
 }
 
-export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo, error, clearError } = useFredChat({ pageContext });
+export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef, sessionId }: ChatInterfaceProps) {
+  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo, error, clearError } = useFredChat({ pageContext, sessionId });
   const { triggerPaywall } = usePaywall();
   const { tier } = useTier();
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -871,7 +871,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       ]);
 
       // Phase 43: Fire-and-forget next steps extraction
-      extractAndStoreNextSteps(userId, result.response.content, new Date().toISOString()).catch(err =>
+      // AI-8663: include sessionId so the "View conversation" link can deep-link back to this chat
+      extractAndStoreNextSteps(userId, result.response.content, new Date().toISOString(), effectiveSessionId).catch(err =>
         console.warn("[FRED Chat] Next steps extraction failed:", err)
       );
 
@@ -1283,7 +1284,8 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
             ]);
 
             // Phase 43: Fire-and-forget next steps extraction
-            extractAndStoreNextSteps(userId, response.content, new Date().toISOString()).catch(err =>
+            // AI-8663: include sessionId so the "View conversation" link can deep-link back to this chat
+            extractAndStoreNextSteps(userId, response.content, new Date().toISOString(), effectiveSessionId).catch(err =>
               console.warn("[FRED Chat] Next steps extraction failed:", err)
             );
 

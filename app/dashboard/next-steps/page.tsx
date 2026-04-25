@@ -247,6 +247,7 @@ export default function NextStepsPage() {
                   whyItMatters={step.whyItMatters}
                   priority={step.priority}
                   sourceConversationDate={step.sourceConversationDate}
+                  sourceSessionId={step.sourceSessionId}
                   completed={step.completed}
                   completedAt={step.completedAt}
                   createdAt={step.createdAt}

@@ -54,6 +54,8 @@ interface NextStepCardProps {
   whyItMatters: string | null;
   priority: StepPriority;
   sourceConversationDate: string | null;
+  /** AI-8663: chat session that produced this step. Used to deep-link "View conversation". */
+  sourceSessionId?: string | null;
   completed: boolean;
   completedAt: string | null;
   createdAt: string;
@@ -78,6 +80,7 @@ export function NextStepCard({
   whyItMatters,
   priority,
   sourceConversationDate,
+  sourceSessionId,
   completed,
   createdAt,
   onToggleComplete,
@@ -188,16 +191,28 @@ export function NextStepCard({
 
             {/* Meta row */}
             <div className="flex items-center gap-3 mt-2">
-              {/* Conversation link */}
-              {sourceConversationDate && (
+              {/* Conversation link
+                  AI-8663: deep-link to the originating session when we know it.
+                  Older steps without sourceSessionId fall through to /chat
+                  which the chat hook will hydrate with the most-recent session. */}
+              {sourceSessionId ? (
                 <Link
-                  href="/chat"
+                  href={`/chat?sessionId=${encodeURIComponent(sourceSessionId)}`}
                   className="inline-flex items-center gap-1 text-xs text-[#ff6a1a] hover:text-[#ea580c] transition-colors"
                 >
                   <MessageSquare className="h-3 w-3" />
                   View conversation
                 </Link>
-              )}
+              ) : sourceConversationDate ? (
+                <Link
+                  href="/chat"
+                  className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#ff6a1a] transition-colors"
+                  title="Original conversation isn't linked for this step — opens your most recent chat instead"
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  View conversation
+                </Link>
+              ) : null}
 
               {/* Created date */}
               <span className="text-xs text-gray-400 dark:text-gray-500">

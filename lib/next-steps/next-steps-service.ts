@@ -21,6 +21,8 @@ export interface NextStep {
   whyItMatters: string | null;
   priority: StepPriority;
   sourceConversationDate: string | null;
+  /** fred_episodic_memory.session_id of the originating chat. NULL for legacy rows. */
+  sourceSessionId: string | null;
   completed: boolean;
   completedAt: string | null;
   dismissed: boolean;
@@ -37,6 +39,7 @@ export interface NextStepInsert {
   whyItMatters?: string;
   priority?: StepPriority;
   sourceConversationDate?: string;
+  sourceSessionId?: string;
   dueDate?: string;
 }
 
@@ -59,7 +62,7 @@ export async function getNextSteps(userId: string): Promise<GroupedNextSteps> {
 
   const { data, error } = await supabase
     .from("next_steps")
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .eq("user_id", userId)
     .eq("dismissed", false)
     .order("created_at", { ascending: false });
@@ -95,7 +98,7 @@ export async function markComplete(
     })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -123,7 +126,7 @@ export async function markIncomplete(
     })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -152,7 +155,7 @@ export async function dismissStep(
     .update({ dismissed: true })
     .eq("id", stepId)
     .eq("user_id", userId)
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .single();
 
   if (error) {
@@ -170,7 +173,8 @@ export async function dismissStep(
 export async function extractAndStoreNextSteps(
   userId: string,
   responseText: string,
-  sourceConversationDate: string | null
+  sourceConversationDate: string | null,
+  sourceSessionId: string | null = null
 ): Promise<NextStep[]> {
   const extracted = extractNextActions(responseText);
   if (extracted.length === 0) return [];
@@ -203,6 +207,7 @@ export async function extractAndStoreNextSteps(
     why_it_matters: step.whyItMatters || null,
     priority: prioritizeStep(index, newSteps.length),
     source_conversation_date: sourceConversationDate,
+    source_session_id: sourceSessionId,
     due_date: step.dueDate || computeDefaultDueDate(prioritizeStep(index, newSteps.length)),
     completed: false,
     dismissed: false,
@@ -211,7 +216,7 @@ export async function extractAndStoreNextSteps(
   const { data, error } = await supabase
     .from("next_steps")
     .insert(inserts)
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at");
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at");
 
   if (error) {
     console.error("[NextSteps] Failed to store:", error);
@@ -252,7 +257,7 @@ export async function getOverdueSteps(userId: string): Promise<NextStep[]> {
 
   const { data, error } = await supabase
     .from("next_steps")
-    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
+    .select("id, user_id, description, why_it_matters, priority, source_conversation_date, source_session_id, completed, completed_at, dismissed, due_date, reminder_sent, created_at, updated_at")
     .eq("user_id", userId)
     .eq("completed", false)
     .eq("dismissed", false)
@@ -361,6 +366,7 @@ function mapRow(row: Record<string, unknown>): NextStep {
     whyItMatters: (row.why_it_matters as string) || null,
     priority: (row.priority as StepPriority) || "optional",
     sourceConversationDate: (row.source_conversation_date as string) || null,
+    sourceSessionId: (row.source_session_id as string) || null,
     completed,
     completedAt: (row.completed_at as string) || null,
     dismissed: (row.dismissed as boolean) || false,

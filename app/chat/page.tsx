@@ -129,10 +129,17 @@ export default function ChatPage() {
   // Pre-seeded message from dashboard chip (e.g. ?message=...)
   const initialMessage = searchParams.get("message") ?? undefined;
 
+  // AI-8663: deep-link to a specific past conversation (e.g. from Next Steps "View conversation")
+  const requestedSessionId = searchParams.get("sessionId") ?? undefined;
+
   const handleInitialMessageConsumed = useCallback(() => {
-    // Remove ?message= from URL after it's been auto-sent
-    router.replace("/chat", { scroll: false });
-  }, [router]);
+    // Remove ?message= from URL after it's been auto-sent.
+    // Preserve ?sessionId= if present so the user can refresh and stay in-context.
+    router.replace(
+      requestedSessionId ? `/chat?sessionId=${encodeURIComponent(requestedSessionId)}` : "/chat",
+      { scroll: false }
+    );
+  }, [router, requestedSessionId]);
 
   const handleCallClick = useCallback(() => {
     setCallModalOpen(true);
@@ -355,6 +362,7 @@ export default function ChatPage() {
               initialMessage={initialMessage}
               onInitialMessageConsumed={handleInitialMessageConsumed}
               onSendRef={sendMessageRef}
+              sessionId={requestedSessionId}
             />
           </div>
         </main>

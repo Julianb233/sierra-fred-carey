@@ -49,9 +49,10 @@ export async function POST() {
     const supabase = await createClient();
 
     // Get recent FRED assistant responses (most recent first)
+    // AI-8663: also pull session_id so the View conversation link can deep-link back
     const { data: episodes } = await supabase
       .from("fred_episodic_memory")
-      .select("content, created_at")
+      .select("content, created_at, session_id")
       .eq("user_id", userId)
       .eq("event_type", "conversation")
       .order("created_at", { ascending: false })
@@ -79,7 +80,8 @@ export async function POST() {
         const stored = await extractAndStoreNextSteps(
           userId,
           text,
-          episode.created_at
+          episode.created_at,
+          (episode.session_id as string | null) ?? null
         );
 
         if (stored.length > 0) {

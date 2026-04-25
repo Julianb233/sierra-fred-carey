@@ -251,34 +251,53 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     persistMessages(messages);
   }, [messages]);
 
-  // Load past conversation from server on mount when sessionStorage is empty
-  // (e.g. fresh login, new device, cleared cookies). Hydrates `messages`
-  // from /api/fred/history so users see their previous chat instead of an
-  // empty greeting.
+  // Load past conversation from server on mount.
+  //
+  // AI-8663: When `providedSessionId` is set (e.g. deep-link from Next Steps
+  // "View conversation"), force-hydrate from that specific session even if
+  // sessionStorage already has messages — the user explicitly asked to view
+  // that prior conversation.
+  //
+  // Otherwise: hydrate the most-recent session only when sessionStorage is
+  // empty (fresh login, new device, cleared cookies).
   const historyLoadedRef = useRef(false);
+  const hydratedSessionIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (historyLoadedRef.current) return;
+    // Re-hydrate when providedSessionId changes (e.g. user clicks a different
+    // "View conversation" link). Otherwise only fire once on mount.
+    const sessionChanged =
+      !!providedSessionId && providedSessionId !== hydratedSessionIdRef.current;
+    if (historyLoadedRef.current && !sessionChanged) return;
     historyLoadedRef.current = true;
-    if (messages.length > 0) return; // sessionStorage already had data
+
+    // Skip if sessionStorage already had data AND we're not deep-linking.
+    if (messages.length > 0 && !providedSessionId) return;
+
     // Skip hydration in unit-test environments — tests mock fetch globally
     // and shouldn't have their mock queues consumed by background hydration.
     if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
+
     let cancelled = false;
     (async () => {
       try {
-        // 1. Get most recent session for this user
-        const listRes = await fetch("/api/fred/history?limit=1");
-        if (!listRes.ok) return;
-        const listJson = await listRes.json() as {
-          success?: boolean;
-          data?: Array<{ sessionId: string; lastActivityAt: string }>;
-        };
-        const recent = listJson.data?.[0];
-        if (!recent || cancelled) return;
+        let targetSessionId: string | null = providedSessionId ?? null;
 
-        // 2. Fetch its messages
+        // No deep-link target: fall back to most-recent session
+        if (!targetSessionId) {
+          const listRes = await fetch("/api/fred/history?limit=1");
+          if (!listRes.ok) return;
+          const listJson = await listRes.json() as {
+            success?: boolean;
+            data?: Array<{ sessionId: string; lastActivityAt: string }>;
+          };
+          const recent = listJson.data?.[0];
+          if (!recent || cancelled) return;
+          targetSessionId = recent.sessionId;
+        }
+
+        // Fetch the target session's messages
         const detailRes = await fetch(
-          `/api/fred/history?sessionId=${encodeURIComponent(recent.sessionId)}`
+          `/api/fred/history?sessionId=${encodeURIComponent(targetSessionId)}`
         );
         if (!detailRes.ok) return;
         const detailJson = await detailRes.json() as {
@@ -295,15 +314,15 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
         const past = detailJson.data?.messages;
         if (!Array.isArray(past) || past.length === 0 || cancelled) return;
 
-        // 3. Adopt the recent session id so the next user message continues
+        // Adopt the session id so the next user message continues
         // the same conversation server-side.
-        sessionIdRef.current = recent.sessionId;
-        setSessionIdState(recent.sessionId);
+        sessionIdRef.current = targetSessionId;
+        setSessionIdState(targetSessionId);
         if (typeof window !== "undefined") {
-          sessionStorage.setItem(SESSION_STORAGE_KEY, recent.sessionId);
+          sessionStorage.setItem(SESSION_STORAGE_KEY, targetSessionId);
         }
 
-        // 4. Hydrate state with prior messages
+        // Hydrate state with prior messages
         const hydrated: FredMessage[] = past.map((m) => ({
           id: m.id,
           role: m.role,
@@ -312,15 +331,19 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           confidence: m.confidence,
           action: m.action,
         }));
-        if (mountedRef.current) setMessages(hydrated);
+        if (mountedRef.current) {
+          setMessages(hydrated);
+          hydratedSessionIdRef.current = targetSessionId;
+        }
       } catch {
         // Non-blocking: empty chat is acceptable fallback
       }
     })();
     return () => { cancelled = true };
-    // Run once on mount only
+    // Re-fire when providedSessionId changes; messages intentionally excluded
+    // to avoid re-hydration loops after we set them.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [providedSessionId]);
 
   // Notify on state change
   useEffect(() => {
