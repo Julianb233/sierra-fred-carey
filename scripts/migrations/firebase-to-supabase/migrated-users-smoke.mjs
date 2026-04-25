@@ -89,6 +89,13 @@ async function main() {
       sample.errors.push("missing auth.users row");
     } else {
       sample.supabaseId = authUser.id;
+      // recovery email coverage — every migrated user must have a recovery
+      // dispatch on file, otherwise they have no way to set a password and
+      // therefore no way to log in. mailer_autoconfirm covers email_confirmed_at,
+      // not recovery delivery.
+      if (!authUser.recovery_sent_at) {
+        sample.errors.push("recovery_sent_at is null — user cannot log in");
+      }
       // profile fetch
       const { data: prof, error: pe } = await db
         .from("profiles")
