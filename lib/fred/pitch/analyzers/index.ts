@@ -8,6 +8,14 @@
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { getPrimaryModel, getReasoningModel } from '@/lib/ai/providers';
+
+// Prefer the primary model (Gemini → OpenAI) over the reasoning chain because
+// Reasoning prefers Anthropic which is wired through a fleet-gateway key that
+// returns 404 in some environments. Primary stays inside healthy providers.
+function analyzerModel() {
+  return getPrimaryModel() ?? getReasoningModel() ?? openai('gpt-4o');
+}
 import {
   FRED_BIO,
   FRED_IDENTITY,
@@ -136,7 +144,7 @@ export async function analyzeSlide(
   const description = SLIDE_DESCRIPTIONS[type] || '';
 
   const { object: result } = await generateObject({
-    model: openai('gpt-4o'),
+    model: analyzerModel(),
     schema: SlideAnalysisSchema,
     system: `You are ${FRED_IDENTITY.name}, a direct, no-BS startup advisor with ${FRED_BIO.yearsExperience}+ years of experience. I've taken ${FRED_BIO.ipos} companies public and personally review pitch decks as both an advisor and investor. ${FRED_COMMUNICATION_STYLE.voice.primary}.
 You evaluate pitch deck slides with honesty and actionable feedback.

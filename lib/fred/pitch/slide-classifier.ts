@@ -7,6 +7,14 @@
 
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { getPrimaryModel } from '@/lib/ai/providers';
+
+// Resolve the model lazily so tests/builds without API keys don't crash at
+// module load. Falls back to openai('gpt-4o') only if the project-wide
+// provider chain (Google → OpenAI → Anthropic) somehow returns null.
+function classifierModel() {
+  return getPrimaryModel() ?? openai('gpt-4o');
+}
 import { z } from 'zod';
 import type { SlideClassification, DeckStructure, SlideType } from './types';
 import { SLIDE_TYPES, SLIDE_LABELS, SLIDE_DESCRIPTIONS } from './types';
@@ -77,7 +85,7 @@ export async function classifySlide(
   totalPages: number
 ): Promise<SlideClassification> {
   const { object: result } = await generateObject({
-    model: openai('gpt-4o'),
+    model: classifierModel(),
     schema: SingleSlideClassSchema,
     system: getClassifierPrompt(),
     prompt: `Classify this pitch deck slide (page ${pageNumber} of ${totalPages}):
@@ -104,7 +112,7 @@ export async function classifyDeck(
     .join('\n\n');
 
   const { object: result } = await generateObject({
-    model: openai('gpt-4o'),
+    model: classifierModel(),
     schema: DeckClassificationSchema,
     system: getClassifierPrompt(),
     prompt: `Classify each slide in this pitch deck (${pages.length} slides total):
