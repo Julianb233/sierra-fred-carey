@@ -251,6 +251,74 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     persistMessages(messages);
   }, [messages]);
 
+  // Load past conversation from server on mount when sessionStorage is empty
+  // (e.g. fresh login, new device, cleared cookies). Hydrates `messages`
+  // from /api/fred/history so users see their previous chat instead of an
+  // empty greeting.
+  const historyLoadedRef = useRef(false);
+  useEffect(() => {
+    if (historyLoadedRef.current) return;
+    historyLoadedRef.current = true;
+    if (messages.length > 0) return; // sessionStorage already had data
+    let cancelled = false;
+    (async () => {
+      try {
+        // 1. Get most recent session for this user
+        const listRes = await fetch("/api/fred/history?limit=1");
+        if (!listRes.ok) return;
+        const listJson = await listRes.json() as {
+          success?: boolean;
+          data?: Array<{ sessionId: string; lastActivityAt: string }>;
+        };
+        const recent = listJson.data?.[0];
+        if (!recent || cancelled) return;
+
+        // 2. Fetch its messages
+        const detailRes = await fetch(
+          `/api/fred/history?sessionId=${encodeURIComponent(recent.sessionId)}`
+        );
+        if (!detailRes.ok) return;
+        const detailJson = await detailRes.json() as {
+          success?: boolean;
+          data?: { sessionId: string; messages: Array<{
+            id: string;
+            role: "user" | "assistant";
+            content: string;
+            timestamp: string;
+            confidence?: "high" | "medium" | "low";
+            action?: string;
+          }> };
+        };
+        const past = detailJson.data?.messages;
+        if (!Array.isArray(past) || past.length === 0 || cancelled) return;
+
+        // 3. Adopt the recent session id so the next user message continues
+        // the same conversation server-side.
+        sessionIdRef.current = recent.sessionId;
+        setSessionIdState(recent.sessionId);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(SESSION_STORAGE_KEY, recent.sessionId);
+        }
+
+        // 4. Hydrate state with prior messages
+        const hydrated: FredMessage[] = past.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: new Date(m.timestamp),
+          confidence: m.confidence,
+          action: m.action,
+        }));
+        if (mountedRef.current) setMessages(hydrated);
+      } catch {
+        // Non-blocking: empty chat is acceptable fallback
+      }
+    })();
+    return () => { cancelled = true };
+    // Run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Notify on state change
   useEffect(() => {
     onStateChange?.(state);
