@@ -177,8 +177,9 @@ export const STAGE_CONFIG: StageConfig[] = [
         completionCheck: "boardy_ready",
       },
     ],
-    unlockedFeatures: ["boardy", "agents", "communities", "marketplace"],
-    gatedRoutes: ["/dashboard/boardy", "/dashboard/agents", "/dashboard/communities", "/dashboard/marketplace"],
+    // AI-8891: marketplace removed until feature is ready
+    unlockedFeatures: ["boardy", "agents", "communities"],
+    gatedRoutes: ["/dashboard/boardy", "/dashboard/agents", "/dashboard/communities"],
   },
 ]
 

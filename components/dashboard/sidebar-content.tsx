@@ -88,11 +88,12 @@ export const coreNavItems: NavItem[] = [
     href: "/dashboard/journey",
     icon: <Map className="h-4 w-4" />,
   },
-  {
-    name: "Marketplace",
-    href: "/dashboard/marketplace",
-    icon: <ShoppingBag className="h-4 w-4" />,
-  },
+  // AI-8891: Marketplace hidden until feature is ready
+  // {
+  //   name: "Marketplace",
+  //   href: "/dashboard/marketplace",
+  //   icon: <ShoppingBag className="h-4 w-4" />,
+  // },
   {
     name: "Well-being",
     href: "/dashboard/wellbeing",

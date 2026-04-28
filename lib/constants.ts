@@ -168,6 +168,16 @@ export const DASHBOARD_NAV = [
 ] as const;
 
 // ============================================
+// DISABLED FEATURES (AI-8891)
+// Features hidden until fully ready for launch.
+// Remove from this set to re-enable.
+// ============================================
+export const DISABLED_FEATURES = new Set([
+  "sales",
+  "marketplace",
+]);
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 export function canAccessFeature(userTier: UserTier, requiredTier: UserTier): boolean {

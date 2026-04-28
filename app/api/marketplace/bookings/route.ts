@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DISABLED_FEATURES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { createBooking, getUserBookings } from "@/lib/db/marketplace";
 
+// AI-8891: Marketplace disabled until ready
 export async function GET(_req: NextRequest) {
+  if (DISABLED_FEATURES.has("marketplace")) {
+    return NextResponse.json(
+      { bookings: [], message: "Marketplace is coming soon." },
+      { status: 200 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -23,7 +32,15 @@ export async function GET(_req: NextRequest) {
   }
 }
 
+// AI-8891: Marketplace disabled until ready
 export async function POST(req: NextRequest) {
+  if (DISABLED_FEATURES.has("marketplace")) {
+    return NextResponse.json(
+      { error: "Marketplace is coming soon. Bookings are not available yet." },
+      { status: 503 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

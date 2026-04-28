@@ -8,6 +8,7 @@
 
 import { tool } from "ai";
 import { z } from "zod";
+import { DISABLED_FEATURES } from "@/lib/constants";
 import { getProviders } from "@/lib/db/marketplace";
 
 // Map common service type keywords to marketplace categories
@@ -53,9 +54,23 @@ export const findProviderTool = tool({
     budget: z
       .enum(["low", "medium", "high", "unknown"])
       .default("unknown")
-      .describe("Budget range (informational — not used for filtering yet)"),
+      .describe("Budget range (informational -- not used for filtering yet)"),
   }),
   execute: async ({ serviceType, stage }) => {
+    // AI-8891: Marketplace disabled until ready
+    if (DISABLED_FEATURES.has("marketplace")) {
+      return {
+        status: "coming_soon" as const,
+        serviceType,
+        message: `The service marketplace is coming soon. In the meantime, I can help you think through what to look for in a ${serviceType} provider and how to evaluate candidates.`,
+        suggestedQuestions: [
+          `What specific ${serviceType} tasks do you need help with?`,
+          "What's your timeline for getting this done?",
+          "What budget range are you considering?",
+        ],
+      };
+    }
+
     try {
       const category = mapServiceTypeToCategory(serviceType);
       const providers = await getProviders({
@@ -72,7 +87,7 @@ export const findProviderTool = tool({
           suggestedQuestions: [
             `What specific ${serviceType} tasks do you need help with?`,
             "What's your timeline for getting this done?",
-            "Have you worked with a ${serviceType} provider before?",
+            `Have you worked with a ${serviceType} provider before?`,
           ],
         };
       }
@@ -93,7 +108,7 @@ export const findProviderTool = tool({
         })),
       };
     } catch {
-      // Graceful degradation — if DB query fails, guide the founder directly
+      // Graceful degradation -- if DB query fails, guide the founder directly
       return {
         status: "coming_soon" as const,
         serviceType,
