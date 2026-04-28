@@ -334,6 +334,8 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
         if (mountedRef.current) {
           setMessages(hydrated);
           hydratedSessionIdRef.current = targetSessionId;
+          // AI-8890: Sync exchange count from hydrated messages
+          exchangeCountRef.current = hydrated.filter(m => m.role === "user").length;
         }
       } catch {
         // Non-blocking: empty chat is acceptable fallback
@@ -367,6 +369,9 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
   // Guard against rapid-fire duplicate submissions
   const sendingRef = useRef(false);
 
+  // AI-8890: Track user exchange count for loop-breaking
+  const exchangeCountRef = useRef(messages.filter(m => m.role === "user").length);
+
   // Send message with streaming
   const sendMessage = useCallback(async (content: string, options?: { source?: "text" | "voice" }) => {
     // Prevent rapid-fire: if we're already processing a send, ignore
@@ -391,6 +396,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       source: options?.source,
     };
     setMessages(prev => [...prev, userMessage]);
+    exchangeCountRef.current += 1;
 
     // Reset state
     setState("connecting");
@@ -418,6 +424,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           stream: true,
           storeInMemory,
           pageContext,
+          exchangeCount: exchangeCountRef.current,
         }),
         signal,
       });
@@ -814,6 +821,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     setError(null);
     setRedFlags([]);
     setRateLimitInfo({ isRateLimited: false });
+    exchangeCountRef.current = 0;
 
     // Generate new session ID and clear persisted messages
     const newSessionId = crypto.randomUUID();

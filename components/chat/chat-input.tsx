@@ -129,7 +129,7 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
       </AnimatePresence>
 
       {/* Glassmorphism container */}
-      <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
+      <div className="relative backdrop-blur-xl bg-white/15 dark:bg-white/10 border border-gray-300/30 dark:border-white/25 rounded-2xl shadow-2xl">
         {/* Gradient glow effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 via-blue-500/20 to-purple-500/20 blur-xl opacity-50 -z-10" />
 
@@ -188,7 +188,7 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
             aria-label="Message to Fred"
             className={cn(
               "flex-1 bg-transparent border-0 outline-none resize-none",
-              "text-base text-foreground placeholder:text-muted-foreground/60",
+              "text-base text-foreground placeholder:text-muted-foreground/80",
               "max-h-32 min-h-[44px] py-2 px-1",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
@@ -222,7 +222,7 @@ export function ChatInput({ onSend, isLoading = false, placeholder = "Ask Fred a
         </div>
 
         {/* Typing hint — hidden on mobile */}
-        <div className="hidden sm:flex items-center justify-between px-4 pb-2 text-xs text-muted-foreground/60">
+        <div className="hidden sm:flex items-center justify-between px-4 pb-2 text-xs text-muted-foreground/80">
           <span>Press Enter to send, Shift+Enter for new line</span>
           {showVoiceInput && isSupported && (
             <span className="flex items-center gap-1">

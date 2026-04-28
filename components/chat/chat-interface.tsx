@@ -243,10 +243,10 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
                 <h3 className="text-sm font-semibold text-[#ff6a1a] mb-2">
                   Welcome to Sahara
                 </h3>
-                <p className="text-sm text-foreground/80 leading-relaxed mb-3">
+                <p className="text-sm text-foreground/90 leading-relaxed mb-3">
                   Sahara is your AI-powered founder operating system. Your mentor Fred Cary has advised hundreds of companies, taken 2 public, and mentored hundreds of founders.
                 </p>
-                <div className="space-y-1.5 text-xs text-foreground/70">
+                <div className="space-y-1.5 text-xs text-foreground/80">
                   <p>Here&apos;s what to expect:</p>
                   <ul className="list-disc list-inside space-y-1 pl-1">
                     <li>Structured mentoring — Fred will guide you step by step</li>
@@ -266,8 +266,8 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
                   onClick={() => handleSendMessage(chip)}
                   className={cn(
                     "text-xs px-3 py-1.5 rounded-full border",
-                    "bg-white/10 border-white/20 text-foreground/80",
-                    "hover:bg-[#ff6a1a]/10 hover:border-[#ff6a1a]/40 hover:text-[#ff6a1a]",
+                    "bg-white/15 border-white/30 text-foreground",
+                    "hover:bg-[#ff6a1a]/15 hover:border-[#ff6a1a]/50 hover:text-[#ff6a1a]",
                     "transition-all duration-200 cursor-pointer"
                   )}
                 >
@@ -282,8 +282,8 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
       {/* Error banner with retry */}
       {error && (
         <div className="px-4 py-2">
-          <div className="max-w-4xl mx-auto flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3">
-            <div className="flex-1 text-sm text-red-400">
+          <div className="max-w-4xl mx-auto flex items-center gap-3 rounded-lg border border-red-500/40 bg-red-500/15 px-4 py-3">
+            <div className="flex-1 text-sm text-red-600 dark:text-red-300">
               Fred is having trouble responding. This is usually temporary.
             </div>
             <button
@@ -292,7 +292,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
                 const lastUserMsg = fredMessages.filter(m => m.role === "user").pop();
                 if (lastUserMsg) sendMessage(lastUserMsg.content);
               }}
-              className="shrink-0 rounded-md bg-red-500/20 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors"
+              className="shrink-0 rounded-md bg-red-500/20 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-200 hover:bg-red-500/30 transition-colors"
             >
               Retry
             </button>
@@ -301,7 +301,7 @@ export function ChatInterface({ className, pageContext, initialMessage, onInitia
       )}
 
       {/* Input area */}
-      <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl bg-background/80 border-t border-white/10">
+      <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl bg-background/80 border-t border-gray-200/30 dark:border-white/15">
         <div className="max-w-4xl mx-auto">
           <ChatInput onSend={handleSendMessage} isLoading={isProcessing} showVoiceInput />
         </div>

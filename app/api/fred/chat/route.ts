@@ -84,7 +84,45 @@ const chatRequestSchema = z.object({
   storeInMemory: z.boolean().default(true),
   /** Current page path so FRED can provide navigation-aware guidance */
   pageContext: z.string().max(200).optional(),
+  /** Number of user messages sent in this session (for loop-breaking) */
+  exchangeCount: z.number().int().min(0).max(500).optional(),
 });
+
+// ============================================================================
+// Loop-Breaker: cap repetitive exchanges
+// ============================================================================
+
+/**
+ * Maximum user exchanges before FRED wraps up with actionable advice.
+ * After this many user messages in a session, FRED stops asking follow-up
+ * questions and provides a concrete summary with next steps.
+ */
+const MAX_EXCHANGES_BEFORE_WRAPUP = 8;
+
+function buildLoopBreakerBlock(exchangeCount: number): string {
+  if (exchangeCount < MAX_EXCHANGES_BEFORE_WRAPUP) return "";
+
+  if (exchangeCount < MAX_EXCHANGES_BEFORE_WRAPUP + 3) {
+    return `## CONVERSATION GUIDANCE — WRAP UP MODE
+This conversation has had ${exchangeCount} exchanges. You MUST now:
+1. Stop asking follow-up or clarifying questions
+2. Synthesize everything discussed so far into 2-3 concrete action items
+3. Give the founder a clear "here's what to do next" with specific steps
+4. If they ask another question, answer it directly and end with action items — do NOT ask more questions back
+
+Be helpful and direct. The founder needs closure, not more questions.`;
+  }
+
+  // Hard cap: after MAX + 3 more exchanges, be very firm
+  return `## CONVERSATION LIMIT — PROVIDE FINAL ANSWER
+This conversation has had ${exchangeCount} exchanges, which is well beyond the productive range. You MUST:
+1. Provide your FINAL concrete advice in this response
+2. List 3 specific action items the founder should take RIGHT NOW
+3. Do NOT ask any questions — this is your closing statement
+4. End with: "That should get you moving. Come back when you've made progress on these and we'll go deeper."
+
+This is non-negotiable. Give actionable advice and close the loop.`;
+}
 
 // ============================================================================
 // Platform Navigation Map
@@ -415,7 +453,7 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    const { message: rawMessage, context, sessionId, stream, storeInMemory, pageContext } = parsed.data;
+    const { message: rawMessage, context, sessionId, stream, storeInMemory, pageContext, exchangeCount } = parsed.data;
 
     // Prompt injection guard
     const injectionCheck = detectInjectionAttempt(rawMessage);
@@ -749,7 +787,11 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       )
     }
 
+    // AI-8890: Loop-breaker — after N exchanges, tell FRED to wrap up
+    const loopBreakerBlock = buildLoopBreakerBlock(exchangeCount ?? 0);
+
     let fullContext = [
+      loopBreakerBlock,    // AI-8890: Loop-breaker takes highest priority when active
       stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
       stageAwareBlock,     // Phase 80: Always-on stage awareness + proactive guidance
       founderContext,
