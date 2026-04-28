@@ -69,12 +69,12 @@ const STEPS: TourStep[] = [
     cta: { label: "View Progress", href: "/dashboard/journey" },
   },
   {
-    id: "wellbeing-marketplace",
+    id: "wellbeing",
     icon: Heart,
-    title: "Wellbeing & Marketplace",
+    title: "Wellbeing",
     description:
-      "Founders burn out. Wellbeing keeps you grounded. The Marketplace connects you to vetted experts when you need a real human for legal, design, or growth.",
-    cta: { label: "Browse Marketplace", href: "/dashboard/marketplace" },
+      "Founders burn out. Wellbeing keeps you grounded with check-ins, self-care prompts, and reminders to step away from the grind.",
+    cta: { label: "Check Wellbeing", href: "/dashboard/wellbeing" },
   },
 ]
 
