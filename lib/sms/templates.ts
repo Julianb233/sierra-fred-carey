@@ -84,3 +84,15 @@ export function getWelcomeTemplate(founderName: string): string {
 export function getStopConfirmation(): string {
   return "Got it -- you're unsubscribed from check-ins. Text START anytime to jump back in. --Fred";
 }
+
+/**
+ * Confirmation message sent when a user first enables SMS check-ins,
+ * confirming backup SMS delivery and introducing the FRED voice feature.
+ *
+ * @param founderName - First name of the founder
+ * @returns SMS message body (max 160 chars)
+ */
+export function getVoiceSetupConfirmationTemplate(founderName: string): string {
+  const full = `You're all set, ${founderName}! Fred will text weekly check-ins. You can also call Fred anytime via the Sahara app. Reply STOP to opt out.`;
+  return full.length <= MAX_SMS_LENGTH ? full : full.slice(0, MAX_SMS_LENGTH);
+}
