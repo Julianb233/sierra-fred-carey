@@ -213,7 +213,7 @@ export default function InvestorReadinessPage() {
 
       <div className="relative z-10 py-20 px-4">
         <div className="container max-w-4xl mx-auto">
-          <Link href="/get-started">
+          <Link href="https://you.joinsahara.com">
             <Button variant="ghost" className="mb-6 text-gray-600 dark:text-gray-400 hover:text-[#ff6a1a]">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back

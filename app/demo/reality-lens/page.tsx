@@ -224,7 +224,7 @@ export default function RealityLensDemo() {
               </div>
 
               <Button asChild size="lg" className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 mt-8">
-                <Link href="/get-started">
+                <Link href="https://you.joinsahara.com">
                   Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
 
                 </Link>

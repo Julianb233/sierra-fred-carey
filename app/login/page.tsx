@@ -301,7 +301,7 @@ function LoginContent() {
             <p className="text-gray-600 dark:text-gray-400">
               Don&apos;t have an account?{" "}
               <Link
-                href="/get-started"
+                href="https://you.joinsahara.com"
                 // orange-800 to clear AA against the soft cream wash. orange-700
                 // (#c2410c) measured 4.36:1, just under the 4.5:1 minimum.
                 className="font-medium text-[#9a3412] hover:text-[#7c2d12]"

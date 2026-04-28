@@ -141,7 +141,7 @@ export default function Hero() {
             <HeroButtonExpandable
               mainText="Get Started"
               expandedText="Let's Build"
-              href="/get-started"
+              href="https://you.joinsahara.com"
             />
 
             <motion.div
@@ -154,7 +154,7 @@ export default function Hero() {
                 size="lg"
                 className="text-lg px-8 h-14 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#702425] hover:text-[#702425] bg-transparent transition-all duration-300"
               >
-                <Link href="/get-started" className="flex items-center gap-2">
+                <Link href="https://you.joinsahara.com" className="flex items-center gap-2">
                   Join Now
                   <motion.span
                     animate={{ x: [0, 5, 0] }}
@@ -314,7 +314,7 @@ export default function Hero() {
                         size="lg"
                         className="text-lg px-8 h-14 bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300"
                       >
-                        <Link href="/get-started" className="flex items-center gap-2">
+                        <Link href="https://you.joinsahara.com" className="flex items-center gap-2">
                           Get Started
                           <ArrowRight className="h-5 w-5" />
                         </Link>
@@ -472,7 +472,7 @@ export default function Hero() {
               size="lg"
               className="text-xl px-12 h-16 bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-2xl shadow-[#ff6a1a]/30 hover:shadow-[#ff6a1a]/50 transition-all duration-300"
             >
-              <Link href="/get-started" className="flex items-center gap-3">
+              <Link href="https://you.joinsahara.com" className="flex items-center gap-3">
                 Get Started
                 <ArrowRight className="h-6 w-6" />
               </Link>
