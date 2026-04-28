@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DISABLED_FEATURES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { createReview, updateProviderRating } from "@/lib/db/marketplace";
 
+// AI-8891: Marketplace disabled until ready
 export async function POST(req: NextRequest) {
+  if (DISABLED_FEATURES.has("marketplace")) {
+    return NextResponse.json(
+      { error: "Marketplace is coming soon. Reviews are not available yet." },
+      { status: 503 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,7 +57,6 @@ export async function POST(req: NextRequest) {
         typeof input.reviewText === "string" ? input.reviewText : undefined,
     });
 
-    // Recalculate provider avg rating after new review
     await updateProviderRating(input.providerId as string);
 
     return NextResponse.json({ review }, { status: 201 });
@@ -56,7 +64,6 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Failed to submit review";
     console.error("[marketplace/reviews] createReview error:", error);
-    // Return 400 for validation errors (booking not found / not completed)
     const status = message.includes("not found") || message.includes("only review")
       ? 400
       : 500;

@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DISABLED_FEATURES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { getProviders } from "@/lib/db/marketplace";
 
+// AI-8891: Marketplace disabled until ready
 export async function GET(req: NextRequest) {
+  if (DISABLED_FEATURES.has("marketplace")) {
+    return NextResponse.json(
+      { providers: [], message: "Marketplace is coming soon." },
+      { status: 200 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
