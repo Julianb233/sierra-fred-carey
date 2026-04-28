@@ -79,6 +79,34 @@ function LoginContent() {
         if (data.code === "EMAIL_NOT_CONFIRMED") {
           throw new Error("EMAIL_NOT_CONFIRMED");
         }
+        // On invalid credentials, check whether this is a Firebase-migrated
+        // account that hasn't reset its password yet. AI-8887: migrated users
+        // were being pushed to re-register because the generic "invalid
+        // credentials" error didn't tell them their account exists.
+        if (data.error === "Invalid email or password") {
+          try {
+            const checkRes = await fetch("/api/auth/check-account", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim().toLowerCase() }),
+            });
+            if (checkRes.ok) {
+              const checkData = await checkRes.json();
+              if (checkData.migrated) {
+                throw new Error("MIGRATED_NEEDS_RESET");
+              }
+              if (checkData.exists) {
+                throw new Error("EXISTS_WRONG_PASSWORD");
+              }
+            }
+          } catch (probeErr) {
+            // Re-throw if we set a recognized marker; otherwise fall through
+            if (probeErr instanceof Error && (probeErr.message === "MIGRATED_NEEDS_RESET" || probeErr.message === "EXISTS_WRONG_PASSWORD")) {
+              throw probeErr;
+            }
+            // Network/parse error during probe — fall back to generic message
+          }
+        }
         throw new Error(data.error || "Failed to sign in");
       }
 
@@ -91,6 +119,10 @@ function LoginContent() {
       const msg = err instanceof Error ? err.message : "Failed to sign in";
       if (msg === "EMAIL_NOT_CONFIRMED") {
         setError("EMAIL_NOT_CONFIRMED");
+      } else if (msg === "MIGRATED_NEEDS_RESET") {
+        setError("MIGRATED_NEEDS_RESET");
+      } else if (msg === "EXISTS_WRONG_PASSWORD") {
+        setError("EXISTS_WRONG_PASSWORD");
       } else if (msg === "Invalid email or password") {
         setError("Invalid email or password. Double-check your credentials or use \"Forgot password?\" below to reset.");
       } else {
@@ -135,6 +167,30 @@ function LoginContent() {
                         Reset your password
                       </Link>{" "}
                       to confirm your account and set a new password.
+                    </p>
+                  </div>
+                ) : error === "MIGRATED_NEEDS_RESET" ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">Welcome back! We recognize your account.</p>
+                    <p>
+                      Your account was migrated from our previous platform. For security, you&apos;ll need to set a new password before signing in.
+                    </p>
+                    <Link
+                      href={`/forgot-password?email=${encodeURIComponent(email.trim().toLowerCase())}`}
+                      className="inline-block mt-1 px-3 py-1.5 rounded-md bg-[#ff6a1a] text-white text-sm font-medium hover:bg-[#ea580c]"
+                    >
+                      Set your new password
+                    </Link>
+                  </div>
+                ) : error === "EXISTS_WRONG_PASSWORD" ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">We found your account, but that password didn&apos;t match.</p>
+                    <p>
+                      Use{" "}
+                      <Link href="/forgot-password" className="text-[#ff6a1a] hover:underline font-medium">
+                        Forgot password?
+                      </Link>{" "}
+                      to reset it. <strong>No need to re-register</strong> — your account is already here.
                     </p>
                   </div>
                 ) : (
@@ -228,18 +284,31 @@ function LoginContent() {
             </Button>
           </div>
 
-          <div className="text-center text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
+          {/* AI-8887: Migrated users were re-registering because this CTA
+              implied they needed to. Lead with a "reset your password"
+              affordance, then the new-account link, so existing users have
+              a clear path back in. */}
+          <div className="text-center text-sm space-y-2">
+            <p className="text-gray-600 dark:text-gray-400">
+              Migrated from our previous platform?{" "}
+              <Link
+                href="/forgot-password"
+                className="font-medium text-[#9a3412] dark:text-[#ff6a1a] hover:text-[#7c2d12] dark:hover:underline"
+              >
+                Reset your password
+              </Link>
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
               Don&apos;t have an account?{" "}
-            </span>
-            <Link
-              href="/get-started"
-              // orange-800 to clear AA against the soft cream wash. orange-700
-              // (#c2410c) measured 4.36:1, just under the 4.5:1 minimum.
-              className="font-medium text-[#9a3412] hover:text-[#7c2d12]"
-            >
-              Get started free
-            </Link>
+              <Link
+                href="/get-started"
+                // orange-800 to clear AA against the soft cream wash. orange-700
+                // (#c2410c) measured 4.36:1, just under the 4.5:1 minimum.
+                className="font-medium text-[#9a3412] hover:text-[#7c2d12]"
+              >
+                Get started free
+              </Link>
+            </p>
           </div>
         </form>
       </div>

@@ -167,6 +167,26 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
+          {/* AI-8887: Existing-user login link below hero CTAs. Migrated
+              users (especially on mobile) couldn't find a login entry point
+              and were forced to re-register. */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="text-center -mt-6 mb-8"
+          >
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Already have an account?{" "}
+            </span>
+            <Link
+              href="/login"
+              className="text-sm font-semibold text-[#c2410c] dark:text-[#ff6a1a] hover:underline underline-offset-4"
+            >
+              Log in
+            </Link>
+          </motion.div>
+
           {/* Trust indicators - visible immediately, no fade-in */}
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
             {[
