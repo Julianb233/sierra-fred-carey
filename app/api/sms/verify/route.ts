@@ -19,6 +19,7 @@ import {
   createTierErrorResponse,
 } from "@/lib/api/tier-middleware";
 import { sendSMS } from "@/lib/sms/client";
+import { getWelcomeTemplate } from "@/lib/sms/templates";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -171,6 +172,23 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Fire-and-forget welcome SMS -- confirm backup SMS delivery and introduce FRED
+    (async () => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", userId)
+          .single();
+        const founderName =
+          (profile?.name as string | undefined)?.split(" ")[0] || "Founder";
+        await sendSMS(phoneNumber, getWelcomeTemplate(founderName));
+        console.info(`[SMS Verify] Welcome SMS sent to user ${userId}`);
+      } catch (smsErr) {
+        console.warn("[SMS Verify] Welcome SMS failed (non-blocking):", smsErr);
+      }
+    })();
 
     return NextResponse.json({
       success: true,

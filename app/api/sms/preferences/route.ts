@@ -18,6 +18,7 @@ import {
   updateSMSPreferences,
   getCheckinHistory,
 } from "@/lib/db/sms";
+import { getVoiceSetupConfirmationTemplate } from "@/lib/sms/templates";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -139,6 +140,10 @@ export async function POST(request: NextRequest) {
     // User-scoped client for user-initiated request (Phase 11-06)
     const supabase = await createClient();
 
+    // Read existing prefs to detect first-time check-in enable
+    const existingPreferences = await getUserSMSPreferences(supabase, userId);
+    const wasCheckinEnabled = existingPreferences?.checkinEnabled ?? false;
+
     // If a phone number is being set, verify it has been confirmed
     if (updates.phoneNumber) {
       const { data: verification } = await supabase
@@ -168,6 +173,36 @@ export async function POST(request: NextRequest) {
       checkinHour: updates.checkinHour,
       timezone: updates.timezone,
     });
+
+    // Fire-and-forget voice-setup confirmation on first check-in enable
+    const justEnabled = updates.checkinEnabled === true && !wasCheckinEnabled;
+    const phoneForConfirmation = preferences.phoneNumber ?? updates.phoneNumber;
+    if (justEnabled && phoneForConfirmation && preferences.phoneVerified) {
+      (async () => {
+        try {
+          const { sendSMS } = await import("@/lib/sms/client");
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", userId)
+            .single();
+          const founderName =
+            (profile?.name as string | undefined)?.split(" ")[0] || "Founder";
+          await sendSMS(
+            phoneForConfirmation,
+            getVoiceSetupConfirmationTemplate(founderName)
+          );
+          console.info(
+            `[SMS Preferences] Voice setup confirmation sent to user ${userId}`
+          );
+        } catch (smsErr) {
+          console.warn(
+            "[SMS Preferences] Voice setup confirmation SMS failed (non-blocking):",
+            smsErr
+          );
+        }
+      })();
+    }
 
     return NextResponse.json({ preferences });
   } catch (error) {
