@@ -116,7 +116,7 @@ Respond in this exact JSON format:
     const { text } = await generateText({
       model: anthropic("claude-sonnet-4-20250514"),
       prompt,
-      maxTokens: 4000,
+      maxOutputTokens: 4000,
     });
 
     // Parse the JSON from the response
