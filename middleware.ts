@@ -38,22 +38,30 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get("origin");
 
   // ---------------------------------------------------------------------
-  // you.joinsahara.com deprecation (2026-04-22). The legacy Firebase-backed
-  // funnel subdomain (hosted on a separate Vercel project serving the
-  // Vite funnel app) is consolidated onto the permanent platform. Any
-  // request arriving with the legacy host header is 308-redirected to the
-  // equivalent path on www.joinsahara.com, with a ?from=funnel-migration
-  // flag so the landing page can show a one-time "welcome back" banner
-  // (see components/welcome-back-banner.tsx).
+  // you.joinsahara.com / u.joinsahara.com deprecation (2026-04-22). The
+  // legacy Firebase-backed funnel subdomain (hosted on a separate Vercel
+  // project serving the Vite funnel app) is consolidated onto the permanent
+  // platform. Any request arriving with either legacy host header is
+  // 308-redirected to the equivalent path on www.joinsahara.com, with a
+  // ?from=funnel-migration flag so the landing page can show a one-time
+  // "welcome back" banner (see components/welcome-back-banner.tsx).
   //
-  // NOTE: this middleware only fires once you.joinsahara.com is pointed at
+  // u.joinsahara.com is included alongside you.joinsahara.com because both
+  // appear historically in the changelog, the Vite funnel app's og:url, the
+  // QR-code targets in the founder PRD, and external collateral (WhatsApp
+  // shares, decks). Keeping both supported costs nothing and prevents
+  // referrers landing on a dead host if u.joinsahara.com ever gets DNS.
+  //
+  // NOTE: this middleware only fires once the legacy host is pointed at
   // THIS Vercel project. Until the domain is moved (or DNS is flipped)
   // this block is defensive / a no-op.
   // ---------------------------------------------------------------------
   const host = (request.headers.get("host") || "").toLowerCase();
   if (
     host === "you.joinsahara.com" ||
-    host.startsWith("you.joinsahara.com:")
+    host.startsWith("you.joinsahara.com:") ||
+    host === "u.joinsahara.com" ||
+    host.startsWith("u.joinsahara.com:")
   ) {
     const target = new URL(pathname, "https://www.joinsahara.com");
     // Preserve the original query string.
