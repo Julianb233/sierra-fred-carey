@@ -44,6 +44,7 @@ export const DEFAULT_PUBLIC_ROUTES: PublicRouteConfig = {
     '/register',
     '/forgot-password',
     '/reset-password',
+    '/reset',
     '/pricing',
     '/about',
     '/product',
@@ -53,6 +54,7 @@ export const DEFAULT_PUBLIC_ROUTES: PublicRouteConfig = {
   ]),
   patterns: [
     /^\/api\/auth\//,
+    /^\/auth\//,  // /auth/verify et al — Supabase OTP flows
     /^\/_next\//,
     /^\/public\//,
     /\.json$|\.xml$|\.txt$/,
