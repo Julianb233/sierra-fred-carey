@@ -310,14 +310,17 @@ function NavBar() {
               </Button>
             ) : (
               <>
+                {/* Login button — high-contrast on mobile so existing users
+                    can find it without thinking. AI-8887: Fred Cary couldn't
+                    see a login button on mobile and was forced to re-register. */}
                 <Button
                   asChild
                   variant="outline"
-                  className="flex border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a] transition-all duration-300 touch-target"
+                  className="flex border-2 border-[#ff6a1a] text-[#ff6a1a] dark:text-[#ff6a1a] bg-white/90 dark:bg-gray-950/90 hover:bg-[#ff6a1a] hover:text-white dark:hover:text-white font-semibold shadow-md transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href="/login">
-                    Login
+                  <Link href="/login" aria-label="Log in to your account">
+                    Log in
                   </Link>
                 </Button>
                 <Button

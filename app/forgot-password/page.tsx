@@ -13,7 +13,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
-  const [email, setEmail] = useState("");
+  // AI-8887: deep-link from /login with ?email= so migrated users don't have
+  // to retype the address that the login form already collected.
+  const emailParam = searchParams.get("email") || "";
+  const [email, setEmail] = useState(emailParam);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     errorParam === "expired"
