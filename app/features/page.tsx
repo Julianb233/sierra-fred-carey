@@ -144,7 +144,7 @@ export default function FeaturesPage() {
               <Link href="/pricing">View Pricing</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="hover:border-[#ff6a1a]/30 hover:text-[#ff6a1a]">
-              <Link href="/get-started">Get Started Free</Link>
+              <Link href="https://you.joinsahara.com">Get Started Free</Link>
             </Button>
           </div>
         </motion.div>
@@ -228,7 +228,7 @@ export default function FeaturesPage() {
             Start with our free tier. No credit card required.
           </p>
           <Button asChild size="lg" className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25">
-            <Link href="/get-started">Get Started Free</Link>
+            <Link href="https://you.joinsahara.com">Get Started Free</Link>
           </Button>
         </motion.div>
       </section>

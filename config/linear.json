@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "team": {
+    "id": "9a9d11aa-c8a5-4dc5-855c-c1da260db615",
+    "key": "AI",
+    "name": "Ai Acrobatics"
+  },
+  "project": {
+    "id": "d884374c-0c58-4e7c-a19a-d62c4daf55e2",
+    "name": "Sahara - AI Founder OS"
+  }
+}

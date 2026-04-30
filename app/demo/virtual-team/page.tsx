@@ -733,7 +733,7 @@ export default function VirtualTeamDemo() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25">
-                <Link href="/get-started">
+                <Link href="https://you.joinsahara.com">
                   Activate My Team <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
