@@ -38,35 +38,41 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get("origin");
 
   // ---------------------------------------------------------------------
-  // you.joinsahara.com host-redirect: when the legacy funnel subdomain is
-  // pointed at this Vercel project, requests are 308-redirected to the
-  // equivalent path on www.joinsahara.com with a ?from=funnel-migration
-  // flag so the landing page can show a one-time "welcome back" banner
-  // (see components/welcome-back-banner.tsx). Defensive / a no-op until
-  // DNS for you.joinsahara.com is moved to this project.
+  // joinsahara.com / www.joinsahara.com host-redirect to you.joinsahara.com.
+  // Per Julian: Alex LaTorre's Vite + Firebase build at you.joinsahara.com is
+  // the public face of Sahara going forward. This legacy Next.js dashboard is
+  // being deprecated — until Alex's Vercel project claims joinsahara.com +
+  // www.joinsahara.com as aliases, this middleware bounces inbound apex/www
+  // traffic over to his app.
+  //
+  // Path allowlist: /api/*, /auth/*, /_next/* and the favicon are NOT
+  // redirected. External callers (Stripe webhooks, Supabase auth callbacks,
+  // OAuth providers) hit those paths and a 302 to a different host would
+  // break webhook delivery + auth flows. Asset paths (_next/*) skip the
+  // bounce so any cached HTML still renders.
+  //
+  // 302 (temporary) is intentional: once Alex claims the aliases this block
+  // becomes circular and gets removed. Permanent 308 would prematurely
+  // poison Google's index against the apex.
   // ---------------------------------------------------------------------
   const host = (request.headers.get("host") || "").toLowerCase();
-  if (
-    host === "you.joinsahara.com" ||
-    host.startsWith("you.joinsahara.com:")
-  ) {
-    const target = new URL(pathname, "https://www.joinsahara.com");
-    // Preserve the original query string.
+  const isLegacyApex =
+    host === "joinsahara.com" ||
+    host === "www.joinsahara.com" ||
+    host.startsWith("joinsahara.com:") ||
+    host.startsWith("www.joinsahara.com:");
+  const isInfraPath =
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/_next/") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt";
+
+  if (isLegacyApex && !isInfraPath) {
+    const target = new URL(pathname, "https://you.joinsahara.com");
     request.nextUrl.searchParams.forEach((v, k) => target.searchParams.set(k, v));
-
-    // Path-level remapping for routes that changed names on the new app.
-    if (pathname === "/signup" || pathname === "/") {
-      target.pathname = "/get-started";
-    } else if (pathname === "/login") {
-      target.searchParams.set("migrated", "1");
-    }
-
-    // Always stamp the migration flag so the banner renders once.
-    if (!target.searchParams.has("from")) {
-      target.searchParams.set("from", "funnel-migration");
-    }
-
-    return NextResponse.redirect(target, 308);
+    return NextResponse.redirect(target, 302);
   }
 
   // Phase 25-02: Correlation ID for structured logging

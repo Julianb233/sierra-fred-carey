@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
+    process.env.NEXT_PUBLIC_APP_URL || "https://you.joinsahara.com";
   const now = new Date();
 
   return [
