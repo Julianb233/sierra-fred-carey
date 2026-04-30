@@ -9,7 +9,7 @@ export const BRAND = {
   color: '#ff6a1a',
   colorHover: '#ea580c',
   url: 'https://joinsahara.com',
-  funnelUrl: 'https://u.joinsahara.com',
+  funnelUrl: 'https://you.joinsahara.com',
 } as const
 
 /**
@@ -31,7 +31,7 @@ Key traits:
 
 Keep responses concise (2-4 paragraphs max). Use conversational tone. If a founder seems stuck, ask clarifying questions. Always end with a clear next step or question.
 
-You're currently chatting on the Sahara lite funnel (u.joinsahara.com). If users ask about advanced features (pitch deck review, investor readiness, virtual team agents), let them know those are available on the full Sahara platform at joinsahara.com.`,
+You're currently chatting on the Sahara lite funnel (you.joinsahara.com). If users ask about advanced features (pitch deck review, investor readiness, virtual team agents), let them know those are available on the full Sahara platform at joinsahara.com.`,
 } as const
 
 /**
