@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { findExistingLinearIssue } from "@/lib/feedback/linear-auto-triage"
 
 /**
  * POST /api/bug-report
@@ -177,6 +178,19 @@ async function createLinearBugIssue(input: LinearBugInput): Promise<LinearResult
     return { success: false, error: "LINEAR_API_KEY not configured" }
   }
 
+  // AI-4108: dedup by exact title match before creating — if a user double-
+  // submits the same bug (network retry, duplicate click), reuse the existing
+  // issue rather than spawning a duplicate.
+  const issueTitle = `[Bug] ${input.title}`
+  const existing = await findExistingLinearIssue(apiKey, issueTitle)
+  if (existing) {
+    return {
+      success: true,
+      identifier: existing.identifier,
+      url: existing.url,
+    }
+  }
+
   // Get team ID
   const teamQuery = await fetch("https://api.linear.app/graphql", {
     method: "POST",
@@ -233,7 +247,7 @@ ${input.description}
       variables: {
         input: {
           teamId,
-          title: `[Bug] ${input.title}`,
+          title: issueTitle,
           description: issueDescription,
           priority: 3,
         },
