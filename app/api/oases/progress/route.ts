@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getUserOasesProgress, getDetailedProgress } from "@/lib/oases/progress"
+import {
+  getUserOasesProgress,
+  getDetailedProgress,
+  resolveJourneyPercentage,
+} from "@/lib/oases/progress"
 
 /**
  * GET /api/oases/progress
@@ -28,11 +32,15 @@ export async function GET() {
       getDetailedProgress(user.id),
     ])
 
-    // Use the detailed journey_steps-based percentage for the overall number
-    // while keeping checklist data (completedStepIds, stepsCompleted/Total) for the UI
+    // Keep the displayed percentage in sync with the visible checklist. The
+    // granular journey_steps score can lag behind imported/completed checklist
+    // data, so it should never under-report checklist completion.
     const enrichedProgress = {
       ...progress,
-      journeyPercentage: detailed.journeyPercentage,
+      journeyPercentage: resolveJourneyPercentage(
+        progress.journeyPercentage,
+        detailed.journeyPercentage
+      ),
     }
 
     return NextResponse.json(
