@@ -21,6 +21,22 @@ export function computeJourneyPercentage(
 }
 
 /**
+ * Resolve the displayed journey percentage when both progress systems are available.
+ *
+ * The Oases checklist drives the visible "N/N complete" UI, while older
+ * journey_steps data can lag behind it. To avoid showing impossible states like
+ * "19/19 complete" with a 75% score, never let the granular score under-report
+ * the checklist-derived completion.
+ */
+export function resolveJourneyPercentage(
+  checklistPercentage: number,
+  detailedPercentage?: number
+): number {
+  if (detailedPercentage == null) return checklistPercentage
+  return Math.max(checklistPercentage, detailedPercentage)
+}
+
+/**
  * Get detailed progress from the journey_steps table.
  * Returns per-stage step counts from the granular 120-step journey_steps table
  * and completed counts from oases_progress. Used for the progress percentage bar.
