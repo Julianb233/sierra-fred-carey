@@ -13,12 +13,13 @@ interface ProgressIndicatorProps {
 
 const STEP_INFO: Record<OnboardingStep, { label: string; shortLabel: string }> = {
   welcome: { label: "Welcome", shortLabel: "Welcome" },
+  "video-intro": { label: "Intro Video", shortLabel: "Video" },
   "startup-info": { label: "Your Startup", shortLabel: "Startup" },
   "fred-intro": { label: "Meet FRED", shortLabel: "FRED" },
   complete: { label: "Complete", shortLabel: "Done" },
 };
 
-const STEPS: OnboardingStep[] = ["welcome", "startup-info", "fred-intro", "complete"];
+const STEPS: OnboardingStep[] = ["welcome", "video-intro", "startup-info", "fred-intro", "complete"];
 
 export function ProgressIndicator({
   currentStep,
