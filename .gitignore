@@ -82,3 +82,5 @@ public/swe-worker-*.js
 .next.bak/
 .claude/worktrees/
 .claude/
+dist/
+workers/voice-agent/dist/
