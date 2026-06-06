@@ -84,3 +84,4 @@ public/swe-worker-*.js
 .claude/
 dist/
 workers/voice-agent/dist/
+*.bak
