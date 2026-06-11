@@ -85,3 +85,9 @@ public/swe-worker-*.js
 dist/
 workers/voice-agent/dist/
 *.bak
+
+# Agent workspace artifacts
+.codex/
+.hermes/
+.planning/e2e/results/
+agentic-os.config.json
