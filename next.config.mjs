@@ -80,6 +80,18 @@ const nextConfig = {
       { source: "/register", destination: "/signup", permanent: true },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/start-now",
+        destination: "/get-started",
+      },
+      {
+        source: "/startnow",
+        destination: "/get-started",
+      },
+    ];
+  },
 };
 
 // Serwist wraps first (inner), then Sentry wraps second (outer)
