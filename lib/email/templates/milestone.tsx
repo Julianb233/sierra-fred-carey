@@ -42,7 +42,7 @@ export function MilestoneEmail(props: MilestoneEmailData) {
           style={{
             fontSize: '24px',
             fontWeight: 700,
-            color: '#6366f1',
+            color: '#ff6a1a',
             margin: '0 0 4px 0',
           }}
         >
@@ -61,7 +61,7 @@ export function MilestoneEmail(props: MilestoneEmailData) {
       {/* Fred quote */}
       <Section
         style={{
-          borderLeft: '3px solid #6366f1',
+          borderLeft: '3px solid #ff6a1a',
           paddingLeft: '16px',
           marginBottom: '24px',
         }}
@@ -105,7 +105,7 @@ export function MilestoneEmail(props: MilestoneEmailData) {
           href={`${appUrl}/dashboard`}
           style={{
             display: 'inline-block',
-            backgroundColor: '#6366f1',
+            backgroundColor: '#ff6a1a',
             color: '#ffffff',
             padding: '12px 32px',
             borderRadius: '6px',

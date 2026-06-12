@@ -16,6 +16,7 @@ import {
   Link,
   Hr,
   Preview,
+  Img,
 } from '@react-email/components';
 import type { ReactNode } from 'react';
 
@@ -25,11 +26,17 @@ interface EmailLayoutProps {
   appUrl?: string;
 }
 
+const SAHARA_ORANGE = '#ff6a1a';
+const SAHARA_DARK = '#111827';
+const SAHARA_GRAY = '#6b7280';
+const SAHARA_LIGHT_GRAY = '#9ca3af';
+
 const fontFamily =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 export function EmailLayout({ previewText, children, appUrl = '' }: EmailLayoutProps) {
-  const settingsUrl = `${appUrl}/dashboard/settings`;
+  const settingsUrl = appUrl ? `${appUrl}/dashboard/settings` : '#';
+  const logoUrl = appUrl ? `${appUrl}/sahara-logo.svg` : undefined;
 
   return (
     <Html>
@@ -50,18 +57,46 @@ export function EmailLayout({ previewText, children, appUrl = '' }: EmailLayoutP
             padding: '40px 0',
           }}
         >
-          {/* Brand header */}
-          <Section style={{ padding: '0 0 24px 0', textAlign: 'center' as const }}>
+          {/* Brand header with logo */}
+          <Section
+            style={{
+              padding: '0 0 24px 0',
+              textAlign: 'center' as const,
+            }}
+          >
+            {logoUrl ? (
+              <Img
+                src={logoUrl}
+                alt="Sahara"
+                width={160}
+                height={35}
+                style={{
+                  margin: '0 auto',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <Text
+                style={{
+                  fontSize: '28px',
+                  fontWeight: 700,
+                  color: SAHARA_ORANGE,
+                  margin: 0,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                Sahara
+              </Text>
+            )}
             <Text
               style={{
-                fontSize: '28px',
-                fontWeight: 700,
-                color: '#6366f1',
-                margin: 0,
-                letterSpacing: '-0.5px',
+                fontSize: '13px',
+                color: SAHARA_GRAY,
+                margin: '6px 0 0 0',
+                letterSpacing: '0.3px',
               }}
             >
-              Sahara
+              AI-Powered Founder Operating System
             </Text>
           </Section>
 
@@ -80,12 +115,22 @@ export function EmailLayout({ previewText, children, appUrl = '' }: EmailLayoutP
           {/* Footer */}
           <Section style={{ textAlign: 'center' as const, padding: '24px 0' }}>
             <Hr style={{ borderColor: '#e5e7eb', margin: '0 0 16px 0' }} />
-            <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
+            <Text style={{ fontSize: '12px', color: SAHARA_LIGHT_GRAY, margin: '0 0 8px 0' }}>
+              You received this email because you have a Sahara account.
+            </Text>
+            <Text style={{ fontSize: '12px', color: SAHARA_LIGHT_GRAY, margin: 0 }}>
               <Link
                 href={settingsUrl}
-                style={{ color: '#6b7280', textDecoration: 'underline' }}
+                style={{ color: SAHARA_GRAY, textDecoration: 'underline' }}
               >
                 Manage email preferences
+              </Link>
+              {' · '}
+              <Link
+                href={appUrl || '#'}
+                style={{ color: SAHARA_GRAY, textDecoration: 'underline' }}
+              >
+                Visit Sahara
               </Link>
             </Text>
           </Section>

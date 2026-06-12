@@ -13,8 +13,8 @@ import {
  * Resend API configuration
  */
 const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "alerts@yourdomain.com";
-const FROM_NAME = process.env.RESEND_FROM_NAME || "A/B Testing Platform";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "alerts@sahara.app";
+const FROM_NAME = process.env.RESEND_FROM_NAME || "Sahara";
 
 /**
  * Email template type
@@ -342,7 +342,7 @@ function generateHtmlWrapper(level: AlertLevel, content: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alert Notification</title>
+  <title>Sahara Alert</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 0;">
@@ -351,7 +351,14 @@ function generateHtmlWrapper(level: AlertLevel, content: string): string {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, ${levelColor} 0%, ${adjustColor(levelColor, -20)} 100%); padding: 4px;"></td>
+            <td style="background: linear-gradient(135deg, #ff6a1a 0%, #ea580c 100%); padding: 32px; text-align: center;">
+              <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 700;">
+                Sahara
+              </h1>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
+                AI-Powered Founder Operating System
+              </p>
+            </td>
           </tr>
 
           <!-- Content -->
@@ -365,10 +372,10 @@ function generateHtmlWrapper(level: AlertLevel, content: string): string {
           <tr>
             <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; font-size: 14px; color: #6b7280;">
-                You're receiving this email because you have notifications enabled for A/B testing alerts.
+                You received this alert because you have notifications enabled for Sahara.
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px; color: #9ca3af;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/settings/notifications" style="color: #3b82f6; text-decoration: none;">Manage notification preferences</a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/settings/notifications" style="color: #6b7280; text-decoration: none;">Manage notification preferences</a>
               </p>
             </td>
           </tr>

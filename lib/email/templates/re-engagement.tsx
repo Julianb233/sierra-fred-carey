@@ -55,14 +55,14 @@ export function ReEngagementEmail(props: ReEngagementEmailData) {
       {/* Feature highlight card */}
       <Section
         style={{
-          backgroundColor: '#f0f0ff',
+          backgroundColor: '#fff7ed',
           borderRadius: '6px',
           padding: '16px 20px',
           marginBottom: '24px',
-          borderLeft: '3px solid #6366f1',
+          borderLeft: '3px solid #ff6a1a',
         }}
       >
-        <Text style={{ fontSize: '13px', color: '#4338ca', margin: 0, lineHeight: '1.6' }}>
+        <Text style={{ fontSize: '13px', color: '#9a3412', margin: 0, lineHeight: '1.6' }}>
           {featureHighlight}
         </Text>
       </Section>
@@ -73,7 +73,7 @@ export function ReEngagementEmail(props: ReEngagementEmailData) {
           href={`${appUrl}/dashboard`}
           style={{
             display: 'inline-block',
-            backgroundColor: isDay30 ? '#6b7280' : '#6366f1',
+            backgroundColor: isDay30 ? '#6b7280' : '#ff6a1a',
             color: '#ffffff',
             padding: '12px 32px',
             borderRadius: '6px',

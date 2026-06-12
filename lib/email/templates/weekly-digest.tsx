@@ -137,7 +137,7 @@ export function WeeklyDigest(props: DigestData) {
           href={`${appUrl}/dashboard`}
           style={{
             display: 'inline-block',
-            backgroundColor: '#6366f1',
+            backgroundColor: '#ff6a1a',
             color: '#ffffff',
             padding: '12px 32px',
             borderRadius: '6px',
