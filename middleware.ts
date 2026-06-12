@@ -69,7 +69,12 @@ export async function middleware(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt";
 
-  if (isLegacyApex && !isInfraPath) {
+  const isExemptPath =
+    pathname === "/start-now" ||
+    pathname === "/startnow" ||
+    pathname === "/get-started";
+
+  if (isLegacyApex && !isInfraPath && !isExemptPath) {
     const target = new URL(pathname, "https://you.joinsahara.com");
     request.nextUrl.searchParams.forEach((v, k) => target.searchParams.set(k, v));
     return NextResponse.redirect(target, 302);
