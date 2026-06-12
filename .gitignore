@@ -91,3 +91,4 @@ workers/voice-agent/dist/
 .hermes/
 .planning/e2e/results/
 agentic-os.config.json
+AGENTS.md
