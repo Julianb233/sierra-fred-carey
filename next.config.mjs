@@ -67,6 +67,12 @@ const nextConfig = {
         destination: "/get-started",
         permanent: true,
       },
+      // /start-now landing page alias (AI-10763)
+      {
+        source: "/start-now",
+        destination: "/get-started",
+        permanent: true,
+      },
       // Common auth URL aliases -> canonical routes
       { source: "/sign-in", destination: "/login", permanent: true },
       { source: "/signin", destination: "/login", permanent: true },
