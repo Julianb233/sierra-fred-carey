@@ -14,7 +14,9 @@ import {
   getFallback2Model,
   getFastModel,
   hasAnyProvider,
+  hasOpenAI,
 } from "./providers";
+import { openai } from "@ai-sdk/openai";
 
 // ============================================================================
 // Types
@@ -66,7 +68,7 @@ function getModelForProvider(provider: ProviderName): LanguageModel | null {
     case "anthropic":
       return getFallback1Model();
     case "openai":
-      return null; // OpenAI not currently active (no credits)
+      return hasOpenAI() ? openai("gpt-4o") : null;
     default:
       return null;
   }

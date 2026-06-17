@@ -9,6 +9,15 @@
 import { createOpenAI, openai } from "@ai-sdk/openai";
 import { createAnthropic, anthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
+
+const customGoogleProvider = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || "",
+});
+
+const customAnthropicProvider = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || "",
+  baseURL: process.env.ANTHROPIC_BASE_URL,
+});
 import type { LanguageModel, EmbeddingModel } from "ai";
 
 // ============================================================================
@@ -107,16 +116,16 @@ export function getCircuitBreakerStatus(): Record<string, { count: number; lastF
 // Provider Availability Check
 // ============================================================================
 
-function hasOpenAI(): boolean {
+export function hasOpenAI(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
 
 export function hasAnthropic(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.startsWith("gw-fleet-");
 }
 
 export function hasGoogle(): boolean {
-  return !!process.env.GOOGLE_API_KEY;
+  return !!process.env.GOOGLE_API_KEY || !!process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 }
 
 // ============================================================================
@@ -127,7 +136,7 @@ export function hasGoogle(): boolean {
  * Get primary model (Gemini 3 Flash Preview, or OpenAI GPT-4o as last resort)
  */
 export function getPrimaryModel(): LanguageModel | null {
-  if (hasGoogle()) return google("gemini-3-flash-preview");
+  if (hasGoogle()) return customGoogleProvider("gemini-3-flash-preview");
   if (hasOpenAI()) return openai("gpt-4o");
   return null;
 }
@@ -137,7 +146,7 @@ export function getPrimaryModel(): LanguageModel | null {
  */
 export function getFallback1Model(): LanguageModel | null {
   if (!hasAnthropic()) return null;
-  return anthropic("claude-sonnet-4-5-20250929");
+  return customAnthropicProvider("claude-sonnet-4-5-20250929");
 }
 
 /**
@@ -145,14 +154,14 @@ export function getFallback1Model(): LanguageModel | null {
  */
 export function getFallback2Model(): LanguageModel | null {
   if (!hasGoogle()) return null;
-  return google("gemini-2.0-flash");
+  return customGoogleProvider("gemini-2.0-flash");
 }
 
 /**
  * Get fast model for quick operations (Gemini 2.0 Flash)
  */
 export function getFastModel(): LanguageModel | null {
-  if (hasGoogle()) return google("gemini-2.0-flash");
+  if (hasGoogle()) return customGoogleProvider("gemini-2.0-flash");
   if (hasOpenAI()) return openai("gpt-4o-mini");
   return null;
 }
@@ -163,9 +172,9 @@ export function getFastModel(): LanguageModel | null {
  */
 export function getReasoningModel(): LanguageModel | null {
   if (hasAnthropic() && isProviderHealthy("anthropic")) {
-    return anthropic("claude-sonnet-4-5-20250929");
+    return customAnthropicProvider("claude-sonnet-4-5-20250929");
   }
-  if (hasGoogle()) return google("gemini-3-flash-preview");
+  if (hasGoogle()) return customGoogleProvider("gemini-3-flash-preview");
   if (hasOpenAI()) return openai("gpt-4o");
   return null;
 }
