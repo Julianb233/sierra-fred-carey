@@ -7,7 +7,7 @@
  */
 
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { getModel } from '@/lib/ai/providers';
 import { FRED_BIO, FRED_COMMUNICATION_STYLE, FRED_MEDIA } from "@/lib/fred-brain";
 import type {
   StrategyInput,
@@ -111,7 +111,7 @@ export async function generateSection(
 
   // Try primary model, then retry once with fallback
   let lastError: unknown;
-  const models = [openai('gpt-4o'), openai('gpt-4o-mini')];
+  const models = [getModel('primary'), getModel('fast')];
 
   for (const model of models) {
     try {
