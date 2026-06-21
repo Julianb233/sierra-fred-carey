@@ -98,7 +98,7 @@ function StartNowForm() {
       }
 
       trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email" });
-      router.push("/welcome");
+      router.push("/dashboard?video=1");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -129,7 +129,7 @@ function StartNowForm() {
       </div>
 
       <p className="mt-3 text-sm font-semibold leading-6 text-gray-600 dark:text-gray-300">
-        Founder details are prefilled when available. Add a password and start free.
+        Founder details are prefilled when available. Add a password and claim your access.
       </p>
 
       <div className="mt-5 grid gap-3">
@@ -221,7 +221,7 @@ function StartNowForm() {
           </>
         ) : (
           <>
-            Start Free
+            Claim Access
             <ArrowRight className="size-5" aria-hidden="true" />
           </>
         )}
@@ -229,7 +229,7 @@ function StartNowForm() {
 
       <div className="mt-4 flex items-start gap-2 rounded-2xl bg-[#ff6a1a]/10 p-3 text-sm font-semibold leading-6 text-gray-700 dark:text-gray-200">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#ff6a1a]" aria-hidden="true" />
-        <span>No credit card required. Tour and Fred intake happen after account creation.</span>
+        <span>No credit card required. After signup, you&apos;ll land on Sahara&apos;s home page and be invited to watch the walkthrough before starting.</span>
       </div>
     </form>
   );
@@ -295,15 +295,15 @@ export default function StartNowPage() {
 
               <div className="space-y-5">
                 <h2 className="max-w-3xl text-5xl font-black leading-[0.96] tracking-normal text-gray-950 sm:text-6xl dark:text-white">
-                  Your Founder seat is ready.
+                  Your Founding Member access is ready.
                 </h2>
                 <p className="max-w-xl text-lg leading-8 text-gray-700 dark:text-gray-300">
-                  Create your account now. The tour, Fred questions, and startup setup happen after you are inside.
+                  Create your account now. After signup, you&apos;ll go straight to Sahara&apos;s home page and get the walkthrough before starting.
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                {["No old stage quiz", "No credit card required", "Founder access path", "Fred intake after signup"].map(
+                {["No credit card required", "Home page after signup", "Watch the walkthrough first", "Begin with Fred"].map(
                   (item) => (
                     <div
                       key={item}
