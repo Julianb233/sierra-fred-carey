@@ -30,7 +30,7 @@ function generateCsp(nonce: string): string {
   return directives.join("; ");
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Phase 59-02: Track request duration for slow request detection
   const start = Date.now();
 
@@ -70,6 +70,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/robots.txt";
 
   const isExemptPath =
+    pathname === "/founding-members" ||
     pathname === "/start-now" ||
     pathname === "/startnow" ||
     pathname === "/get-started";

@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
 
     const name = sanitizeField(body.name);
     const email = sanitizeField(body.email);
+    const phone = sanitizeField(body.phone);
     const stage = sanitizeField(body.stage);
     const ref = sanitizeField(body.ref);
     const password = body.password; // passwords must not be altered
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest) {
         .from("profiles")
         .update({
           name: userName,
+          ...(phone ? { phone } : {}),
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
@@ -215,6 +217,7 @@ export async function POST(request: NextRequest) {
         options: {
           data: {
             name: userName,
+            ...(phone ? { phone } : {}),
             stage: stage || null,
             challenges: challenges || [],
           },
@@ -246,6 +249,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         email: email.toLowerCase(),
         name: userName,
+        ...(phone ? { phone } : {}),
         stage: stage || null,
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
@@ -268,6 +272,7 @@ export async function POST(request: NextRequest) {
           id: userId,
           email: email.toLowerCase(),
           name: userName,
+          ...(phone ? { phone } : {}),
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
@@ -313,7 +318,7 @@ export async function POST(request: NextRequest) {
     // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, email, name, stage, challenges")
+      .select("id, email, name, phone, stage, challenges")
       .eq("id", userId)
       .single();
 
@@ -323,6 +328,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         email: email.toLowerCase(),
         name: userName,
+        phone: phone || null,
         stage: stage || null,
         challenges: challenges || [],
       },

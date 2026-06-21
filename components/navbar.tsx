@@ -44,7 +44,8 @@ function NavBar() {
   const isLogin = pathname === "/login";
   const isCheckIns = pathname?.startsWith("/check-ins");
   const isDeck = pathname === "/deck";
-  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck;
+  const isFoundingMembers = pathname === "/founding-members" || pathname.startsWith("/founding-members/");
+  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck || isFoundingMembers;
 
   useEffect(() => {
     const handleScroll = () => {
