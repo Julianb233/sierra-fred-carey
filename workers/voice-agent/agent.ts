@@ -254,6 +254,12 @@ export default defineAgent({
     const stt = new openai.STT({ model: 'whisper-1' });
     const llm = new openai.LLM({ model: 'gpt-4o', temperature: 0.7 });
     const tts = new elevenlabs.TTS({
+      // The plugin defaults its API key to process.env.ELEVEN_API_KEY and
+      // throws if unset, but this project provisions the key as
+      // ELEVENLABS_API_KEY. Pass it explicitly so the env-var-name mismatch
+      // can't crash the worker on construction. Fall back to ELEVEN_API_KEY
+      // for environments that use the plugin's native name.
+      apiKey: process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_API_KEY,
       // Fred Sahara (instant-clone ElevenLabs voice). The "Fred Cary 2026"
       // professional clone (uxq5gLBpu73uF1Aqzb2t) has its fine-tuning in a
       // failed state on every model, so any TTS call using it returns
