@@ -310,7 +310,11 @@ async function generateWithLLM(
       tokenChannel.emit(chunk);
       fullText += chunk;
     }
-    return fullText;
+    // Trim so a whitespace-only stream (e.g. the model emits only tool calls
+    // and no usable text) collapses to "" — the caller's truthiness check then
+    // correctly falls back to a template instead of surfacing a blank/invalid
+    // FRED response that triggers the user-resend loop.
+    return fullText.trim();
   }
 
   // No token channel — use buffered generate (non-streaming path)
@@ -321,7 +325,9 @@ async function generateWithLLM(
     ...(tools ? { tools, maxSteps: 3 } : {}),
   });
 
-  return result.text;
+  // Trim so a whitespace-only result collapses to "" and the caller falls back
+  // to a template instead of returning a blank/invalid response.
+  return result.text.trim();
 }
 
 /**

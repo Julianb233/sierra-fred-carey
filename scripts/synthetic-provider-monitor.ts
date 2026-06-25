@@ -61,7 +61,7 @@ async function runMonitor() {
       const result = await generateText({
         model,
         prompt: "Say 'healthy' and nothing else.",
-        maxTokens: 5,
+        maxOutputTokens: 5,
         temperature: 0.1,
       });
 
