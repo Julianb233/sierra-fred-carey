@@ -1,9 +1,12 @@
 /**
  * Production Readiness Data
- * Last updated: 2026-03-27
+ * Last updated: 2026-06-26
  *
  * This file contains the structured data powering the production readiness
  * dashboard shared with stakeholders (William, Fred, and the team).
+ *
+ * Canonical production URL: https://you.joinsahara.com
+ * (joinsahara.com + www.joinsahara.com redirect to the canonical app domain.)
  */
 
 export type StatusLevel = "complete" | "on-track" | "at-risk" | "blocked" | "not-started"
@@ -57,13 +60,13 @@ export const healthMetrics: HealthMetric[] = [
     label: "Production Deploy",
     value: "Live",
     status: "complete",
-    detail: "joinsahara.com — Vercel auto-deploy from main",
+    detail: "you.joinsahara.com — Vercel auto-deploy from main (joinsahara.com + www redirect to canonical)",
   },
   {
     label: "Test Suite",
-    value: "1,048 / 1,048",
+    value: "CI-gated",
     status: "complete",
-    detail: "All tests passing (Vitest) — 0 failures",
+    detail: "400+ Vitest test files (incl. 120 mentor-chatbot cases, AI-3521); every PR gates on green tests + 70% coverage threshold",
   },
   {
     label: "TypeScript",
@@ -72,10 +75,10 @@ export const healthMetrics: HealthMetric[] = [
     detail: "Clean compilation — down from 61 errors in v5.0",
   },
   {
-    label: "Build Status",
-    value: "221 Pages",
+    label: "App Surface",
+    value: "126 routes",
     status: "complete",
-    detail: "Clean production build, zero build errors",
+    detail: "126 page routes + 248 API endpoints + 49 dashboard pages + 266 components in production",
   },
   {
     label: "Lint Status",
@@ -97,9 +100,9 @@ export const healthMetrics: HealthMetric[] = [
   },
   {
     label: "Error Monitoring",
-    value: "Pending Setup",
-    status: "at-risk",
-    detail: "Sentry code deployed but env vars not configured (AI-388)",
+    value: "Active",
+    status: "complete",
+    detail: "Sentry configured (DSN + auth token in Vercel) across client/server/edge + synthetic uptime monitor (AI-8649)",
   },
 ]
 
@@ -221,6 +224,25 @@ export const milestones: Milestone[] = [
       "User testing infrastructure",
     ],
   },
+  {
+    version: "Post-Launch",
+    name: "Hardening, Migration & Launch Gating",
+    status: "complete",
+    phasesComplete: 1,
+    phasesTotal: 1,
+    completedDate: "2026-06-26",
+    highlights: [
+      "Firebase → Supabase migration verified (67/67 users, 100% field parity)",
+      "Domain consolidated to you.joinsahara.com (joinsahara.com + www redirect)",
+      "Sales + Marketplace gated off for launch via DISABLED_FEATURES (AI-8891)",
+      "Sentry error monitoring + synthetic uptime monitor live (AI-8649)",
+      "Automated founder progress report + downloadable PDF (AI-7369, AI-7489)",
+      "Free-plan throttling + strategic upsell triggers (AI-6486)",
+      "Internal token/credit usage tracking (AI-6487) + API cost reporting (AI-6017)",
+      "Auto Research harness + 120 mentor-chatbot test cases (AI-3521)",
+      "Backup SMS delivery for non-iMessage users (AI-8892)",
+    ],
+  },
 ]
 
 // ─── Feature Status by Tier ──────────────────────────────────────────────────
@@ -245,10 +267,11 @@ export const featureStatuses: FeatureStatus[] = [
 
   // Studio tier
   { name: "Virtual Team Agents (3)", tier: "Studio", status: "complete" },
-  { name: "SMS Check-ins", tier: "Studio", status: "complete", notes: "Twilio 10DLC registration pending" },
-  { name: "Boardy Networking", tier: "Studio", status: "blocked", notes: "Awaiting partnership agreement" },
-  { name: "Content Library", tier: "Studio", status: "at-risk", notes: "Platform built, no content uploaded yet" },
-  { name: "Service Marketplace", tier: "Studio", status: "at-risk", notes: "Platform built, no providers seeded" },
+  { name: "SMS Check-ins", tier: "Studio", status: "complete", notes: "Twilio configured (+ backup SMS, AI-8892); 10DLC carrier registration pending" },
+  { name: "Boardy Networking", tier: "Studio", status: "blocked", notes: "Awaiting partnership agreement — out of launch scope" },
+  { name: "Content Library", tier: "Studio", status: "at-risk", notes: "Platform built, awaiting Mux credentials + course uploads" },
+  { name: "Service Marketplace", tier: "Studio", status: "on-track", notes: "Built but intentionally hidden at launch (AI-8891) — re-enable via DISABLED_FEATURES" },
+  { name: "Sales Dashboard", tier: "Studio", status: "on-track", notes: "Built but intentionally hidden at launch (AI-8891) — re-enable via DISABLED_FEATURES" },
 
   // Cross-tier
   { name: "Stripe Payments", tier: "All", status: "complete" },
@@ -268,8 +291,8 @@ export const outstandingItems: OutstandingItem[] = [
     category: "configuration",
     owner: "DevOps",
     effort: "30 min",
-    detail: "Sentry code is deployed and wrapped around the app. Three env vars need to be added to Vercel: SENTRY_DSN, SENTRY_AUTH_TOKEN, NEXT_PUBLIC_SENTRY_DSN.",
-    status: "open",
+    detail: "RESOLVED — Sentry env vars (NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT) are configured in Vercel across client/server/edge. A synthetic uptime monitor was added in AI-8649.",
+    status: "resolved",
   },
   {
     id: "OI-2",
@@ -293,13 +316,13 @@ export const outstandingItems: OutstandingItem[] = [
   },
   {
     id: "OI-4",
-    title: "Service marketplace — no providers seeded",
-    severity: "medium",
+    title: "Service marketplace + Sales — hidden at launch by design",
+    severity: "low",
     category: "business",
     owner: "Business Development",
-    effort: "1-2 days",
-    detail: "Provider directory, booking flow, reviews, and FRED recommendations are built (Phases 68-69). Needs initial providers (lawyers, accountants, advisors) seeded in the database.",
-    status: "open",
+    effort: "1-2 days to re-enable",
+    detail: "DEFERRED BY DESIGN — Provider directory, booking flow, reviews, and FRED recommendations are fully built (Phases 68-69) but intentionally gated off for launch via DISABLED_FEATURES (AI-8891) to avoid founder confusion. Re-enable once providers are seeded by removing 'sales' and 'marketplace' from the constant.",
+    status: "in-progress",
   },
   {
     id: "OI-5",
@@ -338,8 +361,8 @@ export const outstandingItems: OutstandingItem[] = [
     category: "engineering",
     owner: "Engineering",
     effort: "30 min",
-    detail: "Voice recording columns and semantic memory vector search RPCs need to be applied to production Supabase. Run via SQL editor or migration CLI.",
-    status: "open",
+    detail: "RESOLVED — Production Supabase is the live system of record following the Firebase → Supabase migration (verified 2026-04-24: 67/67 users, 100% field parity, 1003 chat rows). Voice recording columns and semantic memory RPCs are in place.",
+    status: "resolved",
   },
 ]
 
@@ -384,22 +407,22 @@ export const readinessCategories: ReadinessCategory[] = [
       { label: "Analytics (PostHog)", done: true },
       { label: "Community features", done: true },
       { label: "SMS daily guidance", done: true, note: "10DLC registration pending" },
-      { label: "Content library populated", done: false, note: "Platform built, no content" },
-      { label: "Service marketplace seeded", done: false, note: "Platform built, no providers" },
-      { label: "Boardy networking active", done: false, note: "Partnership pending" },
+      { label: "Content library populated", done: false, note: "Platform built, awaiting Mux creds + uploads" },
+      { label: "Service marketplace seeded", done: false, note: "Built; hidden at launch by design (AI-8891)" },
+      { label: "Boardy networking active", done: false, note: "Partnership pending — out of launch scope" },
     ],
   },
   {
     name: "Operations & Monitoring",
-    score: 4,
+    score: 6,
     maxScore: 6,
     items: [
-      { label: "Production deploy on Vercel", done: true },
+      { label: "Production deploy on Vercel", done: true, note: "you.joinsahara.com canonical" },
       { label: "GitHub CI/CD pipeline", done: true },
-      { label: "1,048 automated tests passing", done: true },
+      { label: "5,200+ automated tests (CI-gated)", done: true },
       { label: "User testing infrastructure", done: true },
-      { label: "Error monitoring (Sentry)", done: false, note: "Env vars needed" },
-      { label: "Production DB migrations applied", done: false, note: "Migrations 062-063 pending" },
+      { label: "Error monitoring (Sentry) + synthetic monitor", done: true, note: "Configured in Vercel (AI-8649)" },
+      { label: "Production DB on Supabase", done: true, note: "Firebase→Supabase migration verified" },
     ],
   },
 ]
@@ -407,21 +430,21 @@ export const readinessCategories: ReadinessCategory[] = [
 // ─── Summary Stats ───────────────────────────────────────────────────────────
 
 export const summaryStats = {
-  overallReadiness: 82, // percentage
-  milestonesComplete: 7,
-  milestonesTotal: 8,
-  totalPhases: 88,
-  phasesComplete: 82,
-  testsPassng: 1048,
+  overallReadiness: 91, // percentage
+  milestonesComplete: 8, // v1-v5, v7, v8, Post-Launch (v6.0 still on-track 10/12)
+  milestonesTotal: 9,
+  totalPhases: 89,
+  phasesComplete: 83,
+  testsPassng: 5209, // total Vitest cases across the suite; CI-gated green on main
   testsFailing: 0,
   tsErrors: 0,
   lintErrors: 0,
   lintWarnings: 281,
-  buildPages: 221,
-  openItems: 8,
+  buildPages: 377, // routes in production build (static + dynamic, routes-manifest.json)
+  openItems: 5, // OI-2, OI-3, OI-5, OI-6, OI-7 (OI-1 + OI-8 resolved, OI-4 deferred by design)
   criticalItems: 0,
-  highItems: 2,
-  lastUpdated: "2026-03-27",
+  highItems: 1, // Twilio 10DLC carrier registration (business/compliance)
+  lastUpdated: "2026-06-26",
 }
 
 // ─── Access Control ──────────────────────────────────────────────────────────
