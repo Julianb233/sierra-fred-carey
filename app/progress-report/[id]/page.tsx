@@ -10,6 +10,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getOptionalUserId } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import DownloadPdfButton from "./DownloadPdfButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,5 +46,10 @@ export default async function ProgressReportPage({ params }: PageProps) {
 
   const html = (report as { html: string }).html;
 
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return (
+    <>
+      <DownloadPdfButton reportId={id} />
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </>
+  );
 }
