@@ -1,0 +1,53 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Main navigation" [ref=e3]:
+    - generic [ref=e10]:
+      - link "Sahara" [ref=e11] [cursor=pointer]:
+        - /url: /
+        - img "Sahara" [ref=e12]
+      - generic [ref=e13]:
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /pricing
+        - button "Open features menu" [ref=e15]:
+          - text: Features
+          - img
+        - link "See it in Action" [ref=e16] [cursor=pointer]:
+          - /url: /product
+        - link "About" [ref=e17] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e18]:
+        - link "Login" [ref=e19] [cursor=pointer]:
+          - /url: /login
+        - link "Get Started Free" [ref=e20] [cursor=pointer]:
+          - /url: /get-started
+          - text: Get Started Free
+          - img
+        - button [ref=e22]:
+          - img
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - img "Sahara" [ref=e26]
+      - heading "Reset your password" [level=2] [ref=e27]
+      - paragraph [ref=e28]: Check your email for a reset link
+    - generic [ref=e42]:
+      - img [ref=e43]
+      - paragraph [ref=e46]:
+        - text: If an account exists for
+        - strong [ref=e47]: qa-signup2-20260424-111758@aiacrobatics.com
+        - text: ", you will receive a password reset email shortly."
+      - generic [ref=e48]:
+        - paragraph [ref=e49]: Don't see the email?
+        - list [ref=e50]:
+          - listitem [ref=e51]: Check your spam or junk folder
+          - listitem [ref=e52]: Make sure you used the email address you signed up with
+          - listitem [ref=e53]: The email may take 1-2 minutes to arrive
+      - button "Try again with a different email" [ref=e54]:
+        - img
+        - text: Try again with a different email
+      - link "Back to login" [ref=e55] [cursor=pointer]:
+        - /url: /login
+        - img
+        - text: Back to login
+  - region "Notifications alt+T"
+  - alert [ref=e41]

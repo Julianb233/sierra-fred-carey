@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   Circle,
   MessageSquare,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -280,21 +279,40 @@ export default function JourneyDashboard() {
       }
 
       // Optimistically update UI
-      setMilestones((prev) =>
-        prev.map((m) =>
-          m.id === id
-            ? {
-                ...m,
-                status,
-                completedAt:
-                  status === "completed" ? new Date().toISOString() : undefined,
-              }
-            : m
-        )
+      const updatedMilestones = milestones.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              status,
+              completedAt:
+                status === "completed" ? new Date().toISOString() : undefined,
+            }
+          : m
       );
+      setMilestones(updatedMilestones);
+
+      // Keep the progress indicators (tab badge + stats cards) aligned with the
+      // checklist so completion never disagrees with the progress visuals.
+      setStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              milestones: {
+                completed: updatedMilestones.filter((m) => m.status === "completed").length,
+                inProgress: updatedMilestones.filter((m) => m.status === "in_progress").length,
+                pending: updatedMilestones.filter((m) => m.status === "pending").length,
+                total: updatedMilestones.length,
+              },
+            }
+          : prev
+      );
+
+      if (status === "completed") {
+        toast.success("Milestone completed — progress updated");
+      }
     } catch (err) {
       console.error("Error updating milestone:", err);
-      // Could show a toast notification here
+      toast.error("Couldn't update milestone. Please try again.");
     }
   };
 

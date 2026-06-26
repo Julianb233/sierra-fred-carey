@@ -1,0 +1,5 @@
+- generic [ref=e2]:
+  - generic [ref=e3]: "!"
+  - heading "Something went wrong" [level=2] [ref=e4]
+  - paragraph [ref=e5]: "[ { \"expected\": \"string\", \"code\": \"invalid_type\", \"path\": [ \"NEXT_PUBLIC_SUPABASE_URL\" ], \"message\": \"Invalid input: expected string, received undefined\" }, { \"expected\": \"string\", \"code\": \"invalid_type\", \"path\": [ \"NEXT_PUBLIC_SUPABASE_ANON_KEY\" ], \"message\": \"Invalid input: expected string, received undefined\" } ]"
+  - button "Try again" [ref=e6] [cursor=pointer]

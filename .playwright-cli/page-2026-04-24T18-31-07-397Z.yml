@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - main [ref=e3]:
+      - generic [ref=e4]:
+        - status "Loading" [ref=e5]:
+          - generic [ref=e18]: Loading...
+        - heading "Deployment is building" [level=1] [ref=e19]:
+          - generic [ref=e20]: Deployment is
+          - generic [ref=e22]:
+            - generic [ref=e23]: b
+            - generic [ref=e24]: u
+            - generic [ref=e25]: i
+            - generic [ref=e26]: l
+            - generic [ref=e27]: d
+            - generic [ref=e28]: i
+            - generic [ref=e29]: "n"
+            - generic [ref=e30]: g
+      - link "View Build" [ref=e31] [cursor=pointer]:
+        - /url: https://vercel.com/deployments/sahara-git-fix-auth-nav-and-redirect-authed-users-ai-acrobatics.vercel.app?redirect=1
+        - paragraph [ref=e35]: View Build
+        - img [ref=e37]
+    - contentinfo [ref=e39]:
+      - paragraph [ref=e40]: This page will update once the build completes.
+  - alert [ref=e41]
