@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { TwitterLogoIcon, LinkedInLogoIcon, RocketIcon } from "@radix-ui/react-icons";
+import { FUNNEL_URL } from "@/lib/constants";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -60,7 +61,7 @@ const Footer = () => {
               asChild
               className="w-fit bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all"
             >
-              <Link href="https://you.joinsahara.com">
+              <Link href={FUNNEL_URL}>
                 Get Started Free
                 <RocketIcon className="ml-2 h-4 w-4" />
               </Link>

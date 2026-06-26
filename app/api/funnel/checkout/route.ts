@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe/server";
 import { PLANS } from "@/lib/stripe/config";
 import { corsHeaders, handleCorsOptions } from "@/lib/api/cors";
+import { FUNNEL_URL } from "@/lib/constants";
 
 /**
  * POST /api/funnel/checkout
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://joinsahara.com";
-    const funnelUrl = process.env.NEXT_PUBLIC_FUNNEL_URL || "https://you.joinsahara.com";
+    const funnelUrl = FUNNEL_URL;
 
     // After successful checkout, redirect to main app onboarding with success flag.
     // After cancellation, redirect back to the funnel.

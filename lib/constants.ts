@@ -4,6 +4,25 @@
  */
 
 // ============================================
+// EXTERNAL / PLATFORM URLS
+// ============================================
+//
+// AI-7364 (Julian + Alex codebase consolidation): the public funnel/app
+// currently lives at a separate deployment (Alex LaTorre's build at
+// `you.joinsahara.com`). Marketing pages, the navbar, pricing CTAs, etc. all
+// hand users off to that host. Historically each of those links hardcoded the
+// string `https://you.joinsahara.com`, which meant ~15 files had to change in
+// lock-step whenever the funnel moved.
+//
+// This constant is the single source of truth for the funnel/app entry point.
+// Once the funnel is served from this unified platform (the end-state of the
+// consolidation), flipping the destination is a one-line env change
+// (`NEXT_PUBLIC_FUNNEL_URL`) instead of a 15-file edit. The default preserves
+// today's live behavior, so introducing the constant is a no-op refactor.
+export const FUNNEL_URL =
+  process.env.NEXT_PUBLIC_FUNNEL_URL || "https://you.joinsahara.com";
+
+// ============================================
 // BRAND COLORS
 // ============================================
 export const COLORS = {
