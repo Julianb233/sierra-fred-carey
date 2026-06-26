@@ -1,5 +1,6 @@
 import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const eslintConfig = [
   ...coreWebVitals,
@@ -16,6 +17,10 @@ const eslintConfig = [
       "fred-cary-db/**",
       "funnel/**",
       "trigger/**",
+      ".claude/**",
+      "worktrees/**",
+      ".worktrees/**",
+      ".vercel/**",
     ],
   },
   {
@@ -28,6 +33,15 @@ const eslintConfig = [
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
+    },
+  },
+  {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/purity": "warn",
     },
