@@ -1,0 +1,38 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Main navigation" [ref=e3]:
+    - generic [ref=e10]:
+      - link "Sahara" [ref=e11] [cursor=pointer]:
+        - /url: /
+        - img "Sahara" [ref=e12]
+      - generic [ref=e13]:
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /pricing
+        - button "Open features menu" [ref=e15]:
+          - text: Features
+          - img
+        - link "See it in Action" [ref=e16] [cursor=pointer]:
+          - /url: /product
+        - link "About" [ref=e17] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e18]:
+        - link "Login" [ref=e19] [cursor=pointer]:
+          - /url: /get-started
+        - link "Get Started Free" [ref=e20] [cursor=pointer]:
+          - /url: /get-started
+          - text: Get Started Free
+          - img
+        - button [ref=e22]:
+          - img
+  - main [ref=e25]:
+    - generic [ref=e180]:
+      - img [ref=e182]
+      - generic [ref=e192]:
+        - heading "You're in! 🎉" [level=1] [ref=e193]
+        - paragraph [ref=e194]: Welcome to Sahara
+      - generic [ref=e195]:
+        - img [ref=e196]
+        - generic [ref=e198]: Preparing your journey...
+  - region "Notifications alt+T"
+  - alert [ref=e76]

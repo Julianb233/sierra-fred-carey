@@ -1,0 +1,36 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Welcome back" [level=2] [ref=e6]
+      - paragraph [ref=e7]: Sign in to continue to your dashboard
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - generic [ref=e12]: Email address
+            - generic [ref=e13]:
+              - img [ref=e14]
+              - textbox "Email address" [ref=e17]:
+                - /placeholder: you@saharacompanies.com
+                - text: qa-signup2-20260424-111758@aiacrobatics.com
+          - generic [ref=e18]:
+            - generic [ref=e19]: Password
+            - generic [ref=e20]:
+              - img [ref=e21]
+              - textbox "Password" [active] [ref=e24]:
+                - /placeholder: ••••••••
+              - button "Show password" [ref=e25]:
+                - img [ref=e26]
+        - link "Forgot password?" [ref=e30] [cursor=pointer]:
+          - /url: /forgot-password
+        - button "Sign in" [ref=e31]:
+          - text: Sign in
+          - img
+      - generic [ref=e32]:
+        - generic [ref=e33]: Don't have an account?
+        - link "Get started free" [ref=e34] [cursor=pointer]:
+          - /url: /get-started
+  - region "Notifications alt+T"
+  - alert [ref=e35]

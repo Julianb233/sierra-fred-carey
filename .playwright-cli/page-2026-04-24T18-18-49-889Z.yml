@@ -1,0 +1,37 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Main navigation" [ref=e3]:
+    - generic [ref=e10]:
+      - link "Sahara" [ref=e11] [cursor=pointer]:
+        - /url: /
+        - img "Sahara" [ref=e12]
+      - generic [ref=e13]:
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /pricing
+        - button "Open features menu" [ref=e15]:
+          - text: Features
+          - img
+        - link "See it in Action" [ref=e16] [cursor=pointer]:
+          - /url: /product
+        - link "About" [ref=e17] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e18]:
+        - link "Login" [ref=e19] [cursor=pointer]:
+          - /url: /get-started
+        - link "Get Started Free" [ref=e20] [cursor=pointer]:
+          - /url: /get-started
+          - text: Get Started Free
+          - img
+        - button [ref=e22]:
+          - img
+  - main [ref=e24]:
+    - generic [ref=e87]:
+      - paragraph [ref=e94]: Question 1 of 5
+      - generic [ref=e95]:
+        - heading "What's your startup idea or company?" [level=2] [ref=e96]
+        - textbox "Tell me about your venture in a few sentences..." [active] [ref=e97]
+        - generic [ref=e98]:
+          - button "Next" [disabled]
+  - region "Notifications alt+T"
+  - alert [ref=e86]

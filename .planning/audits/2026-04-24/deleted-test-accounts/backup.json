@@ -1,0 +1,726 @@
+{
+  "total": 47,
+  "timestamp_utc": "2026-04-24T19:20:00Z",
+  "rationale": "Our-created test accounts (QA, stagehand, uxtest, deploy-verify, etc). NOT Firebase-migrated.",
+  "accounts": [
+    {
+      "id": "8073d024-3e0b-429d-a8b8-989605963e45",
+      "email": "bug-test-agent@aiacrobatics.com",
+      "created_at": "2026-04-22T08:23:13.137626Z",
+      "last_sign_in_at": "2026-04-23T23:02:01.422042Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "name": "Bug Test Agent"
+      }
+    },
+    {
+      "id": "ecb6999e-62f7-4f8a-bc8e-e232808aa10d",
+      "email": "ux-test-2026-04-20@aiacrobatics.com",
+      "created_at": "2026-04-20T20:38:07.868133Z",
+      "last_sign_in_at": null,
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "Launch Readiness Test",
+        "role": "founder"
+      }
+    },
+    {
+      "id": "eb68e0f9-6211-4d87-a5d5-12c0ac7bc404",
+      "email": "test-verify-voice@test.dev",
+      "created_at": "2026-03-11T08:47:04.745501Z",
+      "last_sign_in_at": null,
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true
+      }
+    },
+    {
+      "id": "6e622f04-75c9-46a4-bf81-11ce2885d81c",
+      "email": "test-verify-voice-1741682400@test.dev",
+      "created_at": "2026-03-11T07:50:36.043562Z",
+      "last_sign_in_at": "2026-03-11T07:50:36.180579Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "test-verify-voice-1741682400@test.dev",
+        "email_verified": true,
+        "name": "Test Verify Voice 1741682400",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "6e622f04-75c9-46a4-bf81-11ce2885d81c"
+      }
+    },
+    {
+      "id": "dfc21802-18d2-4010-bedd-73f34c48e566",
+      "email": "deploy-verify-fred-20260311@test.joinsahara.com",
+      "created_at": "2026-03-11T07:22:28.414655Z",
+      "last_sign_in_at": "2026-03-11T07:22:28.484021Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "deploy-verify-fred-20260311@test.joinsahara.com",
+        "email_verified": true,
+        "name": "Deploy Verify Fred 20260311",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "dfc21802-18d2-4010-bedd-73f34c48e566"
+      }
+    },
+    {
+      "id": "e2c08ad5-492a-47cb-8fb3-4c0001eccce9",
+      "email": "ux-audit-20260308@test.dev",
+      "created_at": "2026-03-08T23:15:12.079989Z",
+      "last_sign_in_at": "2026-03-08T23:15:12.128501Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "ux-audit-20260308@test.dev",
+        "email_verified": true,
+        "name": "Ux Audit 20260308",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "e2c08ad5-492a-47cb-8fb3-4c0001eccce9"
+      }
+    },
+    {
+      "id": "3022c6eb-099d-4904-9994-ff948608fabb",
+      "email": "uxtest@sahara-testing.local",
+      "created_at": "2026-03-08T23:12:54.674976Z",
+      "last_sign_in_at": "2026-03-08T23:13:13.256052Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true
+      }
+    },
+    {
+      "id": "faa6e532-c0fb-4efc-a8e2-c0d0caaefc86",
+      "email": "v7test-browser-20260308@test-sahara.com",
+      "created_at": "2026-03-08T23:10:46.746705Z",
+      "last_sign_in_at": "2026-03-08T23:10:46.851533Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "v7test-browser-20260308@test-sahara.com",
+        "email_verified": true,
+        "name": "V7test Browser 20260308",
+        "phone_verified": false,
+        "stage": "seed",
+        "sub": "faa6e532-c0fb-4efc-a8e2-c0d0caaefc86"
+      }
+    },
+    {
+      "id": "9982d11b-1212-4ca8-be21-2bb5406acb3f",
+      "email": "qa-feedback-test@test-sahara.com",
+      "created_at": "2026-03-08T22:35:17.307499Z",
+      "last_sign_in_at": "2026-03-08T23:24:01.061646Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "QA Feedback Tester"
+      }
+    },
+    {
+      "id": "0e34d85c-2952-4fe3-8506-f79750522971",
+      "email": "qa-sentiment-test-0308@acrobatics.dev",
+      "created_at": "2026-03-08T22:34:46.201138Z",
+      "last_sign_in_at": "2026-03-08T22:34:46.279694Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "qa-sentiment-test-0308@acrobatics.dev",
+        "email_verified": true,
+        "name": "Qa Sentiment Test 0308",
+        "phone_verified": false,
+        "stage": "seed",
+        "sub": "0e34d85c-2952-4fe3-8506-f79750522971"
+      }
+    },
+    {
+      "id": "dc032e82-5fb5-403b-816f-4bcc173e0ff6",
+      "email": "v7-ux-test@sahara-test.com",
+      "created_at": "2026-03-08T22:31:33.360817Z",
+      "last_sign_in_at": "2026-03-08T22:33:14.682317Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "V7 UX Test",
+        "role": "admin"
+      }
+    },
+    {
+      "id": "0a8fa046-f5d5-4ed5-8717-dfb27d7a6e2b",
+      "email": "v7-test-agent3@sahara-test.com",
+      "created_at": "2026-03-08T22:29:45.154725Z",
+      "last_sign_in_at": "2026-03-08T22:49:36.132328Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "V7 Test User",
+        "role": "admin"
+      }
+    },
+    {
+      "id": "c949c709-9b85-42be-84ec-e96f13993224",
+      "email": "stagehand-test-20260308@test.joinsahara.com",
+      "created_at": "2026-03-08T22:27:50.98777Z",
+      "last_sign_in_at": "2026-03-08T22:35:14.326975Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "stagehand-test-20260308@test.joinsahara.com",
+        "email_verified": true,
+        "name": "Stagehand Test 20260308",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "c949c709-9b85-42be-84ec-e96f13993224"
+      }
+    },
+    {
+      "id": "655653b5-050a-41dd-809d-b1e519e497ab",
+      "email": "test-debug-p0-2@example.com",
+      "created_at": "2026-03-08T17:13:04.90856Z",
+      "last_sign_in_at": "2026-03-08T17:13:04.935917Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "Finding co-founders"
+        ],
+        "email": "test-debug-p0-2@example.com",
+        "email_verified": true,
+        "name": "Test Debug P0 2",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "655653b5-050a-41dd-809d-b1e519e497ab"
+      }
+    },
+    {
+      "id": "1b1525fd-0471-4bfd-aedf-791b4d438efb",
+      "email": "test-debug-p0@example.com",
+      "created_at": "2026-03-08T17:12:55.35616Z",
+      "last_sign_in_at": "2026-03-08T17:12:55.492155Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [],
+        "email": "test-debug-p0@example.com",
+        "email_verified": true,
+        "name": "Test Debug P0",
+        "phone_verified": false,
+        "sub": "1b1525fd-0471-4bfd-aedf-791b4d438efb"
+      }
+    },
+    {
+      "id": "1d95acc3-a985-4b96-a55c-4d501852bc4a",
+      "email": "v8-journey-test@sahara-test.com",
+      "created_at": "2026-03-08T16:47:55.988384Z",
+      "last_sign_in_at": "2026-03-08T16:48:46.217407Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "name": "V8 Journey Test"
+      }
+    },
+    {
+      "id": "c426ea62-8dd6-4cae-a790-a54fbb303993",
+      "email": "ux-audit@joinsahara.com",
+      "created_at": "2026-03-08T16:41:49.671708Z",
+      "last_sign_in_at": "2026-03-08T16:50:14.845246Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true
+      }
+    },
+    {
+      "id": "069a7777-566d-4042-9049-01269e8e560a",
+      "email": "ux-audit-20260308@sahara-test.com",
+      "created_at": "2026-03-08T16:41:39.206118Z",
+      "last_sign_in_at": "2026-03-08T16:43:03.686702Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "UX Audit Bot"
+      }
+    },
+    {
+      "id": "249f28a3-8653-46e4-a3a9-328adc7167fe",
+      "email": "autopilot-qa-1772982837@sahara-test.com",
+      "created_at": "2026-03-08T15:13:57.944597Z",
+      "last_sign_in_at": "2026-03-08T15:36:43.511051Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenge": "product_market_fit",
+        "email_verified": true,
+        "stage": "ideation"
+      }
+    },
+    {
+      "id": "f83bf765-f3b3-4b98-a624-9e16b4c02713",
+      "email": "stagehand-test-1772982507@sahara-testing.local",
+      "created_at": "2026-03-08T15:08:27.803249Z",
+      "last_sign_in_at": "2026-03-08T15:36:09.957486Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "QA Tester",
+        "is_test_account": true
+      }
+    },
+    {
+      "id": "dbd2a805-113b-4125-9d0a-2318eed21282",
+      "email": "deploy-verify-pers52@test.dev",
+      "created_at": "2026-03-06T06:57:03.932327Z",
+      "last_sign_in_at": null,
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "Deploy Verify Bot"
+      }
+    },
+    {
+      "id": "7d6ecac3-cc84-4abf-aca0-ef70bea72336",
+      "email": "test-verify-sms-20260227@test.dev",
+      "created_at": "2026-02-27T20:28:43.553029Z",
+      "last_sign_in_at": "2026-02-27T20:28:43.694076Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-verify-sms-20260227@test.dev",
+        "email_verified": true,
+        "name": "Test Verify Sms 20260227",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "7d6ecac3-cc84-4abf-aca0-ef70bea72336"
+      }
+    },
+    {
+      "id": "f3b721ae-3f50-4c25-877d-aa409e66b94b",
+      "email": "test-dev@joinsahara.com",
+      "created_at": "2026-02-25T20:45:21.8331Z",
+      "last_sign_in_at": "2026-03-11T08:18:50.173252Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "name": "Test Dev User"
+      }
+    },
+    {
+      "id": "c9d5c4ca-27f8-4695-8ebd-70373b14b4a3",
+      "email": "test-verify-20260225@test.dev",
+      "created_at": "2026-02-25T20:13:52.946712Z",
+      "last_sign_in_at": "2026-02-25T20:13:52.982656Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-verify-20260225@test.dev",
+        "email_verified": true,
+        "name": "Test Verify 20260225",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "c9d5c4ca-27f8-4695-8ebd-70373b14b4a3"
+      }
+    },
+    {
+      "id": "23429263-1c34-4b07-94a6-bcabade790f0",
+      "email": "test-verify-fred-2026@test.dev",
+      "created_at": "2026-02-25T20:10:34.938911Z",
+      "last_sign_in_at": "2026-02-25T20:10:34.965955Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "test-verify-fred-2026@test.dev",
+        "email_verified": true,
+        "name": "Test Verify Fred 2026",
+        "phone_verified": false,
+        "stage": "seed",
+        "sub": "23429263-1c34-4b07-94a6-bcabade790f0"
+      }
+    },
+    {
+      "id": "e36890e9-1629-46ad-aeb4-64b1a38d454d",
+      "email": "test-verify-202602250000@test.dev",
+      "created_at": "2026-02-25T20:05:59.561655Z",
+      "last_sign_in_at": "2026-02-25T20:05:59.572364Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-verify-202602250000@test.dev",
+        "email_verified": true,
+        "name": "Test Verify 202602250000",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "e36890e9-1629-46ad-aeb4-64b1a38d454d"
+      }
+    },
+    {
+      "id": "e07052e2-fa55-4c1b-a49c-6d50745aa7bb",
+      "email": "test-fred-latency@thewizzardof.ai",
+      "created_at": "2026-02-25T20:05:35.487977Z",
+      "last_sign_in_at": "2026-02-25T20:05:35.623543Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-fred-latency@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Fred Latency",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "e07052e2-fa55-4c1b-a49c-6d50745aa7bb"
+      }
+    },
+    {
+      "id": "92d30726-2c44-4ffc-aad0-7bad61174c35",
+      "email": "test-deploy-verify-feb18@test.dev",
+      "created_at": "2026-02-18T22:07:04.922663Z",
+      "last_sign_in_at": "2026-02-18T22:07:04.963223Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-deploy-verify-feb18@test.dev",
+        "email_verified": true,
+        "name": "Test Deploy Verify Feb18",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "92d30726-2c44-4ffc-aad0-7bad61174c35"
+      }
+    },
+    {
+      "id": "93fc4f78-545a-415d-a4c6-6a4cca918f99",
+      "email": "test-verify-signup-0218@thewizzardof.ai",
+      "created_at": "2026-02-18T21:21:04.297546Z",
+      "last_sign_in_at": "2026-02-18T21:21:04.337978Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-verify-signup-0218@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Verify Signup 0218",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "93fc4f78-545a-415d-a4c6-6a4cca918f99"
+      }
+    },
+    {
+      "id": "aed1a0c2-c772-4cd3-9ac8-3e00c8aa07d1",
+      "email": "test-finish-1771448144@joinsahara.com",
+      "created_at": "2026-02-18T20:55:44.443744Z",
+      "last_sign_in_at": "2026-02-18T21:00:49.119517Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [],
+        "email": "test-finish-1771448144@joinsahara.com",
+        "email_verified": true,
+        "name": "QA Test",
+        "phone_verified": false,
+        "sub": "aed1a0c2-c772-4cd3-9ac8-3e00c8aa07d1"
+      }
+    },
+    {
+      "id": "c068ce67-455b-4806-8f32-4909c1dba45e",
+      "email": "test-fux-feb18@thewizzardof.ai",
+      "created_at": "2026-02-18T20:55:19.176925Z",
+      "last_sign_in_at": "2026-02-18T20:55:19.226762Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "test-fux-feb18@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Fux Feb18",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "c068ce67-455b-4806-8f32-4909c1dba45e"
+      }
+    },
+    {
+      "id": "8057788d-5290-4f68-9bab-45a14b32fc32",
+      "email": "stagehand-test-feb18@test.com",
+      "created_at": "2026-02-18T20:53:26.537838Z",
+      "last_sign_in_at": "2026-02-18T20:53:26.563351Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "stagehand-test-feb18@test.com",
+        "email_verified": true,
+        "name": "Stagehand Test Feb18",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "8057788d-5290-4f68-9bab-45a14b32fc32"
+      }
+    },
+    {
+      "id": "ed2bf5e2-d2c9-42d1-b749-bff17d78cb26",
+      "email": "test-direct-1771447737@joinsahara.com",
+      "created_at": "2026-02-18T20:48:57.510604Z",
+      "last_sign_in_at": "2026-02-18T20:48:57.558817Z",
+      "provider": "email",
+      "user_metadata": {
+        "email": "test-direct-1771447737@joinsahara.com",
+        "email_verified": true,
+        "phone_verified": false,
+        "sub": "ed2bf5e2-d2c9-42d1-b749-bff17d78cb26"
+      }
+    },
+    {
+      "id": "c474754c-9370-478e-922e-36fe163da2a6",
+      "email": "test-verify-voice@thewizzardof.ai",
+      "created_at": "2026-02-18T20:13:42.915765Z",
+      "last_sign_in_at": "2026-02-18T21:54:50.782265Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "growth-scaling"
+        ],
+        "email": "test-verify-voice@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Verify Voice",
+        "phone_verified": false,
+        "stage": "seed",
+        "sub": "c474754c-9370-478e-922e-36fe163da2a6"
+      }
+    },
+    {
+      "id": "15378043-c308-4af3-b8ee-81019fa839c7",
+      "email": "uxtest2026@testmail.com",
+      "created_at": "2026-02-18T20:11:57.257465Z",
+      "last_sign_in_at": "2026-02-18T20:11:57.327913Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "uxtest2026@testmail.com",
+        "email_verified": true,
+        "name": "Uxtest2026",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "15378043-c308-4af3-b8ee-81019fa839c7"
+      }
+    },
+    {
+      "id": "d9394447-0d9b-4f1a-876c-e9d2a4e22f26",
+      "email": "chatbot-test-2026@thewizzardof.ai",
+      "created_at": "2026-02-17T21:31:51.134151Z",
+      "last_sign_in_at": "2026-02-17T21:31:51.218736Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "chatbot-test-2026@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Chatbot Test 2026",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "d9394447-0d9b-4f1a-876c-e9d2a4e22f26"
+      }
+    },
+    {
+      "id": "cde5cace-96b2-4201-a423-9f6c317a35a8",
+      "email": "test-qa-live@thewizzardof.ai",
+      "created_at": "2026-02-17T16:14:38.457511Z",
+      "last_sign_in_at": "2026-02-23T19:43:19.783737Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "test-qa-live@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Qa Live",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "cde5cace-96b2-4201-a423-9f6c317a35a8"
+      }
+    },
+    {
+      "id": "8f86ce81-857f-4718-a1a2-0b66d299c61e",
+      "email": "test-voiceqa@thewizzardof.ai",
+      "created_at": "2026-02-17T07:29:12.291777Z",
+      "last_sign_in_at": "2026-02-17T21:29:07.512511Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "test-voiceqa@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Voiceqa",
+        "phone_verified": false,
+        "stage": "seed",
+        "sub": "8f86ce81-857f-4718-a1a2-0b66d299c61e"
+      }
+    },
+    {
+      "id": "9ff8805f-8d0c-4c18-8f4b-1a038b4b1a59",
+      "email": "qatest@sahara-test.com",
+      "created_at": "2026-02-17T02:07:53.268637Z",
+      "last_sign_in_at": "2026-02-17T02:07:53.305918Z",
+      "provider": "email",
+      "user_metadata": {
+        "email": "qatest@sahara-test.com",
+        "email_verified": true,
+        "full_name": "QA Tester",
+        "phone_verified": false,
+        "sub": "9ff8805f-8d0c-4c18-8f4b-1a038b4b1a59"
+      }
+    },
+    {
+      "id": "271826b8-bd62-4507-afbb-62332bdec093",
+      "email": "qa-stagehand-test@example.com",
+      "created_at": "2026-02-17T01:17:17.302599Z",
+      "last_sign_in_at": "2026-02-17T01:23:12.718509Z",
+      "provider": "email",
+      "user_metadata": {
+        "email": "qa-stagehand-test@example.com",
+        "email_verified": true,
+        "phone_verified": false,
+        "sub": "271826b8-bd62-4507-afbb-62332bdec093"
+      }
+    },
+    {
+      "id": "bdfa1512-72c8-4fc9-9c63-ca6df30e4e7b",
+      "email": "debugtest@thewizzardof.ai",
+      "created_at": "2026-02-14T00:16:22.716959Z",
+      "last_sign_in_at": "2026-02-14T00:16:22.832407Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "debugtest@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Debugtest",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "bdfa1512-72c8-4fc9-9c63-ca6df30e4e7b"
+      }
+    },
+    {
+      "id": "ba8540da-7ce0-4b32-9ffb-2aa006bc8d81",
+      "email": "test-liveaudit@thewizzardof.ai",
+      "created_at": "2026-02-12T02:27:53.974396Z",
+      "last_sign_in_at": "2026-02-12T02:29:10.770581Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-liveaudit@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test Liveaudit",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "ba8540da-7ce0-4b32-9ffb-2aa006bc8d81"
+      }
+    },
+    {
+      "id": "96191421-69f1-46dc-824b-e18bdc6e79b6",
+      "email": "test-user@thewizzardof.ai",
+      "created_at": "2026-02-11T20:54:05.466251Z",
+      "last_sign_in_at": "2026-02-11T21:04:39.833029Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "test-user@thewizzardof.ai",
+        "email_verified": true,
+        "name": "Test User",
+        "phone_verified": false,
+        "stage": "idea",
+        "sub": "96191421-69f1-46dc-824b-e18bdc6e79b6"
+      }
+    },
+    {
+      "id": "a91a744c-48d0-4c1b-b872-6807ae235c86",
+      "email": "testuser-browserbase@joinsahara.com",
+      "created_at": "2026-02-09T23:45:56.149656Z",
+      "last_sign_in_at": "2026-02-09T23:45:56.161251Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "fundraising"
+        ],
+        "email": "testuser-browserbase@joinsahara.com",
+        "email_verified": true,
+        "name": "Testuser Browserbase",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "a91a744c-48d0-4c1b-b872-6807ae235c86"
+      }
+    },
+    {
+      "id": "5f6580c5-0d8c-4a50-b200-3754ba362535",
+      "email": "testuser2026@joinsahara.com",
+      "created_at": "2026-02-08T23:40:21.254816Z",
+      "last_sign_in_at": "2026-02-19T16:19:57.846424Z",
+      "provider": "email",
+      "user_metadata": {
+        "challenges": [
+          "product-market-fit"
+        ],
+        "email": "testuser2026@joinsahara.com",
+        "email_verified": true,
+        "name": "Testuser2026",
+        "phone_verified": false,
+        "stage": "pre-seed",
+        "sub": "5f6580c5-0d8c-4a50-b200-3754ba362535"
+      }
+    },
+    {
+      "id": "604cfd37-457f-4112-b120-d904147d2f0c",
+      "email": "audit-test@sahara-test.com",
+      "created_at": "2026-02-06T19:22:08.259771Z",
+      "last_sign_in_at": "2026-02-06T20:38:52.417037Z",
+      "provider": "email",
+      "user_metadata": {
+        "email_verified": true,
+        "name": "Audit Test"
+      }
+    },
+    {
+      "id": "e0aca48a-dbd3-4923-8b06-78805140499d",
+      "email": "uat-test-1770404836518@sahara-test.com",
+      "created_at": "2026-02-06T19:07:18.294863Z",
+      "last_sign_in_at": "2026-02-18T22:09:14.221839Z",
+      "provider": "email",
+      "user_metadata": {
+        "email": "uat-test-1770404836518@sahara-test.com",
+        "email_verified": true,
+        "name": "UAT Test User",
+        "phone_verified": false,
+        "sub": "e0aca48a-dbd3-4923-8b06-78805140499d"
+      }
+    }
+  ]
+}

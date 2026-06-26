@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Main navigation" [ref=e36]:
+    - generic [ref=e43]:
+      - link "Sahara" [ref=e44] [cursor=pointer]:
+        - /url: /
+        - img "Sahara" [ref=e45]
+      - generic [ref=e46]:
+        - link "Pricing" [ref=e47] [cursor=pointer]:
+          - /url: /pricing
+        - button "Open features menu" [ref=e48]:
+          - text: Features
+          - img
+        - link "See it in Action" [ref=e49] [cursor=pointer]:
+          - /url: /product
+        - link "About" [ref=e50] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e51]:
+        - link "Login" [ref=e52] [cursor=pointer]:
+          - /url: /login
+        - link "Get Started Free" [ref=e53] [cursor=pointer]:
+          - /url: /get-started
+          - text: Get Started Free
+          - img
+        - button [ref=e55]:
+          - img
+  - img [ref=e57]
+  - region "Notifications alt+T"
+  - alert [ref=e35]

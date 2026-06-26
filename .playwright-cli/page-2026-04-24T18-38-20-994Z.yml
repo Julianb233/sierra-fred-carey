@@ -1,0 +1,429 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Main navigation" [ref=e3]:
+    - generic [ref=e10]:
+      - link "Sahara" [ref=e11] [cursor=pointer]:
+        - /url: /
+        - img "Sahara" [ref=e12]
+      - generic [ref=e13]:
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /pricing
+        - button "Open features menu" [ref=e15]:
+          - text: Features
+          - img
+        - link "See it in Action" [ref=e16] [cursor=pointer]:
+          - /url: /product
+        - link "About" [ref=e17] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e18]:
+        - link "Login" [ref=e19] [cursor=pointer]:
+          - /url: /login
+        - link "Get Started Free" [ref=e20] [cursor=pointer]:
+          - /url: /get-started
+          - text: Get Started Free
+          - img
+        - button [ref=e22]:
+          - img
+  - main [ref=e23]:
+    - generic [ref=e25]:
+      - generic [ref=e26]: PRICING
+      - heading "Stop guessing. Start building like a fundable company." [level=1] [ref=e27]
+      - paragraph [ref=e28]: Sahara is your founder operating system — from idea to investor readiness to execution.
+    - generic [ref=e30]:
+      - generic [ref=e35]:
+        - img [ref=e37]
+        - generic [ref=e39]:
+          - heading "Free" [level=3] [ref=e40]
+          - paragraph [ref=e41]: Free Forever
+        - generic [ref=e43]:
+          - generic [ref=e44]: $0
+          - generic [ref=e45]: /month
+        - paragraph [ref=e46]: Maximum adoption, trust, and habit formation.
+        - paragraph [ref=e47]: "Best for: First-time founders, early ideation, founders not yet considering fundraising."
+        - list [ref=e49]:
+          - listitem [ref=e50]:
+            - img [ref=e52]
+            - generic [ref=e54]: Founder Decision Engine
+          - listitem [ref=e55]:
+            - img [ref=e57]
+            - generic [ref=e59]: Feasibility + market reality checks
+          - listitem [ref=e60]:
+            - img [ref=e62]
+            - generic [ref=e64]: Red Flag Detection
+          - listitem [ref=e65]:
+            - img [ref=e67]
+            - generic [ref=e69]: Founder wellbeing support
+          - listitem [ref=e70]:
+            - img [ref=e72]
+            - generic [ref=e74]: Initial founder snapshot
+          - listitem [ref=e75]:
+            - img [ref=e77]
+            - generic [ref=e79]: Investor Lens
+          - listitem [ref=e80]:
+            - img [ref=e82]
+            - generic [ref=e84]: Investor Readiness Score
+          - listitem [ref=e85]:
+            - img [ref=e87]
+            - generic [ref=e89]: Pitch Deck Review
+          - listitem [ref=e90]:
+            - img [ref=e92]
+            - generic [ref=e94]: Strategy Documents
+          - listitem [ref=e95]:
+            - img [ref=e97]
+            - generic [ref=e99]: Weekly SMS Check-Ins
+          - listitem [ref=e100]:
+            - img [ref=e102]
+            - generic [ref=e104]: Boardy Integration
+          - listitem [ref=e105]:
+            - img [ref=e107]
+            - generic [ref=e109]: Virtual Team Agents
+        - link "Get Started Free" [ref=e111] [cursor=pointer]:
+          - /url: /get-started
+      - generic [ref=e117]:
+        - img [ref=e119]
+        - generic [ref=e121]:
+          - heading "Builder" [level=3] [ref=e122]
+          - paragraph [ref=e123]: For Founders Getting Serious
+        - generic [ref=e125]:
+          - generic [ref=e126]: $39
+          - generic [ref=e127]: /month
+        - paragraph [ref=e128]: Turn ideas into structured plans you can actually execute.
+        - paragraph [ref=e129]: "Best for: Founders starting to build seriously, moving past the idea stage."
+        - list [ref=e131]:
+          - listitem [ref=e132]:
+            - img [ref=e134]
+            - generic [ref=e136]: Everything in Free
+          - listitem [ref=e137]:
+            - img [ref=e139]
+            - generic [ref=e141]: Saved founder profile + memory
+          - listitem [ref=e142]:
+            - img [ref=e144]
+            - generic [ref=e146]: Limited Investor Readiness insights
+          - listitem [ref=e147]:
+            - img [ref=e149]
+            - generic [ref=e151]: Strategy outputs (lean plans, early roadmap)
+          - listitem [ref=e152]:
+            - img [ref=e154]
+            - generic [ref=e156]: Early-stage scoring + guidance
+          - listitem [ref=e157]:
+            - img [ref=e159]
+            - generic [ref=e161]: Priority responses
+          - listitem [ref=e162]:
+            - img [ref=e164]
+            - generic [ref=e166]: Full Investor Lens
+          - listitem [ref=e167]:
+            - img [ref=e169]
+            - generic [ref=e171]: Investor Readiness Score
+          - listitem [ref=e172]:
+            - img [ref=e174]
+            - generic [ref=e176]: Pitch Deck Review
+          - listitem [ref=e177]:
+            - img [ref=e179]
+            - generic [ref=e181]: Strategy Documents
+          - listitem [ref=e182]:
+            - img [ref=e184]
+            - generic [ref=e186]: Weekly SMS Check-Ins
+          - listitem [ref=e187]:
+            - img [ref=e189]
+            - generic [ref=e191]: Boardy Integration
+          - listitem [ref=e192]:
+            - img [ref=e194]
+            - generic [ref=e196]: Virtual Team Agents
+        - link "Start Building" [ref=e198] [cursor=pointer]:
+          - /url: /get-started
+      - generic [ref=e203]:
+        - generic [ref=e205]: Most Popular
+        - generic [ref=e208]:
+          - img [ref=e210]
+          - generic [ref=e212]:
+            - heading "Pro" [level=3] [ref=e213]
+            - paragraph [ref=e214]: For Founders Preparing to Raise
+          - generic [ref=e216]:
+            - generic [ref=e217]: $99
+            - generic [ref=e218]: /month
+          - paragraph [ref=e219]: Turn clarity into investor-grade readiness.
+          - paragraph [ref=e220]: "Best for: Pre-seed and seed founders, founders preparing for fundraising."
+          - list [ref=e222]:
+            - listitem [ref=e223]:
+              - img [ref=e225]
+              - generic [ref=e227]: Everything in Builder
+            - listitem [ref=e228]:
+              - img [ref=e230]
+              - generic [ref=e232]: Full Investor Lens (Pre-Seed/Seed/A)
+            - listitem [ref=e233]:
+              - img [ref=e235]
+              - generic [ref=e237]: Investor Readiness Score
+            - listitem [ref=e238]:
+              - img [ref=e240]
+              - generic [ref=e242]: Pitch Deck Review Protocol
+            - listitem [ref=e243]:
+              - img [ref=e245]
+              - generic [ref=e247]: Strategy Documents
+            - listitem [ref=e248]:
+              - img [ref=e250]
+              - generic [ref=e252]: Executive Summary
+            - listitem [ref=e253]:
+              - img [ref=e255]
+              - generic [ref=e257]: 30/60/90-day Plans
+            - listitem [ref=e258]:
+              - img [ref=e260]
+              - generic [ref=e262]: Persistent Founder Memory
+            - listitem [ref=e263]:
+              - img [ref=e265]
+              - generic [ref=e267]: Boardy Integration
+            - listitem [ref=e268]:
+              - img [ref=e270]
+              - generic [ref=e272]: Investor Introductions
+            - listitem [ref=e273]:
+              - img [ref=e275]
+              - generic [ref=e277]: Outreach Automation
+            - listitem [ref=e278]:
+              - img [ref=e280]
+              - generic [ref=e282]: Virtual Team Agents
+          - link "Get Investor Ready" [ref=e284] [cursor=pointer]:
+            - /url: /get-started
+      - generic [ref=e290]:
+        - img [ref=e292]
+        - generic [ref=e294]:
+          - heading "Studio" [level=3] [ref=e295]
+          - paragraph [ref=e296]: For Founders Who Want Execution
+        - generic [ref=e298]:
+          - generic [ref=e299]: $249
+          - generic [ref=e300]: /month
+        - paragraph [ref=e301]: Deliver leverage, execution support, and capital connectivity.
+        - paragraph [ref=e302]: "Best for: Founders actively fundraising, scaling operations, small teams replacing headcount."
+        - list [ref=e304]:
+          - listitem [ref=e305]:
+            - img [ref=e307]
+            - generic [ref=e309]: Everything in Pro
+          - listitem [ref=e310]:
+            - img [ref=e312]
+            - generic [ref=e314]: Weekly SMS Check-Ins
+          - listitem [ref=e315]:
+            - img [ref=e317]
+            - generic [ref=e319]: Boardy Integration
+          - listitem [ref=e320]:
+            - img [ref=e322]
+            - generic [ref=e324]: Investor Matching & Warm Intros
+          - listitem [ref=e325]:
+            - img [ref=e327]
+            - generic [ref=e329]: Investor Targeting Guidance
+          - listitem [ref=e330]:
+            - img [ref=e332]
+            - generic [ref=e334]: Outreach Sequencing
+          - listitem [ref=e335]:
+            - img [ref=e337]
+            - generic [ref=e339]: Founder Ops Agent
+          - listitem [ref=e340]:
+            - img [ref=e342]
+            - generic [ref=e344]: Fundraise Ops Agent
+          - listitem [ref=e345]:
+            - img [ref=e347]
+            - generic [ref=e349]: Growth Ops Agent
+          - listitem [ref=e350]:
+            - img [ref=e352]
+            - generic [ref=e354]: Inbox Ops Agent
+          - listitem [ref=e355]:
+            - img [ref=e357]
+            - generic [ref=e359]: Higher Usage Limits
+          - listitem [ref=e360]:
+            - img [ref=e362]
+            - generic [ref=e364]: Priority Compute
+          - listitem [ref=e365]:
+            - img [ref=e367]
+            - generic [ref=e369]: Deeper Memory Persistence
+        - link "Run My Company" [ref=e371] [cursor=pointer]:
+          - /url: /get-started
+    - generic [ref=e374]:
+      - heading "When should I upgrade?" [level=2] [ref=e376]
+      - generic [ref=e377]:
+        - generic [ref=e378]:
+          - paragraph [ref=e379]: Still exploring?
+          - paragraph [ref=e380]: Stay Free
+        - generic [ref=e381]:
+          - paragraph [ref=e382]: Building seriously?
+          - paragraph [ref=e383]: Go Builder
+        - generic [ref=e384]:
+          - paragraph [ref=e385]: Planning to raise?
+          - paragraph [ref=e386]: Go Pro
+        - generic [ref=e387]:
+          - paragraph [ref=e388]: Actively raising or scaling?
+          - paragraph [ref=e389]: Go Studio
+    - generic [ref=e391]:
+      - generic [ref=e392]:
+        - heading "Feature Comparison" [level=2] [ref=e393]
+        - paragraph [ref=e394]: See exactly what's included in each tier.
+      - table [ref=e398]:
+        - rowgroup [ref=e399]:
+          - row "Feature Free $39 $99 $249" [ref=e400]:
+            - columnheader "Feature" [ref=e401]
+            - columnheader "Free" [ref=e402]
+            - columnheader "$39" [ref=e403]
+            - columnheader "$99" [ref=e404]
+            - columnheader "$249" [ref=e405]
+        - rowgroup [ref=e406]:
+          - row "Core OS" [ref=e407]:
+            - cell "Core OS" [ref=e408]
+            - cell [ref=e409]:
+              - img [ref=e411]
+            - cell [ref=e413]:
+              - img [ref=e415]
+            - cell [ref=e417]:
+              - img [ref=e419]
+            - cell [ref=e421]:
+              - img [ref=e423]
+          - row "Founder Profile + Memory" [ref=e425]:
+            - cell "Founder Profile + Memory" [ref=e426]
+            - cell [ref=e427]:
+              - img [ref=e428]
+            - cell [ref=e430]:
+              - img [ref=e432]
+            - cell [ref=e434]:
+              - img [ref=e436]
+            - cell [ref=e438]:
+              - img [ref=e440]
+          - row "Strategy Outputs" [ref=e442]:
+            - cell "Strategy Outputs" [ref=e443]
+            - cell [ref=e444]:
+              - img [ref=e445]
+            - cell [ref=e447]:
+              - img [ref=e449]
+            - cell [ref=e451]:
+              - img [ref=e453]
+            - cell [ref=e455]:
+              - img [ref=e457]
+          - row "Investor Lens" [ref=e459]:
+            - cell "Investor Lens" [ref=e460]
+            - cell [ref=e461]:
+              - img [ref=e462]
+            - cell [ref=e464]:
+              - img [ref=e465]
+            - cell [ref=e467]:
+              - img [ref=e469]
+            - cell [ref=e471]:
+              - img [ref=e473]
+          - row "Investor Readiness Score" [ref=e475]:
+            - cell "Investor Readiness Score" [ref=e476]
+            - cell [ref=e477]:
+              - img [ref=e478]
+            - cell [ref=e480]:
+              - img [ref=e481]
+            - cell [ref=e483]:
+              - img [ref=e485]
+            - cell [ref=e487]:
+              - img [ref=e489]
+          - row "Deck Review" [ref=e491]:
+            - cell "Deck Review" [ref=e492]
+            - cell [ref=e493]:
+              - img [ref=e494]
+            - cell [ref=e496]:
+              - img [ref=e497]
+            - cell [ref=e499]:
+              - img [ref=e501]
+            - cell [ref=e503]:
+              - img [ref=e505]
+          - row "Strategy Docs" [ref=e507]:
+            - cell "Strategy Docs" [ref=e508]
+            - cell [ref=e509]:
+              - img [ref=e510]
+            - cell [ref=e512]:
+              - img [ref=e513]
+            - cell [ref=e515]:
+              - img [ref=e517]
+            - cell [ref=e519]:
+              - img [ref=e521]
+          - row "Weekly SMS Check-Ins" [ref=e523]:
+            - cell "Weekly SMS Check-Ins" [ref=e524]
+            - cell [ref=e525]:
+              - img [ref=e526]
+            - cell [ref=e528]:
+              - img [ref=e529]
+            - cell [ref=e531]:
+              - img [ref=e532]
+            - cell [ref=e534]:
+              - img [ref=e536]
+          - row "Boardy Integration" [ref=e538]:
+            - cell "Boardy Integration" [ref=e539]
+            - cell [ref=e540]:
+              - img [ref=e541]
+            - cell [ref=e543]:
+              - img [ref=e544]
+            - cell [ref=e546]:
+              - img [ref=e547]
+            - cell [ref=e549]:
+              - img [ref=e551]
+          - row "Virtual Team Agents" [ref=e553]:
+            - cell "Virtual Team Agents" [ref=e554]
+            - cell [ref=e555]:
+              - img [ref=e556]
+            - cell [ref=e558]:
+              - img [ref=e559]
+            - cell [ref=e561]:
+              - img [ref=e562]
+            - cell [ref=e564]:
+              - img [ref=e566]
+    - generic [ref=e570]:
+      - generic [ref=e571]:
+        - paragraph [ref=e572]: Try any paid plan free for 14 days.
+        - paragraph [ref=e573]: If Sahara doesn't give you clarity you didn't have before, don't pay.
+      - paragraph [ref=e574]: Founders spend $5K–$15K on advisors, tools, and consultants. Sahara replaces that with one system.
+    - generic [ref=e576]:
+      - generic [ref=e577]:
+        - heading "Our Guiding Principles" [level=2] [ref=e578]
+        - paragraph [ref=e579]: Non-negotiable values that shape everything we build.
+      - generic [ref=e580]:
+        - generic [ref=e582]:
+          - generic [ref=e583]: "1."
+          - paragraph [ref=e584]: Founders earn access to capital tooling by building real businesses.
+        - generic [ref=e586]:
+          - generic [ref=e587]: "2."
+          - paragraph [ref=e588]: Fundraising is never positioned as success by default.
+        - generic [ref=e590]:
+          - generic [ref=e591]: "3."
+          - paragraph [ref=e592]: Free tier builds trust and habit. Paid tiers deliver leverage and judgment.
+        - generic [ref=e594]:
+          - generic [ref=e595]: "4."
+          - paragraph [ref=e596]: Each tier unlocks outcomes, not just features.
+        - generic [ref=e598]:
+          - generic [ref=e599]: "5."
+          - paragraph [ref=e600]: Higher tiers reduce time-to-clarity and time-to-conviction.
+    - generic [ref=e602]:
+      - generic [ref=e603]:
+        - generic [ref=e604]:
+          - link "Sahara" [ref=e605] [cursor=pointer]:
+            - /url: /
+            - img "Sahara" [ref=e606]
+          - paragraph [ref=e607]: The AI-powered decision operating system for startup founders. Built by Fred Cary — hundreds of founders coached, $3B+ raised.
+          - link "Get Started Free" [ref=e608] [cursor=pointer]:
+            - /url: /get-started
+            - text: Get Started Free
+            - img
+        - generic [ref=e609]:
+          - heading "Quick Links" [level=4] [ref=e610]
+          - generic [ref=e611]:
+            - link "Pricing" [ref=e612] [cursor=pointer]:
+              - /url: /pricing
+            - link "Features" [ref=e613] [cursor=pointer]:
+              - /url: /#features
+            - link "FAQ" [ref=e614] [cursor=pointer]:
+              - /url: /#faq
+        - generic [ref=e615]:
+          - heading "Connect" [level=4] [ref=e616]
+          - generic [ref=e617]:
+            - link "Twitter" [ref=e618] [cursor=pointer]:
+              - /url: https://twitter.com/fredcary
+              - img
+            - link "LinkedIn" [ref=e619] [cursor=pointer]:
+              - /url: https://linkedin.com/in/fredcary
+              - img
+          - paragraph [ref=e620]: Founders earn access to capital tooling by building real businesses.
+      - generic [ref=e621]:
+        - generic [ref=e622]: © 2026 Fred Cary. All rights reserved.
+        - generic [ref=e623]:
+          - link "Privacy" [ref=e624] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e625] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=e626]
