@@ -26,6 +26,13 @@ interface UsageData {
     usersWithSessions: number;
     returnWithin48hRate: number;
   };
+  byTier?: Array<{
+    tier: number;
+    tierName: string;
+    users: number;
+    actions: number;
+    credits: number;
+  }>;
 }
 
 function pct(n: number): string {
@@ -72,6 +79,7 @@ export default function AdminUsagePage() {
   if (!data) return <p className="text-gray-500">No usage data.</p>;
 
   const { usage, metrics } = data;
+  const byTier = data.byTier ?? [];
   const actionRows = Object.entries(usage.byAction).sort(
     (a, b) => b[1].credits - a[1].credits
   );
@@ -115,6 +123,39 @@ export default function AdminUsagePage() {
             sub={`${metrics.returningUsers} / ${metrics.usersWithSessions} users`}
           />
           <Stat label="Total sessions" value={metrics.totalSessions.toLocaleString()} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">Usage by tier</h2>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-800 text-left">
+              <tr>
+                <th className="px-4 py-2 font-medium">Tier</th>
+                <th className="px-4 py-2 font-medium text-right">Active users</th>
+                <th className="px-4 py-2 font-medium text-right">Actions</th>
+                <th className="px-4 py-2 font-medium text-right">Credits</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byTier.map((t) => (
+                <tr key={t.tier} className="border-t border-gray-100 dark:border-gray-800">
+                  <td className="px-4 py-2 font-medium">{t.tierName}</td>
+                  <td className="px-4 py-2 text-right">{t.users.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right">{t.actions.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right">{t.credits.toLocaleString()}</td>
+                </tr>
+              ))}
+              {byTier.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-3 text-gray-500" colSpan={4}>
+                    No usage recorded yet.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </section>
 
