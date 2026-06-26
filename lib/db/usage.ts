@@ -15,13 +15,23 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { getPlanByPriceId } from "@/lib/stripe/config";
-import { UserTier, getTierFromString } from "@/lib/constants";
+import { UserTier, TIER_NAMES, getTierFromString } from "@/lib/constants";
 import {
   getActionCost,
   computeRemainingCredits,
   getTierAllowance,
   type UsageActionType,
 } from "@/lib/usage/credits";
+import {
+  startOfUtcDay,
+  nextUtcDayReset,
+  secondsUntilReset,
+  computeActionThrottle,
+  getTierDailyLimits,
+  getUpsellReason,
+  type ActionThrottleStatus,
+  type UpsellReason,
+} from "@/lib/usage/throttle";
 
 /** A session is considered "open" if touched within this idle window. */
 export const SESSION_IDLE_MS = 30 * 60 * 1000; // 30 minutes
@@ -368,4 +378,215 @@ export async function getSessionMetrics(
       ? returningUsers / usersWithSessions
       : 0,
   };
+}
+
+// ============================================================================
+// Daily throttling (AI-6486)
+//
+// The credit allowance above governs the *monthly* budget. These helpers govern
+// the *daily* per-action-type limits used to throttle the free tier and trigger
+// upsells. They count rows (actions taken), not credits, since the daily caps
+// are "N of this action per day".
+// ============================================================================
+
+/**
+ * Count of each action type taken by a user since the start of the current UTC
+ * day. One query, bucketed in JS (per-user daily row volume is small).
+ */
+export async function getActionCountsToday(
+  userId: string,
+  now: Date = new Date()
+): Promise<Record<string, number>> {
+  const since = startOfUtcDay(now);
+  try {
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from("usage_records")
+      .select("action_type")
+      .eq("user_id", userId)
+      .gte("created_at", since);
+    const counts: Record<string, number> = {};
+    for (const r of data ?? []) {
+      const a = String(r.action_type);
+      counts[a] = (counts[a] ?? 0) + 1;
+    }
+    return counts;
+  } catch (error) {
+    console.error("[getActionCountsToday] failed:", error);
+    return {};
+  }
+}
+
+/** Count of a single action type taken by a user today (UTC). */
+export async function getActionCountToday(
+  userId: string,
+  action: string,
+  now: Date = new Date()
+): Promise<number> {
+  const since = startOfUtcDay(now);
+  try {
+    const supabase = createServiceClient();
+    const { count } = await supabase
+      .from("usage_records")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("action_type", action)
+      .gte("created_at", since);
+    return count ?? 0;
+  } catch (error) {
+    console.error("[getActionCountToday] failed:", error);
+    return 0;
+  }
+}
+
+export interface DailyThrottleStatus {
+  tier: UserTier;
+  /** ISO timestamp of the start of the current daily window (UTC midnight). */
+  dayStart: string;
+  /** ISO timestamp when the daily usage resets (next UTC midnight). */
+  resetsAt: string;
+  /** Seconds until reset — handy for "resets in Xh" UI and Retry-After. */
+  resetsInSeconds: number;
+  /** Per-action throttle status for every action capped on this tier. */
+  actions: ActionThrottleStatus[];
+  /** Whether to surface an upsell, and why (null = no nudge needed). */
+  upsell: UpsellReason;
+}
+
+/**
+ * Full daily throttle status for a user: resolves their tier, counts today's
+ * actions, and computes per-action remaining/blocked/approaching plus an
+ * overall upsell decision. Only actions that carry a daily cap on the user's
+ * tier are returned (unlimited actions are omitted to keep the payload tight).
+ */
+export async function getDailyThrottleStatus(
+  userId: string,
+  now: Date = new Date()
+): Promise<DailyThrottleStatus> {
+  const [tier, counts] = await Promise.all([
+    resolveUserTier(userId),
+    getActionCountsToday(userId, now),
+  ]);
+
+  const limits = getTierDailyLimits(tier);
+  const actions: ActionThrottleStatus[] = Object.keys(limits)
+    .filter((action) => limits[action as keyof typeof limits] !== null)
+    .map((action) => computeActionThrottle(tier, action, counts[action] ?? 0));
+
+  return {
+    tier,
+    dayStart: startOfUtcDay(now),
+    resetsAt: nextUtcDayReset(now),
+    resetsInSeconds: secondsUntilReset(now),
+    actions,
+    upsell: getUpsellReason(actions),
+  };
+}
+
+export interface DailyActionCheck {
+  allowed: boolean;
+  status: ActionThrottleStatus;
+  resetsAt: string;
+  resetsInSeconds: number;
+}
+
+/**
+ * Check whether a single action is allowed under the daily throttle for a
+ * known tier. Used by the track route, which already resolved the tier when
+ * checking the monthly credit budget — pass it in to avoid a second lookup.
+ */
+export async function checkDailyAction(
+  userId: string,
+  tier: UserTier,
+  action: string,
+  now: Date = new Date()
+): Promise<DailyActionCheck> {
+  const used = await getActionCountToday(userId, action, now);
+  const status = computeActionThrottle(tier, action, used);
+  return {
+    allowed: status.unlimited || status.remaining >= 1,
+    status,
+    resetsAt: nextUtcDayReset(now),
+    resetsInSeconds: secondsUntilReset(now),
+  };
+}
+
+// ============================================================================
+// Per-tier admin aggregation (AI-6486)
+// ============================================================================
+
+export interface TierUsageRow {
+  tier: UserTier;
+  tierName: string;
+  users: number;
+  actions: number;
+  credits: number;
+}
+
+/**
+ * Aggregate usage bucketed by user tier since `sinceIso` (default: period
+ * start). Tier is resolved from the admin-managed `profiles.tier` column in a
+ * single bulk read (users absent from profiles, or with no tier, bucket to
+ * FREE) — an aggregate dashboard view, not a billing-grade per-user resolution.
+ */
+export async function getUsageByTier(
+  sinceIso?: string
+): Promise<TierUsageRow[]> {
+  const since = sinceIso ?? currentPeriodStart();
+  const supabase = createServiceClient();
+
+  const { data } = await supabase
+    .from("usage_records")
+    .select("user_id, credits_consumed")
+    .gte("created_at", since)
+    .limit(10000);
+
+  const rows = data ?? [];
+  const userIds = Array.from(new Set(rows.map((r) => String(r.user_id))));
+
+  // Bulk-resolve tiers from profiles.
+  const tierByUser: Record<string, UserTier> = {};
+  if (userIds.length > 0) {
+    try {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, tier")
+        .in("id", userIds);
+      for (const p of profiles ?? []) {
+        tierByUser[String(p.id)] =
+          p.tier !== null && p.tier !== undefined
+            ? getTierFromString(String(p.tier))
+            : UserTier.FREE;
+      }
+    } catch (error) {
+      console.error("[getUsageByTier] profile lookup failed:", error);
+    }
+  }
+
+  const buckets: Record<
+    number,
+    { users: Set<string>; actions: number; credits: number }
+  > = {};
+  for (const t of [UserTier.FREE, UserTier.BUILDER, UserTier.PRO, UserTier.STUDIO]) {
+    buckets[t] = { users: new Set(), actions: 0, credits: 0 };
+  }
+
+  for (const r of rows) {
+    const uid = String(r.user_id);
+    const tier = tierByUser[uid] ?? UserTier.FREE;
+    const b = buckets[tier];
+    b.users.add(uid);
+    b.actions += 1;
+    b.credits += Number(r.credits_consumed) || 0;
+  }
+
+  return [UserTier.FREE, UserTier.BUILDER, UserTier.PRO, UserTier.STUDIO].map(
+    (tier) => ({
+      tier,
+      tierName: TIER_NAMES[tier],
+      users: buckets[tier].users.size,
+      actions: buckets[tier].actions,
+      credits: buckets[tier].credits,
+    })
+  );
 }

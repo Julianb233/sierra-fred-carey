@@ -3,6 +3,7 @@ import { requireAdminRequest } from "@/lib/auth/admin";
 import {
   getUsageSummary,
   getSessionMetrics,
+  getUsageByTier,
   currentPeriodStart,
 } from "@/lib/db/usage";
 
@@ -26,14 +27,16 @@ export async function GET(request: NextRequest) {
   const since = url.searchParams.get("since") || undefined;
   const top = Number(url.searchParams.get("top")) || 20;
 
-  const [summary, sessions] = await Promise.all([
+  const [summary, sessions, byTier] = await Promise.all([
     getUsageSummary(since, top),
     getSessionMetrics(since),
+    getUsageByTier(since),
   ]);
 
   return NextResponse.json({
     periodStart: since ?? currentPeriodStart(),
     usage: summary,
     metrics: sessions,
+    byTier,
   });
 }
