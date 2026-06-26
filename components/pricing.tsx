@@ -10,14 +10,15 @@ import { Card3D } from "@/components/premium/Card3D";
 import { FadeUpOnScroll } from "@/components/premium/AnimatedText";
 import { redirectToCheckout } from "@/lib/stripe/client";
 import { PLANS, isTrialEnabled } from "@/lib/stripe/config";
+import { FUNNEL_URL } from "@/lib/constants";
 
 export default function Pricing() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
     if (!priceId) {
-      // Free plan - redirect to you.joinsahara.com
-      window.location.assign("https://you.joinsahara.com");
+      // Free plan - redirect to the funnel/app entry point (AI-7364: single source of truth)
+      window.location.assign(FUNNEL_URL);
       return;
     }
 

@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Zap, TrendingUp, AlertCircle, CheckCircle2, Target, Users, DollarSign, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { FUNNEL_URL } from "@/lib/constants";
 
 export default function RealityLensDemo() {
   const [activeScore, setActiveScore] = useState(0);
@@ -224,7 +225,7 @@ export default function RealityLensDemo() {
               </div>
 
               <Button asChild size="lg" className="w-full bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25 mt-8">
-                <Link href="https://you.joinsahara.com">
+                <Link href={FUNNEL_URL}>
                   Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
 
                 </Link>
