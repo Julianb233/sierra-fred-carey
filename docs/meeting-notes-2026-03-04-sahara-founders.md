@@ -38,26 +38,54 @@ Two key meetings covered Sahara's product readiness, launch strategy, and partne
 - Voice-thread API issue (confirmed fixed, needs hard reload)
 - Compute costs per active user unknown — critical input for pricing
 
-### Action Items (March 4)
-1. **Julian Bradley** — Run performance and compute-cost estimates, send via WhatsApp
-2. **Julian Bradley** — Integrate agreed onboarding flow once he has API key and voice ID
-3. **Julian Bradley** — Message group when pushed updates are deployed for testing
-4. **Ira Hayes** — Run cost model for compute and present results
-5. **Fred Cary** — Prepare presentation deck for Palo Alto pitch to 200 founders
-6. **Fred Cary** — Verify outstanding authorizations/screenshots completed
-7. **Alex LaTorre** — Fix chat freezing/response-chopping bug
-8. **Alex LaTorre** — Enable subscription flow + two-week free trial for event
-9. **Alex LaTorre** — Convert onboarding checkboxes into text fields for free-text answers
-10. **Alex LaTorre** — Confirm and provide correct voice ID and account access to Julian
-11. **Alex LaTorre** — Rename UI: "Fred AI" → "Mentor", "Journey" → "Progress"
-12. **Alex LaTorre** — Add visible "open roadmap" button, make 4 main sections persistently visible
-13. **Alex LaTorre** — Implement radar UI copy and inline article/blurb feature
-14. **Alex LaTorre** — Ensure mobile call/text continuity works
-15. **Alex LaTorre** — Surface simple progress percentage above business-intelligence radar
-16. **Gregory + Alex** — Implement storing cleaned chat data as per-user memory/mini-brain
-17. **Product team** — Create "chat with Fred" entry point + visible progress tracking
-18. **Product team** — Add concise onboarding guide before users interact with Mentor
-19. **All participants** — Create new accounts and test Sahara this week
+### Action Items (March 4) — 19-Point Task List
+
+> **Status audited against the codebase on 2026-06-25 (AI-8013).** Codebase = `joinsahara.com` (Julian's full version). Legend: ✅ shipped · 🟡 partial · ⬜ external/manual (not codebase-verifiable). Path references point at the implementing code.
+
+| # | Owner | Task | Status | Evidence |
+|---|-------|------|--------|----------|
+| 1 | Julian Bradley | Run performance and compute-cost estimates, send via WhatsApp | ⬜ external | Operational/WhatsApp deliverable — not a codebase artifact |
+| 2 | Julian Bradley | Integrate agreed onboarding flow once API key + voice ID available | ✅ shipped | `app/get-started/page.tsx`, `app/onboarding/page.tsx`; voice ID wired in voice worker |
+| 3 | Julian Bradley | Message group when pushed updates are deployed for testing | ⬜ external | Comms task — not a codebase artifact |
+| 4 | Ira Hayes | Run cost model for compute and present results | ⬜ external | Analysis deliverable — not a codebase artifact |
+| 5 | Fred Cary | Prepare Palo Alto pitch deck for 200 founders | ⬜ external | Deck lives at `deck.joinsahara.com` (Alex), not this repo |
+| 6 | Fred Cary | Verify outstanding authorizations/screenshots completed | ⬜ external | Manual verification task |
+| 7 | Alex LaTorre | Fix chat freezing/response-chopping bug | ✅ shipped | Chat persistence/streaming hardened — see `.planning/DEPLOY-VERIFY-2026-02-19-pass8-chat-persistence.md` and `app/api/fred/chat/route.ts` |
+| 8 | Alex LaTorre | Enable subscription flow + two-week free trial | ✅ shipped | `app/api/stripe/checkout/route.ts`, `webhook/route.ts`, `portal/route.ts` |
+| 9 | Alex LaTorre | Convert onboarding checkboxes → free-text fields | ✅ shipped | Free-text onboarding in `app/get-started/`; report ingests free-text answers (`lib/report/prompt.ts`) |
+| 10 | Alex LaTorre | Confirm + provide correct voice ID + account access | ✅ shipped | Voice ID `uxq5gLBpu73uF1Aqzb2t` documented below; LiveKit voice worker live |
+| 11 | Alex LaTorre | Rename "Fred AI" → "Mentor", "Journey" → "Progress" | ✅ shipped | `components/dashboard/sidebar-content.tsx`, `components/mobile/mobile-bottom-nav.tsx`, `components/welcome/journey-welcome.tsx` |
+| 12 | Alex LaTorre | Visible "open roadmap" button + 4 main sections persistent | ✅ shipped | `components/dashboard/WelcomeModal.tsx`, dashboard sidebar; Oases roadmap APIs `app/api/oases/*` |
+| 13 | Alex LaTorre | Radar UI copy + inline article/blurb feature | ✅ shipped | `components/tools/RadarChart.tsx`, `app/tools/investor-readiness/page.tsx` |
+| 14 | Alex LaTorre | Mobile call/text continuity | 🟡 partial | `components/mobile/mobile-bottom-nav.tsx` + voice worker; cross-device continuity flagged finnicky on some Android (Samsung) in WhatsApp notes |
+| 15 | Alex LaTorre | Progress % above business-intelligence radar | ✅ shipped | `app/api/oases/progress/route.ts` powers progress %; surfaced above radar in dashboard |
+| 16 | Gregory + Alex | Store cleaned chat data as per-user memory/mini-brain | ✅ shipped | `lib/fred/active-memory.ts`, `lib/db/fred-memory.ts`, `lib/ai/memory-extraction-prompt.ts`, `lib/fred/founder-memory-types.ts` |
+| 17 | Product team | "Chat with Fred" entry point + visible progress tracking | ✅ shipped | `app/chat/page.tsx` + Oases progress tracking |
+| 18 | Product team | Concise onboarding guide before users meet Mentor | ✅ shipped | `app/onboarding/page.tsx`, `lib/hooks/use-onboarding-checklist.ts`, `components/welcome/journey-welcome.tsx` |
+| 19 | All participants | Create new accounts and test Sahara this week | ⬜ external | Manual QA loop — see "Robert Williams User Testing Loop" below |
+
+**Codebase scorecard:** of the 13 codebase-verifiable items (2, 7–18), **12 are shipped** and **1 is partial** (#14 mobile call/text continuity). The remaining 6 items (1, 3, 4, 5, 6, 19) are external/operational and cannot be confirmed from this repo.
+
+---
+
+## Report Generation Feature — Verified ✅ (AI-8013, 2026-06-25)
+
+The founder **readiness report** generation feature is present and functional in the codebase.
+
+**Surface area:**
+| Layer | Path |
+|-------|------|
+| Generate API (auth-gated) | `app/api/reports/generate/route.ts` → `POST /api/reports/generate` |
+| List API | `app/api/reports/list/route.ts` |
+| Report viewer page | `app/reports/[id]/page.tsx` |
+| Core generator | `lib/report/generate-report.ts` (`generateReport(userId)`) |
+| Claude prompt + parser | `lib/report/prompt.ts` (`buildSystemPrompt`, `buildUserMessage`, `parseReportPayload`) |
+| HTML + text renderer | `lib/report/renderer.ts` (`renderReportHtml`, `renderReportText`) |
+| Types + tier pricing | `lib/report/types.ts` (`ReportPayload`, `TIER_PRICE_CENTS`) |
+
+**Pipeline:** loads the user's `startup_processes` row → inserts a pending `founder_reports` row → calls Claude (`SAHARA_REPORT_MODEL`, default `claude-sonnet-4`) → parses the JSON payload (robust to code-fence / truncation / stray-prose edge cases) → renders branded HTML → persists the completed row → emails it best-effort via Resend. Recommends an upgrade tier (clarity $29 / validate $49 / accelerator $99) based on the score.
+
+**Test coverage added (AI-8013):** `lib/report/report.test.ts` — 15 passing unit tests covering payload parsing (all 4 extraction fallbacks + the two failure modes), HTML rendering (score/headline, killbox gating, upgrade CTA, XSS escaping), plain-text rendering, and tier pricing. Run with `npx vitest run lib/report/report.test.ts`.
 
 ---
 
