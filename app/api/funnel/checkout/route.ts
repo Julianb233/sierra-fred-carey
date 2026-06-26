@@ -34,7 +34,10 @@ export async function POST(request: NextRequest) {
     const { tier, email } = body;
 
     // Map tier to plan
+    // AI-7490 — Builder ($39/mo) is a first-class paid tier and must be
+    // purchasable through the funnel, not just Pro ($99) and Studio ($249).
     const TIER_TO_PLAN_KEY: Record<string, keyof typeof PLANS> = {
+      BUILDER: "BUILDER",
       PRO: "FUNDRAISING",
       FUNDRAISING: "FUNDRAISING",
       STUDIO: "VENTURE_STUDIO",
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
     const planKey = TIER_TO_PLAN_KEY[(tier || "PRO").toUpperCase()];
     if (!planKey) {
       return NextResponse.json(
-        { error: "Invalid tier. Available tiers: 'pro', 'studio'." },
+        { error: "Invalid tier. Available tiers: 'builder', 'pro', 'studio'." },
         { status: 400, headers: corsHeaders(origin) }
       );
     }
