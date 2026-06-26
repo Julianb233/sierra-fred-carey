@@ -92,3 +92,7 @@ workers/voice-agent/dist/
 .planning/e2e/results/
 agentic-os.config.json
 AGENTS.md
+
+# Python bytecode cache
+__pycache__/
+*.pyc
