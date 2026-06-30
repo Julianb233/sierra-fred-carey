@@ -3,10 +3,12 @@
  *
  * GET /api/admin/conversation-priorities[?limit=50]
  *
- * Team-facing read of the persisted conversation summaries. Surfaces two
+ * Team-facing read of the persisted conversation summaries. Surfaces three
  * prioritized queues the Sahara team can act on:
  *   - attentionQueue:    founders who need attention soon (high priorityScore)
  *   - upsellCandidates:  founders recommended for a free -> paid upgrade
+ *   - conversionQueue:   free founders ranked by conversion readiness within the
+ *                        gated Discovery -> paid progression (AI-3526)
  *
  * This reads what the conversation-summaries cron already persisted — it does
  * NOT re-run the (expensive) AI summarization. Admin-gated.

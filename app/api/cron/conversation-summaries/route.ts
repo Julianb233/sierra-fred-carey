@@ -22,6 +22,7 @@ import {
   saveSummary,
 } from "@/lib/ai/conversation-summarizer";
 import { evaluateUpsell } from "@/lib/sales/upsell-engine";
+import { scoreConversionReadiness } from "@/lib/sales/conversion-prioritizer";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -100,6 +101,12 @@ export async function GET(request: NextRequest) {
     urgency: string;
     confidence: number;
   }> = [];
+  const conversionQueue: Array<{
+    userId: string;
+    score: number;
+    stage: string;
+    recommendedAction: string;
+  }> = [];
 
   for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
     const batch = userIds.slice(i, i + BATCH_SIZE);
@@ -115,12 +122,22 @@ export async function GET(request: NextRequest) {
           if (summary.sourceEpisodes === 0) return;
 
           const upsell = evaluateUpsell({ currentTier: tier, summary });
-          await saveSummary(userId, summary, {
-            recommend: upsell.recommend,
-            targetTier: upsell.targetTier,
-            urgency: upsell.urgency,
-            confidence: upsell.confidence,
+          const readiness = scoreConversionReadiness({
+            currentTier: tier,
+            summary,
+            upsell,
           });
+          await saveSummary(
+            userId,
+            summary,
+            {
+              recommend: upsell.recommend,
+              targetTier: upsell.targetTier,
+              urgency: upsell.urgency,
+              confidence: upsell.confidence,
+            },
+            { score: readiness.score, stage: readiness.stage }
+          );
 
           processed++;
           if (summary.priorityScore >= 7) {
@@ -138,6 +155,15 @@ export async function GET(request: NextRequest) {
               confidence: upsell.confidence,
             });
           }
+          // Free founders progressing toward a paid tier (exclude converted).
+          if (readiness.isDiscovery && readiness.stage !== "converted") {
+            conversionQueue.push({
+              userId,
+              score: readiness.score,
+              stage: readiness.stage,
+              recommendedAction: readiness.recommendedAction,
+            });
+          }
         } catch (error) {
           failed++;
           console.error(`${LOG_PREFIX} Failed for ${userId}:`, error);
@@ -148,11 +174,13 @@ export async function GET(request: NextRequest) {
 
   attentionQueue.sort((a, b) => b.priority - a.priority);
   upsellCandidates.sort((a, b) => b.confidence - a.confidence);
+  conversionQueue.sort((a, b) => b.score - a.score);
 
   const durationMs = Date.now() - startedAt;
   console.log(
     `${LOG_PREFIX} Done: ${processed} processed, ${failed} failed, ` +
-      `${attentionQueue.length} high-priority, ${upsellCandidates.length} upsell candidates (${durationMs}ms)`
+      `${attentionQueue.length} high-priority, ${upsellCandidates.length} upsell candidates, ` +
+      `${conversionQueue.length} conversion candidates (${durationMs}ms)`
   );
 
   return NextResponse.json({
@@ -163,9 +191,11 @@ export async function GET(request: NextRequest) {
       failed,
       highPriority: attentionQueue.length,
       upsellCandidates: upsellCandidates.length,
+      conversionCandidates: conversionQueue.length,
       durationMs,
     },
     attentionQueue: attentionQueue.slice(0, 25),
     upsellCandidates: upsellCandidates.slice(0, 25),
+    conversionQueue: conversionQueue.slice(0, 25),
   });
 }
