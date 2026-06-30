@@ -37,6 +37,10 @@
     {
       "path": "/api/cron/conversation-summaries",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/onboarding-reminders",
+      "schedule": "0 17 * * *"
     }
   ],
   "headers": [

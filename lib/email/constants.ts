@@ -16,6 +16,9 @@ export const EMAIL_CATEGORIES: Record<EmailCategory, string> = {
   milestone: 'email',
   re_engagement: 'marketing',
   feedback_improvement: 'feedback',
+  // Onboarding nudges are lifecycle/activation emails; gated only by the
+  // master `email` toggle so users who haven't customized prefs still receive them.
+  onboarding: 'email',
 };
 
 /** Minimum total activity items required to send a digest (0 means any activity triggers send) */
