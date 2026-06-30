@@ -5,12 +5,26 @@
 
 export type ReEngagementTier = 'day7' | 'day14' | 'day30';
 
+/** Delivery channel for a re-engagement reminder. */
+export type ReEngagementChannel = 'email' | 'sms';
+
+/**
+ * The email_sends.email_type value used to log and de-duplicate
+ * re-engagement reminders across both channels. SMS sends reuse this
+ * email_type (with email_subtype = `${tier}_sms`) so the existing
+ * idempotency machinery covers both the email and text channels.
+ */
+export const RE_ENGAGEMENT_EMAIL_TYPE = 're_engagement';
+
 export interface ReEngagementCandidate {
   userId: string;
-  email: string;
+  /** May be null if the profile has no email on file. */
+  email: string | null;
   name: string;
   inactiveDays: number;
   tier: ReEngagementTier;
+  /** Verified, opted-in phone number (E.164) or null when SMS is unavailable. */
+  phoneNumber: string | null;
 }
 
 export interface ReEngagementEmailData {
