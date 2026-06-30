@@ -268,6 +268,15 @@ export async function saveSummary(
     targetTier: number | null;
     urgency: string;
     confidence: number;
+  },
+  /**
+   * Optional conversion-readiness output (lib/sales/conversion-prioritizer.ts,
+   * AI-3526). Persisted via a guarded follow-up UPDATE so the base summary row
+   * still saves even before the 003_conversion_readiness migration is applied.
+   */
+  conversion?: {
+    score: number;
+    stage: string;
   }
 ): Promise<string | null> {
   try {
@@ -308,6 +317,26 @@ export async function saveSummary(
     `;
     const id = result[0]?.id as string;
     logger.log(`[ConvSummary] Saved summary ${id} for user ${userId}`);
+
+    // Persist conversion readiness in a separate, guarded UPDATE so a missing
+    // column (pre-migration) degrades to a logged warning instead of dropping
+    // the whole summary row.
+    if (id && conversion) {
+      try {
+        await sql`
+          UPDATE conversation_summaries
+          SET conversion_readiness = ${conversion.score},
+              progression_stage = ${conversion.stage}
+          WHERE id = ${id}
+        `;
+      } catch (convError) {
+        console.warn(
+          "[ConvSummary] Conversion readiness not persisted (run migration 003?):",
+          convError instanceof Error ? convError.message : convError
+        );
+      }
+    }
+
     return id ?? null;
   } catch (error) {
     console.error("[ConvSummary] Failed to save summary:", error);
@@ -379,6 +408,10 @@ export interface PrioritizedFounder {
   upsellTargetTier: number | null;
   upsellUrgency: string | null;
   upsellConfidence: number | null;
+  /** 0-100 readiness to convert from free Discovery onto a paid tier (AI-3526). */
+  conversionReadiness: number | null;
+  /** Funnel stage: discovery|activated|evaluating|ready|converted (AI-3526). */
+  progressionStage: string | null;
   lastSummaryAt: string;
 }
 
@@ -390,6 +423,11 @@ export interface PrioritizedQueues {
   attentionQueue: PrioritizedFounder[];
   /** Recommended upsell targets, most-confident first. */
   upsellCandidates: PrioritizedFounder[];
+  /**
+   * Hottest free-Discovery -> paid conversion candidates first, by readiness
+   * score (AI-3526). Excludes founders already on a paid tier (converted).
+   */
+  conversionQueue: PrioritizedFounder[];
 }
 
 /**
@@ -404,18 +442,31 @@ export async function getPrioritizedQueues(options?: {
   const limit = Math.max(1, Math.min(200, options?.limit ?? 50));
   const generatedAt = new Date().toISOString();
   try {
-    const rows = await sql`
-      SELECT DISTINCT ON (user_id)
-        user_id, headline, current_focus, sentiment, priority_score,
-        upsell_recommended, upsell_target_tier, upsell_urgency, upsell_confidence,
-        created_at
-      FROM conversation_summaries
-      ORDER BY user_id, created_at DESC
-    `;
+    // Prefer the columns added by migration 003; fall back to the base column
+    // set so the queues keep working before the migration is applied.
+    let rows: Record<string, unknown>[];
+    try {
+      rows = (await sql`
+        SELECT DISTINCT ON (user_id)
+          user_id, headline, current_focus, sentiment, priority_score,
+          upsell_recommended, upsell_target_tier, upsell_urgency, upsell_confidence,
+          conversion_readiness, progression_stage,
+          created_at
+        FROM conversation_summaries
+        ORDER BY user_id, created_at DESC
+      `) as Record<string, unknown>[];
+    } catch {
+      rows = (await sql`
+        SELECT DISTINCT ON (user_id)
+          user_id, headline, current_focus, sentiment, priority_score,
+          upsell_recommended, upsell_target_tier, upsell_urgency, upsell_confidence,
+          created_at
+        FROM conversation_summaries
+        ORDER BY user_id, created_at DESC
+      `) as Record<string, unknown>[];
+    }
 
-    const founders: PrioritizedFounder[] = (
-      rows as Record<string, unknown>[]
-    ).map((r) => ({
+    const founders: PrioritizedFounder[] = rows.map((r) => ({
       userId: String(r.user_id),
       headline: String(r.headline ?? ""),
       currentFocus: String(r.current_focus ?? ""),
@@ -427,6 +478,10 @@ export async function getPrioritizedQueues(options?: {
       upsellUrgency: r.upsell_urgency == null ? null : String(r.upsell_urgency),
       upsellConfidence:
         r.upsell_confidence == null ? null : Number(r.upsell_confidence),
+      conversionReadiness:
+        r.conversion_readiness == null ? null : Number(r.conversion_readiness),
+      progressionStage:
+        r.progression_stage == null ? null : String(r.progression_stage),
       lastSummaryAt: String(r.created_at),
     }));
 
@@ -440,11 +495,24 @@ export async function getPrioritizedQueues(options?: {
       .sort((a, b) => (b.upsellConfidence ?? 0) - (a.upsellConfidence ?? 0))
       .slice(0, limit);
 
+    // Conversion queue: free founders progressing toward a paid tier, hottest
+    // first. Founders already on a paid tier are stage "converted" and excluded.
+    const conversionQueue = founders
+      .filter(
+        (f) =>
+          f.conversionReadiness != null &&
+          f.progressionStage != null &&
+          f.progressionStage !== "converted"
+      )
+      .sort((a, b) => (b.conversionReadiness ?? 0) - (a.conversionReadiness ?? 0))
+      .slice(0, limit);
+
     return {
       generatedAt,
       totalFounders: founders.length,
       attentionQueue,
       upsellCandidates,
+      conversionQueue,
     };
   } catch (error) {
     console.error("[ConvSummary] Failed to build prioritized queues:", error);
@@ -453,6 +521,7 @@ export async function getPrioritizedQueues(options?: {
       totalFounders: 0,
       attentionQueue: [],
       upsellCandidates: [],
+      conversionQueue: [],
     };
   }
 }
