@@ -77,6 +77,12 @@ export default async function AdminLayout({
               Feedback
             </Link>
             <Link
+              href="/admin/conversation-priorities"
+              className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Priorities
+            </Link>
+            <Link
               href="/admin/testing"
               className="px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >

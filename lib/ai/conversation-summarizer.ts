@@ -364,3 +364,95 @@ export async function getLatestSummary(
     return null;
   }
 }
+
+/** Priority score at/above which a founder lands in the attention queue. */
+export const ATTENTION_PRIORITY_THRESHOLD = 7;
+
+/** A founder's latest summary, condensed for the team prioritization queues. */
+export interface PrioritizedFounder {
+  userId: string;
+  headline: string;
+  currentFocus: string;
+  sentiment: ConversationSentiment;
+  priorityScore: number;
+  upsellRecommended: boolean;
+  upsellTargetTier: number | null;
+  upsellUrgency: string | null;
+  upsellConfidence: number | null;
+  lastSummaryAt: string;
+}
+
+export interface PrioritizedQueues {
+  generatedAt: string;
+  /** Founders with at least one stored summary. */
+  totalFounders: number;
+  /** Highest-priority founders first (priorityScore >= threshold). */
+  attentionQueue: PrioritizedFounder[];
+  /** Recommended upsell targets, most-confident first. */
+  upsellCandidates: PrioritizedFounder[];
+}
+
+/**
+ * Team-facing prioritization routine. Reads the *latest* stored summary per
+ * founder (no AI re-run — that's the cron's job) and splits them into an
+ * attention queue and an upsell-candidate queue so the Sahara team can act on
+ * the conversation data. Fails soft to empty queues.
+ */
+export async function getPrioritizedQueues(options?: {
+  limit?: number;
+}): Promise<PrioritizedQueues> {
+  const limit = Math.max(1, Math.min(200, options?.limit ?? 50));
+  const generatedAt = new Date().toISOString();
+  try {
+    const rows = await sql`
+      SELECT DISTINCT ON (user_id)
+        user_id, headline, current_focus, sentiment, priority_score,
+        upsell_recommended, upsell_target_tier, upsell_urgency, upsell_confidence,
+        created_at
+      FROM conversation_summaries
+      ORDER BY user_id, created_at DESC
+    `;
+
+    const founders: PrioritizedFounder[] = (
+      rows as Record<string, unknown>[]
+    ).map((r) => ({
+      userId: String(r.user_id),
+      headline: String(r.headline ?? ""),
+      currentFocus: String(r.current_focus ?? ""),
+      sentiment: (r.sentiment as ConversationSentiment) ?? "neutral",
+      priorityScore: Number(r.priority_score ?? 1),
+      upsellRecommended: Boolean(r.upsell_recommended),
+      upsellTargetTier:
+        r.upsell_target_tier == null ? null : Number(r.upsell_target_tier),
+      upsellUrgency: r.upsell_urgency == null ? null : String(r.upsell_urgency),
+      upsellConfidence:
+        r.upsell_confidence == null ? null : Number(r.upsell_confidence),
+      lastSummaryAt: String(r.created_at),
+    }));
+
+    const attentionQueue = founders
+      .filter((f) => f.priorityScore >= ATTENTION_PRIORITY_THRESHOLD)
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, limit);
+
+    const upsellCandidates = founders
+      .filter((f) => f.upsellRecommended)
+      .sort((a, b) => (b.upsellConfidence ?? 0) - (a.upsellConfidence ?? 0))
+      .slice(0, limit);
+
+    return {
+      generatedAt,
+      totalFounders: founders.length,
+      attentionQueue,
+      upsellCandidates,
+    };
+  } catch (error) {
+    console.error("[ConvSummary] Failed to build prioritized queues:", error);
+    return {
+      generatedAt,
+      totalFounders: 0,
+      attentionQueue: [],
+      upsellCandidates: [],
+    };
+  }
+}
