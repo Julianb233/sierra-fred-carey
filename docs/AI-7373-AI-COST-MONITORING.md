@@ -24,7 +24,15 @@ This maps onto the existing provider tiers in `lib/ai/providers.ts`:
 
 ## How to monitor spend
 
-Run the read-only cost report (added under AI-7373):
+Two read-only surfaces, both backed by the **same** aggregation
+(`lib/ai/cost-monitor.ts`) so they never disagree:
+
+**1. Admin dashboard (AI-7363) — for the team.** Sign in to `/admin` and open
+**`/admin/ai-costs`**. Shows the Claude vs Gemini spend split (stacked bar +
+per-platform cards), per-provider/model table, and top analyzers, with a 7 / 30 /
+90-day window selector. Served by `GET /api/admin/ai-costs?days=N` (admin-gated).
+
+**2. CLI report (AI-7373) — for devs / cron.**
 
 ```bash
 npx tsx scripts/ai-cost-report.ts            # last 30 days
@@ -33,9 +41,11 @@ npx tsx scripts/ai-cost-report.ts --json     # machine-readable
 # or:  npm run ai:cost-report
 ```
 
-It aggregates `ai_requests` / `ai_responses` by platform (Claude vs Gemini vs
-OpenAI), provider/model, and analyzer, and prints an **approximate** spend
-figure. It writes nothing.
+Both aggregate `ai_requests` / `ai_responses` by platform (Claude vs Gemini vs
+OpenAI), provider/model, and analyzer. They report the **persisted**
+`estimated_cost` once migration 003 (below) is applied and rows carry it;
+otherwise they fall back to an **approximate** blended-rate figure and flag
+`telemetrySchemaMissing`. Nothing is written.
 
 ## ⚠ Known blocker — telemetry is not being persisted
 
@@ -50,8 +60,21 @@ As of 2026-06-30 both `ai_requests` and `ai_responses` have **0 rows**, because
 
 The errors are caught and swallowed (the functions return `unlogged-<ts>` so the
 real AI call doesn't fail), so this fails **silently**. **No cost data can exist
-until this is fixed.** Tracked as a separate bug (see the Linear comment on
-AI-7373 for the issue link).
+until this is fixed.**
+
+**Fix shipped under AI-7363** — apply `supabase-migrations/003_ai_cost_telemetry.sql`
+(additive, idempotent: `ADD COLUMN IF NOT EXISTS` + `DROP NOT NULL` on
+`ai_requests.input_data`). `lib/ai/logging.ts` now also supplies `input_data`,
+so request rows persist under either schema variant. After applying:
+
+```bash
+psql "$DATABASE_URL" -f supabase-migrations/003_ai_cost_telemetry.sql
+```
+
+Until it is applied the dashboard + CLI degrade gracefully to the approximate
+basis (verified live 2026-06-30: `telemetry_schema_missing: true`, 0 rows). The
+remaining step to get real numbers is to route the live AI call paths through
+`trackedGenerate()` / `logAIResponse()` rather than raw `fred-client.generate`.
 
 **Recommended fix (additive, idempotent):**
 
