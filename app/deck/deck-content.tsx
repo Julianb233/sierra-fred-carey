@@ -4,7 +4,16 @@ import Image from "next/image";
 import { useState } from "react";
 import { RevenueChart } from "./revenue-chart";
 
-const teamMembers = [
+type TeamMember = {
+  name: string;
+  title: string;
+  stats: string;
+  tagline: string;
+  image?: string;
+  initials: string;
+};
+
+const teamMembers: TeamMember[] = [
   {
     name: "Fred Cary",
     title: "Chairman",
@@ -52,13 +61,13 @@ const teamMembers = [
 function TeamMemberPhoto({
   member,
 }: {
-  member: (typeof teamMembers)[number];
+  member: TeamMember;
 }) {
   const [failed, setFailed] = useState(false);
 
   return (
     <div className="aspect-square bg-slate-200 mb-4 border border-[#101828]/5 overflow-hidden grayscale hover:grayscale-0 transition-all relative">
-      {failed ? (
+      {failed || !member.image ? (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#101828] to-[#1e293b]">
           <span className="text-5xl font-black text-white/30">
             {member.initials}
