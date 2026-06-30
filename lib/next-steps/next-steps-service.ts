@@ -227,12 +227,23 @@ export async function extractAndStoreNextSteps(
 }
 
 /**
- * Extract Next 3 Actions from FRED response text.
- * Matches the pattern:
- *   **Next 3 Actions:**
+ * Extract the founder's next actions from a FRED response.
+ *
+ * Fred Cary's product principle is "every session must produce two or three
+ * clear next steps." FRED's main chat prompt emits a "**Next 3 Actions:**"
+ * heading, but other surfaces (SMS, voice summaries) and natural LLM drift
+ * produce equivalent headings such as "Next Actions:", "Next Steps:",
+ * "## Your Next Steps", or "Next 2 Actions". The marker below recognizes any
+ * of these so a session never silently fails to capture its action items
+ * (which would also break the cross-session memory and overdue reminders that
+ * read from next_steps).
+ *
+ * Matches headings like:
+ *   **Next 3 Actions:**      Next Actions:        ## Next Steps
+ *   Next 2 actions:          Your Next Steps      Next 3 Action Items:
  *   1. Do X
  *   2. Do Y
- *   3. Do Z
+ *   3. Do Z   (capped at the first 3 items)
  *
  * Also attempts to extract "why it matters" if the action item
  * contains a dash or colon separator (e.g., "Do X -- this will help...")
@@ -291,7 +302,13 @@ export async function markReminderSent(
 function extractNextActions(
   text: string
 ): Array<{ description: string; whyItMatters: string | null; dueDate: string | null }> {
-  const marker = /\*?\*?Next 3 [Aa]ctions:?\*?\*?\s*\n/i;
+  // Anchor the heading to its own line (optionally a markdown heading / bold)
+  // and accept an optional count ("3", "2") plus the action/step synonyms.
+  // Requiring the line to terminate at an optional colon prevents matching a
+  // mid-sentence "...your next steps in the journey..." while still catching
+  // real headings like "Next Steps:" or "Your Next Steps".
+  const marker =
+    /(?:^|\n)[ \t]*(?:#{1,4}[ \t]*)?\*{0,2}[ \t]*(?:your[ \t]+)?next[ \t]+(?:\d+[ \t]+)?(?:action[ \t]+items?|actions?|steps?)[ \t]*\*{0,2}[ \t]*:?[ \t]*\*{0,2}[ \t]*(?:\n|$)/i;
   const match = text.match(marker);
   if (!match || match.index === undefined) return [];
 
