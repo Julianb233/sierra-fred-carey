@@ -7,9 +7,16 @@ import {
   ReaderIcon,
   ChatBubbleIcon,
 } from "@radix-ui/react-icons";
-import { Network } from "lucide-react";
+import { Network, Building2 } from "lucide-react";
 
 const demos = [
+  {
+    title: "Enterprise Multi-Agent Sandbox",
+    description:
+      "Governed HR, IT, Finance & Security agents with role-based permission settings",
+    href: "/demo/enterprise",
+    icon: <Building2 className="h-6 w-6" />,
+  },
   {
     title: "Reality Lens",
     description: "5-dimensional AI analysis of your startup idea",
