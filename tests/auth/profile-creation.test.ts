@@ -7,6 +7,7 @@
  * - Profile creation errors are properly propagated
  *
  * Related: .planning/debug/backend-user-system.md
+ * Related Linear task: AI-917 (Supabase cookies called outside Next.js request context in tests)
  */
 
 import { vi } from "vitest";
