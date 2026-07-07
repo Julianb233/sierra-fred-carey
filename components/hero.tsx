@@ -105,7 +105,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-6"
           >
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
+            <h1 className="text-[clamp(2rem,10vw,3rem)] sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] text-gray-900 dark:text-white break-words max-w-full">
               <span className="block">What if you could</span>
               <span className="block text-[#ff6a1a] mt-2 relative inline-block">
                 create a unicorn,
