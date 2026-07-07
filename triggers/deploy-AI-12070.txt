@@ -1,0 +1,4 @@
+# auto-deploy-trigger
+This file exists only to trigger a deploy on push to main.
+Last triggered: 2026-07-07 14:37 UTC
+Purpose: Deploy PR #320 (mobile hero overflow fix) to production.
