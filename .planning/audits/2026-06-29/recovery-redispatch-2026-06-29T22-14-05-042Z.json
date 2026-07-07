@@ -1,0 +1,17 @@
+{
+  "startedAt": "2026-06-29T22:14:04.142Z",
+  "results": [
+    {
+      "email": "ux-test-2026-04-20b@aiacrobatics.com",
+      "id": "92f1b815-b92d-46c2-9ba4-cc3dd8a842ac",
+      "ok": true,
+      "attempt": 1
+    }
+  ],
+  "finishedAt": "2026-06-29T22:14:05.042Z",
+  "summary": {
+    "sent": 1,
+    "failed": 0,
+    "total": 1
+  }
+}
