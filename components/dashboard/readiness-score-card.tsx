@@ -139,16 +139,14 @@ export function ReadinessScoreCard({
               Category Breakdown
             </p>
             {categories.map((cat) => (
-              <div key={cat.category} className="space-y-1">
-                <div className="flex justify-between text-xs">
+              <div key={cat.category} className="space-y-1.5">
+                <div className="flex justify-between items-baseline text-xs">
                   <span className="font-medium text-gray-700 dark:text-gray-300">
                     {cat.label}
                   </span>
-                  <span className="text-gray-500">
-                    {cat.score}/100
-                    <span className="text-gray-400 ml-1">
-                      (benchmark: {cat.benchmark})
-                    </span>
+                  <span className="text-base font-bold text-gray-900 dark:text-white tabular-nums">
+                    {cat.score}
+                    <span className="text-xs font-normal text-gray-400 dark:text-gray-500">/100</span>
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
@@ -164,6 +162,9 @@ export function ReadinessScoreCard({
                     style={{ width: `${Math.min(cat.score, 100)}%` }}
                   />
                 </div>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 text-right">
+                  vs. stage benchmark: {cat.benchmark}
+                </p>
               </div>
             ))}
           </div>
