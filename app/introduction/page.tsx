@@ -238,8 +238,8 @@ export default function IntroductionPage() {
               Why Sahara Is Different
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              There are plenty of AI tools. There's only one built by someone
-              who's done it — repeatedly.
+              There are plenty of AI tools. There&apos;s only one built by someone
+              who&apos;s done it — repeatedly.
             </p>
           </motion.div>
 
