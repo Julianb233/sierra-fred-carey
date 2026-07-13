@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrackedResponse, ChatMessage } from "@/lib/ai/client";
-import { FRED_CAREY_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import {
+  FRED_CAREY_SYSTEM_PROMPT,
+  ASK_AI_SYSTEM_PROMPT,
+  COACHING_PROMPTS,
+  getPromptForTopic,
+} from "@/lib/ai/prompts";
 import { getOptionalUserId } from "@/lib/auth";
 
 /**
  * POST /api/chat
  * Chat with Fred Carey AI assistant
+ *
+ * Accepts an optional "mode" field:
+ *   - "ask-ai" — scoped single-turn Q&A (no mentor persona, no onboarding dialogue)
+ *   - "fundraising" | "pitchReview" | "strategy" — coaching topic with mentor persona
+ *   - omitted or any other value — full mentor persona (default, backward compatible)
  *
  * SECURITY: Optional authentication - works for both authenticated and anonymous users
  * Note: For authenticated users, we can provide personalized responses
@@ -16,13 +26,21 @@ export async function POST(req: NextRequest) {
     // Chat can work without auth, but personalized if authenticated
     const userId = await getOptionalUserId();
 
-    const { message, history } = await req.json();
+    const { message, history, mode } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
         { error: "Message is required" },
         { status: 400 }
       );
+    }
+
+    // Select the right system prompt based on mode
+    let systemPrompt = FRED_CAREY_SYSTEM_PROMPT;
+    if (mode === "ask-ai") {
+      systemPrompt = ASK_AI_SYSTEM_PROMPT;
+    } else if (mode && Object.keys(COACHING_PROMPTS).includes(mode)) {
+      systemPrompt = getPromptForTopic(mode as keyof typeof COACHING_PROMPTS);
     }
 
     // Build conversation history for context
@@ -44,7 +62,7 @@ export async function POST(req: NextRequest) {
     // Generate response using tracked AI client (logs to DB, supports A/B testing)
     const trackedResult = await generateTrackedResponse(
       messages,
-      FRED_CAREY_SYSTEM_PROMPT,
+      systemPrompt,
       {
         userId: userId || undefined,
         analyzer: "chat",
