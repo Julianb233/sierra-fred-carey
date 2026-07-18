@@ -96,21 +96,21 @@ const nextConfig = {
 
 // Serwist wraps first (inner), then Sentry wraps second (outer)
 const serwistConfig = withSerwist(nextConfig);
+const disablePreviewSourcemaps =
+  process.env.VERCEL_ENV === "preview" ||
+  process.env.SENTRY_DISABLE_SOURCE_MAPS === "1";
 
 const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
   ? withSentryConfig(serwistConfig, {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
-      // Was `widenClientFileUpload: true`. With the growth of client chunks
-      // (many routes + lots of pages merged 2026-04-22), the Sentry source-map
-      // upload step OOMed the default 4GB Vercel build container (SIGKILL
-      // after "Successfully uploaded source maps to Sentry" completed the
-      // bulk of the work but pushed the build over the limit). Setting to
-      // false limits upload to default/server files and server bundles,
-      // which is enough for useful stack traces without upload storms.
-      // Re-enable only after Enhanced Builds (higher RAM) is toggled in the
-      // Vercel project settings.
+      // Vercel preview builds run on shared builders and can OOM during Sentry
+      // source-map upload. Keep production uploads enabled, but skip them for
+      // PR previews unless explicitly overridden.
+      sourcemaps: {
+        disable: disablePreviewSourcemaps,
+      },
       widenClientFileUpload: false,
       hideSourceMaps: true,
       disableLogger: true,
