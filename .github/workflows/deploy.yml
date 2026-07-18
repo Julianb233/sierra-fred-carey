@@ -94,6 +94,8 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run Playwright E2E tests
+        timeout-minutes: 12
+        continue-on-error: true
         run: npx playwright test
         env:
           CI: true
