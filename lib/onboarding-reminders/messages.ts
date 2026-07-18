@@ -1,6 +1,6 @@
 /**
  * Onboarding Reminder Copy
- * AI-3518: Automated email + text reminders for user engagement
+ * AI-3492: Automated email + text reminders for user engagement
  *
  * Tier-specific copy for both channels. Email copy is rendered through the
  * branded OnboardingReminderEmail template; SMS copy is kept under the single
