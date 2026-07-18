@@ -38,7 +38,6 @@ import type { ConversationState } from "@/lib/db/conversation-state";
 import { buildStepGuidanceBlock, buildRealityLensGateBlock, buildRealityLensStatusBlock, buildFrameworkInjectionBlock, buildModeTransitionBlock, buildIRSPromptBlock, buildDeckProtocolBlock, buildDeckReviewReadyBlock } from "@/lib/ai/prompts";
 import { determineModeTransition, type DiagnosticMode } from "@/lib/ai/diagnostic-engine";
 import type { ConversationStateContext } from "@/lib/fred/types";
-import { estimateTokens } from "@/lib/ai/context-manager";
 import { captureError, setUserContext, addBreadcrumb, withSentrySpan } from "@/lib/sentry";
 import { logJourneyEventAsync } from "@/lib/db/journey-events";
 import { extractSentiment } from "@/lib/feedback/sentiment";
@@ -54,6 +53,7 @@ import { validateStageAccess } from "@/lib/oases/stage-validator";
 import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases/stage-gate-prompt";
 import type { OasesStage } from "@/types/oases";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
+import { compactFredContextBlocks } from "@/lib/fred/context-blocks";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -790,66 +790,29 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
     // AI-8890: Loop-breaker — after N exchanges, tell FRED to wrap up
     const loopBreakerBlock = buildLoopBreakerBlock(exchangeCount ?? 0);
 
-    let fullContext = [
-      loopBreakerBlock,    // AI-8890: Loop-breaker takes highest priority when active
-      stageRedirectBlock,  // Phase 80: Stage-gate redirect (highest priority when active)
-      stageAwareBlock,     // Phase 80: Always-on stage awareness + proactive guidance
-      founderContext,
-      stepGuidanceBlock,
-      accountabilityBlock, // Outstanding action items from past conversations
-      rlStatusBlock,
-      rlGateBlock,
-      frameworkBlock,
-      modeTransitionBlock,
-      irsBlock,
-      deckProtocolBlock,
-      deckReviewReadyBlock,
-      wellbeingBlock,
-      pageContextBlock,
-    ].filter(Boolean).join("\n\n");
-
-    // Phase 63-03: Context window management — ensure fullContext fits within token budget
-    // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt
-    const contextTokens = estimateTokens(fullContext);
-    if (contextTokens > 100_000) {
-      // Truncation priority (keep most important first):
-      // 0. stageRedirectBlock, 1. stageAwareBlock, 2. founderContext, 3. frameworkBlock,
-      // 4. stepGuidanceBlock, 5. rlStatusBlock, 6. rlGateBlock, 7. modeTransitionBlock,
-      // 8. irsBlock, 9. deckProtocolBlock, 10. deckReviewReadyBlock
-      // Drop least critical blocks first (reverse priority)
-      const blocksInPriority = [
-        { name: "stageRedirectBlock", value: stageRedirectBlock },
-        { name: "stageAwareBlock", value: stageAwareBlock },
-        { name: "founderContext", value: founderContext },
-        { name: "frameworkBlock", value: frameworkBlock },
-        { name: "stepGuidanceBlock", value: stepGuidanceBlock },
-        { name: "rlStatusBlock", value: rlStatusBlock },
-        { name: "rlGateBlock", value: rlGateBlock },
-        { name: "modeTransitionBlock", value: modeTransitionBlock },
-        { name: "irsBlock", value: irsBlock },
-        { name: "deckProtocolBlock", value: deckProtocolBlock },
-        { name: "deckReviewReadyBlock", value: deckReviewReadyBlock },
-      ].filter((b) => Boolean(b.value));
-
-      // Drop blocks from lowest priority until under budget
-      const truncatedBlocks = [...blocksInPriority];
-      while (truncatedBlocks.length > 1) {
-        const candidate = truncatedBlocks.map((b) => b.value).join("\n\n");
-        if (estimateTokens(candidate) <= 100_000) break;
-        truncatedBlocks.pop(); // Remove lowest priority block
-      }
-
-      fullContext = truncatedBlocks.map((b) => b.value).join("\n\n");
-
-      // If still over budget (founderContext alone is too large), truncate it
-      if (estimateTokens(fullContext) > 100_000) {
-        const maxChars = 100_000 * 4; // ~4 chars per token
-        fullContext = fullContext.substring(0, maxChars);
-      }
-
-      const truncatedTokens = estimateTokens(fullContext);
+    // Phase 63-03: Context window management — ensure fullContext fits within token budget.
+    // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt.
+    const compactedContext = compactFredContextBlocks([
+      { name: "loopBreakerBlock", value: loopBreakerBlock, priority: 100 },    // AI-8890: highest priority when active
+      { name: "stageRedirectBlock", value: stageRedirectBlock, priority: 95 },  // Phase 80: stage-gate redirect
+      { name: "wellbeingBlock", value: wellbeingBlock, priority: 90 },          // Phase 83: crisis/support guidance must survive
+      { name: "stageAwareBlock", value: stageAwareBlock, priority: 85 },
+      { name: "founderContext", value: founderContext, priority: 80 },
+      { name: "accountabilityBlock", value: accountabilityBlock, priority: 75 },
+      { name: "stepGuidanceBlock", value: stepGuidanceBlock, priority: 70 },
+      { name: "rlStatusBlock", value: rlStatusBlock, priority: 65 },
+      { name: "rlGateBlock", value: rlGateBlock, priority: 60 },
+      { name: "frameworkBlock", value: frameworkBlock, priority: 55 },
+      { name: "modeTransitionBlock", value: modeTransitionBlock, priority: 50 },
+      { name: "irsBlock", value: irsBlock, priority: 45 },
+      { name: "deckProtocolBlock", value: deckProtocolBlock, priority: 40 },
+      { name: "deckReviewReadyBlock", value: deckReviewReadyBlock, priority: 35 },
+      { name: "pageContextBlock", value: pageContextBlock, priority: 30 },
+    ]);
+    const fullContext = compactedContext.context;
+    if (compactedContext.droppedBlocks.length > 0) {
       console.warn(
-        `[FRED Chat] Context truncated: ${contextTokens} tokens -> ${truncatedTokens} tokens`
+        `[FRED Chat] Context truncated: ${compactedContext.originalTokens} tokens -> ${compactedContext.compactedTokens} tokens; dropped=${compactedContext.droppedBlocks.join(",")}`
       );
     }
 
