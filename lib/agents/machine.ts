@@ -75,6 +75,16 @@ export const agentOrchestratorMachine = setup({
         return runGrowthAgent(input);
       }
     ),
+
+    /**
+     * Fabe Ops Agent - handles executive assistant operating plans in draft-only mode
+     */
+    fabeOpsAgent: fromPromise<AgentResult, AgentTask>(
+      async ({ input }) => {
+        const { runFabeOpsAgent } = await import("./fabe-ops/agent");
+        return runFabeOpsAgent(input);
+      }
+    ),
   },
 
   guards: {
@@ -97,6 +107,13 @@ export const agentOrchestratorMachine = setup({
      */
     isGrowthTask: ({ context }) => {
       return context.currentTask?.agentType === "growth";
+    },
+
+    /**
+     * Route to Fabe Ops agent
+     */
+    isFabeOpsTask: ({ context }) => {
+      return context.currentTask?.agentType === "fabe_ops";
     },
   },
 
@@ -221,6 +238,11 @@ export const agentOrchestratorMachine = setup({
           actions: "logTransition",
         },
         {
+          guard: "isFabeOpsTask",
+          target: "executing_fabe_ops",
+          actions: "logTransition",
+        },
+        {
           target: "error",
           actions: ["logTransition", "storeRoutingError"],
         },
@@ -281,6 +303,30 @@ export const agentOrchestratorMachine = setup({
     executing_growth: {
       invoke: {
         src: "growthAgent",
+        input: ({ context }) => context.currentTask!,
+        onDone: {
+          target: "complete",
+          actions: ["logTransition", "storeResult", "clearTask"],
+        },
+        onError: {
+          target: "error",
+          actions: ["logTransition", "storeError"],
+        },
+      },
+      on: {
+        CANCEL: {
+          target: "failed",
+          actions: "logTransition",
+        },
+      },
+    },
+
+    /**
+     * Executing Fabe Ops Agent
+     */
+    executing_fabe_ops: {
+      invoke: {
+        src: "fabeOpsAgent",
         input: ({ context }) => context.currentTask!,
         onDone: {
           target: "complete",

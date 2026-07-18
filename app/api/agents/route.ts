@@ -34,7 +34,7 @@ import { sanitizeUserInput, detectInjectionAttempt } from "@/lib/ai/guards/promp
 // ============================================================================
 
 const dispatchSchema = z.object({
-  agentType: z.enum(["founder_ops", "fundraising", "growth"]),
+  agentType: z.enum(["founder_ops", "fundraising", "growth", "fabe_ops"]),
   taskType: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   input: z.record(z.string(), z.unknown()).optional(),
@@ -199,6 +199,7 @@ export async function GET(request: NextRequest) {
       "founder_ops",
       "fundraising",
       "growth",
+      "fabe_ops",
     ];
     const validStatuses: AgentStatus[] = [
       "pending",

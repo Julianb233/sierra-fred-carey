@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     );
 
     // 3. Validate enum values if provided
-    const validAgentTypes: AgentType[] = ["founder_ops", "fundraising", "growth"];
+    const validAgentTypes: AgentType[] = ["founder_ops", "fundraising", "growth", "fabe_ops"];
     const validStatuses: AgentStatus[] = ["pending", "running", "complete", "failed", "cancelled"];
 
     if (agentType && !validAgentTypes.includes(agentType)) {
