@@ -24,7 +24,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, memo } from "react";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -43,9 +43,10 @@ function NavBar() {
   // - /login has a full-screen centered auth layout
   const isChat = pathname === "/chat";
   const isLogin = pathname === "/login";
+  const isStartNow = pathname === "/start-now";
   const isCheckIns = pathname?.startsWith("/check-ins");
   const isDeck = pathname === "/deck";
-  const hideNavBar = isChat || isDashboard || isLogin || isCheckIns || isDeck;
+  const hideNavBar = isChat || isDashboard || isLogin || isStartNow || isCheckIns || isDeck;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -209,13 +210,13 @@ function NavBar() {
                 ) : (
                   <>
                     <Button asChild size="lg" variant="outline" className="w-full touch-target border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff6a1a] hover:text-[#ff6a1a]">
-                      <Link href={FUNNEL_URL} onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>
                         Login
                       </Link>
                     </Button>
 
                     <Button asChild size="lg" className="w-full touch-target bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25">
-                      <Link href={FUNNEL_URL} onClick={() => setIsMenuOpen(false)}>
+                      <Link href={START_NOW_URL} onClick={() => setIsMenuOpen(false)}>
                         Get Started Free
                         <RocketIcon className="ml-2 h-4 w-4" />
                       </Link>
@@ -320,7 +321,7 @@ function NavBar() {
                   className="flex border-2 border-[#ff6a1a] text-[#ff6a1a] dark:text-[#ff6a1a] bg-white/90 dark:bg-gray-950/90 hover:bg-[#ff6a1a] hover:text-white dark:hover:text-white font-semibold shadow-md transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href={FUNNEL_URL} aria-label="Log in to your account">
+                  <Link href="/login" aria-label="Log in to your account">
                     Log in
                   </Link>
                 </Button>
@@ -329,7 +330,7 @@ function NavBar() {
                   className="hidden sm:flex bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300 touch-target"
                   size="sm"
                 >
-                  <Link href={FUNNEL_URL}>
+                  <Link href={START_NOW_URL}>
                     Get Started Free
                     <RocketIcon className="ml-2 h-4 w-4" />
                   </Link>

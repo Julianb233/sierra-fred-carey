@@ -7,20 +7,24 @@ test.describe("Pricing & Checkout Flow", () => {
     await page.waitForSelector("text=PRICING", { timeout: 15000 });
   });
 
-  test("should display all three tier cards with correct names", async ({
+  test("should display all four tier cards with correct names", async ({
     page,
   }) => {
     // Free tier
     await expect(page.getByText("Free", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Free Forever")).toBeVisible();
 
+    // Builder tier
+    await expect(page.getByText("Builder", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("For Founders Getting Serious")).toBeVisible();
+
     // Pro tier (Fundraising & Strategy)
     await expect(page.getByText("Pro", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("For Active Fundraisers")).toBeVisible();
+    await expect(page.getByText("For Founders Preparing to Raise")).toBeVisible();
 
     // Studio tier (Venture Studio)
     await expect(page.getByText("Studio", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Full Leverage Mode")).toBeVisible();
+    await expect(page.getByText("For Founders Who Want Execution")).toBeVisible();
   });
 
   test("should display correct pricing amounts", async ({ page }) => {
@@ -44,29 +48,26 @@ test.describe("Pricing & Checkout Flow", () => {
     await expect(page.getByText("Feature Comparison")).toBeVisible();
 
     // Check a few comparison features
-    await expect(page.getByText("Core OS").first()).toBeVisible();
-    await expect(page.getByText("Investor Lens").first()).toBeVisible();
-    await expect(page.getByText("Deck Review").first()).toBeVisible();
+    const comparisonTable = page.locator("table").first();
+    await expect(comparisonTable).toBeVisible();
+    await expect(comparisonTable.getByText("Core OS")).toBeVisible();
+    await expect(comparisonTable.getByText("Investor Lens")).toBeVisible();
+    await expect(comparisonTable.getByText("Deck Review")).toBeVisible();
   });
 
   test("should show CTA buttons for all tiers", async ({ page }) => {
-    await expect(page.getByText("Get Started Free")).toBeVisible();
-
-    // Both Pro and Studio have "Start 14-Day Trial"
-    const trialButtons = page.getByText("Start 14-Day Trial");
-    await expect(trialButtons.first()).toBeVisible();
-    expect(await trialButtons.count()).toBe(2);
+    const startNowLinks = page.locator('a[href="/start-now"]');
+    expect(await startNowLinks.count()).toBeGreaterThanOrEqual(4);
   });
 
-  test("Free tier CTA should link to /get-started", async ({ page }) => {
-    const freeCTA = page.locator('a[href="/get-started"]').first();
-    await expect(freeCTA).toBeVisible();
-    await expect(freeCTA).toHaveText("Get Started Free");
+  test("Free tier CTA should link to /start-now", async ({ page }) => {
+    const freeCTA = page.locator('a[href="/start-now"]').filter({ hasText: "Get Started Free" });
+    await expect(freeCTA.first()).toBeAttached();
   });
 
-  test("Pro tier CTA should link to /get-started", async ({ page }) => {
-    // All CTA buttons link to /get-started
-    const ctaLinks = page.locator('a[href="/get-started"]');
+  test("Pro tier CTA should link to /start-now", async ({ page }) => {
+    // All CTA buttons link to the capture-first signup page.
+    const ctaLinks = page.locator('a[href="/start-now"]');
     expect(await ctaLinks.count()).toBeGreaterThanOrEqual(3);
   });
 
@@ -99,7 +100,7 @@ test.describe("Pricing & Checkout Flow", () => {
       await route.abort();
     });
 
-    // The pricing page CTA links to /get-started, not directly to checkout.
+    // The pricing page CTA links to /start-now, not directly to checkout.
     // The checkout flow is triggered via the UpgradeTier dialog on dashboard pages.
     // We verify the route interception is set up correctly.
     expect(checkoutRequestBody).toBeNull(); // No checkout call on pricing page load

@@ -24,7 +24,7 @@ const links = [
   {
     title: "Get Started",
     description: "Begin your founder journey today",
-    href: "/get-started",
+    href: "/start-now",
     icon: EnterIcon,
     gradient: "from-[#fb923c] to-[#ff6a1a]",
   },

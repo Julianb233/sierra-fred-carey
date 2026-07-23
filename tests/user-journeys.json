@@ -13,7 +13,7 @@
     {
       "id": "journey-001",
       "name": "New User Signup Flow",
-      "description": "End-to-end test of user registration through the 3-click get-started onboarding flow (stage selection, challenge selection, email/password signup) to dashboard landing with welcome modal",
+      "description": "End-to-end test of user registration through the capture-first /start-now signup flow (name, email, phone lead capture, then account password) to dashboard landing with welcome modal",
       "priority": "critical",
       "estimatedDuration": "60s",
       "preconditions": [
@@ -44,59 +44,67 @@
           "action": "Click 'Get Started' CTA button in hero section or navbar",
           "type": "ui",
           "expected": {
-            "navigatesTo": "/get-started",
+            "navigatesTo": "/start-now",
             "pageLoads": true,
-            "elements": ["'3 clicks to get started' badge with Sparkles icon", "Step 1 heading 'What stage are you at?'", "4 stage option cards (Ideation, Pre-seed, Seed, Series A+)", "Progress dots (3 dots, first active)"],
-            "animations": "Framer Motion fade-in with y-axis slide"
+            "elements": ["Sahara Founding Members badge", "Heading 'Reserve your founder seat.'", "Name input", "Email input", "Phone input", "Contact consent checkbox", "'RESERVE MY FOUNDER SEAT' button"],
+            "animations": "Brand-consistent responsive layout renders without navigation chrome on the capture page"
           },
-          "failCriteria": "Navigation fails, /get-started returns 404, or stage selection cards do not render",
+          "failCriteria": "Navigation fails, /start-now returns 404, or contact capture fields do not render",
           "severity": "blocker"
         },
         {
           "id": "CP-001-03",
           "step": 3,
-          "action": "Click 1: Select a startup stage (e.g., 'Ideation')",
+          "action": "Fill lead capture fields with name, email, and phone",
           "type": "frontend",
           "expected": {
             "stateChanges": {
-              "selectedStage": "idea",
-              "currentStep": "auto-advances to 2 after 300ms delay"
+              "name": "trimmed founder name",
+              "email": "lowercased founder email",
+              "phone": "normalized E.164 phone number"
             },
-            "elements": ["Selected card shows orange border and CheckCircle2 icon", "Step 2 renders after transition: 'What's your #1 challenge?'", "6 challenge cards in 2x3 or 3x2 grid", "Back button appears"],
-            "animations": "AnimatePresence mode=wait exit animation followed by entry"
+            "elements": ["Name field remains visible", "Email field remains visible", "Phone field remains visible", "Consent checkbox remains visible"],
+            "animations": "No stage, challenge, business fundamentals, or AI-generated recommendation questions appear before lead capture"
           },
-          "failCriteria": "Stage selection does not highlight, auto-advance fails, or Step 2 does not render",
+          "failCriteria": "Contact fields reject valid values, phone normalization fails, or startup profile questions render before capture",
           "severity": "critical"
         },
         {
           "id": "CP-001-04",
           "step": 4,
-          "action": "Click 2: Select a challenge (e.g., 'Product-Market Fit')",
-          "type": "frontend",
+          "action": "Submit 'RESERVE MY FOUNDER SEAT' lead capture button",
+          "type": "integration",
           "expected": {
-            "stateChanges": {
-              "selectedChallenge": "product-market-fit",
-              "currentStep": "auto-advances to 3 after 300ms delay"
+            "apiCall": {
+              "method": "POST",
+              "endpoint": "/api/contact",
+              "body": {
+                "name": "founder name",
+                "email": "lowercased founder email",
+                "phone": "normalized phone",
+                "company": "Sahara Founding Members",
+                "source": "sahara_start_now",
+                "message": "structured lead intent with consent disclaimer"
+              }
             },
-            "elements": ["Step 3 renders: 'Let's get started!'", "Summary chips showing selected stage and challenge", "Email input field with Mail icon (autofocused)", "Password input field with Lock icon", "Password requirement indicators (8+ chars, uppercase, number)", "'Start Free Trial' button", "'No credit card required' text", "Back button"]
+            "elements": ["Lead captured confirmation", "Create your account heading", "Password input field with Lock icon", "'Start with Fred' button"]
           },
-          "failCriteria": "Challenge selection does not register, auto-advance to Step 3 fails, or form inputs not rendered",
+          "failCriteria": "/api/contact is not called first, source attribution is missing, or account creation appears before contact capture succeeds",
           "severity": "critical"
         },
         {
           "id": "CP-001-05",
           "step": 5,
-          "action": "Enter email and valid password (8+ chars, 1 uppercase, 1 number)",
+          "action": "Enter valid password (8+ chars, 1 uppercase, 1 number)",
           "type": "frontend",
           "expected": {
             "validation": {
-              "emailFormat": "regex /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/",
               "passwordMinLength": 8,
               "passwordUppercase": "at least one uppercase letter",
               "passwordNumber": "at least one digit"
             },
-            "elements": ["Password requirement indicators turn green as criteria met", "Error message clears on valid input"],
-            "buttonState": "'Start Free Trial' button enabled when both fields valid"
+            "elements": ["Password help text remains visible", "Error message clears on valid input"],
+            "buttonState": "'Start with Fred' button enabled when password is valid"
           },
           "failCriteria": "Validation does not trigger inline feedback, or button remains disabled despite valid input",
           "severity": "major"
@@ -104,17 +112,18 @@
         {
           "id": "CP-001-06",
           "step": 6,
-          "action": "Click 3: Submit 'Start Free Trial' button",
+          "action": "Click 'Start with Fred' button",
           "type": "integration",
           "expected": {
             "apiCall": {
               "method": "POST",
               "endpoint": "/api/onboard",
               "body": {
+                "name": "founder name",
                 "email": "test email (lowercased, trimmed)",
+                "phone": "normalized phone",
                 "password": "user password",
-                "stage": "selected stage id",
-                "challenges": ["selected challenge id"],
+                "challenges": [],
                 "isQuickOnboard": true
               }
             },
@@ -231,7 +240,7 @@
           "expected": {
             "url": "/login",
             "pageLoads": true,
-            "elements": ["Sahara logo (sahara-logo.svg, 180x40)", "'Welcome back' heading", "'Sign in to continue to your dashboard' subtext", "Email input with Mail icon and label", "Password input with Lock icon and label", "'Sign in' button with ArrowRight icon", "'Don't have an account? Get started free' link to /get-started"],
+            "elements": ["Sahara logo (sahara-logo.svg, 180x40)", "'Welcome back' heading", "'Sign in to continue to your dashboard' subtext", "Email input with Mail icon and label", "Password input with Lock icon and label", "'Sign in' button with ArrowRight icon", "'Don't have an account? Get started free' link to /start-now"],
             "suspenseFallback": "Loader2 spinner centered on screen while LoginContent loads"
           },
           "failCriteria": "Login page returns 404 or 500, form fields not rendered, or Suspense boundary shows error",
@@ -1227,13 +1236,13 @@
         {
           "id": "CP-007-09",
           "step": 9,
-          "action": "Verify /signup redirects to /get-started",
+          "action": "Verify /signup redirects to /start-now",
           "type": "frontend",
           "expected": {
             "initialUrl": "/signup",
-            "redirect": "router.replace('/get-started') fires on mount",
+            "redirect": "router.replace('/start-now?source=signup') fires on mount",
             "loadingState": "Spinning circle with 'Redirecting to signup...' text shown briefly",
-            "finalUrl": "/get-started"
+            "finalUrl": "/start-now?source=signup"
           },
           "failCriteria": "Redirect does not fire, or user sees infinite loading state on /signup",
           "severity": "minor"
@@ -1244,7 +1253,7 @@
           "action": "Verify public routes do not require authentication",
           "type": "backend",
           "expected": {
-            "publicRoutes": ["/", "/login", "/get-started", "/signup", "/pricing", "/about", "/features", "/support", "/contact", "/terms", "/privacy", "/blog", "/waitlist", "/product"],
+            "publicRoutes": ["/", "/login", "/start-now", "/get-started", "/signup", "/pricing", "/about", "/features", "/support", "/contact", "/terms", "/privacy", "/blog", "/waitlist", "/product"],
             "middlewareBehavior": "isProtectedRoute() returns false for all public paths, no redirect to /login"
           },
           "failCriteria": "Public page redirects to /login for unauthenticated users",
