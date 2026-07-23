@@ -36,12 +36,21 @@ const AGENT_OPTIONS: { value: AgentType; label: string }[] = [
   { value: "founder_ops", label: "Founder Ops" },
   { value: "fundraising", label: "Fundraising" },
   { value: "growth", label: "Growth" },
+  { value: "fabe_ops", label: "Fabe Ops" },
 ];
 
 const TASK_TYPE_SUGGESTIONS: Record<AgentType, string[]> = {
   founder_ops: ["email_draft", "task_creation", "meeting_prep", "weekly_priorities"],
   fundraising: ["investor_research", "outreach_draft", "pitch_strategy", "pipeline_analysis"],
   growth: ["channel_analysis", "experiment_design", "funnel_analysis", "content_strategy"],
+  fabe_ops: [
+    "inbox_triage",
+    "follow_up_plan",
+    "tracker_template",
+    "calendar_blocks",
+    "outreach_sequence",
+    "personal_support_checklist",
+  ],
 };
 
 // ============================================================================
