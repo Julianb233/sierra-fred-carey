@@ -8,7 +8,7 @@ import { Sparkles, Brain, Clock, Users, ArrowRight, Check as CheckIcon } from "l
 import NightModeParticles from "@/components/effects/NightModeParticles";
 import HeroButtonExpandable from "@/components/ui/hero-button-expandable";
 import HeroChatPreview from "@/components/hero-chat-preview";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 
 export default function Hero() {
   return (
@@ -142,7 +142,7 @@ export default function Hero() {
             <HeroButtonExpandable
               mainText="Get Started"
               expandedText="Let's Build"
-              href={FUNNEL_URL}
+              href={START_NOW_URL}
             />
 
             <motion.div
@@ -155,7 +155,7 @@ export default function Hero() {
                 size="lg"
                 className="text-lg px-8 h-14 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#702425] hover:text-[#702425] bg-transparent transition-all duration-300"
               >
-                <Link href={FUNNEL_URL} className="flex items-center gap-2">
+                <Link href={START_NOW_URL} className="flex items-center gap-2">
                   Join Now
                   <motion.span
                     animate={{ x: [0, 5, 0] }}
@@ -315,7 +315,7 @@ export default function Hero() {
                         size="lg"
                         className="text-lg px-8 h-14 bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-[#ff6a1a]/40 transition-all duration-300"
                       >
-                        <Link href={FUNNEL_URL} className="flex items-center gap-2">
+                        <Link href={START_NOW_URL} className="flex items-center gap-2">
                           Get Started
                           <ArrowRight className="h-5 w-5" />
                         </Link>
@@ -473,7 +473,7 @@ export default function Hero() {
               size="lg"
               className="text-xl px-12 h-16 bg-[#ff6a1a] hover:bg-[#ea580c] text-white border-0 shadow-2xl shadow-[#ff6a1a]/30 hover:shadow-[#ff6a1a]/50 transition-all duration-300"
             >
-              <Link href={FUNNEL_URL} className="flex items-center gap-3">
+              <Link href={START_NOW_URL} className="flex items-center gap-3">
                 Get Started
                 <ArrowRight className="h-6 w-6" />
               </Link>

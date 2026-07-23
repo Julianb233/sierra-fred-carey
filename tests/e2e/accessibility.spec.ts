@@ -5,7 +5,7 @@ const publicPages = [
   { name: "Homepage", path: "/" },
   { name: "About", path: "/about" },
   { name: "Login", path: "/login" },
-  { name: "Get Started", path: "/get-started" },
+  { name: "Start Now", path: "/start-now" },
   { name: "Pricing", path: "/pricing" },
   { name: "Contact", path: "/contact" },
   { name: "Blog", path: "/blog" },

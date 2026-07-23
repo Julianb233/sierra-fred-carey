@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function WaitlistPage() {
-  redirect("/get-started");
+  redirect("/start-now?source=waitlist");
 }

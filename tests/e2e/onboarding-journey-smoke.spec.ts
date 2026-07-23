@@ -25,12 +25,12 @@ test.describe("Onboarding Journey Smoke", () => {
     await page.waitForLoadState("networkidle")
     await page.waitForTimeout(1000)
 
-    // May redirect to login or get-started
+    // May redirect to login or the capture-first signup page.
     const url = page.url()
     const isAuthPage =
       url.includes("signup") ||
       url.includes("login") ||
-      url.includes("get-started")
+      url.includes("start-now")
     expect(isAuthPage, `Expected auth page, got: ${url}`).toBeTruthy()
 
     // Look for an email input on the page
@@ -41,35 +41,23 @@ test.describe("Onboarding Journey Smoke", () => {
     }
   })
 
-  test("get-started page loads onboarding flow", async ({ page }) => {
-    await page.goto("/get-started")
+  test("start-now page loads capture-first signup flow", async ({ page }) => {
+    await page.goto("/start-now")
     await page.waitForLoadState("networkidle")
     await page.waitForTimeout(2000)
 
     const url = page.url()
-    // Should either show onboarding or redirect if not authenticated
+    // Should either show capture-first signup or redirect if not authenticated.
     expect(
-      url.includes("get-started") ||
+      url.includes("start-now") ||
       url.includes("login") ||
       url.includes("signup")
     ).toBeTruthy()
 
-    // If on get-started, look for stage selection
-    if (url.includes("get-started")) {
-      const stageOption = page.getByText("Ideation")
-      if (await stageOption.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await stageOption.click()
-        await page.waitForTimeout(1000)
-        // Should advance to next question
-        const hasNextQuestion = await page
-          .getByText(/challenge|problem|goal/i)
-          .isVisible({ timeout: 5000 })
-          .catch(() => false)
-        // It's ok if next question doesn't appear (different flow versions)
-        if (hasNextQuestion) {
-          expect(hasNextQuestion).toBeTruthy()
-        }
-      }
+    if (url.includes("start-now")) {
+      await expect(page.getByText("Reserve your founder seat.")).toBeVisible()
+      await expect(page.locator('input[type="email"]')).toBeVisible()
+      await expect(page.locator('input[type="tel"]')).toBeVisible()
     }
   })
 
@@ -83,7 +71,7 @@ test.describe("Onboarding Journey Smoke", () => {
     expect(
       url.includes("dashboard") ||
       url.includes("login") ||
-      url.includes("get-started")
+      url.includes("start-now")
     ).toBeTruthy()
 
     // No uncaught errors
@@ -104,7 +92,7 @@ test.describe("Onboarding Journey Smoke", () => {
     // Should either show FeatureLock, redirect, or stay on page
     const isBlocked =
       url.includes("login") ||
-      url.includes("get-started") ||
+      url.includes("start-now") ||
       url.includes("dashboard")
 
     // If on the page, check for FeatureLock component
@@ -130,7 +118,7 @@ test.describe("Onboarding Journey Smoke", () => {
     expect(
       url.includes("reality-lens") ||
       url.includes("login") ||
-      url.includes("get-started") ||
+      url.includes("start-now") ||
       url.includes("dashboard")
     ).toBeTruthy()
   })

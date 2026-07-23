@@ -11,7 +11,7 @@ import {
   CheckIcon,
 } from "@radix-ui/react-icons";
 import { Zap } from "lucide-react";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 
 export default function FeaturesPage() {
   const featureCategories = [
@@ -145,7 +145,7 @@ export default function FeaturesPage() {
               <Link href="/pricing">View Pricing</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="hover:border-[#ff6a1a]/30 hover:text-[#ff6a1a]">
-              <Link href={FUNNEL_URL}>Get Started Free</Link>
+              <Link href={START_NOW_URL}>Get Started Free</Link>
             </Button>
           </div>
         </motion.div>
@@ -229,7 +229,7 @@ export default function FeaturesPage() {
             Start with our free tier. No credit card required.
           </p>
           <Button asChild size="lg" className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25">
-            <Link href={FUNNEL_URL}>Get Started Free</Link>
+            <Link href={START_NOW_URL}>Get Started Free</Link>
           </Button>
         </motion.div>
       </section>

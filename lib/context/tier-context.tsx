@@ -18,7 +18,7 @@ import {
 } from "@/lib/constants";
 
 /** Routes where we skip the subscription API call and default to FREE tier */
-const PUBLIC_TIER_PATHS = ["/demo/", "/pricing", "/about", "/product", "/get-started"];
+const PUBLIC_TIER_PATHS = ["/demo/", "/pricing", "/about", "/product", "/get-started", "/start-now"];
 
 // ============================================================================
 // Types

@@ -7,8 +7,7 @@ export default function SignupPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to get-started onboarding flow
-    router.replace("/get-started");
+    router.replace("/start-now?source=signup");
   }, [router]);
 
   return (

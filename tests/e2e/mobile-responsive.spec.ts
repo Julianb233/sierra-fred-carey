@@ -158,10 +158,10 @@ for (const deviceName of deviceNames) {
       })
     })
 
-    // ── Signup / Onboarding Flow ──────────────────────────────
+    // ── Signup / Capture Flow ─────────────────────────────────
     test.describe("Signup Flow", () => {
-      test("onboarding page loads without overflow", async ({ page }) => {
-        await page.goto("/get-started")
+      test("capture page loads without overflow", async ({ page }) => {
+        await page.goto("/start-now")
         await waitForPage(page)
 
         if (await isErrorPage(page)) {
@@ -174,21 +174,21 @@ for (const deviceName of deviceNames) {
         }
 
         await assertNoHorizontalScroll(page)
-        await expect(page.getByText("What stage are you at?")).toBeVisible({
+        await expect(page.getByText("Reserve your founder seat.")).toBeVisible({
           timeout: 10000,
         })
 
-        const ideation = page.getByText("Ideation")
-        await expect(ideation).toBeVisible()
-        await ideation.click()
-
-        await expect(
-          page.getByText("What's your #1 challenge?"),
-        ).toBeVisible({ timeout: 10000 })
+        const submit = page.getByRole("button", { name: /reserve my founder seat/i })
+        await expect(submit).toBeVisible()
+        const box = await submit.boundingBox()
+        expect(box).toBeTruthy()
+        if (box) {
+          expect(box.height).toBeGreaterThanOrEqual(44)
+        }
       })
 
-      test("onboarding form inputs fit mobile viewport", async ({ page }) => {
-        await page.goto("/get-started")
+      test("capture form inputs fit mobile viewport", async ({ page }) => {
+        await page.goto("/start-now")
         await waitForPage(page)
 
         if (await isErrorPage(page)) {
@@ -199,14 +199,6 @@ for (const deviceName of deviceNames) {
           return
         }
 
-        await page.getByText("Ideation").click({ timeout: 10000 })
-        await page.waitForTimeout(500)
-        await page.getByText("Product-Market Fit").click({ timeout: 10000 })
-
-        await expect(page.getByText("Let's get started!")).toBeVisible({
-          timeout: 10000,
-        })
-
         const emailInput = page.locator('input[type="email"]')
         await expect(emailInput).toBeVisible()
 
@@ -215,6 +207,16 @@ for (const deviceName of deviceNames) {
         if (emailBox) {
           expect(emailBox.width).toBeGreaterThan(200)
           expect(emailBox.x + emailBox.width).toBeLessThanOrEqual(
+            viewport.width + 1,
+          )
+        }
+
+        const phoneInput = page.locator('input[type="tel"]')
+        const phoneBox = await phoneInput.boundingBox()
+        expect(phoneBox).toBeTruthy()
+        if (phoneBox) {
+          expect(phoneBox.width).toBeGreaterThan(200)
+          expect(phoneBox.x + phoneBox.width).toBeLessThanOrEqual(
             viewport.width + 1,
           )
         }

@@ -32,13 +32,13 @@ export default function OnboardingPage() {
     skipOnboarding,
   } = useOnboarding();
 
-  // Check authentication - redirect to /get-started if not logged in
+  // Check authentication - redirect to capture-first signup if not logged in
   useEffect(() => {
     const checkAuth = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.replace("/get-started");
+        router.replace("/start-now?source=onboarding");
         return;
       }
       setAuthChecked(true);

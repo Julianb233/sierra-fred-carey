@@ -7,7 +7,7 @@ import Footer from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 import {
   Users,
   LifeBuoy,
@@ -470,10 +470,10 @@ export default function EnterpriseDemoPage() {
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Button asChild className="bg-[#ff6a1a] hover:bg-[#ea580c]">
-                <a href={FUNNEL_URL} target="_blank" rel="noopener noreferrer">
+                <Link href={START_NOW_URL}>
                   Book an enterprise demo
                   <ArrowRight className="h-4 w-4 ml-1.5" />
-                </a>
+                </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/demo">Explore other demos</Link>

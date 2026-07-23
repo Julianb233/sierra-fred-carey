@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
 
     const name = sanitizeField(body.name);
     const email = sanitizeField(body.email);
+    const phone = sanitizeField(body.phone);
     const stage = sanitizeField(body.stage);
     const ref = sanitizeField(body.ref);
     const password = body.password; // passwords must not be altered
@@ -40,6 +41,15 @@ export async function POST(request: NextRequest) {
     const productPositioning = sanitizeField(body.product_positioning);
     const revenueRange = sanitizeField(body.revenue_range);
     const teamSize = typeof body.team_size === "string" ? stripHtml(body.team_size) : (typeof body.team_size === "number" ? body.team_size : undefined);
+    const normalizedPhone = phone
+      ? (() => {
+          const digits = phone.replace(/\D/g, "");
+          if (phone.trim().startsWith("+") && digits.length >= 10 && digits.length <= 15) return `+${digits}`;
+          if (digits.length === 10) return `+1${digits}`;
+          if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+          return phone.trim();
+        })()
+      : undefined;
 
     // Validate required fields - for quick onboard, only email is required
     if (!email) {
@@ -167,6 +177,7 @@ export async function POST(request: NextRequest) {
         .from("profiles")
         .update({
           name: userName,
+          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
@@ -215,6 +226,7 @@ export async function POST(request: NextRequest) {
         options: {
           data: {
             name: userName,
+            ...(normalizedPhone ? { phone: normalizedPhone } : {}),
             stage: stage || null,
             challenges: challenges || [],
           },
@@ -246,6 +258,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         email: email.toLowerCase(),
         name: userName,
+        ...(normalizedPhone ? { phone: normalizedPhone } : {}),
         stage: stage || null,
         challenges: challenges || [],
         teammate_emails: teammateEmails || [],
@@ -268,6 +281,7 @@ export async function POST(request: NextRequest) {
           id: userId,
           email: email.toLowerCase(),
           name: userName,
+          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
           stage: stage || null,
           challenges: challenges || [],
           teammate_emails: teammateEmails || [],
@@ -313,7 +327,7 @@ export async function POST(request: NextRequest) {
     // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, email, name, stage, challenges")
+      .select("id, email, name, phone, stage, challenges")
       .eq("id", userId)
       .single();
 
@@ -323,6 +337,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         email: email.toLowerCase(),
         name: userName,
+        phone: normalizedPhone || null,
         stage: stage || null,
         challenges: challenges || [],
       },
