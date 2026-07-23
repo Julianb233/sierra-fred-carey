@@ -1,6 +1,6 @@
 /**
  * Onboarding Reminders Cron Endpoint
- * AI-3518: Automated email + text reminders for user engagement
+ * AI-3492: Automated email + text reminders for user engagement
  *
  * Triggered by Vercel Cron daily. Sends graduated onboarding nudges (email and
  * SMS) to users who created an account but have not completed onboarding.
@@ -20,6 +20,10 @@ import {
   ONBOARDING_EMAIL_COPY,
   getOnboardingSmsBody,
 } from '@/lib/onboarding-reminders/messages';
+import {
+  isEmailChannelConfigured,
+  isSmsChannelConfigured,
+} from '@/lib/onboarding-reminders/config';
 import { ONBOARDING_REMINDER_EMAIL_TYPE } from '@/lib/onboarding-reminders/types';
 import { OnboardingReminderEmail } from '@/lib/email/templates/onboarding-reminder';
 import { sendEmail } from '@/lib/email/send';
@@ -96,9 +100,8 @@ export async function GET(request: NextRequest) {
     const candidates = await getOnboardingReminderCandidates();
     result.processed = candidates.length;
 
-    const emailConfigured = !!process.env.RESEND_API_KEY;
-    const smsConfigured =
-      !!process.env.TWILIO_ACCOUNT_SID && !!process.env.TWILIO_MESSAGING_SERVICE_SID;
+    const emailConfigured = isEmailChannelConfigured();
+    const smsConfigured = isSmsChannelConfigured();
 
     for (const candidate of candidates) {
       const copy = ONBOARDING_EMAIL_COPY[candidate.tier];
