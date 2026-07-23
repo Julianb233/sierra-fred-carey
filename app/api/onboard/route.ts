@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse } from "@/lib/api/rate-limit";
 import { stripHtml } from "@/lib/communities/sanitize";
+import { syncMemberLifecycle } from "@/lib/customerio";
 
 export async function POST(request: NextRequest) {
   try {
@@ -322,6 +323,29 @@ export async function POST(request: NextRequest) {
         // Non-blocking — goals will auto-generate on first dashboard visit
         console.warn("[onboard] Goal pre-generation failed:", goalErr);
       }
+    }
+
+    // Non-blocking Customer.io member lifecycle sync. The client no-ops when
+    // CUSTOMERIO_* env vars are unset, so this is safe before DNS/credential
+    // activation and gives the launch team an exact event contract to verify.
+    try {
+      await syncMemberLifecycle({
+        userId,
+        email: email.toLowerCase(),
+        name: userName,
+        phone: normalizedPhone ?? null,
+        stage: stage || null,
+        companyName: companyName || null,
+        industry: industry || null,
+        source: isQuickOnboard ? "quick_onboard" : "onboard",
+        createdAt: Date.now(),
+        isNewMember: !existingUser,
+        onboardingCompleted: true,
+      });
+    } catch (customerIoErr) {
+      logger.warn("[onboard] Customer.io lifecycle sync failed", {
+        error: customerIoErr,
+      });
     }
 
     // Get user profile

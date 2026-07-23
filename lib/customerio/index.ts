@@ -29,6 +29,13 @@ export {
   setMemberSuppression,
 } from './track';
 
+export {
+  buildMemberAttributes,
+  syncMemberLifecycle,
+  type MemberLifecycleInput,
+  type MemberLifecycleSyncResult,
+} from './member-lifecycle';
+
 export type {
   CustomerIoRegion,
   CustomerIoResult,
