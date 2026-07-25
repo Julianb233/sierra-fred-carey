@@ -63,9 +63,21 @@ describe('member lifecycle sync', () => {
         onboarding_completed: true,
       })
     );
-    expect(trackLifecycleEvent).toHaveBeenCalledTimes(3);
+    expect(trackLifecycleEvent).toHaveBeenCalledTimes(4);
     expect(trackLifecycleEvent).toHaveBeenNthCalledWith(
       1,
+      'user-42',
+      CUSTOMERIO_EVENTS.ACCOUNT_CREATED,
+      expect.objectContaining({
+        source: 'quick_onboard',
+        correlationId: 'account_created:user-42',
+        consent: 'unknown',
+      }),
+      expect.objectContaining({ source: 'quick_onboard', stage: 'mvp' }),
+      'account_created:user-42'
+    );
+    expect(trackLifecycleEvent).toHaveBeenNthCalledWith(
+      2,
       'user-42',
       CUSTOMERIO_EVENTS.SIGNUP,
       expect.objectContaining({
@@ -77,7 +89,7 @@ describe('member lifecycle sync', () => {
       'signup:user-42'
     );
     expect(trackLifecycleEvent).toHaveBeenNthCalledWith(
-      3,
+      4,
       'user-42',
       CUSTOMERIO_EVENTS.ONBOARDING_COMPLETED,
       expect.objectContaining({

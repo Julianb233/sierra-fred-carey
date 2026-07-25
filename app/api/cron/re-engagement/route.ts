@@ -135,6 +135,20 @@ export async function GET(request: NextRequest) {
         },
         `inactivity:${candidate.userId}:${candidate.tier}`,
       );
+      await trackLifecycleEvent(
+        candidate.userId,
+        CUSTOMERIO_EVENTS.MEMBER_BECAME_INACTIVE,
+        {
+          source: 're_engagement_cron',
+          correlationId: candidate.tier,
+          consent: LIFECYCLE_CONSENT.UNKNOWN,
+        },
+        {
+          tier: candidate.tier,
+          inactive_days: candidate.inactiveDays,
+        },
+        `member_became_inactive:${candidate.userId}:${candidate.tier}`,
+      );
 
       // ---- Email channel ----
       if (candidate.email && !candidate.emailAlreadySent) {

@@ -48,6 +48,17 @@ export async function sendMilestoneEmail(
       { milestone_type: milestoneType, ...(customTitle ? { title: customTitle } : {}) },
       `founder_milestone:${userId}:${milestoneType}`,
     );
+    await trackLifecycleEvent(
+      userId,
+      CUSTOMERIO_EVENTS.MILESTONE_REACHED,
+      {
+        source: 'milestone',
+        correlationId: milestoneType,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
+      { milestone_name: customTitle ?? milestoneType, milestone_type: milestoneType },
+      `milestone_reached:${userId}:${milestoneType}`,
+    );
 
     if (
       ['first_chat', 'first_reality_lens', 'first_pitch_review', 'first_strategy_doc'].includes(

@@ -161,6 +161,20 @@ export async function POST(request: NextRequest) {
           );
           await trackLifecycleEvent(
             userId,
+            CUSTOMERIO_EVENTS.UPGRADE_COMPLETED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              plan: getUserTierFromSubscription(subscription),
+            },
+            `upgrade_completed:${event.id}`
+          );
+          await trackLifecycleEvent(
+            userId,
             CUSTOMERIO_EVENTS.PAID_ONBOARDING_STARTED,
             {
               source: "stripe",
@@ -244,6 +258,21 @@ export async function POST(request: NextRequest) {
               price_id: subscription.items.data[0]?.price.id,
             },
             `stripe:${event.id}`
+          );
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELLED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              status: "canceled",
+              plan: getUserTierFromSubscription(subscription),
+            },
+            `subscription_cancelled:${event.id}`
           );
         } else {
           console.error(`[Webhook] No userId found for deleted subscription ${subscription.id}`);

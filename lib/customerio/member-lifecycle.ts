@@ -27,6 +27,7 @@ export interface MemberLifecycleInput {
 
 export interface MemberLifecycleSyncResult {
   identify: CustomerIoResult;
+  accountCreated?: CustomerIoResult;
   signup?: CustomerIoResult;
   onboardingStarted?: CustomerIoResult;
   onboardingCompleted?: CustomerIoResult;
@@ -93,6 +94,17 @@ export async function syncMemberLifecycle(
   const data = eventData(input);
 
   if (input.isNewMember) {
+    result.accountCreated = await trackLifecycleEvent(
+      input.userId,
+      CUSTOMERIO_EVENTS.ACCOUNT_CREATED,
+      {
+        source: input.source ?? 'onboard',
+        correlationId: `account_created:${input.userId}`,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
+      data,
+      `account_created:${input.userId}`
+    );
     result.signup = await trackLifecycleEvent(
       input.userId,
       CUSTOMERIO_EVENTS.SIGNUP,

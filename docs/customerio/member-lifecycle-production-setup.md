@@ -1,6 +1,9 @@
 # Customer.io member lifecycle production setup
 
 Linear parent: AI-13316
+
+Approved source mapping:
+[`fred-member-communication-plan-v1-mapping.md`](./fred-member-communication-plan-v1-mapping.md)
 Scope: Sahara members after account creation
 Out of scope: GoHighLevel lead generation and sales automation
 
