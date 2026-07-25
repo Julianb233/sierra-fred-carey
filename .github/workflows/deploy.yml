@@ -7,7 +7,7 @@ on:
     branches: [main, staging]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -50,6 +50,8 @@ jobs:
         with:
           name: build-output
           path: .next
+          include-hidden-files: true
+          if-no-files-found: error
 
   security:
     runs-on: ubuntu-latest
@@ -64,8 +66,8 @@ jobs:
       - name: Check for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
+          scan-type: "fs"
+          scan-ref: "."
         continue-on-error: true
 
   e2e:
@@ -85,7 +87,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -165,21 +167,18 @@ jobs:
           echo "Deployed to: $DEPLOY_URL"
 
       - name: Notify Slack
-        if: always()
-        uses: slackapi/slack-github-action@v1
+        if: ${{ always() && env.SLACK_WEBHOOK != '' }}
+        uses: slackapi/slack-github-action@v3.0.3
         continue-on-error: true
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ env.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "text": "Sierra Fred Carey Deployment ${{ job.status }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Sierra Fred Carey Deployment*\nBranch: `${{ github.ref_name }}`\nStatus: ${{ job.status }}\nURL: ${{ steps.deploy.outputs.deployment_url || 'N/A' }}\nCommit: `${{ github.sha }}`"
-                  }
-                }
-              ]
-            }
+            text: "Sierra Fred Carey deployment ${{ job.status }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Sierra Fred Carey Deployment*\nBranch: `${{ github.ref_name }}`\nStatus: ${{ job.status }}\nURL: ${{ steps.deploy.outputs.deployment_url || 'N/A' }}\nCommit: `${{ github.sha }}`"
