@@ -8,6 +8,12 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { AgentTask, AgentType, AgentStatus } from '@/lib/agents/types';
+import type {
+  AgentBlocker,
+  AgentHandoff,
+  VerifierOutcome,
+} from '@/lib/agents/task-contract';
+import { assertSafeAgentEvidence } from '@/lib/agents/task-contract';
 
 // Lazy-initialized Supabase client to avoid build-time crashes when env vars aren't set
 let _supabase: SupabaseClient | null = null;
@@ -44,7 +50,17 @@ export async function createAgentTask(params: {
   taskType: string;
   description: string;
   input?: Record<string, unknown>;
+  tenantId?: string;
+  correlationId?: string;
+  runId?: string;
+  capabilitiesRequired?: string[];
+  enforceSafeInput?: boolean;
 }): Promise<AgentTask> {
+  // Preserve the legacy dispatcher contract while allowing new trusted
+  // integration routes to opt into the stricter no-PII evidence boundary.
+  if (params.enforceSafeInput) {
+    assertSafeAgentEvidence(params.input ?? {});
+  }
   const { data, error } = await supabase
     .from('agent_tasks')
     .insert({
@@ -54,6 +70,10 @@ export async function createAgentTask(params: {
       description: params.description,
       input: params.input || {},
       status: 'pending',
+      tenant_id: params.tenantId ?? params.userId,
+      correlation_id: params.correlationId ?? `task:${crypto.randomUUID()}`,
+      run_id: params.runId ?? `run:${crypto.randomUUID()}`,
+      capabilities_required: params.capabilitiesRequired ?? [],
     })
     .select()
     .single();
@@ -175,6 +195,10 @@ export async function updateAgentTask(
     error: string;
     startedAt: Date;
     completedAt: Date;
+    blockers: AgentBlocker[];
+    handoff: AgentHandoff | null;
+    verifier: VerifierOutcome;
+    evidence: Record<string, unknown>;
   }>
 ): Promise<AgentTask> {
   const dbUpdates: Record<string, unknown> = {
@@ -186,6 +210,13 @@ export async function updateAgentTask(
   if (updates.error !== undefined) dbUpdates.error = updates.error;
   if (updates.startedAt !== undefined) dbUpdates.started_at = updates.startedAt.toISOString();
   if (updates.completedAt !== undefined) dbUpdates.completed_at = updates.completedAt.toISOString();
+  if (updates.blockers !== undefined) dbUpdates.blockers = updates.blockers;
+  if (updates.handoff !== undefined) dbUpdates.handoff = updates.handoff;
+  if (updates.verifier !== undefined) dbUpdates.verifier = updates.verifier;
+  if (updates.evidence !== undefined) {
+    assertSafeAgentEvidence(updates.evidence);
+    dbUpdates.evidence = updates.evidence;
+  }
 
   const { data, error } = await supabase
     .from('agent_tasks')
@@ -218,6 +249,14 @@ function mapAgentTask(row: Record<string, unknown>): AgentTask {
     status: row.status as AgentStatus,
     input: (row.input as Record<string, unknown>) || {},
     output: row.output as Record<string, unknown> | undefined,
+    tenantId: row.tenant_id as string | undefined,
+    correlationId: row.correlation_id as string | undefined,
+    runId: row.run_id as string | undefined,
+    capabilitiesRequired: (row.capabilities_required as string[] | null) ?? [],
+    blockers: (row.blockers as AgentBlocker[] | null) ?? [],
+    handoff: (row.handoff as AgentHandoff | null) ?? undefined,
+    verifier: (row.verifier as VerifierOutcome | null) ?? undefined,
+    evidence: (row.evidence as Record<string, unknown> | null) ?? undefined,
     error: row.error as string | undefined,
     startedAt: row.started_at ? new Date(row.started_at as string) : undefined,
     completedAt: row.completed_at ? new Date(row.completed_at as string) : undefined,

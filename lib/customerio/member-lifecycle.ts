@@ -6,8 +6,8 @@
  */
 
 import { logger } from '@/lib/logger';
-import { CUSTOMERIO_EVENTS } from './events';
-import { identifyMember, trackMemberEvent } from './track';
+import { CUSTOMERIO_EVENTS, LIFECYCLE_CONSENT } from './events';
+import { identifyMember, trackLifecycleEvent } from './track';
 import type { CustomerIoResult, MemberAttributes } from './types';
 
 export interface MemberLifecycleInput {
@@ -21,12 +21,14 @@ export interface MemberLifecycleInput {
   source?: string;
   createdAt?: Date | string | number | null;
   isNewMember?: boolean;
+  onboardingStarted?: boolean;
   onboardingCompleted?: boolean;
 }
 
 export interface MemberLifecycleSyncResult {
   identify: CustomerIoResult;
   signup?: CustomerIoResult;
+  onboardingStarted?: CustomerIoResult;
   onboardingCompleted?: CustomerIoResult;
 }
 
@@ -91,18 +93,42 @@ export async function syncMemberLifecycle(
   const data = eventData(input);
 
   if (input.isNewMember) {
-    result.signup = await trackMemberEvent(
+    result.signup = await trackLifecycleEvent(
       input.userId,
       CUSTOMERIO_EVENTS.SIGNUP,
+      {
+        source: input.source ?? 'onboard',
+        correlationId: `signup:${input.userId}`,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
       data,
       `signup:${input.userId}`
     );
   }
 
+  if (input.onboardingStarted) {
+    result.onboardingStarted = await trackLifecycleEvent(
+      input.userId,
+      CUSTOMERIO_EVENTS.ONBOARDING_STARTED,
+      {
+        source: input.source ?? 'onboard',
+        correlationId: `onboarding_started:${input.userId}`,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
+      data,
+      `onboarding_started:${input.userId}`
+    );
+  }
+
   if (input.onboardingCompleted) {
-    result.onboardingCompleted = await trackMemberEvent(
+    result.onboardingCompleted = await trackLifecycleEvent(
       input.userId,
       CUSTOMERIO_EVENTS.ONBOARDING_COMPLETED,
+      {
+        source: input.source ?? 'onboard',
+        correlationId: `onboarding_completed:${input.userId}`,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
       data,
       `onboarding_completed:${input.userId}`
     );

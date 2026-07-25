@@ -9,8 +9,7 @@
 
 import { tool } from "ai";
 import { z } from "zod";
-import { generateEmbedding } from "@/lib/ai/fred-client";
-import { searchEpisodesByEmbedding } from "@/lib/db/fred-memory";
+import { retrieveScopedKnowledge } from "@/lib/knowledge/broker";
 
 /**
  * Factory function that returns a memory search tool bound to the current user.
@@ -30,19 +29,21 @@ export function createMemorySearchTool(userId: string) {
     }),
     execute: async ({ query, limit }) => {
       try {
-        const embeddingResult = await generateEmbedding(query);
-        const episodes = await searchEpisodesByEmbedding(
-          userId,
-          embeddingResult.embedding,
-          { limit, similarityThreshold: 0.65 }
-        );
+        const evidence = await retrieveScopedKnowledge({
+          tenantId: userId,
+          actorTenantId: userId,
+          purpose: "agent_context",
+          query,
+          limit,
+        });
 
-        const results = episodes.map((episode) => ({
-          summary:
-            (episode.content.content as string) ||
-            JSON.stringify(episode.content),
-          date: episode.createdAt.toISOString(),
-          relevance: episode.similarity,
+        const results = evidence.map((item) => ({
+          summary: item.summary,
+          date: item.occurredAt,
+          relevance: item.confidence,
+          provenance: item.provenance,
+          freshnessDays: item.freshnessDays,
+          classification: item.classification,
         }));
 
         return { results, count: results.length };

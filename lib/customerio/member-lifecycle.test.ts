@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CUSTOMERIO_EVENTS } from './events';
 import { buildMemberAttributes, syncMemberLifecycle } from './member-lifecycle';
-import { identifyMember, trackMemberEvent } from './track';
+import { identifyMember, trackLifecycleEvent } from './track';
 
 vi.mock('./track', () => ({
   identifyMember: vi.fn(async () => ({ success: true, status: 200 })),
-  trackMemberEvent: vi.fn(async () => ({ success: true, status: 200 })),
+  trackLifecycleEvent: vi.fn(async () => ({ success: true, status: 200 })),
 }));
 
 describe('member lifecycle sync', () => {
@@ -50,6 +50,7 @@ describe('member lifecycle sync', () => {
       stage: 'mvp',
       source: 'quick_onboard',
       isNewMember: true,
+      onboardingStarted: true,
       onboardingCompleted: true,
     });
 
@@ -62,18 +63,27 @@ describe('member lifecycle sync', () => {
         onboarding_completed: true,
       })
     );
-    expect(trackMemberEvent).toHaveBeenCalledTimes(2);
-    expect(trackMemberEvent).toHaveBeenNthCalledWith(
+    expect(trackLifecycleEvent).toHaveBeenCalledTimes(3);
+    expect(trackLifecycleEvent).toHaveBeenNthCalledWith(
       1,
       'user-42',
       CUSTOMERIO_EVENTS.SIGNUP,
+      expect.objectContaining({
+        source: 'quick_onboard',
+        correlationId: 'signup:user-42',
+        consent: 'unknown',
+      }),
       expect.objectContaining({ source: 'quick_onboard', stage: 'mvp' }),
       'signup:user-42'
     );
-    expect(trackMemberEvent).toHaveBeenNthCalledWith(
-      2,
+    expect(trackLifecycleEvent).toHaveBeenNthCalledWith(
+      3,
       'user-42',
       CUSTOMERIO_EVENTS.ONBOARDING_COMPLETED,
+      expect.objectContaining({
+        correlationId: 'onboarding_completed:user-42',
+        consent: 'unknown',
+      }),
       expect.objectContaining({ source: 'quick_onboard', stage: 'mvp' }),
       'onboarding_completed:user-42'
     );
@@ -88,10 +98,14 @@ describe('member lifecycle sync', () => {
     });
 
     expect(identifyMember).toHaveBeenCalledTimes(1);
-    expect(trackMemberEvent).toHaveBeenCalledTimes(1);
-    expect(trackMemberEvent).toHaveBeenCalledWith(
+    expect(trackLifecycleEvent).toHaveBeenCalledTimes(1);
+    expect(trackLifecycleEvent).toHaveBeenCalledWith(
       'user-42',
       CUSTOMERIO_EVENTS.ONBOARDING_COMPLETED,
+      expect.objectContaining({
+        correlationId: 'onboarding_completed:user-42',
+        consent: 'unknown',
+      }),
       expect.objectContaining({ source: 'onboard' }),
       'onboarding_completed:user-42'
     );

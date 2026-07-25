@@ -12,8 +12,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { UserTier } from "@/lib/constants";
 import { getUserTier, createTierErrorResponse } from "@/lib/api/tier-middleware";
-import { getAgentTasks } from "@/lib/db/agent-tasks";
+import { createAgentTask, getAgentTasks } from "@/lib/db/agent-tasks";
 import type { AgentType, AgentStatus } from "@/lib/agents/types";
+import { agentTaskCreateSchema } from "@/lib/agents/task-contract";
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,6 +86,44 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { success: false, error: "Failed to fetch agent tasks" },
       { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const userId = await requireAuth();
+    const userTier = await getUserTier(userId);
+    if (userTier < UserTier.STUDIO) {
+      return createTierErrorResponse({
+        allowed: false,
+        userTier,
+        requiredTier: UserTier.STUDIO,
+        userId,
+      });
+    }
+
+    const parsed = agentTaskCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid task contract", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+
+    const task = await createAgentTask({
+      userId,
+      tenantId: userId,
+      enforceSafeInput: true,
+      ...parsed.data,
+    });
+    return NextResponse.json({ success: true, task }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Response) return error;
+    console.error("[Agent Tasks API] POST error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create agent task" },
+      { status: 500 },
     );
   }
 }

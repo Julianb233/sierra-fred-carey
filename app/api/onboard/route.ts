@@ -340,6 +340,7 @@ export async function POST(request: NextRequest) {
         source: isQuickOnboard ? "quick_onboard" : "onboard",
         createdAt: Date.now(),
         isNewMember: !existingUser,
+        onboardingStarted: true,
         onboardingCompleted: true,
       });
     } catch (customerIoErr) {

@@ -11,7 +11,11 @@ import { shouldSendEmail } from '@/lib/email/preferences';
 import { sendEmail } from '@/lib/email/send';
 import { logger } from '@/lib/logger';
 import { MILESTONE_MESSAGES, type MilestoneType, type MilestoneEmailData } from './types';
-import { CUSTOMERIO_EVENTS, trackMemberEvent } from '@/lib/customerio';
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from '@/lib/customerio';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sahara.app';
 
@@ -33,12 +37,35 @@ export async function sendMilestoneEmail(
   try {
     // Record the product milestone independently of Sahara's current email
     // channel. Customer.io suppression remains authoritative for future sends.
-    await trackMemberEvent(
+    await trackLifecycleEvent(
       userId,
       CUSTOMERIO_EVENTS.FOUNDER_MILESTONE,
+      {
+        source: 'milestone',
+        correlationId: milestoneType,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
       { milestone_type: milestoneType, ...(customTitle ? { title: customTitle } : {}) },
       `founder_milestone:${userId}:${milestoneType}`,
     );
+
+    if (
+      ['first_chat', 'first_reality_lens', 'first_pitch_review', 'first_strategy_doc'].includes(
+        milestoneType,
+      )
+    ) {
+      await trackLifecycleEvent(
+        userId,
+        CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED,
+        {
+          source: 'milestone',
+          correlationId: milestoneType,
+          consent: LIFECYCLE_CONSENT.UNKNOWN,
+        },
+        { milestone_type: milestoneType },
+        `first_value_reached:${userId}`,
+      );
+    }
 
     // Check email preferences
     const shouldSend = await shouldSendEmail(userId, 'milestone');
