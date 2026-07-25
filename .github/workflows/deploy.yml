@@ -134,13 +134,34 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
+          set -euo pipefail
           npm install -g vercel
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            DEPLOY_URL=$(vercel --prod --token $VERCEL_TOKEN 2>&1 | tail -1)
+            DEPLOY_URL=$(vercel --prod --yes --token "$VERCEL_TOKEN")
           else
-            DEPLOY_URL=$(vercel --token $VERCEL_TOKEN 2>&1 | tail -1)
+            DEPLOY_URL=$(vercel --yes --token "$VERCEL_TOKEN")
           fi
-          echo "deployment_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+          # Vercel writes progress to stderr and the deployment URL to stdout.
+          # Merging both streams and taking the last line previously stored
+          # "Ready in 4m" as the GitHub environment URL instead of the URL.
+          if [[ ! "$DEPLOY_URL" =~ ^https://.*\.vercel\.app$ ]]; then
+            echo "Vercel did not return a valid deployment URL: $DEPLOY_URL" >&2
+            exit 1
+          fi
+
+          DEPLOYMENT_JSON=$(vercel inspect "$DEPLOY_URL" \
+            --wait \
+            --timeout 10m \
+            --json \
+            --token "$VERCEL_TOKEN")
+          READY_STATE=$(echo "$DEPLOYMENT_JSON" | jq -r '.readyState // .status // empty')
+          if [ "$READY_STATE" != "READY" ]; then
+            echo "Vercel deployment did not reach READY (state=$READY_STATE)" >&2
+            exit 1
+          fi
+
+          echo "deployment_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
           echo "Deployed to: $DEPLOY_URL"
 
       - name: Notify Slack

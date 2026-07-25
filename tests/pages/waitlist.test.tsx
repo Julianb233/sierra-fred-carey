@@ -1,6 +1,6 @@
 /**
  * Waitlist Page Tests
- * The /waitlist route now redirects to /get-started.
+ * The /waitlist route now redirects to capture-first signup.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -18,12 +18,12 @@ describe('Waitlist Page (/waitlist)', () => {
     vi.clearAllMocks();
   });
 
-  it('should call redirect to /get-started on render', async () => {
+  it('should call redirect to /start-now on render', async () => {
     await act(async () => {
       render(<WaitlistPage />);
     });
 
-    expect(redirect).toHaveBeenCalledWith('/get-started');
+    expect(redirect).toHaveBeenCalledWith('/start-now?source=waitlist');
   });
 
   it('should redirect exactly once', async () => {

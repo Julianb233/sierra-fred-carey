@@ -13,7 +13,10 @@
 
 import { logger } from '@/lib/logger';
 import { getCustomerIoConfig } from './client';
-import type { CustomerIoEventName } from './events';
+import type {
+  CustomerIoEventName,
+  LifecycleEventContext,
+} from './events';
 import { SUPPRESSION_STATE, type SuppressionState } from './events';
 import type { CustomerIoResult, MemberAttributes, MemberId } from './types';
 
@@ -99,6 +102,37 @@ export async function trackMemberEvent(
   if (data) payload.data = data;
   if (dedupeId) payload.id = dedupeId;
   return request('POST', `/api/v1/customers/${encodeId(id)}/events`, payload);
+}
+
+/**
+ * Emit a lifecycle event with the provenance fields every Customer.io journey
+ * must branch on. The deterministic event id makes app/provider retries safe.
+ */
+export async function trackLifecycleEvent(
+  id: MemberId,
+  name: CustomerIoEventName,
+  context: LifecycleEventContext,
+  data?: Record<string, unknown>,
+  dedupeId?: string
+): Promise<CustomerIoResult> {
+  if (!context.source.trim()) {
+    return { success: false, error: 'trackLifecycleEvent requires a source' };
+  }
+  if (!context.correlationId.trim()) {
+    return { success: false, error: 'trackLifecycleEvent requires a correlationId' };
+  }
+
+  return trackMemberEvent(
+    id,
+    name,
+    {
+      ...data,
+      source: context.source,
+      correlation_id: context.correlationId,
+      consent_state: context.consent,
+    },
+    dedupeId ?? `${name}:${id}:${context.correlationId}`
+  );
 }
 
 /**

@@ -18,6 +18,7 @@ import {
 import {
   CUSTOMERIO_EVENTS,
   CUSTOMERIO_EVENT_NAMES,
+  FRED_V1_CUSTOMERIO_EVENT_NAMES,
   isCustomerIoEvent,
   SUPPRESSION_STATE,
 } from './events';
@@ -25,6 +26,7 @@ import {
   identifyMember,
   setMemberSuppression,
   suppressMember,
+  trackLifecycleEvent,
   trackMemberEvent,
   unsuppressMember,
 } from './track';
@@ -98,13 +100,30 @@ describe('config', () => {
 
 describe('event schema', () => {
   it('exposes every required lifecycle event', () => {
+    expect(CUSTOMERIO_EVENTS.ACCOUNT_CREATED).toBe('account_created');
     expect(CUSTOMERIO_EVENTS.SIGNUP).toBe('signup');
     expect(CUSTOMERIO_EVENTS.ONBOARDING_STARTED).toBe('onboarding_started');
     expect(CUSTOMERIO_EVENTS.ONBOARDING_COMPLETED).toBe('onboarding_completed');
+    expect(CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED).toBe('first_value_reached');
+    expect(CUSTOMERIO_EVENTS.RECOMMENDED_ACTION_NOT_VIEWED).toBe(
+      'recommended_action_not_viewed'
+    );
     expect(CUSTOMERIO_EVENTS.INACTIVITY).toBe('inactivity');
     expect(CUSTOMERIO_EVENTS.FOUNDER_MILESTONE).toBe('founder_milestone');
     expect(CUSTOMERIO_EVENTS.DECK_SUBMITTED).toBe('deck_submitted');
-    expect(CUSTOMERIO_EVENT_NAMES).toHaveLength(6);
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_STARTED).toBe('subscription_started');
+    expect(CUSTOMERIO_EVENTS.PAID_ONBOARDING_STARTED).toBe('paid_onboarding_started');
+    expect(CUSTOMERIO_EVENTS.UPGRADE_ABANDONED).toBe('upgrade_abandoned');
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_UPDATED).toBe('subscription_updated');
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELED).toBe('subscription_canceled');
+    expect(CUSTOMERIO_EVENTS.PAYMENT_FAILED).toBe('payment_failed');
+    expect(CUSTOMERIO_EVENTS.MOTIVATIONAL_ELIGIBLE).toBe('motivational_eligible');
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELLED).toBe('subscription_cancelled');
+    expect(FRED_V1_CUSTOMERIO_EVENT_NAMES).toHaveLength(31);
+    expect(new Set(FRED_V1_CUSTOMERIO_EVENT_NAMES).size).toBe(31);
+    expect(CUSTOMERIO_EVENT_NAMES).toEqual(
+      expect.arrayContaining(FRED_V1_CUSTOMERIO_EVENT_NAMES)
+    );
   });
 
   it('type-guards known vs unknown event names', () => {
@@ -171,6 +190,51 @@ describe('event tracking', () => {
       data: { deckId: 'd1' },
       id: 'evt-unique-1',
     });
+  });
+
+  it('adds source, correlation, and consent to typed lifecycle events', async () => {
+    configure();
+    const fetchMock = mockFetchOk();
+    await trackLifecycleEvent(
+      'user-8',
+      CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED,
+      {
+        source: 'milestone',
+        correlationId: 'first_chat',
+        consent: 'unknown',
+      },
+      { milestone_type: 'first_chat' }
+    );
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({
+      name: 'first_value_reached',
+      data: {
+        milestone_type: 'first_chat',
+        source: 'milestone',
+        correlation_id: 'first_chat',
+        consent_state: 'unknown',
+      },
+      id: 'first_value_reached:user-8:first_chat',
+    });
+  });
+
+  it('rejects lifecycle events missing source or correlation id', async () => {
+    configure();
+    const fetchMock = mockFetchOk();
+    const noSource = await trackLifecycleEvent(
+      'user-8',
+      CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED,
+      { source: '', correlationId: 'c1', consent: 'unknown' }
+    );
+    const noCorrelation = await trackLifecycleEvent(
+      'user-8',
+      CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED,
+      { source: 'test', correlationId: '', consent: 'unknown' }
+    );
+    expect(noSource.success).toBe(false);
+    expect(noCorrelation.success).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

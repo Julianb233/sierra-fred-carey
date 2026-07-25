@@ -17,6 +17,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { generateDailyAgenda } from "@/lib/guidance/daily-agenda"
 import { sendDailyGuidanceSMS, getEligibleUsersForSMS } from "@/lib/sms/daily-guidance"
 import { timingSafeEqual } from "crypto"
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from "@/lib/customerio"
 
 export const dynamic = "force-dynamic"
 
@@ -75,6 +80,18 @@ export async function GET(request: NextRequest) {
 
       const results = await Promise.allSettled(
         batch.map(async ({ userId, phone }) => {
+          const cohortDate = new Date().toISOString().slice(0, 10)
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.MOTIVATIONAL_ELIGIBLE,
+            {
+              source: "daily_guidance_cron",
+              correlationId: cohortDate,
+              consent: LIFECYCLE_CONSENT.MARKETING_OPTED_IN,
+            },
+            { channel: "sms", cohort_date: cohortDate },
+            `motivational_eligible:${userId}:${cohortDate}`,
+          )
           const agenda = await generateDailyAgenda(userId)
           await sendDailyGuidanceSMS(userId, phone, agenda)
           return userId

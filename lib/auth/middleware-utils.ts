@@ -49,6 +49,7 @@ export const DEFAULT_PUBLIC_ROUTES: PublicRouteConfig = {
     '/about',
     '/product',
     '/get-started',
+    '/start-now',
     '/favicon.ico',
     '/robots.txt',
   ]),

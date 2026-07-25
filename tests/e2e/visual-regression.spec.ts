@@ -7,7 +7,7 @@ const publicPages = [
   { name: "homepage", path: "/", waitFor: "h1" },
   { name: "about", path: "/about", waitFor: "h1" },
   { name: "login", path: "/login", waitFor: 'input[type="email"]' },
-  { name: "get-started", path: "/get-started", waitFor: "text=What stage" },
+  { name: "start-now", path: "/start-now", waitFor: "text=Reserve your founder seat." },
   { name: "pricing", path: "/pricing", waitFor: "text=Pro" },
   { name: "contact", path: "/contact", waitFor: "h1" },
 ];

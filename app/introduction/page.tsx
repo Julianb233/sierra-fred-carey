@@ -13,7 +13,7 @@ import {
   Target,
   Rocket,
 } from "lucide-react";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 
 /**
  * /introduction — Long-form Sahara landing page for A/B test
@@ -150,7 +150,7 @@ export default function IntroductionPage() {
               whileTap={{ scale: 0.98 }}
             >
               <Link
-                href={FUNNEL_URL}
+                href={START_NOW_URL}
                 className="inline-flex items-center gap-2 bg-[#ff6a1a] hover:bg-[#e85d12] text-white text-lg font-semibold px-10 py-4 rounded-full transition-all duration-300 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-xl hover:shadow-[#ff6a1a]/30"
               >
                 Start Your Founder Journey
@@ -287,7 +287,7 @@ export default function IntroductionPage() {
               className="inline-block"
             >
               <Link
-                href={FUNNEL_URL}
+                href={START_NOW_URL}
                 className="inline-flex items-center gap-2 bg-[#ff6a1a] hover:bg-[#e85d12] text-white text-lg font-semibold px-10 py-4 rounded-full transition-all duration-300 shadow-lg shadow-[#ff6a1a]/25 hover:shadow-xl hover:shadow-[#ff6a1a]/30"
               >
                 Get Your Free Score

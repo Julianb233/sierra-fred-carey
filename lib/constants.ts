@@ -22,6 +22,12 @@
 export const FUNNEL_URL =
   process.env.NEXT_PUBLIC_FUNNEL_URL || "https://you.joinsahara.com";
 
+// Current public acquisition entry point. The July 2026 Sahara launch feedback
+// is capture-first: save name/email/phone before any founder-stage questions or
+// AI guidance. Keep the legacy FUNNEL_URL for old funnel/checkout integrations.
+export const START_NOW_URL =
+  process.env.NEXT_PUBLIC_START_NOW_URL || "/start-now";
+
 // ============================================
 // BRAND COLORS
 // ============================================

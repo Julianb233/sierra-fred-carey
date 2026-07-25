@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 import {
   PersonIcon,
   ArrowRightIcon,
@@ -352,7 +352,7 @@ export default function BoardyDemo() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-90">
-                  <Link href={FUNNEL_URL}>
+                  <Link href={START_NOW_URL}>
                     Start Free Trial
                     <RocketIcon className="ml-2 h-4 w-4" />
                   </Link>

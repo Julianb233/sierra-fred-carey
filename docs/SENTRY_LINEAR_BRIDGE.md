@@ -34,7 +34,10 @@ auto-execute**. This implementation enforces that:
 
 1. **Sentry** → Settings → Developer Settings → **New Internal Integration**
    (or a per-project Issue Alert with a Webhook action).
-   - Webhook URL: `https://joinsahara.com/api/webhooks/sentry`
+   - Webhook URL: `https://sierra-fred-carey.vercel.app/api/webhooks/sentry`
+   - Do not use `joinsahara.com` for this webhook until that custom domain
+     serves the Sahara application API routes; it currently serves a separate
+     surface.
    - Enable the **issue** resource / alert events.
 2. Copy the integration's **Client Secret** into `SENTRY_WEBHOOK_SECRET`.
 3. Ensure `LINEAR_API_KEY` is set (already used by the feedback + bug-report flows).
@@ -64,7 +67,7 @@ Repeat alerts for the same error are **deduplicated** by exact issue title
 # Signed sample payload → expect a Linear issue + a suggestion comment, no auto-exec
 BODY='{"action":"created","data":{"issue":{"id":"e2e-123","shortId":"SAHARA-E2E","title":"E2E test error","culprit":"app/test.ts","level":"error","permalink":"https://sentry.io/x","count":1}}}'
 SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SENTRY_WEBHOOK_SECRET" | awk '{print $2}')
-curl -sS -X POST https://joinsahara.com/api/webhooks/sentry \
+curl -sS -X POST https://sierra-fred-carey.vercel.app/api/webhooks/sentry \
   -H 'Content-Type: application/json' \
   -H "sentry-hook-resource: issue" \
   -H "sentry-hook-signature: $SIG" \

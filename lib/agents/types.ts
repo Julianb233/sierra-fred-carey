@@ -32,6 +32,14 @@ export interface AgentTask {
   status: AgentStatus;
   input: Record<string, unknown>;
   output?: Record<string, unknown>;
+  tenantId?: string;
+  correlationId?: string;
+  runId?: string;
+  capabilitiesRequired?: string[];
+  blockers?: import('./task-contract').AgentBlocker[];
+  handoff?: import('./task-contract').AgentHandoff;
+  verifier?: import('./task-contract').VerifierOutcome;
+  evidence?: Record<string, unknown>;
   error?: string;
   startedAt?: Date;
   completedAt?: Date;

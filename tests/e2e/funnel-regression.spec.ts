@@ -115,16 +115,15 @@ for (const device of MOBILE_DEVICES) {
       await expect(page.getByText("$249").first()).toBeVisible();
     });
 
-    // --- Onboarding / Get Started ---
-    test("onboarding step 1 renders without overflow", async ({ page }) => {
-      await assertNoServerError(page, "/get-started");
-      await page.waitForSelector("text=What stage", { timeout: 10000 });
+    // --- Capture-first signup ---
+    test("capture-first signup renders without overflow", async ({ page }) => {
+      await assertNoServerError(page, "/start-now");
+      await page.waitForSelector("text=Reserve your founder seat.", { timeout: 10000 });
       await assertNoOverflow(page);
 
-      // Stage cards should be tappable
-      const stageCard = page.locator('button:has-text("Ideation")');
-      await expect(stageCard).toBeVisible();
-      const box = await stageCard.boundingBox();
+      const submit = page.getByRole("button", { name: /reserve my founder seat/i });
+      await expect(submit).toBeVisible();
+      const box = await submit.boundingBox();
       expect(box).toBeTruthy();
       expect(box!.width).toBeGreaterThanOrEqual(44);
       expect(box!.height).toBeGreaterThanOrEqual(44);
@@ -185,14 +184,13 @@ test.describe("[Regression] Payment Flow — Stripe", () => {
     await page.goto("/pricing");
     await page.waitForSelector("text=PRICING", { timeout: 15000 });
 
-    // Free tier CTA links to /get-started
-    const freeCTA = page.locator('a[href="/get-started"]').first();
+    // Free tier CTA links to capture-first signup.
+    const freeCTA = page.locator('a[href="/start-now"]').first();
     await expect(freeCTA).toBeVisible();
 
-    // Pro and Studio CTAs exist
-    const trialButtons = page.getByText("Start 14-Day Trial");
-    await expect(trialButtons.first()).toBeVisible();
-    expect(await trialButtons.count()).toBe(2);
+    // All pricing tier CTAs route into capture-first signup.
+    const ctaLinks = page.locator('a[href="/start-now"]');
+    expect(await ctaLinks.count()).toBeGreaterThanOrEqual(4);
   });
 
   test("checkout API endpoint rejects unauthenticated requests", async ({ page }) => {
@@ -227,14 +225,14 @@ test.describe("[Regression] Payment Flow — Stripe", () => {
     await page.goto("/pricing");
     await page.waitForSelector("text=PRICING", { timeout: 15000 });
 
-    // Click "Get Started Free" CTA
-    const freeCTA = page.locator('a:has-text("Get Started Free")');
+    // Click the first visible capture-first CTA.
+    const freeCTA = page.locator('a[href="/start-now"]').filter({ hasText: "Get Started Free" }).first();
     await expect(freeCTA).toBeVisible();
     await freeCTA.click();
 
-    // Should navigate to /get-started
-    await page.waitForURL("**/get-started**", { timeout: 10000 });
-    expect(page.url()).toContain("/get-started");
+    // Should navigate to /start-now
+    await page.waitForURL("**/start-now**", { timeout: 10000 });
+    expect(page.url()).toContain("/start-now");
   });
 });
 
@@ -347,125 +345,96 @@ authTest.describe("[Regression] Fred Chat — Authenticated", () => {
 });
 
 // ============================================================================
-// Section 4: Founder Journey Flow (Onboarding / Get-Started)
+// Section 4: Founder Journey Flow (Capture-first signup)
 // ============================================================================
 
 test.describe("[Regression] Founder Journey Flow", () => {
-  test("step 1: stage selection renders all options", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
+  test("capture form renders contact fields before startup questions", async ({ page }) => {
+    await page.goto("/start-now");
+    await page.waitForSelector("text=Reserve your founder seat.", { timeout: 10000 });
 
-    // All stage options should be visible
-    const stages = ["Ideation", "Pre-seed", "Seed", "Series A"];
-    for (const stage of stages) {
-      const btn = page.locator(`button:has-text("${stage}")`);
-      await expect(btn).toBeVisible();
-    }
+    await expect(page.getByRole("textbox", { name: "Name" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Phone" })).toBeVisible();
+    await expect(page.getByText("What stage are you at?")).toHaveCount(0);
+    await expect(page.getByText("What's your #1 challenge?")).toHaveCount(0);
   });
 
-  test("step 1 → step 2: stage selection advances to challenges", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
-
-    // Select a stage
-    await page.click('button:has-text("Ideation")');
-
-    // Should advance to challenge step
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
+  test("legacy /get-started redirects to /start-now and preserves attribution", async ({ page }) => {
+    await page.goto("/get-started?ref=abc123");
+    await page.waitForURL("**/start-now?ref=abc123&source=get-started", {
+      timeout: 10000,
+    });
+    await expect(page.getByText("Save your spot")).toBeVisible();
   });
 
-  test("step 2 → step 3: challenge selection advances to signup form", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
+  test("lead capture advances to account creation with the expected payload", async ({ page }) => {
+    let contactPayload: Record<string, unknown> | null = null;
+    let onboardPayload: Record<string, unknown> | null = null;
 
-    await page.click('button:has-text("Ideation")');
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
+    await page.route("**/api/contact", async (route) => {
+      contactPayload = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, id: "lead_capture_123456" }),
+      });
+    });
+    await page.route("**/api/onboard", async (route) => {
+      onboardPayload = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, profile: { id: "profile_123" } }),
+      });
+    });
 
-    await page.click('button:has-text("Fundraising")');
+    await page.goto("/start-now?utm_campaign=july-founder");
+    await page.getByRole("textbox", { name: "Name" }).fill("Avery Founder");
+    await page.getByRole("textbox", { name: "Email" }).fill("avery@example.com");
+    await page.getByRole("textbox", { name: "Phone" }).fill("(415) 555-0199");
+    await page.getByLabel(/By submitting/).check();
+    await page.getByRole("button", { name: /reserve my founder seat/i }).click();
 
-    // Should advance to email/password form
-    await page.waitForSelector('input[type="email"]', { timeout: 5000 });
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]').first()).toBeVisible();
+    await expect(page.getByText("Create your account")).toBeVisible();
+    expect(contactPayload).toMatchObject({
+      name: "Avery Founder",
+      email: "avery@example.com",
+      phone: "+14155550199",
+      source: "sahara_start_now",
+      company: "Sahara Founding Members",
+    });
+
+    await page.locator('input[type="password"]').fill("Sahara2026");
+    await page.getByRole("button", { name: /start with fred/i }).click();
+
+    await expect(page.getByText("You're in.")).toBeVisible();
+    expect(onboardPayload).toMatchObject({
+      name: "Avery Founder",
+      email: "avery@example.com",
+      phone: "+14155550199",
+      challenges: [],
+      isQuickOnboard: true,
+    });
   });
 
-  test("back button navigates to previous step", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
+  test("lead capture validates invalid phone before calling API", async ({ page }) => {
+    let apiCalled = false;
 
-    // Navigate to step 2
-    await page.click('button:has-text("Ideation")');
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
+    await page.route("**/api/contact", async (route) => {
+      apiCalled = true;
+      await route.fulfill({ status: 500 });
+    });
 
-    // Click back
-    await page.click('button:has-text("Back")');
-    await page.waitForSelector("text=What stage", { timeout: 5000 });
-  });
+    await page.goto("/start-now");
+    await page.getByRole("textbox", { name: "Name" }).fill("Avery Founder");
+    await page.getByRole("textbox", { name: "Email" }).fill("avery@example.com");
+    await page.getByRole("textbox", { name: "Phone" }).fill("123");
+    await page.getByLabel(/By submitting/).check();
+    await page.getByRole("button", { name: /reserve my founder seat/i }).click();
 
-  test("progress indicator shows step progress", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
-
-    // Progress dots should be present (brand color dots)
-    const dots = page.locator(".rounded-full.bg-\\[\\#ff6a1a\\]");
-    await expect(dots.first()).toBeVisible();
-  });
-
-  test("signup form validates empty fields", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
-
-    // Navigate to signup step
-    await page.click('button:has-text("Ideation")');
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
-    await page.click('button:has-text("Fundraising")');
-    await page.waitForSelector('input[type="email"]', { timeout: 5000 });
-
-    // Submit empty form
-    await page.click('button:has-text("Start Free Trial")');
-
-    // Error should appear
-    const error = page.locator('[role="alert"]');
-    await expect(error).toBeVisible({ timeout: 3000 });
-  });
-
-  test("signup form validates invalid email", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
-
-    await page.click('button:has-text("Ideation")');
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
-    await page.click('button:has-text("Fundraising")');
-    await page.waitForSelector('input[type="email"]', { timeout: 5000 });
-
-    // Fill invalid email
-    await page.locator('input[type="email"]').fill("not-an-email");
-    await page.locator('input[placeholder="Create a password"]').fill("TestPass123!");
-    await page.click('button:has-text("Start Free Trial")');
-
-    // Should show validation error, not crash
-    await page.waitForTimeout(1000);
-    expect(page.url()).toContain("/get-started"); // Still on page
-  });
-
-  test("password toggle shows/hides password", async ({ page }) => {
-    await page.goto("/get-started");
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
-
-    await page.click('button:has-text("Ideation")');
-    await page.waitForSelector("text=challenge", { timeout: 5000 });
-    await page.click('button:has-text("Fundraising")');
-    await page.waitForSelector('input[type="email"]', { timeout: 5000 });
-
-    const passwordInput = page.locator('input[placeholder="Create a password"]');
-    await expect(passwordInput).toHaveAttribute("type", "password");
-
-    const toggleBtn = page.locator('button[aria-label="Show password"]');
-    await toggleBtn.click();
-    await expect(passwordInput).toHaveAttribute("type", "text");
-
-    await toggleBtn.click();
-    await expect(passwordInput).toHaveAttribute("type", "password");
+    await expect(page.getByText("Valid phone number is required")).toBeVisible();
+    expect(apiCalled).toBe(false);
   });
 });
 
@@ -604,16 +573,16 @@ test.describe("[Regression] Critical Navigation Paths", () => {
     await expect(page.getByText("Free Forever")).toBeVisible({ timeout: 10000 });
   });
 
-  test("homepage → get-started navigation works", async ({ page }) => {
+  test("homepage → start-now navigation works", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const getStartedLink = page.locator('a[href="/get-started"]').first();
+    const getStartedLink = page.locator('a[href="/start-now"]').first();
     await expect(getStartedLink).toBeVisible({ timeout: 10000 });
     await getStartedLink.click();
 
-    await page.waitForURL("**/get-started**", { timeout: 10000 });
-    await page.waitForSelector("text=What stage", { timeout: 10000 });
+    await page.waitForURL("**/start-now**", { timeout: 10000 });
+    await page.waitForSelector("text=Reserve your founder seat.", { timeout: 10000 });
   });
 
   test("homepage → login navigation works", async ({ page }) => {
@@ -639,6 +608,7 @@ test.describe("[Regression] Critical Navigation Paths", () => {
     const publicPages = [
       "/",
       "/pricing",
+      "/start-now",
       "/get-started",
       "/login",
       "/signup",

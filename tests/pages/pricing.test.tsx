@@ -81,9 +81,9 @@ describe('Pricing Page (/pricing)', () => {
     // Check for CTA buttons - they are links inside buttons
     const allLinks = screen.getAllByRole('link');
     const ctaLinks = allLinks.filter(link =>
-      link.getAttribute('href') === '/get-started'
+      link.getAttribute('href') === '/start-now'
     );
-    // All 3 pricing tiers have CTA buttons linking to /get-started
+    // All pricing tier CTAs route into the capture-first signup page.
     expect(ctaLinks.length).toBeGreaterThanOrEqual(3);
   });
 
@@ -155,17 +155,17 @@ describe('Pricing Page (/pricing)', () => {
     expect(screen.getByText(/Founders actively fundraising/i)).toBeInTheDocument();
   });
 
-  it('should have links to /get-started', async () => {
+  it('should have links to /start-now', async () => {
     await act(async () => {
       render(<PricingPage />);
     });
 
     const ctaLinks = screen.getAllByRole('link');
-    const getStartedLinks = ctaLinks.filter(link =>
-      link.getAttribute('href') === '/get-started'
+    const startNowLinks = ctaLinks.filter(link =>
+      link.getAttribute('href') === '/start-now'
     );
 
-    expect(getStartedLinks.length).toBeGreaterThan(0);
+    expect(startNowLinks.length).toBeGreaterThan(0);
   });
 
   it('should display feature checkmarks correctly', async () => {

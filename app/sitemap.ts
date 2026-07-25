@@ -25,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Auth pages (public entry points)
     { url: `${baseUrl}/login`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     { url: `${baseUrl}/signup`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
+    { url: `${baseUrl}/start-now`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${baseUrl}/get-started`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
     // Legal

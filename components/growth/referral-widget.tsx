@@ -50,7 +50,7 @@ export function ReferralWidget() {
           typeof window !== "undefined"
             ? window.location.origin
             : "https://sahara.app";
-        const referralLink = `${baseUrl}/get-started?ref=${user.id}`;
+        const referralLink = `${baseUrl}/start-now?ref=${user.id}`;
 
         // Count referrals from contact_submissions with this user's ref
         const { count } = await supabase

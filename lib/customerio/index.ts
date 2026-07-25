@@ -17,17 +17,28 @@ export {
   CUSTOMERIO_EVENT_NAMES,
   isCustomerIoEvent,
   SUPPRESSION_STATE,
+  LIFECYCLE_CONSENT,
   type CustomerIoEventName,
+  type LifecycleConsent,
+  type LifecycleEventContext,
   type SuppressionState,
 } from './events';
 
 export {
   identifyMember,
   trackMemberEvent,
+  trackLifecycleEvent,
   suppressMember,
   unsuppressMember,
   setMemberSuppression,
 } from './track';
+
+export {
+  buildMemberAttributes,
+  syncMemberLifecycle,
+  type MemberLifecycleInput,
+  type MemberLifecycleSyncResult,
+} from './member-lifecycle';
 
 export type {
   CustomerIoRegion,

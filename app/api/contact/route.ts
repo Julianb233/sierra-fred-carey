@@ -15,7 +15,31 @@ export async function POST(request: NextRequest) {
       return createRateLimitResponse(rateLimitResult);
     }
 
-    const { name, email, company, message } = await request.json();
+    const { name, email, company, message, source, phone, metadata } = await request.json();
+    const normalizedSource =
+      typeof source === "string" && source.trim()
+        ? source.trim().slice(0, 80)
+        : "contact_page";
+    const normalizedPhone =
+      typeof phone === "string" && phone.trim()
+        ? phone.trim().slice(0, 40)
+        : null;
+    const messageBody =
+      typeof message === "string"
+        ? message.trim()
+        : message
+        ? JSON.stringify(message)
+        : "";
+    const isCaptureLead = normalizedSource === "sahara_start_now";
+    const preparedMessage =
+      messageBody ||
+      (isCaptureLead
+        ? JSON.stringify({
+            intent: "reserve_founder_seat",
+            phone: normalizedPhone,
+            metadata: metadata ?? null,
+          })
+        : "");
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -32,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!message || !message.trim()) {
+    if (!preparedMessage) {
       return NextResponse.json(
         { error: "Message is required" },
         { status: 400 }
@@ -61,9 +85,9 @@ export async function POST(request: NextRequest) {
       .insert({
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        company: company?.trim() || null,
-        message: message.trim(),
-        source: "contact_page",
+        company: company?.trim() || (isCaptureLead ? "Sahara Founding Members" : null),
+        message: preparedMessage,
+        source: normalizedSource,
         ip_address: ipAddress,
         user_agent: userAgent,
       })

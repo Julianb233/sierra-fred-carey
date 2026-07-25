@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 
 /**
  * Login Page
@@ -302,7 +302,7 @@ function LoginContent() {
             <p className="text-gray-600 dark:text-gray-400">
               Don&apos;t have an account?{" "}
               <Link
-                href={FUNNEL_URL}
+                href={START_NOW_URL}
                 // orange-800 to clear AA against the soft cream wash. orange-700
                 // (#c2410c) measured 4.36:1, just under the 4.5:1 minimum.
                 className="font-medium text-[#9a3412] hover:text-[#7c2d12]"

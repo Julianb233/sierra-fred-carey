@@ -1,325 +1,49 @@
 /**
  * Get Started Page Tests
- * Tests for the onboarding flow (/get-started)
+ * /get-started is now a compatibility redirect into capture-first signup.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
-import OnboardingPage from '@/app/get-started/page';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { redirect } from "next/navigation";
+import GetStartedRedirect from "@/app/get-started/page";
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(),
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`redirect:${url}`);
+  }),
 }));
 
-// Mock canvas-confetti
-vi.mock('canvas-confetti', () => ({
-  default: vi.fn(),
-}));
-
-/**
- * Set value on a controlled React input in JSDOM.
- * fireEvent.change alone doesn't trigger React's internal value tracking
- * for controlled inputs — we must use the native setter then dispatch events.
- */
-function setInputValue(input: HTMLInputElement, value: string) {
-  const nativeSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
-  nativeSet.call(input, value);
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-  input.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-describe('Get Started Page (/get-started)', () => {
-  const mockPush = vi.fn();
-
+describe("Get Started Page (/get-started)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Clear persisted wizard state so each test starts at step 1
-    localStorage.removeItem('sahara_onboarding_wizard');
-    (useRouter as any).mockReturnValue({
-      push: mockPush,
-    });
   });
 
-  /**
-   * Helper: navigate from step 1 through stage + challenge + fundamentals
-   * so the test lands on step 4 (email). Fundamentals step was added in the
-   * Mar 21 refactor — the wizard is now 4 steps, not 3.
-   */
-  async function navigateToEmailStep(opts?: { stage?: string; challenge?: string }) {
-    const stage = opts?.stage ?? 'Seed';
-    const challenge = opts?.challenge ?? 'Fundraising';
+  it("redirects to /start-now and tags source", async () => {
+    await expect(
+      GetStartedRedirect({ searchParams: Promise.resolve({}) })
+    ).rejects.toThrow("redirect:/start-now?source=get-started");
 
-    // Step 1: stage
-    await act(async () => {
-      fireEvent.click(screen.getByText(stage).closest('button')!);
-    });
-    // Step 2: challenge
-    await waitFor(() => {
-      expect(screen.getByText(challenge)).toBeInTheDocument();
-    }, { timeout: 1000 });
-    await act(async () => {
-      fireEvent.click(screen.getByText(challenge).closest('button')!);
-    });
-    // Step 3: business fundamentals — fill businessName, Continue
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
-    }, { timeout: 1000 });
-    await act(async () => {
-      setInputValue(
-        screen.getByPlaceholderText('e.g. Acme Labs') as HTMLInputElement,
-        'Test Co'
-      );
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByText('Continue'));
-    });
-    // Step 4: email
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('you@company.com')).toBeInTheDocument();
-    }, { timeout: 1000 });
-  }
-
-  it('should render without crashing', async () => {
-    let container: HTMLElement;
-    await act(async () => {
-      const result = render(<OnboardingPage />);
-      container = result.container;
-    });
-    expect(container!).toBeDefined();
+    expect(redirect).toHaveBeenCalledWith("/start-now?source=get-started");
   });
 
-  it('should show step 1: stage selection on initial load', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    expect(screen.getByText(/What stage are you at\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/4 quick steps to get started/i)).toBeInTheDocument();
-  });
-
-  it('should display all 4 stage options', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    expect(screen.getByText('Ideation')).toBeInTheDocument();
-    expect(screen.getByText('Pre-seed')).toBeInTheDocument();
-    expect(screen.getByText('Seed')).toBeInTheDocument();
-    expect(screen.getByText('Series A+')).toBeInTheDocument();
-  });
-
-  it('should advance to step 2 when stage is selected', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    const ideationButton = screen.getByText('Ideation').closest('button');
-    await act(async () => {
-      fireEvent.click(ideationButton!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/What's your/i)).toBeInTheDocument();
-    }, { timeout: 1000 });
-  });
-
-  it('should display all 6 challenge options in step 2', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    // Select a stage to advance
-    const seedButton = screen.getByText('Seed').closest('button');
-    await act(async () => {
-      fireEvent.click(seedButton!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Product-Market Fit')).toBeInTheDocument();
-      expect(screen.getByText('Fundraising')).toBeInTheDocument();
-      expect(screen.getByText('Team Building')).toBeInTheDocument();
-      expect(screen.getByText('Growth & Scaling')).toBeInTheDocument();
-      expect(screen.getByText('Unit Economics')).toBeInTheDocument();
-      expect(screen.getByText('Strategy')).toBeInTheDocument();
-    }, { timeout: 1000 });
-  });
-
-  it('should show back button in step 2', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    const stageButton = screen.getByText('Pre-seed').closest('button');
-    await act(async () => {
-      fireEvent.click(stageButton!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Back')).toBeInTheDocument();
-    }, { timeout: 1000 });
-  });
-
-  it('should advance to step 3 (business fundamentals) when challenge is selected', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    // Step 1: Select stage
-    await act(async () => {
-      fireEvent.click(screen.getByText('Seed').closest('button')!);
-    });
-
-    // Wait for step 2
-    await waitFor(() => {
-      expect(screen.getByText('Fundraising')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    // Step 2: Select challenge -> advances to step 3 (fundamentals)
-    await act(async () => {
-      fireEvent.click(screen.getByText('Fundraising').closest('button')!);
-    });
-
-    await waitFor(() => {
-      // Step 3 shows the businessName input
-      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
-    }, { timeout: 1000 });
-  });
-
-  it('should validate empty email on step 4', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    await navigateToEmailStep({ stage: 'Ideation', challenge: 'Product-Market Fit' });
-
-    const submitButton = screen.getByText('Start Free Trial');
-    await act(async () => {
-      fireEvent.click(submitButton);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Please enter your email')).toBeInTheDocument();
-    });
-  });
-
-  it('should validate email format on step 4', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    await navigateToEmailStep({ stage: 'Series A+', challenge: 'Strategy' });
-
-    await act(async () => {
-      setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'invalid-email');
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Start Free Trial'));
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
-    });
-  });
-
-  it('should display selected stage and challenge in step 3', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    // Navigate through steps
-    await act(async () => {
-      fireEvent.click(screen.getByText('Seed').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Team Building')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Team Building').closest('button')!);
-    });
-
-    await waitFor(() => {
-      // The selected stage and challenge appear as chips in step 3
-      const chips = document.querySelectorAll('[class*="rounded-full"]');
-      expect(chips.length).toBeGreaterThan(0);
-    }, { timeout: 1000 });
-  });
-
-  it('should show loading state when submitting', async () => {
-    global.fetch = vi.fn(() =>
-      new Promise((resolve) =>
-        setTimeout(() => resolve({
-          ok: true,
-          json: async () => ({ success: true }),
-        } as any), 500)
-      )
+  it("preserves existing query params", async () => {
+    await expect(
+      GetStartedRedirect({
+        searchParams: Promise.resolve({
+          ref: "founder-123",
+          utm_campaign: "july-launch",
+        }),
+      })
+    ).rejects.toThrow(
+      "redirect:/start-now?ref=founder-123&utm_campaign=july-launch&source=get-started"
     );
-
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    await navigateToEmailStep({ stage: 'Pre-seed', challenge: 'Fundraising' });
-
-    await act(async () => {
-      setInputValue(screen.getByPlaceholderText('you@company.com') as HTMLInputElement, 'test@example.com');
-      setInputValue(screen.getByPlaceholderText('Create a password') as HTMLInputElement, 'TestPass123');
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Start Free Trial'));
-    });
-
-    // The button shows "Creating..." during submission
-    await waitFor(() => {
-      expect(screen.getByText(/Creating/i)).toBeInTheDocument();
-    }, { timeout: 2000 });
   });
 
-  it('should show progress dots', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    // Look for progress indicators (3 dots)
-    const dots = document.querySelectorAll('.rounded-full');
-    expect(dots.length).toBeGreaterThan(0);
-  });
-
-  it('should allow navigation back from step 3 (fundamentals) to step 2 (challenge)', async () => {
-    await act(async () => {
-      render(<OnboardingPage />);
-    });
-
-    // Step 1: stage
-    await act(async () => {
-      fireEvent.click(screen.getByText('Seed').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Growth & Scaling')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    // Step 2: challenge -> advances to step 3 (fundamentals)
-    await act(async () => {
-      fireEvent.click(screen.getByText('Growth & Scaling').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('e.g. Acme Labs')).toBeInTheDocument();
-    }, { timeout: 1000 });
-
-    // Click Back button to return to step 2 (challenge)
-    await act(async () => {
-      fireEvent.click(screen.getByText('Back').closest('button')!);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/What's your/i)).toBeInTheDocument();
-    }, { timeout: 1000 });
+  it("does not overwrite explicit source params", async () => {
+    await expect(
+      GetStartedRedirect({
+        searchParams: Promise.resolve({ source: "partner", ref: "abc" }),
+      })
+    ).rejects.toThrow("redirect:/start-now?source=partner&ref=abc");
   });
 });

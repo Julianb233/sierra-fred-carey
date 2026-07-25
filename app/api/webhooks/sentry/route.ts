@@ -11,7 +11,7 @@
  *
  * Setup (Sentry → Settings → Developer Settings → Internal Integration, or a
  * per-project Issue Alert with a webhook action):
- *   URL:    https://joinsahara.com/api/webhooks/sentry
+ *   URL:    https://sierra-fred-carey.vercel.app/api/webhooks/sentry
  *   Events: "issue" (created / triggered)
  *   Secret: set SENTRY_WEBHOOK_SECRET to the integration's Client Secret
  *

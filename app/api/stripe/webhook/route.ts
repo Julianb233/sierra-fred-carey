@@ -14,6 +14,11 @@ import Stripe from "stripe";
 import { serverTrack } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureError, captureMessage } from "@/lib/sentry";
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from "@/lib/customerio";
 
 // Helper to get period timestamps from subscription
 function getSubscriptionPeriod(subscription: Stripe.Subscription) {
@@ -138,6 +143,50 @@ export async function POST(request: NextRequest) {
             break;
           }
           await handleSubscriptionUpdate(subscription, userId);
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.SUBSCRIPTION_STARTED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              status: subscription.status,
+              plan: getUserTierFromSubscription(subscription),
+              price_id: subscription.items.data[0]?.price.id,
+            },
+            `stripe:${event.id}`
+          );
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.UPGRADE_COMPLETED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              plan: getUserTierFromSubscription(subscription),
+            },
+            `upgrade_completed:${event.id}`
+          );
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.PAID_ONBOARDING_STARTED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              plan: getUserTierFromSubscription(subscription),
+            },
+            `paid_onboarding:${event.id}`
+          );
           serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.CHECKOUT_COMPLETED, { priceId: subscription.items.data[0]?.price.id });
         }
         break;
@@ -159,6 +208,23 @@ export async function POST(request: NextRequest) {
         const newTier = getUserTierFromSubscription(subscription);
         serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.TIER_CHANGED, { toTier: newTier, priceId: subscription.items.data[0]?.price.id });
         await handleSubscriptionUpdate(subscription, userId);
+        await trackLifecycleEvent(
+          userId,
+          CUSTOMERIO_EVENTS.SUBSCRIPTION_UPDATED,
+          {
+            source: "stripe",
+            correlationId: event.id,
+            consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+          },
+          {
+            subscription_id: subscription.id,
+            status: subscription.status,
+            plan: newTier,
+            price_id: subscription.items.data[0]?.price.id,
+            cancel_at_period_end: getSubscriptionPeriod(subscription).cancelAtPeriodEnd,
+          },
+          `stripe:${event.id}`
+        );
         break;
       }
 
@@ -177,6 +243,37 @@ export async function POST(request: NextRequest) {
             currentPeriodEnd: period.currentPeriodEnd,
             canceledAt: new Date(),
           });
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              status: "canceled",
+              plan: getUserTierFromSubscription(subscription),
+              price_id: subscription.items.data[0]?.price.id,
+            },
+            `stripe:${event.id}`
+          );
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELLED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+            },
+            {
+              subscription_id: subscription.id,
+              status: "canceled",
+              plan: getUserTierFromSubscription(subscription),
+            },
+            `subscription_cancelled:${event.id}`
+          );
         } else {
           console.error(`[Webhook] No userId found for deleted subscription ${subscription.id}`);
           await markEventAsFailed(stripeEvent.id, `No userId found for deleted subscription ${subscription.id}`);
@@ -215,7 +312,45 @@ export async function POST(request: NextRequest) {
               userId,
               status: "past_due",
             });
+            await trackLifecycleEvent(
+              userId,
+              CUSTOMERIO_EVENTS.PAYMENT_FAILED,
+              {
+                source: "stripe",
+                correlationId: event.id,
+                consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+              },
+              {
+                invoice_id: invoice.id,
+                subscription_id: subscription.id,
+                status: "past_due",
+                plan: getUserTierFromSubscription(subscription),
+              },
+              `stripe:${event.id}`
+            );
           }
+        }
+        break;
+      }
+
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const userId = session.client_reference_id;
+        if (userId && userId !== "funnel-pending") {
+          await trackLifecycleEvent(
+            userId,
+            CUSTOMERIO_EVENTS.UPGRADE_ABANDONED,
+            {
+              source: "stripe",
+              correlationId: event.id,
+              consent: LIFECYCLE_CONSENT.UNKNOWN,
+            },
+            {
+              checkout_session_id: session.id,
+              mode: session.mode,
+            },
+            `upgrade_abandoned:${event.id}`
+          );
         }
         break;
       }

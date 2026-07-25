@@ -154,7 +154,8 @@ for (const deviceName of Object.keys(mobileDevices) as DeviceName[]) {
         // May redirect -- that's fine
         if (
           page.url().includes("login") ||
-          page.url().includes("get-started")
+          page.url().includes("get-started") ||
+          page.url().includes("start-now")
         ) {
           return
         }
@@ -177,7 +178,8 @@ for (const deviceName of Object.keys(mobileDevices) as DeviceName[]) {
         // If redirected, skip
         if (
           page.url().includes("login") ||
-          page.url().includes("get-started")
+          page.url().includes("get-started") ||
+          page.url().includes("start-now")
         ) {
           return
         }

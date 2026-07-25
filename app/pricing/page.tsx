@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Footer from "@/components/footer";
 import { CheckIcon, Cross2Icon, RocketIcon, StarIcon, LightningBoltIcon } from "@radix-ui/react-icons";
+import { START_NOW_URL } from "@/lib/constants";
 
 export default function PricingPage() {
   const plans = [
@@ -291,7 +292,7 @@ export default function PricingPage() {
                         variant={plan.popular ? "default" : "outline"}
                         size="lg"
                       >
-                        <Link href="/get-started">{plan.cta}</Link>
+                        <Link href={START_NOW_URL}>{plan.cta}</Link>
                       </Button>
                     </div>
                   </div>

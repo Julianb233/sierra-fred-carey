@@ -17,6 +17,11 @@ import { createServiceClient } from "@/lib/supabase/server"
 import { getOverdueSteps, markReminderSent } from "@/lib/next-steps/next-steps-service"
 import { notifyOverdueStep } from "@/lib/push/triggers"
 import { timingSafeEqual } from "crypto"
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from "@/lib/customerio"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -89,6 +94,21 @@ export async function GET(request: NextRequest) {
 
         // Send one push per user with count of overdue items
         const topStep = unreminded[0]
+        await trackLifecycleEvent(
+          userId,
+          CUSTOMERIO_EVENTS.RECOMMENDED_ACTION_NOT_VIEWED,
+          {
+            source: "next_steps_reminder_cron",
+            correlationId: topStep.id,
+            consent: LIFECYCLE_CONSENT.UNKNOWN,
+          },
+          {
+            step_id: topStep.id,
+            priority: topStep.priority,
+            overdue_count: unreminded.length,
+          },
+          `recommended_action_not_viewed:${topStep.id}`,
+        )
         notifyOverdueStep(userId, {
           count: unreminded.length,
           topDescription: topStep.description,

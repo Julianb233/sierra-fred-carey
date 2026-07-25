@@ -15,7 +15,7 @@ export default function WelcomePage() {
   const [authChecked, setAuthChecked] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  // Auth gate: redirect to /get-started if not logged in
+  // Auth gate: redirect to capture-first signup if not logged in
   // Also check if user has already been welcomed (show-once logic)
   useEffect(() => {
     const checkAuth = async () => {
@@ -23,7 +23,7 @@ export default function WelcomePage() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        router.replace("/get-started")
+        router.replace("/start-now?source=welcome")
         return
       }
 

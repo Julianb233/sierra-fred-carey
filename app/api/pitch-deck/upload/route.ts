@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { uploadToBlob, FileValidationError } from '@/lib/storage/upload';
 import { requireAuth } from '@/lib/auth';
 import { UserTier } from '@/lib/constants';
 import { getUserTier, createTierErrorResponse } from '@/lib/api/tier-middleware';
 import { checkRateLimit, createRateLimitResponse } from '@/lib/api/rate-limit';
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from '@/lib/customerio';
 
 // Upload rate limits per tier (per day)
 const UPLOAD_RATE_LIMITS: Record<number, { limit: number; windowSeconds: number }> = {
@@ -87,6 +93,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
     // Upload to Blob storage (includes validation)
     const result = await uploadToBlob(file, userId);
+    const uploadRef = createHash('sha256').update(result.url).digest('hex').slice(0, 24);
+
+    // Product event only; Customer.io journeys remain paused while the
+    // existing product/email channels stay authoritative.
+    await trackLifecycleEvent(
+      userId,
+      CUSTOMERIO_EVENTS.DECK_SUBMITTED,
+      {
+        source: 'pitch_deck_upload',
+        correlationId: uploadRef,
+        consent: LIFECYCLE_CONSENT.UNKNOWN,
+      },
+      {
+        file_type: result.type,
+        file_size: result.size,
+      },
+      `deck_submitted:${userId}:${uploadRef}`,
+    );
 
     // Return success response
     return NextResponse.json(

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { FUNNEL_URL } from "@/lib/constants";
+import { START_NOW_URL } from "@/lib/constants";
 import {
   Bot,
   Briefcase,
@@ -734,7 +734,7 @@ export default function VirtualTeamDemo() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white shadow-lg shadow-[#ff6a1a]/25">
-                <Link href={FUNNEL_URL}>
+                <Link href={START_NOW_URL}>
                   Activate My Team <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
