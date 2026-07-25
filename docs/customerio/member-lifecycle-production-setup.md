@@ -139,6 +139,10 @@ The endpoint writes to `customerio_reporting_events`, keyed by Customer.io
 campaign/action, object, metric, time, boolean failure flags, and one-way
 identifier hashes are stored. Recipient addresses, phone numbers, message
 bodies, failure text, and raw payloads are never persisted or logged.
+New bounce, complaint, failure, undeliverable, and dropped events also emit a
+redacted Sentry warning. The existing signed Sentry-to-Linear bridge routes that
+warning into the human-review maintenance lane. Provider retries do not create
+duplicate warnings, and unsubscribes remain consent evidence rather than errors.
 
 Customer.io times out webhook calls after four seconds and retries non-2xx
 responses with exponential backoff for up to seven days. Keep the endpoint

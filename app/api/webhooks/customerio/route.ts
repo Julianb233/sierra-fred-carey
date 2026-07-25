@@ -6,9 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { logger } from '@/lib/logger';
 import {
   buildCustomerIoReportingRecord,
+  isActionableCustomerIoMetric,
   parseCustomerIoReportingPayload,
   recordCustomerIoReportingEvent,
   verifyCustomerIoReportingSignature,
@@ -50,12 +52,36 @@ export async function POST(request: NextRequest) {
       objectType: record.object_type,
       duplicate: result.duplicate,
     });
+    if (!result.duplicate && isActionableCustomerIoMetric(record.metric)) {
+      Sentry.captureMessage('Customer.io delivery failure requires review', {
+        level: 'warning',
+        tags: {
+          integration: 'customerio',
+          metric: record.metric,
+          object_type: record.object_type,
+        },
+        contexts: {
+          customerio: {
+            event_id: result.eventId,
+            campaign_id: record.campaign_id,
+            action_id: record.action_id,
+            occurred_at: record.occurred_at,
+          },
+        },
+      });
+    }
     return NextResponse.json({
       ok: true,
       duplicate: result.duplicate,
       eventId: result.eventId,
     });
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        integration: 'customerio',
+        operation: 'reporting-evidence-write',
+      },
+    });
     logger.error(`${LOG_PREFIX} Evidence write failed`, {
       error: error instanceof Error ? error.message : String(error),
     });

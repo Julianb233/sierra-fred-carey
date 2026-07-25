@@ -6,7 +6,7 @@
  * and header-based auth (for API/CLI usage).
  *
  * Auth priority for isAdminRequest():
- *   1. adminSession cookie -> validated via in-memory session store
+ *   1. adminSession cookie -> validated as a signed JWT
  *   2. x-admin-key header  -> timing-safe comparison against ADMIN_SECRET_KEY
  */
 
@@ -32,22 +32,32 @@ function safeCompare(a: string, b: string): boolean {
 /**
  * Check admin auth via adminSession cookie or x-admin-key header (for API routes).
  *
- * NOTE: Auth bypass enabled — dashboard is publicly accessible for sharing
- * with stakeholders (AI-3516). Remove this bypass to restore admin key auth.
+ * Fails closed when ADMIN_SECRET_KEY is missing.
  */
-export async function isAdminRequest(_request: NextRequest): Promise<boolean> {
-  return true;
+export async function isAdminRequest(request: NextRequest): Promise<boolean> {
+  const secret = process.env.ADMIN_SECRET_KEY;
+  if (!secret) return false;
+
+  const sessionToken = request.cookies.get("adminSession")?.value;
+  if (sessionToken && (await verifyAdminSession(sessionToken))) {
+    return true;
+  }
+
+  const providedKey = request.headers.get("x-admin-key");
+  return Boolean(providedKey && safeCompare(providedKey, secret));
 }
 
 /**
  * Check admin auth via session token cookie (for layouts/server components).
  * Uses Next.js cookies() API which is available in Server Components.
  *
- * NOTE: Auth bypass enabled — dashboard is publicly accessible for sharing
- * with stakeholders (AI-3516). Remove this bypass to restore admin key auth.
+ * Fails closed when ADMIN_SECRET_KEY is missing.
  */
 export async function isAdminSession(): Promise<boolean> {
-  return true;
+  if (!process.env.ADMIN_SECRET_KEY) return false;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("adminSession")?.value;
+  return Boolean(sessionToken && (await verifyAdminSession(sessionToken)));
 }
 
 /**

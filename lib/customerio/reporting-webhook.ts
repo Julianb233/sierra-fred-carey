@@ -36,6 +36,25 @@ export interface CustomerIoReportingResult {
   eventId: string;
 }
 
+const ACTIONABLE_METRICS = new Set([
+  'bounced',
+  'bounce',
+  'complained',
+  'complaint',
+  'failed',
+  'failure',
+  'undeliverable',
+  'dropped',
+]);
+
+/**
+ * Metrics that require operator review in the existing Sentry -> Linear lane.
+ * Unsubscribes are retained as consent evidence but are not operational errors.
+ */
+export function isActionableCustomerIoMetric(metric: string): boolean {
+  return ACTIONABLE_METRICS.has(metric.trim().toLowerCase());
+}
+
 function constantTimeHexEqual(expected: string, provided: string): boolean {
   if (!/^[a-f0-9]{64}$/i.test(provided)) return false;
   const left = Buffer.from(expected, 'hex');
