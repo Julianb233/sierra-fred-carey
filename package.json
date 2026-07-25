@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "test:slack": "tsx scripts/test-slack-webhook.ts",
     "validate-env": "tsx scripts/validate-env.ts",
+    "customerio:audit-members": "tsx scripts/customerio/audit-member-sources.ts",
     "ai:cost-report": "tsx scripts/ai-cost-report.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

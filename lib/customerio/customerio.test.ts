@@ -104,7 +104,11 @@ describe('event schema', () => {
     expect(CUSTOMERIO_EVENTS.INACTIVITY).toBe('inactivity');
     expect(CUSTOMERIO_EVENTS.FOUNDER_MILESTONE).toBe('founder_milestone');
     expect(CUSTOMERIO_EVENTS.DECK_SUBMITTED).toBe('deck_submitted');
-    expect(CUSTOMERIO_EVENT_NAMES).toHaveLength(6);
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_STARTED).toBe('subscription_started');
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_UPDATED).toBe('subscription_updated');
+    expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELED).toBe('subscription_canceled');
+    expect(CUSTOMERIO_EVENTS.PAYMENT_FAILED).toBe('payment_failed');
+    expect(CUSTOMERIO_EVENT_NAMES).toHaveLength(10);
   });
 
   it('type-guards known vs unknown event names', () => {

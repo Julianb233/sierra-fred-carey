@@ -24,6 +24,14 @@ export const CUSTOMERIO_EVENTS = {
   FOUNDER_MILESTONE: 'founder_milestone',
   /** Member submitted / uploaded a pitch deck. */
   DECK_SUBMITTED: 'deck_submitted',
+  /** Member started a paid subscription. */
+  SUBSCRIPTION_STARTED: 'subscription_started',
+  /** Member's paid subscription status, plan, or renewal state changed. */
+  SUBSCRIPTION_UPDATED: 'subscription_updated',
+  /** Member canceled a paid subscription. */
+  SUBSCRIPTION_CANCELED: 'subscription_canceled',
+  /** A payment attempt for the member failed. */
+  PAYMENT_FAILED: 'payment_failed',
 } as const;
 
 export type CustomerIoEventName =

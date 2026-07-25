@@ -11,6 +11,7 @@ import { shouldSendEmail } from '@/lib/email/preferences';
 import { sendEmail } from '@/lib/email/send';
 import { logger } from '@/lib/logger';
 import { MILESTONE_MESSAGES, type MilestoneType, type MilestoneEmailData } from './types';
+import { CUSTOMERIO_EVENTS, trackMemberEvent } from '@/lib/customerio';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sahara.app';
 
@@ -30,6 +31,15 @@ export async function sendMilestoneEmail(
   customTitle?: string,
 ): Promise<void> {
   try {
+    // Record the product milestone independently of Sahara's current email
+    // channel. Customer.io suppression remains authoritative for future sends.
+    await trackMemberEvent(
+      userId,
+      CUSTOMERIO_EVENTS.FOUNDER_MILESTONE,
+      { milestone_type: milestoneType, ...(customTitle ? { title: customTitle } : {}) },
+      `founder_milestone:${userId}:${milestoneType}`,
+    );
+
     // Check email preferences
     const shouldSend = await shouldSendEmail(userId, 'milestone');
     if (!shouldSend) {

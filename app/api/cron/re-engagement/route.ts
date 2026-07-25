@@ -32,6 +32,7 @@ import { sendSMS } from '@/lib/sms/client';
 import { createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import type { ReEngagementEmailData } from '@/lib/email/re-engagement/types';
+import { CUSTOMERIO_EVENTS, trackMemberEvent } from '@/lib/customerio';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -110,6 +111,21 @@ export async function GET(request: NextRequest) {
 
     for (const candidate of candidates) {
       const message = RE_ENGAGEMENT_MESSAGES[candidate.tier];
+
+      // Customer.io is the lifecycle orchestration lane. A stable id makes
+      // retries of the same graduated tier safe while its journeys remain
+      // paused or are later enabled.
+      await trackMemberEvent(
+        candidate.userId,
+        CUSTOMERIO_EVENTS.INACTIVITY,
+        {
+          tier: candidate.tier,
+          inactive_days: candidate.inactiveDays,
+          email_eligible: Boolean(candidate.email && !candidate.emailAlreadySent),
+          sms_eligible: Boolean(candidate.phoneNumber && !candidate.smsAlreadySent),
+        },
+        `inactivity:${candidate.userId}:${candidate.tier}`,
+      );
 
       // ---- Email channel ----
       if (candidate.email && !candidate.emailAlreadySent) {
