@@ -14,6 +14,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import {
   buildCustomerIoReportingRecord,
+  isActionableCustomerIoMetric,
   parseCustomerIoReportingPayload,
   recordCustomerIoReportingEvent,
   verifyCustomerIoReportingSignature,
@@ -101,6 +102,49 @@ describe('Customer.io reporting payload', () => {
     expect(JSON.stringify(record)).not.toContain('canonical-user-id');
     expect(JSON.stringify(record)).not.toContain('delivery_01');
   });
+
+  it.each([
+    ['delivered', false],
+    ['bounced', true],
+    ['complained', true],
+    ['failed', true],
+    ['undeliverable', true],
+    ['unsubscribed', false],
+  ])('classifies %s for the Sentry review lane', (metric, actionable) => {
+    expect(isActionableCustomerIoMetric(metric)).toBe(actionable);
+  });
+
+  it.each(['delivered', 'bounced', 'complained', 'unsubscribed', 'failed'])(
+    'redacts the %s reporting fixture',
+    (metric) => {
+      const fixture = {
+        event_id: `evt_${metric}`,
+        object_type: 'email',
+        metric,
+        timestamp: 1720000000,
+        data: {
+          identifiers: {
+            id: 'canonical-user-id',
+            email: 'member@example.com',
+          },
+          recipient: 'member@example.com',
+          content: 'must not be retained',
+          failure_message: metric === 'failed' ? 'provider detail' : undefined,
+          campaign_id: 123,
+          action_id: 456,
+        },
+      };
+      const parsed = parseCustomerIoReportingPayload(fixture);
+      expect(parsed).not.toBeNull();
+      const record = buildCustomerIoReportingRecord(parsed!, secret);
+      const serialized = JSON.stringify(record);
+      expect(record.metric).toBe(metric);
+      expect(serialized).not.toContain('member@example.com');
+      expect(serialized).not.toContain('must not be retained');
+      expect(serialized).not.toContain('provider detail');
+      expect(serialized).not.toContain('canonical-user-id');
+    }
+  );
 
   it('acknowledges provider retries as duplicates by event_id', async () => {
     const record = buildCustomerIoReportingRecord(
