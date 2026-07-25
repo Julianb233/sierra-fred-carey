@@ -48,7 +48,7 @@ Preview environment only.
 - Region: US, verified through `GET /api/v1/accounts/region` with HTTP 200
 - Dedicated Track credential: `Sahara member lifecycle production`
 - Secret storage: `CUSTOMERIO-sahara` in the shared `API-Keys` 1Password vault
-- Vercel scope: Preview only
+- Vercel scope: Production, Preview, and Development (encrypted)
 - Identity canary: HTTP 200
 - Event canary: HTTP 200
 - Suppression canary: HTTP 200
@@ -70,9 +70,11 @@ Preview environment only.
 
 ## Protected production boundary
 
-No Customer.io production variables were added and no journey was activated.
-Existing Resend and Twilio sends remain authoritative until an explicit cutover
-prevents duplicate messages.
+Customer.io credentials are prepared as encrypted Vercel variables in
+Production, Preview, and Development. Preparing the variables did not deploy
+the pull request and did not activate a journey. Existing Resend and Twilio
+sends remain authoritative until an explicit cutover prevents duplicate
+messages.
 
 Production still runs base commit `68239ab6`. The pull request was not merged
 or promoted because fleet policy requires review and forbids automatic merge.
@@ -85,6 +87,13 @@ be changed without access to the owning registrar account.
 
 Customer.io Startup Program enrollment also remains gated by adding a payment
 method. That is a billing action and was not performed automatically.
+
+The Firebase service-account JSON stored in the shared `API-Keys` 1Password
+vault was normalized and read back as valid JSON. The aggregate Supabase and
+Firebase member audit succeeded from the stored credentials without outputting
+PII. The service account remains operator-only and was not added to the Vercel
+runtime because the production application does not require Firebase Admin
+privileges.
 
 The public `joinsahara.com` hostname is not attached to any accessible
 AI Acrobatics Vercel project. Its existing production content was therefore not

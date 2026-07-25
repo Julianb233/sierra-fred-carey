@@ -86,12 +86,15 @@ trigger that references it.
 
 1. Confirm Customer.io workspace membership, role, region, and startup-program
    state.
-2. Create a Track API key, store it in 1Password, and configure preview only.
+2. Create a Track API key, store it in 1Password, and configure the deployment
+   environments without deploying an unreviewed commit.
 3. Verify `saharamembers.com` sender authentication and the reply-to address.
 4. Build journeys in paused or test mode from Fred's approved copy.
 5. Run allowlisted canaries and confirm a single person, single event, expected
    message, unsubscribe behavior, and suppression readback.
-6. Add production variables and deploy through the normal CI/CD path.
+6. Deploy the reviewed pull request through the normal CI/CD path. Environment
+   variables may be prepared first, but they do not prove the application code
+   is live.
 7. Activate in a small cohort, monitor delivery, complaints, unsubscribes, and
    Sentry/Linear alerts, then expand deliberately.
 
