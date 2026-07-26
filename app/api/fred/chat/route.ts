@@ -54,6 +54,10 @@ import { buildStageAwarePromptBlock, buildStageRedirectBlock } from "@/lib/oases
 import type { OasesStage } from "@/types/oases";
 import { createAuditEntry, updateAuditSentiment } from "@/lib/audit/fred-audit";
 import { compactFredContextBlocks } from "@/lib/fred/context-blocks";
+import {
+  buildAskAiDirectAnswerBlock,
+  CHAT_RESPONSE_MODES,
+} from "@/lib/ai/ask-ai-mode";
 
 export const maxDuration = 60; // Allow up to 60s for FRED's AI pipeline on Vercel Pro
 
@@ -86,6 +90,8 @@ const chatRequestSchema = z.object({
   pageContext: z.string().max(200).optional(),
   /** Number of user messages sent in this session (for loop-breaking) */
   exchangeCount: z.number().int().min(0).max(500).optional(),
+  /** Scoped response behavior for dashboard Q&A versus full mentoring */
+  mode: z.enum(CHAT_RESPONSE_MODES).default("mentor"),
 });
 
 // ============================================================================
@@ -453,7 +459,16 @@ async function handlePost(req: NextRequest) {
       );
     }
 
-    const { message: rawMessage, context, sessionId, stream, storeInMemory, pageContext, exchangeCount } = parsed.data;
+    const {
+      message: rawMessage,
+      context,
+      sessionId,
+      stream,
+      storeInMemory,
+      pageContext,
+      exchangeCount,
+      mode,
+    } = parsed.data;
 
     // Prompt injection guard
     const injectionCheck = detectInjectionAttempt(rawMessage);
@@ -789,10 +804,12 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
 
     // AI-8890: Loop-breaker — after N exchanges, tell FRED to wrap up
     const loopBreakerBlock = buildLoopBreakerBlock(exchangeCount ?? 0);
+    const askAiDirectAnswerBlock = buildAskAiDirectAnswerBlock(mode);
 
     // Phase 63-03: Context window management — ensure fullContext fits within token budget.
     // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt.
     const compactedContext = compactFredContextBlocks([
+      { name: "askAiDirectAnswerBlock", value: askAiDirectAnswerBlock, priority: 110 },
       { name: "loopBreakerBlock", value: loopBreakerBlock, priority: 100 },    // AI-8890: highest priority when active
       { name: "stageRedirectBlock", value: stageRedirectBlock, priority: 95 },  // Phase 80: stage-gate redirect
       { name: "wellbeingBlock", value: wellbeingBlock, priority: 90 },          // Phase 83: crisis/support guidance must survive

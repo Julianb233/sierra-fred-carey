@@ -2,6 +2,19 @@ import React from 'react'
 import { expect, afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 
+// Unit tests must never inherit deploy-time provider credentials from CI or a
+// developer shell. Individual provider tests opt in with vi.stubEnv and use
+// synthetic keys; clearing the ambient values prevents accidental paid/live
+// model calls from FRED tests.
+for (const key of [
+  'OPENAI_API_KEY',
+  'ANTHROPIC_API_KEY',
+  'GOOGLE_API_KEY',
+  'GOOGLE_GENERATIVE_AI_API_KEY',
+]) {
+  delete process.env[key]
+}
+
 // Mock framer-motion so motion.* components render as plain HTML elements in JSDOM
 vi.mock('framer-motion', async (importOriginal) => {
   const actual = await importOriginal<typeof import('framer-motion')>();

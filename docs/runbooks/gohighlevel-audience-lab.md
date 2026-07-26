@@ -57,27 +57,28 @@ consent-verified contact.
 
 ## Private integration and credential state
 
-The intended private integration is `Sahara Audience Lab API`. The
-GoHighLevel Private Integrations UI currently fails while loading the
-scope/user data in this location, including after a fresh dashboard bootstrap.
-No private integration or token was created, and no agency-wide token was
-substituted.
+The location-specific private integration credential is available and its
+scope has been verified against the Sahara location. No agency-wide token is
+used.
 
 1Password system of record:
 
 - Vault: `API-Keys`
 - Item: `GHL-sahara`
 - Item ID: `zeyxuxxcp43l26aqqa72upwxd4`
-- Current credential status: pending the GoHighLevel scope/user UI gate
+- Current credential status: stored as a concealed field and verified on
+  2026-07-24 PDT
 
-When the GHL gate is cleared:
+Live v2 read checks returned 200 for the Sahara location, workflows, contacts,
+opportunity pipelines, custom fields, and tags. A reversible synthetic
+`sahara-test-contact` create/update/readback/delete canary returned
+201/200/200/200. Readback confirmed the updated source and expected test and
+suppression tags; the synthetic contact was then deleted.
 
-1. Create the location-specific private integration.
-2. Grant only the contact, tag, custom-field, pipeline/opportunity, and workflow
-   scopes required by the approved implementation.
-3. Store the token as a concealed field in `GHL-sahara`.
-4. Run synthetic `sahara-test-contact` create/update/readback tests.
-5. Keep the workflow in Draft until the separate live-send approval.
+The credential and schema gate is complete. Publishing the workflow and
+enrolling real contacts remain separate activation gates: consent provenance,
+copy, cadence, exit conditions, and an allowlisted workflow canary must pass
+before any real contact enters the workflow.
 
 ## Operational guardrails
 

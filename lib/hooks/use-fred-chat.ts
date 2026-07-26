@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { RedFlag, BurnoutSignals } from "@/lib/fred/types";
+import type { ChatResponseMode } from "@/lib/ai/ask-ai-mode";
 
 // ============================================================================
 // Types
@@ -82,6 +83,8 @@ export interface UseFredChatOptions {
   storeInMemory?: boolean;
   /** Current page path so FRED can provide navigation-aware guidance */
   pageContext?: string;
+  /** Use direct Q&A for the dashboard Ask Fred surface */
+  mode?: ChatResponseMode;
   /** Callback when state changes */
   onStateChange?: (state: FredState) => void;
   /** Callback when analysis is received */
@@ -211,6 +214,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
     context,
     storeInMemory = true,
     pageContext,
+    mode = "mentor",
     onStateChange,
     onAnalysis,
     onSynthesis,
@@ -425,6 +429,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
           storeInMemory,
           pageContext,
           exchangeCount: exchangeCountRef.current,
+          mode,
         }),
         signal,
       });
@@ -793,7 +798,7 @@ export function useFredChat(options: UseFredChatOptions = {}): UseFredChatReturn
       abortControllerRef.current = null;
       sendingRef.current = false;
     }
-  }, [context, storeInMemory, pageContext]);
+  }, [context, storeInMemory, mode, pageContext]);
 
   // Clear error
   // Dismiss wellbeing alert
