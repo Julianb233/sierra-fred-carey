@@ -809,7 +809,6 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
     // Phase 63-03: Context window management — ensure fullContext fits within token budget.
     // Budget: 128K model limit - 4K response reserve - ~24K for conversation = ~100K for system prompt.
     const compactedContext = compactFredContextBlocks([
-      { name: "askAiDirectAnswerBlock", value: askAiDirectAnswerBlock, priority: 110 },
       { name: "loopBreakerBlock", value: loopBreakerBlock, priority: 100 },    // AI-8890: highest priority when active
       { name: "stageRedirectBlock", value: stageRedirectBlock, priority: 95 },  // Phase 80: stage-gate redirect
       { name: "wellbeingBlock", value: wellbeingBlock, priority: 90 },          // Phase 83: crisis/support guidance must survive
@@ -825,6 +824,9 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       { name: "deckProtocolBlock", value: deckProtocolBlock, priority: 40 },
       { name: "deckReviewReadyBlock", value: deckReviewReadyBlock, priority: 35 },
       { name: "pageContextBlock", value: pageContextBlock, priority: 30 },
+      // Highest retention priority and final behavioral instruction so mentor
+      // context cannot override the direct-answer contract.
+      { name: "askAiDirectAnswerBlock", value: askAiDirectAnswerBlock, priority: 110 },
     ]);
     const fullContext = compactedContext.context;
     if (compactedContext.droppedBlocks.length > 0) {
