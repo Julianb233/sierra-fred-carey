@@ -14,6 +14,7 @@ import type {
   DecisionResult,
   DecisionAction,
   ConversationStateContext,
+  FredTokenChannel,
 } from "../types";
 import { DEFAULT_FRED_CONFIG } from "../types";
 import { logger } from "@/lib/logger";
@@ -32,7 +33,7 @@ export async function decideActor(
   founderContext?: string | null,
   conversationState?: ConversationStateContext | null,
   userId?: string | null,
-  tokenChannel?: { emit: (chunk: string) => void } | null
+  tokenChannel?: FredTokenChannel | null
 ): Promise<DecisionResult> {
   logger.log(
     "[FRED] Deciding action | Confidence:",
@@ -282,7 +283,7 @@ async function generateWithLLM(
   input: ValidatedInput,
   founderContext: string | null,
   userId?: string | null,
-  tokenChannel?: { emit: (chunk: string) => void } | null
+  tokenChannel?: FredTokenChannel | null
 ): Promise<string> {
   // Build the full FRED system prompt with founder context
   let systemPrompt = buildSystemPrompt(founderContext || "");
@@ -302,6 +303,7 @@ async function generateWithLLM(
       system: systemPrompt,
       temperature: 0.7,
       maxOutputTokens: 1024,
+      abortSignal: tokenChannel.signal,
       ...(tools ? { tools, maxSteps: 3 } : {}),
     });
 
@@ -341,7 +343,7 @@ async function buildResponseContent(
   conversationState: ConversationStateContext | null,
   founderContext: string | null,
   userId: string | null,
-  tokenChannel: { emit: (chunk: string) => void } | null
+  tokenChannel: FredTokenChannel | null
 ): Promise<string> {
   // Clarify and defer — route through LLM so Fred gives a real, helpful
   // response instead of a vague template. The LLM has the full system prompt

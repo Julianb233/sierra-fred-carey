@@ -19,6 +19,7 @@ import type {
   MemoryContext,
   FredConfig,
   ConversationStateContext,
+  FredTokenChannel,
 } from "./types";
 
 // ============================================================================
@@ -45,7 +46,7 @@ function createInitialContext(
   chatMode?: boolean,
   preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>,
   tier?: string,
-  tokenChannel?: { emit: (chunk: string) => void } | null
+  tokenChannel?: FredTokenChannel | null
 ): FredContext {
   return {
     sessionId,
@@ -122,7 +123,7 @@ export const fredMachine = setup({
   types: {
     context: {} as FredContext,
     events: {} as FredEvent,
-    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean; tier?: string; tokenChannel?: { emit: (chunk: string) => void } | null },
+    input: {} as { userId: string; sessionId: string; config?: Partial<FredConfig>; founderContext?: string; conversationState?: ConversationStateContext | null; preloadedFacts?: Array<{ category: string; key: string; value: Record<string, unknown> }>; chatMode?: boolean; tier?: string; tokenChannel?: FredTokenChannel | null },
   },
 
   actors: {
@@ -142,7 +143,7 @@ export const fredMachine = setup({
       async ({ input }) => synthesizeActor(input.validatedInput, input.mentalModels, input.memoryContext, input.conversationState)
     ),
 
-    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null; userId: string; tokenChannel: { emit: (chunk: string) => void } | null }>(
+    decide: fromPromise<DecisionResult, { synthesis: SynthesisResult; validatedInput: ValidatedInput; founderContext: string | null; conversationState: ConversationStateContext | null; userId: string; tokenChannel: FredTokenChannel | null }>(
       async ({ input }) => decideActor(input.synthesis, input.validatedInput, input.founderContext, input.conversationState, input.userId, input.tokenChannel)
     ),
 

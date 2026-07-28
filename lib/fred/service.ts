@@ -26,6 +26,8 @@ export interface FredServiceOptions {
   onError?: (error: Error) => void;
   /** Callback invoked for each LLM token chunk during streaming generation */
   onToken?: (chunk: string) => void;
+  /** Cancels provider work when the HTTP stream is no longer usable. */
+  abortSignal?: AbortSignal;
 }
 
 export interface ProcessResult {
@@ -182,7 +184,10 @@ export class FredService {
         tier: this.options.tier || "free",
         chatMode: true,
         tokenChannel: this.options.onToken
-          ? { emit: (chunk: string) => this.options.onToken!(chunk) }
+          ? {
+              emit: (chunk: string) => this.options.onToken!(chunk),
+              signal: this.options.abortSignal,
+            }
           : null,
       },
     });

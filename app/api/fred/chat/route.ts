@@ -244,7 +244,7 @@ When suggesting navigation, say things like "Head over to your **Well-being Trac
 // SSE Helper
 // ============================================================================
 
-function createSSEStream() {
+function createSSEStream(onCancel?: () => void) {
   const encoder = new TextEncoder();
   let controller: ReadableStreamDefaultController<Uint8Array>;
   let closed = false;
@@ -256,6 +256,7 @@ function createSSEStream() {
     cancel() {
       // Client disconnected — mark as closed so send/close don't throw
       closed = true;
+      onCancel?.();
     },
   });
 
@@ -1043,7 +1044,15 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
 
     // Streaming response
     addBreadcrumb("Starting FRED chat completion", "ai", { model: _modelProviderKey, stream: true });
-    const { stream: sseStream, send, close } = createSSEStream();
+    const abortController = new AbortController();
+    let timeoutFired = false;
+    const abortFromClient = () => {
+      if (!abortController.signal.aborted) {
+        abortController.abort(new Error("Client disconnected"));
+      }
+    };
+    req.signal.addEventListener("abort", abortFromClient, { once: true });
+    const { stream: sseStream, send, close } = createSSEStream(abortFromClient);
 
     // Create FRED service with token streaming — onToken fires SSE token events
     const fredService = createFredService({
@@ -1055,13 +1064,16 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
       preloadedFacts,
       tier: tierName,
       onToken: (chunk: string) => send("token", { text: chunk }),
+      abortSignal: abortController.signal,
     });
 
     // Process in background
     (async () => {
       // US-029: AbortController with 55s timeout (5s buffer before Vercel's 60s maxDuration)
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 55_000);
+      const timeoutId = setTimeout(() => {
+        timeoutFired = true;
+        abortController.abort(new Error("FRED stream timed out"));
+      }, 55_000);
 
       try {
         // Send initial connection event
@@ -1096,8 +1108,9 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
         })) {
           // US-029: Check if timeout fired during streaming
           if (abortController.signal.aborted) {
-            send("error", { type: "error", error: "Request timed out. Please try again." });
-            break;
+            throw abortController.signal.reason instanceof Error
+              ? abortController.signal.reason
+              : new Error("FRED stream aborted");
           }
 
           // Only send if state changed
@@ -1413,9 +1426,11 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
         }
       } catch (error) {
         // US-029: Distinguish timeout aborts from other errors
-        if (abortController.signal.aborted) {
+        if (timeoutFired) {
           console.warn("[FredChat] Streaming timed out after 55s", { userId });
           send("error", { type: "error", error: "Request timed out. Please try again." });
+        } else if (abortController.signal.aborted) {
+          console.info("[FredChat] Streaming canceled after client disconnect", { userId });
         } else {
           console.error("[FredChat] Streaming error:", error);
           captureError(error instanceof Error ? error : new Error(String(error)), { route: "POST /api/fred/chat", userId, streaming: true });
@@ -1425,6 +1440,7 @@ INSTRUCTIONS: When natural in conversation, check in on these. Ask "How did X go
         }
       } finally {
         clearTimeout(timeoutId);
+        req.signal.removeEventListener("abort", abortFromClient);
         close();
       }
     })();

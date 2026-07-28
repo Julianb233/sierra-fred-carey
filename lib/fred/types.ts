@@ -31,6 +31,12 @@ export interface ConversationStateContext {
   modeTransitioned: boolean;
 }
 
+export interface FredTokenChannel {
+  emit: (chunk: string) => void;
+  /** Cancels the active provider request when the browser disconnects or times out. */
+  signal?: AbortSignal;
+}
+
 /**
  * FRED State Machine Context
  * Contains all data flowing through the decision pipeline
@@ -75,7 +81,7 @@ export interface FredContext {
   /** User tier (free/pro/studio) for memory loading */
   tier?: string;
   /** Token streaming channel — emits LLM response tokens as they arrive */
-  tokenChannel?: { emit: (chunk: string) => void } | null;
+  tokenChannel?: FredTokenChannel | null;
 }
 
 /**
