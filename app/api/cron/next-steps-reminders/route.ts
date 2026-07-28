@@ -20,7 +20,7 @@ import { timingSafeEqual } from "crypto"
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from "@/lib/customerio"
 
 export const dynamic = "force-dynamic"
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 
         // Send one push per user with count of overdue items
         const topStep = unreminded[0]
-        await trackLifecycleEvent(
+        await trackCanonicalLifecycleEvent(
           userId,
           CUSTOMERIO_EVENTS.RECOMMENDED_ACTION_NOT_VIEWED,
           {
