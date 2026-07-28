@@ -50,6 +50,9 @@ export default function StartNowPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setName(params.get("name") || "");
+    setEmail(params.get("email") || "");
+    setPhone(params.get("phone") || "");
     setSource(params.get("source") || params.get("utm_source") || "start-now");
     trackEvent(ANALYTICS_EVENTS.ONBOARDING.STARTED, { step: "capture" });
   }, []);
@@ -175,7 +178,7 @@ export default function StartNowPage() {
       trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email", referrer: source });
       trackEvent(ANALYTICS_EVENTS.ONBOARDING.COMPLETED, { step: "account" });
       setTimeout(() => {
-        router.push("/welcome");
+        router.push("/dashboard?video=1");
         router.refresh();
       }, 700);
     } catch (err) {
