@@ -106,4 +106,25 @@ describe("AI-5143: FRED never returns a blank/whitespace response", () => {
 
     expect(result.content).toContain("Talk to 10 customers");
   });
+
+  it("passes the request abort signal to the streaming provider", async () => {
+    streamGenerateMock.mockResolvedValue({
+      textStream: (async function* () {
+        yield "A useful answer";
+      })(),
+    });
+
+    const controller = new AbortController();
+    const tokenChannel = {
+      emit: vi.fn(),
+      signal: controller.signal,
+    };
+
+    await decideActor(makeSynthesis(), makeInput(), null, null, null, tokenChannel);
+
+    expect(streamGenerateMock).toHaveBeenCalledWith(
+      makeInput().originalMessage,
+      expect.objectContaining({ abortSignal: controller.signal })
+    );
+  });
 });

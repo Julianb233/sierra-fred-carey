@@ -14,6 +14,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { usePaywall } from "@/lib/context/paywall-context";
 import { useTier } from "@/lib/context/tier-context";
+import type { ChatResponseMode } from "@/lib/ai/ask-ai-mode";
 
 // ============================================================================
 // Suggestion chips — page-aware quick-start prompts
@@ -98,6 +99,8 @@ interface ChatInterfaceProps {
   onSendRef?: MutableRefObject<((msg: string) => void) | null>;
   /** AI-8663: open a specific past conversation (e.g. from Next Steps "View conversation") */
   sessionId?: string;
+  /** Scoped response behavior for dashboard Q&A versus full mentoring */
+  responseMode?: ChatResponseMode;
 }
 
 function buildFredGreeting(): Message {
@@ -109,8 +112,8 @@ function buildFredGreeting(): Message {
   };
 }
 
-export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef, sessionId }: ChatInterfaceProps) {
-  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo, error, clearError } = useFredChat({ pageContext, sessionId });
+export function ChatInterface({ className, pageContext, initialMessage, onInitialMessageConsumed, onSendRef, sessionId, responseMode }: ChatInterfaceProps) {
+  const { messages: fredMessages, sendMessage, state, isProcessing, rateLimitInfo, error, clearError } = useFredChat({ pageContext, sessionId, mode: responseMode });
   const { triggerPaywall } = usePaywall();
   const { tier } = useTier();
   const messagesEndRef = useRef<HTMLDivElement>(null);

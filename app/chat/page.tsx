@@ -38,6 +38,7 @@ import {
   computeVisibleNavItems,
 } from "@/components/dashboard/sidebar-content";
 import { createClient } from "@/lib/supabase/client";
+import type { ChatResponseMode } from "@/lib/ai/ask-ai-mode";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -128,6 +129,8 @@ export default function ChatPage() {
 
   // Pre-seeded message from dashboard chip (e.g. ?message=...)
   const initialMessage = searchParams.get("message") ?? undefined;
+  const responseMode: ChatResponseMode =
+    searchParams.get("mode") === "ask-ai" ? "ask-ai" : "mentor";
 
   // AI-8663: deep-link to a specific past conversation (e.g. from Next Steps "View conversation")
   const requestedSessionId = searchParams.get("sessionId") ?? undefined;
@@ -136,10 +139,14 @@ export default function ChatPage() {
     // Remove ?message= from URL after it's been auto-sent.
     // Preserve ?sessionId= if present so the user can refresh and stay in-context.
     router.replace(
-      requestedSessionId ? `/chat?sessionId=${encodeURIComponent(requestedSessionId)}` : "/chat",
+      requestedSessionId
+        ? `/chat?sessionId=${encodeURIComponent(requestedSessionId)}${responseMode === "ask-ai" ? "&mode=ask-ai" : ""}`
+        : responseMode === "ask-ai"
+          ? "/chat?mode=ask-ai"
+          : "/chat",
       { scroll: false }
     );
-  }, [router, requestedSessionId]);
+  }, [router, requestedSessionId, responseMode]);
 
   const handleCallClick = useCallback(() => {
     setCallModalOpen(true);
@@ -363,6 +370,7 @@ export default function ChatPage() {
               onInitialMessageConsumed={handleInitialMessageConsumed}
               onSendRef={sendMessageRef}
               sessionId={requestedSessionId}
+              responseMode={responseMode}
             />
           </div>
         </main>

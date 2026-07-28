@@ -62,7 +62,7 @@ export function FredHero({
   const handleSend = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
-    router.push(`/chat?message=${encodeURIComponent(trimmed)}`);
+    router.push(`/chat?message=${encodeURIComponent(trimmed)}&mode=ask-ai`);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -176,7 +176,7 @@ export function FredHero({
               <button
                 key={i}
                 onClick={() =>
-                  router.push(`/chat?message=${encodeURIComponent(starter)}`)
+                  router.push(`/chat?message=${encodeURIComponent(starter)}&mode=ask-ai`)
                 }
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}

@@ -121,6 +121,37 @@ describe("useFredChat", () => {
   });
 
   describe("Message Handling", () => {
+    it("sends ask-ai mode for scoped dashboard questions", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        body: {
+          getReader: () => ({
+            read: vi
+              .fn()
+              .mockResolvedValueOnce({
+                done: false,
+                value: new TextEncoder().encode(
+                  'event: done\ndata: {"sessionId":"test"}\n\n'
+                ),
+              })
+              .mockResolvedValueOnce({ done: true }),
+          }),
+        },
+      });
+
+      const { result } = renderHook(() => useFredChat({ mode: "ask-ai" }));
+
+      await act(async () => {
+        await result.current.sendMessage("What is product-market fit?");
+      });
+
+      const request = mockFetch.mock.calls[0][1] as RequestInit;
+      expect(JSON.parse(request.body as string)).toMatchObject({
+        message: "What is product-market fit?",
+        mode: "ask-ai",
+      });
+    });
+
     it("should add user message immediately when sending", async () => {
       // Mock fetch to return a response
       mockFetch.mockResolvedValueOnce({
