@@ -35,7 +35,7 @@ import type { ReEngagementEmailData } from '@/lib/email/re-engagement/types';
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from '@/lib/customerio';
 
 export const dynamic = 'force-dynamic';
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       // Customer.io is the lifecycle orchestration lane. A stable id makes
       // retries of the same graduated tier safe while its journeys remain
       // paused or are later enabled.
-      await trackLifecycleEvent(
+      await trackCanonicalLifecycleEvent(
         candidate.userId,
         CUSTOMERIO_EVENTS.INACTIVITY,
         {
@@ -134,8 +134,13 @@ export async function GET(request: NextRequest) {
           sms_eligible: Boolean(candidate.phoneNumber && !candidate.smsAlreadySent),
         },
         `inactivity:${candidate.userId}:${candidate.tier}`,
+        {
+          ...(candidate.email ? { email: candidate.email } : {}),
+          name: candidate.name,
+          ...(candidate.phoneNumber ? { phone: candidate.phoneNumber } : {}),
+        },
       );
-      await trackLifecycleEvent(
+      await trackCanonicalLifecycleEvent(
         candidate.userId,
         CUSTOMERIO_EVENTS.MEMBER_BECAME_INACTIVE,
         {
@@ -148,6 +153,11 @@ export async function GET(request: NextRequest) {
           inactive_days: candidate.inactiveDays,
         },
         `member_became_inactive:${candidate.userId}:${candidate.tier}`,
+        {
+          ...(candidate.email ? { email: candidate.email } : {}),
+          name: candidate.name,
+          ...(candidate.phoneNumber ? { phone: candidate.phoneNumber } : {}),
+        },
       );
 
       // ---- Email channel ----

@@ -20,7 +20,7 @@ import { timingSafeEqual } from "crypto"
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from "@/lib/customerio"
 
 export const dynamic = "force-dynamic"
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       const results = await Promise.allSettled(
         batch.map(async ({ userId, phone }) => {
           const cohortDate = new Date().toISOString().slice(0, 10)
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.MOTIVATIONAL_ELIGIBLE,
             {
@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
             },
             { channel: "sms", cohort_date: cohortDate },
             `motivational_eligible:${userId}:${cohortDate}`,
+            { phone },
           )
           const agenda = await generateDailyAgenda(userId)
           await sendDailyGuidanceSMS(userId, phone, agenda)

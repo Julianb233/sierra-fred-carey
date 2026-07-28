@@ -40,6 +40,12 @@ export {
   type MemberLifecycleSyncResult,
 } from './member-lifecycle';
 
+export {
+  identifyCanonicalMember,
+  trackCanonicalLifecycleEvent,
+  type CanonicalMemberOverrides,
+} from './canonical-profile';
+
 export type {
   CustomerIoRegion,
   CustomerIoResult,

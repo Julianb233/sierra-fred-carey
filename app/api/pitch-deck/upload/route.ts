@@ -8,7 +8,7 @@ import { checkRateLimit, createRateLimitResponse } from '@/lib/api/rate-limit';
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from '@/lib/customerio';
 
 // Upload rate limits per tier (per day)
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
     // Product event only; Customer.io journeys remain paused while the
     // existing product/email channels stay authoritative.
-    await trackLifecycleEvent(
+    await trackCanonicalLifecycleEvent(
       userId,
       CUSTOMERIO_EVENTS.DECK_SUBMITTED,
       {

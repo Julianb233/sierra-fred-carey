@@ -17,7 +17,7 @@ import { captureError, captureMessage } from "@/lib/sentry";
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from "@/lib/customerio";
 
 // Helper to get period timestamps from subscription
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
             break;
           }
           await handleSubscriptionUpdate(subscription, userId);
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.SUBSCRIPTION_STARTED,
             {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
             },
             `stripe:${event.id}`
           );
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.UPGRADE_COMPLETED,
             {
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
             },
             `upgrade_completed:${event.id}`
           );
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.PAID_ONBOARDING_STARTED,
             {
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         const newTier = getUserTierFromSubscription(subscription);
         serverTrack(userId, ANALYTICS_EVENTS.SUBSCRIPTION.TIER_CHANGED, { toTier: newTier, priceId: subscription.items.data[0]?.price.id });
         await handleSubscriptionUpdate(subscription, userId);
-        await trackLifecycleEvent(
+        await trackCanonicalLifecycleEvent(
           userId,
           CUSTOMERIO_EVENTS.SUBSCRIPTION_UPDATED,
           {
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
             currentPeriodEnd: period.currentPeriodEnd,
             canceledAt: new Date(),
           });
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELED,
             {
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
             },
             `stripe:${event.id}`
           );
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELLED,
             {
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
               userId,
               status: "past_due",
             });
-            await trackLifecycleEvent(
+            await trackCanonicalLifecycleEvent(
               userId,
               CUSTOMERIO_EVENTS.PAYMENT_FAILED,
               {
@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.client_reference_id;
         if (userId && userId !== "funnel-pending") {
-          await trackLifecycleEvent(
+          await trackCanonicalLifecycleEvent(
             userId,
             CUSTOMERIO_EVENTS.UPGRADE_ABANDONED,
             {

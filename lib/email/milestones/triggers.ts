@@ -14,7 +14,7 @@ import { MILESTONE_MESSAGES, type MilestoneType, type MilestoneEmailData } from 
 import {
   CUSTOMERIO_EVENTS,
   LIFECYCLE_CONSENT,
-  trackLifecycleEvent,
+  trackCanonicalLifecycleEvent,
 } from '@/lib/customerio';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sahara.app';
@@ -37,7 +37,7 @@ export async function sendMilestoneEmail(
   try {
     // Record the product milestone independently of Sahara's current email
     // channel. Customer.io suppression remains authoritative for future sends.
-    await trackLifecycleEvent(
+    await trackCanonicalLifecycleEvent(
       userId,
       CUSTOMERIO_EVENTS.FOUNDER_MILESTONE,
       {
@@ -48,7 +48,7 @@ export async function sendMilestoneEmail(
       { milestone_type: milestoneType, ...(customTitle ? { title: customTitle } : {}) },
       `founder_milestone:${userId}:${milestoneType}`,
     );
-    await trackLifecycleEvent(
+    await trackCanonicalLifecycleEvent(
       userId,
       CUSTOMERIO_EVENTS.MILESTONE_REACHED,
       {
@@ -65,7 +65,7 @@ export async function sendMilestoneEmail(
         milestoneType,
       )
     ) {
-      await trackLifecycleEvent(
+      await trackCanonicalLifecycleEvent(
         userId,
         CUSTOMERIO_EVENTS.FIRST_VALUE_REACHED,
         {
