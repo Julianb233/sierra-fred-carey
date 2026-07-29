@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { UserTier } from "@/lib/constants";
 import { useTier } from "@/lib/context/tier-context";
@@ -38,9 +38,17 @@ export default function DashboardLayout({
   const [howToUseOpen, setHowToUseOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { tier, isLoading: isTierLoading, refresh: refreshTier } = useTier();
   const handleCallFred = useCallback(() => setCallModalOpen(true), []);
   const handleHowToUse = useCallback(() => setHowToUseOpen(true), []);
+
+  useEffect(() => {
+    if (searchParams.get("video") !== "1") return;
+    router.replace(pathname || "/dashboard", { scroll: false });
+    const timer = window.setTimeout(() => setHowToUseOpen(true), 0);
+    return () => window.clearTimeout(timer);
+  }, [pathname, router, searchParams]);
 
   // Listen for fred:voice custom event from MobileBottomNav
   useEffect(() => {
