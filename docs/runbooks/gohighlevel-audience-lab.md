@@ -2,7 +2,7 @@
 
 Linear: AI-12563
 Location: `Sahara` (`h2yiH50OluJCRbtWrshg`)
-Last verified: 2026-07-24 PDT
+Last verified: 2026-07-29 PDT
 
 ## Purpose and boundary
 
@@ -11,9 +11,11 @@ Audience Lab. Customer.io remains the member-lifecycle messaging system after
 account creation. Do not copy audiences between the two systems merely to
 share a campaign.
 
-All Audience Lab automation remains Draft/PAUSED until Fred approves consent
-rules, copy, cadence, exit conditions, and live sends. Existing coffee,
-appetizer, and legacy workflows and the `Free Appetizer Pipeline` are preserved.
+Audience Lab sales sends remain gated on explicit consent, approved copy,
+cadence, and live-send verification. The consent guardrail itself is published
+because it sends no message: it marks unverified Audience Lab contacts so they
+cannot be mistaken for consented leads. Existing coffee, appetizer, and legacy
+workflows and the `Free Appetizer Pipeline` are preserved.
 
 ## Installed location schema
 
@@ -41,43 +43,40 @@ Contact fields:
 - `Sahara Segment` — single line
 - `Sahara Consent Timestamp` — date picker
 
-## Installed paused workflow
+## Installed consent workflow
 
-Workflow: `Sahara Audience Lab - Consent Gate (PAUSED)`
+Workflow: `Sahara Audience Lab - Consent Gate`
 
-- State: Draft
+- State: Published
 - Trigger: contact tag added, `sahara-audience-lab`
 - Action: add contact tag, `sahara-source-unverified`
 - Enrollment count at verification: 0
 - Execution count at verification: 0
 
-The workflow is intentionally not published. Its first action creates a visible
+The workflow has no email or SMS action. Its first action creates a visible
 guardrail so a newly added Audience Lab contact cannot be mistaken for a
 consent-verified contact.
 
 ## Private integration and credential state
 
-The intended private integration is `Sahara Audience Lab API`. The
-GoHighLevel Private Integrations UI currently fails while loading the
-scope/user data in this location, including after a fresh dashboard bootstrap.
-No private integration or token was created, and no agency-wide token was
-substituted.
+The Sahara location private-integration token is stored in 1Password and was
+verified against the GoHighLevel API on 2026-07-29. API readback returned 22
+workflows and confirmed the consent workflow is `published`.
 
 1Password system of record:
 
 - Vault: `API-Keys`
 - Item: `GHL-sahara`
 - Item ID: `zeyxuxxcp43l26aqqa72upwxd4`
-- Current credential status: pending the GoHighLevel scope/user UI gate
+- Current credential status: available and API-verified
 
-When the GHL gate is cleared:
+For ongoing verification:
 
-1. Create the location-specific private integration.
-2. Grant only the contact, tag, custom-field, pipeline/opportunity, and workflow
-   scopes required by the approved implementation.
-3. Store the token as a concealed field in `GHL-sahara`.
-4. Run synthetic `sahara-test-contact` create/update/readback tests.
-5. Keep the workflow in Draft until the separate live-send approval.
+1. Keep the token in the concealed credential field of `GHL-sahara`.
+2. Keep scopes limited to contact, tag, custom-field, pipeline/opportunity, and
+   workflow operations required by the approved implementation.
+3. Use only synthetic `sahara-test-contact` records for mutation tests.
+4. Do not add email/SMS actions without sender and consent canaries.
 
 ## Operational guardrails
 
