@@ -3,6 +3,11 @@ import { createCheckoutSession } from "@/lib/stripe/server";
 import { getUserSubscription } from "@/lib/db/subscriptions";
 import { requireAuth, getCurrentUser } from "@/lib/auth";
 import { PLANS, getPlanByPriceId } from "@/lib/stripe/config";
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from "@/lib/customerio";
 
 /**
  * POST /api/stripe/checkout
@@ -97,6 +102,22 @@ export async function POST(request: NextRequest) {
       successUrl: `${baseUrl}/dashboard?success=true&tier=${plan.id}`,
       cancelUrl: `${baseUrl}/pricing?canceled=true`,
     });
+
+    await trackLifecycleEvent(
+      userId,
+      CUSTOMERIO_EVENTS.UPGRADE_STARTED,
+      {
+        source: "stripe_checkout",
+        correlationId: session.id,
+        consent: LIFECYCLE_CONSENT.TRANSACTIONAL,
+      },
+      {
+        checkout_session_id: session.id,
+        plan: plan.id,
+        price_id: resolvedPriceId,
+      },
+      `upgrade_started:${session.id}`,
+    );
 
     return NextResponse.json({
       sessionId: session.id,

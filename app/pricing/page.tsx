@@ -6,8 +6,18 @@ import Link from "next/link";
 import Footer from "@/components/footer";
 import { CheckIcon, Cross2Icon, RocketIcon, StarIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { START_NOW_URL } from "@/lib/constants";
+import { useEffect } from "react";
 
 export default function PricingPage() {
+  useEffect(() => {
+    void fetch("/api/customerio/pricing-viewed", {
+      method: "POST",
+      keepalive: true,
+    }).catch(() => {
+      // Anonymous visitors and provider outages must not affect pricing UX.
+    });
+  }, []);
+
   const plans = [
     {
       name: "Free",

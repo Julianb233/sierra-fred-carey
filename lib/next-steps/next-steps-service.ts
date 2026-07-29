@@ -7,6 +7,11 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import {
+  CUSTOMERIO_EVENTS,
+  LIFECYCLE_CONSENT,
+  trackLifecycleEvent,
+} from "@/lib/customerio";
 
 // ============================================================================
 // Types
@@ -106,7 +111,25 @@ export async function markComplete(
     throw new Error("Failed to mark step complete");
   }
 
-  return mapRow(data);
+  const step = mapRow(data);
+  await trackLifecycleEvent(
+    userId,
+    CUSTOMERIO_EVENTS.RECOMMENDED_ACTION_COMPLETED,
+    {
+      source: "dashboard_next_steps",
+      correlationId: step.id,
+      consent: LIFECYCLE_CONSENT.UNKNOWN,
+    },
+    {
+      action_id: step.id,
+      action_name: step.description,
+      priority: step.priority,
+      completed_at: step.completedAt,
+    },
+    `recommended_action_completed:${step.id}`,
+  );
+
+  return step;
 }
 
 /**
@@ -223,7 +246,29 @@ export async function extractAndStoreNextSteps(
     return [];
   }
 
-  return (data || []).map(mapRow);
+  const stored = (data || []).map(mapRow);
+  await Promise.all(
+    stored.map((step) =>
+      trackLifecycleEvent(
+        userId,
+        CUSTOMERIO_EVENTS.RECOMMENDATION_CREATED,
+        {
+          source: "fred_next_steps",
+          correlationId: step.id,
+          consent: LIFECYCLE_CONSENT.UNKNOWN,
+        },
+        {
+          action_id: step.id,
+          action_name: step.description,
+          priority: step.priority,
+          due_at: step.dueDate,
+        },
+        `recommendation_created:${step.id}`,
+      ),
+    ),
+  );
+
+  return stored;
 }
 
 /**

@@ -107,6 +107,11 @@ trigger that references it.
 - Deck submission: authenticated Pro+ pitch-deck upload
 - Recommended action not viewed: overdue, unacknowledged next-step reminder
   cron
+- Recommendation created/completed: authoritative `next_steps` insert and
+  completion transitions
+- Pricing viewed: authenticated pricing-page view, deduplicated once per
+  member per UTC day
+- Upgrade started: authenticated Stripe Checkout session creation
 - Inactivity: graduated re-engagement cron
 - Subscription, paid onboarding, abandonment, cancellation, and payment
   recovery: verified Stripe webhook events
