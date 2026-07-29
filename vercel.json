@@ -31,6 +31,10 @@
       "schedule": "0 */4 * * *"
     },
     {
+      "path": "/api/cron/customerio-firebase-sync",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/progress-reports",
       "schedule": "0 16 * * 1"
     },

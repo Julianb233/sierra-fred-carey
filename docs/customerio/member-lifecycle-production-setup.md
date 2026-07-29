@@ -9,34 +9,25 @@ Out of scope: GoHighLevel lead generation and sales automation
 
 ## Source of truth
 
-Supabase Auth and `profiles` are the production identity source. The stable
-Customer.io person identifier is the Supabase user ID, never an email address.
-Firebase (`sahara-6800a`) is a legacy reconciliation source only.
+Firebase Auth and Firestore in project `sahara-6800a` are the production
+identity and member-profile sources. The stable Customer.io person identifier
+is the Firebase UID, never an email address. Supabase is not part of this
+member-lifecycle integration.
 
-The aggregate audit on 2026-07-24 found:
+The live aggregate audit and baseline sync on 2026-07-29 found:
 
 | Check | Count |
 | --- | ---: |
-| Supabase Auth users | 100 |
-| Firebase Auth users | 200 |
-| Matching normalized emails | 70 |
-| Firebase-only normalized emails | 130 |
-| Supabase-only normalized emails | 30 |
-| Supabase users with explicit Firebase metadata | 67 |
-| Firebase disabled users | 0 |
-| Firestore `users` documents | 193 |
+| Firebase Auth users | 202 |
+| Firestore `users` documents | 195 |
+| Customer.io identify attempts | 202 |
+| Successful Customer.io identifies | 202 |
+| Failed Customer.io identifies | 0 |
 
-These counts contain no member PII. Re-run the aggregate audit with:
-
-```bash
-npm run customerio:audit-members
-```
-
-Firebase-only records must not be imported into Customer.io campaigns. They
-have no canonical Supabase ID and their current messaging consent has not been
-verified. Reconcile or migrate them to Supabase first, then identify them with
-the resulting Supabase user ID. This prevents duplicate people and accidental
-legacy sends.
+The baseline sync emitted no lifecycle events, so it could not enroll legacy
+members. The five-minute cron upserts profiles and emits a deduplicated
+`account_created` event only for Firebase accounts created inside the most
+recent ten-minute window.
 
 ## Runtime contract
 
@@ -48,6 +39,8 @@ Server-side runtime variables:
 | `CUSTOMERIO_TRACK_API_KEY` | Track API credential |
 | `CUSTOMERIO_REGION` | `us` or `eu` API data center |
 | `CUSTOMERIO_WEBHOOK_SIGNING_KEY` | Reporting-webhook HMAC signing secret |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Server-only credential restricted to `sahara-6800a` |
+| `CRON_SECRET` | Authenticates the five-minute Vercel sync |
 
 Secrets belong in 1Password and the deployment environment. They must never be
 committed. When absent, Sahara logs a skipped Customer.io result without
@@ -57,7 +50,7 @@ blocking member signup, Stripe webhooks, milestone handling, or cron jobs.
 
 Required person attributes:
 
-- `id`: stable Supabase user ID
+- `id`: stable Firebase UID
 - `email`: normalized member email
 - `created_at`: Unix time used for warm-up cohorting
 - `first_name`, `last_name`, `plan`, and `onboarding_completed` when known
@@ -77,8 +70,8 @@ Every lifecycle event also includes:
 
 An `unknown` consent state is not eligible for marketing sends. Transactional
 events may only trigger transactional messages. Provider journeys must enforce
-these branches while the existing Resend/Twilio channels remain the live
-delivery owners.
+these branches. Unknown email, SMS, or daily-motivation consent fails closed;
+the three permission states are never inferred from one another.
 
 ## Append-only event contract
 
@@ -134,7 +127,8 @@ the hex HMAC-SHA256 signature over the exact raw string
 `v0:<timestamp>:<raw body>`. Re-parsed or re-serialized JSON must never be used
 for verification.
 
-The endpoint writes to `customerio_reporting_events`, keyed by Customer.io
+The endpoint writes redacted records to the Firebase collection
+`customerio_reporting_events`, keyed by a SHA-256 digest of Customer.io
 `event_id`. Legitimate retries are acknowledged as duplicates. Only event,
 campaign/action, object, metric, time, boolean failure flags, and one-way
 identifier hashes are stored. Recipient addresses, phone numbers, message
@@ -151,15 +145,14 @@ exists. Enabling after downtime does not backfill events.
 
 Provider setup:
 
-1. Apply the reporting-evidence migration.
-2. Create the reporting webhook in **Integrations → Reporting Webhooks** with
+1. Create the reporting webhook in **Integrations → Reporting Webhooks** with
    body content disabled.
-3. Store the signing key in the existing Sahara Customer.io 1Password item and
+2. Store the signing key in the existing Sahara Customer.io 1Password item and
    encrypted Preview/Production runtimes.
-4. Point the first test at a verified Preview URL and use **Send Test**.
-5. Confirm valid signature → 200/new row, retry → 200/duplicate, and invalid
+3. Point the first test at a verified Preview URL and use **Send Test**.
+4. Confirm valid signature → 200/new record, retry → 200/duplicate, and invalid
    signature → 401.
-6. Keep the reporting webhook scoped to necessary delivery, bounce, complaint,
+5. Keep the reporting webhook scoped to necessary delivery, bounce, complaint,
    unsubscribe, and failure metrics.
 
 ## Safe activation checklist

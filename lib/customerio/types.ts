@@ -13,7 +13,7 @@ export type CustomerIoRegion = 'us' | 'eu';
 
 /**
  * A member identifier. Customer.io upserts by this id, so it MUST be stable
- * for the lifetime of the member (use the Supabase user id, never the email —
+ * for the lifetime of the member (use the Firebase UID, never the email —
  * emails change). Passing the same id twice updates in place (idempotent).
  */
 export type MemberId = string;
