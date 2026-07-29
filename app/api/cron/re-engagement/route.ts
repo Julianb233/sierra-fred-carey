@@ -37,6 +37,7 @@ import {
   LIFECYCLE_CONSENT,
   trackLifecycleEvent,
 } from '@/lib/customerio';
+import { resolveLifecycleDeliveryMode } from '@/lib/customerio/delivery-cutover';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -95,21 +96,25 @@ export async function GET(request: NextRequest) {
 
   let emailsSent = 0;
   let smsSent = 0;
+  let customerIoQueued = 0;
   let skipped = 0;
   let failed = 0;
 
   try {
     const candidates = await getReEngagementCandidates();
     const processed = candidates.length;
+    const deliveryMode = resolveLifecycleDeliveryMode(
+      process.env.CUSTOMERIO_REENGAGEMENT_DELIVERY,
+    );
 
     const emailConfigured = !!process.env.RESEND_API_KEY;
     const smsConfigured =
       !!process.env.TWILIO_ACCOUNT_SID && !!process.env.TWILIO_MESSAGING_SERVICE_SID;
 
-    if (!emailConfigured) {
+    if (deliveryMode === 'direct' && !emailConfigured) {
       logger.warn(`${LOG_PREFIX} Email service not configured — email channel skipped`);
     }
-    if (!smsConfigured) {
+    if (deliveryMode === 'direct' && !smsConfigured) {
       logger.warn(`${LOG_PREFIX} SMS service not configured — text channel skipped`);
     }
 
@@ -149,6 +154,11 @@ export async function GET(request: NextRequest) {
         },
         `member_became_inactive:${candidate.userId}:${candidate.tier}`,
       );
+
+      if (deliveryMode === 'customerio') {
+        customerIoQueued++;
+        continue;
+      }
 
       // ---- Email channel ----
       if (candidate.email && !candidate.emailAlreadySent) {
@@ -236,6 +246,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       processed,
+      deliveryMode,
+      customerIoQueued,
       emailsSent,
       smsSent,
       // Back-compat: previous callers/tests read `sent` as the email count.

@@ -41,6 +41,8 @@ Server-side runtime variables:
 | `CUSTOMERIO_WEBHOOK_SIGNING_KEY` | Reporting-webhook HMAC signing secret |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Server-only credential restricted to `sahara-6800a` |
 | `CRON_SECRET` | Authenticates the five-minute Vercel sync |
+| `CUSTOMERIO_DAILY_GUIDANCE_DELIVERY` | Set to `customerio` only after the Daily Motivation journey is verified and running |
+| `CUSTOMERIO_REENGAGEMENT_DELIVERY` | Set to `customerio` only after the Inactivity journey is verified and running |
 
 Secrets belong in 1Password and the deployment environment. They must never be
 committed. When absent, Sahara logs a skipped Customer.io result without
@@ -174,3 +176,16 @@ Provider setup:
 Existing Resend and Twilio re-engagement sends stay active while Customer.io
 journeys are paused. Before enabling a journey that sends on the same trigger,
 explicitly cut over the existing channel to avoid duplicate messages.
+
+The two cron-owned cutovers fail closed to `direct`. Deploy the cutover code
+first, verify both variables are still `direct`, then use this order for each
+journey:
+
+1. Confirm the Customer.io trigger is `motivational_eligible` (daily guidance)
+   or `member_became_inactive` (re-engagement), with consent and quiet-hour
+   branches intact.
+2. Set the matching production variable to `customerio` and redeploy.
+3. Confirm the cron reports `deliveryMode: "customerio"` and increments
+   `customerIoQueued` without incrementing direct send counters.
+4. Start the Customer.io journey and run one allowlisted canary.
+5. Roll back by restoring the variable to `direct` before stopping the journey.

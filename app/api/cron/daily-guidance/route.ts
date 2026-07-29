@@ -22,6 +22,7 @@ import {
   LIFECYCLE_CONSENT,
   trackLifecycleEvent,
 } from "@/lib/customerio"
+import { resolveLifecycleDeliveryMode } from "@/lib/customerio/delivery-cutover"
 
 export const dynamic = "force-dynamic"
 
@@ -73,7 +74,11 @@ export async function GET(request: NextRequest) {
 
     // 3. Process in batches
     let sent = 0
+    let customerIoQueued = 0
     let failed = 0
+    const deliveryMode = resolveLifecycleDeliveryMode(
+      process.env.CUSTOMERIO_DAILY_GUIDANCE_DELIVERY,
+    )
 
     for (let i = 0; i < eligibleUsers.length; i += BATCH_SIZE) {
       const batch = eligibleUsers.slice(i, i + BATCH_SIZE)
@@ -92,15 +97,21 @@ export async function GET(request: NextRequest) {
             { channel: "sms", cohort_date: cohortDate },
             `motivational_eligible:${userId}:${cohortDate}`,
           )
+
+          if (deliveryMode === "customerio") {
+            return { userId, deliveredBy: "customerio" as const }
+          }
+
           const agenda = await generateDailyAgenda(userId)
           await sendDailyGuidanceSMS(userId, phone, agenda)
-          return userId
+          return { userId, deliveredBy: "direct" as const }
         })
       )
 
       for (const result of results) {
         if (result.status === "fulfilled") {
-          sent++
+          if (result.value.deliveredBy === "customerio") customerIoQueued++
+          else sent++
         } else {
           failed++
           console.error(`${LOG_PREFIX} Failed for user:`, result.reason)
@@ -118,7 +129,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       processed: eligibleUsers.length,
+      deliveryMode,
       sent,
+      customerIoQueued,
       failed,
     })
   } catch (error) {
