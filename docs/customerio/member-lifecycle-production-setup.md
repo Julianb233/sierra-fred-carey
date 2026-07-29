@@ -174,3 +174,8 @@ Provider setup:
 Existing Resend and Twilio re-engagement sends stay active while Customer.io
 journeys are paused. Before enabling a journey that sends on the same trigger,
 explicitly cut over the existing channel to avoid duplicate messages.
+
+Milestone email is the first completed cutover: after Customer.io accepts the
+canonical `milestone_reached` event, the app does not also send the legacy
+Resend celebration. Resend remains a fail-safe only when Customer.io is
+unconfigured, unavailable, or rejects the event.

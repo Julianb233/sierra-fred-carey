@@ -16,6 +16,7 @@ import {
   LIFECYCLE_CONSENT,
   trackLifecycleEvent,
 } from '@/lib/customerio';
+import { shouldSendLegacyMilestoneEmail } from './delivery-policy';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sahara.app';
 
@@ -48,7 +49,7 @@ export async function sendMilestoneEmail(
       { milestone_type: milestoneType, ...(customTitle ? { title: customTitle } : {}) },
       `founder_milestone:${userId}:${milestoneType}`,
     );
-    await trackLifecycleEvent(
+    const customerIoMilestoneResult = await trackLifecycleEvent(
       userId,
       CUSTOMERIO_EVENTS.MILESTONE_REACHED,
       {
@@ -77,6 +78,26 @@ export async function sendMilestoneEmail(
         `first_value_reached:${userId}`,
       );
     }
+
+    // Customer.io owns milestone-email delivery once it accepts the canonical
+    // event. Sending the legacy Resend message as well would deliver the same
+    // celebration twice. If Customer.io is unavailable or rejects the event,
+    // keep the established Resend path as a fail-safe.
+    if (!shouldSendLegacyMilestoneEmail(customerIoMilestoneResult)) {
+      logger.info('[Milestones] Customer.io accepted milestone event; legacy email skipped', {
+        userId,
+        milestoneType,
+      });
+      return;
+    }
+
+    logger.warn('[Milestones] Customer.io milestone event not accepted; using legacy email', {
+      userId,
+      milestoneType,
+      status: customerIoMilestoneResult.status,
+      skipped: customerIoMilestoneResult.skipped,
+      error: customerIoMilestoneResult.error,
+    });
 
     // Check email preferences
     const shouldSend = await shouldSendEmail(userId, 'milestone');
