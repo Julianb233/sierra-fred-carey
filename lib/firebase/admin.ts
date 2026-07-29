@@ -44,7 +44,16 @@ export function getSaharaFirebaseAdmin(): App {
   const existing = getApps().find((app) => app.name === 'sahara-customerio');
   if (existing) return existing;
   return initializeApp(
-    { credential: cert(parseServiceAccount()) },
+    {
+      credential: cert((() => {
+        const account = parseServiceAccount();
+        return {
+          projectId: account.project_id,
+          clientEmail: account.client_email,
+          privateKey: account.private_key,
+        };
+      })()),
+    },
     'sahara-customerio'
   );
 }

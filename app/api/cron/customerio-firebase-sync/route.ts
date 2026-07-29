@@ -30,7 +30,18 @@ export async function GET(request: NextRequest) {
       Sentry.captureMessage('Firebase to Customer.io profile sync had failures', {
         level: 'warning',
         tags: { integration: 'customerio', source: 'firebase' },
-        contexts: { sync: summary },
+        contexts: {
+          sync: {
+            project_id: summary.projectId,
+            auth_users: summary.authUsers,
+            firestore_profiles: summary.firestoreProfiles,
+            attempted: summary.attempted,
+            identified: summary.identified,
+            account_events: summary.accountEvents,
+            skipped_no_email: summary.skippedNoEmail,
+            failed: summary.failed,
+          },
+        },
       });
       return NextResponse.json({ ok: false, ...summary }, { status: 503 });
     }
