@@ -1,7 +1,8 @@
 # Sahara / FRED — Auto Research Workflow
 
 How we test and refine **FRED** (the Sahara mentor chatbot) using an autonomous
-optimization loop ("Auto Research"). Linear: **AI-3521**.
+optimization loop ("Auto Research"). Linear: **AI-3491** eval-suite scaffold and
+**AI-3521** refinement loop.
 
 ## What "Auto Research" is
 
@@ -37,12 +38,24 @@ higher mentor-quality pass rates without changing FRED's core identity or voice.
 ## The dataset
 
 `scripts/fred-autoresearch/scenarios.json` holds **120 founder scenarios** (24 per
-category) plus the binary `eval_criteria` for each category. Grow it freely —
-add scenarios under the right category, keep `id`s unique. The CI test enforces a
-floor (≥100 total, ≥10 per category) so the library can't silently shrink.
+category) plus the binary `eval_criteria` for each category. This is a runnable
+seed harness derived from the Operating Bible and meeting context. It is **not**
+final Fred calibration yet: `source_status.fred_validated_samples_received` stays
+`false` until Fred provides validated sample Q&A pairs. Grow it freely — add
+scenarios under the right category, keep `id`s unique. The CI test enforces the
+100-200 scenario target and the Fred-validation blocker so the library can't
+silently shrink or be misreported as final.
 
 ```jsonc
 {
+  "linear_issues": ["AI-3491", "AI-3521"],
+  "scenario_target": { "min": 100, "max": 200 },
+  "source_status": {
+    "seed_dataset": true,
+    "fred_validated_samples_received": false,
+    "fred_validated_sample_count": 0,
+    "blocker": "Fred-provided validated sample Q&A pairs are still required..."
+  },
   "categories": {
     "fundraising": {
       "overlay_key": "fundraising",                 // must exist in COACHING_PROMPTS
@@ -60,6 +73,7 @@ floor (≥100 total, ≥10 per category) so the library can't silently shrink.
 # This is what CI mirrors; run it before any overnight loop.
 python3 scripts/autoresearch-eval.py --dry-run
 python3 scripts/autoresearch-eval.py --list-categories
+python3 scripts/autoresearch-eval.py --manifest
 
 # One category (needs OPENAI_API_KEY). Default 5 prompts/iteration, 3 iterations.
 python3 scripts/autoresearch-eval.py --category fundraising
@@ -75,6 +89,8 @@ python3 scripts/autoresearch-eval.py --all --limit 8
 `AUTORESEARCH_FRED_MODEL` / `AUTORESEARCH_JUDGE_MODEL` env vars (defaults:
 `gpt-4o` for FRED, `gpt-4o-mini` for the judge). With no `--category`/`--all`,
 the harness defaults to `--dry-run` so it never burns API credits by accident.
+`--manifest` prints machine-readable evidence for Linear/PR comments, including
+scenario counts and whether Fred-validated samples have been received.
 
 ## Reading the output
 
@@ -99,7 +115,8 @@ and asserts, with no API key required:
 - every dataset category maps to a real `COACHING_PROMPTS` overlay;
 - the exact regex the Python harness uses can extract each overlay (so a prompts.ts
   refactor can't silently break the loop);
-- scenario/criterion ids are unique, prompts are non-empty, counts meet the floor.
+- scenario/criterion ids are unique, prompts are non-empty, counts meet the 100-200
+  target, and Fred-validation status remains explicit.
 
 This is the cheap, always-on half of "test and refine": the dataset and the
 overlays it targets can never drift out of sync unnoticed. The expensive half (the

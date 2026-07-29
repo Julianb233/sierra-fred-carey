@@ -1,6 +1,14 @@
 {
   "$schema": "./scenarios.schema.md",
   "version": "1.0.0",
+  "linear_issues": ["AI-3491", "AI-3521"],
+  "scenario_target": { "min": 100, "max": 200 },
+  "source_status": {
+    "seed_dataset": true,
+    "fred_validated_samples_received": false,
+    "fred_validated_sample_count": 0,
+    "blocker": "Fred-provided validated sample Q&A pairs are still required before this suite can be treated as final production calibration. The current 120 scenarios are a runnable seed harness derived from the Operating Bible and meeting context."
+  },
   "description": "FRED mentor-chatbot evaluation scenarios + binary eval criteria, by coaching category. Consumed by scripts/autoresearch-eval.py (overnight overlay-optimization loop) and lib/ai/__tests__/autoresearch-scenarios.test.ts (dataset integrity + overlay-alignment gate). Eval criteria are sourced from .planning/OPERATING-BIBLE.md. Add scenarios freely; keep ids unique within a category.",
   "categories": {
     "fundraising": {

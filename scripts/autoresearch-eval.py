@@ -21,6 +21,7 @@ Usage:
   # Validate dataset + overlay extraction WITHOUT any API calls (free, fast):
   python3 scripts/autoresearch-eval.py --dry-run
   python3 scripts/autoresearch-eval.py --list-categories
+  python3 scripts/autoresearch-eval.py --manifest
 
   # Run the loop (requires OPENAI_API_KEY):
   python3 scripts/autoresearch-eval.py --category fundraising
@@ -67,6 +68,30 @@ def load_dataset() -> dict:
 
 def category_names(dataset: dict) -> list:
     return list(dataset["categories"].keys())
+
+
+def scenario_count(dataset: dict) -> int:
+    return sum(len(cat.get("scenarios", [])) for cat in dataset["categories"].values())
+
+
+def dataset_manifest(dataset: dict) -> dict:
+    """Return a machine-readable suite manifest for Linear/CI evidence."""
+    categories = {}
+    for category, cat in dataset["categories"].items():
+        categories[category] = {
+            "overlay_key": cat.get("overlay_key", category),
+            "scenario_count": len(cat.get("scenarios", [])),
+            "eval_criteria_count": len(cat.get("eval_criteria", [])),
+        }
+
+    return {
+        "version": dataset.get("version"),
+        "linear_issues": dataset.get("linear_issues", []),
+        "scenario_target": dataset.get("scenario_target", {}),
+        "source_status": dataset.get("source_status", {}),
+        "total_scenarios": scenario_count(dataset),
+        "categories": categories,
+    }
 
 
 def prompts_for(dataset: dict, category: str, limit: int | None) -> list:
@@ -474,6 +499,17 @@ def run_autoresearch(category: str, dataset: dict, limit: int, max_iterations: i
 def dry_run(dataset: dict, categories: list, limit: int) -> int:
     """Validate the dataset and that every overlay is extractable. Returns exit code."""
     print("DRY RUN — no API calls. Validating dataset + overlay extraction.\n")
+    manifest = dataset_manifest(dataset)
+    source_status = manifest.get("source_status", {})
+    target = manifest.get("scenario_target", {})
+    print(
+        f"Dataset: v{manifest.get('version')} | scenarios={manifest['total_scenarios']} "
+        f"(target {target.get('min', '?')}-{target.get('max', '?')}) | "
+        f"Fred-validated samples={source_status.get('fred_validated_sample_count', 0)}"
+    )
+    if source_status.get("fred_validated_samples_received") is False:
+        print(f"Source blocker: {source_status.get('blocker')}\n")
+
     errors = 0
     for category in categories:
         cat = dataset["categories"][category]
@@ -546,12 +582,29 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                         help="Validate dataset + overlay extraction without any API calls")
     parser.add_argument("--list-categories", action="store_true", help="Print categories and counts, then exit")
+    parser.add_argument("--manifest", action="store_true",
+                        help="Print machine-readable dataset manifest, then exit")
     args = parser.parse_args()
 
     dataset = load_dataset()
     all_cats = category_names(dataset)
 
+    if args.manifest:
+        print(json.dumps(dataset_manifest(dataset), indent=2))
+        return
+
     if args.list_categories:
+        manifest = dataset_manifest(dataset)
+        target = manifest.get("scenario_target", {})
+        source_status = manifest.get("source_status", {})
+        print(
+            f"Dataset v{manifest.get('version')} — {manifest['total_scenarios']} scenarios "
+            f"(target {target.get('min', '?')}-{target.get('max', '?')}); "
+            f"Fred-validated samples: {source_status.get('fred_validated_sample_count', 0)}"
+        )
+        if source_status.get("fred_validated_samples_received") is False:
+            print(f"Blocker: {source_status.get('blocker')}")
+        print()
         print("Categories in dataset:")
         for c in all_cats:
             n = len(dataset["categories"][c]["scenarios"])

@@ -41,6 +41,17 @@ interface Category {
 }
 interface Dataset {
   version: string;
+  linear_issues: string[];
+  scenario_target: {
+    min: number;
+    max: number;
+  };
+  source_status: {
+    seed_dataset: boolean;
+    fred_validated_samples_received: boolean;
+    fred_validated_sample_count: number;
+    blocker: string;
+  };
   categories: Record<string, Category>;
 }
 
@@ -77,7 +88,20 @@ describe("autoresearch dataset — structure", () => {
       (sum, c) => sum + dataset.categories[c].scenarios.length,
       0,
     );
-    expect(total).toBeGreaterThanOrEqual(100);
+    expect(total).toBeGreaterThanOrEqual(dataset.scenario_target.min);
+    expect(total).toBeLessThanOrEqual(dataset.scenario_target.max);
+  });
+
+  it("is traceable to the Linear eval-suite issues", () => {
+    expect(dataset.linear_issues).toContain("AI-3491");
+    expect(dataset.linear_issues).toContain("AI-3521");
+  });
+
+  it("records Fred validation status so seed data is not mistaken for final calibration", () => {
+    expect(dataset.source_status.seed_dataset).toBe(true);
+    expect(dataset.source_status.fred_validated_samples_received).toBe(false);
+    expect(dataset.source_status.fred_validated_sample_count).toBe(0);
+    expect(dataset.source_status.blocker).toMatch(/Fred-provided validated sample Q&A pairs/i);
   });
 });
 
