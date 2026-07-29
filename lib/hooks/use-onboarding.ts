@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export type OnboardingStep =
   | "welcome"
+  | "video-intro"
   | "startup-info"
   | "fred-intro"
   | "complete";
@@ -34,7 +35,7 @@ export interface OnboardingState {
   completedAt?: string;
 }
 
-const STEPS: OnboardingStep[] = ["welcome", "startup-info", "fred-intro", "complete"];
+const STEPS: OnboardingStep[] = ["welcome", "video-intro", "startup-info", "fred-intro", "complete"];
 const STORAGE_KEY = "sahara-onboarding";
 
 // ============================================================================

@@ -7,6 +7,7 @@ import { useOnboarding } from "@/lib/hooks/use-onboarding";
 import { ProgressIndicator } from "@/components/onboarding/progress-indicator";
 import { WelcomeStep } from "@/components/onboarding/welcome-step";
 import { StartupInfoStep } from "@/components/onboarding/startup-info-step";
+import { VideoIntroStep } from "@/components/onboarding/video-intro-step";
 import { FredIntroStep } from "@/components/onboarding/fred-intro-step";
 import { CompleteStep } from "@/components/onboarding/complete-step";
 import { Loader2 } from "lucide-react";
@@ -112,6 +113,14 @@ export default function OnboardingPage() {
               <WelcomeStep
                 key="welcome"
                 onNext={() => { trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, { step: "welcome" }); completeStep("welcome"); }}
+                onSkip={skipOnboarding}
+              />
+            )}
+
+            {currentStep === "video-intro" && (
+              <VideoIntroStep
+                key="video-intro"
+                onNext={() => { trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, { step: "video-intro" }); completeStep("video-intro"); }}
                 onSkip={skipOnboarding}
               />
             )}

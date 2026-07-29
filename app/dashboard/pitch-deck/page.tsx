@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Loader2, AlertCircle, FileText, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, FileText, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -228,6 +228,16 @@ function PitchDeckReviewContent() {
               </p>
             </div>
           </div>
+
+          <Link href="/dashboard/pitch-deck/generate">
+            <Button
+              size="sm"
+              className="bg-[#ff6a1a] hover:bg-[#ea580c] text-white"
+            >
+              <Sparkles className="h-4 w-4 mr-1" />
+              Generate Deck
+            </Button>
+          </Link>
         </div>
       </header>
 
