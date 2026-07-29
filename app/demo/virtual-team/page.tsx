@@ -24,6 +24,7 @@ import {
   Layers,
   Calculator,
   Scale,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -111,6 +112,28 @@ export default function VirtualTeamDemo() {
       ],
       stats: { emailsTriaged: 342, hoursReclaimed: "6h" },
       testimonial: "I used to spend 2 hours a day on email. Now it's 15 minutes. Game changer.",
+    },
+    {
+      name: "Fabe Ops",
+      icon: ClipboardList,
+      color: "bg-violet-500",
+      role: "Executive Assistant AI",
+      description: "Draft-only support for Fabe's inbox, Fred follow-ups, trackers, calendar blocks, and outreach prep",
+      capabilities: [
+        "Triages inbox items into review queues without sending",
+        "Turns Fred's commitments into follow-up plans",
+        "Builds spreadsheet-ready next-step trackers",
+        "Proposes calendar blocks by event type for approval",
+        "Drafts outreach sequences without contacting targets",
+        "Converts personal support requests into human-review checklists",
+      ],
+      messages: [
+        { from: "agent", text: "I triaged the open loops into 6 review queues: urgent replies, investor follow-ups, team asks, calendar holds, tracker updates, and personal support. Nothing has been sent or scheduled." },
+        { from: "user", text: "Build Fabe a follow-up plan for Fred's commitments" },
+        { from: "agent", text: "Draft ready for review:\n• Today: investor replies and Alex product notes\n• Tomorrow: campaign tracker cleanup\n• Friday: outreach sequence approvals\n\nEvery external action is marked human-review required before send or scheduling." },
+      ],
+      stats: { queuesDrafted: 6, actionsSent: 0 },
+      testimonial: "Fabe gets the operating system without risking accidental sends, bookings, or purchases.",
     },
     {
       name: "Social Media Manager",

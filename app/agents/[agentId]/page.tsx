@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, Target, Rocket, Inbox, ArrowLeft, Activity, TrendingUp, Clock, Sparkles, Share2, FileEdit, HeartHandshake, Layers, Calculator, Scale } from "lucide-react";
+import { Zap, Target, Rocket, Inbox, ArrowLeft, Activity, TrendingUp, Clock, Sparkles, Share2, FileEdit, HeartHandshake, Layers, Calculator, Scale, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
 import AgentAvatar from "@/components/agents/AgentAvatar";
@@ -148,6 +148,42 @@ const agentData = {
       { label: "Draft Response", action: "draft" },
       { label: "Follow-ups", action: "followup" },
       { label: "Search", action: "search" },
+    ],
+  },
+  "fabe-ops": {
+    id: "fabe-ops",
+    name: "Fabe Ops",
+    description: "Draft-only executive assistant support for Fabe and Fred",
+    color: "indigo",
+    icon: ClipboardList,
+    status: "active" as const,
+    lastActivity: "Just now",
+    tasksCompleted: 6,
+    currentTask: "Preparing executive assistant workflows",
+    capabilities: [
+      "Inbox triage",
+      "Fred follow-up tracking",
+      "Spreadsheet-ready trackers",
+      "Calendar block proposals",
+      "Outreach draft sequencing",
+      "Personal support checklists",
+    ],
+    recentTasks: [
+      { id: 1, task: "Prepared inbox triage categories", time: "Just now", status: "completed" },
+      { id: 2, task: "Built follow-up tracker template", time: "Just now", status: "completed" },
+      { id: 3, task: "Outlined outreach approval workflow", time: "Just now", status: "completed" },
+    ],
+    suggestedPrompts: [
+      "Triage these emails and draft next actions",
+      "Build a follow-up plan from Fred's commitments",
+      "Create a tracker template for open workstreams",
+      "Propose calendar blocks for the week",
+    ],
+    quickActions: [
+      { label: "Triage Inbox", action: "triage" },
+      { label: "Follow-ups", action: "followups" },
+      { label: "Tracker", action: "tracker" },
+      { label: "Calendar Blocks", action: "calendar" },
     ],
   },
   "social-media-ops": {

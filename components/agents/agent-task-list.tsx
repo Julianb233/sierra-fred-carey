@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Bot, DollarSign, TrendingUp, Inbox } from "lucide-react";
+import { ChevronDown, ChevronRight, Bot, DollarSign, TrendingUp, Inbox, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { AgentTask, AgentType, AgentStatus } from "@/lib/agents/types";
@@ -54,12 +54,14 @@ const AGENT_ICON: Record<AgentType, typeof Bot> = {
   founder_ops: Bot,
   fundraising: DollarSign,
   growth: TrendingUp,
+  fabe_ops: ClipboardList,
 };
 
 const AGENT_DISPLAY_NAME: Record<AgentType, string> = {
   founder_ops: "Founder Ops",
   fundraising: "Fundraising",
   growth: "Growth",
+  fabe_ops: "Fabe Ops",
 };
 
 // ============================================================================

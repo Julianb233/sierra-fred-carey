@@ -11,9 +11,9 @@
 // ============================================================================
 
 /**
- * The three specialist agent types in the Studio tier
+ * Specialist agent types in the Studio tier
  */
-export type AgentType = 'founder_ops' | 'fundraising' | 'growth';
+export type AgentType = 'founder_ops' | 'fundraising' | 'growth' | 'fabe_ops';
 
 /**
  * Agent task lifecycle status

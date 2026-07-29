@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, Target, Rocket, Inbox, Sparkles, ArrowRight, Share2, FileEdit, HeartHandshake, Layers, Calculator, Scale } from "lucide-react";
+import { Zap, Target, Rocket, Inbox, Sparkles, ArrowRight, Share2, FileEdit, HeartHandshake, Layers, Calculator, Scale, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import AgentCard from "@/components/agents/AgentCard";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,17 @@ const agents: AgentType[] = [
     status: "idle",
     lastActivity: "1 hour ago",
     tasksCompleted: 89,
+  },
+  {
+    id: "fabe-ops",
+    name: "Fabe Ops",
+    description: "Draft-only inbox, follow-up, tracker, calendar, and outreach support for Fabe",
+    color: "indigo",
+    icon: ClipboardList,
+    status: "active",
+    lastActivity: "Just now",
+    tasksCompleted: 6,
+    currentTask: "Preparing executive assistant workflows",
   },
   {
     id: "social-media-ops",

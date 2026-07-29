@@ -94,7 +94,7 @@ export default function AgentsPage() {
 
   // Compute per-agent stats from tasks
   const agentStats: AgentStats[] = (
-    ["founder_ops", "fundraising", "growth"] as AgentType[]
+    ["founder_ops", "fundraising", "growth", "fabe_ops"] as AgentType[]
   ).map((type) => {
     const agentTasks = tasks.filter((t) => t.agentType === type);
     const lastTask = agentTasks[0]; // Already sorted by created_at desc
@@ -163,13 +163,13 @@ export default function AgentsPage() {
       >
         {/* Agent Cards Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
               <AgentCardSkeleton key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {agentStats.map((stats) => {
               const config = AGENT_CONFIG[stats.agentType];
               return (

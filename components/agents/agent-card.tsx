@@ -9,7 +9,7 @@
  * Used on the agent dashboard page.
  */
 
-import { Bot, DollarSign, TrendingUp, Clock, CheckCircle2, Plus } from "lucide-react";
+import { Bot, DollarSign, TrendingUp, Clock, CheckCircle2, Plus, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AgentType } from "@/lib/agents/types";
@@ -51,6 +51,14 @@ const AGENT_CONFIG: Record<
     icon: TrendingUp,
     accentClass: "text-emerald-500",
     bgClass: "bg-emerald-500/10",
+  },
+  fabe_ops: {
+    displayName: "Fabe Ops",
+    description:
+      "Draft-only executive assistant workflows for inbox triage, follow-ups, trackers, calendar blocks, and outreach prep.",
+    icon: ClipboardList,
+    accentClass: "text-violet-500",
+    bgClass: "bg-violet-500/10",
   },
 };
 
