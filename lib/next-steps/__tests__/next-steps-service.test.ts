@@ -8,15 +8,29 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest"
 
 // Mock Supabase service client
-const mockSelect = vi.fn()
-const mockInsert = vi.fn()
-const mockUpdate = vi.fn()
 const mockFrom = vi.fn()
+const { mockTrackLifecycleEvent } = vi.hoisted(() => ({
+  mockTrackLifecycleEvent: vi.fn().mockResolvedValue({
+    success: true,
+    skipped: false,
+  }),
+}))
 
 vi.mock("@/lib/supabase/server", () => ({
   createServiceClient: () => ({
     from: mockFrom,
   }),
+}))
+
+vi.mock("@/lib/customerio", () => ({
+  CUSTOMERIO_EVENTS: {
+    RECOMMENDATION_CREATED: "recommendation_created",
+    RECOMMENDED_ACTION_COMPLETED: "recommended_action_completed",
+  },
+  LIFECYCLE_CONSENT: {
+    UNKNOWN: "unknown",
+  },
+  trackLifecycleEvent: mockTrackLifecycleEvent,
 }))
 
 // Build chainable query builder mock
@@ -91,6 +105,17 @@ Let me know if you need help with any of these!`
       expect(result[0].priority).toBe("critical")
       expect(result[1].priority).toBe("important")
       expect(result[2].priority).toBe("optional")
+      expect(mockTrackLifecycleEvent).toHaveBeenCalledTimes(3)
+      expect(mockTrackLifecycleEvent).toHaveBeenCalledWith(
+        "user-1",
+        "recommendation_created",
+        expect.objectContaining({
+          source: "fred_next_steps",
+          correlationId: "1",
+        }),
+        expect.objectContaining({ action_id: "1" }),
+        "recommendation_created:1",
+      )
     })
 
     it("returns empty array when no Next 3 Actions block found", async () => {
@@ -304,6 +329,16 @@ Next 3 actions:
       const result = await markComplete("u1", "s1")
       expect(result.completed).toBe(true)
       expect(result.completedAt).toBe("2026-03-08T10:00:00Z")
+      expect(mockTrackLifecycleEvent).toHaveBeenCalledWith(
+        "u1",
+        "recommended_action_completed",
+        expect.objectContaining({
+          source: "dashboard_next_steps",
+          correlationId: "s1",
+        }),
+        expect.objectContaining({ action_id: "s1" }),
+        "recommended_action_completed:s1",
+      )
     })
   })
 
