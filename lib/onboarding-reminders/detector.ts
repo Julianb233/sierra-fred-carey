@@ -1,6 +1,6 @@
 /**
  * Onboarding Reminder Candidate Detector
- * AI-3518: Automated email + text reminders for user engagement
+ * AI-3492: Automated email + text reminders for user engagement
  *
  * Identifies users who created an account but have not completed onboarding,
  * buckets them into graduated tiers by account age, and attaches verified SMS
@@ -16,6 +16,7 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import {
+  INCOMPLETE_ONBOARDING_PROFILE_FILTER,
   ONBOARDING_REMINDER_EMAIL_TYPE,
   type OnboardingReminderCandidate,
   type OnboardingReminderTier,
@@ -35,7 +36,7 @@ export function tierForAge(accountAgeDays: number): OnboardingReminderTier | nul
  * Find users eligible for onboarding reminders.
  *
  * Process:
- * 1. Fetch profiles where onboarding_completed is not true.
+ * 1. Fetch profiles where onboarding_completed is false or unset.
  * 2. Bucket by account age into day1 / day3 / day7 tiers.
  * 3. Batch-load verified, opted-in phone numbers from user_sms_preferences.
  * 4. Filter out anyone who already received this tier on the relevant channel.
@@ -55,11 +56,11 @@ export async function getOnboardingReminderCandidates(): Promise<
     const supabase = createServiceClient();
 
     // Batch 1: profiles that have not completed onboarding.
-    // `neq(... , true)` also matches NULL values (treated as not-onboarded).
+    // NULL is treated as incomplete, so include both explicit false and absent values.
     const { data: users, error: usersError } = await supabase
       .from('profiles')
       .select('id, name, email, created_at, onboarding_completed')
-      .neq('onboarding_completed', true);
+      .or(INCOMPLETE_ONBOARDING_PROFILE_FILTER);
 
     if (usersError || !users || users.length === 0) {
       if (usersError) {

@@ -1,6 +1,6 @@
 # Onboarding Reminders — SOP
 
-**Linear:** AI-3518 · **Owner:** Growth/Lifecycle · **Status:** Live
+**Linear:** AI-3492 · **Owner:** Growth/Lifecycle · **Status:** Live
 
 Automated, graduated email **and** SMS reminders that nudge users who created a
 Sahara account but have not finished onboarding. Part of the engagement
@@ -12,7 +12,7 @@ reminders.
 A Vercel cron hits `GET /api/cron/onboarding-reminders` once daily (17:00 UTC /
 9am PT). The handler:
 
-1. **Detects candidates** — `profiles.onboarding_completed` is not `true`.
+1. **Detects candidates** — `profiles.onboarding_completed` is `false` or unset.
 2. **Buckets by account age** into graduated tiers:
    | Tier | Account age | Tone |
    |------|-------------|------|
@@ -50,7 +50,7 @@ A Vercel cron hits `GET /api/cron/onboarding-reminders` once daily (17:00 UTC /
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID` — SMS.
 - `NEXT_PUBLIC_APP_URL` — used for CTA/onboarding links.
 
-If a channel's env is missing the handler **skips** that channel gracefully
+If any required env for a channel is missing, the handler **skips** that channel gracefully
 (counted under `skipped`) rather than failing the run.
 
 ## Operating the system

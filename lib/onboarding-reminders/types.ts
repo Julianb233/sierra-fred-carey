@@ -1,6 +1,6 @@
 /**
  * Onboarding Reminder Types
- * AI-3518: Automated email + text reminders for user engagement
+ * AI-3492: Automated email + text reminders for user engagement
  *
  * Graduated onboarding nudges for users who signed up but have not yet
  * completed onboarding. Mirrors the structure of the re-engagement system
@@ -19,6 +19,9 @@ export type ReminderChannel = 'email' | 'sms';
  * onboarding reminders across both channels.
  */
 export const ONBOARDING_REMINDER_EMAIL_TYPE = 'onboarding_reminder';
+
+export const INCOMPLETE_ONBOARDING_PROFILE_FILTER =
+  'onboarding_completed.is.null,onboarding_completed.eq.false';
 
 /** A user eligible to receive an onboarding reminder. */
 export interface OnboardingReminderCandidate {

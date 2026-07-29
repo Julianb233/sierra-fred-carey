@@ -1,12 +1,19 @@
 /**
  * Onboarding Reminder unit tests
- * AI-3518: Automated email + text reminders for user engagement
+ * AI-3492: Automated email + text reminders for user engagement
  */
 
 import { describe, it, expect } from 'vitest';
+import {
+  isEmailChannelConfigured,
+  isSmsChannelConfigured,
+} from './config';
 import { tierForAge } from './detector';
 import { ONBOARDING_EMAIL_COPY, getOnboardingSmsBody } from './messages';
-import type { OnboardingReminderTier } from './types';
+import {
+  INCOMPLETE_ONBOARDING_PROFILE_FILTER,
+  type OnboardingReminderTier,
+} from './types';
 
 const TIERS: OnboardingReminderTier[] = ['day1', 'day3', 'day7'];
 
@@ -72,5 +79,40 @@ describe('getOnboardingSmsBody', () => {
     for (const tier of TIERS) {
       expect(getOnboardingSmsBody('Sam', tier)).toContain('STOP');
     }
+  });
+});
+
+describe('channel configuration', () => {
+  it('requires a Resend API key for email dispatch', () => {
+    expect(isEmailChannelConfigured({ RESEND_API_KEY: 're_test' })).toBe(true);
+    expect(isEmailChannelConfigured({})).toBe(false);
+  });
+
+  it('requires all Twilio credentials before SMS dispatch is considered configured', () => {
+    expect(
+      isSmsChannelConfigured({
+        TWILIO_ACCOUNT_SID: 'AC123',
+        TWILIO_AUTH_TOKEN: 'token',
+        TWILIO_MESSAGING_SERVICE_SID: 'MG123',
+      }),
+    ).toBe(true);
+
+    expect(
+      isSmsChannelConfigured({
+        TWILIO_ACCOUNT_SID: 'AC123',
+        TWILIO_MESSAGING_SERVICE_SID: 'MG123',
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('profile eligibility filter', () => {
+  it('includes both null and explicit false onboarding completion states', () => {
+    expect(INCOMPLETE_ONBOARDING_PROFILE_FILTER).toContain(
+      'onboarding_completed.is.null',
+    );
+    expect(INCOMPLETE_ONBOARDING_PROFILE_FILTER).toContain(
+      'onboarding_completed.eq.false',
+    );
   });
 });
