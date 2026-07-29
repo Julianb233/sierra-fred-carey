@@ -216,8 +216,11 @@ ${signalIdsFormatted}${truncation}`
 /**
  * Search Linear for an existing issue with an exact title match.
  * Returns the first match or null if none found.
+ *
+ * Exported so sibling callsites (WhatsApp monitor, bug-report route) can
+ * reuse the same dedup check before creating new issues (AI-4108).
  */
-async function findExistingLinearIssue(
+export async function findExistingLinearIssue(
   apiKey: string,
   title: string
 ): Promise<{ identifier: string; title: string; url: string } | null> {

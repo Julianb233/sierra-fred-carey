@@ -12,6 +12,7 @@
  * to track last check timestamp and avoid duplicate processing.
  */
 import { schedules, logger } from "@trigger.dev/sdk/v3";
+import { findExistingLinearIssue } from "@/lib/feedback/linear-auto-triage";
 
 // ── Types ───────────────────────────────────────────────────────
 interface WhatsAppMessage {
@@ -410,6 +411,16 @@ async function createLinearIssue(issue: IdentifiedIssue): Promise<string> {
   const apiKey = process.env.LINEAR_API_KEY;
   if (!apiKey) {
     throw new Error("LINEAR_API_KEY not configured");
+  }
+
+  // AI-4108: dedup by exact title match before creating — same theme detected
+  // across scheduled runs should not spawn duplicate Linear issues.
+  const existing = await findExistingLinearIssue(apiKey, issue.title);
+  if (existing) {
+    logger.log(
+      `Duplicate skipped — Linear issue ${existing.identifier} already exists with title "${existing.title}"`
+    );
+    return existing.identifier;
   }
 
   // Get team ID, label IDs, project ID, and active cycle in one query
