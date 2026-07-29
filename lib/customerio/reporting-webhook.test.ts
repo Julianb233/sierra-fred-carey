@@ -2,14 +2,13 @@ import { createHmac } from 'crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const dbMocks = vi.hoisted(() => ({
-  from: vi.fn(),
-  upsert: vi.fn(),
-  select: vi.fn(),
-  maybeSingle: vi.fn(),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  create: vi.fn(),
 }));
 
-vi.mock('@/lib/supabase/server', () => ({
-  createServiceClient: () => ({ from: dbMocks.from }),
+vi.mock('@/lib/firebase/admin', () => ({
+  getSaharaFirestore: () => ({ collection: dbMocks.collection }),
 }));
 
 import {
@@ -42,9 +41,8 @@ const rawBody = JSON.stringify({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  dbMocks.from.mockReturnValue({ upsert: dbMocks.upsert });
-  dbMocks.upsert.mockReturnValue({ select: dbMocks.select });
-  dbMocks.select.mockReturnValue({ maybeSingle: dbMocks.maybeSingle });
+  dbMocks.collection.mockReturnValue({ doc: dbMocks.doc });
+  dbMocks.doc.mockReturnValue({ create: dbMocks.create });
 });
 
 describe('Customer.io reporting signature', () => {
@@ -151,9 +149,9 @@ describe('Customer.io reporting payload', () => {
       parseCustomerIoReportingPayload(JSON.parse(rawBody))!,
       secret
     );
-    dbMocks.maybeSingle
-      .mockResolvedValueOnce({ data: { event_id: 'evt_01' }, error: null })
-      .mockResolvedValueOnce({ data: null, error: null });
+    dbMocks.create
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(Object.assign(new Error('exists'), { code: 6 }));
 
     await expect(recordCustomerIoReportingEvent(record)).resolves.toEqual({
       accepted: true,
@@ -165,9 +163,9 @@ describe('Customer.io reporting payload', () => {
       duplicate: true,
       eventId: 'evt_01',
     });
-    expect(dbMocks.upsert).toHaveBeenCalledWith(record, {
-      onConflict: 'event_id',
-      ignoreDuplicates: true,
-    });
+    expect(dbMocks.collection).toHaveBeenCalledWith(
+      'customerio_reporting_events'
+    );
+    expect(dbMocks.create).toHaveBeenCalledWith(record);
   });
 });

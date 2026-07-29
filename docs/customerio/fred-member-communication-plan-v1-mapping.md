@@ -8,9 +8,9 @@ duplicate the confidential message library.
 
 ## Authority and boundaries
 
-- Sahara/Supabase is the system of record and permanent Sahara user ID is the
-  Customer.io profile ID.
-- Firebase is reconciliation-only. Firebase-only identities are not imported.
+- Firebase project `sahara-6800a` is the member system of record, and its
+  permanent UID is the Customer.io profile ID.
+- Supabase is not read or written by this member-lifecycle integration.
 - Customer.io owns lifecycle evaluation and future delivery. Resend and Twilio
   remain authoritative until a reviewed cutover avoids duplicate sends.
 - Email is for explanation, education, and progress reporting. SMS is for
@@ -79,3 +79,6 @@ retention expansion:
   Paid-Member Onboarding, and Daily Motivation have Fred-aligned entry triggers;
   message, delay, branch, goal, and exit nodes must still be built from this
   map and verified with allowlisted synthetic profiles before activation.
+- The verified 2026-07-29 baseline synchronized 202 Firebase Auth identities
+  and merged 195 Firestore profiles into Customer.io with zero failures and
+  zero baseline lifecycle events.

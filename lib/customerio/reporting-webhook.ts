@@ -8,7 +8,7 @@
  */
 
 import { createHash, createHmac, timingSafeEqual } from 'crypto';
-import { createServiceClient } from '@/lib/supabase/server';
+import { getSaharaFirestore } from '@/lib/firebase/admin';
 
 export interface CustomerIoReportingPayload {
   event_id: string;
@@ -159,20 +159,33 @@ export function buildCustomerIoReportingRecord(
 export async function recordCustomerIoReportingEvent(
   record: CustomerIoReportingRecord,
 ): Promise<CustomerIoReportingResult> {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from('customerio_reporting_events')
-    .upsert(record, { onConflict: 'event_id', ignoreDuplicates: true })
-    .select('event_id')
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to record Customer.io reporting event: ${error.message}`);
+  const documentId = createHash('sha256')
+    .update(record.event_id, 'utf8')
+    .digest('hex');
+  try {
+    await getSaharaFirestore()
+      .collection('customerio_reporting_events')
+      .doc(documentId)
+      .create(record);
+  } catch (error) {
+    const code = (error as { code?: number | string })?.code;
+    if (code === 6 || code === 'already-exists') {
+      return {
+        accepted: true,
+        duplicate: true,
+        eventId: record.event_id,
+      };
+    }
+    throw new Error(
+      `Failed to record Customer.io reporting event in Firebase: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
 
   return {
     accepted: true,
-    duplicate: !data,
+    duplicate: false,
     eventId: record.event_id,
   };
 }

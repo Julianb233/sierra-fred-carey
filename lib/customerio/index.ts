@@ -40,6 +40,13 @@ export {
   type MemberLifecycleSyncResult,
 } from './member-lifecycle';
 
+export {
+  buildFirebaseCustomerIoAttributes,
+  syncFirebaseMembersToCustomerIo,
+  type FirebaseCustomerIoSyncSummary,
+  type FirebaseMemberProfile,
+} from './firebase-profile-sync';
+
 export type {
   CustomerIoRegion,
   CustomerIoResult,
