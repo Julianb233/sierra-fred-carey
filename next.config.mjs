@@ -28,6 +28,13 @@ const nextConfig = {
   transpilePackages: ["framer-motion"],
   // Acknowledge Turbopack as the default bundler in Next.js 16
   turbopack: {},
+  experimental: {
+    // Keep production and preview builds within Vercel's standard 8 GB
+    // container. The app previously exhausted the builder while compiling
+    // with the host CPU count, even though the same build passed locally.
+    cpus: 2,
+    webpackMemoryOptimizations: true,
+  },
   typescript: {
     // tsc --noEmit passes separately; skip during build to avoid
     // race with .next/types generation

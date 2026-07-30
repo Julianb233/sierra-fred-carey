@@ -8,6 +8,10 @@ import { ArrowRight, CheckCircle2, Loader2, Lock, Mail, Phone, ShieldCheck, User
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import {
+  parseAcquisitionAttribution,
+  type AcquisitionAttribution,
+} from "@/lib/analytics/attribution";
 
 type Step = "lead" | "account" | "done";
 
@@ -44,25 +48,33 @@ export default function StartNowPage() {
   const [password, setPassword] = useState("");
   const [consent, setConsent] = useState(false);
   const [source, setSource] = useState("start-now");
+  const [attribution, setAttribution] = useState<AcquisitionAttribution | null>(null);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setSource(params.get("source") || params.get("utm_source") || "start-now");
+    const captured = parseAcquisitionAttribution(
+      window.location.search,
+      window.location.pathname,
+      document.referrer,
+    );
+    setSource(captured.source);
+    setAttribution(captured);
+    trackEvent(ANALYTICS_EVENTS.ACQUISITION.LANDING_VIEWED, { ...captured });
     trackEvent(ANALYTICS_EVENTS.ONBOARDING.STARTED, { step: "capture" });
   }, []);
 
   const leadMetadata = () => {
-    const params = new URLSearchParams(window.location.search);
+    const captured =
+      attribution ??
+      parseAcquisitionAttribution(
+        window.location.search,
+        window.location.pathname,
+        document.referrer,
+      );
     return {
-      source,
-      ref: params.get("ref"),
-      utmSource: params.get("utm_source"),
-      utmMedium: params.get("utm_medium"),
-      utmCampaign: params.get("utm_campaign"),
-      path: window.location.pathname,
+      ...captured,
       consentText: CONSENT_DISCLAIMER,
     };
   };
@@ -123,6 +135,7 @@ export default function StartNowPage() {
       setPhone(cleanPhone);
       setLeadId(data.id ?? null);
       setStep("account");
+      trackEvent(ANALYTICS_EVENTS.ACQUISITION.LEAD_CAPTURED, metadata);
       trackEvent(ANALYTICS_EVENTS.ONBOARDING.STEP_COMPLETED, {
         step: "capture",
         stepIndex: 1,
@@ -173,6 +186,9 @@ export default function StartNowPage() {
       localStorage.removeItem("sahara_onboarding_wizard");
       setStep("done");
       trackEvent(ANALYTICS_EVENTS.AUTH.SIGNUP, { method: "email", referrer: source });
+      trackEvent(ANALYTICS_EVENTS.ACQUISITION.ACCOUNT_CREATED, attribution
+        ? { ...attribution }
+        : { source });
       trackEvent(ANALYTICS_EVENTS.ONBOARDING.COMPLETED, { step: "account" });
       setTimeout(() => {
         router.push("/welcome");

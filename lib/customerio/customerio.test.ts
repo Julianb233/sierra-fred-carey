@@ -119,6 +119,13 @@ describe('event schema', () => {
     expect(CUSTOMERIO_EVENTS.PAYMENT_FAILED).toBe('payment_failed');
     expect(CUSTOMERIO_EVENTS.MOTIVATIONAL_ELIGIBLE).toBe('motivational_eligible');
     expect(CUSTOMERIO_EVENTS.SUBSCRIPTION_CANCELLED).toBe('subscription_cancelled');
+    expect(CUSTOMERIO_EVENTS.WEEKLY_PROGRESS_READY).toBe('weekly_progress_ready');
+    expect(CUSTOMERIO_EVENTS.HUMAN_RESCUE_REQUESTED).toBe('human_rescue_requested');
+    expect(CUSTOMERIO_EVENTS.MEMBER_FEEDBACK_SUBMITTED).toBe(
+      'member_feedback_submitted'
+    );
+    expect(CUSTOMERIO_EVENTS.ADVOCACY_ELIGIBLE).toBe('advocacy_eligible');
+    expect(CUSTOMERIO_EVENTS.FEATURE_COMPLETED).toBe('feature_completed');
     expect(FRED_V1_CUSTOMERIO_EVENT_NAMES).toHaveLength(31);
     expect(new Set(FRED_V1_CUSTOMERIO_EVENT_NAMES).size).toBe(31);
     expect(CUSTOMERIO_EVENT_NAMES).toEqual(

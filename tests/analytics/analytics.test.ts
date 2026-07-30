@@ -51,6 +51,20 @@ describe("Analytics Events", () => {
     expect(ANALYTICS_EVENTS.ONBOARDING.SKIPPED).toBe("onboarding.skipped");
   });
 
+  it("should define all ACQUISITION event constants", async () => {
+    const { ANALYTICS_EVENTS } = await import("@/lib/analytics/events");
+
+    expect(ANALYTICS_EVENTS.ACQUISITION.LANDING_VIEWED).toBe(
+      "acquisition.landing_viewed"
+    );
+    expect(ANALYTICS_EVENTS.ACQUISITION.LEAD_CAPTURED).toBe(
+      "acquisition.lead_captured"
+    );
+    expect(ANALYTICS_EVENTS.ACQUISITION.ACCOUNT_CREATED).toBe(
+      "acquisition.account_created"
+    );
+  });
+
   it("should define all CHAT event constants", async () => {
     const { ANALYTICS_EVENTS } = await import("@/lib/analytics/events");
 
@@ -109,15 +123,16 @@ describe("Analytics Events", () => {
     );
   });
 
-  it("should have 6 event categories", async () => {
+  it("should have 7 event categories", async () => {
     const { ANALYTICS_EVENTS } = await import("@/lib/analytics/events");
 
     const categories = Object.keys(ANALYTICS_EVENTS);
-    expect(categories).toHaveLength(6);
+    expect(categories).toHaveLength(7);
     expect(categories).toEqual(
       expect.arrayContaining([
         "AUTH",
         "ONBOARDING",
+        "ACQUISITION",
         "CHAT",
         "FEATURES",
         "SUBSCRIPTION",
