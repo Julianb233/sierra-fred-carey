@@ -72,6 +72,22 @@ export const CUSTOMERIO_EVENTS = {
   DAILY_MOTIVATION_OPT_OUT: 'daily_motivation_opt_out',
   /** Member is eligible for the daily motivational-message cohort. */
   MOTIVATIONAL_ELIGIBLE: 'motivational_eligible',
+  /** A personalized weekly progress summary is ready for the member. */
+  WEEKLY_PROGRESS_READY: 'weekly_progress_ready',
+  /** A member explicitly requested help from a person. */
+  HUMAN_RESCUE_REQUESTED: 'human_rescue_requested',
+  /** A member submitted qualitative or scored product feedback. */
+  MEMBER_FEEDBACK_SUBMITTED: 'member_feedback_submitted',
+  /** A member met the approved referral, testimonial, or case-study criteria. */
+  ADVOCACY_ELIGIBLE: 'advocacy_eligible',
+  /** A member viewed a product capability that has an adoption journey. */
+  FEATURE_VIEWED: 'feature_viewed',
+  /** A member started the primary action for a product capability. */
+  FEATURE_STARTED: 'feature_started',
+  /** A member completed the primary action for a product capability. */
+  FEATURE_COMPLETED: 'feature_completed',
+  /** A referred founder completed the configured conversion action. */
+  REFERRAL_CONVERTED: 'referral_converted',
 } as const;
 
 export type CustomerIoEventName =

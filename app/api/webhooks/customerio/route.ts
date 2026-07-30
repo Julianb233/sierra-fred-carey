@@ -15,6 +15,10 @@ import {
   recordCustomerIoReportingEvent,
   verifyCustomerIoReportingSignature,
 } from '@/lib/customerio/reporting-webhook';
+import {
+  CUSTOMERIO_HEALTH_CHECKPOINTS,
+  recordCustomerIoHealthCheckpoint,
+} from '@/lib/customerio/health';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 10;
@@ -46,6 +50,15 @@ export async function POST(request: NextRequest) {
   try {
     const record = buildCustomerIoReportingRecord(payload);
     const result = await recordCustomerIoReportingEvent(record);
+    await recordCustomerIoHealthCheckpoint(
+      CUSTOMERIO_HEALTH_CHECKPOINTS.REPORTING_WEBHOOK,
+      'success',
+      {
+        metric: record.metric,
+        object_type: record.object_type,
+        duplicate: result.duplicate,
+      },
+    );
     logger.info(`${LOG_PREFIX} Event accepted`, {
       eventId: result.eventId,
       metric: record.metric,
@@ -76,6 +89,14 @@ export async function POST(request: NextRequest) {
       eventId: result.eventId,
     });
   } catch (error) {
+    try {
+      await recordCustomerIoHealthCheckpoint(
+        CUSTOMERIO_HEALTH_CHECKPOINTS.REPORTING_WEBHOOK,
+        'failure',
+      );
+    } catch {
+      // Preserve the original evidence-write failure for retry and Sentry.
+    }
     Sentry.captureException(error, {
       tags: {
         integration: 'customerio',

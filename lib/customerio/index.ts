@@ -47,6 +47,15 @@ export {
   type FirebaseMemberProfile,
 } from './firebase-profile-sync';
 
+export {
+  trackWeeklyProgressReady,
+  trackHumanRescueRequested,
+  trackMemberFeedbackSubmitted,
+  trackAdvocacyEligible,
+  trackFeatureAdoptionEvent,
+  type FeatureAdoptionStage,
+} from './growth-lifecycle';
+
 export type {
   CustomerIoRegion,
   CustomerIoResult,

@@ -25,6 +25,13 @@ export const ANALYTICS_EVENTS = {
     SKIPPED: "onboarding.skipped",
   },
 
+  /** Marketing acquisition and lead-capture events */
+  ACQUISITION: {
+    LANDING_VIEWED: "acquisition.landing_viewed",
+    LEAD_CAPTURED: "acquisition.lead_captured",
+    ACCOUNT_CREATED: "acquisition.account_created",
+  },
+
   /** Chat / FRED interaction events */
   CHAT: {
     MESSAGE_SENT: "chat.message_sent",
@@ -53,6 +60,9 @@ export const ANALYTICS_EVENTS = {
     DASHBOARD_VIEWED: "engagement.dashboard_viewed",
     SETTINGS_UPDATED: "engagement.settings_updated",
     DOCUMENT_EXPORTED: "engagement.document_exported",
+    WEEKLY_PROGRESS_VIEWED: "engagement.weekly_progress_viewed",
+    HUMAN_RESCUE_REQUESTED: "engagement.human_rescue_requested",
+    FEEDBACK_SUBMITTED: "engagement.feedback_submitted",
   },
 } as const;
 
@@ -70,6 +80,21 @@ export interface OnboardingEventProperties {
   stepIndex?: number;
   totalSteps?: number;
   skippedReason?: string;
+}
+
+export interface AcquisitionEventProperties {
+  source?: string;
+  ref?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  utmTerm?: string | null;
+  gclid?: string | null;
+  fbclid?: string | null;
+  redditClickId?: string | null;
+  landingPath?: string;
+  referrerHost?: string | null;
 }
 
 export interface ChatEventProperties {
@@ -112,6 +137,7 @@ type EventValues<T> = T extends Record<string, string> ? T[keyof T] : never;
 
 export type AnalyticsEventName =
   | EventValues<EventCategory["AUTH"]>
+  | EventValues<EventCategory["ACQUISITION"]>
   | EventValues<EventCategory["ONBOARDING"]>
   | EventValues<EventCategory["CHAT"]>
   | EventValues<EventCategory["FEATURES"]>

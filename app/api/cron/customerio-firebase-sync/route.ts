@@ -2,6 +2,10 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { syncFirebaseMembersToCustomerIo } from '@/lib/customerio/firebase-profile-sync';
+import {
+  CUSTOMERIO_HEALTH_CHECKPOINTS,
+  recordCustomerIoHealthCheckpoint,
+} from '@/lib/customerio/health';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -26,6 +30,19 @@ export async function GET(request: NextRequest) {
     const summary = await syncFirebaseMembersToCustomerIo({
       emitRecentAccountEvents: true,
     });
+    await recordCustomerIoHealthCheckpoint(
+      CUSTOMERIO_HEALTH_CHECKPOINTS.FIREBASE_SYNC,
+      summary.failed > 0 ? 'failure' : 'success',
+      {
+        auth_users: summary.authUsers,
+        firestore_profiles: summary.firestoreProfiles,
+        attempted: summary.attempted,
+        identified: summary.identified,
+        account_events: summary.accountEvents,
+        skipped_no_email: summary.skippedNoEmail,
+        failed: summary.failed,
+      },
+    );
     if (summary.failed > 0) {
       Sentry.captureMessage('Firebase to Customer.io profile sync had failures', {
         level: 'warning',
@@ -47,6 +64,14 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json({ ok: true, ...summary });
   } catch (error) {
+    try {
+      await recordCustomerIoHealthCheckpoint(
+        CUSTOMERIO_HEALTH_CHECKPOINTS.FIREBASE_SYNC,
+        'failure',
+      );
+    } catch {
+      // The original exception remains the actionable failure.
+    }
     Sentry.captureException(error, {
       tags: { integration: 'customerio', source: 'firebase' },
     });
