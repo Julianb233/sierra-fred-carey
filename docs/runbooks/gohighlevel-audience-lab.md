@@ -83,6 +83,6 @@ For ongoing verification:
 - Never enroll a contact when consent provenance is unknown.
 - `sahara-do-not-contact` and an opt-out always override every positive tag.
 - Use only synthetic, allowlisted records for setup tests.
-- Do not publish this workflow or enable real email/SMS sends during schema or
-  API testing.
+- Do not add email/SMS actions, enroll real contacts, or enable real outreach
+  during schema or API testing.
 - Verify changes through a readback in the GHL location, then update AI-12563.
